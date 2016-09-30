@@ -1,0 +1,2151 @@
+// HVAC Secondary Systems - System Controls
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.7.2 - System Controls
+//     Section 5.7.2.1 - Control System Type
+//            Control System Type
+//     Section 5.7.2.2 - Schedules
+//            Air Handler Fan Cycling
+//            Optimum Start
+//            Night-Cycle HVAC Fan Control
+//     Section 5.7.2.3 - Cooling Control
+//            Cooling Supply Air Temperature
+//            Cooling Supply Air Temperature Control
+//            Cooling Reset Schedule by OSA
+//     Section 5.7.2.4 - Heating Control
+//            Preheat Setpoint (not supported)
+//            Heating Supply Air Temeperature
+//            Heating Supply Air Temperature Control       
+//            Heating Reset Schedule by OSA
+
+
+
+// -----------------------------------------------------------------------------
+RULE AirSys:CtrlZnRef
+  DESCRIPTION
+    "The control zone for the system." 
+  HELP
+    "For single-zone systems, this is the zone with the controlling thermostat. 
+     For multi-zone systems, this is the zone that triggers the system to night-cycle
+     if NightCycleFanCtrl = CycleOnCallPrimaryZone."
+  REFERENCE 
+    NACM Section 5.7.1 
+  INPUTCLASS 
+    CondRequired
+  DEFAULT
+    if( IsMultiZnSys = 0 )
+    then // Is a single-zone system
+      if( CountRefs( ThrmlZn:PriAirCondgSysRef ) > 0 )
+      then MaxRevRefComp( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FlrArea )
+      else if( CountRefs( ThrmlZn:SecAirCondgSysRef ) > 0 )
+      then MaxRevRefComp( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FlrArea )
+      else if( CountRefs( ThrmlZn:VentSysRef ) > 0 )
+      then MaxRevRefComp( ThrmlZn:VentSysRef, ThrmlZn:FlrArea )
+      else UNDEFINED
+      endif endif endif   
+    else UNDEFINED
+    endif    
+  CHECKSIM
+    if( IsExhSys = 0 )
+    then
+    if( LocalCompAssigned( CtrlZnRef ) = 0 )
+      then 
+        if( IsMultiZnSys = 0 )
+        then 
+          PostError("AirSystem '%s' must have a control zone defined.", Name )
+        else if( NightCycleFanCtrl = "CycleOnCallPrimaryZone" )
+        then
+          PostError("AirSystem '%s' must have a control zone defined if night 
+                     cycle control is 'CycleOnCallPrimaryZone',", Name )
+        else UNCHANGED
+        endif endif
+      else if( IfValidAnd( CtrlZnRef:PriAirCondgSysRef:Name != Name ) .AND.
+               IfValidAnd( CtrlZnRef:VentSysRef:Name != Name ) )
+      then // Neither the PriAirCondg or VentSysRef for the CtrlZn is the current AirSys
+        PostError("The control zone '%s' for AirSystem '%s' is not served by the
+                   system. Revise inputs for consistency.", CtrlZnRef:Name, Name)      
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+   if( IsMultiZnSys .AND. NightCycleFanCtrl != "CycleOnCallPrimaryZone" )
+    then UNDEFINED // Not applicable to multizone systems at this time
+    else
+    if( Proj:IsNoMech .OR. 
+        ( Proj:IsNoAddMech .AND. IsExisting = 0 ) )
+    then UNCHANGED // Partial Envelope compliance follow rules defined in BaselineHVACSystems.rule
+    else u:CtrlZnRef
+    endif endif
+  SIZING_BASELINE
+    if( IsNew = 0 )
+    then zp:CtrlZnRef
+    else UNCHANGED // Baseline rules defined in BaselineHVACSystems.rule
+    endif
+  ANNUAL
+    z:CtrlZnRef
+ENDRULE
+// -----------------------------------------------------------------------------
+RULE ZnSys:CtrlZnRef
+  INPUTCLASS
+    NotInput
+  DEFAULT  
+    if( CountRefs( ThrmlZn:PriAirCondgSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FlrArea )
+    else if( CountRefs( ThrmlZn:SecAirCondgSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FlrArea )
+    else if( CountRefs( ThrmlZn:VentSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:VentSysRef, ThrmlZn:FlrArea )
+    else UNDEFINED
+    endif endif endif
+  CHECKSIM
+    if( LocalStatus( CtrlZnRef ) = 0 .AND. IsExhSys = 0 )
+    then 
+      PostError("ZoneSystem '%s' must be referenced by a ThermalZone.", Name )
+    else UNCHANGED
+    endif
+  SIZING  
+    if( CountRefs( ThrmlZn:PriAirCondgSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FlrArea )
+    else if( CountRefs( ThrmlZn:SecAirCondgSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FlrArea )
+    else if( CountRefs( ThrmlZn:VentSysRef ) > 0 )
+    then MaxRevRefComp( ThrmlZn:VentSysRef, ThrmlZn:FlrArea )
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:CtrlZnRef
+ENDRULE
+
+
+// ********** Control System Type **********************************************  
+// Applicable to multizone systems only
+RULE AirSys:CtrlSysType
+  DESCRIPTION
+    "The type of control system used for an HVAC system.  Applicable to multizone
+     systems only." 
+  HELP
+    "The type of control system for multizone HVAC systems and their related 
+     equipment. This input affects the proposed design system specification 
+     for zone level controls, supply air temperature reset controls, ventilation 
+     controls and fan and pump static pressure part-load curves. " 
+  REFERENCE 
+    NACM Section 5.7.2.1
+  INPUTCLASS 
+    Default
+  OPTION         
+    DDCToZone 
+    Other     
+  DEFAULT
+    if( IsMultiZnSys )
+    then "Other"
+    else UNDEFINED
+    endif 
+  CHECKCODE : T24N_2016
+    if( IsNew .AND. IfValidAnd( CtrlSysType = "Other" ) .AND.
+        ( ClgCap >= 300000 .OR. HtgCap >= 300000 ) .AND.
+        CondHVACZnCntWithMult > 3 )
+    then
+      PostError("AirSystem '%s' is a New multizone system with heating or cooling
+                 capacity > 300 kBtu/hr, and serves more than 3 HVAC zones. 
+                 'DDCToZone' control is required.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( IsMultiZnSys )
+    then 
+      if( BaseSysNum > 0 )
+      then "DDCToZone"
+      else u:CtrlSysType
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:CtrlSysType
+ENDRULE
+
+
+// ********** Static Pressure Reset ********************************************
+RULE AirSys:StaticPressRstCtrl
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "An interger that indicates static pressure sensors and DDC system
+     is used to control VAV fans to reduce the static pressure sepoint of the
+     system."
+  INPUTCLASS 
+    Default
+  DEFAULT
+    if( IsMultiZnSys )
+    then 0
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IfValidAnd( StaticPressRstCtrl > 0 ) )
+    then
+      if( IsMultiZnSys = 0 )
+      then 
+        PostWarning("AirSystem '%s' is not a multizone HVAC system. 
+                    StaticPressureResetControl will be ignored.", Name )
+      else if( IsMultiZnSys = 1 .AND. IfValidAnd( CtrlSysType = "Other" ) )
+      then 
+        PostWarning("AirSystem '%s' does not have 'DDCToZone' control. 
+                    StaticPressureResetControl will be ignored.", Name )
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( IsMultiZnSys )
+    then 
+      if( BaseSysNum > 0 )
+      then 1 // Baseline VAV systems use SP Reset
+      else if( IfValidAnd( CtrlSysType = "DDCToZone" ) )
+      then u:StaticPressRstCtrl // Proposed has DDC, so user-defined
+      else 0 // Proposed does not have DDC, so can't use SP Reset
+      endif endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:StaticPressRstCtrl
+ENDRULE
+RULE AirSys:StaticPressRstCtrl
+  RULESETS
+    T24N
+  DESCRIPTION
+    "An interger that indicates static pressure sensors and DDC system
+     is used to control VAV fans to reduce the static pressure sepoint of the
+     system."
+  INPUTCLASS 
+    NotInput  IgnoreUserInput  "Removed in transition from 2013 ver 3b to 3c"
+ENDRULE
+
+// ********** Reheat Control Type **********************************************
+RULE AirSys:ReheatCtrlMthd
+  DESCRIPTION
+    "The air/temperature control strategy for VAV boxes in heating mode. This 
+     input is used to default the control method specified for individual TerminalUnits
+     of Type = VAVReheatBox. The input at TerminalUnit is ultimately the value
+     that is simulated." 
+  HELP
+    "Single Maximum: The airflow is set to a minimum constant value in both the
+     deadband and heating mode. The minimum airflow septoint is typically
+     30 to 50 percent of maximum. This control mode typically has a
+     higher minimum airflow than the minimum used in the dual maximum
+     below, resulting in more frequent reheat.
+
+     Dual Maximum: raises the SAT as the first stage of heating, and increases
+     the airflow to the zone as the second stage of heating, as follows:
+
+     1. The first stage of heating consists of modulating the zone
+        supply air temperature setpoint up to a maximum setpoint no
+        larger than 95°F while the airflow is maintained at the dead
+        band flow rate. 
+
+     2. The second stage of heating consists of modulating the airflow
+        rate from the dead band flow rate up to the heating maximum
+        flow rate (50% of design flow rate).
+
+     NOTE: 'DualMaximum' control is only available if the the AirSys control system
+     is 'DDCToZone' and the reheat coils are HotWater. In all other case, 
+     'SingleMaximum' will be simulated."
+  REFERENCE 
+    NACM Section 5.6.5.1
+  INPUTCLASS 
+    Default
+  OPTION
+    SingleMaximum
+    DualMaximum 
+  DEFAULT
+    if( IsMultiZnSys )
+    then "SingleMaximum"
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsMultiZnSys .AND. SumChildren( TrmlUnit:HasHotWtrCoil ) > 0 )
+    then 
+      if( BaseSysNum > 0 )
+      then "DualMaximum"
+      else if( LocalStatus( ReheatCtrlMthd ) > 0 .AND.
+               IfValidAnd( CtrlSysType = "DDCToZone" ) = 0 ) 
+      then "SingleMaximum"
+      else u:ReheatCtrlMthd
+      endif endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:ReheatCtrlMthd
+ENDRULE
+
+
+// ********** AirSys HVAC Fan Control ******************************************
+RULE AirSys:FanCtrl
+  DESCRIPTION
+    "The type of fan control used when the system is scheduled to be 'On'. For
+     AirSystems, this option is currently only available for Types SZAC, SZHP, 
+     SZVAVAC, SZVAVHP, and HV."
+  HELP
+    "Continous control indicates supply fan runs continuously whenever the 
+     availability schedule is set to 'On' (= 1). Cycling control indicates supply 
+     fan cycles on and off to meet the heating/cooling load whenever the 
+     availability schedule is set to 'On'.  In both cases, the design outside
+     air flow specified for the system is provided when ever the supply fan runs."  
+  INPUTCLASS 
+    Default
+  OPTION
+    Continuous
+    Cycling
+  DEFAULT
+    if( IsExhSys )
+    then UNDEFINED
+    else if( LocalCompAssigned( CtrlZnRef ) )
+    then 
+      if( IfValidAnd( CtrlZnRef:VentIsRequired = 1 ) .AND.
+          IfValidAnd( CtrlZnRef:VentSysRef:Name = Name ) )
+      then "Continuous"
+      else "Cycling"
+      endif
+    else "Continuous"
+    endif endif 
+  CHECKCODE
+    if( IfValidAnd( FanCtrl = "Cycling" ) .AND. 
+        ( IsExhSys .OR. IsMultiZnSys ) )
+    then
+      PostWarning("AirSystem '%s' has fan control = 'Cycling', which is currently
+                   not supported for Type = '%s'.", Name, Type)
+    else if( LocalCompAssigned( CtrlZnRef ) )
+    then 
+      if( IfValidAnd( CtrlZnRef:VentSysRef:Name = Name ) .AND.
+          IfValidAnd( CtrlZnRef:VentSrc = "Forced" ) .AND.
+          IfValidAnd( FanCtrl = "Cycling" ) )
+      then
+        PostError("AirSystem '%s' has fan control = 'Cycling', but this 
+                   system is defined to provide 'Forced' ventilation
+                   for control zone '%s'.", Name, CtrlZnRef)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif     
+  SIZING
+    if( IsExhSys )
+    then UNDEFINED 
+    else if( BaseSysNum > 0 )
+    then 
+      if( SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FlrArea ) > 0 )
+      then "Continuous" 
+      else "Cycling"
+      endif
+    else u:FanCtrl
+    endif endif
+  ANNUAL
+    z:FanCtrl
+ENDRULE
+// If Fan:Ctrl = 'Cycling', set schedule to 'Off'. See issue 1099
+RULE AirSys:AvailSchRef
+  SIZING
+    if( AirSys:FanCtrl = "Cycling" )
+    then RuleLibrary(Schedule, "CyclingHVACAvail")
+    else UNCHANGED
+    endif
+ENDRULE
+// ********** ZnSys HVAC Fan Control ******************************************
+RULE ZnSys:FanCtrl
+  DESCRIPTION
+    "The type of fan control used when the system is scheduled to be 'On'."
+  HELP
+    "Continous control indicates supply fan runs continuously whenever the 
+     availability schedule is set to 'On' (= 1). Cycling control indicates supply 
+     fan cycles on and off to meet the heating/cooling load whenever the 
+     availability schedule is set to 'On'.  In both cases, the design outside
+     air flow specified for the system is provided when ever the supply fan runs."  
+  INPUTCLASS 
+    Default
+  OPTION
+    Continuous
+    Cycling
+  DEFAULT
+    if( Type = "Baseboard" .OR. IsExhSys)
+    then UNDEFINED
+    else if( LocalCompAssigned( CtrlZnRef ) )
+    then 
+      if( IfValidAnd( CtrlZnRef:VentIsRequired = 1 ) .AND.
+          IfValidAnd( CtrlZnRef:VentSysRef:Name = Name ) )
+      then "Continuous"
+      else "Cycling"
+      endif
+    else UNDEFINED
+    endif endif 
+  CHECKCODE
+    if( Type = "Baseboard" .OR. IsExhSys)
+    then UNCHANGED
+    else if( LocalCompAssigned( CtrlZnRef ) )
+    then 
+      if( IfValidAnd( CtrlZnRef:VentSysRef:Name = Name ) .AND.
+          IfValidAnd( CtrlZnRef:VentSrc = "Forced" ) .AND.
+          IfValidAnd( FanCtrl = "Cycling" ) )
+      then
+        PostError("ZoneSystem '%s' has fan control = 'Cycling', but this 
+                   system is defined to provide 'Forced' ventilation
+                   for control zone '%s'.", Name, CtrlZnRef)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif     
+  SIZING
+    if( Type = "Baseboard" .OR. IsExhSys )
+    then UNDEFINED 
+    else if( BaseSysNum > 0 )
+    then 
+      if( SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FlrArea ) > 0 )
+      then "Continuous" 
+      else "Cycling"
+      endif
+    else u:FanCtrl
+    endif endif
+  ANNUAL
+    z:FanCtrl
+ENDRULE
+
+
+// ********** Night-Cycle HVAC Fan Control *************************************
+// Currently for AirSys only
+RULE AirSys:NightCycleFanCtrl
+  DESCRIPTION
+    "The HVAC system control method when heating, cooling and fan systems are 
+     scheduled to be 'Off'."
+  HELP
+    "For this control, the space is controlled to the setback or setup temperature 
+     only; this control is not equivalent to night purge control."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS 
+    Default
+;  OPTION - Defined in BEMEnums, for reference
+;    StaysOff
+;    CycleOnCallAnyZone
+;    CycleOnCallPrimaryZone
+;    CycleZoneFansOnly
+;  DEFAULT - Defined in BEMEnums, for reference
+;    CycleOnCallAnyZone
+  CHECKCODE : T24N
+    if( NumTrmlUnitAllTypes != NumTrmlUnitFanPowered .AND. 
+        NightCycleFanCtrl = "CycleZoneFansOnly" )
+    then
+      PostWarning("System '%s' specifies night cycling as 'CycleZoneFansOnly'.  
+                   This is only allowed if all TerminalUnits are fan-powered.
+                   CycleOnCallAnyZone will be simulated.", Name)
+    else if( NightCycleFanCtrl = "StaysOff" )
+    then
+      PostWarning("System '%s' specifies night cycling as 'StaysOff'.  
+                   This is only allowed in Research mode.
+                   CycleOnCallAnyZone will be simulated.", Name)   
+    else UNCHANGED
+    endif endif
+  CHECKCODE : S901G ECBC
+    if( NightCycleFanCtrl = "StaysOff" )
+    then 
+      PostError("System '%s' requires fans to cycle on and off to meet
+                 heating and cooling loads during unoccupied hours.", Name)
+    else
+    if( NumTrmlUnitAllTypes != NumTrmlUnitFanPowered .AND. 
+        NightCycleFanCtrl = "CycleZoneFansOnly" )
+    then
+      PostError("System '%s' specifies night cycling as 'CycleZoneFansOnly'.  
+                 This is only allowed if all TerminalUnits are fan-powered.", Name)
+    else UNCHANGED
+    endif endif
+  SIZING
+    if( IsExhSys )       
+    then UNDEFINED
+    else
+    if( BaseSysNum > 0 )
+    then
+      if( IsSglZnSys )
+      then "CycleOnCallPrimaryZone"
+      else "CycleOnCallAnyZone"
+      endif
+    else
+    if( IsSglZnSys .OR. FanCtrl = "Cycling" ) // See issue 1099 
+    then "CycleOnCallPrimaryZone"
+    else
+    if( NumTrmlUnitAllTypes = NumTrmlUnitFanPowered.AND. 
+        NightCycleFanCtrl = "CycleZoneFansOnly" )
+    then // All AirSys TrmlUnits are fan powered, cycling zone fans only is allowed
+      "CycleZoneFansOnly"
+    else // System must cycle on any zone
+      "CycleOnCallAnyZone"
+    endif endif endif endif
+  ANNUAL  
+    z:NightCycleFanCtrl
+ENDRULE
+RULE AirSys:NightCycleTstatTolerance
+  DESCRIPTION
+    "The amount by which the zone temperature must fall outside the the current
+     zone heating and cooling setpoints for night cycling to occur."
+  HELP
+    "The default is 1/2 the throttling range of the control zone, if defined, 
+     or other thermal zone served."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    °F
+  SIZING
+    if( NightCycleFanCtrl != "StaysOff" )
+    then
+      if( LocalCompAssigned( CtrlZnRef ) )
+      then ValidOr( CtrlZnRef:ThrtlgRng, 2 )
+      else if( LocalCompAssigned( MaxAreaThrmlZnRef ) )
+      then ValidOr( MaxAreaThrmlZnRef:ThrtlgRng, 2 )
+      else 2
+      endif endif
+    else UNDEFINED
+    endif   
+  ANNUAL  
+    z:NightCycleTstatTolerance
+ENDRULE
+RULE AirSys:NightCycleRunTime
+  DESCRIPTION
+    "The time in seconds the system will run after it is night cycled on."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    seconds
+  SIZING
+    if( NightCycleFanCtrl != "StaysOff" )
+    then
+      if( FanCtrl = "Cycling" )
+      then 3600 // 60 minutes
+      else 1800 // 30 minutes
+      endif
+    else UNDEFINED
+    endif    
+  ANNUAL  
+    z:NightCycleRunTime
+ENDRULE
+
+// Currently not supported by E+ for ZoneHVAC
+RULE ZnSys:NightCycleFanCtrl
+  DESCRIPTION
+    "The HVAC system control method when heating, cooling and fan systems are 
+     scheduled to be 'Off'"
+  HELP
+    "** Night cycle control of ZoneSystems is not currently supported.**
+     For this control, the space is controlled to the setback or setup temperature 
+     only; this control is not equivalent to night purge control."
+  REFERENCE 
+    PRM-RM 3.6.2.2
+  INPUTCLASS 
+    NotInput
+  OPTION
+    StaysOff
+    CycleOnCallPrimaryZone
+  DEFAULT
+    "CycleOnCallPrimaryZone"
+  SIZING
+    if( IsExhSys )     
+    then UNDEFINED
+    else "CycleOnCallPrimaryZone"
+    endif
+  ANNUAL  
+    z:NightCycleFanCtrl
+ENDRULE
+RULE ZnSys:NightCycleTstatTolerance
+  DESCRIPTION
+    "The amount by which the zone temperature must fall outside the the current
+     zone heating and cooling setpoints for night cycling to occur."
+  HELP
+    "The default is 1/2 the throttling range of the control zone, if defined, 
+     or other thermal zone served."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    °F
+  SIZING
+    if( NightCycleFanCtrl != "StaysOff" )
+    then
+      if( LocalCompAssigned( CtrlZnRef ) )
+      then ValidOr( CtrlZnRef:ThrtlgRng, 2 )
+      else if( LocalCompAssigned( MaxAreaThrmlZnRef ) )
+      then ValidOr( MaxAreaThrmlZnRef:ThrtlgRng, 2 )
+      else 2
+      endif endif
+    else UNDEFINED
+    endif
+  ANNUAL  
+    z:NightCycleTstatTolerance
+ENDRULE
+RULE ZnSys:NightCycleRunTime
+  DESCRIPTION
+    "The time in seconds the system will run after it is night cycled on."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    seconds
+  SIZING
+    if( NightCycleFanCtrl != "StaysOff" )
+    then
+      if( FanCtrl = "Cycling" )
+      then 3600 // 60 minutes
+      else 1800 // 30 minutes
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL  
+    z:NightCycleRunTime
+ENDRULE
+
+// ********** Optimum Start Control ********************************************
+RULE AirSys:OptStart
+  DESCRIPTION
+    "The control capability to adjust scheduling of system start time based on 
+     building loads."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS : T24N_2013
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+  CHECKCODE : S901G ECBC
+    if( IfValidAnd(OptStart = 0) .AND. IfValidAnd(SupFanCap > 10000) )
+    then 
+      PostError("AirSystem '%s' has Supply Fan Capacity greater than 10,000 cfm
+                 and therefore must have Optimum Start Control.", Name)
+    else UNCHANGED
+    endif
+  CHECKCODE : T24N_2016
+    if( IsNew .AND. OptStart = 0 .AND. IsMultiZnSys .AND. 
+        IfValidAnd( CtrlSysType = "DDCToZone" ) )
+    then 
+      PostError("AirSystem '%s' has DDCToZone control. OptimumStart is 
+                 required.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    0 // OptStart not used for sizing
+  ANNUAL : S901G ECBC
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(SupFanCap > 10000) ) then 1 else 0 endif
+    else u:OptStart
+    endif
+  ANNUAL : T24N_2016
+    if( BaseSysNum > 0 )
+    then
+      if( IsMultiZnSys .AND. IfValidAnd( CtrlSysType = "DDCToZone" ) )
+      then 1
+      else 0
+      endif
+    else u:OptStart
+    endif
+  ANNUAL : T24N_2013
+    0  // OptStart not applicable
+ENDRULE
+RULE ZnSys:OptStart
+  DESCRIPTION
+    "The control capability to adjust scheduling of system start time based on 
+     building loads."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS : T24N
+    NotInput   IgnoreUserInput  "ZnSys:OptStart removed in transition from 2013 3d to 3e and 2016.1 to 2016.2"
+  INPUTCLASS : S901G
+    Default
+  DEFAULT
+    0
+  CHECKCODE : S901G
+    if( IfValidAnd(OptStart = 0) .AND. IfValidAnd(SupFanCap > 10000) )
+    then 
+      PostError("Zone System '%s' has Supply Fan Capacity greater than 10,000 cfm
+                 and therefore must have Optimum Start Control.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    0 // OptStart not used for sizing
+  ANNUAL : S901G
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(SupFanCap > 10000) ) then 1 else 0 endif
+    else u:OptStart
+    endif
+  ANNUAL
+    0 // OptStart not supported for ZnSys
+ENDRULE
+// Optimum Start Control
+RULE AirSys:OptStartCtrl
+  DESCRIPTION
+    "The control capability to adjust scheduling of system start time based on 
+     building loads."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G
+    Default
+  OPTION
+    None
+    ControlZone
+    AnyZone
+  DEFAULT
+    if( OptStart = 1 ) 
+    then
+      if( IsMultiZnSys .AND. IfValidAnd( CtrlSysType = "DDCToZone"  ) )
+      then "AnyZone"
+      else if( IsSglZnSys .AND. IsExhSys = 0 )
+      then "ControlZone"
+      else "None"
+      endif endif
+    else "None"
+    endif
+  SIZING
+   "None"  // Optimum start not used for sizing
+  ANNUAL : S901G
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(OptStart = 1) )
+      then
+        if( IfValidAnd(Type = "PVAV") .OR. IfValidAnd(Type = "VAV") )
+        then "AnyZone"
+        else if( IfValidAnd(IsExhSys != 0) )
+        then UNDEFINED
+        else "ControlZone"
+        endif endif
+      else "None"
+      endif
+    else if (LocalStatus( u:OptStartCtrl ) > 0)
+    then
+      u:OptStartCtrl
+    else  UNDEFINED
+    endif endif
+  ANNUAL : T24N_2013
+    "None" // OptStart not applicable
+  ANNUAL : T24N_2016
+    if( BaseSysNum > 0 )
+    then
+      if( OptStart = 1 ) 
+      then
+        if( IsMultiZnSys .AND. IfValidAnd( CtrlSysType = "DDCToZone"  ) )
+        then "AnyZone"
+        else if( IsSglZnSys .AND. IsExhSys = 0 )
+        then "ControlZone"
+        else "None"
+        endif endif
+      else UNDEFINED
+      endif
+    else u:OptStartCtrl
+    endif
+ENDRULE
+RULE ZnSys:OptStartCtrl
+  DESCRIPTION
+    "The control capability to adjust scheduling of system start time based on 
+     building loads."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G
+    Default
+  OPTION
+    None
+    ControlZone
+    AnyZone
+  DEFAULT : S901G
+    if( IfValidAnd(OptStart = 1) )
+    then
+      if( IfValidAnd(IsExhSys != 0) )
+      then "None"
+      else "ControlZone"
+      endif
+    else UNDEFINED
+    endif
+  DEFAULT
+    "None"
+  CHECKCODE : S901G
+    if( IfValidAnd(OptStartCtrl = "None") .AND. IfValidAnd(SupFanCap > 10000) )
+    then 
+      PostError("Zone System '%s' has Supply Fan Capacity greater than 10,000 cfm
+                 and therefore must have Optimum Start Control.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    "None" // OptStart not used for sizing
+  ANNUAL : S901G
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(SupFanCap > 10000) )
+      then
+        if( IfValidAnd(IsExhSys != 0) )
+        then "None"
+        else "ControlZone"
+        endif
+      else UNDEFINED
+      endif
+    else u:OptStartCtrl
+    endif
+  ANNUAL
+    "None" // OptStart not supported for ZnSys
+ENDRULE
+// Optimum Start Maximum Value
+RULE AirSys:OptStartMaxVal
+  DESCRIPTION
+    "This is the maximum number of hours that a system can start before occupancy."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+RULE ZnSys:OptStartMaxVal
+  DESCRIPTION
+    "This is the maximum number of hours that a system can start before occupancy."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+// Optimum Start Cooling Gradient
+RULE AirSys:OptStartClgGradient
+  DESCRIPTION
+    "Initial value of temperature gradient (C/hour) for cooling operation."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+RULE ZnSys:OptStartClgGradient
+  DESCRIPTION
+    "Initial value of temperature gradient (C/hour) for cooling operation."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+// Optimum Start Heating Gradient
+RULE AirSys:OptStartHtgGradient
+  DESCRIPTION
+    "Initial value of temperature gradient (C/hour) for heating operation."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+RULE ZnSys:OptStartHtgGradient
+  DESCRIPTION
+    "Initial value of temperature gradient (C/hour) for heating operation."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 3 else UNDEFINED endif
+ENDRULE
+// Optimum Start Number of Previous Days
+RULE AirSys:OptStartNumDays
+  DESCRIPTION
+    "The value of optimal start time for number of days enetered here will be
+     used to determine the adaptive gradients."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 2 else UNDEFINED endif
+ENDRULE
+RULE ZnSys:OptStartNumDays
+  DESCRIPTION
+    "The value of optimal start time for number of days enetered here will be
+     used to determine the adaptive gradients."
+  INPUTCLASS
+    NotInput
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( OptStart = 1 ) then 2 else UNDEFINED endif
+ENDRULE
+
+
+// ********** Cooling Supply Air Temperature ***********************************
+// =========================== AirSystem ======================================
+RULE AirSys:ClgDsgnSupAirTemp
+  DESCRIPTION
+    "The design cooling supply air temperature of single duct system or the cold
+     duct of a dual duct system. This is also the minimum supply air temperature
+     setpoint for SZVAV systems in cooling mode."
+  REFERENCE 
+    NACM Section 5.7.2.3    
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    50
+  COMMONMAXIMUM
+    80
+  UNITS 
+    °F
+  DEFAULT
+    if( IfValidAnd( ClgCap = 0 ) )
+    then UNDEFINED
+    else if( SubType = "CRAC" .OR. SubType = "CRAH" )
+    then 60
+    else Max( 55, MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp ) )
+    endif endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then
+      if( SubType = "CRAC" .OR. SubType = "CRAH" )
+      then 60
+      else 
+      switch ( Type )
+        case "SZAC"      :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "SZHP"      :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "PVAV"      :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "VAV"       :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "SZVAVAC"   :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "SZVAVHP"   :  MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        case "HV"        :  UNDEFINED
+        default : UNDEFINED
+      endswitch
+      endif
+    else if( LocalStatus( u:ClgDsgnSupAirTemp ) > 0 )
+    then u:ClgDsgnSupAirTemp
+    else if( IfValidAnd( ClgCap > 0 ) )
+    then Max( 55, MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp ) )
+    else UNDEFINED
+    endif endif endif
+  ANNUAL 
+    z:ClgDsgnSupAirTemp
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:ClgDsgnSupAirTemp
+  DESCRIPTION
+    "The design cooling supply air temperature of the system."
+  REFERENCE 
+    NACM Section 5.7.2.3    
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    50
+  COMMONMAXIMUM
+    80
+  UNITS 
+    °F
+  DEFAULT
+    if( IfValidAnd( ClgCap = 0 ) )
+    then UNDEFINED
+    else Max( 55, MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp ) )
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type )
+        case "PTAC" : MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)                          
+        case "PTHP" : MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)   
+        case "FPFC" : MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp)
+        default : UNDEFINED
+      endswitch
+    else if( LocalStatus( u:ClgDsgnSupAirTemp ) > 0 )
+    then u:ClgDsgnSupAirTemp
+    else if( IfValidAnd( ClgCap > 0 ) )
+    then Max( 55, MinRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:ClgDsgnSupAirTemp ) )
+    else UNDEFINED
+    endif endif endif
+  ANNUAL 
+    z:ClgDsgnSupAirTemp
+ENDRULE
+
+
+// ********** Heating Supply Air Temperature ***********************************
+// =========================== AirSystem ======================================
+RULE AirSys:HtgDsgnSupAirTemp
+  DESCRIPTION
+    "The design heating supply air temperature of single duct system or the hot
+     duct of a dual duct system.  This is also the maximum supply air temperature
+     setpoint for SZVAV systems in heating mode."  
+  REFERENCE 
+    NACM Section 5.7.2.4    
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    50
+  COMMONMAXIMUM
+    110
+  UNITS 
+    °F
+  DEFAULT : T24N
+    if( SumChildren( AirSeg:CoilHtgCnt ) = 0 ) 
+    then UNDEFINED
+    else if( Type = "PVAV" .OR. Type = "VAV" )
+    then 60
+    else Max( 95, MaxRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp) > 0 )
+    endif endif
+  DEFAULT : S901G ECBC
+    if( SumChildren( AirSeg:CoilHtgCnt ) = 0 ) 
+    then UNDEFINED
+    else if( Type = "PVAV" .OR. Type = "VAV" )
+    then 60
+    else if(Type = "HV" )
+    then 105
+    else  Max( 90, MaxRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp) > 0 )
+    endif endif endif
+  SIZING : T24N
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "PVAV" .OR. Type = "VAV" )
+      then 60
+      else MaxRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+      endif
+    else if( LocalStatus( HtgDsgnSupAirTemp ) > 0 )
+    then u:HtgDsgnSupAirTemp
+    else if( SumChildren( AirSeg:CoilHtgCnt ) > 0 ) 
+    then 95 
+    else UNDEFINED
+    endif endif endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "PVAV" .OR. Type = "VAV" )
+      then 60
+      else if(Type = "HV" )
+      then 105 
+      else MaxRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+      endif endif
+    else if( LocalStatus( HtgDsgnSupAirTemp ) > 0 )
+    then u:HtgDsgnSupAirTemp
+    else if( SumChildren( AirSeg:CoilHtgCnt ) > 0 ) 
+    then 95 
+    else UNDEFINED
+    endif endif endif
+  ANNUAL 
+    z:HtgDsgnSupAirTemp
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:HtgDsgnSupAirTemp
+  DESCRIPTION
+    "The design heating supply air temperature of the system."
+  REFERENCE 
+    NACM Section 5.7.2.4    
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    50
+  COMMONMAXIMUM
+    110
+  DEFAULT : T24N
+    if( CoilHtgCnt = 0 ) 
+    then UNDEFINED
+    else 95
+    endif
+  DEFAULT : S901G ECBC
+    if( CoilHtgCnt = 0 ) 
+    then UNDEFINED
+    else 
+      switch ( Type )
+        case "SZAC"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+        case "SZHP"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+        case "PTAC"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+        case "PTHP"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)   
+        case "FPFC"      :  95
+        case "Baseboard" :  95     
+        default : UNDEFINED
+      endswitch
+    endif
+  SIZING : T24N
+    if( BaseSysNum > 0 )
+    then 95
+    else if( LocalStatus( HtgDsgnSupAirTemp ) > 0 )
+    then u:HtgDsgnSupAirTemp
+    else if( CoilHtgCnt > 0 ) 
+    then 95 
+    else UNDEFINED
+    endif endif endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type )   
+        case "PTAC"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+        case "PTHP"      :  MaxRevRef(ThrmlZn:PriAirCondgSysRef, ThrmlZn:HtgDsgnSupAirTemp)
+        case "FPFC"      :  95
+        case "Baseboard" :  95 
+        default : UNDEFINED
+      endswitch
+    else if( LocalStatus( HtgDsgnSupAirTemp ) > 0 )
+    then u:HtgDsgnSupAirTemp
+    else if( CoilHtgCnt > 0 ) 
+    then 95 
+    else UNDEFINED
+    endif endif endif
+  ANNUAL 
+    z:HtgDsgnSupAirTemp
+ENDRULE
+
+
+// ********** Supply Air Setpoint Control (Single Duct or Cold Duct ************
+RULE NEW AirSys:IsWarmestCtrl
+  DATATYPE
+    Integer
+  LONGFORM
+    IsWarmestControl
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "WarmestResetFlowFirst" ) .OR. 
+        IfValidAnd( ClgCtrl = "WarmestResetTemperatureFirst" ) .OR.
+        IfValidAnd( ClgCtrl = "WarmestReset" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+// =========================== AirSystem ======================================
+RULE AirSys:ClgCtrl
+  DESCRIPTION
+    "The method of controlling the supply air temperature of a single duct system,
+     or the cold duct of dual duct system."
+  HELP
+    "NoSATControl means the heating and cooling coils cycle on/off based
+     on control zone thermostat signal for heating/cooling. There is no controller
+     to maintain a specific supply air temperature (SAT).
+
+     Fixed means that a constant SAT setpoint is used.
+
+     Scheduled means the SAT is adjusted based on a user-specified
+     schedule.
+
+     OutdoorAirReset means the SAT is adjusted based on
+     the outdoor air temperature.
+
+     WarmestResetFlowFirst means the SAT is adjusted
+     to meet the demands of warmest zone by adjusting supply air flow
+     before temperature. 
+
+     WarmestResetTemperatureFirst means the SAT is
+     adjusted to meet the demands of warmest zone by adjusting supply air
+     temperature before reseting flow.
+
+     WarmestReset means the SAT is adjusted to meet the demands of warmest
+     zone by adjusting supply air flow before reseting temperature."
+  REFERENCE 
+    NACM Section 5.7.2.3    
+  INPUTCLASS
+    Default
+;  OPTION - Defined in BEMEnums, for reference
+;    NoSATControl
+;    Fixed
+;    OutsideAirReset
+;    Scheduled
+;    WarmestResetFlowFirst
+;    WarmestResetTemperatureFirst
+;    FixedDualSetpoint  // See issue 1220 for background
+;    ScheduledDualSetpoint // See issue 1220 for background
+;    StagedSetpoint  // Currently not supported
+;  DEFAULT - Defined in BEMEnums, for reference
+;    See BEMEnums
+  CHECKCODE
+    if( IsMultiZnSys = 0  .AND. IsWarmestCtrl ) 
+    then 
+      PostError("The 'WarmestReset*' control schemes for AirSystem '%s'
+                 are not valid selections for Type = '%s' .", Name, Type)
+    else if( IsMultiZnSys )
+    then 
+      if( IfValidAnd( CtrlSysType = "Other" ) .AND. IsWarmestCtrl )
+      then
+        PostError("The 'WarmestReset*' control schemes for AirSystem '%s'
+                   are not valid selections for ControlSystemType = '%s' .", 
+                   Name, CtrlSysType)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    if( IsExhSys)
+    then UNDEFINED 
+    else if( IsMultiZnSys .AND. LabArea > 0 )
+    then "WarmestReset" // Use this controller, see GC issue 840
+    else
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type )     
+        case "SZAC"      :  "NoSATControl"
+        case "PVAV"      :  "Fixed" // Use Fixed for sizing
+        case "VAV"       :  "Fixed" // Use Fixed for sizing
+        case "SZVAVAC"   :  "NoSATControl"
+        case "HV"        :  "NoSATControl"
+        default : "NoSATControl"
+      endswitch
+    else if( Type = "SZVAVAC" .OR. Type = "SZVAVHP" )
+    then // See issue 677.  
+         // EnergyPlus SingleZoneReheat control used for SZVAV, and the limits for
+         // the controller are defined by ClgDsgnSupAirTemp and HtgDsgnSupAirTemp
+      "NoSATControl" 
+    else if( u:ClgCtrl = "WarmestResetFlowFirst" )
+    then // See issue 840
+      "WarmestReset"
+    else u:ClgCtrl   
+    endif endif endif endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type )     
+        case "SZAC"      :  "NoSATControl"
+        case "PVAV"      :  "WarmestReset" // Change for ANNUAL
+        case "VAV"       :  "WarmestReset" // Change for ANNUAL
+        case "SZVAVAC"   :  "NoSATControl"
+        case "HV"        :  "NoSATControl"
+        default : "NoSATControl"
+      endswitch
+    else z:ClgCtrl
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:ClgCtrl 
+  DESCRIPTION
+    "The method of controlling the supply air temperature.  For ZoneSystems,
+     currently only 'NoSATControl' is supported."
+  HELP
+    "NoSATControl means that the heating and cooling coils cycle on/off based
+     on control zone thermostat signal for heating/cooling. There is no controller
+     to maintain a specific supply air temperature (SAT)." 
+  INPUTCLASS
+    NotInput
+;  OPTION - Defined in BEMEnums, for reference
+;    NoSATControl
+;  DEFAULT - Defined in BEMEnums, for reference
+;    NoSATControl
+  SIZING
+    if( IsExhSys)
+    then UNDEFINED   
+    else "NoSATControl"
+    endif
+  ANNUAL 
+    z:ClgCtrl
+ENDRULE
+
+
+// ********** Fixed Supply Air Temp Setpoint *********************************   
+RULE AirSys:ClgFixedSupTemp
+  DESCRIPTION
+    "The fixed supply air temperature setpoint of the system or cooling coil."
+  HELP
+    "Valid if Supply Temp Control = 'Fixed' or 'FixedDualSetpoint'.
+     If 'Fixed', this value defines the setpoint for the system discharge
+     air temperature. If 'FixedDualSetpoint', this value
+     defines the leaving air temperature setpoint for the cooling coil."
+  REFERENCE 
+    NACM Section 5.7.2.3  
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "Fixed" ) .OR. 
+        IfValidAnd( ClgCtrl = "FixedDualSetpoint" ) )
+    then
+      if( IfValidAnd( ClgCap > 0 ) )
+      then ClgDsgnSupAirTemp
+      else if( IfValidAnd( HtgCap > 0 ) )
+      then HtgDsgnSupAirTemp
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( ( IfValidAnd( ClgCtrl = "Fixed" ) .OR. 
+          IfValidAnd( ClgCtrl = "FixedDualSetpoint" ) )
+        .AND. 
+        LocalStatus ( ClgFixedSupTemp ) = 0 )
+    then
+      PostError("CoolingFixedSupplyTemperature for AirSystem '%s' is required if 
+                 temperature control = 'Fixed' or 'FixedDualSetpoint'.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 .AND. ClgCtrl = "Fixed" )
+    then ClgDsgnSupAirTemp // See issue 1375
+    else
+    if( IfValidAnd( ClgCtrl = "Fixed" ) = 0 .AND.
+        IfValidAnd( ClgCtrl = "FixedDualSetpoint" ) = 0 )
+    then UNDEFINED // Not used unless these either of these two control methods are specified
+    else u:ClgFixedSupTemp
+    endif endif
+  ANNUAL 
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Not used for annual run
+    else z:ClgFixedSupTemp
+    endif 
+ENDRULE
+// See issue 1220 for background on adding HtgFixedSupTemp
+RULE AirSys:HtgFixedSupTemp
+  DESCRIPTION
+    "The supply air temperature setpoint of the heating coil."
+  HELP
+    "Only valid if Supply Temp Control = 'FixedDualSetpoint', this value
+     defines the leaving air temperature setpoint for the heating coil."
+  REFERENCE 
+    NACM Section 5.7.2.3  
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( ClgCtrl = "FixedDualSetpoint" )
+    then
+      if( IfValidAnd( HtgCap > 0 ) )
+      then HtgDsgnSupAirTemp
+      else if( IfValidAnd( ClgCap > 0 ) )
+      then ClgDsgnSupAirTemp
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( IfValidAnd( ClgCtrl = "FixedDualSetpoint" ) .AND. 
+        LocalStatus( HtgFixedSupTemp ) = 0 )
+    then 
+      PostError("HeatingFixedSupplyTemperature for AirSystem '%s' is required if 
+                 temperature control = 'FixedDualSetpoint'.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else
+    if( IfValidAnd( ClgCtrl = "FixedDualSetpoint" ) = 0 )
+    then UNDEFINED // Not used unless these either of these two control methods are specified
+    else u:HtgFixedSupTemp
+    endif endif
+  ANNUAL 
+    z:HtgFixedSupTemp
+ENDRULE
+
+
+
+// ********** SAT Reset Limits for WarmestResetFlowFirst and OutdoorAirReset ************
+// Currently for AirSys only
+RULE AirSys:ClRstSupHi
+  DESCRIPTION
+    "The maximum (high) reset supply air temperature for Temperature Ctrl =
+     OutsideAirReset and WarmestReset* options."  
+  HELP
+    "If Temperature Ctrl = OutsideAirReset, specifies the higher supply air temperature
+     setpoint at the specified corresponding outdoor air temperature. Between the 
+     corresponding outside air temperature setpoints, the supply air temperature 
+     is adjusted linearly between the reset temperature setpoints. 
+
+     If supply air temperature is reset based on 'Warmest' zone, specifies the
+     maximum supply air reset temperature."
+  REFERENCE 
+    NACM Section 5.7.2.3    
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    55
+  COMMONMAXIMUM
+    70
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl )
+    then
+      switch ( Type )
+        case "PVAV"      :  60
+        case "VAV"       :  60
+        default : UNDEFINED
+      endswitch  
+    else UNDEFINED
+    endif 
+  CHECKSIM
+    if( ( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl ) .AND.
+        LocalStatus( ClRstSupHi ) = 0 ) 
+      then
+      PostError("CoolingResetSupplyHigh for AirSystem '%s' is required if 
+                 temperature control = OutsideAirReset or Warmest.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Used fixed temp for sizing. See issue 1375
+    else
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl )
+    then u:ClRstSupHi
+    else UNDEFINED
+    endif endif
+  ANNUAL 
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type ) 
+        case "PVAV"      :  60
+        case "VAV"       :  60
+        default : UNCHANGED
+      endswitch  
+    else z:ClRstSupHi
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE AirSys:ClRstSupLow
+  DESCRIPTION
+    "The outdoor air temperature at the corresponds to the low reset supply air 
+     temperature"  
+  HELP
+    "If Temperature Ctrl = OutsideAirReset, specifies the lower supply air temperature
+     setpoint at the specified corresponding outdoor air temperature. Between the 
+     corresponding outside air temperature setpoints, the supply air temperature 
+     is adjusted linearly between the reset temperature setpoints. 
+
+     If supply air temperature is reset based on 'Warmest' zone, specifies the
+     maximum supply air reset temperature."
+  REFERENCE 
+    NACM Section 5.7.2.3
+  INPUTCLASS
+    Default
+  COMMONMINIMUM
+    50
+  COMMONMAXIMUM
+    65
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl )
+    then
+      switch ( Type )
+        case "PVAV"      :  55
+        case "VAV"       :  55
+        default : UNDEFINED
+      endswitch    
+    else UNDEFINED
+    endif 
+  CHECKSIM
+    if( ( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl ) .AND.
+        LocalStatus( ClRstSupLow ) = 0 ) 
+    then
+      PostError("CoolingResetSupplyLow for AirSystem '%s' is required if 
+                 temperature control = OutsideAirReset or Warmest.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Used fixed temp for sizing. See issue 1375
+    else
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .OR. IsWarmestCtrl )
+    then u:ClRstSupLow
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      switch ( Type ) 
+        case "PVAV"      :  55
+        case "VAV"       :  55
+        default : UNCHANGED
+      endswitch  
+    else z:ClRstSupLow
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// RstOutDrHio/Low only applicable to ClgCtrl = "OutsideAirReset"
+RULE AirSys:ClRstOutdrHi  
+  DESCRIPTION
+    "The outdoor air temperature at the corresponds to the high reset supply air 
+     temperature"  
+  HELP
+    "This is the outdoor air temperature that corresponds to high supply air reset 
+     temperature. For example, for a VAV system that resets from 55°F to 60°F 
+     depending on outdoor air temperature, this input would be likely be 55°F or lower."
+  REFERENCE 
+    NACM Section 5.7.2.3
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) )
+    then 60  
+    else UNDEFINED
+    endif 
+  CHECKSIM
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .AND. 
+        LocalStatus( ClRstOutdrHi ) = 0 )
+    then
+      PostError("CoolingResetOutdoorHigh for AirSystem '%s' is required if 
+                 temperature control = OutsideAirReset.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 .OR. IfValidAnd( ClgCtrl = "OutsideAirReset" ) = 0 )
+    then UNDEFINED // Baseline systems do not use this control scheme
+    else u:ClRstOutdrHi
+    endif
+  ANNUAL 
+    z:ClRstOutdrHi
+ENDRULE
+// -----------------------------------------------------------------------------
+RULE AirSys:ClRstOutdrLow
+  DESCRIPTION
+    "The outdoor air temperature at the corresponds to the low reset supply air 
+     temperature"  
+  HELP
+    "This is the outdoor air temperature that corresponds to low supply air reset 
+     temperature. For example, for a VAV system that resets from 55°F to 60°F 
+     depending on outdoor air temperature, this input would be likely be 60°F or higher."
+  REFERENCE 
+    NACM Section 5.7.2.3    
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) )
+    then 80  
+    else UNDEFINED
+    endif 
+  CHECKSIM
+    if( IfValidAnd( ClgCtrl = "OutsideAirReset" ) .AND. 
+        LocalStatus( ClRstOutdrHi ) = 0 )
+    then
+      PostError("CoolingResetOutdoorLow for AirSystem '%s' is required if 
+                 temperature control = OutsideAirReset.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 .OR. IfValidAnd( ClgCtrl = "OutsideAirReset" ) = 0 )
+    then UNDEFINED // Baseline systems do not use this control scheme
+    else u:ClRstOutdrLow
+    endif
+  ANNUAL 
+    z:ClRstOutdrLow
+ENDRULE                       
+       
+
+// ********** Supply Air Setpoint Schedule *************************************
+// Currently for AirSys only
+RULE AirSys:ClgSetptSchRef
+  DESCRIPTION
+    "The scheduled supply air temperature setpoint of the system or cooling coil."
+  HELP
+    "Valid if Supply Temp Control = 'Scheduled' or 'ScheduledDualSetpoint'.
+     If 'Scheduled', this schedule defines the setpoint for the system discharge
+     air temperature. If 'ScheduledDualSetpoint', this schedule
+     defines the leaving air temperature setpoint for the cooling coil."
+  REFERENCE 
+    NACM Section 5.7.2.3
+  INPUTCLASS 
+    CondRequired
+  CHECKSIM
+    if( ( IfValidAnd( ClgCtrl = "Scheduled" ) .OR. 
+          IfValidAnd( ClgCtrl = "ScheduledDualSetpoint" ) )
+        .AND. 
+        LocalCompAssigned( ClgSetptSchRef ) = 0 )
+    then
+      PostError("CoolingSetpointScheduleReference for AirSystem '%s' is required if 
+                 temperature control = 'Scheduled' or 'ScheduledDualSetpoint'.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Baseline systems do not use this control
+    else
+    if( IfValidAnd( ClgCtrl = "Scheduled" ) = 0 .AND. 
+        IfValidAnd( ClgCtrl = "ScheduledDualSetpoint" ) = 0 )
+    then UNDEFINED // Not used unless these either of these two control methods are specified
+    else u:ClgSetptSchRef
+    endif endif
+  ANNUAL 
+    z:ClgSetptSchRef
+ENDRULE
+// See issue 1220 for background on adding HtgSetptSchRef
+RULE AirSys:HtgSetptSchRef
+  DESCRIPTION
+    "The scheduled supply air temperature setpoint of the heating coil."
+  HELP
+    "Only valid if Supply Temp Control = 'ScheduledDualSetpoint', this schedule
+     defines the leaving air temperature setpoint for the heating coil."
+  REFERENCE 
+    NACM Section 5.7.2.3
+  INPUTCLASS 
+    CondRequired
+  CHECKSIM
+    if( IfValidAnd( ClgCtrl = "ScheduledDualSetpoint" ) .AND. 
+        LocalCompAssigned( HtgSetptSchRef ) = 0 )
+    then
+      PostError("HeatingSetpointScheduleReference for AirSystem '%s' is required if 
+                 temperature control = 'ScheduledDualSetpoint'.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Baseline systems do not use this control
+    else if( IfValidAnd( ClgCtrl = "ScheduledDualSetpoint" ) = 0 )
+    then UNDEFINED // Not used unless these either of these two control methods are specified
+    else u:HtgSetptSchRef
+    endif endif
+  ANNUAL 
+    z:HtgSetptSchRef
+ENDRULE
+
+
+// ********** Fan Position *****************************************************
+// =========================== AirSystem =======================================
+RULE AirSys:FanPos
+  DESCRIPTION
+    "The position of the supply fan relative to the cooling coil."  
+  REFERENCE 
+    NACM Section 5.7.3.2
+  INPUTCLASS
+    Default
+  OPTION
+    DrawThrough
+    BlowThrough  
+  DEFAULT
+    "DrawThrough"
+  SIZING
+    if( IsExhSys)
+    then UNDEFINED
+    else if( BaseSysNum > 0 )
+    then "DrawThrough"
+    else u:FanPos
+    endif endif
+  ANNUAL
+    z:FanPos
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:FanPos
+  INPUTCLASS
+    Prescribed
+  OPTION
+    DrawThrough
+    BlowThrough  
+  DEFAULT
+    "DrawThrough"
+  SIZING
+    if( Type = "Baseboard" .OR. IsExhSys)
+    then UNDEFINED
+    else "DrawThrough"
+    endif
+  ANNUAL
+    z:FanPos 
+ENDRULE
+
+
+// ********** Preheat Coil Control *********************************************
+RULE AirSys:PrehtCtrl
+  RULESETS
+    S901G
+  DESCRIPTION
+    "The method of controlling the supply air temperature of a single duct system,
+     or the hot duct of dual duct system."
+  HELP
+    "Fixed means that a constant SAT setpoint is used."
+  INPUTCLASS
+    Default
+  OPTION
+    Fixed
+  DEFAULT
+    if( SumChildren( AirSeg:CoilHtgCnt ) = 0 )
+    then UNDEFINED
+    else
+      if( Type = "PVAV" .OR. Type = "VAV" )
+      then "Fixed"
+      else UNDEFINED
+      endif
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then
+      if( BaseSysNum = 5 .OR. BaseSysNum = 6 .OR. BaseSysNum = 7 .OR. BaseSysNum = 8 )
+      then "Fixed"
+      else UNDEFINED
+      endif
+    else u:PrehtCtrl
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( BaseSysNum = 5 .OR. BaseSysNum = 6 .OR. BaseSysNum = 7 .OR. BaseSysNum = 8 )
+      then "Fixed"
+      else UNDEFINED
+      endif
+    else z:PrehtCtrl
+    endif
+ENDRULE
+RULE AirSys:PrehtFixedSupTemp
+  RULESETS
+    S901G
+  DESCRIPTION
+    "The supply air temperature setpoint for 'Fixed' temperature control of 
+     a preheat coil."
+  COMMONMINIMUM
+    35
+  COMMONMAXIMUM
+    55
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( IfValidAnd(PrehtCtrl = "Fixed") )
+    then
+      if( IfValidAnd(ClgFixedSupTemp > 0) ) then ( ClgFixedSupTemp - 2 ) else
+      if( IfValidAnd(ClRstSupLow > 0) ) then ( ClRstSupLow - 2 ) else 50
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( IfValidAnd(PrehtCtrl = "Fixed") .AND. IfValidAnd(PrehtFixedSupTemp >= 0) )
+    then 
+      if( IfValidAnd(ClgFixedSupTemp >= 0) )
+      then
+        if( PrehtFixedSupTemp > ClgFixedSupTemp - 2 .OR. IfValidAnd(PrehtFixedSupTemp = 0) )
+        then
+        PostError("The preheat coil supply air temperature on AirSystem '%s' must be greater
+                   than zero and a minimum of 2F less than the Fixed Supply Temperature", Name)
+        else
+          if( IfValidAnd(ClRstSupLow >= 0) )
+          then
+            if( PrehtFixedSupTemp > ClRstSupLow - 2 .OR. IfValidAnd(PrehtFixedSupTemp = 0) )
+	    then
+            PostError("The preheat coil supply air temperature on AirSystem '%s' must be greater
+                       than zero and a minimum of 2F less than the Reset Supply Low Temperature", Name)
+            else UNCHANGED
+            endif
+          else UNCHANGED
+          endif
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(PrehtCtrl = "Fixed") )
+      then 50
+      else UNDEFINED
+      endif
+    else
+      if( IfValidAnd(PrehtCtrl = "Fixed") )
+      then u:PrehtFixedSupTemp
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL 
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd(PrehtCtrl = "Fixed") )
+      then 50
+      else UNDEFINED
+      endif
+    else z:PrehtFixedSupTemp
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE AirSys:OptStartRpt
+  DESCRIPTION
+    "A text string if Optimum Start is selected for the proposed model."
+  INPUTCLASS 
+    NotInput
+  ANNUAL_PROPOSED
+    if( IfValidAnd(OptStart = 1) )
+    then "Optimum Start"
+    else
+     if( IfValidAnd(OptStart = 0) )
+     then "No Optimum Start"
+     else UNDEFINED
+     endif
+    endif
+ENDRULE
+
+// Staged setpoint temperature control not supported by E+
+;// **********  Cooling Supply Air Temperature Reset by Stage *******************
+;RULE AirSys:ClgSupAirStageTempDiff[1]
+;  DESCRIPTION
+;    "The cooling supply air temperature setpoint deviation from the cooling design
+;     supply air temperature for the first [1] stage of mechanical cooling."
+;  HELP
+;    "The temperature reset is expressed as an array, with each entry a deviation 
+;     from the design cooling supply air temperature (CoilHtg:DsgnClgTemp). For 
+;     example, if the first stage of cooling calls for a 5.0F reset up from the 
+;     design cooling temperature (i.e. 55F to 60F, this array property value is 
+;     '5.0'."
+;  REFERENCE 
+;    NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    Optional
+;  COMMONMINIMUM
+;    0.0
+;  COMMONMAXIMUM
+;    10.0
+;  DEFAULT
+;    if( ClgCtrl = "Warmest" )
+;    then UNCHANGED
+;    else UNDEFINED
+;    endif   
+;  PROPOSED
+;    if( p:ClgCtrl = "Warmest" )
+;    then u:ClgSupAirStageTempDiff[1]
+;    else UNDEFINED
+;    endif      
+;  BASELINESIZING
+;// Sizing peformed with constant volume/one-stage system (PSZ-AC)
+;    UNDEFINED
+;  BASELINE 
+;    if( b:ClgCtrl = "Warmest" )
+;    then 5.0
+;    else UNDEFINED
+;    endif   
+;ENDRULE
+;// -----------------------------------------------------------------------------
+;RULE AirSys:ClgSupAirStageTempDiff[2]
+;  DESCRIPTION
+;    "The cooling supply air temperature setpoint deviation from the cooling design
+;     supply air temperature for the second [2] stage of mechanical cooling."
+;  HELP
+;    "The temperature reset is expressed as an array, with each entry a deviation 
+;     from the design cooling supply air temperature (CoilHtg:DsgnClgTemp). For 
+;     example, for a system with two cooling stages, this array property value is 
+;     '0.0'."
+;  REFERENCE 
+;     NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    Optional
+;  COMMONMINIMUM
+;    0.0
+;  COMMONMAXIMUM
+;    10.0
+;  DEFAULT
+;    if( ClgCtrl = "Warmest" )
+;    then UNCHANGED
+;    else UNDEFINED
+;    endif     
+;  PROPOSED
+;    if( p:ClgCtrl = "Warmest" )
+;    then u:ClgSupAirStageTempDiff[2]
+;    else UNDEFINED
+;    endif          
+;  BASELINESIZING
+;// Sizing peformed with constant volume/one-stage system (PSZ-AC)
+;    UNDEFINED
+;  BASELINE  
+;    if( b:ClgCtrl = "Warmest" )
+;    then 0.0
+;    else UNDEFINED
+;    endif  
+;ENDRULE
+;
+;// ********** Heating Supply Air Temperature Reset by Stage ********************
+;RULE AirSys:HtgSupAirStageTempDiff[1]
+;  DESCRIPTION
+;    "The heating supply air temperature setpoint deviation from the cooling design
+;     supply air temperature for the first [1] stage of heating."
+;  HELP
+;    "The temperature reset is expressed as an array, with each entry a deviation 
+;     from the design heating supply air temperature (CoilHtg:DsgnHtgTemp). For 
+;     example, if the first stage of heating calls for a 10F reset down from the 
+;     design heating temperature (i.e. 105F to 95F), this array property value is 
+;     '-10.0'."
+;  REFERENCE 
+;    NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    Optional
+;  COMMONMINIMUM
+;    -20.0
+;  COMMONMAXIMUM
+;    0.0
+;  DEFAULT
+;    if( u:HtgCtrl = "Coldest" )
+;    then UNCHANGED
+;    else UNDEFINED
+;    endif   
+;  PROPOSED
+;    if( p:HtgCtrl = "Coldest" )
+;    then u:HtgSupAirStageTempDiff[1]
+;    else UNDEFINED
+;    endif       
+;  BASELINESIZING
+;// Sizing peformed with constant volume/one-stage system (PSZ-AC)
+;    UNDEFINED
+;  BASELINE 
+;    if( b:HtgCtrl = "Coldest" )
+;    then -10.0
+;    else UNDEFINED
+;    endif  
+;ENDRULE
+;// -----------------------------------------------------------------------------
+;RULE AirSys:HtgSupAirStageTempDiff[2]
+;  DESCRIPTION
+;    "The cooling supply air temperature setpoint deviation from the cooling design
+;     supply air temperature for the second [2] stage of mechanical cooling."
+;  HELP
+;    "The temperature reset is expressed as an array, with each entry a deviation 
+;     from the design heating supply air temperature (CoilHtg:DsgnClgTemp). For 
+;     example, for a system with two heating stages, this array property value is 
+;     '0.0'."
+;  REFERENCE 
+;    NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    Optional
+;  COMMONMINIMUM
+;    -20.0
+;  COMMONMAXIMUM
+;    0.0
+;  DEFAULT
+;    if( HtgCtrl = "Coldest" )
+;    then UNCHANGED
+;    else UNDEFINED
+;    endif    
+;  PROPOSED
+;    if( p:HtgCtrl = "Coldest" )
+;    then u:HtgSupAirStageTempDiff[2]
+;    else UNDEFINED
+;    endif    
+;  BASELINESIZING
+;// Sizing peformed with constant volume/one-stage system (PSZ-AC)
+;    UNDEFINED
+;  BASELINE  
+;    if( b:HtgCtrl = "Coldest" )
+;    then 0.0
+;    else UNDEFINED
+;    endif 
+;ENDRULE
+
+
+
+// NOTE:
+// The following properties are only appliable to the control of the hot duct of 
+// a dual duct system.  Dual duct systems are only described by AirSys objects, 
+// so none of the following properties are relevant to ZnSys
+
+;// ********** Heating Air Temperature Control **********************************
+;// =========================== AirSystem ======================================
+;RULE AirSys:HtgCtrl
+;  DESCRIPTION
+;    "The method of controlling the hot duct supply air temperature in a dual 
+;     duct system." 
+;  HELP
+;    "" 
+;  REFERENCE 
+;    NACM Section 5.7.2.4      
+;  INPUTCLASS
+;    Optional
+;;  OPTION - Defined in BEMEnums, for reference
+;;    Fixed
+;;    WarmestResetFlowFirst
+;;    OutsideAirReset
+;;    Scheduled
+;;    StagedSetpoint  // Currently not supported
+;;  DEFAULT - Defined in BEMEnums, for reference
+;;    See BEMEnums
+;  CHECKSIM
+;    if( LocalStatus( u:HtgCtrl ) > 0 .AND. u:Type != "DFDD" )
+;      then
+;      PostError("Only applicable to dual duct systems")
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    u:HtgCtrl 
+;  BASELINESIZING
+;    UNDEFINED
+;  BASELINE  
+;    UNDEFINED
+;ENDRULE
+;
+;
+;// ********** Heating Setpoint Schedule ****************************************
+;RULE AirSys:HtgSetptSchRef
+;  DESCRIPTION
+;    "The scheduled supply air temperature of the hot duct in a dual duct system"
+;  HELP
+;    ""
+;  REFERENCE 
+;    NACM Section 5.7.2.4
+;  INPUTCLASS 
+;    Optional
+;  CHECKSIM
+;    if( LocalStatus( u:HtgSetptSchRef ) > 0 )
+;      then
+;      if( u:Type != "DFDD" )
+;        then
+;        PostError("Only applicable to dual duct systems")
+;      else if( u:HtgCtrl = "Scheduled" )
+;      then UNCHANGED
+;      else 
+;      PostError("Only applicable to dual duct systems with HtgCtrl = Scheduled")
+;      endif endif
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    if( u:HtgCtrl = "Scheduled" )
+;    then u:HtgSetptSchRef
+;    else UNDEFINED
+;    endif
+;  BASELINESIZING
+;    UNDEFINED
+;  BASELINE  
+;    UNDEFINED
+;ENDRULE
+;
+;// ********** SAT Reset Limits for OutdoorAirReset and WarmestResetFlowFirst ************
+;RULE AirSys:HtRstSupHi
+;  DESCRIPTION
+;    "The maximum (high) reset supply air temperature for the hot duct of dual duct systems."  
+;  HELP
+;    "If heating supply air temperature is reset based on outside air temperature, 
+;     specifies the supply air high setpoint to at the outside drybulb low.
+;     If cooling supply air temperature is reset based on warmest zone, 
+;     specifies the maximum supply air temperature for reset."
+;  REFERENCE 
+;    NACM Section 5.7.2.4    
+;  INPUTCLASS
+;    Optional
+;  CHECKSIM
+;    if( LocalStatus( u:HtRstSupHi ) > 0 )
+;      then
+;      if( u:Type != "DFDD" )
+;        then
+;        PostError("Only applicable to dual duct systems")
+;      else if( u:HtgCtrl = "OutsideAirReset" .OR. u:HtgCtrl = "WarmestResetFlowFirst" )
+;      then UNCHANGED
+;      else 
+;      PostError("Only applicable to dual duct systems with HtgCtrl = OutsideAirReset
+;                 or WarmestResetFlowFirst")
+;      endif endif
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    u:HtRstSupHi
+;  BASELINESIZING
+;    UNDEFINED  // Not used for baseline design
+;  BASELINE  
+;    UNDEFINED  // Not used for baseline design
+;ENDRULE
+;
+;// -----------------------------------------------------------------------------
+;RULE AirSys:HtRstSupLow
+;  DESCRIPTION
+;    "The minimum (low) reset supply air temperature during heating."  
+;  HELP
+;    "If heating supply air temperature is reset based on outside air temperature, 
+;     specifies the supply air low setpoint to at the outside drybulb high.
+;     If heating supply air temperature is reset based on warmest zone, 
+;     specifies the minimum supply air temperature for reset."
+;  REFERENCE 
+;    NACM Section 5.7.2.4
+;  INPUTCLASS
+;    Optional
+;  CHECKSIM
+;    if( LocalStatus( u:HtRstSupLow ) > 0 )
+;      then
+;      if( u:Type != "DFDD" )
+;        then
+;        PostError("Only applicable to dual duct systems")
+;      else if( u:HtgCtrl = "OutsideAirReset" .OR. u:HtgCtrl = "WarmestResetFlowFirst" )
+;      then UNCHANGED
+;      else 
+;      PostError("Only applicable to dual duct systems with HtgCtrl = OutsideAirReset
+;                 or WarmestResetFlowFirst")
+;      endif endif
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    u:HtRstSupLow
+;  BASELINESIZING
+;    UNDEFINED  // Not used for baseline design
+;  BASELINE  
+;    UNDEFINED  // Not used for baseline design
+;ENDRULE
+;
+;// -----------------------------------------------------------------------------
+;RULE AirSys:HtRstOutdrHi  
+;  DESCRIPTION
+;    "The maximum (high) outdoor air temperature at the low reset supply air 
+;     temperature during heating."  
+;  HELP
+;    "If heating supply air temperature is reset based on outside air temperature,
+;     specifies the supply air low setpoint to at the outside drybulb high."
+;  REFERENCE 
+;    NACM Section 5.7.2.4
+;  INPUTCLASS
+;    Optional
+;  CHECKSIM
+;    if( LocalStatus( u:HtRstOutdrHi ) > 0 )
+;      then
+;      if( u:Type != "DFDD" )
+;        then
+;        PostError("Only applicable to dual duct systems")
+;      else if( u:HtgCtrl = "OutsideAirReset" )
+;      then UNCHANGED
+;      else 
+;      PostError("Only applicable to dual duct systems with HtgCtrl = OutsideAirReset")
+;      endif endif
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    u:HtRstOutdrLow
+;  BASELINESIZING
+;    UNDEFINED  // Not used for baseline design
+;  BASELINE  
+;    UNDEFINED  // Not used for baseline design
+;ENDRULE
+;
+;// -----------------------------------------------------------------------------
+;RULE AirSys:HtRstOutdrLow
+;  DESCRIPTION
+;    "The minimum (low) outdoor air temperature at the high reset supply air 
+;     temperature during cooling."  
+;  HELP
+;    "Applicable when cooling supply air temperature is reset based on outside air
+;     temperature, specifies the outside drybulb low."
+;  REFERENCE 
+;    NACM Section 5.7.2.4  
+;  INPUTCLASS
+;    Optional
+;  CHECKSIM
+;    if( LocalStatus( u:HtRstOutdrLow ) > 0 )
+;      then
+;      if( u:Type != "DFDD" )
+;        then
+;        PostError("Only applicable to dual duct systems")
+;      else if( u:HtgCtrl = "OutsideAirReset" )
+;      then UNCHANGED
+;      else 
+;      PostError("Only applicable to dual duct systems with HtgCtrl = OutsideAirReset")
+;      endif endif
+;    else UNCHANGED
+;    endif
+;  PROPOSED
+;    u:HtRstOutdrHi  
+;  BASELINESIZING
+;    UNDEFINED  // Not used for baseline design
+;  BASELINE  
+;    UNDEFINED  // Not used for baseline design
+;ENDRULE 
+
+
+

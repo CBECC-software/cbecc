@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>CBECC-Res16</ProjectName>
+    <ProjectGuid>{E18291F4-F66C-45A6-BE33-275FC8BF4276}</ProjectGuid>
+    <RootNamespace>CBECC-Res16</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>../../bin/Release_VC12/</OutDir>
+    <IntDir>../../bin/CBECC-Res16_VC12/Release/</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>CBECC-Res16</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>../../bin/Debug_VC12/</OutDir>
+    <IntDir>../../bin/CBECC-Res16_VC12/Debug/</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>CBECC-Res16</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>$(IntDir)CBECC-Res16.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2016;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)CBECC-Res16.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC12\BEMProc16r.lib;..\..\bin\Release_VC12\BEMCmpMgr16r.lib;..\..\bin\Release_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(IntDir)CBECC-Res16.pdb</ProgramDatabaseFile>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(IntDir)CBECC-Res16.map</MapFileName>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(IntDir)CBECC-Res16.bsc</OutputFile>
+    </Bscmake>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>$(IntDir)CBECC-Res16.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\vendor\boost_1_55_0;..\..\vendor\Qt_5.3\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;UI_PROGYEAR2016;UI_CARES;CECRPTGEN;BOOST_FILESYSTEM_VERSION=3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)CBECC-Res16.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC12\BEMProc16r.lib;..\..\bin\Debug_VC12\BEMCmpMgr16r.lib;..\..\bin\Debug_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(IntDir)CBECC-Res16.pdb</ProgramDatabaseFile>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>$(IntDir)CBECC-Res16.map</MapFileName>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(IntDir)CBECC-Res16.bsc</OutputFile>
+    </Bscmake>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\BEMProcUI\CButtonST\BtnST.cpp" />
+    <ClCompile Include="ComplianceUI.cpp" />
+    <ClCompile Include="ComplianceUIDoc.cpp" />
+    <ClCompile Include="Ctl_butn.cpp" />
+    <ClCompile Include="Ctl_cmbb.cpp" />
+    <ClCompile Include="Ctl_edit.cpp" />
+    <ClCompile Include="CUIGlobl.cpp" />
+    <ClCompile Include="CUILibView.cpp" />
+    <ClCompile Include="DlgBDBErrors.cpp" />
+    <ClCompile Include="DlgCompType.cpp" />
+    <ClCompile Include="DlgCreate.cpp" />
+    <ClCompile Include="DlgEvaluateRulelist.cpp" />
+    <ClCompile Include="DlgFTPProgress.cpp" />
+    <ClCompile Include="DlgPrimData.cpp" />
+    <ClCompile Include="DlgRename.cpp" />
+    <ClCompile Include="DlgStartLoad.cpp" />
+    <ClCompile Include="FileVersion.cpp" />
+    <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="MainView.cpp" />
+    <ClCompile Include="PATHNAME.CPP" />
+    <ClCompile Include="PersistentWaitCursor.cpp" />
+    <ClCompile Include="ResizableDialog.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="TextProgressCtrl.cpp" />
+    <ClCompile Include="TreeBDB.cpp" />
+    <ClCompile Include="XMessageBox.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CBECC-Res16.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BDBDialog.h" />
+    <ClInclude Include="BDBTabCtrl.h" />
+    <ClInclude Include="ComplianceUI.h" />
+    <ClInclude Include="ComplianceUIDoc.h" />
+    <ClInclude Include="Ctl_butn.h" />
+    <ClInclude Include="Ctl_cmbb.h" />
+    <ClInclude Include="Ctl_edit.h" />
+    <ClInclude Include="CUIGlobl.h" />
+    <ClInclude Include="CUILibView.h" />
+    <ClInclude Include="DlgCompType.h" />
+    <ClInclude Include="DlgCreate.h" />
+    <ClInclude Include="DlgEvaluateRulelist.h" />
+    <ClInclude Include="DlgPrimData.h" />
+    <ClInclude Include="DlgRename.h" />
+    <ClInclude Include="DlgStartLoad.h" />
+    <ClInclude Include="DlgWizard.h" />
+    <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="MainView.h" />
+    <ClInclude Include="PATHNAME.H" />
+    <ClInclude Include="PersistentWaitCursor.h" />
+    <ClInclude Include="ResizableDialog.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="Screens.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="TreeBDB.h" />
+    <ClInclude Include="XMessageBox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="hlp\AppExit.bmp" />
+    <Image Include="hlp\Bullet.bmp" />
+    <Image Include="hlp\CurArw2.bmp" />
+    <Image Include="hlp\CurArw4.bmp" />
+    <Image Include="hlp\CurHelp.bmp" />
+    <Image Include="hlp\EditCopy.bmp" />
+    <Image Include="hlp\EditCut.bmp" />
+    <Image Include="hlp\EditPast.bmp" />
+    <Image Include="hlp\EditUndo.bmp" />
+    <Image Include="hlp\FileNew.bmp" />
+    <Image Include="hlp\FileOpen.bmp" />
+    <Image Include="hlp\FilePrnt.bmp" />
+    <Image Include="hlp\FileSave.bmp" />
+    <Image Include="hlp\HlpSBar.bmp" />
+    <Image Include="hlp\HlpTBar.bmp" />
+    <Image Include="hlp\RecFirst.bmp" />
+    <Image Include="hlp\RecLast.bmp" />
+    <Image Include="hlp\RecNext.bmp" />
+    <Image Include="hlp\RecPrev.bmp" />
+    <Image Include="hlp\Scmax.bmp" />
+    <Image Include="hlp\ScMenu.bmp" />
+    <Image Include="hlp\Scmin.bmp" />
+    <Image Include="res\CBECC-Res.ico" />
+    <Image Include="res\CBECC-ResDev.ico" />
+    <Image Include="res\CBECC-ResDoc.ico" />
+    <Image Include="res\CUItools.bmp" />
+    <Image Include="res\Toolbar.bmp" />
+    <Image Include="res\ToolbarD.bmp" />
+    <Image Include="res\t_ac_1.bmp" />
+    <Image Include="res\t_ac_2.bmp" />
+    <Image Include="res\t_AirSegR_1.bmp" />
+    <Image Include="res\t_AirSegR_2.bmp" />
+    <Image Include="res\t_AirSeg_1.bmp" />
+    <Image Include="res\t_AirSeg_2.bmp" />
+    <Image Include="res\t_area_1.bmp" />
+    <Image Include="res\t_area_2.bmp" />
+    <Image Include="res\t_blck_1.bmp" />
+    <Image Include="res\t_blck_2.bmp" />
+    <Image Include="res\t_bldg_1.bmp" />
+    <Image Include="res\t_bldg_2.bmp" />
+    <Image Include="res\t_boil_1.bmp" />
+    <Image Include="res\t_boil_2.bmp" />
+    <Image Include="res\t_bshd_1.bmp" />
+    <Image Include="res\t_bshd_2.bmp" />
+    <Image Include="res\t_ceil_1.bmp" />
+    <Image Include="res\t_ceil_2.bmp" />
+    <Image Include="res\t_chlr_1.bmp" />
+    <Image Include="res\t_chlr_2.bmp" />
+    <Image Include="res\t_Cons_1.bmp" />
+    <Image Include="res\t_Cons_2.bmp" />
+    <Image Include="res\t_ctwr_1.bmp" />
+    <Image Include="res\t_ctwr_2.bmp" />
+    <Image Include="res\t_DHWHtr_1.bmp" />
+    <Image Include="res\t_DHWHtr_2.bmp" />
+    <Image Include="res\t_DHWSys_1.bmp" />
+    <Image Include="res\t_DHWSys_2.bmp" />
+    <Image Include="res\t_door_1.bmp" />
+    <Image Include="res\t_door_2.bmp" />
+    <Image Include="res\t_DrCons_1.bmp" />
+    <Image Include="res\t_DrCons_2.bmp" />
+    <Image Include="res\t_econ_1.bmp" />
+    <Image Include="res\t_econ_2.bmp" />
+    <Image Include="res\t_ewal_1.bmp" />
+    <Image Include="res\t_ewal_2.bmp" />
+    <Image Include="res\t_fan_1.bmp" />
+    <Image Include="res\t_fan_2.bmp" />
+    <Image Include="res\t_FenCons_1.bmp" />
+    <Image Include="res\t_FenCons_2.bmp" />
+    <Image Include="res\t_fewa_1.bmp" />
+    <Image Include="res\t_fewa_2.bmp" />
+    <Image Include="res\t_fiwa_1.bmp" />
+    <Image Include="res\t_fiwa_2.bmp" />
+    <Image Include="res\t_FldSeg_1.bmp" />
+    <Image Include="res\t_FldSeg_2.bmp" />
+    <Image Include="res\t_flr_1.bmp" />
+    <Image Include="res\t_flr_2.bmp" />
+    <Image Include="res\t_furn_1.bmp" />
+    <Image Include="res\t_furn_2.bmp" />
+    <Image Include="res\t_fwal_1.bmp" />
+    <Image Include="res\t_fwal_2.bmp" />
+    <Image Include="res\t_hpmp_1.bmp" />
+    <Image Include="res\t_hpmp_2.bmp" />
+    <Image Include="res\t_hvac_1.bmp" />
+    <Image Include="res\t_hvac_2.bmp" />
+    <Image Include="res\t_iwal_1.bmp" />
+    <Image Include="res\t_iwal_2.bmp" />
+    <Image Include="res\t_lsys_1.bmp" />
+    <Image Include="res\t_lsys_2.bmp" />
+    <Image Include="res\t_Lum_1.bmp" />
+    <Image Include="res\t_Lum_2.bmp" />
+    <Image Include="res\t_Mat_1.bmp" />
+    <Image Include="res\t_Mat_2.bmp" />
+    <Image Include="res\t_plnt_1.bmp" />
+    <Image Include="res\t_plnt_2.bmp" />
+    <Image Include="res\t_poly_1.bmp" />
+    <Image Include="res\t_poly_2.bmp" />
+    <Image Include="res\t_proj_1.bmp" />
+    <Image Include="res\t_proj_2.bmp" />
+    <Image Include="res\t_pump_1.bmp" />
+    <Image Include="res\t_pump_2.bmp" />
+    <Image Include="res\t_roof_1.bmp" />
+    <Image Include="res\t_roof_2.bmp" />
+    <Image Include="res\t_SchA_1.bmp" />
+    <Image Include="res\t_SchA_2.bmp" />
+    <Image Include="res\t_SchD_1.bmp" />
+    <Image Include="res\t_SchD_2.bmp" />
+    <Image Include="res\t_SchW_1.bmp" />
+    <Image Include="res\t_SchW_2.bmp" />
+    <Image Include="res\t_site_1.bmp" />
+    <Image Include="res\t_site_2.bmp" />
+    <Image Include="res\t_sky_1.bmp" />
+    <Image Include="res\t_sky_2.bmp" />
+    <Image Include="res\t_SpcDflt_1.bmp" />
+    <Image Include="res\t_SpcDflt_2.bmp" />
+    <Image Include="res\t_spc_1.bmp" />
+    <Image Include="res\t_spc_2.bmp" />
+    <Image Include="res\t_TermU_1.bmp" />
+    <Image Include="res\t_TermU_2.bmp" />
+    <Image Include="res\t_unkn_1.bmp" />
+    <Image Include="res\t_unkn_2.bmp" />
+    <Image Include="res\t_uwal_1.bmp" />
+    <Image Include="res\t_uwal_2.bmp" />
+    <Image Include="res\t_win_1.bmp" />
+    <Image Include="res\t_win_2.bmp" />
+    <Image Include="res\t_ZnSys_1.bmp" />
+    <Image Include="res\t_ZnSys_2.bmp" />
+    <Image Include="res\wizard.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CBECC-Res16.reg" />
+    <None Include="hlp\AfxCore.rtf" />
+    <None Include="hlp\AfxPrint.rtf" />
+    <None Include="res\CBECC-Res.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

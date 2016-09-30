@@ -1,0 +1,2335 @@
+// HVAC Primary Systems - Controls
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+
+
+
+// ********** Availability Schedule ********************************************
+RULE FluidSys:AvailSchRef
+  DESCRIPTION
+    "The name of the schedule that determines when the hot water system is
+    available to provide heating."
+  HELP
+    "The name of the schedule that determines when the hot water system is
+    available to provide heating.  The system is not necessarily providing
+    heating at all times it is available, but if it is not available, no
+    heating will be provided."
+  REFERENCE
+    ACM-5.8.1
+  INPUTCLASS
+    Prescribed
+  SIZING
+    RuleLibrary( Schedule, "On" )
+  ANNUAL
+    z:AvailSchRef
+ENDRULE
+
+
+// ********** Design Supply Water Temp *****************************************
+RULE FluidSys:DsgnSupWtrTemp
+  DESCRIPTION
+    "The design supply water temperature of the loop."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.8-HVAC Primary Systems
+  INPUTCLASS
+    Default
+  MINIMUM
+    35
+  MAXIMUM
+    250
+  UNITS
+    °F
+  DEFAULT
+    if( Type = "ChilledWater" )
+      then 44
+    else if( Type = "HotWater" )
+      then 180
+    else if( Type = "CondenserWater" )
+      then min( 85, Proj:DsgnWBT + 10 )
+    else if( Type = "ServiceHotWater" )
+      then 135
+    else UNDEFINED
+    endif endif endif endif
+  CHECKSIM
+    if( Type =  "ServiceHotWater" .AND. DsgnSupWtrTemp > 177 ) then
+      PostError("The design supply water temperature for Service Hot Water 
+                 system '%s' is '%.1f' which is too high.", Name, 
+                 DsgnSupWtrTemp)
+    else UNCHANGED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" )
+        then 44
+      else if( Type = "HotWater" )
+        then 180
+      else if( Type = "CondenserWater" )
+        then min( 85, Proj:DsgnWBT + 10 )
+      else if( Type = "ServiceHotWater" )
+        then 135
+      else UNDEFINED
+      endif endif endif endif
+    else u:DsgnSupWtrTemp
+    endif
+  ANNUAL
+    z:DsgnSupWtrTemp
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:HtgDsgnSupWtrTemp
+  DESCRIPTION
+    "The design supply water temperature of the loop."
+  INPUTCLASS
+    Default
+  MINIMUM
+    35
+  MAXIMUM
+    250
+  UNITS
+    °F
+  DEFAULT
+    if( Type = "CondenserWater" .AND. 
+        TempCtrl = "FixedDualSetpoint" )
+    then 60
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      UNDEFINED // Not used
+    else u:HtgDsgnSupWtrTemp
+    endif
+  ANNUAL
+    z:HtgDsgnSupWtrTemp
+ENDRULE
+
+// ********** Design Supply Water Temp *****************************************
+RULE FluidSys:DsgnSupWtrDelT
+  DESCRIPTION
+    "The design supply water temperature of the loop."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.8-HVAC Primary Systems
+  INPUTCLASS
+    Default
+  MINIMUM
+    1
+  COMMONMINIMUM
+    5
+  COMMONMAXIMUM
+    90
+  UNITS
+    °F
+  DEFAULT : S901G ECBC
+    if( Type = "ChilledWater" )
+      then 12
+    else if( Type = "HotWater" )
+      then 50
+    else if( Type = "CondenserWater" )
+      then 10
+    else if( Type = "ServiceHotWater" )
+      then DsgnSupWtrTemp - 55
+    else UNDEFINED
+    endif endif endif endif
+  DEFAULT
+    if( Type = "ChilledWater" )
+      then 20
+    else if( Type = "HotWater" )
+      then 40
+    else if( Type = "CondenserWater" )
+      then 10
+    else if( Type = "ServiceHotWater" )
+      then DsgnSupWtrTemp - 55
+    else UNDEFINED
+    endif endif endif endif
+  CHECKSIM
+    if( LocalStatus( DsgnSupWtrDelT ) = 0 ) then
+      PostError("The design water deltaT for fluid system '%s' has not been set. 
+                 This is a required input.", Name)
+    else if( DsgnSupWtrDelT < 1 ) then
+        PostError("The design water deltaT for fluid system '%s' is '%.1f' which
+                   is too low.", Name, DsgnSupWtrDelT)
+    else if( Type = "CondenserWater" .AND. DsgnSupWtrDelT >= 20 ) then
+        PostError("The design water deltaT for condenser water system '%s' 
+                   is '%.1f' which equals or exceeds the simulation limit 
+                   of 20F.", Name, DsgnSupWtrDelT)
+    else UNCHANGED
+    endif endif endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" )
+        then 12
+      else if( Type = "HotWater" )
+        then 50
+      else if( Type = "CondenserWater" )
+        then 10
+      else if( Type = "ServiceHotWater" )
+        then DsgnSupWtrTemp - 55
+      else UNDEFINED
+      endif endif endif endif
+    else u:DsgnSupWtrDelT
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" )
+        then 20
+      else if( Type = "HotWater" )
+        then 40
+      else if( Type = "CondenserWater" )
+        then 10
+      else if( Type = "ServiceHotWater" )
+        then DsgnSupWtrTemp - 55
+      else UNDEFINED
+      endif endif endif endif
+    else u:DsgnSupWtrDelT
+    endif
+  ANNUAL
+    z:DsgnSupWtrDelT
+ENDRULE
+
+
+// ********** Supply Water Temp Control Method *********************************
+RULE FluidSys:CtrlType
+  DESCRIPTION
+    "The type of control system used for the fluid system - DDC or other."
+  HELP
+     "This is used to specify part load curves for variable speed pumps."
+  REFERENCE
+    ACM-5.8.5-Pumps
+  INPUTCLASS
+    Default
+  OPTION
+    DDC
+    Other
+  DEFAULT
+    "Other"
+  CHECKCODE : T24N_2016
+    if( IsNew .AND. 
+        ( Type = "ChilledWater" .OR. Type = "HotWater" ) .AND. 
+        IfValidAnd( ClgCap >= 300000 ) .AND.
+        MaxChild( FluidSeg:CondHVACZnCntWithMult ) > 3 .AND.
+        CtrlType = "Other" )
+    then
+      PostError("FluidSystem '%s' is a New chilled water plant with
+                 capacity > 300 kBtu/hr and serves more than 3 HVAC zones. 
+                 'DDC' control is required.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( Type = "ServiceHotWater" )
+    then UNDEFINED
+    else if( IsBaseSys )
+    then 
+      if( Type = "ChilledWater" .OR. Type = "HotWater" )
+      then "DDC"
+      else "Other"
+      endif
+    else u:CtrlType
+    endif endif
+  ANNUAL
+    z:CtrlType
+ENDRULE
+
+
+// ********** Supply Water Temp Control Method *********************************
+RULE FluidSys:TempCtrl
+  DESCRIPTION
+    "The method of controlling the supply water temperature of of the fluid system."
+  HELP
+     "Fixed means that a constant temperature setpoint is used.
+
+     Scheduled means that the temperature is adjusted based on a user specified
+     schedule.
+
+     OutdoorAirReset means that the supply water temperature is adjusted based on
+     the outdoor air temperature.
+
+     WetBulbReset is only applicable to condenser water loops, and means that 
+     the supply condenser water temperature is adjusted based on the outdoor 
+     wet bulb temperature.
+
+     FixedDualSetpoint is applicable only to condenser water loops which have 
+     both heating and cooling primary equipment, such as a boiler and cooling 
+     tower used for water source heat pumps.  The high setpoint is used for 
+     cooling and the low setpoint for heating."
+  REFERENCE
+    ACM-5.8.1-Boilers
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    Default
+  OPTION
+    Fixed
+    Scheduled
+    OutsideAirReset
+    WetBulbReset
+    FixedDualSetpoint
+    ; ScheduledDualSetpoint - Not supported yet
+    ; LoadReset - Not supported yet
+  DEFAULT : S901G ECBC
+    if( Type = "CondenserWater" .AND. 
+        IfValidAnd( ClgCap > 0 ) .AND. 
+        IfValidAnd( HtgCap > 0 ) )
+    then // Has both heating and cooling primary equipment, i.e. for WLHP
+      "FixedDualSetpoint"
+    else
+      if( Type = "CondenserWater" )
+      then "WetBulbReset"
+      else
+        if( Type = "ChilledWater" .OR. Type = "HotWater" )
+        then "OutsideAirReset"
+        else "Fixed"
+        endif
+      endif
+    endif
+  DEFAULT
+    if( Type = "CondenserWater" .AND. 
+        IfValidAnd( ClgCap > 0 ) .AND. 
+        IfValidAnd( HtgCap > 0 ) )
+    then // Has both heating and cooling primary equipment, i.e. for WLHP
+      "FixedDualSetpoint"
+    else
+      "Fixed"
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" )
+      // TO DO: Replace with LoadReset when that is available
+        then "OutsideAirReset"
+      else if( Type = "HotWater" )
+        then "OutsideAirReset"
+      else if( Type = "CondenserWater" )
+        then "WetBulbReset"
+      else if( Type = "ServiceHotWater" )
+        then "Fixed"
+      else UNDEFINED
+      endif endif endif endif
+    else if( LocalStatus(u:TempCtrl) > 0 ) then
+      u:TempCtrl
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" )
+      // TO DO: Replace with LoadReset when that is available
+        then "OutsideAirReset"
+      else if( Type = "HotWater" )
+        then "Fixed"
+      else if( Type = "CondenserWater" )
+        then "Fixed"
+      else if( Type = "ServiceHotWater" )
+        then "Fixed"
+      else UNDEFINED
+      endif endif endif endif
+    else if( LocalStatus(u:TempCtrl) > 0 ) then
+      u:TempCtrl
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:TempCtrl
+ENDRULE
+
+
+
+// ********** Fixed Supply Water Temp Setpoint *********************************
+RULE FluidSys:FixedSupTemp
+  DESCRIPTION
+    "The supply water temperature setpoint for 'Fixed' temperature control."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.8.1-Boilers
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( TempCtrl = "Fixed" .OR. TempCtrl = "FixedDualSetpoint" ) then
+      DsgnSupWtrTemp
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( TempCtrl = "Fixed" .AND. LocalStatus( FixedSupTemp ) = 0 ) 
+    then
+      PostError("Supply temperature is a required input for system '%s' 
+                 if Temperature Ctrl = Fixed", Name)
+    else
+      if( TempCtrl = "FixedDualSetpoint" .AND. LocalStatus( FixedSupTemp ) = 0 )
+      then
+        PostError("Cooling supply temperature is a required input for system '%s' 
+                 if Temperature Ctrl = FixedDualSetpoint", Name)
+      else
+        if( Type = "ServiceHotWater" .AND. 
+            ( IfValidAnd( FixedSupTemp < 110 ) .OR. 
+              IfValidAnd( FixedSupTemp > 180 ) ) )
+        then
+          PostError("The Water Heater setpoint must be greater than or equal to 110F and less than or equal to 180F.")
+        else UNCHANGED
+        endif
+      endif
+    endif
+  SIZING_PROPOSED
+    if( IsBaseSys ) then
+      if( Type = "HotWater" ) then
+        180
+      else if( Type = "CondenserWater" ) then
+        70
+      else if( Type = "ServiceHotWater" ) then
+        135
+      else UNDEFINED
+      endif endif endif
+    else if( u:TempCtrl = "Fixed" .OR. u:TempCtrl = "FixedDualSetpoint" ) then
+      u:FixedSupTemp
+    else UNDEFINED
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "HotWater" ) then
+        UNDEFINED
+      else if( Type = "CondenserWater" ) then
+        UNDEFINED
+      else if( Type = "ServiceHotWater" ) then
+        135
+      else UNDEFINED
+      endif endif endif
+    else
+      if( u:TempCtrl = "Fixed" .AND. u:Type = "ServiceHotWater" )
+      then 135
+      else
+        if( u:TempCtrl = "Fixed" .OR. u:TempCtrl = "FixedDualSetpoint" )
+        then u:FixedSupTemp
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE
+    if( IsBaseSys ) then
+      if( Type = "HotWater" ) then
+        180
+      else if( Type = "CondenserWater" ) then
+        70
+      else if( Type = "ServiceHotWater" ) then
+//        135
+        if ( IfValidAnd(Proj:SHWPropOnly = 1) )
+         then u:FixedSupTemp
+        else 135
+        endif 
+      else UNDEFINED
+      endif endif endif
+    else
+      if( u:TempCtrl = "Fixed" .AND. u:Type = "ServiceHotWater" )
+//      then 135
+        then
+        if ( IfValidAnd(Proj:SHWPropOnly = 1) )
+         then u:FixedSupTemp
+         else 135
+        endif 
+      else
+        if( u:TempCtrl = "Fixed" .OR. u:TempCtrl = "FixedDualSetpoint" )
+        then u:FixedSupTemp
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL
+    z:FixedSupTemp
+ENDRULE
+
+
+// ********** Fixture Hot Water Supply Temp ******************************
+RULE FluidSys:HotWtrSupTemp
+  DESCRIPTION
+    "The fixture supply water temperature setpoint for 'Fixed' temperature control."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.8.1-Boilers
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( IfValidAnd(FixedSupTemp >= 135) )
+      then 135
+      else
+        if( IfValidAnd(FixedSupTemp < 110) )
+	then 110
+        else FixedSupTemp
+	endif
+      endif
+    else UNCHANGED
+    endif
+  CHECKSIM
+    if( Type = "ServiceHotWater" .AND. LocalStatus(HotWtrSupTemp) = 0 ) then
+      PostError("The fixture supply temperature is a required input for system '%s'", Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( IsBaseSys )
+    then
+      if( Type = "ServiceHotWater" )
+      then 135
+      else UNDEFINED
+      endif
+    else
+      if( Type = "ServiceHotWater" .AND. IfValidAnd(FixedSupTemp < 135) )
+      then u:FixedSupTemp
+      else
+        if( Type = "ServiceHotWater" )
+        then 
+          if ( IfValidAnd(Proj:SHWPropOnly = 1) )
+           then u:FixedSupTemp
+           else 135
+          endif 
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE
+    if( IsBaseSys )
+    then
+      if( Type = "ServiceHotWater" )
+      then 135
+      else UNDEFINED
+      endif
+    else
+      if( Type = "ServiceHotWater" .AND. IfValidAnd(FixedSupTemp < 135) )
+      then u:FixedSupTemp
+      else
+        if( Type = "ServiceHotWater" )
+         then 
+          if ( IfValidAnd(Proj:SHWPropOnly = 1) )
+           then u:FixedSupTemp
+          else 135
+          endif 
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL
+    z:HotWtrSupTemp
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:HtgFixedSupTemp
+  DESCRIPTION
+    "The supply water temperature setpoint in heating mode for 
+     'FixedDualSetpoint' temperature control."
+  HELP
+    "Currently only applicable to condenser water loops with both heating and 
+     cooling primary equipment; i.e. for WLHP systems."
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( TempCtrl = "FixedDualSetpoint" )
+      then HtgDsgnSupWtrTemp
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsBaseSys )
+    then UNDEFINED // Not used
+    else u:HtgFixedSupTemp
+    endif
+  ANNUAL
+    z:HtgFixedSupTemp
+ENDRULE
+
+// ********** Supply Water Setpoint Schedule ***********************************
+RULE FluidSys:TempSetptSchRef
+  DESCRIPTION
+    "The scheduled supply water temperature setpoint of fluid system for 
+     'Scheduled' temperature control."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.8.1-Boilers
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    CondRequired
+  CHECKSIM
+    if( TempCtrl = "Scheduled" .AND. LocalCompAssigned(TempSetptSchRef) = 0 )
+        then
+        PostError("Setpoint temperature schedule must be defined for fluid system '%s'
+                   if Temperature Ctrl = 'Scheduled'.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( IsBaseSys )
+    then UNDEFINED
+    else 
+    if( ( TempCtrl = "Scheduled" .OR. TempCtrl = "ScheduledDualSetpoint" ) .AND.
+        LocalCompAssigned( u:TempSetptSchRef ) )
+    then u:TempSetptSchRef
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:TempSetptSchRef
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:HtgTempSetptSchRef
+  DESCRIPTION
+    "The scheduled supply water temperature setpoint in heating mode 
+     for 'ScheduledDualSetpoint' temperature control."
+  HELP
+    "Currently only applicable to condenser water loops with both heating and 
+     cooling primary equipment; i.e. for WLHP systems."
+  INPUTCLASS
+    CondRequired
+  SIZING
+    if( IsBaseSys )
+    then UNDEFINED
+    else 
+    if( TempCtrl = "ScheduledDualSetpoint" .AND.
+        LocalCompAssigned( u:TempSetptSchRef ) )
+    then u:HtgTempSetptSchRef
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:HtgTempSetptSchRef
+ENDRULE
+
+
+// ********** Reset Limits for LoadReset and OutdoorAirReset *******************
+
+// ********** Supply Water Reset Temperatures **********************************
+RULE FluidSys:RstSupHi
+  DESCRIPTION
+    "The maximum (high) reset supply water temperature for Temperature Ctrl =
+     OutsideAirReset or LoadReset."
+  HELP
+    "If Temperature Ctrl = OutsideAirReset, specifies the high supply water temperature
+     setpoint at the specified corresponding outdoor air temperature. Between the
+     corresponding outside air temperature setpoints, the supply water temperature
+     is adjusted linearly between the reset temperature setpoints.
+
+     If supply water temperature is reset based on the worst-case load
+     (Temperature Ctrl = LoadReset), specifies the maximum supply water reset
+     temperature."
+  REFERENCE
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    20
+  MAXIMUM
+    250
+  UNITS
+    °F
+  CHECKSIM
+    if( TempCtrl = "LoadReset" .OR. TempCtrl = "OutsideAirReset" .AND.
+        LocalStatus(RstSupHi) = 0 )
+      then
+      PostError("Required input for fluid system '%s' if Temperature Ctrl = 
+                 'OutsideAirReset' or 'LoadReset'.", Name)
+    else UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        54
+      else
+        if( Type = "HotWater" ) then
+        180
+        else UNDEFINED
+        endif
+      endif
+    else if( u:TempCtrl = "LoadReset" .OR. u:TempCtrl = "OutsideAirReset" ) then
+      u:RstSupHi
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        54
+      else UNDEFINED
+      endif
+    else if( u:TempCtrl = "LoadReset" .OR. u:TempCtrl = "OutsideAirReset" ) then
+      u:RstSupHi
+    else if( u:TempCtrl = "WetBulbReset" ) then
+      90
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:RstSupHi
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:RstSupLow
+  DESCRIPTION
+    "The low supply water temperature used for a reset control.  This is the
+     temperature at the high outside air temperature or high cooling load."
+  HELP
+    "If Temperature Ctrl = OutsideAirReset, specifies the low supply water temperature
+     setpoint at the specified corresponding outdoor air temperature. Between the
+     corresponding outside air temperature setpoints, the supply water temperature
+     is adjusted linearly between the reset temperature setpoints.
+
+     If supply water temperature is reset based on the worst-case load
+     (Temperature Ctrl = LoadReset), specifies the minimum supply water reset
+     temperature."
+  REFERENCE
+    ACM-5.8.2-Chillers
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    20
+  MAXIMUM
+    250
+  UNITS
+    °F
+  CHECKSIM
+    if( TempCtrl = "LoadReset" .OR. TempCtrl = "OutsideAirReset" .AND.
+        LocalStatus(RstSupLow) = 0 )
+      then
+      PostError("Required input for fluid system '%s' if Temperature Ctrl = 
+                 'OutsideAirReset' or 'LoadReset'.", Name)
+    else UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        44
+      else
+        if( Type = "HotWater" ) then
+        150
+        else UNDEFINED
+        endif
+      endif
+    else if( u:TempCtrl = "LoadReset" .OR. u:TempCtrl = "OutsideAirReset" ) then
+      u:RstSupLow
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        44
+      else UNDEFINED
+      endif
+    else if( u:TempCtrl = "LoadReset" .OR. u:TempCtrl = "OutsideAirReset" ) then
+      u:RstSupLow
+    else if( u:TempCtrl = "WetBulbReset" ) then
+      65
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:RstSupLow
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:RstOutdrHi
+  DESCRIPTION
+    "The outdoor air temperature at the corresponds to the high reset supply water
+     temperature"
+  HELP
+    "This is the outdoor air temperature that corresponds to high supply water
+     reset temperature. For example, for a chilled water system that resets from
+     44°F to 54°F depending on outdoor air temperature, this input would be
+     likely be 60°F or lower."
+  REFERENCE
+    ACM-5.8.2-Chillers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    120
+  UNITS
+    °F
+  CHECKSIM
+    if( TempCtrl = "OutsideAirReset" .AND. LocalStatus(RstOutdrHi) = 0 ) then
+      PostError("Required input for fluid system '%s' if Temperature Ctrl
+                 = 'OutsideAirReset'.",Name)
+    else UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        60
+      else
+        if( Type = "HotWater" ) then
+        20
+        else UNDEFINED
+        endif
+      endif
+    else if( u:TempCtrl = "OutsideAirReset" ) then
+      u:RstOutdrHi
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        60
+      else UNDEFINED
+      endif
+    else if( u:TempCtrl = "OutsideAirReset" ) then
+      u:RstOutdrHi
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:RstOutdrHi
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:RstOutdrLow
+  DESCRIPTION
+    "The outdoor air temperature at the corresponds to the low reset supply water
+     temperature"
+  HELP
+    "This is the outdoor air temperature that corresponds to high supply water
+     reset temperature. For example, for a chilled water system that resets from
+     44°F to 54°F depending on outdoor air temperature, this input would be
+     likely 80°F or higher."
+  REFERENCE
+    ACM-5.8.2-Chillers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    120
+  UNITS
+    °F
+  CHECKSIM
+    if( TempCtrl = "OutsideAirReset" .AND. LocalStatus(RstOutdrLow) = 0 )
+      then
+      PostError("Required input for fluid system '%s' if Temperature Ctrl =
+                 'OutsideAirReset'.", Name)
+    else UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        80
+      else
+        if( Type = "HotWater" ) then
+        50
+        else UNDEFINED
+        endif
+      endif
+    else if( u:TempCtrl = "OutsideAirReset" ) then
+      u:RstOutdrLow
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "ChilledWater" ) then
+        80
+      else UNDEFINED
+      endif
+    else if( u:TempCtrl = "OutsideAirReset" ) then
+      u:RstOutdrLow
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:RstOutdrLow
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:WetBulbApproach
+  DESCRIPTION
+    "The difference between the cooling tower leaving water temperature and the
+     outdoor wet-bulb temperature when Wet Bulb Approach water supply
+     temperature controls are used."
+  REFERENCE
+    ACM-5.8.3-Cooling Towers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  COMMONMINIMUM
+    5
+  MAXIMUM
+    20
+  UNITS
+    °F
+  DEFAULT : S901G ECBC
+    if( IfValidAnd(TempCtrl = "WetBulbReset") )
+    then 10
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( TempCtrl = "WetBulbReset" .AND. 
+        Type .NE. "CondenserWater" ) then
+      PostError("Temperature Ctrl = WetBulbReset is not allowed for fluid system
+                '%s'.  It is only allowed for condenser water systems.", Name)
+    else if( TempCtrl = "WetBulbReset" .AND. 
+             LocalStatus(WetBulbApproach) = 0 ) then
+      PostError("Wet bulb approach temperature is a required input for fluid
+                 system '%s' if Temperature Ctrl = WetBulbReset", Name)
+    else UNCHANGED
+    endif endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) 
+    then
+      if( IfValidAnd(TempCtrl = "WetBulbReset") )
+      then 10
+      else UNDEFINED
+      endif
+    else
+      if( u:TempCtrl = "WetBulbReset" )
+      then u:WetBulbApproach
+      else UNDEFINED
+      endif
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      UNDEFINED
+    else if( u:TempCtrl = "WetBulbReset" ) then
+      u:WetBulbApproach
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:WetBulbApproach
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:LdRngLim[1]
+  DESCRIPTION
+    "The upper limit of load range 1."  
+  MINIMUM
+    0
+  COMMONMINIMUM
+    300000
+  CHECKSIM
+    if( Type = "ChilledWater" .OR.
+        Type = "HotWater" ) 
+    then
+      if( LocalStatus( LdRngLim[1] ) > 0 )
+      then  
+        if( LdRngLim[1] > 0 )
+        then UNCHANGED
+        else
+          PostError("If plant staging is used, the first load range limit for 
+                     fluid system '%s' must be greater than zero.", Name)
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    LdRngLim[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[1]
+  DESCRIPTION
+    "The name of the load following piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( LocalStatus( EqpList1Name[1] ) = 0 )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else if( EqpList1Name[1] = "NONE" )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[2]
+  DESCRIPTION
+    "The name of the first listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[2] != "NONE" )
+      then
+        if( EqpList1Name[2] = EqpList1Name[1] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[2])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[3]
+  DESCRIPTION
+    "The name of the second listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[3] != "NONE" )
+      then
+        if( EqpList1Name[3] = EqpList1Name[1] .OR.
+            EqpList1Name[3] = EqpList1Name[2] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[3])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[3]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[4]
+  DESCRIPTION
+    "The name of the third listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[4] != "NONE" )
+      then
+        if( EqpList1Name[4] = EqpList1Name[1] .OR.
+            EqpList1Name[4] = EqpList1Name[2] .OR.
+            EqpList1Name[4] = EqpList1Name[3] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[4])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[4]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[5]
+  DESCRIPTION
+    "The name of the fourth listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[5] != "NONE" )
+      then
+        if( EqpList1Name[5] = EqpList1Name[1] .OR.
+            EqpList1Name[5] = EqpList1Name[2] .OR.
+            EqpList1Name[5] = EqpList1Name[3] .OR.
+            EqpList1Name[5] = EqpList1Name[4] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[5])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[5]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[6]
+  DESCRIPTION
+    "The name of the fifth listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[6] != "NONE" )
+      then
+        if( EqpList1Name[6] = EqpList1Name[1] .OR.
+            EqpList1Name[6] = EqpList1Name[2] .OR.
+            EqpList1Name[6] = EqpList1Name[3] .OR.
+            EqpList1Name[6] = EqpList1Name[4] .OR.
+            EqpList1Name[6] = EqpList1Name[5] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[6])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[6]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[7]
+  DESCRIPTION
+    "The name of the sixth listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[7] != "NONE" )
+      then
+        if( EqpList1Name[7] = EqpList1Name[1] .OR.
+            EqpList1Name[7] = EqpList1Name[2] .OR.
+            EqpList1Name[7] = EqpList1Name[3] .OR.
+            EqpList1Name[7] = EqpList1Name[4] .OR.
+            EqpList1Name[7] = EqpList1Name[5] .OR.
+            EqpList1Name[7] = EqpList1Name[6] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[7])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[7]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[8]
+  DESCRIPTION
+    "The name of the seventh listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[8] != "NONE" )
+      then
+        if( EqpList1Name[8] = EqpList1Name[1] .OR.
+            EqpList1Name[8] = EqpList1Name[2] .OR.
+            EqpList1Name[8] = EqpList1Name[3] .OR.
+            EqpList1Name[8] = EqpList1Name[4] .OR.
+            EqpList1Name[8] = EqpList1Name[5] .OR.
+            EqpList1Name[8] = EqpList1Name[6] .OR.
+            EqpList1Name[8] = EqpList1Name[7] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[8])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[8]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[9]
+  DESCRIPTION
+    "The name of the eighth listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[9] != "NONE" )
+      then
+        if( EqpList1Name[9] = EqpList1Name[1] .OR.
+            EqpList1Name[9] = EqpList1Name[2] .OR.
+            EqpList1Name[9] = EqpList1Name[3] .OR.
+            EqpList1Name[9] = EqpList1Name[4] .OR.
+            EqpList1Name[9] = EqpList1Name[5] .OR.
+            EqpList1Name[9] = EqpList1Name[6] .OR.
+            EqpList1Name[9] = EqpList1Name[7] .OR.
+            EqpList1Name[9] = EqpList1Name[8] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[9])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[9]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList1Name[10]
+  DESCRIPTION
+    "The name of the ninth listed base load piece of equipment in load range 1."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[1] ) > 0 )
+    then
+      if( EqpList1Name[10] != "NONE" )
+      then
+        if( EqpList1Name[10] = EqpList1Name[1] .OR.
+            EqpList1Name[10] = EqpList1Name[2] .OR.
+            EqpList1Name[10] = EqpList1Name[3] .OR.
+            EqpList1Name[10] = EqpList1Name[4] .OR.
+            EqpList1Name[10] = EqpList1Name[5] .OR.
+            EqpList1Name[10] = EqpList1Name[6] .OR.
+            EqpList1Name[10] = EqpList1Name[7] .OR.
+            EqpList1Name[10] = EqpList1Name[8] .OR.
+            EqpList1Name[10] = EqpList1Name[9] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 1, '%s' is listed more
+                     than once.", Name, EqpList1Name[10])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList1Name[10]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:LdRngLim[2]
+  DESCRIPTION
+    "The upper limit of load range 2."  
+  MINIMUM
+    0
+  COMMONMINIMUM
+    300000
+  CHECKSIM
+    if( Type = "ChilledWater" .OR.
+        Type = "HotWater" ) 
+    then
+      if( LocalStatus( LdRngLim[2] ) > 0 )
+      then  
+        if( LdRngLim[2] > LdRngLim[1] )
+        then UNCHANGED
+        else
+          PostError("If plant staging is used, the second load range limit for 
+                     fluid system '%s' must be greater than the first load range 
+                     limit.", Name)
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    LdRngLim[2]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[1]
+  DESCRIPTION
+    "The name of the load following piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( LocalStatus( EqpList2Name[1] ) = 0 )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else if( EqpList2Name[1] = "NONE" )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[2]
+  DESCRIPTION
+    "The name of the first listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[2] != "NONE" )
+      then
+        if( EqpList2Name[2] = EqpList2Name[1] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[2]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[3]
+  DESCRIPTION
+    "The name of the second listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[3] != "NONE" )
+      then
+        if( EqpList2Name[3] = EqpList2Name[1] .OR.
+            EqpList2Name[3] = EqpList2Name[2] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[3]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[4]
+  DESCRIPTION
+    "The name of the third listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[4] != "NONE" )
+      then
+        if( EqpList2Name[4] = EqpList2Name[1] .OR.
+            EqpList2Name[4] = EqpList2Name[2] .OR.
+            EqpList2Name[4] = EqpList2Name[3] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[4])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[4]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[5]
+  DESCRIPTION
+    "The name of the fourth listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[5] != "NONE" )
+      then
+        if( EqpList2Name[5] = EqpList2Name[1] .OR.
+            EqpList2Name[5] = EqpList2Name[2] .OR.
+            EqpList2Name[5] = EqpList2Name[3] .OR.
+            EqpList2Name[5] = EqpList2Name[4] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[5])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[5]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[6]
+  DESCRIPTION
+    "The name of the fifth listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[6] != "NONE" )
+      then
+        if( EqpList2Name[6] = EqpList2Name[1] .OR.
+            EqpList2Name[6] = EqpList2Name[2] .OR.
+            EqpList2Name[6] = EqpList2Name[3] .OR.
+            EqpList2Name[6] = EqpList2Name[4] .OR.
+            EqpList2Name[6] = EqpList2Name[5] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[6])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[6]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[7]
+  DESCRIPTION
+    "The name of the sixth listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[7] != "NONE" )
+      then
+        if( EqpList2Name[7] = EqpList2Name[1] .OR.
+            EqpList2Name[7] = EqpList2Name[2] .OR.
+            EqpList2Name[7] = EqpList2Name[3] .OR.
+            EqpList2Name[7] = EqpList2Name[4] .OR.
+            EqpList2Name[7] = EqpList2Name[5] .OR.
+            EqpList2Name[7] = EqpList2Name[6] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[7])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[7]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[8]
+  DESCRIPTION
+    "The name of the seventh listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[8] != "NONE" )
+      then
+        if( EqpList2Name[8] = EqpList2Name[1] .OR.
+            EqpList2Name[8] = EqpList2Name[2] .OR.
+            EqpList2Name[8] = EqpList2Name[3] .OR.
+            EqpList2Name[8] = EqpList2Name[4] .OR.
+            EqpList2Name[8] = EqpList2Name[5] .OR.
+            EqpList2Name[8] = EqpList2Name[6] .OR.
+            EqpList2Name[8] = EqpList2Name[7] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[8])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[8]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[9]
+  DESCRIPTION
+    "The name of the eighth listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[9] != "NONE" )
+      then
+        if( EqpList2Name[9] = EqpList2Name[1] .OR.
+            EqpList2Name[9] = EqpList2Name[2] .OR.
+            EqpList2Name[9] = EqpList2Name[3] .OR.
+            EqpList2Name[9] = EqpList2Name[4] .OR.
+            EqpList2Name[9] = EqpList2Name[5] .OR.
+            EqpList2Name[9] = EqpList2Name[6] .OR.
+            EqpList2Name[9] = EqpList2Name[7] .OR.
+            EqpList2Name[9] = EqpList2Name[8] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[9])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[9]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList2Name[10]
+  DESCRIPTION
+    "The name of the ninth listed base load piece of equipment in load range 2."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[2] ) > 0 )
+    then
+      if( EqpList2Name[10] != "NONE" )
+      then
+        if( EqpList2Name[10] = EqpList2Name[1] .OR.
+            EqpList2Name[10] = EqpList2Name[2] .OR.
+            EqpList2Name[10] = EqpList2Name[3] .OR.
+            EqpList2Name[10] = EqpList2Name[4] .OR.
+            EqpList2Name[10] = EqpList2Name[5] .OR.
+            EqpList2Name[10] = EqpList2Name[6] .OR.
+            EqpList2Name[10] = EqpList2Name[7] .OR.
+            EqpList2Name[10] = EqpList2Name[8] .OR.
+            EqpList2Name[10] = EqpList2Name[9] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 2, '%s' is listed more
+                     than once.", Name, EqpList2Name[10])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList2Name[10]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:LdRngLim[3]
+  DESCRIPTION
+    "The upper limit of load range 3."  
+  MINIMUM
+    0
+  COMMONMINIMUM
+    300000
+  CHECKSIM
+    if( Type = "ChilledWater" .OR.
+        Type = "HotWater" ) 
+    then
+      if( LocalStatus( LdRngLim[3] ) > 0 )
+      then  
+        if( LdRngLim[3] > LdRngLim[2] )
+        then UNCHANGED
+        else
+          PostError("If plant staging is used, the third load range limit for 
+                     fluid system '%s' must be greater than the second load range 
+                     limit.", Name)
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    LdRngLim[3]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[1]
+  DESCRIPTION
+    "The name of the load following piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( LocalStatus( EqpList3Name[1] ) = 0 )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else if( EqpList3Name[1] = "NONE" )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[2]
+  DESCRIPTION
+    "The name of the first listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[2] != "NONE" )
+      then
+        if( EqpList3Name[2] = EqpList3Name[1] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[2]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[3]
+  DESCRIPTION
+    "The name of the second listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[3] != "NONE" )
+      then
+        if( EqpList3Name[3] = EqpList3Name[1] .OR.
+            EqpList3Name[3] = EqpList3Name[2] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[3]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[4]
+  DESCRIPTION
+    "The name of the third listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[4] != "NONE" )
+      then
+        if( EqpList3Name[4] = EqpList3Name[1] .OR.
+            EqpList3Name[4] = EqpList3Name[2] .OR.
+            EqpList3Name[4] = EqpList3Name[3] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[4])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[4]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[5]
+  DESCRIPTION
+    "The name of the fourth listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[5] != "NONE" )
+      then
+        if( EqpList3Name[5] = EqpList3Name[1] .OR.
+            EqpList3Name[5] = EqpList3Name[2] .OR.
+            EqpList3Name[5] = EqpList3Name[3] .OR.
+            EqpList3Name[5] = EqpList3Name[4] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[5])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[5]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[6]
+  DESCRIPTION
+    "The name of the fifth listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[6] != "NONE" )
+      then
+        if( EqpList3Name[6] = EqpList3Name[1] .OR.
+            EqpList3Name[6] = EqpList3Name[2] .OR.
+            EqpList3Name[6] = EqpList3Name[3] .OR.
+            EqpList3Name[6] = EqpList3Name[4] .OR.
+            EqpList3Name[6] = EqpList3Name[5] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[6])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[6]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[7]
+  DESCRIPTION
+    "The name of the sixth listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[7] != "NONE" )
+      then
+        if( EqpList3Name[7] = EqpList3Name[1] .OR.
+            EqpList3Name[7] = EqpList3Name[2] .OR.
+            EqpList3Name[7] = EqpList3Name[3] .OR.
+            EqpList3Name[7] = EqpList3Name[4] .OR.
+            EqpList3Name[7] = EqpList3Name[5] .OR.
+            EqpList3Name[7] = EqpList3Name[6] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[7])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[7]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[8]
+  DESCRIPTION
+    "The name of the seventh listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[8] != "NONE" )
+      then
+        if( EqpList3Name[8] = EqpList3Name[1] .OR.
+            EqpList3Name[8] = EqpList3Name[2] .OR.
+            EqpList3Name[8] = EqpList3Name[3] .OR.
+            EqpList3Name[8] = EqpList3Name[4] .OR.
+            EqpList3Name[8] = EqpList3Name[5] .OR.
+            EqpList3Name[8] = EqpList3Name[6] .OR.
+            EqpList3Name[8] = EqpList3Name[7] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[8])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[8]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[9]
+  DESCRIPTION
+    "The name of the eighth listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[9] != "NONE" )
+      then
+        if( EqpList3Name[9] = EqpList3Name[1] .OR.
+            EqpList3Name[9] = EqpList3Name[2] .OR.
+            EqpList3Name[9] = EqpList3Name[3] .OR.
+            EqpList3Name[9] = EqpList3Name[4] .OR.
+            EqpList3Name[9] = EqpList3Name[5] .OR.
+            EqpList3Name[9] = EqpList3Name[6] .OR.
+            EqpList3Name[9] = EqpList3Name[7] .OR.
+            EqpList3Name[9] = EqpList3Name[8] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[9])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[9]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList3Name[10]
+  DESCRIPTION
+    "The name of the ninth listed base load piece of equipment in load range 3."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[3] ) > 0 )
+    then
+      if( EqpList3Name[10] != "NONE" )
+      then
+        if( EqpList3Name[10] = EqpList3Name[1] .OR.
+            EqpList3Name[10] = EqpList3Name[2] .OR.
+            EqpList3Name[10] = EqpList3Name[3] .OR.
+            EqpList3Name[10] = EqpList3Name[4] .OR.
+            EqpList3Name[10] = EqpList3Name[5] .OR.
+            EqpList3Name[10] = EqpList3Name[6] .OR.
+            EqpList3Name[10] = EqpList3Name[7] .OR.
+            EqpList3Name[10] = EqpList3Name[8] .OR.
+            EqpList3Name[10] = EqpList3Name[9] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 3, '%s' is listed more
+                     than once.", Name, EqpList3Name[10])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList3Name[10]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:LdRngLim[4]
+  DESCRIPTION
+    "The upper limit of load range 4."  
+  MINIMUM
+    0
+  COMMONMINIMUM
+    300000
+  CHECKSIM
+    if( Type = "ChilledWater" .OR.
+        Type = "HotWater" ) 
+    then
+      if( LocalStatus( LdRngLim[4] ) > 0 )
+      then  
+        if( LdRngLim[4] > LdRngLim[3] )
+        then UNCHANGED
+        else
+          PostError("If plant staging is used, the fourth load range limit for 
+                     fluid system '%s' must be greater than the third load range 
+                     limit.", Name)
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    LdRngLim[4]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[1]
+  DESCRIPTION
+    "The name of the load following piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( LocalStatus( EqpList4Name[1] ) = 0 )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else if( EqpList4Name[1] = "NONE" )
+      then
+        PostWarning("For fluid system '%s', no equipment is listed in the Load 
+                     Following position.", Name)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[1]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[2]
+  DESCRIPTION
+    "The name of the first listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[2] != "NONE" )
+      then
+        if( EqpList4Name[2] = EqpList4Name[1] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[2]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[3]
+  DESCRIPTION
+    "The name of the second listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[3] != "NONE" )
+      then
+        if( EqpList4Name[3] = EqpList4Name[1] .OR.
+            EqpList4Name[3] = EqpList4Name[2] )
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[1])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[3]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[4]
+  DESCRIPTION
+    "The name of the third listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[4] != "NONE" )
+      then
+        if( EqpList4Name[4] = EqpList4Name[1] .OR.
+            EqpList4Name[4] = EqpList4Name[2] .OR.
+            EqpList4Name[4] = EqpList4Name[3] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[4])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[4]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[5]
+  DESCRIPTION
+    "The name of the fourth listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[5] != "NONE" )
+      then
+        if( EqpList4Name[5] = EqpList4Name[1] .OR.
+            EqpList4Name[5] = EqpList4Name[2] .OR.
+            EqpList4Name[5] = EqpList4Name[3] .OR.
+            EqpList4Name[5] = EqpList4Name[4] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[5])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[5]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[6]
+  DESCRIPTION
+    "The name of the fifth listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[6] != "NONE" )
+      then
+        if( EqpList4Name[6] = EqpList4Name[1] .OR.
+            EqpList4Name[6] = EqpList4Name[2] .OR.
+            EqpList4Name[6] = EqpList4Name[3] .OR.
+            EqpList4Name[6] = EqpList4Name[4] .OR.
+            EqpList4Name[6] = EqpList4Name[5] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[6])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[6]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[7]
+  DESCRIPTION
+    "The name of the sixth listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[7] != "NONE" )
+      then
+        if( EqpList4Name[7] = EqpList4Name[1] .OR.
+            EqpList4Name[7] = EqpList4Name[2] .OR.
+            EqpList4Name[7] = EqpList4Name[3] .OR.
+            EqpList4Name[7] = EqpList4Name[4] .OR.
+            EqpList4Name[7] = EqpList4Name[5] .OR.
+            EqpList4Name[7] = EqpList4Name[6] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[7])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[7]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[8]
+  DESCRIPTION
+    "The name of the seventh listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[8] != "NONE" )
+      then
+        if( EqpList4Name[8] = EqpList4Name[1] .OR.
+            EqpList4Name[8] = EqpList4Name[2] .OR.
+            EqpList4Name[8] = EqpList4Name[3] .OR.
+            EqpList4Name[8] = EqpList4Name[4] .OR.
+            EqpList4Name[8] = EqpList4Name[5] .OR.
+            EqpList4Name[8] = EqpList4Name[6] .OR.
+            EqpList4Name[8] = EqpList4Name[7] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[8])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[8]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[9]
+  DESCRIPTION
+    "The name of the eighth listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[9] != "NONE" )
+      then
+        if( EqpList4Name[9] = EqpList4Name[1] .OR.
+            EqpList4Name[9] = EqpList4Name[2] .OR.
+            EqpList4Name[9] = EqpList4Name[3] .OR.
+            EqpList4Name[9] = EqpList4Name[4] .OR.
+            EqpList4Name[9] = EqpList4Name[5] .OR.
+            EqpList4Name[9] = EqpList4Name[6] .OR.
+            EqpList4Name[9] = EqpList4Name[7] .OR.
+            EqpList4Name[9] = EqpList4Name[8] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[9])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[9]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE FluidSys:EqpList4Name[10]
+  DESCRIPTION
+    "The name of the ninth listed base load piece of equipment in load range 4."  
+  CHECKSIM
+    if( LocalStatus( LdRngLim[4] ) > 0 )
+    then
+      if( EqpList4Name[10] != "NONE" )
+      then
+        if( EqpList4Name[10] = EqpList4Name[1] .OR.
+            EqpList4Name[10] = EqpList4Name[2] .OR.
+            EqpList4Name[10] = EqpList4Name[3] .OR.
+            EqpList4Name[10] = EqpList4Name[4] .OR.
+            EqpList4Name[10] = EqpList4Name[5] .OR.
+            EqpList4Name[10] = EqpList4Name[6] .OR.
+            EqpList4Name[10] = EqpList4Name[7] .OR.
+            EqpList4Name[10] = EqpList4Name[8] .OR.
+            EqpList4Name[10] = EqpList4Name[9] ) 
+        then
+          PostError("If plant staging is used, each piece of equipment can only 
+                     be listed once in each load range.  For fluid system '%s' 
+                     in load range 4, '%s' is listed more
+                     than once.", Name, EqpList4Name[10])
+        else UNCHANGED
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    EqpList4Name[10]
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+

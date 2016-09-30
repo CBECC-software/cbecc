@@ -1,0 +1,773 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Setup Construction objects for CSE Energy Simulation
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2014, California Energy Commission
+; Copyright (c) 2012-2014, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+RULELIST "CSE_SimulationPrep_Cons" 1 0 0 1
+;*************************************************************************
+
+ ; import some project-wide, generic materials (potentially) referenced in multiple constructions
+	"Import Gypsum Mat from library (if needed)"			Proj:LibMat_Gypsum		= {	if (LocalCompAssigned( LibMat_Gypsum )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "Gypsum Board" )  endif  }
+; SAC 3/11/14 - moved these Mat assignments UP into defaulting rules since properties of these Mats now referenced there
+;	"Import SoftWood Mat from library (if needed)"		Proj:LibMat_SoftWood		= {	if (LocalCompAssigned( LibMat_SoftWood )) then  UNCHANGED
+;																												else  RuleLibrary( Mat, "SoftWood" )  endif  }
+;	"Import Ceiling Ins Mat from library (if needed)"	Proj:LibMat_CeilingIns	= {	if (LocalCompAssigned( LibMat_CeilingIns )) then  UNCHANGED
+;																												else  RuleLibrary( Mat, "Ceiling Insul" )  endif  }
+;	"Import Other Ins Mat from library (if needed)"		Proj:LibMat_OtherIns		= {	if (LocalCompAssigned( LibMat_OtherIns )) then  UNCHANGED
+;																												else  RuleLibrary( Mat, "Other Insul" )  endif  }
+  ; following two library reference obejcts used only for crawl space walls
+	"Import WoodLayer Mat from library (if needed)"		Proj:LibMat_WoodLayer	= {	if (LocalCompAssigned( LibMat_WoodLayer ) .OR. ComponentCount( CrawlSpace ) < 1) then  UNCHANGED
+																												else if (MaxAll( CrawlSpace:AvgWallHeight ) > 2) then  RuleLibrary( Mat, "Wood layer" )
+																												else  UNCHANGED  endif endif  }
+	"Import 3CoatStucco Mat from library (if needed)"	Proj:LibMat_3CoatStucco	= {	if (LocalCompAssigned( LibMat_3CoatStucco ) .OR. ComponentCount( CrawlSpace ) < 1) then  UNCHANGED
+																												else if (MaxAll( CrawlSpace:AvgWallHeight ) > 2) then  RuleLibrary( Mat, "3 Coat Stucco" )
+																												else  UNCHANGED  endif endif  }
+
+; SAC 3/17/14 - to be REMOVED
+; "store BEMProc details"		Proj:Action = {  StoreBEMProc( "Before SetupAtticEdgeCons", 0 )  }
+
+  ; SAC 12/4/12 - separate out all rules and rulelist calls pertaining to attic edge construction generation
+  	"Call subordinate rulelist to manage ALL attic edge surface creation/defaulting"
+			Proj:Action	= {	if (SumAll( CeilingBelowAttic:AtcEdg_TotArea ) < 0.1) then  UNCHANGED
+									else	EvalRulelist( "SetupAtticEdgeConstructions" )  endif  }
+
+; SAC 3/17/14 - to be REMOVED
+; "store BEMProc details"		Proj:Action = {  StoreBEMProc( "After SetupAtticEdgeCons", 0 )  }
+
+;	"Create materials to model insulation in construction cavities - needed to ensure valid AtticEdge Cons"
+;		Cons:Action	= {	EvalRulelist( "CreateConsCavityInsulMat_All", 1 )  }
+; SAC 3/17/14 - addded full Cons object defaulting here in order to ensure that all constructions are fully defaulted and InsFur materials present & valid prior to simulation
+;					 clean-up of LayerParams & Mat objects created during these defaulting/setup rules is handled @ beginning of the ProcessResults rulelist
+	"Default Mat ConductivityQII"					Proj:Action	= {	EvalRulelist( "DefaultMatCondQII" )  }		; SAC 3/18/14
+	"Default Cons properties - AtcEdg-WA"		Cons:Action = {	if (IfValidAnd( AtcEdg_ConsType == 1 )) then		EvalRulelist( "SetupCons_CathedralCeiling_WA", 1 )  else  UNCHANGED  endif  }  ; Cathedral Ceilings - attic edge WA
+	"Default Cons properties - AtcEdg-WB"		Cons:Action = {	if (IfValidAnd( AtcEdg_ConsType == 2 )) then		EvalRulelist( "SetupCons_CathedralCeiling_WB", 1 )  else  UNCHANGED  endif  }  ; Cathedral Ceilings - attic edge WB
+	"Default Cons properties - non-AtcEdg"		Cons:Action = {	if (IfValidAnd( AtcEdg_ConsType == 1 )) then			UNCHANGED   ; Cathedral Ceilings - attic edge WA
+																					else if (IfValidAnd( AtcEdg_ConsType == 2)) then	UNCHANGED   ; Cathedral Ceilings - attic edge WB
+																					else																EvalRulelist( "DefaultConsObject", 1 )
+																					endif endif  }
+	"Perform final Ufactor prep and call ConsUFactoRes()"		Proj:Action	= {	EvalRulelist( "SetupCons_UValue_All" )  }
+
+; SAC 3/17/14 - to be REMOVED
+; "store BEMProc details"		Proj:Action = {  StoreBEMProc( "After Final Cons defaulting", 0 )  }
+; "debug"		Proj:Action	= {	MessageBox( "Final SimPrep Cons defaulting done." )  }
+
+; SAC 12/22/14 - added logic to set NumLayers based on MAX of cavity & frame PathMats - final FramePathMats ignored in R-0 Ceilings when no cavity path material defined above framing (GC issue 430)
+	"Reset Cons:NumLayers"	Cons:NumLayers = {	     if (LocalCompAssigned( CavityPathMats[10] ) .OR. LocalCompAssigned( FramePathMats[10] )) then  10
+																else if (LocalCompAssigned( CavityPathMats[9]  ) .OR. LocalCompAssigned( FramePathMats[9]  )) then   9
+																else if (LocalCompAssigned( CavityPathMats[8]  ) .OR. LocalCompAssigned( FramePathMats[8]  )) then   8
+																else if (LocalCompAssigned( CavityPathMats[7]  ) .OR. LocalCompAssigned( FramePathMats[7]  )) then   7
+																else if (LocalCompAssigned( CavityPathMats[6]  ) .OR. LocalCompAssigned( FramePathMats[6]  )) then   6
+																else if (LocalCompAssigned( CavityPathMats[5]  ) .OR. LocalCompAssigned( FramePathMats[5]  )) then   5
+																else if (LocalCompAssigned( CavityPathMats[4]  ) .OR. LocalCompAssigned( FramePathMats[4]  )) then   4
+																else if (LocalCompAssigned( CavityPathMats[3]  ) .OR. LocalCompAssigned( FramePathMats[3]  )) then   3
+																else if (LocalCompAssigned( CavityPathMats[2]  ) .OR. LocalCompAssigned( FramePathMats[2]  )) then   2
+																else if (LocalCompAssigned( CavityPathMats[1]  ) .OR. LocalCompAssigned( FramePathMats[1]  )) then   1
+																else  0  endif endif endif endif endif endif endif endif endif endif  }
+
+	"Reset Cons:NumPaths"  Cons:NumPaths 	= {	if (LocalCompAssigned( FramePathMats[1] ) .AND.
+																		  (LocalCompAssigned( CavityPathMats[1] ) .OR. LocalCompAssigned( CavityPathMats[2] ))) then  2
+																else if (LocalCompAssigned( CavityPathMats[1] ) .OR. LocalCompAssigned( CavityPathMats[2] ))  then  1  else  0  endif endif  }
+
+ ; CSE MATERIALs
+	"Blast Mat:cseMATERIAL"								Mat:cseMATERIAL				= {	if (LocalCompAssigned( cseMATERIAL )) then  DeleteComp()  else  UNCHANGED  endif  }
+  ; SAC 2/7/14 - only create cseMATERIAL if the Mat has a valid Conductivity property
+	"Create new Mat:cseMATERIAL"  					Mat:cseMATERIAL				= {	if (LocalStatus( ConductivityQII ) > 0) then  CreateComp( cseMATERIAL, "m-" + Local( Name ) )  else  UNCHANGED  endif  }
+	"Set Mat:cseMATERIAL:SourceMat"					Mat:cseMATERIAL:SourceMat	= {	Local( Name )  }
+	"Default remaining cseMATERIAL properties"	cseMATERIAL:Action			= {	EvalRulelist( "Default_MATERIAL_BasedOn_SourceMat", 1 )  }
+
+ ; CSE CONSTRUCTIONs & LAYERs
+ 	"Default missing Cavity path material layer thicknesses"	Proj:Action	= {	EvalRulelist( "Default_CavityPath_Thicknesses" )  }
+ 	; setup individual Frame & Cavity constructions in a subordinate rulelist so that they are created consecutively (not all framed followed by all cavity)
+ 	"Setup Frame & Cavity CSE CONSTRUCTIONs"	Cons:Action						= {	EvalRulelist( "Setup_CSE_CONSTRUCTION", 1 )  }
+
+	; setup Slab Floor constructions
+	"Set Proj:CptSlabFloorArea"		Proj:CptSlabFloorArea		= {	SumAll( SlabFloor:CarpetedArea )  }
+	"Set Proj:ExpSlabFloorArea"		Proj:ExpSlabFloorArea		= {	SumAll( SlabFloor:ExposedArea  )  }
+; 	"Setup Slab Floor CSE CONSTRUCTIONs"		Proj:Action			= {	if (SumAll( SlabFloor:Area ) < 0.5) then  UNCHANGED
+;																							else  EvalRulelist( "Setup_CSE_CONSTRUCTION_SlabFloors" )  endif  }
+; SAC 1/29/13 - revised above rule to prevent creation of slab constructions not needed in simulation
+ 	"Setup Slab Floor CSE CONSTRUCTIONs"		Proj:Action			= {	if (CptSlabFloorArea > 0.1 .AND. ExpSlabFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_SlabFloors" )
+																							else if (CptSlabFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_SlabFloors_CarpetedOnly" )
+																							else if (ExpSlabFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_SlabFloors_ExposedOnly" )
+																							else	UNCHANGED  endif endif endif  }
+
+	; setup Underground Floor constructions - SAC 11/17/14
+	"Set Proj:CptUndFloorArea"			Proj:CptUndFloorArea			= {	SumAll( UndFloor:CarpetedArea )  }
+	"Set Proj:ExpUndFloorArea"			Proj:ExpUndFloorArea			= {	SumAll( UndFloor:ExposedArea  )  }
+ 	"Setup Und Floor CSE CONSTRUCTIONs"			Proj:Action			= {	if (CptUndFloorArea > 0.1 .AND. ExpUndFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_UndFloors" )
+																							else if (CptUndFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_UndFloors_CarpetedOnly" )
+																							else if (ExpUndFloorArea > 0.1)
+																							then	EvalRulelist( "Setup_CSE_CONSTRUCTION_UndFloors_ExposedOnly" )
+																							else	UNCHANGED  endif endif endif  }
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "CSE_Cleanup_Cons" 1 0 0 1
+;*************************************************************************
+	"Delete all cseCONSTRUCTION components"		Proj:Action = {	DeleteAllComps( cseCONSTRUCTION )  }
+	"Delete all cseMATERIAL components"				Proj:Action = {	DeleteAllComps( cseMATERIAL )  }
+	"Delete all Mat components"						Proj:Action = {	DeleteAllComps( Mat )  }
+END
+;*************************************************************************
+
+
+; SAC 12/4/12 - attic edge construction generation
+;*************************************************************************
+RULELIST "SetupAtticEdgeConstructions" 1 0 0 0
+;*************************************************************************
+  ; SAC 12/3/12 - define constructions that describe the WA & WB cathedral ceiling constructions
+  	"Call subordinate rulelist to create WA & WB Cons components used to model attic edge cathedral ceilings"
+			CeilingBelowAttic:Action		= {	if ((Local( AtcEdg_WA ) > 0 .OR. Local( AtcEdg_WB ) > 0) .AND. LocalCompAssigned( AtticZone ) > 0)
+															then	EvalRulelist( "CreateAtticEdgeConstructions", 1 )
+															else	UNCHANGED  endif  }
+
+;  ; SAC 12/3/12 - default attic edge WA constructions (that describe cathedral ceiling constructions)
+;	"Call subordinate rulelist to setup attic edge (WA) construction materials"
+;			Cons:Action = {	if (AtcEdg_ConsType == 1) then	EvalRulelist( "SetupCons_CathedralCeiling_WA", 1 )		; Cathedral Ceilings - attic edge WA
+;									else	UNCHANGED	endif  }
+;	"Call subordinate rulelist to setup attic edge (WB) construction materials"
+;			Cons:Action = {	if (AtcEdg_ConsType == 2) then	EvalRulelist( "SetupCons_CathedralCeiling_WB", 1 )		; Cathedral Ceilings - attic edge WB
+;									else	UNCHANGED	endif  }
+END
+
+
+;*************************************************************************
+RULELIST "Default_MATERIAL_BasedOn_SourceMat" 1 0 0 1
+;   Rules to default newly-created MATERIAL components
+;*************************************************************************
+;	"Set cseMATERIAL:matThk"      "ft",               "Thickness (feet)"   ; conversion from inches required  
+	"Set cseMATERIAL:matDens"		cseMATERIAL:matDens	= {	if (LocalStatus( SourceMat:Density  ) > 1) then  LocalRef( SourceMat:Density  )  else  UNDEFINED  endif  }	; "lb/ft3",           "Density"    
+	"Set cseMATERIAL:matSpHt"		cseMATERIAL:matSpHt	= {	if (LocalStatus( SourceMat:SpecHeat ) > 1) then  LocalRef( SourceMat:SpecHeat )  else  UNDEFINED  endif  }	; "Btu/lb-°F",        "Specific heat of material"   
+	"Set cseMATERIAL:matCond"		cseMATERIAL:matCond	= {	if (IfValidAnd( SourceMat:ConductivityQII > 0 )) then  LocalRef( SourceMat:ConductivityQII )
+																				else if (IfValidAnd( SourceMat:Thickness > 0 ) .AND. IfValidAnd( SourceMat:Resistance > 0 ))
+																				then  1 / (LocalRef( SourceMat:Resistance ) * (12 / LocalRef( SourceMat:Thickness )))
+																				else  UNDEFINED  endif endif  }		; "Btuh-ft/ft2-°F",   "Conductivity (always per foot of thickness)"  
+	"Set cseMATERIAL:matCondCT"	cseMATERIAL:matCondCT ={	if (IfValidAnd( SourceMat:ConductivityCT > 0 )) then  LocalRef( SourceMat:ConductivityCT )  else  UNDEFINED  endif  }
+;	"Set cseMATERIAL:matRNom"     "°F-ft2-h/Btu",     "Resistance (insulation materials only - documentation only)" 
+END
+
+; Written to IBD files:  
+;   Mat   "Gypsum board"              Thickness = 0.5   Conductivity = 0.092       SpecHeat = 0.26   Density = 49.9  Resistance = 0.452899
+;   Mat   "Asphalt shingle roofing"   Thickness = 0.4   Conductivity = 0.07        SpecHeat = 0.3    Density = 70    Resistance = 0.47619
+;   Mat   "Wood decking"              Thickness = 1     Conductivity = 0.067       SpecHeat = 0.39   Density = 30    Resistance = 1.24378
+;   Mat   "Empty cavity"              Thickness = 1     Conductivity = 0.0816993                                     Resistance = 1.02
+;   Mat   "BT uninsul abv grd conc"   Thickness = 6     Conductivity = 1.27        SpecHeat = 0.22   Density = 140   Resistance = 1.3
+;   Mat   "Light dry soil"            Thickness = 24    Conductivity = 0.2         SpecHeat = 0.2    Density = 90    Resistance = 10
+;   
+; from BESTEST CSE inputs:
+;    MATERIAL	"R18Insulation"		matCond=0.0255	    matSpHt=0.20	    matDens=0.68
+;    MATERIAL   "R19Insulation"		matCond=0.0274	    matSpHt=0.20	    matDens=0.6
+;    MATERIAL   "R38Insulation"		matCond=0.0263	    matSpHt=0.20	    matDens=0.6
+;    MATERIAL	"IsocyanurateBrd"	   matCond=0.0116	    matSpHt=0.22	    matDens=2.0
+;    MATERIAL	"WoodFraming"		   matCond=0.0667	    matSpHt=0.33	    matDens=32.0
+;    MATERIAL	"FiberSheathing"	   matCond=0.0316	    matSpHt=0.31	    matDens=18.0
+;    MATERIAL   "WoodSiding"		   matCond=0.0544	    matSpHt=0.28	    matDens=40.0
+;    MATERIAL	"Plywood"			   matCond=0.0667	    matSpHt=0.29	    matDens=34.0
+;    MATERIAL	"AsphaltShingle"	   matCond=0.0473	    matSpHt=0.30	    matDens=70.0
+;    MATERIAL	"SolidDoor"			   matCond=0.0669	    matSpHt=0.33	    matDens=32.0
+;    MATERIAL	"PouredConcrete"	   matCond=1.0417	    matSpHt=0.20	    matDens=140.0
+;    MATERIAL	"PerimeterInsul"	   matCond=0.031	    matSpHt=0.20	    matDens=0.60	//	matSpHt and matDens are random guesses
+
+
+;*************************************************************************
+RULELIST "Default_CavityPath_Thicknesses" 1 0 0 1
+;   Rules to default cavity path material (layer) thicknesses to those of the corresponding Frame path when not otherwise specified
+;*************************************************************************
+	"Default Cons:CavityPathMats[1]:Thickness"	Cons:CavityPathMats[1]:Thickness	= {	if (LocalStatus( CavityPathMats[1]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[1]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[1]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[2]:Thickness"	Cons:CavityPathMats[2]:Thickness	= {	if (LocalStatus( CavityPathMats[2]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[2]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[2]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[3]:Thickness"	Cons:CavityPathMats[3]:Thickness	= {	if (LocalStatus( CavityPathMats[3]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[3]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[3]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[4]:Thickness"	Cons:CavityPathMats[4]:Thickness	= {	if (LocalStatus( CavityPathMats[4]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[4]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[4]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[5]:Thickness"	Cons:CavityPathMats[5]:Thickness	= {	if (LocalStatus( CavityPathMats[5]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[5]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[5]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[6]:Thickness"	Cons:CavityPathMats[6]:Thickness	= {	if (LocalStatus( CavityPathMats[6]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[6]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[6]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[7]:Thickness"	Cons:CavityPathMats[7]:Thickness	= {	if (LocalStatus( CavityPathMats[7]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[7]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[7]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[8]:Thickness"	Cons:CavityPathMats[8]:Thickness	= {	if (LocalStatus( CavityPathMats[8]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[8]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[8]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[9]:Thickness"	Cons:CavityPathMats[9]:Thickness	= {	if (LocalStatus( CavityPathMats[9]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[9]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[9]:Thickness )  else  UNCHANGED  endif  }
+	"Default Cons:CavityPathMats[10]:Thickness"	Cons:CavityPathMats[10]:Thickness = {	if (LocalStatus( CavityPathMats[10]:Thickness ) < 3 .AND. LocalStatus( FramePathMats[10]:Thickness ) > 2)
+																													then  LocalRef( FramePathMats[10]:Thickness )  else  UNCHANGED  endif  }
+END
+
+
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_SlabFloors" 1 0 0 1
+;   Rules to setup/create Slab Floor CONSTRUCTION components
+;*************************************************************************
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[1]"  			Proj:cseSlabNoEdgInsMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-SNEICConcrete" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[2]"  			Proj:cseSlabNoEdgInsMATERIALs[2]				= {	CreateComp( cseMATERIAL,  "m-SNEICEarth" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matDens	= {	115   }
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[3]"  			Proj:cseSlabNoEdgInsMATERIALs[3]				= {	CreateComp( cseMATERIAL,  "m-SNEICCarpet" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matCond	= {	0.02  }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matSpHt	= {	0.34  }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matDens	= {	12.3  }
+
+	"Create Proj:cseSlabNoEdgInsCptCONS"  					Proj:cseSlabNoEdgInsCptCONS					= {	CreateComp( cseCONSTRUCTION, "scn-SlabConsCarpet" )  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[1]"				Proj:cseSlabNoEdgInsCptLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-SNEICCCarpet" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[1]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[1]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[3]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[1]:lrThk		= {	0.5/12  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[2]"				Proj:cseSlabNoEdgInsCptLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-SNEICCConcrete" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[2]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[2]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[1]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[2]:lrThk		= {	3.5/12  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[3]"				Proj:cseSlabNoEdgInsCptLAYERs[3]				= {	CreateComp( cseLAYER, "cl3-SNEICCEarth" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[3]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[3]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[2]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[3]:lrThk		= {	2.0  }
+
+	"Create Proj:cseSlabNoEdgInsExpCONS"  					Proj:cseSlabNoEdgInsExpCONS					= {	CreateComp( cseCONSTRUCTION, "scn-SlabConsExposed" )  }
+
+	"Create Proj:cseSlabNoEdgInsExpLAYERs[1]"				Proj:cseSlabNoEdgInsExpLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-SNEIXCConcrete" )  }
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Parent" 		Proj:cseSlabNoEdgInsExpLAYERs[1]:Parent	= {	Local( cseSlabNoEdgInsExpCONS )  }               
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Material"  	Proj:cseSlabNoEdgInsExpLAYERs[1]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[1]  )  }      
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Thickness"  	Proj:cseSlabNoEdgInsExpLAYERs[1]:lrThk		= {	3.5/12  }                                     
+
+	"Create Proj:cseSlabNoEdgInsExpLAYERs[2]"				Proj:cseSlabNoEdgInsExpLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-SNEIXCEarth" )  }
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Parent" 		Proj:cseSlabNoEdgInsExpLAYERs[2]:Parent	= {	Local( cseSlabNoEdgInsExpCONS )  }            
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Material"  	Proj:cseSlabNoEdgInsExpLAYERs[2]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[2]  )  }   
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Thickness"  	Proj:cseSlabNoEdgInsExpLAYERs[2]:lrThk		= {	2.0  }                                     
+END
+
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_SlabFloors_CarpetedOnly" 1 0 0 1
+;   Rules to setup/create Slab Floor CONSTRUCTION components - for ONLY CARPETED SLABS
+;*************************************************************************
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[1]"  			Proj:cseSlabNoEdgInsMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-SNEICConcrete" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[2]"  			Proj:cseSlabNoEdgInsMATERIALs[2]				= {	CreateComp( cseMATERIAL,  "m-SNEICEarth" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matDens	= {	115   }
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[3]"  			Proj:cseSlabNoEdgInsMATERIALs[3]				= {	CreateComp( cseMATERIAL,  "m-SNEICCarpet" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matCond	= {	0.02  }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matSpHt	= {	0.34  }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[3]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[3]:matDens	= {	12.3  }
+
+	"Create Proj:cseSlabNoEdgInsCptCONS"  					Proj:cseSlabNoEdgInsCptCONS					= {	CreateComp( cseCONSTRUCTION, "scn-SlabConsCarpet" )  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[1]"				Proj:cseSlabNoEdgInsCptLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-SNEICCCarpet" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[1]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[1]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[3]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[1] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[1]:lrThk		= {	0.5/12  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[2]"				Proj:cseSlabNoEdgInsCptLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-SNEICCConcrete" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[2]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[2]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[1]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[2] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[2]:lrThk		= {	3.5/12  }
+
+	"Create Proj:cseSlabNoEdgInsCptLAYERs[3]"				Proj:cseSlabNoEdgInsCptLAYERs[3]				= {	CreateComp( cseLAYER, "cl3-SNEICCEarth" )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Parent" 		Proj:cseSlabNoEdgInsCptLAYERs[3]:Parent	= {	Local( cseSlabNoEdgInsCptCONS )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Material"  	Proj:cseSlabNoEdgInsCptLAYERs[3]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[2]  )  }
+	"Set Proj:cseSlabNoEdgInsCptLAYERs[3] Thickness"  	Proj:cseSlabNoEdgInsCptLAYERs[3]:lrThk		= {	2.0  }
+END
+
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_SlabFloors_ExposedOnly" 1 0 0 1
+;   Rules to setup/create Slab Floor CONSTRUCTION components - for ONLY EXPOSED SLABS
+;*************************************************************************
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[1]"  			Proj:cseSlabNoEdgInsMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-SNEICConcrete" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[1]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseSlabNoEdgInsMATERIALs[2]"  			Proj:cseSlabNoEdgInsMATERIALs[2]				= {	CreateComp( cseMATERIAL,  "m-SNEICEarth" )  }   ; 
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matCond"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matCond	= {	1.0   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matSpHt	= {	0.2   }
+	"Set Proj:cseSlabNoEdgInsMATERIALs[2]:matDens"  	Proj:cseSlabNoEdgInsMATERIALs[2]:matDens	= {	115   }
+
+	"Create Proj:cseSlabNoEdgInsExpCONS"  					Proj:cseSlabNoEdgInsExpCONS					= {	CreateComp( cseCONSTRUCTION, "scn-SlabConsExposed" )  }
+
+	"Create Proj:cseSlabNoEdgInsExpLAYERs[1]"				Proj:cseSlabNoEdgInsExpLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-SNEIXCConcrete" )  }
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Parent" 		Proj:cseSlabNoEdgInsExpLAYERs[1]:Parent	= {	Local( cseSlabNoEdgInsExpCONS )  }               
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Material"  	Proj:cseSlabNoEdgInsExpLAYERs[1]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[1]  )  }      
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[1] Thickness"  	Proj:cseSlabNoEdgInsExpLAYERs[1]:lrThk		= {	3.5/12  }                                     
+
+	"Create Proj:cseSlabNoEdgInsExpLAYERs[2]"				Proj:cseSlabNoEdgInsExpLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-SNEIXCEarth" )  }
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Parent" 		Proj:cseSlabNoEdgInsExpLAYERs[2]:Parent	= {	Local( cseSlabNoEdgInsExpCONS )  }            
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Material"  	Proj:cseSlabNoEdgInsExpLAYERs[2]:lrMat		= {	Local( cseSlabNoEdgInsMATERIALs[2]  )  }   
+	"Set Proj:cseSlabNoEdgInsExpLAYERs[2] Thickness"  	Proj:cseSlabNoEdgInsExpLAYERs[2]:lrThk		= {	2.0  }                                     
+END
+
+
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_UndFloors" 1 0 0 1
+;   Rules to setup/create Underground Floor CONSTRUCTION components
+;*************************************************************************
+
+	"Create Proj:cseUndFloorMATERIALs[1]"  			Proj:cseUndFloorMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-UFlrCConcrete" )  }   ; 
+	"Set Proj:cseUndFloorMATERIALs[1]:matCond" 	 	Proj:cseUndFloorMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matSpHt"  		Proj:cseUndFloorMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matDens" 	 	Proj:cseUndFloorMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseUndFloorMATERIALs[2]"  			Proj:cseUndFloorMATERIALs[2]				= {	CreateComp( cseMATERIAL,  "m-UFlrCCarpet" )  }   ; 
+	"Set Proj:cseUndFloorMATERIALs[2]:matCond"  		Proj:cseUndFloorMATERIALs[2]:matCond	= {	0.02  }
+	"Set Proj:cseUndFloorMATERIALs[2]:matSpHt"  		Proj:cseUndFloorMATERIALs[2]:matSpHt	= {	0.34  }
+	"Set Proj:cseUndFloorMATERIALs[2]:matDens" 	 	Proj:cseUndFloorMATERIALs[2]:matDens	= {	12.3  }
+
+	"Create Proj:cseUndFloorCptCONS"  					Proj:cseUndFloorCptCONS						= {	CreateComp( cseCONSTRUCTION, "scn-UFlrConsCarpet" )  }
+
+	"Create Proj:cseUndFloorCptLAYERs[1]"				Proj:cseUndFloorCptLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-UFlrCCCarpet" )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Parent" 		Proj:cseUndFloorCptLAYERs[1]:Parent		= {	Local( cseUndFloorCptCONS )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Material"  	Proj:cseUndFloorCptLAYERs[1]:lrMat		= {	Local( cseUndFloorMATERIALs[2]  )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Thickness"  	Proj:cseUndFloorCptLAYERs[1]:lrThk		= {	0.5/12  }
+
+	"Create Proj:cseUndFloorCptLAYERs[2]"				Proj:cseUndFloorCptLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-UFlrCCConcrete" )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Parent" 		Proj:cseUndFloorCptLAYERs[2]:Parent		= {	Local( cseUndFloorCptCONS )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Material"  	Proj:cseUndFloorCptLAYERs[2]:lrMat		= {	Local( cseUndFloorMATERIALs[1]  )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Thickness"  	Proj:cseUndFloorCptLAYERs[2]:lrThk		= {	3.5/12  }
+
+	"Create Proj:cseUndFloorExpCONS"  					Proj:cseUndFloorExpCONS						= {	CreateComp( cseCONSTRUCTION, "scn-UFlrConsExposed" )  }
+
+	"Create Proj:cseUndFloorExpLAYERs[1]"				Proj:cseUndFloorExpLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-UFlrXCConcrete" )  }
+	"Set Proj:cseUndFloorExpLAYERs[1] Parent" 		Proj:cseUndFloorExpLAYERs[1]:Parent		= {	Local( cseUndFloorExpCONS )  }               
+	"Set Proj:cseUndFloorExpLAYERs[1] Material"  	Proj:cseUndFloorExpLAYERs[1]:lrMat		= {	Local( cseUndFloorMATERIALs[1]  )  }      
+	"Set Proj:cseUndFloorExpLAYERs[1] Thickness"  	Proj:cseUndFloorExpLAYERs[1]:lrThk		= {	3.5/12  }                                     
+END
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_UndFloors_CarpetedOnly" 1 0 0 1
+;   Rules to setup/create Underground Floor CONSTRUCTION components - for ONLY CARPETED Underground Floors
+;*************************************************************************
+
+	"Create Proj:cseUndFloorMATERIALs[1]"  			Proj:cseUndFloorMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-UFlrCConcrete" )  }   ; 
+	"Set Proj:cseUndFloorMATERIALs[1]:matCond"  		Proj:cseUndFloorMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matSpHt"  		Proj:cseUndFloorMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matDens" 	 	Proj:cseUndFloorMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseUndFloorMATERIALs[2]"  			Proj:cseUndFloorMATERIALs[2]				= {	CreateComp( cseMATERIAL,  "m-UFlrCCarpet" )  }   ; 
+	"Set Proj:cseUndFloorMATERIALs[2]:matCond"  		Proj:cseUndFloorMATERIALs[2]:matCond	= {	0.02  }
+	"Set Proj:cseUndFloorMATERIALs[2]:matSpHt"  		Proj:cseUndFloorMATERIALs[2]:matSpHt	= {	0.34  }
+	"Set Proj:cseUndFloorMATERIALs[2]:matDens" 	 	Proj:cseUndFloorMATERIALs[2]:matDens	= {	12.3  }
+
+	"Create Proj:cseUndFloorCptCONS"  					Proj:cseUndFloorCptCONS						= {	CreateComp( cseCONSTRUCTION, "scn-UFlrConsCarpet" )  }
+
+	"Create Proj:cseUndFloorCptLAYERs[1]"				Proj:cseUndFloorCptLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-UFlrCCCarpet" )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Parent" 		Proj:cseUndFloorCptLAYERs[1]:Parent		= {	Local( cseUndFloorCptCONS )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Material"  	Proj:cseUndFloorCptLAYERs[1]:lrMat		= {	Local( cseUndFloorMATERIALs[2]  )  }
+	"Set Proj:cseUndFloorCptLAYERs[1] Thickness"  	Proj:cseUndFloorCptLAYERs[1]:lrThk		= {	0.5/12  }
+
+	"Create Proj:cseUndFloorCptLAYERs[2]"				Proj:cseUndFloorCptLAYERs[2]				= {	CreateComp( cseLAYER, "cl2-UFlrCCConcrete" )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Parent" 		Proj:cseUndFloorCptLAYERs[2]:Parent		= {	Local( cseUndFloorCptCONS )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Material"  	Proj:cseUndFloorCptLAYERs[2]:lrMat		= {	Local( cseUndFloorMATERIALs[1]  )  }
+	"Set Proj:cseUndFloorCptLAYERs[2] Thickness"  	Proj:cseUndFloorCptLAYERs[2]:lrThk		= {	3.5/12  }
+END
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION_UndFloors_ExposedOnly" 1 0 0 1
+;   Rules to setup/create Underground Floor CONSTRUCTION components - for ONLY EXPOSED Underground Floors
+;*************************************************************************
+
+	"Create Proj:cseUndFloorMATERIALs[1]"  			Proj:cseUndFloorMATERIALs[1]				= {	CreateComp( cseMATERIAL,  "m-UFlrCConcrete" )  }   ; 
+	"Set Proj:cseUndFloorMATERIALs[1]:matCond" 	 	Proj:cseUndFloorMATERIALs[1]:matCond	= {	1.0   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matSpHt"  		Proj:cseUndFloorMATERIALs[1]:matSpHt	= {	0.2   }
+	"Set Proj:cseUndFloorMATERIALs[1]:matDens"  		Proj:cseUndFloorMATERIALs[1]:matDens	= {	144   }
+
+	"Create Proj:cseUndFloorExpCONS"  					Proj:cseUndFloorExpCONS						= {	CreateComp( cseCONSTRUCTION, "scn-UFlrConsExposed" )  }
+
+	"Create Proj:cseUndFloorExpLAYERs[1]"				Proj:cseUndFloorExpLAYERs[1]				= {	CreateComp( cseLAYER, "cl1-UFlrXCConcrete" )  }
+	"Set Proj:cseUndFloorExpLAYERs[1] Parent" 		Proj:cseUndFloorExpLAYERs[1]:Parent		= {	Local( cseUndFloorExpCONS )  }               
+	"Set Proj:cseUndFloorExpLAYERs[1] Material"  	Proj:cseUndFloorExpLAYERs[1]:lrMat		= {	Local( cseUndFloorMATERIALs[1]  )  }      
+	"Set Proj:cseUndFloorExpLAYERs[1] Thickness"  	Proj:cseUndFloorExpLAYERs[1]:lrThk		= {	3.5/12  }                                     
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "Setup_CSE_CONSTRUCTION" 1 0 0 1
+;   Rules to setup/create Frame & Cavity CONSTRUCTION components
+;*************************************************************************
+	"Blast Cons:cseCavCONS"							Cons:cseCavCONS				= {	if (LocalCompAssigned( cseCavCONS )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Create new Cons:cseCavCONS"  				Cons:cseCavCONS				= {	if (Local( NumPaths ) < 1) then UNDEFINED
+																										else  CreateComp( cseCONSTRUCTION, "cc-" + Local( Name ) )  endif  }
+	"Set Cons:cseCavCONS:SourceCons"				Cons:cseCavCONS:SourceCons	= {	Local( Name )  }
+	"Default remaining Cav CONS properties"	Cons:cseCavCONS:Action		= {	EvalRulelist( "Default_CavCONSTRUCTION", 1 )  }
+
+	"Blast Cons:cseFrmCONS"							Cons:cseFrmCONS				= {	if (LocalCompAssigned( cseFrmCONS )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Create new Cons:cseFrmCONS"  				Cons:cseFrmCONS				= {	if (Local( NumPaths ) < 2) then UNDEFINED
+																										else  CreateComp( cseCONSTRUCTION, "fc-" + Local( Name ) )  endif  }
+	"Set Cons:cseFrmCONS:SourceCons"				Cons:cseFrmCONS:SourceCons	= {	Local( Name )  }
+	"Default remaining Frm CONS properties"	Cons:cseFrmCONS:Action		= {	EvalRulelist( "Default_FrmCONSTRUCTION", 1 )  }
+
+
+;  1,           "cseFrmCONS",        BEMP_Obj,  1, "",                 0, "CONSTRUCTION", 0, "",         7010, "CSE frame CONSTRUCTION component corresponding to this Cons" 
+;  1,           "cseCavCONS",        BEMP_Obj,  1, "",                 0, "CONSTRUCTION", 0, "",         7010, "CSE cavity CONSTRUCTION component corresponding to this Cons" 
+;  CONSTRUCTION:SourceCons,    Optional,   0,    1,   1,    1,  1,  1
+;  
+;  
+;  1,           "cseFrmLAYERs",      BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             7010, "CSE frame LAYER components corresponding to this Cons" 
+;  1,           "cseCavLAYERs",      BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             7010, "CSE cavity LAYER components corresponding to this Cons" 
+;  LAYER:lrMat,    	           Optional,   0,    1,   1,    1,  1,  1
+;  LAYER:lrThk,                 Optional,   0,    1,   1,    1,  1,  1
+;  LAYER:SourceCons,            Optional,   0,    1,   1,    1,  1,  1
+END
+
+
+; SAC 12/3/12 - rulelist that creates the constructions that describe attic edge WA & WB cathedral ceiling constructions
+;*************************************************************************
+RULELIST "CreateAtticEdgeConstructions" 1 0 0 0
+;*************************************************************************
+	"Delete WA Cons component (if one already assigned)"		CeilingBelowAttic:AtcEdg_WACons	= {	if (LocalCompAssigned( AtcEdg_WACons ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+	"Create WA Cons component"		CeilingBelowAttic:AtcEdg_WACons						= {	CreateComp( Cons, Local( Name ) + "-AtcEdgWA", "CreateAtticEdgeWAConstruction" )  }
+	"Set object reference of WA cons that points back to the local Cons object"
+											CeilingBelowAttic:AtcEdg_WACons:AtcEdg_ClgCons	= {	LocalRef( Construction:Name )  }
+	"Set object reference of WA cons that points back to the Attic's Cons object"
+											CeilingBelowAttic:AtcEdg_WACons:AtcEdg_AtcCons	= {	LocalRef( AtticZone:Construction:Name )  }
+	"Set object reference of Attic object needed to setup WA cons"
+											CeilingBelowAttic:AtcEdg_WACons:AtcEdg_Attic		= {	LocalRef( AtticZone:Name )  }
+	"Set object reference of CeilingBelowAttic object needed to setup WA cons"
+											CeilingBelowAttic:AtcEdg_WACons:AtcEdg_ClgBlwAtc = {	Local( Name )  }
+
+	"Delete WB Cons component (if one already assigned)"		CeilingBelowAttic:AtcEdg_WBCons	= {	if (LocalCompAssigned( AtcEdg_WBCons ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+	"Create WB Cons component"		CeilingBelowAttic:AtcEdg_WBCons						= {	CreateComp( Cons, Local( Name ) + "-AtcEdgWB", "CreateAtticEdgeWBConstruction" )  }
+	"Set object reference of WB cons that points back to the local Cons object"
+											CeilingBelowAttic:AtcEdg_WBCons:AtcEdg_ClgCons	= {	LocalRef( Construction:Name )  }
+	"Set object reference of WB cons that points back to the Attic's Cons object"
+											CeilingBelowAttic:AtcEdg_WBCons:AtcEdg_AtcCons	= {	LocalRef( AtticZone:Construction:Name )  }
+	"Set object reference of Attic object needed to setup WB cons"
+											CeilingBelowAttic:AtcEdg_WBCons:AtcEdg_Attic		= {	LocalRef( AtticZone:Name )  }
+	"Set object reference of CeilingBelowAttic object needed to setup WB cons"
+											CeilingBelowAttic:AtcEdg_WBCons:AtcEdg_ClgBlwAtc = {	Local( Name )  }
+END
+;*************************************************************************
+RULELIST "CreateAtticEdgeWAConstruction" 1 0 0 0
+	"Set WA Cons CanAssignTo -> Cathedral Ceilings"		Cons:CanAssignTo		= {	2  }		; "Cathedral Ceilings"  
+	"Set flag denoting this as a WA Cons component"		Cons:AtcEdg_ConsType	= {	1  }		; WA
+END
+;*************************************************************************
+RULELIST "CreateAtticEdgeWBConstruction" 1 0 0 0
+	"Set WB Cons CanAssignTo -> Cathedral Ceilings"		Cons:CanAssignTo		= {	2  }		; "Cathedral Ceilings"  
+	"Set flag denoting this as a WB Cons component"		Cons:AtcEdg_ConsType	= {	2  }		; WB
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "Default_CavCONSTRUCTION" 1 0 0 1
+;   Rules to default newly-created Cavity LAYER components
+;*************************************************************************
+
+	"Create Cav Layer #1"  				Cons:cseCavLAYERs[1]				= {	if (Local( NumLayers ) < 1 .OR. LocalCompAssigned( CavityPathMats[1]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl1-" + Local( Name ) )  endif  }
+	"Set Cav Layer #1 Parent" 			Cons:cseCavLAYERs[1]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #1 Material"  		Cons:cseCavLAYERs[1]:lrMat		= {	LocalRef( CavityPathMats[1]:cseMATERIAL  )  }
+	"Set Cav Layer #1 Thickness"  	Cons:cseCavLAYERs[1]:lrThk		= {	if (IfValidAnd( CavityPathMats[1]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[1]:Thickness  ) / 12
+																								else  Local( Thickness[1] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #1"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[1] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[1]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[1]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #1 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #2"  				Cons:cseCavLAYERs[2]				= {	if (Local( NumLayers ) < 2 .OR. LocalCompAssigned( CavityPathMats[2]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl2-" + Local( Name ) )  endif  }
+	"Set Cav Layer #2 Parent" 			Cons:cseCavLAYERs[2]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #2 Material"  		Cons:cseCavLAYERs[2]:lrMat		= {	LocalRef( CavityPathMats[2]:cseMATERIAL  )  }
+	"Set Cav Layer #2 Thickness"  	Cons:cseCavLAYERs[2]:lrThk		= {	if (IfValidAnd( CavityPathMats[2]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[2]:Thickness  ) / 12
+																								else  Local( Thickness[2] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #2"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[2] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[2]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[2]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #2 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #3"  				Cons:cseCavLAYERs[3]				= {	if (Local( NumLayers ) < 3 .OR. LocalCompAssigned( CavityPathMats[3]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl3-" + Local( Name ) )  endif  }
+	"Set Cav Layer #3 Parent" 			Cons:cseCavLAYERs[3]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #3 Material"  		Cons:cseCavLAYERs[3]:lrMat		= {	LocalRef( CavityPathMats[3]:cseMATERIAL  )  }
+	"Set Cav Layer #3 Thickness"  	Cons:cseCavLAYERs[3]:lrThk		= {	if (IfValidAnd( CavityPathMats[3]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[3]:Thickness  ) / 12
+																								else  Local( Thickness[3] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #3"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[3] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[3]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[3]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #3 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #4"  				Cons:cseCavLAYERs[4]				= {	if (Local( NumLayers ) < 4 .OR. LocalCompAssigned( CavityPathMats[4]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl4-" + Local( Name ) )  endif  }
+	"Set Cav Layer #4 Parent" 			Cons:cseCavLAYERs[4]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #4 Material"  		Cons:cseCavLAYERs[4]:lrMat		= {	LocalRef( CavityPathMats[4]:cseMATERIAL  )  }
+	"Set Cav Layer #4 Thickness"  	Cons:cseCavLAYERs[4]:lrThk		= {	if (IfValidAnd( CavityPathMats[4]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[4]:Thickness  ) / 12
+																								else  Local( Thickness[4] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #4"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[4] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[4]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[4]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #4 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #5"  				Cons:cseCavLAYERs[5]				= {	if (Local( NumLayers ) < 5 .OR. LocalCompAssigned( CavityPathMats[5]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl5-" + Local( Name ) )  endif  }
+	"Set Cav Layer #5 Parent" 			Cons:cseCavLAYERs[5]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #5 Material"  		Cons:cseCavLAYERs[5]:lrMat		= {	LocalRef( CavityPathMats[5]:cseMATERIAL  )  }
+	"Set Cav Layer #5 Thickness"  	Cons:cseCavLAYERs[5]:lrThk		= {	if (IfValidAnd( CavityPathMats[5]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[5]:Thickness  ) / 12
+																								else  Local( Thickness[5] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #5"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[5] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[5]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[5]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #5 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #6"  				Cons:cseCavLAYERs[6]				= {	if (Local( NumLayers ) < 6 .OR. LocalCompAssigned( CavityPathMats[6]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl6-" + Local( Name ) )  endif  }
+	"Set Cav Layer #6 Parent" 			Cons:cseCavLAYERs[6]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #6 Material"  		Cons:cseCavLAYERs[6]:lrMat		= {	LocalRef( CavityPathMats[6]:cseMATERIAL  )  }
+	"Set Cav Layer #6 Thickness"  	Cons:cseCavLAYERs[6]:lrThk		= {	if (IfValidAnd( CavityPathMats[6]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[6]:Thickness  ) / 12
+																								else  Local( Thickness[6] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #6"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[6] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[6]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[6]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #6 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #7"  				Cons:cseCavLAYERs[7]				= {	if (Local( NumLayers ) < 7 .OR. LocalCompAssigned( CavityPathMats[7]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl7-" + Local( Name ) )  endif  }
+	"Set Cav Layer #7 Parent" 			Cons:cseCavLAYERs[7]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #7 Material"  		Cons:cseCavLAYERs[7]:lrMat		= {	LocalRef( CavityPathMats[7]:cseMATERIAL  )  }
+	"Set Cav Layer #7 Thickness"  	Cons:cseCavLAYERs[7]:lrThk		= {	if (IfValidAnd( CavityPathMats[7]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[7]:Thickness  ) / 12
+																								else  Local( Thickness[7] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #7"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[7] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[7]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[7]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #7 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #8"  				Cons:cseCavLAYERs[8]				= {	if (Local( NumLayers ) < 8 .OR. LocalCompAssigned( CavityPathMats[8]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl8-" + Local( Name ) )  endif  }
+	"Set Cav Layer #8 Parent" 			Cons:cseCavLAYERs[8]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #8 Material"  		Cons:cseCavLAYERs[8]:lrMat		= {	LocalRef( CavityPathMats[8]:cseMATERIAL  )  }
+	"Set Cav Layer #8 Thickness"  	Cons:cseCavLAYERs[8]:lrThk		= {	if (IfValidAnd( CavityPathMats[8]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[8]:Thickness  ) / 12
+																								else  Local( Thickness[8] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #8"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[8] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[8]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[8]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #8 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #9"  				Cons:cseCavLAYERs[9]				= {	if (Local( NumLayers ) < 9 .OR. LocalCompAssigned( CavityPathMats[9]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl9-" + Local( Name ) )  endif  }
+	"Set Cav Layer #9 Parent" 			Cons:cseCavLAYERs[9]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #9 Material"  		Cons:cseCavLAYERs[9]:lrMat		= {	LocalRef( CavityPathMats[9]:cseMATERIAL  )  }
+	"Set Cav Layer #9 Thickness"  	Cons:cseCavLAYERs[9]:lrThk		= {	if (IfValidAnd( CavityPathMats[9]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[9]:Thickness  ) / 12
+																								else  Local( Thickness[9] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #9"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[9] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[9]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[9]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #9 - layer thickness not > 0", Name )  endif  }
+
+	"Create Cav Layer #10"  			Cons:cseCavLAYERs[10]			= {	if (Local( NumLayers ) < 10 .OR. LocalCompAssigned( CavityPathMats[10]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "cl10-" + Local( Name ) )  endif  }
+	"Set Cav Layer #10 Parent" 		Cons:cseCavLAYERs[10]:Parent	= {	Local( cseCavCONS )  }
+	"Set Cav Layer #10 Material"  	Cons:cseCavLAYERs[10]:lrMat	= {	LocalRef( CavityPathMats[10]:cseMATERIAL  )  }
+	"Set Cav Layer #10 Thickness"  	Cons:cseCavLAYERs[10]:lrThk	= {	if (IfValidAnd( CavityPathMats[10]:Thickness  > 0 ))
+																								then	LocalRef( CavityPathMats[10]:Thickness  ) / 12
+																								else  Local( Thickness[10] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #10"	Cons:Action					= {	if (LocalCompAssigned( cseCavLAYERs[10] ) < 0.5 .OR. LocalCompAssigned( CavityPathMats[10]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseCavLAYERs[10]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Cavity Layer #10 - layer thickness not > 0", Name )  endif  }
+
+	
+; 1,           "FramePathMats",     BEMP_Obj, 10, "",                 0, "Mat",      0, "",            11160, "Materials in the frame path" 
+; 1,           "Thickness",         BEMP_Flt,  1, "in",               0, "",         0, "",            11210, "Thickness (inches)"  
+; 
+; 
+; 1,           "cseFrmLAYERs",      BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             7010, "CSE frame LAYER components corresponding to this Cons" 
+; 
+; 1,           "Layers",           BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             6095, "LAYER children" 
+; 	"Set Cons:cseFrmCONS:SourceCons"				Cons:cseFrmCONS:SourceCons	= {	Local( Name )  }
+; 	"Default remaining Frm CONS properties"	Cons:cseFrmCONS:Action		= {	EvalRulelist( "Default_FrmCONSTRUCTION", 1 )  }
+; 
+; 
+; 	"Default remaining Frm CONS properties"	Cons:cseFrmCONS:Action		= {	EvalRulelist( "Default_FrmCONSTRUCTION", 1 )  }
+; 
+; 
+; 
+; 
+; 1,           "cseFrmCONS",        BEMP_Obj,  1, "",                 0, "CONSTRUCTION", 0, "",         7010, "CSE frame CONSTRUCTION component corresponding to this Cons" 
+; 1,           "cseCavCONS",        BEMP_Obj,  1, "",                 0, "CONSTRUCTION", 0, "",         7010, "CSE cavity CONSTRUCTION component corresponding to this Cons" 
+; CONSTRUCTION:SourceCons,    Optional,   0,    1,   1,    1,  1,  1
+
+
+; 1,           "cseFrmLAYERs",      BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             7010, "CSE frame LAYER components corresponding to this Cons" 
+; 1,           "cseCavLAYERs",      BEMP_Obj, 10, "",                 0, "LAYER",    0, "",             7010, "CSE cavity LAYER components corresponding to this Cons" 
+; LAYER:lrMat,    	           Optional,   0,    1,   1,    1,  1,  1
+; LAYER:lrThk,                 Optional,   0,    1,   1,    1,  1,  1
+; LAYER:SourceCons,            Optional,   0,    1,   1,    1,  1,  1
+
+END
+
+;*************************************************************************
+RULELIST "Default_FrmCONSTRUCTION" 1 0 0 1
+;   Rules to default newly-created Frame LAYER components
+;*************************************************************************
+
+	"Create Frm Layer #1"  				Cons:cseFrmLAYERs[1]				= {	if (Local( NumLayers ) < 1 .OR. LocalCompAssigned( FramePathMats[1]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl1-" + Local( Name ) )  endif  }
+	"Set Frm Layer #1 Parent" 			Cons:cseFrmLAYERs[1]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #1 Material"  		Cons:cseFrmLAYERs[1]:lrMat		= {	LocalRef( FramePathMats[1]:cseMATERIAL  )  }
+	"Set Frm Layer #1 Thickness"  	Cons:cseFrmLAYERs[1]:lrThk		= {	if (IfValidAnd( FramePathMats[1]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[1]:Thickness  ) / 12
+																								else  Local( Thickness[1] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #1"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[1] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[1]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[1]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #1 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #2"  				Cons:cseFrmLAYERs[2]				= {	if (Local( NumLayers ) < 2 .OR. LocalCompAssigned( FramePathMats[2]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl2-" + Local( Name ) )  endif  }
+	"Set Frm Layer #2 Parent" 			Cons:cseFrmLAYERs[2]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #2 Material"  		Cons:cseFrmLAYERs[2]:lrMat		= {	LocalRef( FramePathMats[2]:cseMATERIAL  )  }
+	"Set Frm Layer #2 Thickness"  	Cons:cseFrmLAYERs[2]:lrThk		= {	if (IfValidAnd( FramePathMats[2]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[2]:Thickness  ) / 12
+																								else  Local( Thickness[2] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #2"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[2] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[2]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[2]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #2 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #3"  				Cons:cseFrmLAYERs[3]				= {	if (Local( NumLayers ) < 3 .OR. LocalCompAssigned( FramePathMats[3]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl3-" + Local( Name ) )  endif  }
+	"Set Frm Layer #3 Parent" 			Cons:cseFrmLAYERs[3]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #3 Material"  		Cons:cseFrmLAYERs[3]:lrMat		= {	LocalRef( FramePathMats[3]:cseMATERIAL  )  }
+	"Set Frm Layer #3 Thickness"  	Cons:cseFrmLAYERs[3]:lrThk		= {	if (IfValidAnd( FramePathMats[3]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[3]:Thickness  ) / 12
+																								else  Local( Thickness[3] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #3"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[3] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[3]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[3]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #3 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #4"  				Cons:cseFrmLAYERs[4]				= {	if (Local( NumLayers ) < 4 .OR. LocalCompAssigned( FramePathMats[4]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl4-" + Local( Name ) )  endif  }
+	"Set Frm Layer #4 Parent" 			Cons:cseFrmLAYERs[4]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #4 Material"  		Cons:cseFrmLAYERs[4]:lrMat		= {	LocalRef( FramePathMats[4]:cseMATERIAL  )  }
+	"Set Frm Layer #4 Thickness"  	Cons:cseFrmLAYERs[4]:lrThk		= {	if (IfValidAnd( FramePathMats[4]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[4]:Thickness  ) / 12
+																								else  Local( Thickness[4] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #4"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[4] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[4]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[4]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #4 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #5"  				Cons:cseFrmLAYERs[5]				= {	if (Local( NumLayers ) < 5 .OR. LocalCompAssigned( FramePathMats[5]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl5-" + Local( Name ) )  endif  }
+	"Set Frm Layer #5 Parent" 			Cons:cseFrmLAYERs[5]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #5 Material"  		Cons:cseFrmLAYERs[5]:lrMat		= {	LocalRef( FramePathMats[5]:cseMATERIAL  )  }
+	"Set Frm Layer #5 Thickness"  	Cons:cseFrmLAYERs[5]:lrThk		= {	if (IfValidAnd( FramePathMats[5]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[5]:Thickness  ) / 12
+																								else  Local( Thickness[5] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #5"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[5] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[5]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[5]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #5 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #6"  				Cons:cseFrmLAYERs[6]				= {	if (Local( NumLayers ) < 6 .OR. LocalCompAssigned( FramePathMats[6]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl6-" + Local( Name ) )  endif  }
+	"Set Frm Layer #6 Parent" 			Cons:cseFrmLAYERs[6]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #6 Material"  		Cons:cseFrmLAYERs[6]:lrMat		= {	LocalRef( FramePathMats[6]:cseMATERIAL  )  }
+	"Set Frm Layer #6 Thickness"  	Cons:cseFrmLAYERs[6]:lrThk		= {	if (IfValidAnd( FramePathMats[6]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[6]:Thickness  ) / 12
+																								else  Local( Thickness[6] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #6"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[6] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[6]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[6]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #6 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #7"  				Cons:cseFrmLAYERs[7]				= {	if (Local( NumLayers ) < 7 .OR. LocalCompAssigned( FramePathMats[7]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl7-" + Local( Name ) )  endif  }
+	"Set Frm Layer #7 Parent" 			Cons:cseFrmLAYERs[7]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #7 Material"  		Cons:cseFrmLAYERs[7]:lrMat		= {	LocalRef( FramePathMats[7]:cseMATERIAL  )  }
+	"Set Frm Layer #7 Thickness"  	Cons:cseFrmLAYERs[7]:lrThk		= {	if (IfValidAnd( FramePathMats[7]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[7]:Thickness  ) / 12
+																								else  Local( Thickness[7] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #7"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[7] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[7]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[7]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #7 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #8"  				Cons:cseFrmLAYERs[8]				= {	if (Local( NumLayers ) < 8 .OR. LocalCompAssigned( FramePathMats[8]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl8-" + Local( Name ) )  endif  }
+	"Set Frm Layer #8 Parent" 			Cons:cseFrmLAYERs[8]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #8 Material"  		Cons:cseFrmLAYERs[8]:lrMat		= {	LocalRef( FramePathMats[8]:cseMATERIAL  )  }
+	"Set Frm Layer #8 Thickness"  	Cons:cseFrmLAYERs[8]:lrThk		= {	if (IfValidAnd( FramePathMats[8]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[8]:Thickness  ) / 12
+																								else  Local( Thickness[8] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #8"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[8] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[8]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[8]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #8 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #9"  				Cons:cseFrmLAYERs[9]				= {	if (Local( NumLayers ) < 9 .OR. LocalCompAssigned( FramePathMats[9]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl9-" + Local( Name ) )  endif  }
+	"Set Frm Layer #9 Parent" 			Cons:cseFrmLAYERs[9]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #9 Material"  		Cons:cseFrmLAYERs[9]:lrMat		= {	LocalRef( FramePathMats[9]:cseMATERIAL  )  }
+	"Set Frm Layer #9 Thickness"  	Cons:cseFrmLAYERs[9]:lrThk		= {	if (IfValidAnd( FramePathMats[9]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[9]:Thickness  ) / 12
+																								else  Local( Thickness[9] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #9"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[9] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[9]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[9]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #9 - layer thickness not > 0", Name )  endif  }
+
+	"Create Frm Layer #10"  			Cons:cseFrmLAYERs[10]			= {	if (Local( NumLayers ) < 10 .OR. LocalCompAssigned( FramePathMats[10]:cseMATERIAL  ) == 0) then  UNDEFINED
+																								else  CreateComp( cseLAYER, "fl10-" + Local( Name ) )  endif  }
+	"Set Frm Layer #10 Parent" 		Cons:cseFrmLAYERs[10]:Parent	= {	Local( cseFrmCONS )  }
+	"Set Frm Layer #10 Material"  	Cons:cseFrmLAYERs[10]:lrMat	= {	LocalRef( FramePathMats[10]:cseMATERIAL  )  }
+	"Set Frm Layer #10 Thickness"  	Cons:cseFrmLAYERs[10]:lrThk	= {	if (IfValidAnd( FramePathMats[10]:Thickness  > 0 ))
+																								then	LocalRef( FramePathMats[10]:Thickness  ) / 12
+																								else  Local( Thickness[10] ) / 12  endif  }   ; conversion of inches to feet
+	"Check for valid layer thickness #10"	Cons:Action					= {	if (LocalCompAssigned( cseFrmLAYERs[10] ) < 0.5 .OR. LocalCompAssigned( FramePathMats[10]:cseMATERIAL ) < 0.5 .OR.
+																										IfValidAnd( cseFrmLAYERs[10]:lrThk > 0 )) then  UNCHANGED
+																								else  PostError( "Unable to setup CSE Construction '%s' Frame Layer #10 - layer thickness not > 0", Name )  endif  }
+
+END
+
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

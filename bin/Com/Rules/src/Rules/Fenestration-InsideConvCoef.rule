@@ -1,0 +1,252 @@
+// Fenestration - Interior Air Film Convection Coefficient Adjustments
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// ----------------------------------------------------------------------------
+//  
+
+// The main objects in the SDD are:
+//    Bldg:Space:Roof:Window:ConsAssyRef
+//    FenestationConstruction:UFactorSim
+//    Window:InsideConvCoef
+//    Skylight:InsideConvCoef
+
+// --------------  --------------------
+// Input restriction summary: 
+//  None - All properties in this ruleset are considered 'NotInput' and
+//  are set by the rulset
+//
+//      
+//  In cases where the input U-Factor exceeds the E+ upper limit of 1.03 Btu/hr-ft2-F
+//  the 'Modified Interior Film Coefficient' method is triggered, for both the Porposed
+//  and Standard Design u-factor simulation inputs.
+//  This method limits the simulation input U-factor to 1.03 Btu/hr-ft2-F (5.85 W/m2-K), 
+//  and also provides a fixed interior convection coefficient calculated based on the 
+//  input u-factor:  
+//    For input U-factor <= 1.03, InsideConvCoeff = 0.754492575*ln(FenCons:UFactor*5.678263)+1.568119741)/5.678263
+//    For input U-factor > 1.03, InsideConvCoeff = 0.10971569*(FenCons:UFactor*5.678263)*(FenCons:UFactor*5.678263)+(-0.251391355*(FenCons:UFactor*5.678263))+0.769506006)/5.678263
+
+
+// ---------- Flag to trigger use InsideConvCoeff method regardless of U-factor
+RULE FenCons:DebugInsideConvCoefFlag
+  DESCRIPTION
+    "Set this flag to value of 1 in order to force all windows to use the 
+     fixed inside convection coefficient method for simulating window U-factor.
+     If this flag is set to 0, only windows with proposed or baseline U-factors
+     > 1.03 will use the fixed inside convection coefficient method."
+  INPUTCLASS
+    Prescribed
+  DEFAULT
+    0
+ENDRULE
+
+// ---------- Identify FenCons for which InsideConvCoeff method is used -------
+RULE NEW FenCons:UFactorLimitFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    UFactorLimitFlag
+  DESCRIPTION
+    "A Flag to indicate that the user specified or default U-Factor 
+     exceeds the Energy-Plus  simulation effective limit of 5.85 W/m2-K
+     or 1.03 Btu/h-ft2-F"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( UFactor > 1.03 ) .OR.
+        DebugInsideConvCoefFlag = 1 )
+    then 1
+    else 0
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( UFactor > 1.03 ) .OR.
+        DebugInsideConvCoefFlag = 1 )
+    then 1
+    else 0
+    endif 
+  SIZING_BASELINE
+    // the modified method will be used in the Standard Design in cases where it
+    // was utilized in the Proposed Design.  This ensures and apples to apples
+    // comparison between proposed and baseline windows/skylights
+    zp:UFactorLimitFlag
+  ANNUAL
+    z:UFactorLimitFlag
+ENDRULE
+
+// ---------- Set UFactorSim - the value that is sent to simulation -----------
+RULE FenCons:UFactorSim
+;  DATATYPE
+;    Float
+;  LONGFORM
+;    UFactorSimulated
+  DESCRIPTION
+    "Intermediate calculation to limit the simulated U-factor to the EnergyPluse 
+     Effective Maximum U-Factor = 1.03 Btu/hr-ft2-F or 5.85 W/m2-K.  This is the
+     value that will be passed to OpenStudio for simulation."  
+  INPUTCLASS
+    NotInput
+  SIZING
+    if( FenCons:UFactor > 1.03 )
+    then // Set an upper limit on u-factor (1.03 Btu/hr-ft2-F).
+      1.03
+    else // For input u-foctor below 1.03 Btu/hr-ft2-F, maintain input value
+      FenCons:UFactor
+    endif  
+  ANNUAL
+    z:UFactorSim
+ENDRULE
+
+RULE NEW FenCons:InsideConvCoef
+  DATATYPE
+    Float
+  LONGFORM
+    InteriorAirFilmCoefficient
+  DESCRIPTION
+    "Calculation to set the Interior AirFilm Coefficient value, in cases where the
+     user input U-value is greater than the E+ simulation limitations:  
+     Effective Maximum of 1.03 Btu/hr-ft2-F"  
+  INPUTCLASS
+    NotInput
+  SIZING
+    if( UFactorLimitFlag = 1 )
+    then if( FenCons:UFactor > 1.03 )
+      then ; Calculated Inside Convection Coefficient for u-factor > 1.03 Btu/hr-ft2-F
+           ( 0.686392479 * ( FenCons:UFactor ) * ( FenCons:UFactor ) +
+           (-0.490581078 * ( FenCons:UFactor ) ) + 0.356207210 )
+      else ; Calculated Inside Convection Coefficient for u-factor > 1.03 Btu/hr-ft2-F
+           ( 0.076126371 * log( FenCons:UFactor ) + 0.493567111 )
+      endif 
+    else UNCHANGED
+    endif
+  ANNUAL
+    z:InsideConvCoef
+ENDRULE
+
+// ********** Window/Skylight Inside Convection Coefficient *******************
+RULE Window:InsideConvCoef
+  DESCRIPTION
+    "For windows using the modified inside convection coefficient u-factor input method, 
+     the calculated value of inside convection coefficient provided to the  E+ simulation
+     engine."  
+  INPUTCLASS
+    NotInput
+  UNITS 
+    Btu/h-ft2-F
+  SIZING
+    if( IfValidAnd( FenConsRef:InsideConvCoef > 0 ) )
+    then FenConsRef:InsideConvCoef
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InsideConvCoef
+ENDRULE
+
+RULE Skylight:InsideConvCoef
+  DESCRIPTION
+    "For windows using the modified inside convection coefficient u-factor input method, 
+     the calculated value of inside convection coefficient provided to the  E+ simulation
+     engine."  
+  INPUTCLASS
+    NotInput
+  UNITS 
+    Btu/h-ft2-F
+  SIZING
+    if( IfValidAnd( FenConsRef:InsideConvCoef > 0 ) )
+    then FenConsRef:InsideConvCoef
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InsideConvCoef
+ENDRULE
+
+// ---------- Project level flags identifying use of InsideConvCoeff method ---
+
+// LH - removed from CBECC-Com for 2013-v3e and 2016.02
+;RULE Proj:ExcptCondUFactorLimit
+;  DESCRIPTION
+;    "A Flag to indicate whether any user specified U-Factor exceeds the Energy-Plus 
+;     simulation effective upper limit of 1.03 Btu/hr-ft2-F or 5.85 W/m2-K"  
+;  HELP
+;    ""  
+;  REFERENCE 
+;    
+;  INPUTCLASS
+;    NotInput
+;  DEFAULT
+;    if( SumChildren( FenCons:UFactorLimitFlag ) > 0 )
+;    then "Yes"
+;    else "No"
+;    endif
+;  SIZING
+;    if( SumChildren( FenCons:UFactorLimitFlag ) > 0 )
+;    then "Yes"
+;    else "No"
+;    endif            
+;  ANNUAL
+;    z:ExcptCondUFactorLimit
+;ENDRULE
+
+RULE NEW FenCons:DebugInsideConvCoefUsed
+  DATATYPE
+    Integer
+  LONGFORM
+    DebugInsideConvCoefUsed
+  DESCRIPTION
+    "A flag to indicate that 'DebugInsideConvCoeffFlag' is set to
+     1 (TRUE) for one or more REFERENCED fenestration constructions which would 
+     otherwise be simulated using the E+ Native 'Simple Glazing Model'."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( DebugInsideConvCoefFlag = 1 .AND.
+        IfValidAnd( UFactor <= 1.03 ) .AND.
+        IfValidAnd( Area > 0 ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Proj:DebugInsideConvCoefUsed
+  DATATYPE
+    Integer
+  LONGFORM
+    DebugInsideConvCoefUsed
+  DESCRIPTION
+    "A project level flag to indicate that 'DebugInsideConvCoeffFlag' is set to
+     1 (TRUE) for one or more REFERENCED fenestration constructions which would 
+     otherwise be simulated using the E+ Native 'Simple Glazing Model'."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll( FenCons:DebugInsideConvCoefUsed ) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE

@@ -1,0 +1,451 @@
+// Building - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// ********** Space Heating Source Areas ***************************************
+// HtgOnly Areas
+RULE NEW Spc:HtgOnlyFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( HtgOnlySysArea > 0 ) .AND. HtgFuelSrc = 1 )
+    then HtgOnlySysArea * Mult
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:HtgOnlyFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaElectricHeat 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( HtgOnlySysArea > 0 ) .AND. HtgFuelSrc = 0 )
+    then HtgOnlySysArea * Mult
+    else 0
+    endif
+ENDRULE
+// NonRes Areas
+RULE NEW Spc:NonResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HtgFuelSrc = 1 .AND. NotEnclosed = 0 )
+    then NonResCondFlrAreaWithMult
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:NonResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HtgFuelSrc = 0 .AND. NotEnclosed = 0 )
+    then NonResCondFlrAreaWithMult
+    else 0
+    endif
+ENDRULE
+// Res Areas
+RULE NEW Spc:ResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HtgFuelSrc = 1 .AND. NotEnclosed = 0 )
+    then ResCondFlrAreaWithMult
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:ResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HtgFuelSrc = 0 .AND. NotEnclosed = 0 )
+    then ResCondFlrAreaWithMult
+    else 0
+    endif
+ENDRULE
+
+
+// ********** BuildingStory Heating Source Areas *******************************
+// HtgOnly Areas
+RULE NEW Story:HtgOnlyFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:HtgOnlyFlrAreaFossilHt )
+ENDRULE
+RULE NEW Story:HtgOnlyFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:HtgOnlyFlrAreaElecHt )
+ENDRULE
+// NonRes Areas (excludes HtgOnly area)
+RULE NEW Story:NonResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:NonResCondFlrAreaFossilHt ) - 
+    SumChildren( Spc:HtgOnlyFlrAreaFossilHt )
+ENDRULE
+RULE NEW Story:NonResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:NonResCondFlrAreaElecHt ) -
+    SumChildren( Spc:HtgOnlyFlrAreaElecHt )
+ENDRULE
+// Res Areas
+RULE NEW Story:ResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:ResCondFlrAreaFossilHt )
+ENDRULE
+RULE NEW Story:ResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaElectricHeat   
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Spc:ResCondFlrAreaElecHt )
+ENDRULE
+
+
+// ********** BuildingStory Heating Source Number of Stories ************************
+RULE NEW Story:NonResStoryCntFossilHt  
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialStoryCountFossilHeat 
+  DESCRIPTION
+    "A count of nonresidential stories in the building with fossil heat. Used 
+     only for defaulting of Bldg property."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ValidOr( NonResCondFlrAreaFossilHt, 0 ) >= ValidOr( NonResCondFlrAreaElecHt, 0 ) 
+        .AND. 
+        ValidOr( NonResCondFlrAreaWithMult, 0 ) >= ValidOr( ResCondFlrAreaWithMult, 0 ) )
+    then Mult
+    else 0
+    endif
+ENDRULE
+RULE NEW Story:NonResStoryCntElecHt  
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialStoryCountElectricHeat
+  DESCRIPTION
+    "A count of nonresidential stories in the building with electric heat. Used 
+     only for defaulting of Bldg property."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ValidOr( NonResCondFlrAreaFossilHt, 0 ) < ValidOr( NonResCondFlrAreaElecHt, 0 ) 
+        .AND. 
+        ValidOr( NonResCondFlrAreaWithMult, 0 ) >= ValidOr( ResCondFlrAreaWithMult, 0 ) )
+    then Mult
+    else 0
+    endif
+ENDRULE
+RULE NEW Story:ResStoryCntFossilHt
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialStoryCountFossilHeat
+  DESCRIPTION
+    "A count of residential stories in the building with fossil heat. Used 
+     only for defaulting of Bldg property."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ValidOr( ResCondFlrAreaFossilHt, 0 ) >= ValidOr( ResCondFlrAreaElecHt, 0 ) 
+        .AND. 
+        ValidOr( NonResCondFlrAreaWithMult, 0 ) < ValidOr( ResCondFlrAreaWithMult, 0 ) )
+    then Mult
+    else 0
+    endif
+ENDRULE
+RULE NEW Story:ResStoryCntElecHt
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialStoryCountElectricHeat
+  DESCRIPTION
+    "A count of residential stories in the building with electric heat. Used 
+     only for defaulting of Bldg property."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ValidOr( ResCondFlrAreaFossilHt, 0 ) < ValidOr( ResCondFlrAreaElecHt, 0 ) 
+        .AND. 
+        ValidOr( NonResCondFlrAreaWithMult, 0 ) < ValidOr( ResCondFlrAreaWithMult, 0 ) )
+    then Mult
+    else 0
+    endif
+ENDRULE
+
+
+// ********** Building Heating Source Areas ************************************
+// Bldg conditioned floor area by occupancy and heating source
+// HtgOnly area
+RULE NEW Bldg:HtgOnlyFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:HtgOnlyFlrAreaFossilHt )
+ENDRULE
+RULE NEW Bldg:HtgOnlyFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:HtgOnlyFlrAreaElecHt )
+ENDRULE
+RULE NEW Bldg:HtgOnlyFlrArea
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlyFloorArea
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    HtgOnlyFlrAreaFossilHt + HtgOnlyFlrAreaElecHt
+ENDRULE
+// NonRes Areas (excludes HtgOnly area)
+RULE NEW Bldg:NonResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:NonResCondFlrAreaFossilHt )
+ENDRULE
+RULE NEW Bldg:NonResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaElectricHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:NonResCondFlrAreaElecHt )
+ENDRULE
+RULE NEW Bldg:NonResCondFlrAreaAllHt
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaAllHeat  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    NonResCondFlrAreaFossilHt + NonResCondFlrAreaElecHt
+ENDRULE
+// Res Areas
+RULE NEW Bldg:ResCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:ResCondFlrAreaFossilHt )
+ENDRULE
+RULE NEW Bldg:ResCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaElectricHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Story:ResCondFlrAreaElecHt )
+ENDRULE
+
+// Total Bldg conditioned floor area by heating source
+RULE NEW Bldg:TotCondFlrAreaFossilHt
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaFossilHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    NonResCondFlrAreaFossilHt + HtgOnlyFlrAreaFossilHt + ResCondFlrAreaFossilHt
+ENDRULE
+RULE NEW Bldg:TotCondFlrAreaElecHt
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaElectricHeat    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    NonResCondFlrAreaElecHt + HtgOnlyFlrAreaElecHt + ResCondFlrAreaElecHt
+ENDRULE
+
+
+// ********** Building Heating Source Number of Stories ************************
+RULE Bldg:NonResStoryCntFossilHt   
+  DESCRIPTION
+    "The total number of nonresidential stories in the building with any 
+     fossil fuel heating."
+  HELP
+    ""
+  INPUTCLASS 
+    Required
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:NonResStoryCntFossilHt )
+ENDRULE
+RULE Bldg:NonResStoryCntElecHt  
+  DESCRIPTION
+    "The total number of nonresidential stories in the building with any 
+     electric heating."
+  HELP
+    ""
+  INPUTCLASS 
+    Required
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:NonResStoryCntElecHt )
+ENDRULE
+RULE Bldg:ResStoryCntFossilHt
+  DESCRIPTION
+    "The total number of residential stories in the building with any 
+     fossil fuel heating."
+  HELP
+    ""
+  INPUTCLASS 
+    Required
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:ResStoryCntFossilHt )
+ENDRULE
+RULE Bldg:ResStoryCntElecHt
+  DESCRIPTION
+    "The total number of residential stories in the building with any 
+     electric heating."
+  HELP
+    ""
+  INPUTCLASS 
+    Required
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:ResStoryCntElecHt )
+ENDRULE
+
+// Total number of conditioned stories by occupancy
+RULE NEW Bldg:NonResTotStoryCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialTotalStoryCount
+  DESCRIPTION
+    "The total number of stories in the building with any nonresidential space."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    NonResStoryCntFossilHt + NonResStoryCntElecHt
+ENDRULE
+
+RULE NEW Bldg:ResTotStoryCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialTotalStoryCount  
+  DESCRIPTION
+    "The total number of stories in the building with any residential space."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    ResStoryCntFossilHt + ResStoryCntElecHt
+ENDRULE
+

@@ -1,0 +1,627 @@
+//Complete Material and Composite List
+//Save this TAB as MaterialData-S901G_2010.csv
+TABLE MaterialData
+CodeCat,MatList,Thkns,Rvalue,ThrmlCndct,Dens,SpecHt,ExtRoughness,// For Reference
+//Material Category,Material Name,Thickness,Resistance,Conductivity,Density,Specific Heat,Roughness,Input
+//,,(in.),(h-ft2-F/BTU),(BTU/h-ft-F),(lb/ft3),(BTU/lb-F),,
+Air,Air - Cavity - Wall Roof Ceiling - 4 in. or more,6,0.92,0.5433,0.08,0.24,NA,JA4
+Air,Air - Metal Wall Framing - 16 or 24 in. OC,5.5,0.65,0.705,0.08,0.24,NA,JA4
+Air,Air - Wall - 1/2 in.,0.5,0.77,0.0542,0.08,0.24,NA,CEC Doug
+Air,Air - Wall - 3/4 in.,0.75,0.84,0.0742,0.08,0.24,NA,CEC Doug
+Air,Air - Wall - 1 1/2 in.,1.5,0.87,0.1433,0.08,0.24,NA,CEC Doug
+Air,Air - Wall - 3 1/2 in.,3.5,0.85,0.3433,0.08,0.24,NA,CEC Doug
+Air,Air - Ceiling - 1/2 in.,0.5,0.73,0.0567,0.08,0.24,NA,CEC Doug
+Air,Air - Ceiling - 3/4 in.,0.75,0.75,0.0833,0.08,0.24,NA,CEC Doug
+Air,Air - Ceiling - 1 1/2 in.,1.5,0.77,0.1625,0.08,0.24,NA,CEC Doug
+Air,Air - Ceiling - 3 1/2 in.,3.5,0.8,0.365,0.08,0.24,NA,CEC Doug
+Air,Air - Roof - 1/2 in.,0.5,0.76,0.055,0.08,0.24,NA,CEC Doug
+Air,Air - Roof - 3/4 in.,0.75,0.81,0.0775,0.08,0.24,NA,CEC Doug
+Air,Air - Roof - 1 1/2 in.,1.5,0.8,0.1567,0.08,0.24,NA,CEC Doug
+Air,Air - Roof - 3 1/2 in.,3.5,0.82,0.3558,0.08,0.24,NA,CEC Doug
+Air,Air - Floor - 1/2 in.,0.5,0.77,0.0542,0.08,0.24,NA,CEC Doug
+Air,Air - Floor - 3/4 in.,0.75,0.85,0.0733,0.08,0.24,NA,CEC Doug
+Air,Air - Floor - 1 1/2 in.,1.5,0.94,0.1333,0.08,0.24,NA,CEC Doug
+Air,Air - Floor - 3 1/2 in.,3.5,1,0.2917,0.08,0.24,NA,CEC Doug
+Air,Air 90.1 - Wall - 16 in. OC - 3 1/2 in.,3.5,0.79,0.3691,0.08,0.24,NA,S901G-2010
+Air,Air 90.1 - Wall Interior Semiheated - 16 in. OC - 3 1/2 in.,3.5,0.36,0.8102,0.08,0.24,NA,S901G-2010
+Bldg Board and Siding,Fiber cement board - 63 lb/ft3 - 1/3 in.,0.31,0.24,0.1083,63.00,0.20,Smooth,AEC
+Bldg Board and Siding,Fiber cement board - 88 lb/ft3 - 1/3 in.,0.31,0.18,0.1417,88.00,0.20,Smooth,AEC
+Bldg Board and Siding,Fiber cement board - 88 lb/ft3 - 1/2 in.,0.47,0.28,0.1417,88.00,0.20,Smooth,AEC
+Bldg Board and Siding,Fiberboard sheathing - 1/2 in.,0.5,1.03,0.0408,24.96,0.31,Smooth,AEC
+Bldg Board and Siding,Gypsum Board - 3/8 in.,0.375,0.32,0.09167,40.00,0.27,MediumSmooth,CEC Doug
+Bldg Board and Siding,Gypsum Board - 1/2 in.,0.5,0.45,0.09167,40.00,0.27,MediumSmooth,CEC Doug
+Bldg Board and Siding,Gypsum Board - 5/8 in.,0.625,0.56,0.09167,40.00,0.27,MediumSmooth,CEC Doug
+Bldg Board and Siding,Gypsum Board - 3/4 in.,0.75,0.68,0.09167,40.00,0.27,MediumSmooth,CEC Doug
+Bldg Board and Siding,Hard Board - 3/4 in.,0.75,1.04,0.06,50.00,0.31,Smooth,CEC Doug
+Bldg Board and Siding,Hardboard - HDF - 50 lb/ft3 - 3/8 in.,0.375,0.51,0.0608,50.00,0.31,Smooth,AEC
+Bldg Board and Siding,Hardboard - HDF - 50 lb/ft3 - 1/2 in.,0.5,0.68,0.0608,50.00,0.31,Smooth,AEC
+Bldg Board and Siding,Hardboard - HDF - 50 lb/ft3 - 5/8 in.,0.625,0.86,0.0608,50.00,0.31,Smooth,AEC
+Bldg Board and Siding,Hardboard - HDF - 50 lb/ft3 - 3/4 in.,0.75,1.03,0.0608,50.00,0.31,Smooth,AEC
+Bldg Board and Siding,HB Part. Brd - 3/4 in.,0.75,0.64,0.09833,50.00,0.31,Smooth,CEC Doug
+Bldg Board and Siding,Metal Deck - 1/16 in.,0.0625,0,0.3333,488.22,0.12,Smooth,AEC
+Bldg Board and Siding,Metal Siding - 1/16 in.,0.0625,0,0.3333,488.22,0.12,Smooth,AEC
+Bldg Board and Siding,OSB - Oriented Strand Board - 1/2 in.,0.5,0.8,0.0517,41.00,0.45,MediumSmooth,AEC
+Bldg Board and Siding,OSB - Oriented Strand Board - 5/8 in.,0.625,0.82,0.0633,41.00,0.45,MediumSmooth,AEC
+Bldg Board and Siding,OSB - Oriented Strand Board - 3/4 in.,0.75,0.83,0.0758,41.00,0.45,MediumSmooth,AEC
+Bldg Board and Siding,Plywood - 1/4 in.,0.25,0.31,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Plywood - 3/8 in.,0.375,0.47,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Plywood - 1/2 in.,0.5,0.63,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Plywood - 5/8 in.,0.625,0.78,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Plywood - 3/4 in.,0.75,0.94,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Plywood - 1 in.,1,1.25,0.0667,30.00,0.45,MediumSmooth,CEC Doug
+Bldg Board and Siding,Shingles - Asbestos cement - lapped - 1/4 in.,0.25,0.21,0.0992,120.00,0.24,VeryRough,AEC
+Bldg Board and Siding,Shingles - Asphalt roll siding - 1/4 in.,0.25,0.15,0.1392,70.00,0.36,VeryRough,AEC
+Bldg Board and Siding,Shingles - Wood - 16 in. - 7 1/2 in. exposure - 1/2 in.,0.5,0.87,0.0475,22.00,0.31,MediumRough,AEC
+Bldg Board and Siding,Shingles - Wood - plus insulated backer board Siding - 5/16 in.,0.3125,1.4,0.0183,22.00,0.31,MediumRough,AEC
+Bldg Board and Siding,Wood shingles - 3/4 in.,0.75,0.9,0.0692,36.94,0.31,VeryRough,AEC
+Bldg Board and Siding,Wood shingles - plain and plastic film faced - 3/4 in.,0.75,0.94,0.0667,22.00,0.31,VeryRough,AEC
+Bldg Board and Siding,Siding - Asphalt insulating siding - 1/2 in. bed - 1/2 in.,0.5,1.46,0.0283,70.00,0.35,VeryRough,AEC
+Bldg Board and Siding,Siding - Wood - bevel - 10 in. - lapped - 3/4 in.,0.75,1.05,0.0592,22.00,0.28,Rough,AEC
+Bldg Board and Siding,Synthetic Stucco - EIFS finish - 1 in.,1,4,0.0208,1.50,0.35,Smooth,AEC
+Building Membrane,Building Paper - 1/16 in.,0.0625,0.03,0.1667,70.00,0.30,MediumSmooth,CEC Doug
+Building Membrane,Roofing felt - 1/8 in.,0.125,0.015,0.6917,141.00,0.30,VeryRough,AEC
+Building Membrane,Vapor permeable felt - 1/8 in.,0.125,0.06,0.1733,22.00,0.30,Rough,AEC
+Building Membrane,Vapor seal - 2 layers of mopped 15 lb felt - 1/4 in.,0.25,0.12,0.1733,22.00,0.30,Rough,AEC
+Building Membrane,Vapor seal - plastic film - 1/16 in.,0.625,0.01,5.2083,30.00,0.30,Rough,AEC
+Concrete,Concrete - 80 lb/ft3 - 2 in.,2,0.54,0.3067,79.87,0.20,MediumRough,AEC
+Concrete,Concrete - 80 lb/ft3 - 4 in.,4,1.09,0.3067,79.87,0.20,MediumRough,AEC
+Concrete,Concrete - 80 lb/ft3 - 6 in.,6,1.63,0.3067,79.87,0.20,MediumRough,AEC
+Concrete,Concrete - 80 lb/ft3 - 8 in.,8,2.17,0.3067,79.87,0.20,MediumRough,AEC
+Concrete,Concrete - 80 lb/ft3 - 10 in.,10,2.72,0.3067,79.87,0.20,MediumRough,AEC
+Concrete,Concrete 90.1 - 80 lb/ft3 - 4 in.,4,0.877,0.3801,80.00,0.20,Rough,S901G-2010
+Concrete,Concrete - 140 lb/ft3 - 2 in.,2,0.15,1.1275,139.78,0.22,MediumRough,AEC
+Concrete,Concrete - 140 lb/ft3 - 4 in.,4,0.3,1.1275,139.78,0.22,MediumRough,AEC
+Concrete,Concrete - 140 lb/ft3 - 6 in.,6,0.44,1.1275,139.78,0.22,MediumRough,AEC
+Concrete,Concrete - 140 lb/ft3 - 8 in.,8,0.59,1.1275,139.78,0.22,MediumRough,AEC
+Concrete,Concrete - 140 lb/ft3 - 10 in.,10,0.74,1.1275,139.78,0.22,MediumRough,AEC
+Concrete,Concrete 90.1 - 140 lb/ft3 - 4 in.,4,0.25,1.3333,140.00,0.22,Rough,S901G-2010
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in.,13.5,0.851,1.3217,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 2 in.,14,0.949,1.2292,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 3 in.,15,1.251,0.9992,120.20,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 4 in.,16,1.548,0.8617,112.75,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 6 in.,18,2.153,0.6967,100.33,0.13,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in.,13.5,0.851,1.3217,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 2 in.,14,0.556,2.0983,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 3 in.,15,0.476,2.6258,120.20,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 4 in.,16,0.417,3.1975,112.75,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 6 in.,18,0.333,4.5042,100.33,0.13,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in.,13.5,1.251,0.8992,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 2 in.,14,1.449,0.805,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 3 in.,15,2.049,0.61,120.20,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 4 in.,16,2.647,0.5033,112.75,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 6 in.,18,3.758,0.3992,100.33,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in.,13.5,1.15,0.9783,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 2 in.,14,1.449,0.805,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 3 in.,15,1.951,0.6408,120.20,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 4 in.,16,2.45,0.5442,112.75,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 6 in.,18,3.555,0.4217,100.33,0.12,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in.,13.5,7.347,0.1533,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 2 in.,14,9.676,0.1208,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 3 in.,15,14.302,0.0875,120.20,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 4 in.,16,18.83,0.0708,112.75,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 6 in.,18,28.562,0.0525,100.33,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in.,13.5,5.248,0.2142,133.44,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 2 in.,14,6.963,0.1675,128.71,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 3 in.,15,10.139,0.1233,120.20,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 4 in.,16,13.436,0.0992,112.75,0.11,MediumRough,JA4-10
+Concrete Sandwich Panel,Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 6 in.,18,19.983,0.075,100.33,0.11,MediumRough,JA4-10
+Finish Materials,Acoustic Tile - 3/8 in.,0.375,0.95,0.0325,18.00,0.19,MediumSmooth,AEC
+Finish Materials,Acoustic Tile - 1/2 in.,0.5,1.26,0.0333,18.00,0.19,MediumSmooth,AEC
+Finish Materials,Acoustic Tile - 3/4 in.,0.75,1.89,0.0333,18.00,0.19,MediumSmooth,AEC
+Finish Materials,Carpet - 3/4 in.,0.75,2.38,0.0263,18.00,0.33,Rough,CEC Doug
+Finish Materials,Linoleum/cork tile - 1/4 in.,0.25,0.49,0.0425,29.00,0.45,MediumRough,AEC
+Finish Materials,Rubber tile - 1 in.,1,2.94,0.0283,119.00,0.48,MediumSmooth,AEC
+Finish Materials,Slate or tile - 1/2 in.,0.5,0.05,0.9192,119.81,0.30,VeryRough,AEC
+Finish Materials,Terrazzo - 1 in.,1,0.08,1.0417,160.00,0.19,Rough,AEC
+Finish Materials,Carpet 90.1 - 1/2 in.,0.5,1.23,0.0339,18.00,0.33,Rough,S901G-2010
+Finish Materials,Carpet Interior Semiheated 90.1 - 1/2 in.,0.5,0.77,0.0541,18.00,0.33,Rough,S901G-2010
+ICF Wall,Insulating Concrete Forms - 1 1/2 in. Polyurethane Ins. each side - concrete 6 in.,9,19.13,0.0392,100.33,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 1 1/2 in. Polyurethane Ins. each side - concrete 8 in.,11,19.318,0.0475,109.36,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. Polyurethane Ins. each side - concrete 6 in.,10,22.72,0.0367,90.40,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. Polyurethane Ins. each side - concrete 8 in.,12,23.09,0.0433,100.33,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 1/2 in. Polyurethane Ins. each side - concrete 6 in.,15,42.81,0.0292,60.60,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 1/2 in. Polyurethane Ins. each side - concrete 8 in.,17,42.54,0.0333,71.12,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. EPS Ins. each side - concrete 6 in.,10,16.4,0.0508,90.40,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. EPS Ins. each side - concrete 8 in.,12,16.67,0.06,100.33,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 3 in. EPS Ins. each side - concrete 6 in.,12,23.98,0.0417,75.50,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 3 in. EPS Ins. each side - concrete 8 in.,14,24.551,0.0475,86.14,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 in. EPS Ins. each side - concrete 6 in.,14,32.58845438,0.0358,64.86,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 in. EPS Ins. each side - concrete 8 in.,16,31.97442046,0.0417,75.50,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. XPS Ins. each side - concrete 6 in.,10,21.26,0.0392,90.40,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 2 in. XPS Ins. each side - concrete 8 in.,12,21.05,0.0475,100.33,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 3 in. XPS Ins. each side - concrete 6 in.,12,30.77,0.0325,75.50,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 3 in. XPS Ins. each side - concrete 8 in.,14,31.11,0.0375,86.14,0.22,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 in. XPS Ins. each side - concrete 6 in.,14,39.9543379,0.0292,64.86,0.23,Smooth,JA4-10
+ICF Wall,Insulating Concrete Forms - 4 in. XPS Ins. each side - concrete 8 in.,16,41.02564103,0.0325,75.50,0.22,Smooth,JA4-10
+Insulation Batt,Glass fiber batt - 3 1/2 in.,3.5,11.67,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 4 in.,4,13.33,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 4 1/2 in.,4.5,15,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 5 in.,5,16.67,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 5 1/2 in.,5.5,18.33,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 6 in.,6,20,0.025,0.70,0.20,MediumRough,AEC
+Insulation Batt,Glass fiber batt - 6 1/2 in.,6.5,21.67,0.025,0.70,0.20,MediumRough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 1/8 in. R0.7,0.125,0.733,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 1/4 in. R1.5,0.25,1.467,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 1/2 in. R2.9,0.5,2.934,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 1 in. R5.9,1,5.868,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 1 1/2 in. R8.8,1.5,8.801,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 2 in. R12,2,11.735,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 2 1/2 in. R15,2.5,14.669,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 3 in. R18,3,17.603,0.0142,1.50,0.38,Rough,"AEC, CEC RJ"
+Insulation Board,Cellular polyisocyanurate (unfaced) - 3 1/2 in. R21,3.5,20.54,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 4 in. R23,4,23.47,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 4 1/2 in. R26,4.5,26.41,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 5 in. R29,5,29.34,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 5 1/2 in. R32,5.5,32.28,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 6 in. R35,6,35.21,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Cellular polyisocyanurate (unfaced) - 6 1/2 in. R38,6.5,38.15,0.0142,1.50,0.38,Rough,AEC
+Insulation Board,Expanded perlite - organic bonded - 3/4 in. R2.1,0.75,2.08,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 1 in. R2.8,1,2.78,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 1 1/2 in. R4.2,1.5,4.17,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 2 in. R5.6,2,5.56,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 3 in. R8.3,3,8.33,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 4 in. R11,4,11.11,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded perlite - organic bonded - 6 in. R17,6,16.67,0.03,1.00,0.30,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 1/4 in. R1.0,0.25,1.04,0.02,1.20,0.27,MediumSmooth,"AEC, CEC RJ"
+Insulation Board,Expanded Polystyrene - EPS - 1/2 in. R2.1,0.5,2.08,0.02,1.20,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polystyrene - EPS - 3/4 in. R3.1,0.75,3.13,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 1 in. R4.2,1,4.17,0.02,1.20,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polystyrene - EPS - 1 1/4 in. R5.2,1.25,5.21,0.02,1.20,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polystyrene - EPS - 1 1/2 in. R6.3,1.5,6.25,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 1 3/4 in. R7.3,1.75,7.29,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 1 7/8 in. R8.0,1.92,8,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 1 15/16 in. R8.1,1.9375,8.07,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 2 in. R8.3,2,8.33,0.02,1.20,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polystyrene - EPS - 2 2/5 in. R10,2.4,10,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 2 7/16 in. R10,2.43,10.13,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 3 in. R13,3.01,12.54,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 3 1/3 in. R14,3.35,13.96,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 3 2/5 in. R14,3.39,14.13,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 3 1/2 in. R15,3.5,14.58,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 4 1/16 in. R17,4.05,16.88,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 4 7/10 in. R20,4.71,19.63,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 5 2/5 in. R22,5.2,21.67,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 5 19/20 in. R25,5.96,24.83,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 6 1/10 in. R25,6.11,25.46,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 6 7/8 in. R29,6.87,28.63,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Expanded Polystyrene - EPS - 8 3/5 in. R35,8.38,34.92,0.02,1.20,0.27,MediumSmooth,AEC
+Insulation Board,Extruded Polystyrene - XPS - 1/4 in. R1.25,0.25,1.25,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1/2 in. R2.50,0.5,2.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 3/4 in. R3.75,0.75,3.75,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1 in. R5.00,1,5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1 1/4 in. R6.25,1.25,6.25,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1 1/2 in. R7.50,1.5,7.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1 3/4 in. R8.75,1.75,8.75,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 1 7/8 in. R9.37,1.875,9.375,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 2 in. R10.00,2,10,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 2 1/2 in. R12.50,2.5,12.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 3 in. R15.00,3,15,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 3 1/2 in. R17.50,3.5,17.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 4 in. R20.00,4,20,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 4 1/2 in. R22.50,4.5,22.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 5 in. R25.00,5,25,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 5 1/2 in. R27.50,5.5,27.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 6 in. R30.00,6,30,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 6 1/2 in. R32.50,6.5,32.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 8 in. R40.00,8,40,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Extruded Polystyrene - XPS - 8 1/2 in. R42.50,8.5,42.5,0.016666667,1.30,0.35,MediumSmooth,CEC RJ
+Insulation Board,Expanded Polyurethane - 1/2 in. R3.1,0.5,3.13,0.0133,1.00,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polyurethane - 3/4 in. R4.7,0.75,4.7,0.0133,1.00,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polyurethane - 1 in. R6.3,1,6.27,0.0133,1.00,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polyurethane - 1 1/4 in. R7.8,1.25,7.83,0.0133,1.00,0.27,MediumSmooth,CEC Doug
+Insulation Board,Expanded Polyurethane - 2 in. R12.6,2,12.53,0.0133,1.00,0.27,MediumSmooth,CEC Doug
+Insulation Board,Perlite board - 3/4 in. R1.9,0.75,1.88,0.0333,10.00,0.20,Rough,AEC,,,0.033244681,,,,,
+Insulation Board,Perlite board - 1 in. R2.5,1,2.5,0.0333,10.00,0.20,Rough,AEC
+Insulation Board,Perlite board - 1 1/2 in. R3.8,1.5,3.75,0.0333,10.00,0.20,Rough,AEC
+Insulation Board,Perlite board - 2 in. R5.0,2,5,0.0333,10.00,0.20,Rough,AEC
+Insulation Board,R-24 Batt Wall - 8 in. R24,8,24,0.0278,1.19,0.23,VeryRough,CEC Doug,,,0.027777778,,,,,
+Insulation Board,Compliance Insulation R0.01,0.001596,0.01,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R0.02,0.003192,0.02,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R0.05,0.00798,0.05,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R0.10,0.01596,0.1,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R0.20,0.03192,0.20,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R0.50,0.0798,0.50,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R1.00,0.1596,1.00,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R1.35,0.21546,1.35,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R1.41,0.225036,1.41,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R1.54,0.245784,1.54,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R2.00,0.3192,2.00,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R2.15,0.34314,2.15,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R2.19,0.349524,2.19,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R2.85,0.45486,2.85,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R2.89,0.461244,2.89,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R3.63,0.579348,3.63,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R3.70,0.59052,3.7,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R3.80,0.60648,3.8,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R5.00,0.798,5,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R5.60,0.89376,5.6,0.0133,1.00,0.27,MediumSmooth,S901G-2011
+Insulation Board,Compliance Insulation R6.00,0.9576,6,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R6.32,1.008672,6.32,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R6.46,1.031016,6.46,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R7.10,1.13316,7.1,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R7.18,1.145928,7.18,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R7.39,1.179444,7.39,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R7.50,1.197,7.5,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R7.60,1.21296,7.6,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R8.00,1.2768,8,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R8.07,1.287972,8.07,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R9.40,1.50024,9.4,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R9.80,1.56408,9.8,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R9.83,1.56965004,9.8349,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R9.94,1.586424,9.94,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R10.00,1.596,10,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R10.06,1.605576,10.06,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R11.70,1.86732,11.7,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R12.50,1.995,12.5,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R12.55,2.00298,12.55,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R12.69,2.025324,12.69,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R13.50,2.1546,13.5,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R13.99,2.232804,13.99,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R14.14,2.256744,14.14,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R14.32,2.285472,14.32,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R14.60,2.33016,14.6,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R15.00,2.394,15,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R15.54,2.480184,15.54,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R16.20,2.58552,16.2,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R16.34,2.607864,16.34,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R16.58,2.646168,16.58,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R16.69,2.663724,16.69,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R17.67,2.820132,17.67,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R19.63,3.132948,19.63,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R20.00,3.192,20,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R20.05,3.19998,20.05,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R21.18,3.380328,21.18,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R21.39,3.413844,21.39,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R21.60,3.44736,21.6,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R22.48,3.587808,22.48,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R23.70,3.78252,23.7,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R24.80,3.95808,24.8,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R24.86,3.967656,24.86,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R25.16,4.015536,25.16,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R28.12,4.487952,28.12,0.0133,1.00,0.27,MediumSmooth,S901G-2010
+Insulation Board,Compliance Insulation R28.63,4.569348,28.63,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Board,Compliance Insulation R34.93,5.574828,34.93,0.0133,1.00,0.27,MediumSmooth,AEC
+Insulation Loose Fill,Loose fill - Mineral fiber - 2 lb/ft3 - 4 in.,4,11.9,0.028,2.00,0.20,Rough,AEC,,,0.028011204,,,,,
+Insulation Loose Fill,Loose fill - Mineral fiber - 2 lb/ft3 - 6 1/2 in.,6.5,19.35,0.028,2.00,0.20,Rough,AEC,,,0.027993109,,,,,
+Insulation Loose Fill,Loose fill - Mineral fiber - 2 lb/ft3 - 7 1/2 in.,7.5,22.32,0.028,2.00,0.20,Rough,AEC,,,0.028001792,,,,,
+Insulation Loose Fill,Loose fill - Mineral fiber - 2 lb/ft3 - 8 1/4 in.,8.25,24.55,0.028,2.00,0.20,Rough,AEC
+Insulation Loose Fill,Loose fill - Mineral fiber - 2 lb/ft3 - 13 3/4 in.,13.75,40.92,0.028,2.00,0.20,Rough,AEC,,,0.028001792,,,,,
+Insulation Loose Fill,Loose fill - Mineral fiber - closed sidewalls - 3 1/2 in.,3.5,10.42,0.028,2.00,0.20,Rough,AEC
+Insulation Other,Rammed Earth,18,12.19,0.1233,115.00,0.20,Rough,CEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 3 1/2 in.,3.5,10.92384519,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 4 in.,4,12.48439451,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 4 1/2 in.,4.5,14.04494382,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 5 in.,5,15.60549313,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 5 1/2 in.,5.5,17.16604245,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 6 in.,6,18.72659176,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 6 1/2 in.,6.5,20.28714107,0.0267,4.60,0.34,Rough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 3 1/2 in.,3.5,12.96296296,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 4 in.,4,14.81481481,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 4 1/2 in.,4.5,16.66666667,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 5 in.,5,18.51851852,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 5 1/2 in.,5.5,20.37037037,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 6 in.,6,22.22222222,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Glass fiber - 3.9 lb/ft3 - 6 1/2 in.,6.5,24.07407407,0.0225,3.90,0.23,MediumRough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 3 1/2 in.,3.5,11.67,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 4 in.,4,13.33,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 4 1/2 in.,4.5,15,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 5 in.,5,16.67,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 5 1/2 in.,5.5,18.33,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 6 in.,6,20,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 0.5 lb/ft3 - 6 1/2 in.,6.5,21.67,0.025,0.50,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 3 1/2 in.,3.5,17.5,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 4 in.,4,20,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 4 1/2 in.,4.5,22.5,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 5 in.,5,25,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 5 1/2 in.,5.5,27.5,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 6 in.,6,30,0.01667,3.00,0.35,Rough,AEC
+Insulation Spray Applied,Spray applied - Polyurethane foam - 3.0 lb/ft3 - 6 1/2 in.,6.5,32.5,0.01667,3.00,0.35,Rough,AEC
+Masonry Materials,Brick - 48 lb/ft3 - 3 5/8 in.,3.625,2.42,0.125,48.00,0.19,Rough,AEC
+Masonry Materials,Brick - fired clay -  140 lb/ft3 - 3 5/8 in.,3.625,0.44,0.685,139.78,0.19,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 1 cell deep - 3 in.,3,0.8,0.3125,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 1 cell deep - 4 in.,4,1.11,0.3,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 2 cells deep - 6 in.,6,1.52,0.3292,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 2 cells deep - 8 in.,8,1.85,0.36,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 2 cells deep - 10 in.,10,2.22,0.375,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay tile - hollow - 3 cells deep - 12 in.,12,2.5,0.4,85.00,0.21,MediumRough,AEC
+Masonry Materials,Clay Tile - Paver,0.375,0.03,1.042,139.78,0.22,MediumRough,CEC Doug
+Masonry Materials,Concrete,0.375,0.0833,0.3752,144.00,0.20,MediumRough,CEC Bruce
+Masonry Materials,Gypsum partition block - solid - 3 in. x 12 in. x 30 in. - 3 in.,3,1.26,0.1983,62.40,0.19,MediumRough,AEC
+Masonry Materials,Gypsum partition block - 4 cells - 3 in. x 12 in. x 30 in. - 3 in.,3,1.35,0.185,53.10,0.19,MediumRough,AEC
+Masonry Materials,Gypsum partition block - 3 cells - 4 in. x 12 in. x 30 in. - 4 in.,4,1.67,0.2,53.10,0.19,MediumRough,AEC
+Masonry Materials,Stone - 1 in.,1,0.08,1.042,139.78,0.22,MediumRough,CEC Doug
+Masonry Materials,3 Coat Stucco,0.875,0.2,0.3646,116.00,0.20,MediumRough,CEC Bruce
+Masonry Materials,Synthetic Stucco - EIFS finish - 1 in.,1,4,0.0208,1.50,0.35,Smooth,AEC
+Masonry Materials,Terrazzo - 1 in.,1,0.08,1.042,139.78,0.22,MediumRough,CEC Doug
+Masonry Units Hollow,Clay - Part Grouted and Empty - 130 lb/ft3 - 6 in.,6,1.923,0.26,130.00,0.13,MediumRough,JA4-10
+Masonry Units Hollow,Clay - Part Grouted and Empty - 130 lb/ft3 - 8 in.,8,2.128,0.3133,130.00,0.13,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 105 lb/ft3 - 6 in.,6,1.852,0.27,105.00,0.15,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 105 lb/ft3 - 8 in.,8,2,0.3333,105.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 105 lb/ft3 - 10 in.,10,2.174,0.3833,105.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 105 lb/ft3 - 12 in.,12,2.326,0.43,105.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 115 lb/ft3 - 6 in.,6,1.724,0.29,115.00,0.15,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 115 lb/ft3 - 8 in.,8,1.887,0.3533,115.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 115 lb/ft3 - 10 in.,10,2.041,0.4083,115.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 115 lb/ft3 - 12 in.,12,2.174,0.46,115.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 125 lb/ft3 - 6 in.,6,1.639,0.305,125.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 125 lb/ft3 - 8 in.,8,1.786,0.3733,125.00,0.13,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 125 lb/ft3 - 10 in.,10,1.923,0.4333,125.00,0.14,MediumRough,JA4-10
+Masonry Units Hollow,Concrete - Part Grouted and Empty - 125 lb/ft3 - 12 in.,12,2.041,0.49,125.00,0.13,MediumRough,JA4-10
+Masonry Units Solid,Clay - Solid Grout - 130 lb/ft3 - 6 in.,6,1.538,0.325,130.00,0.17,MediumRough,JA4-10
+Masonry Units Solid,Clay - Solid Grout - 130 lb/ft3 - 8 in.,8,1.754,0.38,130.00,0.17,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 105 lb/ft3 - 6 in.,6,0.72,0.6944,105.00,0.21,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 105 lb/ft3 - 8 in.,8,0.96,0.6944,105.00,0.22,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 105 lb/ft3 - 10 in.,10,1.18,0.7062,105.00,0.22,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 105 lb/ft3 - 12 in.,12,1.4,0.7142,105.00,0.22,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 115 lb/ft3 - 6 in.,6,0.59,0.8475,115.00,0.20,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 115 lb/ft3 - 8 in.,8,0.877,0.7602,115.00,0.20,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 115 lb/ft3 - 10 in.,10,1.09,0.7645,115.00,0.21,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 115 lb/ft3 - 12 in.,12,1.3,0.7692,115.00,0.21,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 125 lb/ft3 - 6 in.,6,0.59,0.8475,125.00,0.19,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 125 lb/ft3 - 8 in.,8,0.79,0.8439,125.00,0.20,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 125 lb/ft3 - 10 in.,10,0.99,0.8418,125.00,0.20,MediumRough,JA4-10
+Masonry Units Solid,Concrete - Solid Grout - 125 lb/ft3 - 12 in.,12,1.19,0.8403,125.00,0.20,MediumRough,JA4-10
+Masonry Units with Fill,Clay - Part Grouted and Insulated - 130 lb/ft3 - 6 in.,6,2.222,0.225,130.00,0.13,MediumRough,JA4-10
+Masonry Units with Fill,Clay - Part Grouted and Insulated - 130 lb/ft3 - 8 in.,8,2.564,0.26,130.00,0.13,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 105 lb/ft3 - 6 in.,6,2.273,0.22,105.00,0.15,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 105 lb/ft3 - 8 in.,8,2.703,0.2467,105.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 105 lb/ft3 - 10 in.,10,2.941,0.2833,105.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 105 lb/ft3 - 12 in.,12,3.333,0.3,105.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 115 lb/ft3 - 6 in.,6,2.083,0.24,115.00,0.15,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 115 lb/ft3 - 8 in.,8,2.439,0.2733,115.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 115 lb/ft3 - 10 in.,10,2.703,0.3083,115.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 115 lb/ft3 - 12 in.,12,3.03,0.33,115.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 125 lb/ft3 - 6 in.,6,1.923,0.26,125.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 125 lb/ft3 - 8 in.,8,2.273,0.2933,125.00,0.13,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 125 lb/ft3 - 10 in.,10,2.439,0.3417,125.00,0.14,MediumRough,JA4-10
+Masonry Units with Fill,Concrete - Part Grouted and Insulated - 125 lb/ft3 - 12 in.,12,2.778,0.36,125.00,0.13,MediumRough,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 2 in.,2,11.971,0.01392,34.87,0.26,Smooth,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 2 1/2 in.,2.5,15.023,0.01387,28.47,0.26,Smooth,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 3 in.,3,18.018,0.01388,24.11,0.26,Smooth,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 4 in.,4,23.54,0.01416,18.54,0.26,Smooth,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 5 in.,5,29.453,0.01415,15.14,0.27,Smooth,JA4-10
+Metal Insulated Panel Wall,Metal Insulated Panels - 6 in.,6,36.187,0.01382,12.84,0.27,Smooth,JA4-10
+Plastering Materials,Aggregate - 45 lb/ft3 - 1/2 in.,0.5,0.32,0.13,45.00,0.32,MediumSmooth,AEC
+Plastering Materials,Aggregate - 45 lb/ft3 - 5/8 in.,0.625,0.39,0.1333,45.00,0.32,MediumSmooth,AEC
+Plastering Materials,Aggregate - 45 lb/ft3 - on metal lath - 3/4 in.,0.75,0.47,0.1333,45.00,0.32,MediumSmooth,AEC
+Plastering Materials,Aggregate - Perlite - 1/2 in.,0.5,0.3846,0.1083,45.00,0.32,Smooth,AEC
+Plastering Materials,Aggregate - Perlite - 5/8 in.,0.625,0.4167,0.125,45.00,0.32,Smooth,AEC
+Plastering Materials,Aggregate - Perlite - on metal lath - 3/4 in.,0.75,0.4412,0.1417,45.00,0.32,Smooth,AEC
+Plastering Materials,Concrete/Sand Aggregate - 6 in.,6.005,1.4,0.3575,116.00,0.20,Smooth,CEC Doug
+Plastering Materials,Gypsum plaster - 80 lb/ft3 - 1/2 in.,0.5,0.1563,0.2667,80.00,0.26,Smooth,AEC
+Plastering Materials,Gypsum plaster - 80 lb/ft3 - 5/8 in.,0.625,0.1953,0.2667,80.00,0.26,Smooth,AEC
+Plastering Materials,Gypsum plaster - on metal lath 70 lb/ft3 - 3/4 in.,0.75,0.2885,0.2167,70.00,0.26,Smooth,AEC
+Plastering Materials,Gypsum plaster - on metal lath 80 lb/ft3 - 3/4 in.,0.75,0.2344,0.2667,80.00,0.26,Smooth,AEC
+Plastering Materials,Mortar - Cement - 1 in.,1.005,0.2,0.4192,116.00,0.20,Smooth,CEC Doug
+Plastering Materials,Mortar - Cement - 1 3/4 in.,1.755,0.35,0.4175,116.00,0.20,Smooth,CEC Doug
+Plastering Materials,Perlite plaster - 25 lb/ft3 - 1/2 in.,0.5,0.83,0.05,25.00,0.32,Smooth,AEC
+Plastering Materials,Perlite plaster - 38 lb/ft3 - 1/2 in.,0.5,0.38,0.1083,38.00,0.32,Smooth,AEC
+Plastering Materials,Plaster/Sand Aggregate - 1 in.,1.005,0.2,0.4192,116.00,0.20,Smooth,CEC Doug
+Plastering Materials,Pulpboard or paper plaster - 1/2 in.,0.5,1,0.0417,38.00,0.32,Smooth,AEC
+Plastering Materials,Sand aggregate - 3/8 in.,0.38,0.07,0.4292,116.00,0.20,Smooth,AEC
+Plastering Materials,Sand aggregate - 1/2 in.,0.5,0.092,0.4542,105.00,0.20,Smooth,AEC
+Plastering Materials,Sand aggregate - 5/8 in.,0.625,0.11,0.4667,105.00,0.20,Smooth,AEC
+Plastering Materials,Sand aggregate - 3/4 in.,0.75,0.14,0.4233,116.00,0.20,Smooth,AEC
+Plastering Materials,Sand aggregate on metal lath - 3/4 in.,0.75,0.13,0.4808,105.00,0.20,Smooth,AEC
+Plastering Materials,Vermiculite aggregate - 45 lb/ft3 - 1/2 in.,0.5,0.29,0.1417,45.00,0.32,Smooth,AEC
+Plastering Materials,Stucco - 3/8 in.,0.375,0.07502,0.4167,115.81,0.20,Smooth,CEC Doug
+Plastering Materials,Stucco - 7/8 in.,0.875,0.18,0.405,115.81,0.20,Smooth,CEC Doug
+Plastering Materials,Synthetic Stucco - EIFS finish - 1 in.,1,4,0.0208,1.50,0.35,Smooth,AEC
+Roofing,10 PSF Roof - 1 in.,1,0.0833,1.0004,120.00,0.20,VeryRough,CEC Bruce
+Roofing,15 PSF Roof - 1 1/2 in.,1.5,0.0833,1.5006,120.00,0.20,VeryRough,CEC Bruce
+Roofing,25 PSF Roof - 2 1/2 in.,2.5,0.0833,2.501,120.00,0.20,VeryRough,CEC Bruce
+Roofing,5 PSF Roof - 1/2 in.,0.5,0.0833,0.5002,120.00,0.20,VeryRough,CEC Bruce
+Roofing,Asbestos or cement shingles - 3/8 in.,0.375,0.21,0.1492,120.00,0.24,VeryRough,AEC
+Roofing,Asphalt - bitumen with inert fill - 100 lb/ft3 - 3/4 in.,0.75,0.25,0.25,100.00,0.30,VeryRough,AEC
+Roofing,Asphalt - bitumen with inert fill - 144 lb/ft3 - 3/4 in.,0.75,0.0938,0.6667,144.00,0.30,VeryRough,AEC
+Roofing,Asphalt roll roofing - 1/4 in.,0.25,0.15,0.1392,70.00,0.36,VeryRough,AEC
+Roofing,Asphalt shingles - 1/4 in.,0.25,0.45,0.0467,69.89,0.30,VeryRough,CEC Doug
+Roofing,Built-up roofing - 3/8 in.,0.375,0.33,0.095,70.00,0.35,VeryRough,AEC
+Roofing,Clay tile - 1/2 in.,0.5,2.63,0.0158,85.00,0.21,MediumRough,AEC
+Roofing,Light Roof - 2/5 in.,0.2,0.0833,0.2001,120.00,0.20,VeryRough,CEC Bruce
+Roofing,Mastic asphalt (heavy - 20% grit) - 1 in.,1,0.77,0.1083,59.00,0.22,VeryRough,AEC
+Roofing,Metal Standing Seam - 1/16 in.,0.0625,0,0.3333,488.22,0.12,Smooth,AEC
+Roofing,Roof Gravel - 1 in.,1,0.1,0.8333,159.74,0.19,VeryRough,CEC Doug
+Roofing,Roof Gravel - 1/2 in.,0.5,0.05,0.8333,159.74,0.19,VeryRough,CEC Doug
+Roofing,Slate - 1/2 in.,0.5,0.05,0.9192,119.81,0.30,VeryRough,CEC Doug
+Roofing,Tile Gap - 3/4 in.,0.75,1.1333,0.0551,70.00,0.24,VeryRough,CEC Bruce
+Roofing,Wood shingles - 3/4 in.,0.75,0.9,0.0692,36.94,0.31,VeryRough,AEC
+Roofing,Wood shingles - plain and plastic film faced - 3/4 in.,0.75,0.94,0.0667,22.00,0.31,VeryRough,AEC
+SIPS Floor,SIPS - Crawl Space - R22 - I Joist Spline - 6 1/2 in.,6.5,28.08,0.01929,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R33 - I Joist Spline - 6 1/2 in.,6.5,38.497,0.01407,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R28 - I Joist Spline - 8 1/4 in.,8.25,33.867,0.0203,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R36 - I Joist Spline - 10 1/4 in.,10.25,42.285,0.0202,4.90,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R22 - Single 2x Spline - 6 1/2 in.,6.5,27.133,0.01996,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R33 - Single 2x Spline - 6 1/2 in.,6.5,38.497,0.01407,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R28 - Single 2x Spline - 8 1/4 in.,8.25,33.867,0.0203,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R36 - Single 2x Spline - 10 1/4 in.,10.25,40.308,0.02119,4.90,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R22 - Double 2x Spline - 6 1/2 in.,6.5,26.242,0.02064,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R33 - Double 2x Spline - 6 1/2 in.,6.5,35.292,0.01535,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R28 - Double 2x Spline - 8 1/4 in.,8.25,32.544,0.02113,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - Crawl Space - R36 - Double 2x Spline - 10 1/4 in.,10.25,38.497,0.02219,4.90,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R22 - I Joist Spline - 6 1/2 in.,6.5,21.83,0.02481,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R33 - I Joist Spline - 6 1/2 in.,6.5,32.544,0.01664,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R28 - I Joist Spline - 8 1/4 in.,8.25,28.08,0.02448,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R36 - I Joist Spline - 10 1/4 in.,10.25,35.292,0.0242,4.90,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R22 - Single 2x Spline - 6 1/2 in.,6.5,21.22,0.02553,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R33 - Single 2x Spline - 6 1/2 in.,6.5,31.313,0.0173,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R28 - Single 2x Spline - 8 1/4 in.,8.25,27.133,0.02534,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R36 - Single 2x Spline - 10 1/4 in.,10.25,35.292,0.0242,4.90,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R22 - Double 2x Spline - 6 1/2 in.,6.5,20.086,0.02697,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R33 - Double 2x Spline - 6 1/2 in.,6.5,28.08,0.01929,7.15,0.30,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R28 - Double 2x Spline - 8 1/4 in.,8.25,26.242,0.0262,5.85,0.29,Smooth,JA4-10
+SIPS Floor,SIPS - No Crawl Space - R36 - Double 2x Spline - 10 1/4 in.,10.25,32.544,0.02625,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R22 - I joist Spline - 6 1/2 in.,6.5,21.516,0.02518,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R33 - I joist Spline - 6 1/2 in.,6.5,30.518,0.01775,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R28 - I joist Spline - 8 1/2 in.,8.5,28.563,0.0248,5.71,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R36 - I joist Spline - 10 1/4 in.,10.25,35.297,0.0242,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R55 - I joist Spline - 10 1/4 in.,10.25,53.816,0.01587,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R44 - I joist Spline - 12 1/4 in.,12.25,43.715,0.02335,4.27,0.28,Smooth,JA4-10
+SIPS Roof,SIPS - R22 - Single 2x Spline - 6 1/2 in.,6.5,20.987,0.0258,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R33 - Single 2x Spline - 6 1/2 in.,6.5,30.518,0.01775,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R28 - Single 2x Spline - 8 1/2 in.,8.5,27.672,0.0256,5.71,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R36 - Single 2x Spline - 10 1/4 in.,10.25,33.974,0.02514,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R55 - Single 2x Spline - 10 1/4 in.,10.25,50.892,0.01678,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R44 - Single 2x Spline - 12 1/4 in.,12.25,41.738,0.02446,4.27,0.28,Smooth,JA4-10
+SIPS Roof,SIPS - R22 - Double 2x Spline - 6 1/2 in.,6.5,19.999,0.02708,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R33 - Double 2x Spline - 6 1/2 in.,6.5,27.672,0.01957,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R28 - Double 2x Spline - 8 1/2 in.,8.5,25.287,0.02801,5.71,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R36 - Double 2x Spline - 10 1/4 in.,10.25,32.743,0.02609,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R55 - Double 2x Spline - 10 1/4 in.,10.25,45.879,0.01862,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R44 - Double 2x Spline - 12 1/4 in.,12.25,38.26,0.02668,4.27,0.28,Smooth,JA4-10
+SIPS Roof,SIPS - R22 - OSB Spline - 6 1/2 in.,6.5,22.65,0.02391,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R33 - OSB Spline - 6 1/2 in.,6.5,31.593,0.01715,7.15,0.30,Smooth,JA4-10
+SIPS Roof,SIPS - R28 - OSB Spline - 8 1/2 in.,8.5,28.563,0.0248,5.71,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R36 - OSB Spline - 10 1/4 in.,10.25,36.722,0.02326,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R55 - OSB Spline - 10 1/4 in.,10.25,57.084,0.01496,4.90,0.29,Smooth,JA4-10
+SIPS Roof,SIPS - R44 - OSB Spline - 12 1/4 in.,12.25,45.879,0.02225,4.27,0.28,Smooth,JA4-10
+SIPS Roof,SIPS - R14 - Metal Spline - 48 in.,48,11.593,0.345,1.83,0.27,Smooth,JA4-10
+SIPS Roof,SIPS - R22 - Metal Spline - 48 in.,48,15.804,0.2533,1.83,0.27,Smooth,JA4-10
+SIPS Roof,SIPS - R28 - Metal Spline - 48 in.,48,19.537,0.20474,1.83,0.27,Smooth,JA4-10
+SIPS Roof,SIPS - R36 - Metal Spline - 48 in.,48,21.516,0.1858,1.83,0.27,Smooth,JA4-10
+SIPS Wall,SIPS - R14 - I joist Spline - 4 1/2 in.,4.5,12.746,0.02942,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R18 - I joist Spline - 4 1/2 in.,4.5,15.409,0.02434,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R22 - I joist Spline - 6 1/2 in.,6.5,19.293,0.02808,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R33 - I joist Spline - 6 1/2 in.,6.5,26.238,0.02064,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R28 - I joist Spline - 8 1/4 in.,8.25,25.487,0.02697,5.85,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R36 - I joist Spline - 10 1/4 in.,10.25,31.793,0.02687,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R55 - I joist Spline - 10 1/4 in.,10.25,43.915,0.01945,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R44 - I joist Spline - 12 1/4 in.,12.25,38.46,0.02654,4.27,0.28,Smooth,JA4-10
+SIPS Wall,SIPS - R14 - Single 2x Spline - 4 1/2 in.,4.5,12.545,0.02989,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R18 - Single 2x Spline - 4 1/2 in.,4.5,14.853,0.02525,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R22 - Single 2x Spline - 6 1/2 in.,6.5,18.46,0.02934,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R33 - Single 2x Spline - 6 1/2 in.,6.5,24.776,0.02186,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R28 - Single 2x Spline - 8 1/4 in.,8.25,24.101,0.02853,5.85,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R36 - Single 2x Spline - 10 1/4 in.,10.25,29.71,0.02875,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R55 - Single 2x Spline - 10 1/4 in.,10.25,40.127,0.02129,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R44 - Single 2x Spline - 12 1/4 in.,12.25,35.497,0.02876,4.27,0.28,Smooth,JA4-10
+SIPS Wall,SIPS - R14 - Double 2x Spline - 4 1/2 in.,4.5,11.447,0.03276,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R18 - Double 2x Spline - 4 1/2 in.,4.5,13.612,0.02755,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R22 - Double 2x Spline - 6 1/2 in.,6.5,16.979,0.0319,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R33 - Double 2x Spline - 6 1/2 in.,6.5,21.716,0.02494,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R28 - Double 2x Spline - 8 1/4 in.,8.25,21.716,0.03166,5.85,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R36 - Double 2x Spline - 10 1/4 in.,10.25,27.031,0.0316,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R55 - Double 2x Spline - 10 1/4 in.,10.25,34.174,0.025,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R44 - Double 2x Spline - 12 1/4 in.,12.25,34.174,0.02987,4.27,0.28,Smooth,JA4-10
+SIPS Wall,SIPS - R14 - OSB Spline - 4 1/2 in.,4.5,14.853,0.02525,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R18 - OSB Spline - 4 1/2 in.,4.5,17.328,0.02164,9.89,0.31,Smooth,JA4-10
+SIPS Wall,SIPS - R22 - OSB Spline - 6 1/2 in.,6.5,22.85,0.02371,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R33 - OSB Spline - 6 1/2 in.,6.5,29.71,0.01823,7.15,0.30,Smooth,JA4-10
+SIPS Wall,SIPS - R28 - OSB Spline - 8 1/4 in.,8.25,29.71,0.02314,5.85,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R36 - OSB Spline - 10 1/4 in.,10.25,36.922,0.02313,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R55 - OSB Spline - 10 1/4 in.,10.25,48.46,0.01763,4.90,0.29,Smooth,JA4-10
+SIPS Wall,SIPS - R44 - OSB Spline - 12 1/4 in.,12.25,43.915,0.02325,4.27,0.28,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - No Ins.,2.27,2.007,0.0942,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R4 Ins.,1.83,3.889,0.0392,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R7 Ins.,2.55,4.526,0.0467,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R10 Ins.,3.27,4.93,0.055,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R15 Ins.,4.47,5.323,0.07,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R20 Ins.,5.67,5.602,0.0842,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R25 Ins.,6.87,5.773,0.0992,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R30 Ins.,8.07,5.861,0.115,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - No Ins.,2.27,2.721,0.0692,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R4 Ins.,1.83,4.15,0.0367,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R7 Ins.,2.55,4.706,0.045,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R10 Ins.,3.27,5.032,0.0542,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R15 Ins.,4.47,5.4,0.0692,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R20 Ins.,5.67,5.644,0.08372,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R25 Ins.,6.87,5.773,0.0992,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Double glass with no low e coatings - R30 Ins.,8.07,5.907,0.1142,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - No Ins.,2.27,3.299,0.0575,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R4 Ins.,1.83,4.386,0.03477,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R7 Ins.,2.55,4.832,0.0442,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R10 Ins.,3.27,5.138,0.05304,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R15 Ins.,4.47,5.439,0.0683,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R20 Ins.,5.67,5.686,0.0833,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R25 Ins.,6.87,5.817,0.0983,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/out Thrml Break - Triple or low e glass - R30 Ins.,8.07,5.907,0.1142,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - No Ins.,2.27,1.928,0.0983,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R4 Ins.,1.83,3.282,0.0467,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R7 Ins.,2.55,3.655,0.0583,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R10 Ins.,3.27,3.867,0.0708,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R15 Ins.,4.47,4.076,0.0917,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R20 Ins.,5.67,4.201,0.1125,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R25 Ins.,6.87,4.278,0.1342,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R30 Ins.,8.07,4.331,0.155,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - No Ins.,2.27,2.517,0.075,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R4 Ins.,1.83,3.442,0.0442,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R7 Ins.,2.55,3.823,0.0558,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R10 Ins.,3.27,3.981,0.0683,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R15 Ins.,4.47,4.15,0.09,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R20 Ins.,5.67,4.252,0.1108,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R25 Ins.,6.87,4.305,0.1333,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Double glass with no low e - R30 Ins.,8.07,4.358,0.1542,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - No Ins.,2.27,2.895,0.065,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R4 Ins.,1.83,3.575,0.0425,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R7 Ins.,2.55,3.823,0.0558,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R10 Ins.,3.27,3.981,0.0683,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R15 Ins.,4.47,4.15,0.09,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R20 Ins.,5.67,4.252,0.1108,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R25 Ins.,6.87,4.305,0.1333,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Aluminum w/ Thrml Break - Triple or low e glass - R30 Ins.,8.07,4.358,0.1542,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - No Ins.,2.27,1.928,0.0983,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R4 Ins.,1.83,5.907,0.0258,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R7 Ins.,2.55,8.954,0.02373,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R10 Ins.,3.27,11.971,0.02276,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R15 Ins.,4.47,17.007,0.0219,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R20 Ins.,5.67,21.877,0.0216,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R25 Ins.,6.87,26.928,0.02126,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Single glass pane. stone. or metal pane - R30 Ins.,8.07,31.408,0.02141,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - No Ins.,2.27,2.517,0.075,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R4 Ins.,1.83,6.503,0.02345,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R7 Ins.,2.55,9.459,0.0225,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R10 Ins.,3.27,12.483,0.02183,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R15 Ins.,4.47,17.669,0.02108,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R20 Ins.,5.67,22.406,0.02109,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R25 Ins.,6.87,27.721,0.02065,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Double glass with no low e coatings - R30 Ins.,8.07,32.483,0.0207,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - No Ins.,2.27,2.895,0.065,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R4 Ins.,1.83,6.902,0.0221,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R7 Ins.,2.55,9.903,0.02146,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R10 Ins.,3.27,12.849,0.02121,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R15 Ins.,4.47,18.018,0.02067,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R20 Ins.,5.67,22.96,0.02058,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R25 Ins.,6.87,27.721,0.02065,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Continuous Ins. - Triple or low e glass - R30 Ins.,8.07,32.483,0.0207,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - No Ins.,2.52,1.975,0.1067,41.90,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R4 Ins.,2.08,4.278,0.04052,50.36,0.25,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R7 Ins.,2.8,5.285,0.0442,37.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R10 Ins.,3.52,5.953,0.0492,30.20,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R15 Ins.,4.72,6.726,0.0583,22.79,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R20 Ins.,5.92,7.28,0.06777,18.37,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R25 Ins.,7.12,7.625,0.07781,15.45,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Single glass pane. stone. or metal pane - R30 Ins.,8.32,7.922,0.0875,13.37,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - No Ins.,2.27,2.8,0.0675,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R4 Ins.,1.83,4.706,0.0325,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R7 Ins.,2.55,5.56,0.0383,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R10 Ins.,3.27,6.192,0.0442,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R15 Ins.,4.47,6.902,0.05397,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R20 Ins.,5.67,7.347,0.0642,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R25 Ins.,6.87,7.697,0.0742,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Double glass with no low e coatings - R30 Ins.,8.07,7.922,0.085,8.88,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - No Ins.,2.27,3.479,0.0542,29.09,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R4 Ins.,1.83,5.067,0.03,35.69,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R7 Ins.,2.55,5.817,0.03653,25.92,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R10 Ins.,3.27,6.396,0.0425,20.44,0.26,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R15 Ins.,4.47,7.024,0.05303,15.23,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R20 Ins.,5.67,7.414,0.06373,12.22,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R25 Ins.,6.87,7.771,0.07367,10.26,0.27,Smooth,JA4-10
+Spandrel Panels Curtain Walls,Structural Glazing - Triple or low e glass - R30 Ins.,8.07,8,0.0842,8.88,0.27,Smooth,JA4-10
+Straw Bale Wall,Straw Bale - Int and Ext Stucco - 18 in.,19.5,30,0.0542,12.95,0.11,Smooth,JA4-10
+Woods,Ash - 1 in.,1,0.91,0.0917,40.06,0.39,MediumSmooth,AEC
+Woods,Birch - 1 in.,1,0.84,0.0992,43.93,0.39,MediumSmooth,AEC
+Woods,California Redwood - 1 in.,1,1.28,0.065,26.21,0.39,MediumSmooth,AEC
+Woods,Douglas Fir-Larch - 1 in.,1,1.02,0.0817,34.88,0.39,MediumSmooth,AEC
+Woods,Hardwood - 1 in.,1,0.86,0.0967,42.43,0.39,MediumSmooth,AEC
+Woods,Hardwood - 1/2 in.,0.5,0.43,0.0967,42.43,0.39,MediumSmooth,AEC
+Woods,Hardwood - 3/4 in.,0.75,0.65,0.0967,42.43,0.39,MediumSmooth,AEC
+Woods,Maple - 1 in.,1,0.88,0.095,41.87,0.39,MediumSmooth,AEC
+Woods,Oak - 1 in.,1,0.85,0.0983,43.93,0.39,MediumSmooth,AEC
+Woods,Pine (oven-dried) - 1 in.,1,1.56,0.0533,23.00,0.45,MediumSmooth,AEC
+Woods,Wood - 1 in.,1,0.96,0.0867,37.94,0.39,MediumSmooth,AEC
+Woods,Wood - 1/2 in.,0.5,0.48,0.0867,37.94,0.39,MediumSmooth,AEC
+Woods,Wood - 2 in.,2,1.92,0.0867,37.94,0.39,MediumSmooth,AEC
+Woods,Wood - 4 in.,4,3.84,0.0867,37.94,0.39,MediumSmooth,AEC
+Woods,Wood siding - 1/2 in.,0.5,0.8,0.0517,36.94,0.28,MediumSmooth,AEC
+ENDTABLE
+//

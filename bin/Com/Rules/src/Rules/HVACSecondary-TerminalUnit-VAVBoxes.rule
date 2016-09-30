@@ -1,0 +1,817 @@
+// TerminalUnit - VAV Heating and Controls
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.6.3 - Terminal Heating
+//      Terminal Heat Type
+//      Terminal Heat Capacity
+//      Reheat Delta T
+//  Section 5.6.5.1 - VAV Air Flow
+//      Terminal Heating Control Type
+
+
+
+// ********** Maxmimum Primary Airflow During Heating **************************
+RULE TrmlUnit:HtgAirFlowMax
+  DESCRIPTION
+    "The maximum primary air flow to the terminal in heating mode."
+  REFERENCE 
+    NACM Section 5.6.5.1
+  INPUTCLASS 
+    CondRequired
+  MINIMUM 
+    0
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:AutoHardSize = 1 .AND. Type = "VAVReheatBox")
+    then // For PROPOSED AutoHardSizing only
+      if( IfValidAnd( PriAirFlowMin >= 0 ) .AND.
+          IfValidAnd( PriAirFlowMax >= 0 ) )
+      then
+        if( AirSys:LabArea > 0 )
+        then PriAirFlowMax
+        else if( IfValidAnd( ReheatCtrlMthd = "SingleMaximum" ) )
+        then PriAirFlowMin
+        else Max( PriAirFlowMin, PriAirFlowMax * 0.5 )
+        endif endif
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Type = "VAVReheatBox" .AND. LocalStatus( HtgAirFlowMax ) = 0 )
+    then 
+      PostError("The max. heating flow of TerminalUnit '%s' has not been 
+                 defined.", Name)
+    else UNCHANGED
+    endif  
+  SIZING
+    if(  BaseSysNum > 0 .OR. Type != "VAVReheatBox" )
+    then UNDEFINED 
+    else u:HtgAirFlowMax
+    endif
+  ANNUAL 
+    if( BaseSysNum > 0 .AND. Type = "VAVReheatBox" )
+    then
+      if( AirSys:LabArea > 0 )
+      then PriAirFlowMax
+      else if( ReheatCtrlMthd = "DualMaximum" )
+      then Max( PriAirFlowMin, PriAirFlowMax * 0.5 )
+      else Max( PriAirFlowMin, PriAirFlowMax * 0.2 )
+      endif endif
+    else z:HtgAirFlowMax
+    endif
+ENDRULE
+
+RULE TrmlUnit:HtgAirFlowMaxSim
+  DESCRIPTION
+    "The maximum primary air flow to the terminal in heating mode, for simulation" 
+  INPUTCLASS 
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    cfm  
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( LocalStatus( HtgAirFlowMax ) > 0 )
+    then HtgAirFlowMax * SysCnt
+    else UNDEFINED
+    endif 
+ENDRULE
+
+RULE NEW TrmlUnit:HtgAirFlowMaxFrac
+  DATATYPE
+    Float
+  LONGFORM
+   HeatingAirFlowMaximumFraction 
+  DESCRIPTION
+    "The fraction calculated by dividing the zone minimum primary air flow by the
+     design (maximum) primary airflow for the zone."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( IfValidAnd( HtgAirFlowMax > 0 ) .AND.
+        IfValidAnd( PriAirFlowMax > 0 ) )
+    then HtgAirFlowMax / PriAirFlowMax
+    else UNDEFINED
+    endif
+  ANNUAL 
+    if( IfValidAnd( HtgAirFlowMax > 0 ) .AND.
+        IfValidAnd( PriAirFlowMax > 0 ) )
+    then HtgAirFlowMax / PriAirFlowMax
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// Intermediate calculation of minimum system air flow (AirSys only)
+RULE NEW AirSys:TotTrmlHtgAirFlowMaxSim
+  DATATYPE
+    Float
+  LONGFORM
+    TotalTerminalHeatingAirFlowMaximumSimulated
+  DESCRIPTION
+    "The total minimum primary air flow of all terminal units connected to the AirSystem."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    cfm
+  DEFAULT
+    SumChildren( TrmlUnit:HtgAirFlowMaxSim )   
+  SIZING
+    UNDEFINED 
+  ANNUAL
+    SumChildren( TrmlUnit:HtgAirFlowMaxSim )  
+ENDRULE
+
+
+
+// ---------- Section 5.6.3 - Terminal Heating ---------------------------------
+
+// ********** Terminal Heat Capacity *******************************************
+// Flag that indicate TerminalUnit has HotWater coils
+RULE NEW TrmlUnit:HasHotWtrCoil
+  DATATYPE
+    Float
+  LONGFORM
+    HasHotWaterCoil
+  DESCRIPTION
+    "A flag that indicates the TerminalUnit has a child HotWater coils."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h 
+  DEFAULT
+    if( SumChildrenIf( CoilHtg:SysCnt, CoilHtg:Type = "HotWater" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    if( SumChildrenIf( CoilHtg:SysCnt, CoilHtg:Type = "HotWater" ) )
+    then 1
+    else 0
+    endif
+  ANNUAL
+    z:HasHotWtrCoil
+ENDRULE
+// Terminal units with hot water coils
+RULE NEW TrmlUnit:CapTotNetRtdHotWtr
+  DATATYPE
+    Float
+  LONGFORM
+    CapacityTotalNetRatedHotWater
+  DESCRIPTION
+    "The terminal unit heating capacity that is Type = 'HotWater'."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h  
+  DEFAULT
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type = "HotWater" )
+  SIZING
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type = "HotWater" )
+  ANNUAL
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type = "HotWater" )
+ENDRULE
+// Terminal units with other heating coils
+RULE NEW TrmlUnit:CapTotNetRtdOther
+  DATATYPE
+    Float
+  LONGFORM
+    CapacityTotalNetRatedOther
+  DESCRIPTION
+    "The terminal unit heating capacity that is Type other than 'HotWater'."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h  
+  DEFAULT
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type != "HotWater" )
+  SIZING
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type != "HotWater" )
+  ANNUAL
+    SumChildrenIf( CoilHtg:CapTotNetRtd, CoilHtg:Type != "HotWater" )
+ENDRULE
+
+RULE NEW TrmlUnit:CoilHtgCap
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingCapacity
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h  
+  DEFAULT
+    CapTotNetRtdHotWtr + CapTotNetRtdOther
+  SIZING
+    UNDEFINED
+  ANNUAL
+    CapTotNetRtdHotWtr + CapTotNetRtdOther
+ENDRULE
+
+
+// ********** Reheat Control Type **********************************************
+RULE TrmlUnit:ReheatCtrlMthd
+  DESCRIPTION
+    "The air/temperature control strategy for VAV reheat box in heating mode." 
+  HELP
+    "Single Maximum: The airflow is set to a minimum constant value in both the 
+     deadband and heating mode. The minimum airflow septoint is typically 
+     30 to 50 percent of maximum.  This control mode typically has a 
+     higher minimum airflow than the minimum used in the dual maximum 
+     below, resulting in more frequent reheat.
+
+     Dual Maximum: raises the SAT as the first stage of heating, and increases 
+     the airflow to the zone as the second stage of heating, as follows:
+
+     1. The first stage of heating consists of modulating the zone 
+        supply air temperature setpoint up to a maximum setpoint no 
+        larger than 95°F while the airflow is maintained at the dead 
+        band flow rate. 
+
+     2. The second stage of heating consists of modulating the airflow 
+        rate from the dead band flow rate up to the heating maximum 
+        flow rate (50% of design flow rate)." 
+  REFERENCE 
+    NACM Section 5.6.5.1
+  INPUTCLASS 
+    Default
+; OPTION
+;   SingleMaximum
+;   DualMaximum
+  DEFAULT
+    if( Type = "VAVReheatBox" .AND. ParentStatus( ReheatCtrlMthd ) > 0 )
+    then Parent( ReheatCtrlMthd )
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Type = "VAVReheatBox" .AND. 
+        ChildCount( CoilHtg ) > 0 .AND.
+        LocalStatus( ReheatCtrlMthd ) > 0 )
+    then
+      if( HasHotWtrCoil > 0 .AND.
+          IfValidAnd( Parent( CtrlSysType ) != "DDCToZone" ) .AND.
+          ReheatCtrlMthd = "DualMaximum" )
+      then 
+        PostWarning( "Reheat control for TerminalUnit '%s' cannot be 'DualMaxmimum'
+                      unless the AirSystem '%s' control system type is 'DDCToZone'.
+                      'SingleMaxmimum' will be simulated.", Name, Parent( Name ) )
+      else  
+      if( HasHotWtrCoil = 0 .AND.
+          ReheatCtrlMthd = "DualMaximum" )      
+      then  // TrmlUnit has non-HotWater reheat coil, only SingleMaximum is valid
+        PostWarning("Reheat control for TerminalUnit '%s' cannot be 'DualMaxmimum'
+                     unless the reheat coil is hot water. 'SingleMaxmimum' will 
+                     be simulated.", Name)   
+      else UNCHANGED
+      endif endif        
+    else UNCHANGED
+    endif   
+  SIZING
+    if( Type = "VAVReheatBox" )
+    then
+      if( ZnServedRef:LabArea > 0 )
+      then "SingleMaximum"
+      else if( BaseSysNum > 0 )
+      then "DualMaximum"
+      else if( IfValidAnd( Parent( CtrlSysType ) = "DDCToZone" ) .AND.
+               HasHotWtrCoil > 0 )
+      then u:ReheatCtrlMthd
+      else "SingleMaximum"
+      endif endif endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    if( Type = "VAVReheatBox" )
+    then z:ReheatCtrlMthd
+    else UNDEFINED
+    endif
+ENDRULE 
+
+// ********** Control for Outdoor Air ***************************************************
+RULE TrmlUnit:CtrlForOA
+  DESCRIPTION
+    "A flag that indicates if a VAVReheatBox or VAVNoReheatBox terminal shoudl be
+     controlled to provide the required OA when using DCV."
+  HELP
+    "This corresponds the setting available in the OpenStudio application, and
+     results in the E+ zone Design Specification Outdoor Air object to be
+     defined in the simulation of SingleDuct:VAV:Reheat and VAV:NoReheat objects."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ( Type = "VAVReheatBox" .OR. Type = "VAVNoReheatBox" ) .AND.
+        LocalCompAssigned( ZnServedRef ) )
+    then 
+      if( ZnServedRef:VentCtrlMthd = "CO2Sensors" )
+      then 1 // Zone has DCV
+      else 0
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED // No DCV for sizing
+  ANNUAL
+    if( ( Type = "VAVReheatBox" .OR. Type = "VAVNoReheatBox" ) .AND.
+        LocalCompAssigned( ZnServedRef ) )
+    then 
+      if( ZnServedRef:VentCtrlMthd = "CO2Sensors" )
+      then 1 // Zone has DCV
+      else 0
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// ********** Reheat Delta T ***************************************************
+RULE TrmlUnit:ReheatDelTemp
+  DESCRIPTION
+    "Temperature increase across heating coil at design conditions."
+  HELP
+    "This is an alternate method to enter the terminal heat capacity. It is
+     currently not available for compliance analysis."
+  REFERENCE 
+    NACM Section 5.6.3
+  INPUTCLASS 
+    NotInput
+  COMMONMINIMUM
+    20 
+  COMMONMAXIMUM
+    30
+  MAXIMUM 
+    60
+  UNITS 
+    degF
+  REPORTPRECISION
+    0
+  DEFAULT : T24N
+    25 // Revised back to 25 to match v3.  Code below is more adaptive
+  DEFAULT : S901G ECBC
+   if( ChildCount( CoilHtg ) > 0 .AND.
+       LocalCompAssigned( ZnServedRef ) )
+   then // Default with bound between 20 and 40°F
+     if( IfValidAnd( SupAirSegHtgCap > 0 ) )
+     then // System has main heating coil, use HtgDsgnSupAirTemp
+       Max( Min( ValidOr( ZnServedRef:HtgDsgnSupAirTemp, 95 ) - 
+                 ValidOr( AirSys:HtgDsgnSupAirTemp, 55 ), 40 ), 20 )
+     else // System has no main heating coil, use ClgDsgnSupAirTemp
+       Max( Min( ValidOr( ZnServedRef:HtgDsgnSupAirTemp, 95 ) - 
+                 ValidOr( AirSys:ClgDsgnSupAirTemp, 55 ), 40 ), 20 )
+     endif
+   else UNDEFINED
+   endif
+  SIZING_PROPOSED
+    if( IsBaseHVAC = 0 .AND. IfValidAnd( CoilHtgCap > 0 ) )
+    then u:ReheatDelTemp
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    UNDEFINED
+// Not used, for baseline
+ENDRULE
+
+
+// ********** Min Air Flow Schedule **********************************************
+RULE TrmlUnit:MinAirFracSchRef
+  DESCRIPTION
+    "A fractional schedule that defines a VAV terminal unit minimum air flow as 
+     a fraction of the maximum air flow rate."
+  HELP
+    "This schedule is prescribed for T24 compliance analysis."
+  INPUTCLASS : T24N
+    Prescribed 
+  INPUTCLASS : S901G ECBC
+    Optional 
+  SIZING
+    UNDEFINED
+  ANNUAL 
+    if( Type = "VAVReheatBox" .OR. Type = "VAVNoReheatBox" )
+    then
+      if( ZnServedRef:LabArea > 0 )
+      then // Syncronize supply air flow with lab exhaust flow
+        ZnServedRef:ExhFlowSchRef
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+ENDRULE 
+
+// ********** Terminal Heat Capacity *******************************************
+// Repeat of rules included in HVACSecondary=CoilHeating-Capacity, except these 
+//  are specific to reheat coils in TerminalUnits
+
+RULE Proj:Bldg:AirSys:TrmlUnit:CoilHtg:Type
+  CHECKSIM
+    if( Type = "HeatPump" ) then
+      PostError("Heat pump heating coils are not allowed in terminal units. 
+                 Change the heating coil type in TerminalUnit '%s'.", Name)
+    else UNCHANGED
+    endif  
+  SIZING
+    if( BaseSysNum > 0 )
+    then // Baseline system definitions defined by Library_HVAC.txt file.
+      UNCHANGED
+    else u:Type
+    endif
+  ANNUAL
+    z:Type
+ENDRULE
+
+// Gross Capacity
+RULE AirSys:TrmlUnit:CoilHtg:CapTotGrossRtd
+  DEFAULT
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else
+      if( IfValidAnd( TrmlUnit:ReheatDelTemp > 0 ) )
+      then
+        if( IfValidAnd( TrmlUnit:HtgAirFlowMax > 0 ) )
+        then 1.0944 * TrmlUnit:HtgAirFlowMax * TrmlUnit:ReheatDelTemp * 1.25
+        else if( IfValidAnd( TrmlUnit:PriAirFlowMin > 0 ) )
+        then 1.0944 * TrmlUnit:PriAirFlowMin * TrmlUnit:ReheatDelTemp * 1.25
+        else 0
+        endif endif
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING    
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:CapTotGrossRtd
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd( z:CapTotGrossRtdSim >= 0 ) .AND. 
+          SysCnt > 0 ) 
+      then z:CapTotGrossRtdSim / SysCnt * SizingRat
+      else 0
+      endif
+    else z:CapTotGrossRtd
+    endif
+ENDRULE
+// Net Capacity
+RULE AirSys:TrmlUnit:CoilHtg:CapTotNetRtd
+  REPORTPRECISION
+    -3
+  DEFAULT
+    CapTotGrossRtd // For terminal unit coils, net is the same as gross
+  SIZING
+    CapTotGrossRtd
+  ANNUAL
+    CapTotGrossRtd
+ENDRULE
+// Design fluid flow rate, used for sizing E+ hot water coils
+RULE AirSys:TrmlUnit:CoilHtg:FluidFlowRtDsgn
+  DEFAULT
+    if( Type = "HotWater" .AND. 
+        Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else
+      if( LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then CapTotGrossRtd / ( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT )
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else if( Type = "HotWater" )
+    then
+      if( IfValidAnd( u:FluidFlowRtDsgn > 0 ) )
+      then u:FluidFlowRtDsgn 
+      else if( LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+               IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then CapTotGrossRtd /( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT)
+      else 0
+      endif endif
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "HotWater" .AND. 
+          LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then CapTotGrossRtd /( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT)
+      else 0
+      endif
+    else z:FluidFlowRtDsgn
+    endif
+ENDRULE   
+
+// Design load on coil
+;RULE AirSys:TrmlUnit:CoilHtg:FluidLdDsgn
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    if( Type = "HotWater" )
+;    // Calculate coil load based on design water flow rate
+;    then
+;      if( IfValidAnd( FluidFlowRtDsgn > 0 ) .AND.
+;          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) ) 
+;      then 
+;        FluidFlowRtDsgn / SizingRat * 500.19 *
+;        FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT
+;      else 0
+;      endif
+;    else UNDEFINED
+;    endif 
+;ENDRULE   
+
+
+// ********** Simulated Capacities *********************************************
+RULE AirSys:TrmlUnit:CoilHtg:CapTotGrossRtdSim
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( IfValidAnd( CapTotGrossRtd > 0 ) )
+    then CapTotGrossRtd * SysCnt
+    else 0
+    endif
+  SIZING
+    // Source for Autosize data:
+    // E+ Report: Equipment Summary -> Heating Coils -> Nominal Total Capacity
+    // This value reflects multipliers of zone loads
+  ANNUAL
+    if( IfValidAnd( CapTotGrossRtd > 0 ) )
+    then CapTotGrossRtd * SysCnt
+    else 1
+    endif
+ENDRULE
+RULE NEW AirSys:TrmlUnit:CoilHtg:CapTotNetRtdSim
+  DEFAULT
+    if( IfValidAnd( CapTotNetRtd > 0 ) )
+    then CapTotNetRtd * SysCnt
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( IfValidAnd( CapTotNetRtd > 0 ) )
+    then CapTotNetRtd * SysCnt
+    else 0
+    endif
+ENDRULE
+RULE AirSys:TrmlUnit:CoilHtg:FluidFlowRtDsgnSim
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IfValidAnd( FluidFlowRtDsgn > 0 ) )
+    then FluidFlowRtDsgn * SysCnt
+    else 0
+    endif
+  SIZING
+    // Source for Autosize data:
+    // E+ Report: 
+    // This value reflects multipliers of zone loads
+  ANNUAL
+    if( IfValidAnd( FluidFlowRtDsgn > 0 ) )
+    then FluidFlowRtDsgn * SysCnt
+    else 0
+    endif
+ENDRULE
+
+
+
+// ********** Total Heating Capacity of System *********************************
+// Terminal units
+// with hot water coils
+RULE NEW AirSys:TrmlUnitHtgCapHotWtr
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  LONGFORM
+    TrmlUnitHeatingCapacityHotWater
+  DEFAULT
+    SumChildren( TrmlUnit:CapTotNetRtdHotWtr )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    SumChildren( TrmlUnit:CapTotNetRtdHotWtr )
+ENDRULE
+// with other coils
+RULE NEW AirSys:TrmlUnitHtgCapOther
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  LONGFORM
+    TrmlUnitHeatingCapacityOther  
+  DEFAULT
+    SumChildren( TrmlUnit:CapTotNetRtdOther )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    SumChildren( TrmlUnit:CapTotNetRtdOther )
+ENDRULE
+
+// Systems
+// =========================== AirSystem =======================================
+RULE AirSys:HtgCap
+  DESCRIPTION
+    "The net heating capacity of the AirSystem."
+  HELP
+    "This is the sum of all child CoilHeating component (net) heating capacities,
+     minus the capacity of heat pump supplementary coils."
+  INPUTCLASS 
+    NotInput     
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( LocalStatus( SuppHtgCap ) > 0 )
+    then SumChildren( CoilHtg:CapTotNetRtd ) - SuppHtgCap  
+    else SumChildren( CoilHtg:CapTotNetRtd )
+    endif  
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:HtgCap
+    endif
+  ANNUAL
+    if( LocalStatus( SuppHtgCap ) > 0 )
+    then SumChildren( CoilHtg:CapTotNetRtd ) - SuppHtgCap  
+    else SumChildren( CoilHtg:CapTotNetRtd )
+    endif 
+ENDRULE
+
+RULE NEW AirSys:CoilHtgCapAddAlt
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingCapacityAdditionAlteration
+  DESCRIPTION
+    "Gross capacity of heating coil for determining the baseline system for 
+     Additions/Alterations. Does not include Type = HotWater or Steam coil capacity,
+     but does includes 'Count' multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:CapAddAlt > 0 )
+  SIZING 
+    UNDEFINED
+  ANNUAL
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:CapAddAlt > 0 )
+ENDRULE
+
+// =========================== ZoneSystem ======================================
+RULE ZnSys:HtgCap
+  DESCRIPTION
+    "The net heating capacity of the AirSystem."
+  HELP
+    "This is the sum of all child CoilHeating component (net) heating capacities,
+     minus the capacity of heat pump supplementary coils."
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( LocalStatus( SuppHtgCap ) > 0 )
+    then SumChildren( CoilHtg:CapTotNetRtd ) - SuppHtgCap  
+    else SumChildren( CoilHtg:CapTotNetRtd )
+    endif  
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:HtgCap
+    endif
+  ANNUAL
+    if( LocalStatus( SuppHtgCap ) > 0 )
+    then SumChildren( CoilHtg:CapTotNetRtd ) - SuppHtgCap  
+    else SumChildren( CoilHtg:CapTotNetRtd )
+    endif 
+ENDRULE
+
+RULE NEW ZnSys:CoilHtgCapAddAlt
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingCapacityAdditionAlteration
+  DESCRIPTION
+    "Gross capacity of heating coil for determining the baseline system for 
+     Additions/Alterations. Does not include Type = HotWater or Steam coil capacity,
+     but does includes 'Count' multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( CoilHtg:CapAddAlt )
+  SIZING 
+    UNDEFINED
+  ANNUAL
+    SumChildren( CoilHtg:CapAddAlt )
+ENDRULE
+
+// Update DsgnAirFlowMin for controllers
+RULE AirSys:DsgnAirFlowMinRat
+  ANNUAL
+    if( Type = "PVAV" .OR. Type = "VAV" )
+    then // Determine from terminal units
+      if( IfValidAnd( TotTrmlPriAirFlowMaxSim > 0 ) )
+      then
+        Max( TotTrmlHtgAirFlowMaxSim, TotTrmlPriAirFlowMinSim ) / TotTrmlPriAirFlowMaxSim
+      else 1.0 // Constant-volume - can occur when testing/debugging (OpenStudio bypassed)
+      endif
+    else if( IfValidAnd( SupFanCap > 0 ) .AND. IfValidAnd( SupFanFlowMin > 0 ) )
+    then // Note: E+ SingleZoneReheat control limits flow to min flow in heating
+         // SZVAV uses SingleZoneReheat with limits based on design temps
+      SupFanFlowMin / SupFanCap
+    else 1.0 // Constant-volume
+    endif endif
+ENDRULE
+
+
+// For reporting ThrmlZn Properties
+RULE ThrmlZn:HtgAirFlowMax
+  DESCRIPTION
+    "The heating maximum air flow rate of provided by the TerminalUnit that serves the zone.
+     Only applicable to VAV terminal units."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    cfm 
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( LocalCompAssigned( TrmlUnitRef ) )
+    then 
+      if( TrmlUnitRef:Type = "VAVReheatBox" )
+      then TrmlUnitRef:HtgAirFlowMax
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( LocalCompAssigned( TrmlUnitRef ) )
+    then 
+      if( TrmlUnitRef:Type = "VAVReheatBox" )
+      then TrmlUnitRef:HtgAirFlowMax
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+RULE ThrmlZn:HtgAirFlowMaxFrac
+  DESCRIPTION
+    "The fraction calculated by dividing the zone maximum primary air flow in
+     in heating mode by the design (maximum) primary airflow for the zone."
+  INPUTCLASS 
+    NotInput
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( LocalCompAssigned( TrmlUnitRef ) )
+    then TrmlUnitRef:HtgAirFlowMaxFrac
+    else UNDEFINED
+    endif
+  ANNUAL 
+    if( LocalCompAssigned( TrmlUnitRef ) )
+    then TrmlUnitRef:HtgAirFlowMaxFrac
+    else UNDEFINED
+    endif
+ENDRULE

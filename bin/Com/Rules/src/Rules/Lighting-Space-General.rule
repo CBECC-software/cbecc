@@ -1,0 +1,1868 @@
+// Interior Lighting - General Information
+//
+// -------------------------------------------------------------------------
+//  Copyright (c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+// ---------- Lighting Classification Method ----------------------------------
+RULE Spc:IntLtgSpecMthd
+  DESCRIPTION
+    "The method for selecting baseline lighting and other loads for a space"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM 5.4.3
+  INPUTCLASS
+    Default
+  DEFAULT : T24N
+    "AreaCategoryMethod"
+  DEFAULT : S901G ECBC
+    "SpaceBySpace"
+  SIZING
+    u:IntLtgSpecMthd
+  ANNUAL
+    z:IntLtgSpecMthd
+ENDRULE
+
+// ---------- Whether the lighting is specified via Interior Lighting System --
+RULE Spc:IntLtgSysChildren
+  DESCRIPTION
+    "The number of interior lighting system children."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    ChildCount( IntLtgSys )
+  CHECKCODE
+    if( Spc:HasNoInternalLoads = 1 .AND.
+        IfValidAnd(IntLtgSysChildren > 0 ) )
+    then
+      PostError("Space '%s' is unoccupied, and may not be assigned an interior lighting system",
+                 Name )
+    else 
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Lighiting Status ************************************************
+// Flags to identify whether 'user' defined or standard design lighting power 
+// is to be utilized
+
+// ---------- Build Up Space Status parameters based on IntLtgSys inputs ------
+RULE NEW Spc:NewLumCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    NewLuminaireCount
+  DESCRIPTION
+    "The number of Luminaires with Status = 'New' assigned
+     to the space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( IntLtgSys:NewLumCnt )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:AltLumCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    AlteredLumCount
+  DESCRIPTION
+    "The number of luminaires with Status = 'Altered' 
+     assigned to the space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( IntLtgSys:AltLumCnt )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:ExistLumCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    ExistingLuminaireCount
+  DESCRIPTION
+    "The number of luminaires with Status = 'Existing' 
+     assigned to the space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( IntLtgSys:ExistLumCnt )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:FutureLumCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    FutureLuminaireCount
+  DESCRIPTION
+    "The number of child luminaires with Status = 'Future' 
+     assigned to the space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( IntLtgSys:FutureLumCnt )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Spc:TotLumCnt
+  DATATYPE
+    Integer
+  LONGFORM
+    TotalLuminaireCount
+  DESCRIPTION
+    "The number of Luminaires assigned to the space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    NewLumCnt + AltLumCnt + ExistLumCnt + FutureLumCnt
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Spc:AltLumFrac
+  DATATYPE
+    Float
+  LONGFORM
+    AlteredLuminaireFraction
+  DESCRIPTION
+    "The percentage of luminaires in the space which have been altered.  Determines
+     whether standard design will be existing lighting or prescriptive allowance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( TotLumCnt > 0 )
+    then AltLumCnt / TotLumCnt
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Spc:SpcOverallLumStatus
+  RULESETS
+    T24N
+  DATATYPE
+    String
+  LONGFORM
+    SpaceOverallLuminaireStatus
+  DESCRIPTION
+    "The aggregated status of the child interior lighting systems associated
+     assigned to the space"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( IntLtgSysChildren > 0 ) )
+    then    // Get Status from IntLtgSys
+      if( NewLumCnt > 1 ) 
+      then "New"
+      else if( AltLumCnt > 1 ) 
+      then if (AltLumFrac < .1 )
+        then "Existing"
+        else "Altered"
+        endif
+      else if( ExistLumCnt > 1 ) 
+      then "Existing" 
+      else if( FutureLumCnt > 1 ) 
+      then "Future" 
+      else "Undetermined"
+      endif endif endif endif
+    else UNCHANGED
+    endif
+  CHECKCODE
+    if( IsAlt )
+    then if( AltLumCnt > 0 .AND. AltLumFrac < 0.10 )
+      then 
+        PostWarning( "In Space: '%s', The fraction of 'Altered' luminaires is
+                     less than 10%.  Lighitng will be treated as existing.",
+                     Name)
+      else if( AltLumFrac >= 0.10 )
+      then
+        PostWarning ( "In Space: '%s', The fraction of 'Altered' luminaires is
+                       greater than or equal to 10%.  The standard design lighting
+                       power density will be set to the prescriptive maximum
+                       for the selected space function.",
+                       Name)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif    
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+  ENDRULE
+
+// ********** Space - Lighting Status *****************************************
+// Rules to identify whether 'user' defined lighting power is to be utilized
+// for propsed and/or standard design.
+
+RULE NEW Spc:DefaultLtgStatus
+  DATATYPE 
+    Enumeration
+  LONGFORM
+    DefaultLuminaireStatus
+  DESCRIPTION
+    "This property holds the default Luminaire Status based on project compliance
+     and envelope status."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  DEFAULT 
+    if( IntLtgSysChildren > 0 )
+    then SpcOverallLumStatus
+    else if( Proj:IsNewLtg )
+    then "New"
+    else if( Proj:IsExistingLtg )
+    then "Existing"
+    else if( Proj:IsFutureLtg )
+    then "Future"           
+    else if( Proj:CompType = "ExistingAlteration" .OR.
+             Proj:CompType = "ExistingAdditionAndAlteration" .OR.
+             Proj:CompType = "AdditionComplete" .OR.
+             Proj:CompType = "AdditionEnvelopeAndPartialLighting" .OR.
+             Proj:CompType = "AdditionEnvelopeAndLighting" )
+    then ValidOr( Spc:EnvStatus, "New" )
+    else if( Proj:CompType = "AdditionEnvelope" .OR.
+             Proj:CompType = "AdditionEnvelopeAndMechanical" )
+    then if( IfValidAnd( Spc:EnvStatus = "New" ) )
+      then "Future"
+      else "Existing"
+      endif
+    else "New"
+    endif endif endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE Spc:LtgStatus
+// Proj:CompType options:
+//    ComplianceType                         Valid Options                Default (* indicates the only option)
+//    --------------                         -------------                -------
+//    NewComplete                            New                          *New
+//    NewEnvelope                            Future                       *Future
+//    NewEnvelopeAndLighting                 New                          *New     
+//    NewEnvelopeAndPartialLighting          New, Future                  New    
+//    NewEnvelopeAndMechanical               Future                       *Future
+//    NewMechanical                          Existing                     *Existing     
+//    NewMechanicalAndLighting               New                          *New     
+//    NewMechanicalAndPartialLighting        New, Existing                New
+//    ExistingAlteration                     New, Altered, Existing       REF:EnvStatus
+//    ExistingAdditionAndAlteration          New, Altered, Existing       REF:EnvStatus
+//    AdditionComplete                       New, Existing                REF:EnvStatus
+//    AdditionEnvelope                       Future, Exist                If(EnvStatus = New) then Future, else Existing
+//    AdditionEnvelopeAndLighting            New, Existing                REF:EnvStatus
+//    AdditionEnvelopeAndPartialLighting     New, Existing, Future,       REF:EnvStatus
+//    AdditionEnvelopeAndMechanical          Future, Exist                If(EnvStatus = New) then Future, else Existing
+//    AdditionMechanical                     Existing                     *Existing
+//    AdditionMechanicalAndLighting          New, Existing                New
+//    AdditionMechanicalAndPartialLighting   New, Future,                 New
+  DESCRIPTION
+    "Specifies the Status of the lighting in a space for Additions, Alterations
+     and Partial Compliance."
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to lighting in 'New' Spaces or lighting in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Valid only for ExistingAlteration and 
+                 ExistingAdditionAndAlteration compliance types. Applies to 
+                 luminaire modifications in existing spaces, which do not 
+                 increase the total space lighting power.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which Lighting systems have been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where lighting systems are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Lighting
+                 Power Density inputs with Status = Future will be
+                 ignored."
+
+  INPUTCLASS
+    Default
+  OPTION : S901G ECBC
+    New
+  OPTION 
+    New
+    Altered
+    Existing
+    Future
+  DEFAULT : S901G ECBC
+    "New"
+  DEFAULT
+    DefaultLtgStatus
+  SIZING : T24N
+    if( Spc:IsNewLtg = 1 ) then "New"  else 
+    if( Spc:IsAlteredLtg = 1 ) then "Altered" else
+    if( Spc:IsExistingLtg = 1 ) then "Existing" else
+    if( Spc:IsFutureLtg = 1 ) then "Future" else "New"
+    endif endif endif endif
+  SIZING : S901G ECBC
+    "New"
+  ANNUAL
+    z:LtgStatus
+  ENDRULE
+
+RULE NEW Spc:IsValidLtgStatus
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLightingStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LtgStatus = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LtgStatus = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LtgStatus = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LtgStatus = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Spc:LtgStatusForComp
+  RULESETS
+    T24N
+  DATATYPE
+    String
+  LONGFORM
+    StatusForCompliance
+  DESCRIPTION
+    "A string to hold the true lighting status for the default/checkcode transform"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLtgStatus ) then LtgStatus else
+    DefaultLtgStatus
+    endif endif endif endif 
+  CHECKCODE
+	  if( IsValidLtgStatus = 0 )
+    then
+      PostWarning( "For Space '%s': Lighting status '%s'is not valid for the 
+                    selected compliance type: '%s'.  Lighitng Status has been 
+                    reset to '%s'.",
+                    Name, LtgStatus, Proj:CompType, LtgStatusForComp )
+     else UNCHANGED
+     endif
+ENDRULE
+
+RULE NEW Spc:IsNewLtg
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewLighting
+  DESCRIPTION
+    "A flag to indicate whether the lighting in a space has 'New' status."  
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    1
+  DEFAULT
+	  if ( IfValidAnd( LtgStatusForComp = "New" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:IsAlteredLtg
+  DATATYPE
+    Integer
+  LONGFORM
+    IsAlteredLighting
+  DESCRIPTION
+    "A flag to indicate whether the lighting in a space has 'Altered' status."  
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    0
+  DEFAULT
+	  if ( IfValidAnd( LtgStatusForComp = "Altered" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:IsExistingLtg
+  DATATYPE
+    Integer
+  LONGFORM
+    IsExistingLighting
+  DESCRIPTION
+    "A flag to indicate whether the lighting in a space has 'Existing' status."  
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    0
+  DEFAULT
+	  if ( IfValidAnd( LtgStatusForComp = "Existing" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:IsFutureLtg
+  DATATYPE
+    Integer
+  LONGFORM
+    IsExistingLighting
+  DESCRIPTION
+    "A flag to indicate whether the lighting in a space has 'Existing' status."  
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    0
+  DEFAULT 
+	  if ( IfValidAnd( LtgStatusForComp = "Future" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Spc:ApplyStdLtg
+  DATATYPE 
+    Integer
+  LONGFORM
+    ApplyStandardLighting
+  DESCRIPTION
+    "Flag to identify whether standard LPD is applied."  
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    if( Spc:OccClass = "Residential" )
+    then  // lighting in residential spaces is set equal to standard design
+      1
+    else if( IsFutureLtg ) 
+    then  // envelope only compliance, proposed lighting subject to standard design rules
+      1
+    else
+      0  // all other lighting statuses subject to proposed rules
+    endif endif
+    DEFAULT : S901G ECBC
+     0
+  SIZING_PROPOSED : T24N
+    if( Spc:OccClass = "Residential" )
+    then  // lighting in residential spaces is set equal to standard design
+      1
+    else if( IsFutureLtg ) 
+    then  // proposed lighting subject to standard design rules, such as in 'NewEnvelope' compliance
+      1
+    else
+      0  // all other lighting statuses subject to proposed rules
+    endif endif
+  SIZING_BASELINE : T24N
+    if( Spc:OccClass = "Residential" )
+    then // lighting in residential spaces is set equal to standard design in all cases
+      1
+    else if( IsExistingLtg )
+    then // for existing lighting, standard design is set equal to proposed
+      0 
+    else if( Spc:CondgType = "Unconditioned" .AND.
+             IfValidAnd( u:RegLtgPwr <= RegBaseGenPwr ) )
+    then  // lighting in unconditioned spaces is equivalent to user input, up to Standard Design LPD
+      0
+    else 
+      1
+    endif endif endif
+  SIZING_PROPOSED : S901G ECBC
+    0  //  additions/alterations not yet implemented
+  SIZING_BASELINE : S901G ECBC
+    1  //  additions/alterations not yet implemented
+  ANNUAL
+    z:ApplyStdLtg
+ENDRULE
+
+// ********** Properties for Calculating Room Cavity Ratio ********************
+RULE NEW Spc:AveLumHgt
+  DATATYPE
+    Float
+  LONGFORM
+     AverageLuminaireHeight
+  DESCRIPTION
+    "The Average Luminaire Height of all IntLgtSys( s ) for which 
+     General LPD calcs are being performed."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( u:IntLtgSysChildren > 0 .AND.
+        SumChildren( IntLtgSys:Pwr ) > 0 ) then
+      SumChildren( IntLtgSys:LumMntgHgtXPwr ) /
+      SumChildren( IntLtgSys:Pwr )
+    else 
+      Spc:FlrToCeilingHgt
+    endif
+  SIZING
+    if( u:IntLtgSysChildren > 0  .AND.
+        SumChildren( IntLtgSys:Pwr ) > 0)
+    then SumChildren( IntLtgSys:LumMntgHgtXPwr ) /
+         SumChildren( IntLtgSys:Pwr )
+    else
+      u:AveLumHgt
+    endif
+  ANNUAL
+    z:AveLumHgt
+ENDRULE
+RULE NEW Spc:AveWorkPlaneHgt
+  DATATYPE
+    Float
+  LONGFORM
+    AverageWorkplaneHeight 
+  DESCRIPTION
+    "The Average Work Plane Height of all IntLgtSys( s ) for which 
+     General LPD calcs are being performed."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( u:IntLtgSysChildren > 0  .AND.
+        SumChildren( IntLtgSys:Pwr ) > 0)
+    then SumChildren( IntLtgSys:WorkPlaneHgtXPwr ) /
+         SumChildren( IntLtgSys:Pwr )
+    else 3
+    endif
+  SIZING
+    if( u:IntLtgSysChildren > 0  .AND.
+        SumChildren( IntLtgSys:Pwr ) > 0)
+    then SumChildren( IntLtgSys:WorkPlaneHgtXPwr ) /
+         SumChildren( IntLtgSys:Pwr )
+    else u:AveWorkPlaneHgt
+    endif
+  ANNUAL
+    z:AveWorkPlaneHgt
+ENDRULE
+RULE Spc:TaskHgt
+  DESCRIPTION
+    "The Task Height all IntLgtSys( s ) for which
+     General LPD calcs are being performed.
+     Task Height is defined as the distance from the work plane to center 
+     of the lighting fixture"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    1
+  DEFAULT   
+    if( LocalStatus( AveLumHgt ) = 0 .OR.
+        LocalStatus( AveWorkPlaneHgt ) = 0 )
+    then UNDEFINED
+    else AveLumHgt - AveWorkPlaneHgt
+    endif
+  SIZING
+    if( LocalStatus( AveLumHgt ) = 0 .OR.
+        LocalStatus( AveWorkPlaneHgt ) = 0 )
+    then UNDEFINED
+    else AveLumHgt - AveWorkPlaneHgt
+    endif
+  ANNUAL
+    z:TaskHgt
+ENDRULE
+RULE Spc:RCR
+  DESCRIPTION
+    "The Room Cavity Ratio of a Space calculated as:
+     2.5*Perimeter*TaskHeight/Area"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( FlrArea > 0 .AND.
+        LocalStatus( Perim ) > 0 .AND.
+        LocalStatus( TaskHgt ) > 0 )
+    then 2.5*( Spc:Perim )*TaskHgt / FlrArea
+    else UNDEFINED
+    endif
+  SIZING
+    u:RCR
+  ANNUAL
+    z:RCR
+ENDRULE
+
+// ********** Baseline Lighting Powers - Space ********************************
+// calculate the baseline lighting power allowance for a space, 
+// stored at proposed transform for reporting on PERF-1 Reports
+
+// ---------- Area Category Method Baseline - T24N ----------------------------
+
+RULE NEW Spc:ACMBaseGenLPD
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    AreaCategoryMethodGeneralLPD
+  DESCRIPTION
+    "A container for the Baseline General Area Category Method LPD
+     at the Space level."
+  HELP
+    "Primarily for reporting purposes, this value represents the baseline LPD
+     when using the Area Category Method"
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( Spc:HasNoInternalLds = 1 )
+    then 0
+    else SpaceFunctionData:IntLPDReg("FuncType",SpcFunc )
+    endif
+  SIZING
+    u:ACMBaseGenLPD
+  ANNUAL
+    z:ACMBaseGenLPD
+ENDRULE
+RULE NEW Spc:ACMBaseGenPwr
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    AreaCategoryMethodGeneralPower
+  DESCRIPTION
+    "A container at the Space level for the Regulated Lighting Power 
+     Calculated via the Area Category Method"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    ACMBaseGenLPD * FlrArea
+  SIZING
+    u:ACMBaseGenPwr
+  ANNUAL
+    z:ACMBaseGenPwr
+ENDRULE
+
+// ---------- Tailored Method Baseline - T24N ---------------------------------
+
+RULE NEW Spc:TMAllowed
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+     TailoredMethodAllowed
+  DESCRIPTION
+    "The Average Luminaire Height of all IntLgtSys(s) for which Tailored Method
+     General LPD calcs are being performed."
+  HELP
+    ""
+  REFERENCE 
+     T-24 Standards 140.6(c)3
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( SpcFunc != "- specify -" ) )
+    then TailoredMethodLPA:TMAllowed( "SpaceFunction", Spc:SpcFunc )
+    else 0
+    endif
+  CHECKCODE
+    if( LocalStatus( Spc:SpcFunc ) > 0 .AND.
+        IfValidAnd( Spc:IntLtgSpecMthd = "TailoredMethod" ) .AND.
+        IfValidAnd( Spc:TMAllowed = 0 ) )
+    then // Tailored Method only allowed for 
+      PostError( "In Space '%s', TailoredMethod is not a valid interior lighting
+                  specification method for Space Function: '%s'.",
+                  u:Name, u:SpcFunc )
+    else if( Proj:IsDetailedGeometry = 0 .AND. 
+             IfValidAnd( Spc:IntLtgSpecMthd = "TailoredMethod" ) .AND.
+             LocalStatus( Spc:Perim ) <= 0  )
+    then 
+      PostError( "In Space '%s', Space Perimeter must be specified for Tailored
+                  Method interior lighting calculations.",
+                  u:Name )    
+    else 
+      UNCHANGED
+    endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Spc:TMFlag
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    TailoredMethodFlag
+  DESCRIPTION
+    "A Flag for spaces using the Tailored Lighting Method"
+  HELP
+    "Primarily for QA purposes, this flag will be used to identify whether
+     any spaces in the project are using the Tailored Lighting Method"
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( IntLtgSpecMthd = "TailoredMethod") 
+    then 1
+    else 0
+    endif
+  SIZING
+    u:TMFlag
+  ANNUAL
+    z:TMFlag
+ENDRULE
+RULE NEW Proj:TMFlag
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    TailoredMethodFlag
+  DESCRIPTION
+    "A Flag to identify whether whether any Spaces in the project are using 
+     the Tailored Lighting Method"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumChildren( Spc:TMFlag ) > 0 )
+    then 1
+    else 0
+    endif
+  SIZING
+    u:TMFlag
+  ANNUAL
+    z:TMFlag
+ENDRULE
+
+RULE NEW Spc:TMGenAveLumHgt
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+     TailoredMethodGeneralLightingAverageLuminaireHeight
+  DESCRIPTION
+    "The Average Luminaire Height of all IntLgtSys( s ) for which Tailored Method
+     General LPD (Not Additional Allowance) calcs are being performed."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Spc:IntLtgSpecMthd = "TailoredMethod" )
+    then if( u:IntLtgSysChildren > 0 .AND.
+             SumChildrenIf( IntLtgSys:Pwr,
+                            IntLtgSys:AllowType = "- none specified -") > 0 )
+      then SumChildrenIf( IntLtgSys:LumMntgHgtXPwr,
+                         IntLtgSys:AllowType = "- none specified -")/
+           SumChildrenIf( IntLtgSys:Pwr,
+                         IntLtgSys:AllowType = "- none specified -")
+      else Spc:FlrToCeilingHgt
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    u:TMGenAveLumHgt
+  ANNUAL
+    z:TMGenAveLumHgt
+ENDRULE
+RULE NEW Spc:TMGenAveWorkPlaneHgt
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    TailoredMethodAverageWorkplaneHeight 
+  DESCRIPTION
+    "The Average Work Plane Height of all IntLgtSys( s ) for which Tailored Method
+     General LPD (Not Additional Allowance) calcs are being performed."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Spc:IntLtgSpecMthd = "TailoredMethod")
+    then if( u:IntLtgSysChildren > 0  .AND.
+             SumChildrenIf( IntLtgSys:Pwr,
+                            IntLtgSys:AllowType = "- none specified -") > 0)
+      then SumChildrenIf( IntLtgSys:WorkPlaneHgtXPwr,
+                         IntLtgSys:AllowType = "- none specified -")/
+           SumChildrenIf( IntLtgSys:Pwr,
+                         IntLtgSys:AllowType = "- none specified -")
+      else 3
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    u:TMGenAveWorkPlaneHgt
+  ANNUAL
+    z:TMGenAveWorkPlaneHgt
+ENDRULE
+RULE NEW Spc:TMGenTaskHgt
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+      TailoredMethodGeneralTaskHeight
+  DESCRIPTION
+    "The Task Height all IntLgtSys( s ) for which Tailored Method
+     General LPD (Not Additional Allowance) calcs are being performed.
+     Task Height is defined as the distance from the work plane to center 
+     of the lighting fixture"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT   
+    if( LocalStatus( TMGenAveLumHgt ) = 0 .OR.
+       LocalStatus( TMGenAveWorkPlaneHgt ) = 0 )
+    then UNDEFINED
+    else TMGenAveLumHgt - TMGenAveWorkPlaneHgt
+    endif
+  SIZING
+    u:TMGenTaskHgt
+  ANNUAL
+    z:TMGenTaskHgt
+ENDRULE
+
+RULE NEW Spc:TMRCRCat
+  RULESETS
+    T24N
+  DATATYPE 
+    String                 
+  LONGFORM
+     TailoredMethodRoomCavityRatioCategory
+  DESCRIPTION
+    "For table lookups in Table 140.6-G"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( Spc:IntLtgSpecMthd = "TailoredMethod") 
+    then if( LocalStatus( RCR ) = 0 )
+      then UNDEFINED
+      else if ( RCR <= 2.0 ) then "RCRCat1"
+      else if ( RCR <= 3.5 ) then "RCRCat2"
+      else if ( RCR <= 7.0 ) then "RCRCat3"
+      else "RCRCat4"
+      endif endif endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    u:TMRCRCat
+  ANNUAL
+    z:TMRCRCat
+ENDRULE
+
+RULE NEW Spc:TMGenIlum
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    TailoredMethodGeneralIllumination
+  DESCRIPTION
+    "A container at the Space level for the Specified Illumination Level 
+     for Tailored Method baseline lighting power calcs"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( Spc:IntLtgSpecMthd = "TailoredMethod" .AND.
+         Spc:TMAllowed = 1 ) 
+    then if( Spc:HasNoInternalLds = 1 )
+      then 0
+      else TailoredMethodLPA:GenIllum("SpaceFunction",Spc:SpcFunc )
+      endif
+    else 0
+    endif
+  SIZING
+    u:TMGenIlum
+  ANNUAL
+    z:TMGenIlum
+ENDRULE
+RULE Spc:TMGenlIlumRnd
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Rounded Tailored Method Illumination for use in lookups for Table 146-B"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( TMGenIlum > 0 )
+    then MAX( TMGenIlum-mod( TMGenIlum,100 ),50 )
+    else 0
+    endif 
+  SIZING
+    u:TMGenlIlumRnd
+  ANNUAL
+    z:TMGenlIlumRnd
+ENDRULE
+
+RULE Spc:TMBaseGenlLPD
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A container for the General Tailored Method LPD
+     at the Space level."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3
+  INPUTCLASS
+    NotInput 
+  REPORTPRECISION
+    1
+  DEFAULT
+    if ( Spc:HasNoInternalLds = 1 )
+    then 0
+    else
+      if( Spc:IntLtgSpecMthd = "TailoredMethod" .AND.
+          Spc:TMAllowed = 1 .AND. 
+          LocalStatus( TMRCRCat ) > 0 .AND.
+          LocalStatus( TMGenlIlumRnd ) > 0 )
+      then IlluminanceLevelLPD:LPD("RCRCat",TMRCRCat,
+                                   "IllumLevel",TMGenlIlumRnd )
+      else 0
+      endif
+    endif
+  SIZING
+    u:TMBaseGenlLPD
+  ANNUAL
+    z:TMBaseGenlLPD
+ENDRULE
+RULE Spc:TMBaseGenlPwr 
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A container at the Space level for the Regulated Lighting Power 
+     Calculated via the Tailored Method"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    TMBaseGenlLPD * FloorArea
+  SIZING
+    u:TMBaseGenlPwr
+  ANNUAL 
+    z:TMBaseGenlPwr
+ENDRULE
+
+RULE Bldg:TMBaseGenlPwr 
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A container at the building level for the Regulated Lighting Power 
+     Calculated via the Tailored Method"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Spc:TMBaseGenlPwr )
+  SIZING
+    u:TMBaseGenlPwr
+  ANNUAL
+    z:TMBaseGenlPwr
+ENDRULE
+RULE Bldg:CondTMBaseGenlPwr 
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A container at the building level for the Regulated Baseline Lighting Power 
+     Allowance Calculated via the Tailored Method, for conditioned spaces"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( Spc:TMBaseGenlPwr, Spc:IsCond )
+  SIZING
+    u:CondTMBaseGenlPwr
+  ANNUAL
+    z:CondTMBaseGenlPwr
+ENDRULE
+RULE Bldg:UncondTMBaseGenlPwr 
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A container at the building level for the Regulated Baseline Lighting Power 
+     Allowance Calculated via the Tailored Method, for unconditioned spaces"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( Spc:TMBaseGenlPwr, Spc:IsCond = 0 )
+  SIZING
+    u:UncondTMBaseGenlPwr
+  ANNUAL
+    z:UncondTMBaseGenlPwr
+ENDRULE
+
+// ---------- Baseline Lighting Powers - S901G --------------------------------
+
+RULE NEW Spc:RCRThresh
+  RULESETS
+    S901G
+  DATATYPE
+    Float
+  LONGFORM
+    RoomCavityRatioThreshold
+  DESCRIPTION
+    "If the room cavity ratio exceeds this Value, the Room Cavity Adjustment can
+     be made when calculating the baseline design lighting power density.  The
+     Table Contains both text and numeric values, so this value will be returned
+     as text.  Applicable values will be converted to numeric format in a 
+     subsequent rule."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HasNoInternalLds = 1 .OR.
+        SpcFunc = "Atrium - First 40 ft in height" .OR.
+        SpcFunc = "Atrium - Height above 40 ft" .OR.
+        SpcFunc = "Multifamily - Dwelling/Sleeping Units" )
+    then // not applicable for selected Space Funciton
+      -999
+    else if( SpcFunc = "Corridor/Transition" .OR.
+             SpcFunc = "Hospital - Corridor/Transition" .OR.
+             SpcFunc = "Manufacturing - Corridor/Transition" )
+    then // apply adjustment if space width is less than 8 feet
+      -1000
+    else SpaceFunctionData:RCRThresh("FuncType",SpcFunc )
+    endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:WidthLT8ft
+  RULESETS
+    S901G
+  DATATYPE
+    Integer
+  LONGFORM
+    WidthLessThan8Feet
+  DESCRIPTION
+    "Applies to Corridor/Transition Spaces: if the width is less than 8 feet, 
+     the Room Cavity Adjustment is applicable, regardless of space geometry."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    0
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:ApplyRmGeoAdjust
+  RULESETS
+    S901G
+  DATATYPE
+    Integer
+  LONGFORM
+    ApplyRoomCavityAdjustment
+  DESCRIPTION
+    "Whether Room Cavity Adjustment is made when calculating the baseline 
+     design lighting power density."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( RCRThresh = -999) ) 
+    then  // not applicable for selected Space Funciton
+      0
+    else if( IfValidAnd( RCRThresh = -1000 ) ) 
+    then  // apply adjustment if space width is less than 8 feet
+      WidthLT8ft
+    else if( LocalStatus( RCRThresh ) > 0 ) then
+      if( RCR >= RCRThresh )
+      then 1
+      else 0
+      endif
+    else 0
+    endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Spc:BaseSxSLPD
+  RULESETS
+    S901G
+  DATATYPE
+    Float
+  LONGFORM
+    BaselinSpaceBySpaceLightingPowerDensity
+  DESCRIPTION
+    "Preliminary return value from Space-By-Space LPD Lookup"
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Spc:HasNoInternalLds = 1 ) then 
+      0
+    else if( SpcFunc = "Multifamily - Dwelling/Sleeping Units" )
+    then // as designed for MFAM Units
+      u:IntLPDReg
+    else 
+      SpaceFunctionData:IntLPDReg("FuncType",SpcFunc )
+    endif endif
+  SIZING
+    u:BaseSxSLPD
+  ANNUAL
+    z:BaseSxSLPD
+ENDRULE
+
+// ********** General Lighting Power - Space **********************************
+
+RULE NEW Spc:RegBaseGenLPD
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedBaselineGeneralLightingPowerDensity
+  DESCRIPTION
+    "A container for the Regulated Baseline Regulated Baseline General Lighting Power Density"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+;    Complete Building Method Not Supported
+;    if ( IntLtgSpecMthd = "CompleteBuildingMethod") 
+;      then CBMBaseGenLPD
+;    else 
+    if ( IntLtgSpecMthd = "AreaCategoryMethod") 
+    then ACMBaseGenLPD
+    else if ( IntLtgSpecMthd = "TailoredMethod") 
+      then TMBaseGenlLPD
+      else 0
+    endif endif 
+;    endif 
+  DEFAULT : S901G
+    if( Spc:HasNoInternalLds = 1 ) then 
+      0
+    else if( IfValidAnd( BaseSxSLPD > 0 ) ) then
+      if( ( IfValidAnd( SpcFunc = "Atrium - First 40 ft in height"  ) .OR.
+            IfValidAnd( SpcFunc = "Atrium - Height above 40 ft"  ) ) .AND. 
+          IfValidAnd( FlrToCeilingHgt > 0 ) .AND.
+          IfValidAnd( FlrArea > 0 ) ) then
+        BaseSxSLPD*Spc:FlrToCeilingHgt/Spc:FlrArea
+      else if( IfValidAnd ( ApplyRmGeoAdjust = 1 ) ) then
+        1.2*BaseSxSLPD
+      else
+        BaseSxSLPD
+      endif endif 
+    else 0
+    endif endif
+  SIZING
+    u:RegBaseGenLPD
+  ANNUAL
+    z:RegBaseGenLPD
+ENDRULE
+RULE NEW Spc:RegBaseGenPwr
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedBaselineGeneralPower
+  DESCRIPTION
+    "A container for the Regulated Baseline RegBaseGenPwrGeneral Lighting Power"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    RegBaseGenLPD * FlrArea
+  SIZING
+    u:RegBaseGenPwr
+  ANNUAL
+    z:RegBaseGenPwr
+ENDRULE
+
+// ********** Regulated Interior Lighting Power - Space ***********************
+RULE NEW Spc:LowVTLPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    LowVisibleTransmittanceLPDAdjustment
+  DESCRIPTION
+    "The value of the baseline LPD adjustment which accounts for reductions
+     to daylighting potential associated with low VT values in Simplified 
+     geometry models.  A value of 1 indicated no adjustment is made."  
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    if( ( SumChildren( Win:LowVTLPDAdjFlag ) +
+          SumChildren( Skylt:LowVTLPDAdjFlag ) ) > 0 )
+    then 1 / 1.2
+    else 1
+    endif
+  SIZING_PROPOSED
+    1  ; proposed design lighting power should not recieve penalty
+  SIZING_BASELINE
+    u:LowVTLPDAdj 
+  ANNUAL
+    z:LowVTLPDAdj
+ENDRULE
+
+RULE Spc:IntLPDReg
+  DESCRIPTION
+    "User Input - Total regulated connected lighting power density for all
+     interior lighting systems in a Space, including the loads for lamps and 
+     ballasts."
+  HELP
+    "This property is utilized for User Input, and may be ignored or overwritten
+     under certian circumstances."
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS 
+    Default
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND.
+        IfValidAnd( SpcFuncDefaultsRef:IntLPDReg >= 0 ) .AND. 
+        LocalStatus( SpcFunc ) < 5 )
+    then ; Space level power assigned via SpaceFunction Default
+      SpcFuncDefaultsRef:IntLPDReg
+    else if( LocalStatus( SpcFunc ) > 4 )
+    then  ; use ACM default for LPD
+      SpaceFunctionData:IntLPDReg("FuncType",SpcFunc)
+    else ; No Space Function Assigned
+      0
+    endif endif
+  SIZING ; will be reset below to maintain current functionality.  Transistioning to Sim properties
+    UNDEFINED  
+ENDRULE
+
+RULE Spc:RegLtgPwr
+  DESCRIPTION
+    "Container for Total Regulated Lighting Power at Space"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:HasNoInternalLds = 1 ) 
+    then 0
+    else if( IntLtgSysChildren > 0 )
+    then  ; Power Specified via Interior Lighting System
+      SumChildren( IntLtgSys:RegLtgPwr )
+    else if( ApplyStdLtg ) 
+    then  ; Standard Design Lighting - used in residential and future lighting cases
+      ValidOr( u:RegBaseGenPwr, 0 ) + 
+      ValidOr( u:RegAddlAllowPwr, 0 )
+    else if(IfValidAnd( FlrArea > 0 ) ) 
+    then  ; space level, user input lighting power
+       IntLPDReg*FlrArea 
+    else
+      0 
+    endif endif endif endif
+  SIZING
+    if( Spc:HasNoInternalLds = 1 )
+    then 0
+    else switch( ApplyStdLtg )
+      case 1:    
+        if( u:RegLtgPwr = 0 )     
+        then 
+          0   ; if User specified lighting is 0, set baseline to 0 as well
+        else  ; standard design lighting power, including allowances
+          LowVTLPDAdj *
+          ( ValidOr( u:RegBaseGenPwr, 0 ) + 
+            ValidOr( u:RegAddlAllowPwr, 0 ) )
+        endif
+      default: LowVTLPDAdj * u:RegLtgPwr  ; user specified.
+      endswitch      
+    endif
+  ANNUAL
+   z:RegLtgPwr
+ENDRULE
+
+RULE Spc:IntLPDRegSim
+  DESCRIPTION
+    "Calculated - Total regulated connected lighting power density for all
+     interior lighting systems in a Space, including the loads for lamps and 
+     ballasts."    
+  HELP
+    "This property is displayed in the User Interface when lighting power is 
+     specified via Interior Lighting System, or when another scenario has
+     prevented/overwritten user input."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( Spc:FlrArea > 0 ) .AND.
+        IfValidAnd(RegLtgPwr >= 0 ) )
+    then RegLtgPwr/Spc:FlrArea
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( Spc:FlrArea > 0 ) .AND.
+        IfValidAnd(RegLtgPwr >= 0 ) )
+    then RegLtgPwr/Spc:FlrArea
+    else 0
+    endif
+  ANNUAL
+    z:IntLPDRegSim
+ENDRULE
+
+RULE NEW Spc:LPDUIDispToggle
+  DATATYPE
+    Integer
+  LONGFORM
+    LightingPowerDensityUIDisplayToggle
+  DESCRIPTION
+    "Toggles which LPD parameter is displayed in the user interface.
+       0 -> Display User Input: IntLPDReg
+       1 -> Display Calculated: IntLPDRegSim"
+  INPUTCLASS       
+    NotInput         
+  DEFAULT : T24N
+    if( u:Spc:OccClass = "Residential" .OR.  ; overwrite user input with standard design LPD for residnetial spaces
+        u:IntLtgSysChildren > 0 )            ; overwrite user input with sum of IntLtgSys lighting if IntLtgSys used
+    then switch ( IsCond )
+      case 1 : 1
+      default: 2
+      endswitch
+    else // display user input or space level default
+      0
+    endif
+  DEFAULT : S901G
+    if( u:IntLtgSysChildren > 0 ) 
+    then 1  ; overwrite user input with sum of IntLtgSys lighting if IntLtgSys used
+    else 0  ;display user input or space level default
+    endif
+  SIZING
+    UNDEFINED
+ENDRULE
+
+RULE Spc:IntLtgRegEndUseCat
+  DESCRIPTION
+    "The end-use sub category into which the regulated lighting energy 
+     associated with this space is placed"    
+  INPUTCLASS
+    NotInput
+  OPTION
+    ComplianceLtg
+    NonComplianceLtg
+  DEFAULT : T24N
+    if( Spc:IsCond ) 
+    then "ComplianceLtg"
+    else "NonComplianceLtg"
+    endif
+  DEFAULT : S901G
+    "ComplianceLtg"
+  SIZING
+    u:IntLtgRegEndUseCat
+  ANNUAL
+    z:IntLtgRegEndUseCat
+ENDRULE
+
+// ********** Non Regulated Interior Lighting Power  **************************
+RULE Spc:IntLPDNonReg
+  DESCRIPTION
+    "Total non-regulated connected lighting power density for all interior 
+     lighting systems in a Space, including the loads for lamps and 
+     ballasts."
+  HELP
+    "User input non-regulated lighting power density (LPD)."
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS 
+    Default
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND.
+        IfValidAnd( SpcFuncDefaultsRef:IntLPDNonReg >= 0 ) )
+    then ; Space level power assigned via SpaceFunction Default
+      SpcFuncDefaultsRef:IntLPDNonReg
+    else
+      UNDEFINED
+    endif
+  SIZING ; will be reset below to maintain current functionality.  Transistioning to Sim properties
+    UNDEFINED  
+ENDRULE
+
+RULE NEW Spc:NonRegLtgPwr
+  DATATYPE
+    Float
+  LONGFORM
+    NonRegLtgPwr 
+  DESCRIPTION
+    "Container for Total NonRegulated Lighting Power at Space"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  DEFAULT : T24N
+    if( Spc:HasNoInternalLds = 1 .OR.  ; Unoccupied or Plenum - no lighting loads simulated
+        Spc:OccClass = "Residential" ) ; Non Regulated Lighting Power not allowed in residential spaces
+    then UNDEFINED
+    else if( u:IntLtgSysChildren > 0 ) 
+    then   ; ; Power Specified via Interior Lighting System
+       SumChildren( u:IntLtgSys:NonRegLtgPwr )
+    else if(IfValidAnd( FlrArea > 0 ) .AND. 
+            IfValidAnd( IntLPDNonReg >= 0 ) ) 
+    then  ; space level, user input lighting power
+       IntLPDNonReg*FlrArea 
+    else UNDEFINED
+    endif endif endif
+  DEFAULT : S901G
+    if( Spc:HasNoInternalLds = 1 ) ; Non Regulated Lighting Power not allowed in residential spaces
+    then UNDEFINED
+    else if( u:IntLtgSysChildren > 0 ) 
+    then   ; ; Power Specified via Interior Lighting System
+      SumChildren( u:IntLtgSys:NonRegLtgPwr )
+    else if(IfValidAnd( FlrArea > 0 ) .AND. 
+            IfValidAnd( IntLPDNonReg >= 0 ) ) 
+    then  ; space level, user input lighting power
+       IntLPDNonReg*FlrArea 
+    else UNDEFINED
+    endif endif endif
+  SIZING 
+    u:NonRegLtgPwr
+  ANNUAL  
+    z:NonRegLtgPwr
+ENDRULE
+
+RULE Spc:IntLPDNonRegSim
+  DESCRIPTION
+    "Non-Regulated LPD in conditioned spaces, calculated by program based on user input
+     for IntLPDReg and/or InteriorLightingSystem properties"
+  HELP
+    ""
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    W/ft2
+  DEFAULT
+    if( IfValidAnd( Spc:FlrArea > 0 ) .AND.
+        IfValidAnd(NonRegLtgPwr >= 0 ) )
+    then NonRegLtgPwr/Spc:FlrArea
+    else UNDEFINED
+    endif
+  SIZING
+    u:IntLPDNonRegSim
+  ANNUAL
+    z:IntLPDNonRegSim
+ENDRULE
+
+RULE Spc:IntLtgNonRegEndUseCat
+  DESCRIPTION
+    "The end-use sub category into which the regulated lighting energy 
+     associated with this space is placed"    
+  INPUTCLASS
+    NotInput
+  OPTION
+    ComplianceLtg
+    NonComplianceLtg
+  DEFAULT : T24N
+    "NonComplianceLtg"
+  DEFAULT : S901G
+    "ComplianceLtg"
+  SIZING
+    u:IntLtgNonRegEndUseCat
+  ANNUAL
+    z:IntLtgNonRegEndUseCat
+ENDRULE
+
+
+// ********** Reporting ******************************************************
+RULE Spc:PAFCtrlCred
+  DESCRIPTION
+    "Container for total control credits at space"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:HasNoInternalLds = 1 ) 
+    then UNDEFINED 
+    else if( IntLtgSysChildren > 0 )
+      then SumChildren( IntLtgSys:PAFCtrlCred )
+      else 0
+      endif
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  0: 
+      if( LocalStatus( PAFCtrlCred ) = 0 )
+      then 0
+      else u:PAFCtrlCred
+      endif
+    case  1: 0
+    default:
+      if( LocalStatus( PAFCtrlCred ) = 0 )
+      then 0
+      else u:PAFCtrlCred
+      endif
+    endswitch
+  ANNUAL
+    z:PAFCtrlCred
+ENDRULE
+RULE Spc:CondPAFCtrlCred
+  DESCRIPTION
+    "Container for total control credits in conditioned spaces at space"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:IsCond ) 
+    then PAFCtrlCred
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; PAF Credits do not apply to standard design
+    default:             ; proposed design
+      if( Spc:IsCond ) 
+      then PAFCtrlCred
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    z:CondPAFCtrlCred
+ENDRULE
+RULE Spc:UncondPAFCtrlCred
+  DESCRIPTION
+    "Container for total control credits in unconditioned spaces at space"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:IsCond ) 
+    then 0
+    else PAFCtrlCred
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; PAF Credits do not apply to standard design
+    default:             ; proposed design
+      if( Spc:IsCond ) 
+      then 0
+      else PAFCtrlCred
+      endif
+    endswitch
+  ANNUAL
+    z:UncondPAFCtrlCred
+ENDRULE
+
+RULE NEW Spc:RegInstLtgPwr
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedInstalledLightingPower 
+  DESCRIPTION
+    "Container for Total Regulated Lighting Power at Space before control credit
+     adjustments"
+  HELP
+    "Primarily for reporting purposes, this value does not include any Power
+     Adjustment Factors"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  DEFAULT
+    if( Spc:HasNoInternalLds = 1 ) 
+    then UNDEFINED 
+    else if( IntLtgSysChildren > 0 )
+    then SumChildren( IntLtgSys:RegInstLtgPwr )
+    else RegLtgPwr
+    endif endif
+  SIZING
+    switch( ApplyStdLtg )
+    case  0: u:RegInstLtgPwr
+    case  1: 0   ; 'Installed Power' does not make sense for standard design
+    default: u:RegInstLtgPwr
+    endswitch
+  ANNUAL
+    z:RegInstLtgPwr
+ENDRULE
+RULE Spc:CondRegInstLtgPwr
+  DESCRIPTION
+    "Container for the installed lighting power in conditioned spaces only, for 
+     reporting."     
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:IsCond ) 
+    then RegInstLtgPwr
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; Installed lighting is Undefined for standard design
+    default:             ; proposed design
+      if( Spc:IsCond ) 
+      then RegInstLtgPwr
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    z:CondRegInstLtgPwr
+ENDRULE
+RULE Spc:UncondRegInstLtgPwr
+  DESCRIPTION
+    "Container for the installed lighting power in unconditioned spaces only, for 
+     reporting."     
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Spc:IsCond ) 
+    then 0
+    else RegInstLtgPwr
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; Installed lighting is Undefined for standard design
+    default:             ; proposed design
+      if( Spc:IsCond ) 
+      then 0
+      else RegInstLtgPwr
+      endif
+    endswitch
+  ANNUAL
+    z:UncondRegInstLtgPwr
+ENDRULE
+
+
+
+RULE NEW Spc:RegInstLPD
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedInstalledLightingPowerDensity
+  DESCRIPTION
+    "Container for Total Regulated Lighting Power Density at Space before 
+     control credit adjustments"
+  HELP
+    "Primarily for reporting purposes, this value does not include any Power
+     Adjustment Factors"
+  INPUTCLASS       
+    NotInput         
+  UNITS 
+    Watts      
+  DEFAULT
+    if( IfValidAnd( RegInstLtgPwr > 0 ) .AND. 
+        IfValidAnd( FlrArea > 0 ) )
+    then RegInstLtgPwr/FlrArea
+    else 0
+    endif
+  SIZING
+    switch( ApplyStdLtg )
+    case  0: u:RegInstLPD
+    case  1: 0   ; 'Installed Power' does not make sense for standard design
+    default: u:RegInstLPD
+    endswitch
+  ANNUAL
+    z:RegInstLPD
+ENDRULE
+
+RULE NEW Spc:RegLtgPwrFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    RegulatedLightingPowerFlag
+  DESCRIPTION
+    "Identifies whether Regulated Lighting Power has been specified for a space"
+  HELP
+    "Exceptional Condition Flag for Reporting Purposes"
+  INPUTCLASS       
+    NotInput         
+  DEFAULT
+    if( IfValidAnd( RegLtgPwr > 0 ))
+    then 1
+    else 0
+    endif
+  SIZING 
+    u:RegLtgPwrFlag
+  ANNUAL
+    z:RegLtgPwrFlag
+ENDRULE
+
+RULE NEW Spc:NonRegLtgPwrFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    NonRegulatedLightingPowerFlag
+  DESCRIPTION
+    "Identifies whether Non Regulated Lighting Power has been specified for a space"
+  INPUTCLASS       
+    NotInput         
+  DEFAULT
+    if( IfValidAnd( NonRegLtgPwr > 0 ))
+    then 1
+    else 0
+    endif
+  SIZING 
+    u:NonRegLtgPwrFlag
+  ANNUAL
+    z:NonRegLtgPwrFlag
+ENDRULE
+
+RULE NEW Spc:ZeroLtgPwrFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    ZeroLightingPowerFlag
+  DESCRIPTION
+    "Identifies whether an occupied space has zero lighting power"
+  INPUTCLASS       
+    NotInput         
+  DEFAULT
+    if( IfValidAnd( u:SpcFunc <> "Unoccupied-Include in Gross Floor Area") .AND.
+       IfValidAnd( u:SpcFunc <> "Unoccupied-Exclude from Gross Floor Area") )
+    then if( u:RegLtgPwrFlag = 0 .AND.
+            u:NonRegLtgPwrFlag = 0 ) 
+       then 1
+       else 0
+       endif
+    else 0
+    endif
+  SIZING 
+    u:ZeroLtgPwrFlag
+  ANNUAL
+    z:ZeroLtgPwrFlag
+ENDRULE
+
+
+
+
+
+

@@ -1,0 +1,753 @@
+// Building - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+
+
+// ********** Building Stories *************************************************
+// ------------ Total number of stories ------------  
+RULE Bldg:TotStoryCnt
+  DESCRIPTION
+    "The total number of stories in a building, New and Existing."
+  HELP
+    "Includes both above grade stories and any below grade stories."
+  INPUTCLASS 
+    Required
+  MINIMUM 
+    1
+  REPORTPRECISION
+    0
+  DEFAULT : S901G ECBC
+    NonResTotStoryCnt + ResTotStoryCnt
+  DEFAULT : T24N
+    Max( ValidOr( AboveGrdStoryCnt, 0 ), ChildCount( Story ) )
+// ISSUE: Add QC check to compare to number of Bldg:Story objects?
+ENDRULE
+
+// ------------ Above-grade stories ------------    
+RULE Bldg:AboveGrdStoryCnt
+  DESCRIPTION
+    "The number of above-grade building stories."
+  HELP
+    "This property is one determining factor for the basline HVAC system type. 
+     A “floor” is considered a “Habitable Story”, defined in the Standards as a 
+     story that is at least 50 percent above grade."
+  INPUTCLASS : T24N 
+    Required 
+  INPUTCLASS : S901G ECBC
+    Optional
+  MINIMUM 
+    1
+  REPORTPRECISION
+    0
+  DEFAULT
+    ValidOr( TotStoryCnt, 0 )
+// ISSUE: Add QC check to compare to number of Bldg:Story objects?
+ENDRULE
+
+
+// ********** Floor Areas and Volumes ******************************************
+// ------------ Calculate Bldg total floor area ------------
+RULE NEW Story:TotFlrAreaWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total floor area (conditioned and unconditioned) of each story, 
+     including multipliers."
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  REPORTPRECISION
+    0
+  DEFAULT 
+    SumChildren( Spc:FlrAreaWithMult )
+ENDRULE
+
+RULE Bldg:TotFlrArea
+  DESCRIPTION
+    "The total floor area (conditioned and unconditioned) of the building,
+     including multipliers."
+  INPUTCLASS 
+    Default
+  MINIMUM 
+    1
+  UNITS 
+    ft2 
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:TotFlrAreaWithMult )
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( TotFlrArea ) > 4 )
+    then
+      PostError("Building total floor area should not be user defined if the
+                 whole building is modeled. Uncheck this option and restore the
+                 default to perform compliance.")
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ------------ Calculate Bldg total conditioned volume ------------
+RULE NEW Story:CondVolWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedVolume
+  DESCRIPTION
+    "The story conditioned volume, including multipliers" 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2  
+  MINIMUM 
+    0
+  DEFAULT 
+    SumChildren( Spc:CondVolWithMult )
+ENDRULE
+
+RULE Bldg:TotCondVol
+  DESCRIPTION
+    "The total building conditioned volume." 
+  INPUTCLASS
+    Default
+  MINIMUM 
+    1
+  UNITS 
+    ft2  
+  REPORTPRECISION
+    0
+  DEFAULT 
+    SumChildren( Story:CondVolWithMult )
+ENDRULE
+
+// ------------ Calculate Story floor area by category -------------------------
+// Residential
+RULE NEW Story:ResCondFlrAreaWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialConditionedFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total Story residential (conditioned) floor area,
+     including multipliers.  This includes High Rise
+     Residential and Hotel / Motel." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  DEFAULT 
+    SumChildren( Spc:ResCondFlrAreaWithMult )
+ENDRULE
+
+// Nonresidential
+RULE NEW Story:NonResCondFlrAreaWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialConditionedFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total Story nonresidential (conditioned) floor area,
+     including multipliers."
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildren( Spc:NonResCondFlrAreaWithMult ) 
+ENDRULE
+
+// Total
+RULE NEW Story:TotCondFlrAreaWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total Story (conditioned) floor area,
+     including multipliers."
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2    
+  DEFAULT 
+    NonResCondFlrAreaWithMult + ResCondFlrAreaWithMult
+ENDRULE
+
+// Total
+RULE NEW Story:SpcCnt
+  DATATYPE
+    Float
+  LONGFORM
+    SpaceCount
+  DESCRIPTION
+    "The total number of child Spaces for the BuildingStory."
+  INPUTCLASS
+    NotInput 
+  DEFAULT 
+    ChildCount( Spc)
+  CHECKSIM
+    if( SpcCnt = 0 )
+    then 
+      PostError("BuildingStory '%s' has no child spaces. Remove this BuildingStory
+                 object from the model, or add Spaces.",
+                 Name)
+   else UNCHANGED
+   endif
+ENDRULE
+
+
+// ------------ Calculate Bldg floor areas by category -------------------------
+// Bldg Totals ----------
+RULE Bldg:ResFlrArea
+  DESCRIPTION
+    "The total building residential (conditioned) floor area." 
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  REPORTPRECISION
+    0
+  DEFAULT 
+    SumChildren( Story:ResCondFlrAreaWithMult ) 
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( ResFlrArea ) > 4 )
+    then
+      PostError("Building total, conditioned, RESIDENTIAL floor area should not 
+                 be user defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+  ENDRULE
+
+RULE Bldg:NonResFlrArea
+  DESCRIPTION
+    "The total building nonresidential (conditioned) floor area." 
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    1
+  UNITS 
+    ft2    
+  REPORTPRECISION
+    0
+  DEFAULT 
+    SumChildren( Story:NonResCondFlrAreaWithMult ) 
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( NonResFlrArea ) > 4 )
+    then
+      PostError("Building total, conditioned, NONRESIDENTIAL floor area should not 
+                 be user defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE Bldg:TotCondFlrArea
+  DESCRIPTION
+    "The total building conditioned floor area." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    1
+  UNITS 
+    ft2  
+  REPORTPRECISION
+    0
+  DEFAULT 
+    ResFlrArea + NonResFlrArea
+ENDRULE
+
+
+
+// HighRiseResidential
+RULE NEW Story:HighRiseResCondFlrAreaWithMult
+  RULESETS
+    T24N  
+  DATATYPE
+    Float
+  LONGFORM
+    HighRiseResidentialConditionedFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total Story residential (conditioned) floor area,
+     including multipliers.  This includes High Rise
+     Residential only." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  DEFAULT 
+    SumChildren( Spc:HighRiseResCondFlrAreaWithMult )
+  SIZING
+    u:HighRiseResCondFlrAreaWithMult
+  ANNUAL
+    z:HighRiseResCondFlrAreaWithMult
+ENDRULE
+
+RULE NEW Bldg:HighRiseResFlrArea
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    HighRiseResidentialFloorArea
+  DESCRIPTION
+    "The total building residential (conditioned) floor area.  This is High Rise
+     Residential only." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  DEFAULT 
+    SumChildren( Story:HighRiseResCondFlrAreaWithMult ) 
+  SIZING
+    u:HighRiseResFlrArea
+  ANNUAL
+    z:HighRiseResFlrArea
+ENDRULE
+
+// Hotel-Motel
+RULE NEW Story:HotelMotelGuestRmCondFlrAreaWithMult
+  RULESETS
+    T24N  
+  DATATYPE
+    Float
+  LONGFORM
+    HotelMotelGuestRoomConditionedFloorAreaWithMultiplier
+  DESCRIPTION
+    "The total Story residential (conditioned) floor area,
+     including multipliers.  This includes Hotel/Motel Guest Room only." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  DEFAULT 
+    SumChildren( Spc:HotelMotelGuestRmCondFlrAreaWithMult )
+  SIZING
+    u:HotelMotelGuestRmCondFlrAreaWithMult
+  ANNUAL
+    z:HotelMotelGuestRmCondFlrAreaWithMult
+ENDRULE
+
+RULE NEW Bldg:HotelMotelGuestRmFlrArea
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    HotelMotelGuestRoomFloorArea
+  DESCRIPTION
+    "The total building residential (conditioned) floor area.  This is 
+     Hotel/Motel Guest Room only." 
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    ft2  
+  DEFAULT 
+    SumChildren( Story:HotelMotelGuestRmCondFlrAreaWithMult ) 
+  SIZING
+    u:HotelMotelGuestRmFlrArea
+  ANNUAL
+    z:HotelMotelGuestRmFlrArea
+ENDRULE
+
+
+
+// -------------- Living Unit Count --------------------
+RULE Proj:Bldg:HighRiseResLivingUnitCnt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The total number of High Rise Residential units in the
+     building."
+  HELP
+    ""
+  REFERENCE 
+    Standards Definitions - High-Rise Residential Buidling
+  INPUTCLASS
+    Default
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    100
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( Spc:ResLivingUnitCntWithMult, Spc:SpcFunc = 123 )
+  CHECKCODE
+    if( HighRiseResLivingUnitCnt = 0 .AND. HighRiseResFlrArea > 0 )
+    then
+      PostError("Buildings with spaces classified as High-Rise Residential Living 
+                 Space are required to provide the number of High-Rise Res. 
+                 living units in the building.")
+    else if( HighRiseResLivingUnitCnt > 0 .AND. HighRiseResFlrArea = 0 )
+    then 
+      PostError("Buildings with no spaces classified as High-Rise Residential
+                 Living Units may not specify HighRiseResLivingUnitCnt > 0.")
+    else UNCHANGED
+    endif endif
+  SIZING
+    u:HighRiseResLivingUnitCnt
+  ANNUAL
+    z:HighRiseResLivingUnitCnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Proj:Bldg:HotelMotelGuestRmCnt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The total number of Hotel/Motel units in the building."
+  HELP
+    ""
+  REFERENCE 
+    Standards Definitions - Hotel/Motel
+  INPUTCLASS
+    Default
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    100
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( Spc:HotelMotelGuestRmCntWithMult, Spc:SpcFunc = 125 )
+  CHECKCODE
+    if( HotelMotelGuestRmCnt = 0 .AND. HotelMotelGuestRmFlrArea > 0 )
+    then
+      PostError("Buildings with spaces classified as Hotel/Motel Guest Room 
+                 Space are required to provide the number of Hotel/Motel 
+                 Guest Rooms in the building.")
+    else if( HotelMotelGuestRmCnt > 0 .AND. HotelMotelGuestRmFlrArea = 0 )
+    then 
+      PostError("Buildings with no spaces classified as Hotel/Motel Guest Rooms
+                 may not specify HotelMotelGuestRmCnt > 0.")
+    else UNCHANGED
+    endif endif
+  SIZING
+    u:HotelMotelGuestRmCnt
+  ANNUAL
+    z:HotelMotelGuestRmCnt
+ENDRULE
+
+RULE Proj:Bldg:LivingUnitCntRpt
+  DESCRIPTION
+    "The total number of Residential or Hotel/Motel living units in the
+     building."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Optional
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    100
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT : T24N
+    HighRiseResLivingUnitCnt + HotelMotelGuestRmCnt
+  DEFAULT : S901G ECBC
+    0
+  SIZING
+    LivingUnitCntRpt
+  ANNUAL
+    z:LivingUnitCntRpt
+ENDRULE
+
+// -------------- Average Living Unit Floor Area --------------------
+//RULE Proj:Bldg:AvgLivingUnitFlArea
+//  RULESETS
+//    T24N
+//  DESCRIPTION
+//    "This is floor area of a typical living unit served by the water heater."
+//  HELP
+//    ""
+//  REFERENCE 
+//    ACM-5.9.1 Water Heating
+//  INPUTCLASS
+//    NotInput
+//  MINIMUM
+//    0 
+//  COMMONMINIMUM
+//    0
+//  COMMONMAXIMUM
+//    2500
+//  MAXIMUM
+//    15000
+//  UNITS
+//    ft2
+//  REPORTPRECISION
+//    0
+//  DEFAULT
+//    if( HighRiseResLivingUnitCnt = 0 )
+//    then 0
+//    else if
+//      (((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "High-Rise Residential Living Spaces")) /
+//         HighRiseResLivingUnitCnt) > 0)
+//    then ((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "High-Rise Residential Living Spaces")) /
+//           HighRiseResLivingUnitCnt)
+////    else if
+////      (((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "Hotel/Motel Guest Room")) /
+////         HotelMotelGuestRmCnt) > 0)
+////    then ((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "Hotel/Motel Guest Room")) /
+////           HotelMotelGuestRmCnt)
+//    else 0
+////    endif
+//    endif endif
+//  SIZING
+//    if( u:HighRiseResLivingUnitCnt = 0 )
+//    then 0
+//    else if
+//      (((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "High-Rise Residential Living Spaces")) /
+//         z:HighRiseResLivingUnitCnt) > 0)
+//    then ((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "High-Rise Residential Living Spaces")) /
+//           z:HighRiseResLivingUnitCnt)
+////    else if
+////      (((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "Hotel/Motel Guest Room")) /
+////         z:HotelMotelGuestRmCnt) > 0)
+////    then ((SumChildrenIf(Spc:FlrAreaWithMult, Spc:SpcFunc = "Hotel/Motel Guest Room")) /
+////           z:HotelMotelGuestRmCnt)
+//    else 0
+////    endif
+//    endif endif
+//  ANNUAL
+//    z:AvgLivingUnitFlArea
+//ENDRULE
+
+
+
+// ---------- Calculate Bldg Res/NonRes Floor Area Ratios ---------------------
+// Used for setting Bldg:CompleteBldgOccClass
+RULE NEW Bldg:ResAreaRatio
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialAreaRatio  
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2   
+  DEFAULT 
+    if( Bldg:ResFlrArea + Bldg:NonResFlrArea > 0 )
+    then Bldg:ResFlrArea / ( Bldg:ResFlrArea + Bldg:NonResFlrArea )
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Bldg:NonResAreaRatio
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialAreaRatio  
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2   
+  DEFAULT 
+    if( Bldg:ResFlrArea + Bldg:NonResFlrArea > 0 )
+    then Bldg:NonResFlrArea / ( Bldg:ResFlrArea + Bldg:NonResFlrArea )
+    else 0
+    endif
+ENDRULE
+
+// ---------- Used to label objects in component tree ---------------------
+RULE NEW Bldg:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( LocalStatus( TotStoryCnt ) = 0 )
+    then Format( "**Define # stories** / %s cond ft2 / Orientation: %s", FltToStr( TotCondFlrArea ), OrientationRpt )
+    else if( TotStoryCnt = 1 )
+	  then Format( "%.0f story / %s cond ft2 / Orientation: %s", TotStoryCnt, FltToStr( TotCondFlrArea ), OrientationRpt )
+    else Format( "%.0f stories / %s cond ft2 / Orientation: %s", TotStoryCnt, FltToStr( TotCondFlrArea ), OrientationRpt )
+    endif endif
+ENDRULE
+
+RULE NEW Story:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    Format( "Total = %s ft2, Conditioned: NonRes = %s ft2, Res = %s ft2, Mult = %s", 
+            FltToStr( TotFlrAreaWithMult ), FltToStr( NonResCondFlrAreaWithMult ), 
+            FltToStr( ResCondFlrAreaWithMult ), FltToStr( Mult ) )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Bldg:BldgType
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Building Type for reporting purposes" 
+  INPUTCLASS
+    NotInput
+  OPTION
+    Relocatable Public School Building
+    Hotel-Motel
+    High-Rise Residential
+    Nonresidential
+    Mixed Occupancy
+  DEFAULT
+    if( Bldg:RelocPubSchoolBldg = 1 )
+    then 
+      "Relocatable Public School Building"
+    else if( IfValidAnd( Bldg:HotelMotelGuestRmCnt > 5 ) )
+    then 
+      "Hotel-Motel"
+    else if( Bldg:TotStoryCnt >= 4 .AND.
+             IfValidAnd( (Bldg:HighRiseResFlrArea / Bldg:TotCondFlrArea) >= 0.8 ) )
+    then
+      "High-Rise Residential"
+    else if( Bldg:TotStoryCnt < 4 .OR.
+             IfValidAnd( (Bldg:HighRiseResFlrArea / Bldg:TotCondFlrArea) < 0.2 ) )
+    then "Nonresidential" 
+    else "Mixed Occupancy"
+    endif endif endif endif
+  CHECKCODE
+    if( AboveGrdStoryCnt < 4 .AND.
+        HighRiseResFlrArea >= ( TotCondFlrArea * 0.20 ) )
+    then
+      PostError("The residential floor area of this building is greater than or equal to 20% of the total 
+      building area and the building is less than 4 stories tall. The non-residential portion should be 
+      modeled in CBECC-Com and the residential in CBECC-Res.")
+    else UNCHANGED
+    endif
+  SIZING
+    u:BldgType
+  ANNUAL
+    z:BldgType
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Proj:ShdgCredRpt
+  DESCRIPTION
+    "A text string (Yes or No) to be reported indicating that compliance credit
+     is being taking for window shading, used for reporting."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( SumChildren(FenCons:ShdgCred) > 0 ) then "Yes"
+    else "No"
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Bldg:ShdgCredRpt
+  DESCRIPTION
+    "A text string (Yes or No) to be reported indicating that compliance credit
+     is being taking for window shading, used for reporting."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    Proj:ShdgCredRpt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Bldg:WinShdgNoteRpt
+  DESCRIPTION
+    "A text string consisting of a note to Table B of the ENV DETAILS section 
+     which will include text if the note applies or will be blank otherwise."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ChildCount(ExtShdgObj) > 0 ) then
+      "Windows in this building may be shaded by shading devices not tied directly to windows.  Check building plans."
+    else " "
+    endif
+  ANNUAL_BASELINE
+    " "
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Bldg:OrientationRpt
+  DESCRIPTION
+    "A text string for reporting the cardinal direction (N, S, E, W) of the 
+     building for inclusion in Table A of the general section of the 
+     compliance forms."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( BldgAz >  45 .AND. BldgAz <= 135 ) 
+    then Format("(E) %.0f deg", BldgAz)
+    else if( BldgAz > 135 .AND. BldgAz <= 225 ) 
+    then Format("(S) %.0f deg", BldgAz)
+    else if( BldgAz > 225 .AND. BldgAz <= 315 ) 
+    then Format("(W) %.0f deg", BldgAz)
+    else if( BldgAz > 315 .OR.  BldgAz <=  45 ) 
+    then Format("(N) %.0f deg", BldgAz)
+    else "Not Defined"
+    endif endif endif endif
+ENDRULE

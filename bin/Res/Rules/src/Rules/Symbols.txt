@@ -1,0 +1,55 @@
+;-------------------------------------------------------------------------
+; Table of Symbols/Selections
+;-------------------------------------------------------------------------
+; ASHRAE/IES Standard 90.1-1989 (Equivalent) - Energy Cost Budget Method
+; Compiled for US DOE by RS_Briggs@pnl.gov
+; July, 23 1998
+;-------------------------------------------------------------------------
+;
+; The format of this file:
+;    Record
+;    Header   Record Contents
+;    -------------------------
+;      0      Class:Property[Array] - identifying the database parameter
+;                which the following symbol list describes (array index
+;                is 1-based (1-N))
+;             Integer - numeric value corresponding to the defualt symbol
+;                selection
+;
+;      1      Class:Property[Array] - identifying the database parameter
+;                which deteremines whether or not the following symbol
+;                list should be used to describe the parameter identified
+;                in the preceeding 0-record. (array index is 1-based)
+;             Float - value which the preceeding database parameter must
+;                equal in order for the following symbol list to be used
+;                to describe the parameter identified in the preceeding
+;                0-record.
+;             Integer - numeric value corresponding to the default symbol
+;                selection (overrides the default value contained in
+;                preceeding 0- or 1-records).
+;
+;      2      Integer - the numeric value corresponding to this symbol
+;             String - the symbol string which is used to select the
+;                value of the database parameter identified in the 
+;                preceeding 0-record.
+;
+;  Note regarding 0-records:
+;   - Multiple records beginning with 0 ocurring one after the other 
+;     cause the following symbol lists to be defined for each of the
+;     database parameters described in each 0 record.
+;
+;  Notes regarding 1-records:
+;   - Records beginning w/ 1 occur only when the list of selectable
+;     symbols or the default symbol varies based on the value of another
+;     database parameter.
+;   - There can be a maximum of 2 subsequent 1-records.
+;             
+;-------------------------------------------------------------------------
+
+
+
+
+-1
+
+
+

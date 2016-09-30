@@ -1,0 +1,377 @@
+;-------------------------------------------------------------------------
+; Building Component Library
+;-------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;    E Q U I P M E N T   P E R F O R M A N C E   C U R V E S
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+// If pasting from data from Appendix_5.7_Performance_Curves.xlsx workbook,
+// need to perform the following search and replace (S&R) operations in a separate
+// editor instance, and then paste into this file.
+// S&R Operations
+// 1) Search:  "Crv 
+//    Replace: Crv
+// 2) Search:  ""
+//    Replace: "
+// 3) Search:  "..
+//    Replace: ..
+
+
+CrvCubic       "FanAForBIPwrRatio_fCFMRatio"                                    Coef1 =  0.163100  Coef2 =  1.590100  Coef3 = -0.881700  Coef4 =  0.128100  
+                                                                                MaxOut = 1.000   MinOut = 0.700   MaxVar1 = 1.000   MinVar1 = 0.437   
+..
+CrvCubic       "FanAForBIVanesPwrRatio_fCFMRatio"                               Coef1 =  0.997700  Coef2 = -0.659000  Coef3 =  0.954700  Coef4 = -0.293600  
+                                                                                MaxOut = 1.000   MinOut = 0.871   MaxVar1 = 1.000   MinVar1 = 0.510   
+..
+CrvCubic       "FanFCPwrRatio_fCFMRatio"                                        Coef1 =  0.122400  Coef2 =  0.612000  Coef3 =  0.598300  Coef4 = -0.333400  
+                                                                                MaxOut = 1.000   MinOut = 0.500   MaxVar1 = 1.000   MinVar1 = 0.462   
+..
+CrvCubic       "FanFCVanesPwrRatio_fCFMRatio"                                   Coef1 =  0.303800  Coef2 = -0.760800  Coef3 =  2.272900  Coef4 = -0.816900  
+                                                                                MaxOut = 1.000   MinOut = 0.500   MaxVar1 = 1.000   MinVar1 = 0.610   
+..
+CrvCubic       "FanVaneAxVpPwrRatio_fCFMRatio"                                  Coef1 =  0.163900  Coef2 = -0.401600  Coef3 =  1.990900  Coef4 = -0.754100  
+                                                                                MaxOut = 1.000   MinOut = 0.400   MaxVar1 = 1.000   MinVar1 = 0.532   
+..
+CrvCubic       "FanVSDPwrRatio_fCFMRatio"                                       Coef1 =  0.070429  Coef2 =  0.385330  Coef3 = -0.460864  Coef4 =  1.009203  
+                                                                                MaxOut = 1.000   MinOut = 0.100   MaxVar1 = 1.000   MinVar1 = 0.084   
+..
+CrvCubic       "FanVSD901PwrRatio_fCFMRatio"                                    Coef1 =  0.001300  Coef2 =  0.147000  Coef3 =  0.950600  Coef4 = -0.099800  
+                                                                                MaxOut = 1.000   MinOut = 0.189   MaxVar1 = 1.000   MinVar1 = 0.393   
+..
+CrvCubic       "FanVSDGoodSpResetPwrRatio_fCFMRatio"                            Coef1 =  0.040760  Coef2 =  0.088045  Coef3 = -0.072926  Coef4 =  0.943740  
+                                                                                MaxOut = 1.000   MinOut = 0.100   MaxVar1 = 1.000   MinVar1 = 0.342   
+..
+CrvCubic       "FanVSDPerfSpResetPwrRatio_fCFMRatio"                            Coef1 =  0.027828  Coef2 =  0.026583  Coef3 = -0.087069  Coef4 =  1.030920  
+                                                                                MaxOut = 1.000   MinOut = 0.100   MaxVar1 = 1.000   MinVar1 = 0.420   
+..
+CrvCubic       "FanLinearPwrRatio_fCFMRatio"                                    Coef1 =  0.000000  Coef2 =  1.000000  Coef3 =  0.000000  Coef4 =  0.000000  
+                                                                                MaxOut = 1.000   MinOut = 0.500   MaxVar1 = 1.000   MinVar1 = 0.000   
+..
+
+
+CrvCubic       "PumpVSDNoRstEPPwrRatio_fGPMRatio"                               Coef1 =  0.103000  Coef2 = -0.040000  Coef3 =  0.767000  Coef4 =  0.167900  
+                                                                                MaxOut = 1.000   MinOut = 0.130   MaxVar1 = 1.000   MinVar1 = 0.200   
+..
+CrvCubic       "PumpVSDRstEPPwrRatio_fGPMRatio"                                 Coef1 =  0.027300  Coef2 = -0.131700  Coef3 =  0.664200  Coef4 =  0.444500  
+                                                                                MaxOut = 1.000   MinOut = 0.030   MaxVar1 = 1.000   MinVar1 = 0.200   
+..
+
+
+CrvDblQuad     "CoilClgPTACQRatio_fTwbToadbSI"                                  Coef1 =  0.942879  Coef2 =  0.009538  Coef3 =  0.000684  Coef4 = -0.011002  Coef5 =  0.000006  Coef6 = -0.000010  
+                                                                                MaxOut = 1.340   MinOut = 0.710   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "CoilClgDXQRatio_fTwbToadbSI"                                    Coef1 =  0.867790  Coef2 =  0.014245  Coef3 =  0.000554  Coef4 = -0.007569  Coef5 =  0.000032  Coef6 = -0.000191  
+                                                                                MaxOut = 1.290   MinOut = 0.770   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+
+
+
+
+
+
+
+
+
+
+
+
+CrvQuad        "CoilClgDXSnglQRatio_fCFMRatio"                                  Coef1 =  0.800000  Coef2 =  0.200000  Coef3 =  0.000000  
+                                                                                MinOut = 0.800   
+..
+CrvCubic       "CoilClgDXDblQRatio_fCFMRatio"                                   Coef1 =  0.472786  Coef2 =  1.243342  Coef3 = -1.038706  Coef4 =  0.322578  
+                                                                                MinOut = 0.470   
+..
+
+CrvDblQuad     "CoilClgPTACEIRRatio_fTwbToadbSI"                                Coef1 =  0.341434  Coef2 =  0.034810  Coef3 = -0.000625  Coef4 =  0.004941  Coef5 =  0.000437  Coef6 = -0.000729  
+                                                                                MaxOut = 1.400   MinOut = 0.750   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "CoilClgDXEER11SEER13EIRRatio_fTwbToadbSI"                       Coef1 =  0.686684  Coef2 = -0.035826  Coef3 =  0.000781  Coef4 =  0.025564  Coef5 =  0.000163  Coef6 = -0.000559  
+                                                                                MaxOut = 1.510   MinOut = 0.650   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+CrvDblQuad     "CoilClgDXEER11SEER15EIRRatio_fTwbToadbSI"                       Coef1 = -1.247121  Coef2 = -0.027513  Coef3 =  0.000752  Coef4 =  0.121123  Coef5 = -0.001013  Coef6 = -0.000736  
+                                                                                MaxOut = 1.480   MinOut = 0.410   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+CrvDblQuad     "CoilClgDXEER11SEER17EIRRatio_fTwbToadbSI"                       Coef1 = -2.724920  Coef2 = -0.021120  Coef3 =  0.000730  Coef4 =  0.194128  Coef5 = -0.001911  Coef6 = -0.000872  
+                                                                                MaxOut = 1.450   MinOut = 0.230   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+CrvDblQuad     "CoilClgDXEER13SEER16EIRRatio_fTwbToadbSI"                       Coef1 = -0.199992  Coef2 = -0.035686  Coef3 =  0.000787  Coef4 =  0.074834  Coef5 = -0.000516  Coef6 = -0.000573  
+                                                                                MaxOut = 1.440   MinOut = 0.550   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+CrvDblQuad     "CoilClgDXEER13SEER18EIRRatio_fTwbToadbSI"                       Coef1 = -1.790474  Coef2 = -0.028777  Coef3 =  0.000763  Coef4 =  0.153391  Coef5 = -0.001482  Coef6 = -0.000721  
+                                                                                MaxOut = 1.420   MinOut = 0.350   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+CrvDblQuad     "CoilClgDXEER13SEER20EIRRatio_fTwbToadbSI"                       Coef1 = -3.060538  Coef2 = -0.023207  Coef3 =  0.000744  Coef4 =  0.216093  Coef5 = -0.002253  Coef6 = -0.000839  
+                                                                                MaxOut = 1.400   MinOut = 0.200   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "CoilClgDXEIRRatio_fTwbToadbSI"                                  Coef1 =  0.116709  Coef2 =  0.028458  Coef3 = -0.000411  Coef4 =  0.021422  Coef5 =  0.000162  Coef6 = -0.000680  
+                                                                                MaxOut = 1.330   MinOut = 0.770   MaxVar1 = 25.000   MinVar1 = 13.890   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+
+
+CrvQuad        "CoilClgDXSnglEIRRatio_fCFMRatio"                                Coef1 =  1.156000  Coef2 = -0.181600  Coef3 =  0.025600   
+..
+CrvCubic       "CoilClgDXDblEIRRatio_fCFMRatio"                                 Coef1 =  1.007948  Coef2 =  0.345441  Coef3 = -0.692289  Coef4 =  0.338899   
+..
+
+
+
+
+
+CrvCubic       "CoilClgPTACEIRRatio_fQFrac"                                     Coef1 =  0.850000  Coef2 =  0.150000  Coef3 =  0.000000  Coef4 =  0.000000  
+                                                                                MaxOut = 1.000   MinOut = 0.960   MinVar1 = 0.700   
+..
+CrvCubic       "CoilClgDXSEEREIRRatio_fQFrac"                                   Coef1 =  1.000000  Coef2 =  0.000000  Coef3 =  0.000000  Coef4 =  0.000000  
+                                                                                MaxOut = 1.000   MinOut = 1.000   MinVar1 = 0.700   
+..
+CrvCubic       "CoilClgDXEIRRatio_fQFrac"                                       Coef1 =  0.000000  Coef2 =  5.109100  Coef3 = -8.551500  Coef4 =  4.474400  
+                                                                                MaxOut = 1.000   MinOut = 0.920   MaxVar1 = 1.000   MinVar1 = 0.700   
+..
+
+
+
+CrvQuad        "CoilHtgFurnFIRRatio_fQRatio"                                    Coef1 =  0.018610  Coef2 =  1.094209  Coef3 = -0.112819  
+                                                                                MaxOut = 1.000   MinOut = 0.730   MaxVar1 = 1.000   MinVar1 = 0.700   
+..
+
+
+CrvCubic       "CoilHtgHPQRatio_fToadbSI"                                       Coef1 =  0.729009  Coef2 =  0.031928  Coef3 =  0.000136  Coef4 = -0.000009  
+                                                                                MaxOut = 1.050   MinOut = 0.170   MaxVar1 = 10.000   
+..
+
+
+CrvQuad        "CoilHtgHPQRatio_fCFMRatio"                                      Coef1 =  0.840000  Coef2 =  0.160000  Coef3 =  0.000000  
+                                                                                MinOut = 0.840   
+..
+
+CrvCubic       "CoilHtgHPEIRRatio_fToadbSI"                                     Coef1 =  1.218290  Coef2 = -0.036117  Coef3 =  0.001420  Coef4 = -0.000027  
+                                                                                MaxOut = 3.180   MinOut = 0.970   MaxVar1 = 10.000   
+..
+
+
+
+CrvQuad        "CoilHtgHPEIRRatio_fCFMRatio"                                    Coef1 =  1.382400  Coef2 = -0.433600  Coef3 =  0.051200  
+                                                                                MinOut = 1.380   MaxVar1 = 1.000   
+..
+CrvQuad        "CoilHtgHPEIRRatio_fQFrac"                                       Coef1 =  0.850000  Coef2 =  0.150000  Coef3 =  0.000000  
+                                                                                MaxOut = 1.000   MinOut = 0.850   MaxVar1 = 1.000   
+..
+
+
+
+
+CrvQuad        "BlrHWBlrFIRRatio_fQRatioSI"                                     Coef1 =  0.626700  Coef2 =  0.674000  Coef3 = -0.307300  
+                                                                                MinOut = 0.750   
+..
+
+CrvDblQuad     "BlrHWCondBlrFIRRatio_fQRatioTewtSI"                             Coef1 =  1.193810  Coef2 = -0.110825  Coef3 =  0.039514  Coef4 = -0.006371  Coef5 =  0.000038  Coef6 =  0.000830  
+                                                                                MaxOut = 1.050   MinOut = 0.930   MaxVar1 = 1.000   MinVar1 = 0.100   MaxVar2 = 71.100   MinVar2 = 15.560   
+..
+
+
+CrvDblQuad     "ChlrAirScrollQRatio_fTchwsToadbSI"                              Coef1 =  1.021380  Coef2 =  0.037021  Coef3 =  0.000233  Coef4 = -0.003893  Coef5 = -0.000065  Coef6 = -0.000269  
+                                                                                MaxOut = 1.300   MinOut = 0.820   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "ChlrAirRecipQRatio_fTchwsToadbSI"                               Coef1 =  1.126030  Coef2 =  0.041571  Coef3 =  0.000253  Coef4 = -0.010526  Coef5 =  0.000010  Coef6 = -0.000256  
+                                                                                MaxOut = 1.350   MinOut = 0.800   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "ChlrAirScrewQRatio_fTchwsToadbSI"                               Coef1 =  0.985959  Coef2 =  0.049487  Coef3 = -0.000298  Coef4 = -0.003737  Coef5 = -0.000045  Coef6 = -0.000502  
+                                                                                MaxOut = 1.280   MinOut = 0.830   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+
+
+CrvDblQuad     "ChlrAirScrollEIRRatio_fTchwsToadbSI"                            Coef1 =  0.702194  Coef2 = -0.004466  Coef3 =  0.000535  Coef4 = -0.005506  Coef5 =  0.000544  Coef6 = -0.000729  
+                                                                                MaxOut = 1.450   MinOut = 0.690   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "ChlrAirRecipEIRRatio_fTchwsToadbSI"                             Coef1 =  0.542784  Coef2 = -0.013907  Coef3 =  0.000476  Coef4 =  0.012197  Coef5 =  0.000149  Coef6 = -0.000334  
+                                                                                MaxOut = 1.300   MinOut = 0.720   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+CrvDblQuad     "ChlrAirScrewEIRRatio_fTchwsToadbSI"                             Coef1 =  0.570624  Coef2 =  0.011954  Coef3 = -0.000522  Coef4 = -0.000032  Coef5 =  0.000421  Coef6 = -0.000606  
+                                                                                MaxOut = 1.380   MinOut = 0.700   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 46.110   MinVar2 = 23.890   
+..
+
+
+CrvQuad        "ChlrAirScrollEIRRatio_fQRatio"                                  Coef1 =  0.063691  Coef2 =  0.584888  Coef3 =  0.352803  
+                                                                                MinOut = 0.060   
+..
+CrvQuad        "ChlrAirRecipEIRRatio_fQRatio"                                   Coef1 =  0.114437  Coef2 =  0.545933  Coef3 =  0.342299  
+                                                                                MinOut = 0.110   
+..
+CrvQuad        "ChlrAirScrewEIRRatio_fQRatio"                                   Coef1 =  0.036487  Coef2 =  0.734743  Coef3 =  0.219947  
+                                                                                MinOut = 0.040   
+..
+
+
+
+CrvDblQuad     "ChlrWtrPosDispPathAAllQRatio_fTchwsTcwsSI"                      Coef1 =  0.967440  Coef2 =  0.037082  Coef3 =  0.000434  Coef4 = -0.005837  Coef5 = -0.000049  Coef6 = -0.000274  
+                                                                                MaxOut = 1.330   MinOut = 0.890   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathAAllQRatio_fTchwsTcwsSI"                         Coef1 =  0.364691  Coef2 = -0.030521  Coef3 = -0.001930  Coef4 =  0.066374  Coef5 = -0.001892  Coef6 =  0.003111  
+                                                                                MaxOut = 0.870   MinOut = 0.910   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrPosDispPathBAllQRatio_fTchwsTcwsSI"                      Coef1 =  0.899926  Coef2 =  0.030102  Coef3 = -0.000332  Coef4 = -0.001743  Coef5 = -0.000092  Coef6 =  0.000229  
+                                                                                MaxOut = 1.210   MinOut = 0.930   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBLt300tonQRatio_fTchwsTcwsSI"                    Coef1 =  1.155080  Coef2 =  0.036503  Coef3 = -0.000499  Coef4 = -0.001455  Coef5 = -0.000439  Coef6 = -0.000172  
+                                                                                MaxOut = 1.370   MinOut = 0.860   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBGtEql300Lt600tonQRatio_fTchwsTcwsSI"            Coef1 =  1.356080  Coef2 =  0.048750  Coef3 = -0.000888  Coef4 = -0.014525  Coef5 = -0.000286  Coef6 = -0.000040  
+                                                                                MaxOut = 1.520   MinOut = 0.870   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBGtEql600tonQRatio_fTchwsTcwsSI"                 Coef1 =  0.854454  Coef2 =  0.042526  Coef3 = -0.000185  Coef4 =  0.011697  Coef5 = -0.000497  Coef6 = -0.000412  
+                                                                                MaxOut = 1.330   MinOut = 0.900   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrPosDispPathAAllEIRRatio_fTchwsTcwsSI"                    Coef1 =  0.665307  Coef2 = -0.009339  Coef3 =  0.000483  Coef4 =  0.009492  Coef5 =  0.000544  Coef6 = -0.000864  
+                                                                                MaxOut = 1.270   MinOut = 0.740   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathAAllEIRRatio_fTchwsTcwsSI"                       Coef1 =  0.658643  Coef2 = -0.025339  Coef3 =  0.000991  Coef4 =  0.012801  Coef5 =  0.000171  Coef6 = -0.000301  
+                                                                                MaxOut = 1.050   MinOut = 0.680   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrPosDispPathBAllEIRRatio_fTchwsTcwsSI"                    Coef1 =  0.428265  Coef2 = -0.024071  Coef3 =  0.000849  Coef4 =  0.016416  Coef5 =  0.000381  Coef6 = -0.000590  
+                                                                                MaxOut = 1.070   MinOut = 0.500   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBLt300tonEIRRatio_fTchwsTcwsSI"                  Coef1 =  0.711108  Coef2 = -0.023515  Coef3 =  0.001194  Coef4 =  0.017737  Coef5 =  0.000152  Coef6 = -0.001159  
+                                                                                MaxOut = 1.130   MinOut = 0.690   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBGtEql300Lt600tonEIRRatio_fTchwsTcwsSI"          Coef1 =  0.756376  Coef2 = -0.015019  Coef3 =  0.000156  Coef4 =  0.002460  Coef5 =  0.000515  Coef6 = -0.000687  
+                                                                                MaxOut = 1.120   MinOut = 0.630   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+
+CrvDblQuad     "ChlrWtrCentPathBGtEql600tonEIRRatio_fTchwsTcwsSI"               Coef1 =  0.737625  Coef2 =  0.001456  Coef3 = -0.000223  Coef4 =  0.007116  Coef5 =  0.000267  Coef6 = -0.000735  
+                                                                                MaxOut = 1.080   MinOut = 0.760   MaxVar1 = 12.220   MinVar1 = 4.440   MaxVar2 = 29.440   MinVar2 = 15.560   
+..
+CrvQuad        "ChlrWtrPosDispPathAAllEIRRatio_fQRatio"                         Coef1 =  0.310965  Coef2 =  0.322519  Coef3 =  0.372745  
+                                                                                MinOut = 0.350   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrWtrCentPathAAllEIRRatio_fQRatio"                            Coef1 =  0.222149  Coef2 =  0.503156  Coef3 =  0.256905  
+                                                                                MinOut = 0.280   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrWtrPosDispPathBAllEIRRatio_fQRatio"                         Coef1 =  0.000000  Coef2 =  0.620600  Coef3 =  0.389300  
+                                                                                MinOut = 0.070   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrWtrCentPathBLt300tonEIRRatio_fQRatio"                       Coef1 =  0.208389  Coef2 = -0.121404  Coef3 =  0.918455  
+                                                                                MinOut = 0.210   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrWtrCentPathBGtEql300Lt600tonEIRRatio_fQRatio"               Coef1 =  0.055483  Coef2 =  0.451866  Coef3 =  0.488242  
+                                                                                MinOut = 0.110   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrWtrCentPathBGtEql600tonEIRRatio_fQRatio"                    Coef1 =  0.107426  Coef2 =  0.156775  Coef3 =  0.739345  
+                                                                                MinOut = 0.130   MinVar1 = 0.100   
+..
+CrvQuad        "ChlrAbsorbSglStgIndirQRatio_fTcwsSI"                            Coef1 =  5.019667  Coef2 = -0.219222  Coef3 =  0.002889  
+                                                                                MaxVar1 = 34.000   MinVar1 = 10.000   
+..
+CrvQuad        "ChlrAbsorbSglStgIndirQRatio_fTchwsSI"                           Coef1 =  0.690571  Coef2 =  0.065571  Coef3 = -0.002890  
+                                                                                MaxVar1 = 10.000   MinVar1 = 4.000   
+..
+CrvCubic       "ChlrAbsorbSglStgIndirQRatio_fTgenSI"                            Coef1 =  25.359010  Coef2 = -1.045196  Coef3 =  0.014006  Coef4 = -0.000060  
+                                                                                MaxVar1 = 95.000   MinVar1 = 70.000   
+..
+CrvCubic       "ChlrAbsorbSglStgIndirHIRRatio_fQRatioSI"                        Coef1 =  0.967530  Coef2 =  1.014360  Coef3 = -1.166360  Coef4 =  0.507920  
+                                                                                MaxVar1 = 1.000   MinVar1 = 0.150   
+..
+CrvCubic       "ChlrAbsorbSglStgIndirHIRRatio_fTcwsSI"                          Coef1 =  0.712019  Coef2 = -0.004780  Coef3 =  0.000864  Coef4 = -0.000013  
+                                                                                MaxVar1 = 30.000   MinVar1 = 7.000   
+..
+CrvCubic       "ChlrAbsorbSglStgIndirHIRRatio_fTchwsSI"                         Coef1 =  0.995571  Coef2 =  0.046821  Coef3 = -0.010990  Coef4 =  0.000608  
+                                                                                MaxVar1 = 10.000   MinVar1 = 4.000   
+..
+CrvLin         "ChlrAbsorbSglStgIndirEIRRatio_fQRatioSI"                        Coef1 =  1.000000  Coef2 =  0.000000   
+..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CrvCubic       "HtRejVSDFanPwrRatio_fQRatio"                                    Coef1 =  0.331629  Coef2 = -0.885676  Coef3 =  0.605565  Coef4 =  0.948482   
+..
+
+
+
+
+
+
+CrvCubic       "WtHtrStorFIRRatio_fQRatio"                                      Coef1 =  0.021826  Coef2 =  0.977630  Coef3 =  0.000543  Coef4 =  0.000000
+                                                                                MaxOut = 1.000   MinOut = 0.100   MaxVar1 = 1.000   MinVar1 = 0.100   
+..
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+END_OF_INPUT

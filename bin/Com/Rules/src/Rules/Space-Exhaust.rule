@@ -1,0 +1,1227 @@
+// Space - Exhaust
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+// -------------- Laboratory --------------------
+RULE Spc:LabExhRtType
+  DESCRIPTION
+    "The type of load that dictates the minimum design ventilation/exhaust rate for 
+     Laboratory spaces."
+  HELP
+    "The user specified design ventilation/exhaust air flow rates must be at least
+     6 ACH for 'LoadDominated', and 15 ACH if 'HoodDominated'. Otherwise, the
+     ventilation/exhaust flow rates are as designed."
+  INPUTCLASS
+    Default
+  OPTION
+    HoodDominated
+    LoadDominated
+  DEFAULT
+    if( LabArea > 0 )
+    then "LoadDominated"
+    else UNDEFINED
+    endif
+  SIZING
+    u:LabExhRtType
+  ANNUAL
+    z:LabExhRtType
+ENDRULE
+
+// -------------- Commerical Kitchen --------------------
+// Kitchen hood style
+RULE Spc:KitExhHoodStyle[1]
+  DESCRIPTION
+    "The commercial kitchen exhaust hood style, as defined in Table 140.9-A of
+     the Standards."
+  INPUTCLASS
+    Optional
+  OPTION
+    None
+    WallMountedCanopy
+    SingleIsland
+    DoubleIsland
+    Eyebrow
+    BackshelfOrPassover
+  DEFAULT
+    if( CommKitArea > 0 )
+    then "None"
+    else UNDEFINED
+    endif
+  SIZING
+    u:KitExhHoodStyle[1]
+  ANNUAL
+    z:KitExhHoodStyle[1]
+ENDRULE
+RULE Spc:KitExhHoodStyle[2]
+  DEFAULT
+    if( CommKitArea > 0 .AND. IfValidAnd( KitExhHoodStyle[1] != "None" ) )
+    then "None"
+    else UNDEFINED
+    endif
+  SIZING
+    u:KitExhHoodStyle[2]
+  ANNUAL
+    z:KitExhHoodStyle[2]
+ENDRULE
+RULE Spc:KitExhHoodStyle[3]
+  DEFAULT
+    if( CommKitArea > 0 .AND. IfValidAnd( KitExhHoodStyle[2] != "None" ) )
+    then "None"
+    else UNDEFINED
+    endif
+  SIZING
+    u:KitExhHoodStyle[3]
+  ANNUAL
+    z:KitExhHoodStyle[3]
+ENDRULE
+RULE Spc:KitExhHoodStyle[4]
+  DEFAULT
+    if( CommKitArea > 0 .AND. IfValidAnd( KitExhHoodStyle[3] != "None" ) )
+    then "None"
+    else UNDEFINED
+    endif
+  SIZING
+    u:KitExhHoodStyle[4]
+  ANNUAL
+    z:KitExhHoodStyle[4]
+ENDRULE
+RULE Spc:KitExhHoodStyle[5]
+  DEFAULT
+    if( CommKitArea > 0 .AND. IfValidAnd( KitExhHoodStyle[4] != "None" ) )
+    then "None"
+    else UNDEFINED
+    endif
+  SIZING
+    u:KitExhHoodStyle[5]
+  ANNUAL
+    z:KitExhHoodStyle[5]
+ENDRULE
+
+// Kitchen hood duty
+RULE Spc:KitExhHoodDuty[1]
+  DESCRIPTION
+    "The commercial kitchen exhaust hood cooking duty, as defined in Table
+     140.9-A of the Standards."
+  INPUTCLASS
+    CondRequired
+// Enums defined in BEMEnums.txt
+//OPTION
+//  Light
+//  Medium
+//  Heavy
+//  ExtraHeavy
+  SIZING
+    if( IfValidAnd( u:KitExhHoodStyle[1] != "None" ) )
+    then u:KitExhHoodDuty[1]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodDuty[2]
+  SIZING
+    if( IfValidAnd( u:KitExhHoodStyle[2] != "None" ) )
+    then u:KitExhHoodDuty[2]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodDuty[3]
+  SIZING
+    if( IfValidAnd( u:KitExhHoodStyle[3] != "None" ) )
+    then u:KitExhHoodDuty[3]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodDuty[4]
+  SIZING
+    if( IfValidAnd( u:KitExhHoodStyle[4] != "None" ) )
+    then u:KitExhHoodDuty[4]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodDuty[5]
+  SIZING
+    if( IfValidAnd( u:KitExhHoodStyle[5] != "None" ) )
+    then u:KitExhHoodDuty[5]
+    else UNDEFINED
+    endif
+ENDRULE
+
+// Kitchen hood length
+RULE Spc:KitExhHoodLen[1]
+  DESCRIPTION
+    "The total linear length of commercial kitchen exhaust hoods located in the 
+     space."  
+  INPUTCLASS
+    CondRequired
+  UNITS
+    ft
+  MINIMUM
+    0
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[1] != "None" ) .AND.
+        IfValidAnd( KitExhHoodLen[1] = 0 ) )
+    then
+      PostError("The kitchen exhaust hood length must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif     
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[1] != "None" ) )    
+    then u:KitExhHoodLen[1]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodLen[2]
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[2] != "None" ) .AND.
+        IfValidAnd( KitExhHoodLen[2] = 0 ) )
+    then
+      PostError("The kitchen exhaust hood length must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[2] != "None" ) )    
+    then u:KitExhHoodLen[2]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodLen[3]
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[3] != "None" ) .AND.
+        IfValidAnd( KitExhHoodLen[3] = 0 ) )
+    then
+      PostError("The kitchen exhaust hood length must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[3] != "None" ) )    
+    then u:KitExhHoodLen[3]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodLen[4]
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[4] != "None" ) .AND.
+        IfValidAnd( KitExhHoodLen[4] = 0 ) )
+    then
+      PostError("The kitchen exhaust hood length must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[4] != "None" ) )    
+    then u:KitExhHoodLen[4]
+    else UNDEFINED
+    endif
+ENDRULE
+RULE Spc:KitExhHoodLen[5]
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[5] != "None" ) .AND.
+        IfValidAnd( KitExhHoodLen[5] = 0 ) )
+    then
+      PostError("The kitchen exhaust hood length must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[5] != "None" ) )    
+    then u:KitExhHoodLen[5]
+    else UNDEFINED
+    endif
+ENDRULE
+
+// Kitchen exhaust flow per length, based on standards table
+RULE NEW Spc:KitExhHoodFlowPerFt1
+  DATATYPE
+    Float
+  LONGFORM
+    KitchenExhaustHoodFlowPerFoot1
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft
+  DEFAULT
+    if( IfValidAnd( KitExhHoodStyle[1] != "None" ) .AND.
+        LocalStatus( KitExhHoodDuty[1] ) > 0 )
+    then 
+      KitExhHoodMaxFlow:FlowPerLen( "Style", KitExhHoodStyle[1], 
+                                    "Duty", KitExhHoodDuty[1] )
+    else UNDEFINED  
+    endif
+ENDRULE 
+RULE NEW Spc:KitExhHoodFlowPerFt2
+  DATATYPE
+    Float
+  LONGFORM
+    KitchenExhaustHoodFlowPerFoot2
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft
+  DEFAULT
+    if( IfValidAnd( KitExhHoodStyle[2] != "None" ) .AND.
+        LocalStatus( KitExhHoodDuty[2] ) > 0 )
+    then 
+      KitExhHoodMaxFlow:FlowPerLen( "Style", KitExhHoodStyle[2], 
+                                    "Duty", KitExhHoodDuty[2] )
+    else UNDEFINED  
+    endif
+ENDRULE 
+RULE NEW Spc:KitExhHoodFlowPerFt3
+  DATATYPE
+    Float
+  LONGFORM
+    KitchenExhaustHoodFlowPerFoot3
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft
+  DEFAULT
+    if( IfValidAnd( KitExhHoodStyle[3] != "None" ) .AND.
+        LocalStatus( KitExhHoodDuty[3] ) > 0 )
+    then 
+      KitExhHoodMaxFlow:FlowPerLen( "Style", KitExhHoodStyle[3], 
+                                    "Duty", KitExhHoodDuty[3] )
+    else UNDEFINED  
+    endif
+ENDRULE 
+RULE NEW Spc:KitExhHoodFlowPerFt4
+  DATATYPE
+    Float
+  LONGFORM
+    KitchenExhaustHoodFlowPerFoot4
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft
+  DEFAULT
+    if( IfValidAnd( KitExhHoodStyle[4] != "None" ) .AND.
+        LocalStatus( KitExhHoodDuty[4] ) > 0 )
+    then 
+      KitExhHoodMaxFlow:FlowPerLen( "Style", KitExhHoodStyle[4], 
+                                    "Duty", KitExhHoodDuty[4] )
+    else UNDEFINED  
+    endif
+ENDRULE 
+RULE NEW Spc:KitExhHoodFlowPerFt5
+  DATATYPE
+    Float
+  LONGFORM
+    KitchenExhaustHoodFlowPerFoot5
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft
+  DEFAULT
+    if( IfValidAnd( KitExhHoodStyle[5] != "None" ) .AND.
+        LocalStatus( KitExhHoodDuty[5] ) > 0 )
+    then 
+      KitExhHoodMaxFlow:FlowPerLen( "Style", KitExhHoodStyle[5], 
+                                    "Duty", KitExhHoodDuty[5] )
+    else UNDEFINED  
+    endif
+ENDRULE 
+
+// Kitchen exhaust flow per hood, based on length and 
+RULE Spc:KitExhHoodFlow[1]
+  INPUTCLASS
+    Default
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[1] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt1 > 0 ) )
+    then KitExhHoodFlowPerFt1 * KitExhHoodLen[1]
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[1] != "None" ) .AND.
+        IfValidAnd( KitExhHoodFlow[1] != 0 ) = 0 )
+    then
+      PostError("The kitchen exhaust hood flow must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[1] != "None" ) )    
+    then u:KitExhHoodFlow[1]
+    else UNDEFINED
+    endif
+ENDRULE 
+RULE Spc:KitExhHoodFlow[2]
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[2] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt2 > 0 ) )
+    then KitExhHoodFlowPerFt2 * KitExhHoodLen[2]
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[2] != "None" ) .AND.
+        IfValidAnd( KitExhHoodFlow[2] != 0 ) = 0 )
+    then
+      PostError("The kitchen exhaust hood flow must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( IfValidAnd( KitExhHoodStyle[2] != "None" ) )    
+    then u:KitExhHoodFlow[2]
+    else UNDEFINED
+    endif
+ENDRULE 
+RULE Spc:KitExhHoodFlow[3]
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[3] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt3 > 0 ) )
+    then KitExhHoodFlowPerFt3 * KitExhHoodLen[3]
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[3] != "None" ) .AND.
+        IfValidAnd( KitExhHoodFlow[3] != 0 ) = 0 )
+    then
+      PostError("The kitchen exhaust hood flow must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+ENDRULE 
+RULE Spc:KitExhHoodFlow[4]
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[4] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt4 > 0 ) )
+    then KitExhHoodFlowPerFt4 * KitExhHoodLen[4]
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[4] != "None" ) .AND.
+        IfValidAnd( KitExhHoodFlow[4] != 0 ) = 0 )
+    then
+      PostError("The kitchen exhaust hood flow must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+ENDRULE 
+RULE Spc:KitExhHoodFlow[5]
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[5] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt5 > 0 ) )
+    then KitExhHoodFlowPerFt5 * KitExhHoodLen[5]
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( CommKitArea > 0 .AND.
+        IfValidAnd( KitExhHoodStyle[5] != "None" ) .AND.
+        IfValidAnd( KitExhHoodFlow[5] != 0 ) = 0 )
+    then
+      PostError("The kitchen exhaust hood flow must be defined for Space '%s'.",
+                 Name)
+    else UNCHANGED
+    endif 
+ENDRULE 
+
+RULE NEW Spc:MaxKitExhHoodFlow1
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The maximum kitchen exhaust hood air flow, per Table 140.9-A of
+     the Standard"  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[1] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt1 > 0 ) )
+    then KitExhHoodFlowPerFt1 * KitExhHoodLen[1]
+    else 0
+    endif
+ENDRULE 
+RULE NEW Spc:MaxKitExhHoodFlow2
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[2] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt2 > 0 ) )
+    then KitExhHoodFlowPerFt2 * KitExhHoodLen[2]
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:MaxKitExhHoodFlow3
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[3] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt3 > 0 ) )
+    then KitExhHoodFlowPerFt3 * KitExhHoodLen[3]
+    else 0
+    endif
+ENDRULE 
+RULE NEW Spc:MaxKitExhHoodFlow4
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[4] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt4 > 0 ) )
+    then KitExhHoodFlowPerFt4 * KitExhHoodLen[4]
+    else 0
+    endif
+ENDRULE 
+RULE NEW Spc:MaxKitExhHoodFlow5
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( IfValidAnd( KitExhHoodLen[5] > 0 ) .AND.
+        IfValidAnd( KitExhHoodFlowPerFt5 > 0 ) )
+    then KitExhHoodFlowPerFt5 * KitExhHoodLen[5]
+    else 0
+    endif
+ENDRULE 
+
+
+TABLE KitExhHoodMaxFlow
+   Style                FlowPerLen  FlowPerLen  FlowPerLen  FlowPerLen
+   Duty=                "Light"     "Medium"    "Heavy"     "ExtraHeavy"
+   WallMountedCanopy    140         210         280         385
+   SingleIsland         280         350         420         490
+   DoubleIsland         175         210         280         385
+   Eyebrow              175         175         Error1      Error1
+   BackshelfOrPassover  210         210         280         Error1
+Error1     "Not allowed per Table 140.9-A of the Standard."
+ENDTABLE
+
+
+// Calculate the design exhaust flow for covered process spaces
+RULE NEW Spc:TotKitExhHoodFlow
+  DATATYPE
+    Float
+  LONGFORM
+    TotalKitchenExhaustHoodFlow
+  DESCRIPTION
+    "The total kitchen exhaust hood air flow, in CFM, for the Space."  
+  HELP
+    "The sum of all KitchenExhaustHoodFlows."
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( CommKitArea > 0 )
+    then 
+      ValidOr( KitExhHoodFlow[1], 0 ) +
+      ValidOr( KitExhHoodFlow[2], 0 ) +
+      ValidOr( KitExhHoodFlow[3], 0 ) +
+      ValidOr( KitExhHoodFlow[4], 0 ) +
+      ValidOr( KitExhHoodFlow[5], 0 )
+    else 0
+    endif
+ENDRULE
+// Total kitchen hood flow based on maximum allowed by Std
+RULE NEW Spc:MaxTotKitExhHoodFlow
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumTotalKitchenExhaustHoodFlow
+  DESCRIPTION
+    "The sum of maximum kitchen exhaust hood air flows, per Table 140.9-A of
+     the Standard, for the Space."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( CommKitArea > 0 )
+    then 
+      MaxKitExhHoodFlow1 +
+      MaxKitExhHoodFlow2 +
+      MaxKitExhHoodFlow3 +
+      MaxKitExhHoodFlow4 +
+      MaxKitExhHoodFlow5
+    else 0
+    endif
+ENDRULE
+
+
+// ********** Code Minimum Exhaust Components ******************************
+// Per Area basis
+RULE NEW Spc:CodeExhPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustPerArea
+  DESCRIPTION
+     "The code mininum amount of exhaust flow per floor area."
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft2 
+  DEFAULT : T24N
+    if( HasProcExh .AND. PrkgGarArea > 0 )
+    then ValidOr( CodeVentPerArea, 0 )
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    0
+ENDRULE
+RULE NEW Spc:CodeOtherExhPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    CodeOtherExhaustPerArea
+  DESCRIPTION
+     "The code mininum amount of exhaust flow per floor area for 'Other'
+      ventilation standards." 
+  INPUTCLASS
+    Default
+  UNITS
+    cfm/ft2
+  DEFAULT
+    0
+ENDRULE
+RULE NEW Spc:CodeExhPerAreaFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustPerAreaFlow
+  DESCRIPTION
+     "The code required exhaust air flow rate, in CFM, associated with the ExhPerArea input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+   if( VentStd = "Other" )
+   then CodeOtherExhPerArea * FlrArea
+   else CodeExhPerArea * FlrArea
+   endif
+  SIZING
+   if( VentStd = "Other" )
+   then CodeOtherExhPerArea * FlrArea
+   else CodeExhPerArea * FlrArea
+   endif
+  ANNUAL
+    z:CodeExhPerAreaFlow
+ENDRULE
+// ACH
+RULE NEW Spc:CodeExhACH
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustAirChangesPerHour
+  DESCRIPTION
+     "The code mininum amount of exhaust, in cubic feet per hour,
+      divided by the volume of the space."
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    NotInput
+  UNITS
+    changes/hr
+  DEFAULT : T24N
+    if( HasProcExh .AND. LabArea > 0 )
+    then ValidOr( CodeVentACH, 0 )
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    0
+ENDRULE
+RULE NEW Spc:CodeOtherExhACH
+  DATATYPE
+    Float
+  LONGFORM
+    CodeOtherExhaustAirChangesPerHour
+  DESCRIPTION
+     "The code mininum amount of exhaust flow, in cubic feet per hour,
+      divided by the volume of the space for 'Other' ventilation standards."
+  INPUTCLASS
+    Default
+  UNITS
+    changes/hr
+  DEFAULT
+    0
+ENDRULE
+RULE NEW Spc:CodeExhACHFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustAirChangesPerHourFlow
+  DESCRIPTION
+     "The code required exhaust air flow rate, in CFM, associated with the CodeExhACH input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+   if( VentStd = "Other" )
+   then CodeOtherExhACH * ValidOr( Vol, 0 ) / 60
+   else CodeExhACH * ValidOr( Vol, 0 ) / 60
+   endif
+  SIZING
+   if( VentStd = "Other" )
+   then CodeOtherExhACH * Vol / 60
+   else CodeExhACH * Vol / 60
+   endif
+  ANNUAL
+    z:CodeExhACHFlow
+ENDRULE
+// Per Spc
+RULE NEW Spc:CodeExhPerSpc
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustPerSpace
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    0
+ENDRULE
+
+
+// ********** Proposed Exhaust Components **************************************
+RULE Spc:ExhPerArea
+  DESCRIPTION
+    "The design exhaust air flow rate, in CFM/ft2, for the Space."  
+  INPUTCLASS
+    Optional
+  UNITS
+    cfm/ft2
+  MINIMUM
+    0
+  DEFAULT
+    if( PrkgGarArea > 0 )
+    then VentPerArea
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then SpcFuncDefaultsRef:ExhPerArea
+    else 0
+    endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM exhaust rates
+      CodeExhPerArea
+    else u:ExhPerArea
+    endif
+  SIZING_BASELINE
+    zp:ExhPerArea   
+  ANNUAL
+    z:ExhPerArea
+ENDRULE
+RULE Spc:ExhACH
+  DESCRIPTION
+    "The design exhaust air flow rate, in ACH, for the Space."  
+  INPUTCLASS
+    Optional
+  UNITS
+    changes/hr
+  MINIMUM
+    0
+  DEFAULT
+    if( LabArea > 0 .AND. IfValidAnd( VentACH > 0 ) )
+    then VentACH
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then SpcFuncDefaultsRef:ExhACH
+    else 0
+    endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM exhaust rates
+      CodeExhACH
+    else u:ExhACH
+    endif
+  SIZING_BASELINE
+    zp:ExhACH
+  ANNUAL
+    z:ExhACH
+ENDRULE
+RULE Spc:ExhPerSpc
+  DESCRIPTION
+    "The design exhaust air flow rate, in CFM, for the Space."  
+  INPUTCLASS
+    Optional
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT
+    if( PrkgGarArea = 0 .AND. LabArea = 0 .AND. VentSysIsExh )
+    then VentFlow
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then SpcFuncDefaultsRef:ExhPerSpc
+    else 0
+    endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM exhaust rates
+      CodeExhPerSpc
+    else u:ExhPerSpc
+    endif
+  SIZING_BASELINE
+    zp:ExhPerSpc
+  ANNUAL
+    z:ExhPerSpc
+ENDRULE
+
+
+// Specify the design exhaust air flow for the space
+RULE NEW Spc:CodeExhFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeExhaustFlow  
+  DESCRIPTION
+    "Specifies the minimum design exhaust air flow, as specified by the NACM."
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( HasProcExh .AND. IfValidAnd( TotKitExhHoodFlow > 0 ) )
+    then 
+      if( IfValidAnd( Bldg:TotKitExhHoodFlow > 5000 ) )
+      then 
+        // Total building kitchen hood exhaust flow is > 5000 cfm
+        // Baseline hood exhaust flow is modeled using the maximum in Table 140.9
+        MaxTotKitExhHoodFlow
+      else // Baseline kitchen hood exhaust is the same as the proposed
+        TotKitExhHoodFlow
+      endif
+    else
+      CodeExhPerAreaFlow + CodeExhACHFlow + CodeExhPerSpc
+    endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Is Partial compliance w/ no mechanical (complete or addition)
+      if( VentSysIsExh = 1 .AND. IsCond )
+      then 0 // Proposed exhaust is for ventilation of a conditioned space
+             // Baseline ventilation provided by system, so set exhaust to 0.
+             // See issue 1698
+      else u:CodeExhFlow // Code (baseline) exhaust is same as proposed.
+      endif
+    else u:CodeExhFlow // Is partial non-mech or is existing HVAC, leave unchanged.
+    endif  
+  SIZING_BASELINE
+    zp:CodeExhFlow
+ENDRULE
+
+RULE Spc:ExhFlow
+  DESCRIPTION
+    "The design exhaust air flow rate, in CFM, for the Space."  
+  HELP
+    "For general exhaust, the design exhasut air flow rate is the sum of all the 
+     individual exhaust inputs (cfm/ft2, ACH, and cfm)."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( HasProcExh .AND. TotKitExhHoodFlow > 0 )
+    then // Use kitchen hood inputs
+      TotKitExhHoodFlow
+    else // Sum of all user inputs
+      ( ValidOr( ExhPerArea, 0 ) * FlrArea ) + 
+      ( ValidOr( ExhACH, 0 ) * ValidOr( Vol, 0 ) / 60 ) + 
+      ValidOr( ExhPerSpc, 0 )
+    endif
+  CHECKCODE : T24N
+      if( CondgType = "Unconditioned" .AND. 
+          HasExhSys .AND. ExhFlow > 0 .AND.
+          PrkgGarArea = 0 )   
+      then 
+        PostWarning("Space '%s' is 'Unconditioned', but has exhaust flow
+                     defined. The exhaust flow and system serving the space's zone
+                     will be simulated the same in the proposed and standard
+                     design.", Name) 
+      else if( HasProcExh .AND. LabArea > 0 .AND. 
+               ExhFlow < CodeExhFlow * ( 1 - Proj:VentTolLim ))
+      then 
+        PostWarning("Space '%s' is Laboratory, but the user-specified exhaust flow rate
+                   is less than the required amount for the specified 'Lab Exhaust Type'.
+                   For compliance analysis, the minimum exhaust air flow for 
+                   Laboratory spaces must be at least 6ACH or 15ACH, depending 
+                   on the user-specified 'Lab Exhaust Type'.", Name)
+      else UNCHANGED
+      endif endif
+  SIZING_PROPOSED : T24N
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Is Partial compliance w/ no mechanical (complete or addition)
+      if( VentSysIsExh = 2 )
+      then // Baseline residential exhaust is the code ventilation flow
+        CodeVentFlow
+      else 
+        CodeExhFlow 
+      endif
+    else if( HasProcExh .AND. LabArea > 0 .AND. ExhFlow < CodeExhFlow )
+    then // ExhFlow must be at least the CodeExhFlow for Lab
+      Max( ExhFlow, CodeExhFlow )
+    else u:ExhFlow
+    endif endif
+  SIZING_BASELINE : T24N
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial envelope, baseline = proposed
+      zp:ExhFlow 
+    else if( VentSysIsExh = 2 )
+    then // Baseline residential exhaust is the code ventilation flow
+      CodeVentFlow   
+    else if( CodeExhFlow > 0 )
+    then // Use code value
+      CodeExhFlow 
+    else if( zp:VentSysIsExh = 1 .AND. IsCond )
+    then 0 // Proposed exhaust is for ventilation of a conditioned space
+           // Baseline ventilation provided by system, so set exhaust to 0.
+           // See issue 1698
+    else // Same as user design for lab and all other spaces
+      zp:ExhFlow
+    endif endif endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( HasProcExh .AND. LabArea > 0 .AND. ExhFlow < CodeExhFlow )
+    then // ExhFlow must be at least the CodeExhFlow for Lab
+      Max( ExhFlow, CodeExhFlow )
+    else u:ExhFlow
+    endif
+  SIZING_BASELINE : S901G ECBC
+    zp:ExhFlow
+  ANNUAL
+    z:ExhFlow
+ENDRULE
+RULE NEW Spc:DsgnExhACH
+  DATATYPE
+    Float
+  LONGFORM
+    DesignExhaustAirChangesPerHour
+  DESCRIPTION
+    "The design exhaust air flow rate, in ACH, for the Space."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    changes/hr
+  DEFAULT
+    if( IfValidAnd( Vol > 0 ) )
+    then ExhFlow * 60 / Vol
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( Vol > 0 ) )
+    then ExhFlow * 60 / Vol
+    else 0
+    endif
+  ANNUAL
+    z:DsgnExhACH
+ENDRULE
+RULE NEW Spc:DsgnExhPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    DesignExhaustPerArea
+  DESCRIPTION
+    "The design exhaust air flow rate, in ACH, for the Space."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft2
+  DEFAULT
+    if( IfValidAnd( FlrArea > 0 ) )
+    then ExhFlow / FlrArea
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( FlrArea > 0 ) )
+    then ExhFlow / FlrArea
+    else 0
+    endif
+  ANNUAL
+    z:DsgnExhPerArea
+ENDRULE
+
+
+// Calculate exhaust flows for BuildingStory calculations
+RULE NEW Spc:ExhFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    ExhaustFlowForBalance
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .OR.
+        IsRes .OR. // Residential spaces excluded from balance 
+        LabArea > 0 .OR. 
+        PrkgGarArea > 0 )
+    then 0
+    else ExhFlow * HasExhSys
+    endif
+  DEFAULT : S901G ECBC
+    if( VentStd != "Other" )
+    then ExhFlow * IncludeInBal * HasExhSys
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:OtherExhFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    OtherExhaustFlowForBalance
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .OR.
+        IsRes .OR. // Residential spaces excluded from balance 
+        LabArea > 0 .OR. 
+        PrkgGarArea > 0 )
+    then 0
+    else ExhFlow * HasExhSys
+    endif
+  DEFAULT : S901G ECBC
+    if( VentStd = "Other" )
+    then ExhFlow * IncludeInBal * HasExhSys
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:VentExhBalFlow
+  DATATYPE
+    Float
+  LONGFORM 
+    VentilationExhaustBalanceFlow
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( LabArea > 0 .OR. PrkgGarArea > 0 )
+    then 0
+    else Max( ExhFlow - VentFlow, 0 )
+    endif
+  SIZING
+    if( LabArea > 0 .OR. PrkgGarArea > 0 )
+    then 0
+    else Max( ExhFlow - VentFlow, 0 )
+    endif
+ENDRULE
+
+
+// -------------- Infiltration Method [2] --------------------------------------
+// Used for exhaust-driven or natural ventilation
+RULE Spc:InfMthd[2]
+  DESCRIPTION
+    "The method used to calculate an infiltration rate that represents the 
+     outdoor air for spaces served by exhaust ventilation systems."
+  HELP
+    ""
+;  OPTION     Specified in BEMEnums
+;    FlowSpace
+;    FlowArea
+;    FlowExteriorArea
+;    FlowExteriorWallArea
+;    AirChangesPerHour
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfMthd[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  SIZING_PROPOSED : T24N
+    if( VentSysIsExh > 0 // Proposed has exhaust ventilation
+        .OR. 
+        ( IsRes .AND. IsCond .AND. ThrmlZnRef:VentSrc = "Natural" ) ) // Proposed uses natural ventilation
+    then "FlowSpace"
+    else UNDEFINED
+    endif
+  SIZING_BASELINE : T24N
+    if( IsRes .AND. IsCond )
+    then "FlowSpace" // Baseline residential ventilation system is exhaust or natural
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( VentSysIsExh > 0 )
+    then "FlowSpace"
+    else UNDEFINED
+    endif 
+  SIZING_BASELINE : S901G ECBC
+    UNDEFINED // 90.1 baseline does not use exhaust ventilation systems 
+  ANNUAL
+    z:InfMthd[2]
+ENDRULE
+RULE Spc:DsgnInfRt[2]
+  DESCRIPTION
+    "The infiltration rate for the space."
+  HELP
+    "The unit for this property depend on the Spc:InfMthd. 
+    
+    InfMthd = 'FlowSpace', unit is cfm.
+    InfMthd = 'AirChangesPerHour', unit is ACH
+    All others, unit is cfm/SF"
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:DsgnInfRt[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+  SIZING_PROPOSED : T24N
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then
+      if( VentSysIsExh > 0 )
+      then Max( ExhFlow, VentFlow )
+      else CodeVentFlow
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE : T24N
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then CodeVentFlow
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then Max( ExhFlow, VentFlow )
+    else UNDEFINED
+    endif
+  SIZING_BASELINE : S901G ECBC
+    UNDEFINED // 90.1 baseline does not use exhaust ventilation systems 
+  ANNUAL
+    z:DsgnInfRt[2]
+ENDRULE
+RULE Spc:InfSchRef[2]
+  DESCRIPTION
+    "The schedule that defines the hourly multiplier on the infiltration flow."
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfSchRef[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  SIZING
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then RuleLibrary( Schedule, "On" )
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InfSchRef[2]
+ENDRULE
+RULE Spc:InfModelCoefA[2]
+  DESCRIPTION
+    "The constant coefficient in the infiltration rate calculation equation"
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfModelCoefA[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+  SIZING
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then 1.0
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InfModelCoefA[2]
+ENDRULE
+RULE Spc:InfModelCoefB[2]
+  DESCRIPTION
+    "The temperature coefficient in the infiltration rate calculation equation."
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfModelCoefB[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+  UNITS
+    1/°F
+  SIZING
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then 0
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InfModelCoefB[2]
+ENDRULE
+RULE Spc:InfModelCoefC[2]
+  DESCRIPTION
+    "The windspeed coefficient in the infiltration rate calculation equation."
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfModelCoefC[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+  UNITS
+    1/mph
+  SIZING
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then 0
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InfModelCoefC[2]
+ENDRULE
+RULE Spc:InfModelCoefD[2]
+  DESCRIPTION
+    "The windspeed squared coefficient in the infiltration rate calculation equation."
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Spc:InfModelCoefD[2] no longer an allowed input as of version 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+  UNITS
+    1/mph2
+  SIZING
+    if( LocalStatus( InfMthd[2] ) > 0 )
+    then 0
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:InfModelCoefD[2]
+ENDRULE

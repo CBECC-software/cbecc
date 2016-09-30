@@ -1,0 +1,7 @@
+; BEMProcUI16c.def : Declares the module parameters for the DLL.
+
+LIBRARY      "BEMProcUI16c"
+; DESCRIPTION  'BEMProcUI16c Windows Dynamic Link Library'  - throws compiler warning
+
+EXPORTS
+    ; Explicit exports can go here

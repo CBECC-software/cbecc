@@ -1,0 +1,49 @@
+;-------------------------------------------------------------------------
+; Table of Component Assignment Uniqueness definitions
+;-------------------------------------------------------------------------
+; CEC Title-24 Residential 2013
+; Compiled for the CEC by ...
+; Modification History:
+;    Aug 19, 2011 - Scott Criswell - skeleton ruleset setup
+;-------------------------------------------------------------------------
+;
+; The format of this file:
+;
+;    - Integer value indicating when all assignments of the following
+;      component type must be unique.  When the value for
+;      Proj:UniqueAssignFlag = this value => assignments must be unique.
+;      (-1 denotes end of file)
+;
+;    - Component type string
+;
+; Values for Proj:UniqueAssignFlag (as defined in ruleset):
+;        Rulelist           Value
+;        ------------------------
+;        ProposedInput        0
+;        PostProposedInput    1
+;        BudgetConversion     2
+;
+; Note: SAC 5/13/99 - At the very end of each rulelist in which you set the
+;                     Proj:UniqueAssignFlag in order to initiate unique
+;                     assignment checking, also set the Proj:RemoveDupsFlag
+;                     property to the same value which will cause duplicate
+;                     user-defined components to be deleted before simulation.
+;
+;-------------------------------------------------------------------------
+
+;1, Cons
+;1, Layers
+;1, Mat
+;
+;2, Cons
+;2, Layers
+;2, Mat
+
+; Other components which are likely candidates for future definition here
+;LtFix
+;Curve
+;Sched
+;WkSch
+;DaySch
+
+-1

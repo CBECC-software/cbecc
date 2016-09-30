@@ -1,0 +1,37 @@
+;,CEC 2013 Nonresdiential ACM Ruleset,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,TABLE NAME:,,,,,,,,,,,,,,,,,,
+;,,FenConsInputReqs_T24N,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,MODIFICATION HISTORY:,,,,,,,,,,,,,,,,,,
+;,,Date,Name,Purpose,,,,,,,,,,,,,,,
+;,,8/2/2014,L. Hovee,Screens Control and InputChecking Flags,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,Standards/ACM Reference:,,,,,,,,,,,,,,,,,,
+;,,None,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,Notes:,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,Syntax Examples:,,,,,,,,,,,,,,,,,,
+;,,"FenConsInputReqs:FenProdTypeReq(""FenType"",FenType, ""CertificationMethod"",CertificationMthd, ""ProductType"",FenProdType, ""Panes"",FenPanes)",,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,
+; ####################################  Start of Table ####################################,,,,,,,,,,,,,,,,,,,
+,TABLE FenConsInputReqs,,,,,,,,,,,,,,,,,,
+,,FenType,CertificationMethod,ProductType,Panes,FenProdTypeReq,FenFrmReq,FenPanesReq,OperableWinConfigurationReq,WinDividerReq,GreenhouseGardenWinReq,GlazingTintReq,SkylightGlazingReq,SkylightCurbReq,UFactorCOGReq,SHGCCOGReq,VTCOGReq,;,All Cols Filled
+,,VerticalFenestration,NFRCRated,*,*,1,0,0,0,0,0,0,0,0,0,0,0,;,1
+,,VerticalFenestration,DefaultPerformance,OperableWindow,DoublePane,1,1,1,1,1,1,1,0,0,0,0,0,;,1
+,,VerticalFenestration,DefaultPerformance,*,DoublePane,1,1,1,0,1,1,1,0,0,0,0,0,;,1
+,,VerticalFenestration,DefaultPerformance,OperableWindow,*,1,1,1,1,0,1,1,0,0,0,0,0,;,1
+,,VerticalFenestration,DefaultPerformance,*,*,1,1,1,0,0,1,1,0,0,0,0,0,;,1
+,,VerticalFenestration,COGEquations,OperableWindow,*,1,1,0,1,0,0,0,0,0,1,1,1,;,1
+,,VerticalFenestration,COGEquations,*,*,1,1,0,0,0,0,0,0,0,1,1,1,;,1
+,,Skylight,NFRCRated,*,*,0,0,0,0,0,0,0,1,1,0,0,0,;,1
+,,Skylight,DefaultPerformance,*,DoublePane,1,1,1,0,1,0,1,1,1,0,0,0,;,1
+,,Skylight,DefaultPerformance,*,*,1,1,1,0,0,0,1,1,1,0,0,0,;,1
+,,Skylight,COGEquations,*,*,0,1,0,0,0,0,0,1,1,1,1,1,;,1
+,ENDTABLE,,,,,,,,,,,,,,,,,,

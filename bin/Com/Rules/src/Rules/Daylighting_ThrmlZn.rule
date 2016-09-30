@@ -1,0 +1,1031 @@
+// Daylighting and Daylighting Controls - Thermal Zone Aggregation
+//
+// -------------------------------------------------------------------------
+//  Copyright ( c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES ( INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT ( INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.4.5 - Daylighting Control
+//      Skylit Daylighted Area
+//      Primary Daylighted Area
+//      Secondary Daylighted Area
+//      Reference Point for Illuminance Calculations
+//      Installed General Lighting Power
+//      Daylighting Control Requirements
+//      Fraction of Controlled Lighting
+//      Daylight Illuminance Setpoint
+//      Illumination Adjustment Factor
+//      Daylighting Control Type
+//      Minimum Dimming Light Fraction
+//      Minimum Dimming Power Fraction
+//      Controlled Luminaire Type
+//      Number of Control Steps
+//      ..
+
+
+// ********** Section 5.4.5 - Daylighting Control - Thermal Zone****************
+
+// ********** Section to Aggregate Daylighting Control Parms to ThrmlZn ********
+
+// ---------- Daylit Areas -----------------------------------------------------
+RULE NEW  ThrmlZn:SkylitDaylitArea
+  DESCRIPTION
+    "Total Skylit Daylit Area in the Thermal Zone"   
+  REFERENCE 
+    ACM 5.4.5 - Skylit, Primary and Secondary Sidelit Daylighted Area
+  DATATYPE
+    Float
+  LONGFORM
+    SkylitDaylitArea  
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  UNITS
+   ft2
+  DEFAULT
+   SumRevRef( Spc:ThrmlZnRef, Spc:SkylitDaylitArea )
+  SIZING
+   SumRevRef( Spc:ThrmlZnRef, Spc:SkylitDaylitArea )
+  ANNUAL
+   SumRevRef( Spc:ThrmlZnRef, Spc:SkylitDaylitArea )
+ENDRULE
+RULE NEW  ThrmlZn:PriSideDaylitArea
+  DESCRIPTION
+    "Total Primary Sidelit Daylit Area in the Thermal Zone"   
+  REFERENCE 
+    ACM 5.4.5 - Skylit, Primary and Secondary Sidelit Daylighted Area
+  DATATYPE
+    Float
+  LONGFORM
+    PrimarySidelitDaylitArea  
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  UNITS
+   ft2
+  DEFAULT
+   SumRevRef( Spc:ThrmlZnRef, Spc:PriSideDaylitArea )
+  SIZING
+   SumRevRef( Spc:ThrmlZnRef, Spc:PriSideDaylitArea )
+  ANNUAL
+   SumRevRef( Spc:ThrmlZnRef, Spc:PriSideDaylitArea )
+ENDRULE
+RULE NEW  ThrmlZn:SecSideDaylitArea
+  DESCRIPTION
+    "Total Secondary Sidelit Daylit Area in the Thermal Zone"   
+  REFERENCE 
+    ACM 5.4.5 - Skylit, Primary and Secondary Sidelit Daylighted Area
+  DATATYPE
+    Float
+  LONGFORM
+    SecondarySidelitDaylitArea  
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  UNITS
+   ft2
+  DEFAULT
+   SumRevRef( Spc:ThrmlZnRef, Spc:SecSideDaylitArea )
+  SIZING
+   SumRevRef( Spc:ThrmlZnRef, Spc:SecSideDaylitArea )
+  ANNUAL
+   SumRevRef( Spc:ThrmlZnRef, Spc:SecSideDaylitArea )
+ENDRULE
+
+
+RULE NEW  ThrmlZn:SkylitMaxRDP
+  DESCRIPTION
+    ""   
+  REFERENCE 
+    
+  DATATYPE
+    Float
+  LONGFORM
+    DaylightingControl1Type
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+  -1000000 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SkylitRDP )
+  SIZING
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SkylitRDP )
+  ANNUAL
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SkylitRDP ) 
+ENDRULE
+RULE NEW  ThrmlZn:PriSideMaxRDP
+  DESCRIPTION
+    ""   
+  REFERENCE 
+    
+  DATATYPE
+    Float
+  LONGFORM
+    DaylightingControl1Type
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+  -1000000 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    MaxRevRef( Spc:ThrmlZnRef, Spc:PriSideRDP )
+  SIZING
+    MaxRevRef( Spc:ThrmlZnRef, Spc:PriSideRDP )
+  ANNUAL
+    MaxRevRef( Spc:ThrmlZnRef, Spc:PriSideRDP )
+ENDRULE
+RULE NEW  ThrmlZn:SecSideMaxRDP
+  DESCRIPTION
+    ""   
+  REFERENCE 
+    
+  DATATYPE
+    Float
+  LONGFORM
+    DaylightingControl1Type
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+  -1000000 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SecSideRDP )
+  SIZING
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SecSideRDP )
+  ANNUAL
+    MaxRevRef( Spc:ThrmlZnRef, Spc:SecSideRDP )
+ENDRULE
+
+// the following four rules identify the Daylit Zone type that each reference point 
+// will be associated with
+RULE NEW  ThrmlZn:DayltgCtrl1ZnType
+  DESCRIPTION
+    ""   
+  REFERENCE 
+
+  DATATYPE
+    STRING
+  LONGFORM
+    DaylightingControl1ZoneType
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( SecSideDaylitArea > 0 ) then
+      if( SkylitDaylitArea > 0 .AND. PriSideDaylitArea > 0 ) 
+      then "Skylit + PriSide" else 
+      if ( SkylitDaylitArea > 0 )
+      then "Skylit" else
+      if ( PriSideDaylitArea > 0 )
+      then "PriSide" else 
+      "SecSide"  
+      endif endif endif
+    else 
+      if ( SkylitDaylitArea > 0 ) 
+      then "Skylit" else
+      if ( PriSideDaylitArea > 0 )
+      then "PriSide" else
+      "None"
+      endif endif
+    endif
+  SIZING
+    "None"
+  ANNUAL
+          if ( SecSideDaylitArea > 0 ) then
+      if( SkylitDaylitArea > 0 .AND. u:PriSideDaylitArea > 0 ) 
+      then "Skylit + PriSide" else 
+      if ( SkylitDaylitArea > 0 )
+      then "Skylit" else
+      if ( PriSideDaylitArea > 0 )
+      then "PriSide" else 
+      "SecSide"  
+      endif endif endif
+    else 
+      if ( SkylitDaylitArea > 0 ) 
+      then "Skylit" else
+      if ( PriSideDaylitArea > 0 )
+      then "PriSide" else
+      "None"
+      endif endif
+    endif
+ENDRULE
+RULE NEW  ThrmlZn:DayltgCtrl2ZnType
+  DESCRIPTION
+    ""   
+  REFERENCE 
+
+  DATATYPE
+    STRING
+  LONGFORM
+    DaylightingControl1ZoneType
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( SecSideDaylitArea > 0 ) then
+      if ( DaylightingControl1ZoneType = "SecSide" ) then
+      "None" else
+      "SecSide"
+      endif
+    else
+      if ( DaylightingControl1ZoneType = "Skylit" ) then
+        if ( PriSideDaylitArea > 0 ) then
+        "PriSide" else
+        "None"
+        endif
+      else "None"
+      endif
+    endif
+  SIZING
+    "None"
+  ANNUAL
+    if ( SecSideDaylitArea > 0 ) then
+      if ( DaylightingControl1ZoneType = "SecSide" ) then
+      "None" else
+      "SecSide"
+      endif
+    else
+      if ( DaylightingControl1ZoneType = "Skylit" ) then
+        if ( PriSideDaylitArea > 0 ) then
+        "PriSide" else
+        "None"
+        endif
+      else "None"
+      endif
+    endif
+ENDRULE
+RULE NEW  ThrmlZn:DayltgCtrl1Cat
+  DESCRIPTION
+    ""   
+  REFERENCE 
+
+  DATATYPE
+    STRING
+  LONGFORM
+    DaylightingControl1Category
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( DayltgCtrl1ZnType = "Skylit + PriSide" ) then
+      if ( PriSideMaxRDP > SkylitMaxRDP ) then
+      "PriSide" else
+      "Skylit"
+      endif
+    else DayltgCtrl1ZnType
+    endif
+ SIZING
+    "None"
+  ANNUAL
+    if ( DayltgCtrl1ZnType = "Skylit + PriSide" ) then
+      if ( PriSideMaxRDP > SkylitMaxRDP ) then
+      "PriSide" else
+      "Skylit"
+      endif
+    else DayltgCtrl1ZnType
+    endif
+ENDRULE
+RULE NEW  ThrmlZn:DayltgCtrl2Cat
+  DESCRIPTION
+    ""   
+  REFERENCE 
+
+  DATATYPE
+    STRING
+  LONGFORM
+    DaylightingControl2Category
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    DayltgCtrl2ZnType
+  SIZING
+    "None"
+  ANNUAL
+    DayltgCtrl2ZnType
+ENDRULE
+
+
+// ********** Fraction of Controlled Lighting *********************************
+RULE NEW  ThrmlZn:SkylitDayltgCtrlLtgPwr
+  DESCRIPTION
+    "Total Power of all controlled lighting in Skylit Daylit Zone"   
+  DATATYPE
+    Float
+  LONGFORM
+    SkylitDaylightingControlledLightingPower
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:SkylitDayltgCtrlLtgPwr )
+  SIZING
+    0
+  ANNUAL
+    SumRevRef( Spc:ThrmlZnRef, Spc:SkylitDayltgCtrlLtgPwr )
+ENDRULE
+RULE NEW  ThrmlZn:PriSideDayltgCtrlLtgPwr
+  DESCRIPTION
+    "Total Power of all controlled lighting in Primary Sidelit Daylit Zone"   
+  DATATYPE
+    Float
+  LONGFORM
+    PrimarySideDaylightingControlledLightingPower
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:PriSideDayltgCtrlLtgPwr )
+  SIZING
+    0
+  ANNUAL
+    SumRevRef( Spc:ThrmlZnRef, Spc:PriSideDayltgCtrlLtgPwr )
+ENDRULE
+RULE NEW  ThrmlZn:SecSideDayltgCtrlLtgPwr
+  DESCRIPTION
+    "Total Power of all controlled lighting in Secondary Sidelit Daylit Zone"   
+  DATATYPE
+    Float
+  LONGFORM
+    SecondarySideDaylightingControlledLightingPower
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:SecSideDayltgCtrlLtgPwr )
+  SIZING
+    0
+  ANNUAL
+    SumRevRef( Spc:ThrmlZnRef, Spc:SecSideDayltgCtrlLtgPwr )
+ENDRULE
+
+RULE NEW  ThrmlZn:DayltgCtrlLtgPwr1
+  DESCRIPTION
+    "Total Power of all controlled lighting controlled by Reference Point 1"   
+  DATATYPE
+    Float
+  LONGFORM
+    DaylightingControlLightingPower1
+  INPUTCLASS
+    NotInput
+  UNITS
+    Watts
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    if ( IfValidAnd( Proj:DisableDayltgCtrls = 1 )) then 0 else  
+    if ( DayltgCtrl1ZnType = "Skylit + PriSide" ) then
+      SkylitDayltgCtrlLtgPwr + PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "Skylit" ) then
+      SkylitDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "PriSide" ) then
+      PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "SecSide" ) then
+      SecSideDayltgCtrlLtgPwr else
+    0  
+    endif endif endif endif endif
+  SIZING
+    0  
+  ANNUAL
+    if ( IfValidAnd( u:Proj:DisableDayltgCtrls = 1 )) then 0 else 
+    if ( DayltgCtrl1ZnType = "Skylit + PriSide" ) then
+        SkylitDayltgCtrlLtgPwr + PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "Skylit" ) then
+        SkylitDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "PriSide" ) then
+        PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl1ZnType = "SecSide" ) then
+        SecSideDayltgCtrlLtgPwr else
+    0  
+    endif endif endif endif endif
+ENDRULE
+RULE NEW  ThrmlZn:DayltgCtrlLtgPwr2
+  DESCRIPTION
+    "Total Power of all controlled lighting controlled by Reference Point 2"   
+  DATATYPE
+    Float
+  LONGFORM
+    DaylightingControlLightingPower2
+  INPUTCLASS
+    NotInput
+  UNITS
+    Watts
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    if ( IfValidAnd( Proj:DisableDayltgCtrls = 1 )) then 0 else  
+    if ( DayltgCtrl2ZnType = "PriSide" ) then
+    PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl2ZnType = "SecSide" ) then
+    SecSideDayltgCtrlLtgPwr else
+    0
+    endif endif endif
+  SIZING
+    0
+  ANNUAL
+    if ( IfValidAnd( u:Proj:DisableDayltgCtrls = 1 )) then 0 else  
+    if ( DayltgCtrl2ZnType = "PriSide" ) then
+    PriSideDayltgCtrlLtgPwr else
+    if ( DayltgCtrl2ZnType = "SecSide" ) then
+    SecSideDayltgCtrlLtgPwr else
+    0
+    endif endif endif
+ENDRULE
+RULE NEW  ThrmlZn:TotDayltgCtrlLtgPwr
+  DESCRIPTION
+    "Total Power of all daylighting controlled lighting"   
+  DATATYPE
+    Float
+  LONGFORM
+    TotalDaylightingControlLightingPower
+  INPUTCLASS
+    NotInput
+  UNITS
+    Watts
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    DayltgCtrlLtgPwr1 + DayltgCtrlLtgPwr2
+  SIZING
+    0
+  ANNUAL
+    DayltgCtrlLtgPwr1 + DayltgCtrlLtgPwr2
+ENDRULE
+
+
+RULE NEW  ThrmlZn:RegLtgPwr
+  DESCRIPTION
+    "Total Power of all controlled lighting in Secondary Sidelit Daylit Zone"   
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedLightingPower
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:RegInstLtgPwr )
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:RegLtgPwr )
+  ANNUAL
+    SumRevRef( Spc:ThrmlZnRef, Spc:RegLtgPwr )
+ENDRULE
+
+RULE ThrmlZn:DayltgCtrlLtgFrac1
+  DESCRIPTION
+    "Fraction of Total Power of all controlled lighting controlled by Reference Point 1"   
+  INPUTCLASS
+    Optional
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    if ( DayltgCtrlLtgPwr1 = 0 ) 
+    then 0 else
+    if ( RegLtgPwr > 0 ) then MIN( 1,DayltgCtrlLtgPwr1 / RegLtgPwr ) 
+    else 0
+    endif endif
+  SIZING
+    0
+  ANNUAL
+    if ( DayltgCtrlLtgPwr1 = 0 ) then 0 else
+    if ( RegLtgPwr > 0 ) then MIN( 1,DayltgCtrlLtgPwr1 / RegLtgPwr )
+    else 0
+    endif endif
+ENDRULE
+RULE ThrmlZn:DayltgCtrlLtgFrac2
+  DESCRIPTION
+    "Fraction of Total Power of all controlled lighting controlled by Reference Point 2"   
+  INPUTCLASS
+    Optional
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    if ( DayltgCtrlLtgPwr2 = 0 ) then 0 else
+    if ( RegLtgPwr > 0 ) then 
+      MIN( (0.99999-DayltgCtrlLtgFrac1 ),DayltgCtrlLtgPwr2 / RegLtgPwr ) 
+    else 0
+    endif endif
+  SIZING
+    0
+  ANNUAL
+    if ( DayltgCtrlLtgPwr2 = 0 ) then 0 else
+    if ( RegLtgPwr > 0 ) then 
+      MIN( (0.99999-DayltgCtrlLtgFrac1 ),DayltgCtrlLtgPwr2 / RegLtgPwr ) 
+    else 0
+    endif endif
+ENDRULE
+
+// ---------- Reference Point Positions ----------------------------------------
+RULE NEW  ThrmlZn:DayltgRefPtRepSpc1Ref
+  DESCRIPTION
+    "The space from which reference point 1 is selected"   
+  REFERENCE 
+    ACM 5.4.7 - Reference Point for Illuminance Calcualtions
+  DATATYPE
+    Spc
+  LONGFORM
+    DaylightingReferencePointRepresentativeSpace1Reference
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:SkylitRDP ) else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:PriSideRDP ) else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:SecSideRDP ) else "None"
+    endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:SkylitRDP ) else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:PriSideRDP ) else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       MaxRevRefComp( Spc:ThrmlZnRef, Spc:SecSideRDP ) else "None"
+    endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt1Coord[1]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 1"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000
+  DEFAULT
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[1] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[1] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[1] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[1] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[1] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[1] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt1Coord[2]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 1"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000 
+  DEFAULT
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+      DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[2] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+      DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[2] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+      DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[2] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+        if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+      DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[2] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+      DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[2] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+      DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[2] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt1Coord[3]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 1"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000 
+  DEFAULT
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+      DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[3] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+      DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[3] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+      DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[3] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNCHANGED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+      DayltgRefPtRepSpc1Ref:SkylitDayltgRefPtCoord[3] else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+      DayltgRefPtRepSpc1Ref:PriSideDayltgRefPtCoord[3] else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+      DayltgRefPtRepSpc1Ref:SecSideDayltgRefPtCoord[3] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+
+RULE NEW  ThrmlZn:DayltgRefPtRepSpc2Ref
+  DESCRIPTION
+    "The space from which reference point 2 is selected"   
+  REFERENCE 
+    ACM 5.4.7 - Reference Point for Illuminance Calcualtions
+  DATATYPE
+    Spc
+  LONGFORM
+    DaylightingReferencePointRepresentativeSpace2Reference
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:SkylitRDP ) else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:PriSideRDP ) else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:SecSideRDP ) else "None"
+    endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+        if( DayltgCtrl2Cat = "Skylit" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:SkylitRDP ) else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:PriSideRDP ) else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:SecSideRDP ) else "None"
+    endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt2Coord[1]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 2"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000
+  DEFAULT
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[1] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[1] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[1] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[1] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[1] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[1] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt2Coord[2]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 2"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000
+  DEFAULT
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[2] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[2] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[2] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[2] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[2] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[2] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumRefPt2Coord[3]
+  DESCRIPTION
+    "X Position of Thermal Daylighting Reference Point Position 2"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+   -100000 
+  MAXIMUM 
+    100000
+  DEFAULT
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[3] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[3] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[3] else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNCHANGED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+      DayltgRefPtRepSpc2Ref:SkylitDayltgRefPtCoord[3] else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+      DayltgRefPtRepSpc2Ref:PriSideDayltgRefPtCoord[3] else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+      DayltgRefPtRepSpc2Ref:SecSideDayltgRefPtCoord[3] else UNDEFINED
+    endif endif endif endif
+ENDRULE
+
+// ********** Daylight Illuminance Setpoint ***********************************
+// selects the illuminance set point assocaiated with the space level control which 
+//   was selected as the representative zone level control.
+RULE ThrmlZn:DayltgIllumSetpt1
+  DESCRIPTION
+    "Illuminance set point at the first reference position"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+    0 
+  MAXIMUM 
+    10000
+  DEFAULT
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNDEFINED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       DayltgRefPtRepSpc1Ref:SkylitDayltgAdjIllumSetpt else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       DayltgRefPtRepSpc1Ref:PriSideDayltgAdjIllumSetpt else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       DayltgRefPtRepSpc1Ref:SecSideDayltgAdjIllumSetpt else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr1 = 0 ) then UNDEFINED else
+    if( DayltgCtrl1Cat = "Skylit" ) then
+       DayltgRefPtRepSpc1Ref:SkylitDayltgAdjIllumSetpt else
+    if( DayltgCtrl1Cat = "PriSide" ) then
+       DayltgRefPtRepSpc1Ref:PriSideDayltgAdjIllumSetpt else
+    if( DayltgCtrl1Cat = "SecSide" ) then
+       DayltgRefPtRepSpc1Ref:SecSideDayltgAdjIllumSetpt else UNDEFINED
+    endif endif endif endif
+ENDRULE
+RULE ThrmlZn:DayltgIllumSetpt2
+  DESCRIPTION
+    "Illuminance set point at the second reference position"   
+  INPUTCLASS
+    Prescribed
+  REFERENCE 
+    ACM 5.4.5
+  MINIMUM 
+    0 
+  MAXIMUM 
+    10000
+  DEFAULT
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNDEFINED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+       DayltgRefPtRepSpc2Ref:SkylitDayltgAdjIllumSetpt else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+       DayltgRefPtRepSpc2Ref:PriSideDayltgAdjIllumSetpt else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+       DayltgRefPtRepSpc2Ref:SecSideDayltgAdjIllumSetpt else UNDEFINED
+    endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( DayltgCtrlLtgPwr2 = 0 ) then UNDEFINED else
+    if( DayltgCtrl2Cat = "Skylit" ) then
+       DayltgRefPtRepSpc2Ref:SkylitDayltgAdjIllumSetpt else
+    if( DayltgCtrl2Cat = "PriSide" ) then
+       DayltgRefPtRepSpc2Ref:PriSideDayltgAdjIllumSetpt else
+    if( DayltgCtrl2Cat = "SecSide" ) then
+       DayltgRefPtRepSpc2Ref:SecSideDayltgAdjIllumSetpt else UNDEFINED
+    endif endif endif endif
+ENDRULE
+  
+// ********** Daylighting Control Type ****************************************
+// selects the daylighting control type and parameters associated with the space 
+//   having the most controlled watts
+
+RULE NEW  ThrmlZn:DayltgCtrlRepSpcRef
+  DESCRIPTION
+    "The space from which daylighting control properties for reference point 1 is selected"   
+  REFERENCE 
+    ACM 5.4.7 - Reference Point for Illuminance Calcualtions
+  DATATYPE
+    Spc
+  LONGFORM
+    DaylightingControlRepresentativeSpaceReference
+  INPUTCLASS
+    NotInput
+  DEFAULT
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:DayltgCtrlLtgPwr )
+  SIZING
+      UNDEFINED
+  ANNUAL
+      MaxRevRefComp( Spc:ThrmlZnRef, Spc:DayltgCtrlLtgPwr )
+
+ENDRULE
+RULE ThrmlZn:DayltgCtrlType
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+; defined in BEMEnums for backward Compatibility
+;  OPTION
+;    None
+;    Continuous
+;    ContinuousPlusOff
+;    SteppedSwitching
+;    SteppedDimming
+  DEFAULT
+    if( TotDayltgCtrlLtgPwr = 0 ) then UNDEFINED else
+    if ( LocalStatus( DayltgCtrlRepSpcRef:DayltgCtrlType ) > 0 )
+    then DayltgCtrlRepSpcRef:DayltgCtrlType
+    else UNDEFINED
+    endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( TotDayltgCtrlLtgPwr = 0 ) then UNDEFINED else
+    if ( LocalStatus( DayltgCtrlRepSpcRef:DayltgCtrlType ) > 0 )
+    then DayltgCtrlRepSpcRef:DayltgCtrlType
+    else UNDEFINED
+    endif endif
+ENDRULE
+RULE ThrmlZn:DayltgMinDimPwrFrac
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if ( LocalStatus( DayltgCtrlRepSpcRef:MinDimPwrFrac ) > 0 ) then
+      if ( TotDayltgCtrlLtgPwr = 0 )
+      then UNDEFINED 
+      else DayltgCtrlRepSpcRef:MinDimPwrFrac
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( TotDayltgCtrlLtgPwr = 0 ) then UNDEFINED else
+    if ( LocalStatus( DayltgCtrlRepSpcRef:MinDimPwrFrac ) > 0 )
+    then DayltgCtrlRepSpcRef:MinDimPwrFrac
+    else  UNDEFINED
+    endif endif
+ENDRULE
+RULE ThrmlZn:DayltgMinDimLtgFrac
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if ( LocalStatus( DayltgCtrlRepSpcRef:MinDimLtgFrac ) > 0 ) then
+      if ( TotDayltgCtrlLtgPwr = 0 )
+      then UNDEFINED 
+      else DayltgCtrlRepSpcRef:MinDimLtgFrac
+      endif
+    else  UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( TotDayltgCtrlLtgPwr = 0 ) then UNDEFINED else
+    if ( LocalStatus( DayltgCtrlRepSpcRef:MinDimLtgFrac ) > 0 )
+    then DayltgCtrlRepSpcRef:MinDimLtgFrac
+    else  UNDEFINED
+    endif endif
+ENDRULE
+RULE ThrmlZn:DayltgNumOfCtrlSteps
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if ( LocalStatus( DayltgCtrlRepSpcRef:NumOfCtrlSteps ) > 0 ) then
+      if ( TotDayltgCtrlLtgPwr = 0 )
+      then UNDEFINED 
+      else DayltgCtrlRepSpcRef:NumOfCtrlSteps
+      endif
+    else  UNDEFINED
+    endif 
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( TotDayltgCtrlLtgPwr = 0 ) then UNDEFINED else
+    if ( LocalStatus( DayltgCtrlRepSpcRef:NumOfCtrlSteps ) > 0 )
+    then DayltgCtrlRepSpcRef:NumOfCtrlSteps
+    else UNDEFINED
+    endif endif
+ENDRULE
+

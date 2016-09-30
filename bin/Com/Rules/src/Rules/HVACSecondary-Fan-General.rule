@@ -1,0 +1,1119 @@
+// HVAC Secondary Systems - Fans - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+
+
+// Echo system count for reference in UI and capacity/efficiency adjustment rules
+RULE Fan:SysCnt
+  DESCRIPTION
+    "Echo of Air/System:Count, or if the Coil parent is a TerminalUnit, the 
+     SystemCount is TerminalUnit:SystemCount * TerminalUnit:Count."
+  HELP
+    "The number of duplicate systems can only be > 1 when all attributes of 
+     the system are the same.  If Count is specified to be > 1, all parameters
+     (capacities, power, etc) should be specified for the single piece of equipment.
+     The ruleset will apply multipliers for the final simulation."
+  INPUTCLASS 
+    NotInput 
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ParentComponentType() = "AirSeg" )
+    then // AirSystem
+      AirSys:Cnt
+    else if( ParentComponentType() = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:Cnt
+    else if( ParentComponentType() = "TrmlUnit" )
+    then // TerminalUnit
+      TrmlUnit:SysCnt
+    else 0
+    endif endif endif
+  SIZING
+    if( ParentComponentType() = "AirSeg" )
+    then // AirSystem
+      AirSys:Cnt
+    else if( ParentComponentType() = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:Cnt
+    else if( ParentComponentType() = "TrmlUnit" )
+    then // TerminalUnit
+      TrmlUnit:SysCnt
+    else 0
+    endif endif endif
+  ANNUAL
+    z:SysCnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// SystemType set to property of local component, for screens, rules etc
+RULE NEW CoilHtg:SysType
+  DATATYPE
+    Enumeration
+  LONGFORM
+    SystemType
+  DESCRIPTION
+    "Type of Parent; used for system type specific rules and conditional enums."
+  INPUTCLASS 
+    NotInput 
+  OPTION
+    PVAV
+    VAV
+    SZAC
+    SZHP
+    SZVAVAC
+    SZVAVHP
+    HV
+    FPFC
+    WSHP
+    PTAC
+    PTHP
+    Baseboard
+    Exhaust
+    NA
+  DEFAULT
+    if( ParentComp = "AirSys" )
+    then AirSys:Type
+    else if( ParentComp = "ZnSys" )
+    then ZnSys:Type
+    else "NA"
+    endif endif
+  SIZING
+    if( ParentComp = "AirSys" )
+    then AirSys:Type
+    else if( ParentComp = "ZnSys" )
+    then ZnSys:Type
+    else "NA"
+    endif endif
+ENDRULE
+
+
+// ********** Status ***********************************************************
+RULE Fan:Status
+  DESCRIPTION
+    "The status of the system or component, used for additions and alterations."
+  INPUTCLASS 
+    NotInput
+; OPTION
+;   * Defined in BEMEnums, shown here for reference. Default is 'New' 
+;   New
+;   Existing 
+  DEFAULT
+// Status defined from top-down. If parent system is altered, child objects
+// are defaulted to Existing
+    if( Parent( IsNew ) ) then "New" else "Existing" endif
+// SIZING and ANNUAL rules not used; status of any new objects created by rules 
+// is defined by BEMEnums default
+ENDRULE
+
+RULE NEW Fan:IsNew
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then 1 else 0 endif
+  SIZING : T24N
+    if( Status = "New" ) then 1 else 0 endif
+  SIZING : S901G ECBC
+    if( Status = "New" .AND. Parent( IsNew ) = 1 ) then 1 else 0 endif
+  ANNUAL
+    z:IsNew    
+ENDRULE
+
+RULE NEW Fan:IsExisting
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsNew ) then 0 else 1 endif
+  SIZING
+    if( IsNew ) then 0 else 1 endif
+  ANNUAL
+    z:IsExisting
+ENDRULE
+
+
+// ********** Classification and Centrifugal Type ******************************
+RULE Fan:Class
+  DESCRIPTION
+    "The classification of the fan design."  
+  REFERENCE 
+    NACM Section 5.7.3.2    
+  INPUTCLASS
+    Default
+  OPTION
+    Centrifugal
+    Axial
+  DEFAULT
+    "Centrifugal"
+  SIZING
+    if( BaseSysNum > 0 )
+    then "Centrifugal"
+    else u:Class 
+    endif
+  ANNUAL
+    z:Class
+ENDRULE
+
+RULE Fan:CentType
+  DESCRIPTION
+    "The type of blade type used in a centrifugal fan."  
+  REFERENCE 
+    NACM Section 5.7.3.2    
+  INPUTCLASS
+    Default
+  OPTION
+    AirFoil
+    BackwardInclined
+    ForwardCurved
+  DEFAULT
+    if( Class = "Centrifugal" )
+    then "AirFoil"
+    else UNDEFINED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then "AirFoil"
+    else u:CentType
+    endif
+  ANNUAL
+    z:CentType
+ENDRULE
+
+
+// ********** Supply Fan Sizing Ratio ******************************************
+RULE NEW Fan:SizingRat
+  DATATYPE
+    Float
+  LONGFORM
+    SizingRatio
+  DESCRIPTION
+    "Multiplier used to adjust the fan capacity"
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    Prescribed        
+  COMMONMINIMUM
+    1.0
+  COMMONMAXIMUM
+    1.25
+  SIZING 
+    1.0
+  ANNUAL : T24N
+    if( BaseSysNum = 1 .OR. 
+        BaseSysNum = 3 .OR.
+        BaseSysNum = 5 .OR.
+        BaseSysNum = 7 .OR. 
+        BaseSysNum = 12 .OR.
+        BaseSysNum = 13  )
+    then
+    // Cooling sizing ratio applied to system fan flow of DX systems to ensure 
+    // total system air flow is consistent with oversized cooling capacity   
+      Proj:ClgSizingRat
+    else 1.0
+    endif
+  ANNUAL : S901G ECBC
+    if( BaseSysNum <= 6 )
+    then
+    // Cooling sizing ratio applied to system fan flow of DX systems to ensure 
+    // total system air flow is consistent with oversized cooling capacity   
+      Proj:ClgSizingRat
+    else 1.0
+    endif
+ENDRULE
+
+
+// ********** Supply Fan Design Air Rated Capacity *****************************
+// Intermediate calculation of maximum system air flow capacity
+// =========================== AirSystem =======================================
+RULE NEW AirSys:TotTrmlPriAirFlowMaxSim
+  DATATYPE
+    Float
+  LONGFORM
+    TotalTerminalPrimaryAirFlowMaximumSimulated
+  DESCRIPTION
+    "The total maximum primary air flow of all terminal units connected to the AirSystem."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    cfm
+  DEFAULT
+    SumChildren( TrmlUnit:PriAirFlowMaxSim )  
+  SIZING
+    UNDEFINED
+  ANNUAL
+    SumChildren( TrmlUnit:PriAirFlowMaxSim )  
+ENDRULE
+// Intermediate calculation of minimum system air flow (AirSys only)
+RULE NEW AirSys:TotTrmlPriAirFlowMinSim
+  DATATYPE
+    Float
+  LONGFORM
+    TotalTerminalPrimaryAirFlowMinimumSimulated
+  DESCRIPTION
+    "The total minimum primary air flow of all terminal units connected to the AirSystem."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    cfm
+  DEFAULT
+    SumChildren( TrmlUnit:PriAirFlowMinSim )   
+  SIZING
+    UNDEFINED 
+  ANNUAL
+    SumChildren( TrmlUnit:PriAirFlowMinSim )  
+ENDRULE
+// Fan capacities
+RULE AirSys:AirSeg:Fan:FlowCap
+  DESCRIPTION
+    "The maximum air flow rate of an AirSystem fan at design conditions."  
+  HELP
+    "This building descriptor sets the 100% point for the fan part-load curve.  
+     This input should be at least as great as the sum of the design air flow 
+     specified for each of the thermal zones that are served by the fan system.
+     For multiple deck systems, a separate entry should be made for each deck."
+  REFERENCE 
+    NACM Section 5.7.3.2    
+  INPUTCLASS
+    Required
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT : T24N
+    if( AirSys:IsExhSys )
+    then ValidOr( AirSys:TotZnExhFlowSim, 0 ) / SysCnt
+    else
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( AirSeg:Type = "Supply" .OR. AirSeg:Type = "DualDuctSplitter" )
+      then
+        if( Proj:ModelName != "" )
+        then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+        else
+        if( AirSys:IsSglZnSys .AND. 
+            CtrlMthd = "ConstantVolume" .AND.
+            ValidOr( AirSys:NumTrmlUnitAllTypes, 0 ) / SysCnt = 1 .AND.
+            Proj:IsStdModel = 0 )
+        then // Is SZ system with only 1 TrmlUnit, use supply Fan:FlowCap
+          AirSys:AirFlowPerSqFt * AirSys:TotCondFlrArea
+        else 
+          Max( AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, AirSys:SysVentFlow )
+        endif endif
+      else if( AirSeg:Type = "Return" .OR. AirSeg:Type = "Relief" )
+      then
+        if( Proj:ModelName != "" )
+        then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+        else
+          Max( ValidOr( AirSys:DsgnReliefFlow, 0 ) - 
+              ( AirSys:TotCondFlrArea * 0.05 ), 0 )
+        endif
+      else 0
+      endif endif
+    else // Standard default rules
+    if( AirSeg:Type = "Supply" .AND.
+        AirSys:IsSglZnSys .AND.  
+        CtrlMthd = "ConstantVolume" .AND.
+        ValidOr( AirSys:NumTrmlUnitAllTypes, 0 ) / SysCnt = 1 )
+    then // Is SZ system with one terminal unit
+      Max( AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, AirSys:SysVentFlow )
+    else 0
+    endif endif endif
+  DEFAULT : S901G ECBC
+    if( AirSys:IsExhSys )
+    then ValidOr( AirSys:TotZnExhFlowSim, 0 ) / SysCnt
+    else
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( AirSeg:Type = "Supply" .OR. AirSeg:Type = "DualDuctSplitter" )
+      then
+        if( Proj:ModelName != "" )
+        then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+        else
+        if( AirSys:IsSglZnSys .AND. 
+            CtrlMthd = "ConstantVolume" .AND.
+            ValidOr( AirSys:NumTrmlUnitAllTypes, 0 ) / SysCnt = 1 )
+        then // Is SZ system with only 1 TrmlUnit, use supply Fan:FlowCap
+          AirSys:AirFlowPerSqFt * AirSys:TotCondFlrArea
+        else 
+          Max( AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, AirSys:SysVentFlow )
+        endif endif
+      else if( AirSeg:Type = "Return" .OR. AirSeg:Type = "Relief" )
+      then
+        if( Proj:ModelName != "" )
+        then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+        else ValidOr( AirSys:DsgnRetFlow, 0 )
+        endif
+      else 0
+      endif endif
+    else // Standard default rules
+    if( AirSeg:Type = "Supply" .AND.
+        AirSys:IsSglZnSys .AND.  
+        CtrlMthd = "ConstantVolume" .AND.
+        ValidOr( AirSys:NumTrmlUnitAllTypes, 0 ) / SysCnt = 1 )
+    then // Is SZ system with one terminal unit
+      Max( AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, AirSys:SysVentFlow )
+    else 0
+    endif endif endif
+  CHECKSIM
+    if( AirSys:IsExhSys = 0 .AND.
+        AirSeg:Type = "Supply" .AND. 
+        LocalStatus( FlowCap ) > 0 .AND.
+        Proj:HVACAutoSizing = 0 .AND. 
+        SysCnt > 0 )
+    then
+      if( AirSys:IsSglZnSys .AND. 
+          AirSys:TotTrmlPriAirFlowMaxSim / SysCnt * 0.97 > FlowCap ) 
+      then // Sum of TerminalUnit:PrimaryAirFlow is GT supply fan flow
+        PostWarning("Total maximum primary air flow of terminal units served by
+                     AirSystem '%s' is %0.f, which is greater than the supply fan flow
+                     capacity, %0.1f.", 
+                     AirSys:Name, AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, FlowCap ) 
+      else
+      if( AirSys:IsSglZnSys .AND. 
+          AirSys:TotTrmlPriAirFlowMaxSim / SysCnt * 1.03 < FlowCap ) 
+      then // Sum of TerminalUnit:PrimaryAirFlow is LT supply fan flow
+        PostWarning("Total maximum primary air flow of terminal units served by
+                     AirSystem '%s' is %0.f, which is less than the supply fan flow
+                     capacity, %0.1f.", 
+                     AirSys:Name, AirSys:TotTrmlPriAirFlowMaxSim / SysCnt, FlowCap ) 
+      else
+      if( AirSys:TotTrmlPriAirFlowMaxSim / SysCnt * 1.3 < FlowCap .OR.
+          AirSys:TotTrmlPriAirFlowMaxSim / SysCnt * 0.7 > FlowCap ) 
+      then // Sum of TerminalUnit:PrimaryAirFlow is LT supply fan flow
+        PostWarning("Total maximum primary air flow of AirSystem '%s' terminal
+                     units differs by more than 30% from the supply fan capacity.", 
+                     AirSys:Name ) 
+      else UNCHANGED
+      endif endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:FlowCap
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 .AND. SysCnt > 0 )
+    then
+      if( AirSys:IsMultiZnSys = 1 )
+      then // Use E+ fan sizing
+        ValidOr( z:FlowCapSim, 0 ) / SysCnt * SizingRat
+      else // No sizing ratio since it is applied at TrmlUnit:PriAirFlowMax
+        ValidOr( AirSys:TotTrmlPriAirFlowMaxSim, 0 ) / SysCnt
+      endif
+    else ValidOr( z:FlowCap, 0 )
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:Fan:FlowCap
+  DEFAULT
+    if( ZnSys:IsExhSys )
+    then ValidOr( ZnSys:TotZnExhFlowSim, 0 ) / SysCnt
+    else if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else ZnSys:TotCondFlrArea * ZnSys:AirFlowPerSqFt / SysCnt
+      endif
+    else 0
+    endif endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:FlowCap
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( SysCnt > 0 )
+      then 
+        ValidOr( z:FlowCapSim, 0 ) / SysCnt * SizingRat
+      else 0
+      endif
+    else ValidOr( z:FlowCap, 0 )   
+    endif
+ENDRULE
+
+
+// ********** Fan Control Method *********************************************** 
+// =========================== AirSystem =======================================  
+RULE AirSys:AirSeg:Fan:CtrlMthd
+  DESCRIPTION
+    "The method used to control fan flow"  
+  REFERENCE 
+    NACM Section 5.7.3.2     
+  INPUTCLASS
+    Required
+;  OPTION - Defined in BEMEnums, for reference
+;    ConstantVolume
+;    VariableSpeedDrive
+;    Dampers
+;    InletVanes
+;    VariablePitch
+;    TwoSpeed (Only supported for FPFC systems)
+  DEFAULT
+    switch( AirSys:Type )
+      case "PVAV"    : "VariableSpeedDrive"
+      case "VAV"     : "VariableSpeedDrive"
+      case "SZVAVAC" : "VariableSpeedDrive"
+      case "SZVAVHP" : "VariableSpeedDrive"
+      default        : "ConstantVolume"
+    endswitch
+  CHECKSIM
+    if( CtrlMthd = "TwoSpeed" )
+    then
+      PostWarning("TwoSpeed control is only supported for ZoneSystem:Type = FPFC.
+                   Proposed control method for fan '%s' will be reset to
+                   'ConstantVolume'.", Name)
+    else if( ( AirSys:Type = "SZVAVAC" .OR. AirSys:Type = "SZVAVAC" ) .AND. 
+             CtrlMthd != "VariableSpeedDrive" )
+    then
+      PostError("AirSystem '%s' is Type = '%s', but the ControlMethod for Fan
+                 '%s' is not 'VariableSpeedDrive'. Revise these inputs for
+                 consistency.", 
+                 AirSystem:Name, AirSys:Type, Name )
+    else if( ( AirSys:Type = "SZAC" .OR. AirSys:Type = "SZHP" ) .AND. 
+             Parent ( Type ) != "Relief" .AND.
+             CtrlMthd != "ConstantVolume" )
+    then
+      PostError("AirSystem '%s' is Type = '%s', but the ControlMethod for Fan
+                 '%s' is not 'ConstantVolume'. Revise these inputs for
+                 consistency. To model a variable volume single-zone system, use
+                 Type = 'SZVAVAC' or 'SZVAVHP'.", 
+                 AirSystem:Name, AirSys:Type, Name )
+    else if( AirSys:IsExhSys .AND. AirSys:ExhSysType = "ParkingGarage" .AND.
+             AirSys:ExhCtrlMthd = "COControl" .AND. CtrlMthd != "VariableSpeedDrive" )
+    then
+      PostError("AirSystem '%s' is a parking garage ventilation/exhaust system with
+                 'COControl', but the ControlMethod for Fan '%s' is not
+                 'VariableSpeedDrive'. Revise these inputs for consistency.", 
+                 AirSystem:Name, Name )
+    else if( AirSys:IsExhSys = 0 .AND. AirSys:IsVAVSys = 1 .AND. 
+             CtrlMthd = "ConstantVolume" )
+    then
+      PostWarning("AirSystem '%s' is Type = '%s', but the ControlMethod for Fan
+                  '%s' is 'ConstantVolume'.", 
+                  AirSystem:Name, AirSys:Type, Name)
+    else if( AirSys:IsExhSys .AND. AirSys:ExhCtrlMthd = "VariableFlowVariableSpeedFan"
+             .AND. CtrlMthd != "VariableSpeedDrive" )
+    then
+      PostWarning("AirSystem '%s' is Type = 'Exhaust' with ControlMethod =
+                  'VariableFlowVariableSpeedFan', but ControlMethod for Fan '%s'
+                  not 'VariableSpeedDrive'.", 
+                  AirSystem:Name, Name)
+    else if( AirSys:IsVAVSys = 0 .AND. AirSys:IsExhSys = 0 .AND.
+             CtrlMthd != "ConstantVolume" .AND. Parent( Type ) = "Supply" )
+    then
+      PostWarning("AirSystem '%s' is Type = '%s', but the ControlMethod for Fan
+                  '%s' is not 'ConstantVolume'.", 
+                  AirSystem:Name, AirSys:Type, Name)
+    else UNCHANGED
+    endif endif endif endif endif
+    endif endif
+  SIZING_PROPOSED
+    if( BaseSysNum > 0 )
+    then UNCHANGED
+    else if( CtrlMthd = "TwoSpeed" )
+    then "ConstantVolume"
+    else u:CtrlMthd  
+    endif endif
+; SIZING_BASELINE
+// Baseline definitions defined by Library_HVAC.txt file.
+  ANNUAL
+    z:CtrlMthd 
+ENDRULE
+// =========================== ZnSystem ========================================
+RULE ZnSys:Fan:CtrlMthd
+  DEFAULT
+    "ConstantVolume"
+  CHECKSIM
+    if( ZnSys:IsExhSys )
+    then UNCHANGED
+    else if( ZnSys:Type != "FPFC" .AND. CtrlMthd != "ConstantVolume" )
+      then
+      PostWarning("The fan control method for fan '%s' is '%s', which is not supported
+                   for ZnSys:Type = '%s'. The control method will be reset to
+                   'ConstantVolume'.", Name, ZnSys:Type)    
+    else if( ZnSys:Type = "FPFC" .AND.
+             ( ZnSys:FanCtrl = "Continuous" .AND. CtrlMthd != "ConstantVolume") )
+    then
+      PostWarning("FPFC system '%s' cannot be operated as 'Continuous'
+                   unless the fan control method is 'ConstantVolume'. The 
+                   control method will be reset to 'ConstantVolume'.", 
+                   ZnSys:Name, Name) 
+    else UNCHANGED
+    endif endif endif
+  SIZING_PROPOSED
+    if( BaseSysNum > 0 )
+    then UNCHANGED
+    else if( ZnSys:FanCtrl = "Cycling" )
+    then
+      if( ZnSys:Type = "FPFC" .AND. CtrlMthd = "TwoSpeed" )
+      then "TwoSpeed"
+      else if( ZnSys:Type = "FPFC" .AND. CtrlMthd = "VariableSpeedDrive" )
+      then "VariableSpeedDrive"    
+      else "ConstantVolume"
+      endif endif
+    else "ConstantVolume"
+    endif endif
+; SIZING_BASELINE
+// Baseline definitions defined by Library_HVAC.txt file.
+  ANNUAL
+    z:CtrlMthd 
+ENDRULE
+
+// ==================== Fan Control Method Report ====================
+RULE Fan:CtrlMthdRpt
+  RULESETS
+    T24N
+  INPUTCLASS
+    NotInput
+  OPTION
+    Constant Volume
+    Variable Speed Drive
+    Dampers
+    Inlet Vanes
+    Variable Pitch Blades
+    Two Speed
+  ANNUAL_PROPOSED
+    if( CtrlMthd = "ConstantVolume" )
+    then "Constant Volume"
+    else
+    if( CtrlMthd = "VariableSpeedDrive" )
+    then "Variable Speed Drive"
+    else
+    if( CtrlMthd = "Dampers" )
+    then "Dampers"
+    else
+    if( CtrlMthd = "InletVanes" )
+    then "Inlet Vanes"
+    else
+    if( CtrlMthd = "VariablePitchBlades" )
+    then "Variable Pitch Blades"
+    else
+    if( CtrlMthd = "TwoSpeed" )
+    then "Two Speed"
+    else UNDEFINED
+    endif endif endif endif endif endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// ********** Fan Flow Minimum *************************************************   
+// =========================== AirSystem ========================================
+RULE AirSys:AirSeg:Fan:FlowMin
+  DESCRIPTION
+    "The minimum air flow rate of the fan."  
+  HELP
+    "Applicable only when Control Method is not 'ConstantVolume'. The minimum fan
+     volume is typically the set to be equal to or greater than the design
+     ventilation air flow rate."
+  REFERENCE 
+    NACM Section 5.7.3.2    
+  INPUTCLASS
+    CondRequired
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( CtrlMthd = "ConstantVolume" )
+    then // FlowMin not used for ConstantVolume fans
+      UNDEFINED
+    else if( AirSys:IsExhSys )
+    then // 20% min flow for variable flow exhaust systems
+      ValidOr( AirSys:TotZnExhFlowSim, 0 ) / SysCnt * 0.2
+    else 
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( AirSeg:Type = "Supply" .OR. AirSeg:Type = "DualDuctSplitter" )
+      then // Sum up TrmlUnit min flows
+        Min( AirSys:TotTrmlPriAirFlowMinSim / SysCnt, ValidOr( FlowCap, 0 ) )
+      else if( AirSeg:Type = "Return" .OR. AirSeg:Type = "Relief" )
+      then // No minimum for return/relief fans
+        0
+      else UNDEFINED
+      endif endif
+    else 0
+    endif endif endif
+  CHECKSIM
+    if( AirSeg:Type = "Supply" .AND. CtrlMthd != "ConstantVolume" )
+    then
+      if( LocalStatus( FlowMin ) > 0 .AND. 
+          IfValidAnd( ( AirSys:TotTrmlPriAirFlowMinSim / SysCnt * 0.99 ) > FlowMin ) .AND.
+          ( AirSys:Type != "SZVAVAC" .AND. AirSys:Type != "SZVAVHP" ) )
+      then // Sum of TerminalUnit:PrimaryAirFlow is greater than supply fan flow
+        PostWarning("Total min. primary air flow of terminal units served by
+                     Fan '%s' is %.1f, which is greater than the fan min. flow, %.1f", 
+                     Name, AirSys:TotTrmlPriAirFlowMinSim / SysCnt, FlowMin)
+      else
+      if( ValidOr( FlowMin, 0 ) > ValidOr( FlowCap, 0 ) * 1.1 ) 
+      then // FlowMin is greater than supply fan FlowCap
+        PostWarning("Total min. flow of Fan '%s' is greater than the fan min. flow.
+                     The min. fan flow will be reset to equal the fan capacity.", 
+                     Name) 
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( ( BaseSysNum > 0 ) .OR. CtrlMthd = "ConstantVolume" )
+    then UNDEFINED
+    else Min( ValidOr( u:FlowMin, FlowCap ), FlowCap )
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( CtrlMthd != "ConstantVolume" .AND. SysCnt > 0 )
+      then AirSys:TotTrmlPriAirFlowMinSim / SysCnt
+      else UNDEFINED
+      endif
+    else z:FlowMin
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:Fan:FlowMin
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ZnSys:Type = "FPFC" )
+    then
+      if( CtrlMthd = "TwoSpeed" )
+      then FlowCap * 0.5
+      else if( CtrlMthd = "VariableSpeedDrive" )
+      then FlowCap * 0.3
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else 
+    if( CtrlMthd = "TwoSpeed" .OR.
+        CtrlMthd = "VariableSpeedDrive")
+    then u:FlowMin
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else z:FlowMin
+    endif
+ENDRULE
+
+RULE Fan:FlowMinFrac
+  DESCRIPTION
+    "The fraction calculated by dividing the fan minimum air flow rate by the
+     design (maximum) air flow."
+  INPUTCLASS 
+    NotInput
+  ANNUAL 
+    if( IfValidAnd( FlowMin > 0 ) .AND.
+        IfValidAnd( FlowCap > 0 ) )
+    then FlowMin / FlowCap
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// ********** Fan Position *****************************************************
+// For reference only, fan position is specified at the AirSys or ZnSys object.
+RULE Fan:Pos
+  DESCRIPTION
+    "The position of the supply fan relative to the cooling coil."
+  HELP
+    "Shown here only for reference; the location of the fan with respect to
+     the cooling and/or heating coil is defined at the system level."  
+  REFERENCE 
+    NACM Section 5.7.3.2
+  INPUTCLASS
+    NotInput
+  OPTION
+    DrawThrough
+    BlowThrough  
+  DEFAULT
+    if( ParentComponentType() = "ZnSys" )
+    then ZnSys:FanPos
+    else if( ParentComponentType() = "AirSeg" )
+    then AirSys:FanPos
+    else if( ParentComponentType() = "TrmlUnit" )
+    then "DrawThrough"
+    else UNDEFINED
+    endif endif endif
+  SIZING
+    if( ParentComponentType() = "ZnSys" )
+    then ZnSys:FanPos
+    else if( ParentComponentType() = "AirSeg" )
+    then AirSys:FanPos
+    else if( ParentComponentType() = "TrmlUnit" )
+    then "DrawThrough"
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:Pos
+ENDRULE
+
+
+// ********** Motor Type *******************************************************
+RULE Fan:MtrType
+  DESCRIPTION
+    "The type of enclosure used for the fan motor"
+  INPUTCLASS
+    Default
+  OPTION
+    Open
+    Enclosed
+  DEFAULT : T24N
+    "Open"
+  DEFAULT : S901G ECBC
+    "Enclosed"
+  SIZING : T24N
+    if( BaseSysNum > 0 )
+    then "Open"
+    else u:MtrType
+    endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then "Enclosed"
+    else u:MtrType
+    endif
+  ANNUAL
+    z:MtrType
+ENDRULE
+
+
+// ********** Motor Poles ******************************************************
+RULE Fan:MtrPoleCnt
+  DESCRIPTION
+    "The number of poles in the fan motor"
+  INPUTCLASS
+    Default
+  REPORTPRECISION
+    0
+  DEFAULT
+    4
+  SIZING
+    if( BaseSysNum > 0 )
+    then 4
+    else u:MtrPoleCnt
+    endif
+  ANNUAL
+    z:MtrPoleCnt
+ENDRULE
+
+
+// ********** Simulated Capacities / Efficiency ********************************
+RULE Fan:FlowCapSim
+  DESCRIPTION
+    "The maximum air flow rate of the fan at design conditions, for simulation."    
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IfValidAnd( FlowCap >= 0 ) )
+    then FlowCap * SysCnt
+    else 0
+    endif
+  SIZING
+    // Source for Autosize data:
+    // E+ Report: Equipment Summary -> Fans -> Max Air Flow Rate
+    // This value reflects multipliers of zone loads, so SDD reported value is 
+    // divided by Fan:SysCnt. 
+  ANNUAL
+    if( IfValidAnd( FlowCap >= 0 ) )
+    then FlowCap * SysCnt
+    else 0
+    endif
+ENDRULE
+RULE Fan:FlowMinSim
+  DESCRIPTION
+    "The minimum air flow rate of the fan, for simulation."     
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( CtrlMthd != "ConstantVolume" .AND. IfValidAnd( FlowMin >= 0 ) )
+    then FlowMin * SysCnt
+    else 0
+    endif  
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( CtrlMthd != "ConstantVolume" .AND. IfValidAnd( FlowMin >= 0 ) )
+    then FlowMin * SysCnt
+    else UNDEFINED
+    endif  
+ENDRULE
+
+
+// =========================== AirSystem =======================================
+RULE NEW AirSeg:FanFlowCap
+  DATATYPE
+    Float
+  LONGFORM
+    FanFlowCapacity
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Fan:FlowCap )
+  ANNUAL
+    SumChildren( Fan:FlowCap )
+ENDRULE
+
+RULE NEW AirSeg:FanFlowMinCap
+  DATATYPE
+    Float
+  LONGFORM
+    FanFlowMinimumCapacity
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Fan:FlowMin )
+  ANNUAL
+    SumChildren( Fan:FlowMin )
+ENDRULE
+
+RULE AirSys:SupFanCap
+  DESCRIPTION
+    "The total supply fan capacity of the AirSystem"
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Supply" )
+  ANNUAL
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Supply" )
+ENDRULE
+
+RULE NEW AirSys:RetFanCap
+  DATATYPE
+    Float
+  LONGFORM
+    ReturnFanCapacity
+  DESCRIPTION
+    "The total return fan capacity of the AirSystem"
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Return" )
+  ANNUAL
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Return" )
+ENDRULE
+
+RULE NEW AirSys:ReliefFanCap
+  DATATYPE
+    Float
+  LONGFORM
+    ReliefFanCapacity
+  DESCRIPTION
+    "The total relief fan capacity of the AirSystem"
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Relief" )
+  ANNUAL
+    SumChildrenIf( AirSeg:FanFlowCap, AirSeg:Type = "Relief" )
+ENDRULE
+
+RULE NEW AirSys:SupFanFlowMin
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyFanFlowMinimum
+  DESCRIPTION
+    "The minimum supply fan flow rate the AirSystem."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT
+    SumChildrenIf( AirSeg:FanFlowMinCap, AirSeg:Type = "Supply" )
+  SIZING
+    SumChildrenIf( AirSeg:FanFlowMinCap, AirSeg:Type = "Supply" )
+  ANNUAL
+    SumChildrenIf( AirSeg:FanFlowMinCap, AirSeg:Type = "Supply" )
+ENDRULE
+
+RULE NEW AirSys:SupFanFlowMinRat
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyFanFlowMinimumRatio
+  DESCRIPTION
+    "The minimum supply fan flow ratio of the AirSystem.
+     Primary purpose is to define the VAVNoReheatBox min flow for SZVAV"
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT
+    if( IfValidAnd( SupFanCap > 0 ) )
+    then Min( SupFanFlowMin / SupFanCap, 1.0 )
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( SupFanCap > 0 ) )
+    then Min( SupFanFlowMin / SupFanCap, 1.0 )
+    else 0
+    endif
+  ANNUAL
+    if( IfValidAnd( SupFanCap > 0 ) )
+    then Min( SupFanFlowMin / SupFanCap, 1.0 )
+    else 0
+    endif
+ENDRULE
+
+RULE NEW AirSeg:IsCVSupFan
+  DATATYPE
+    Integer
+  LONGFORM
+    IsConstantVolumeSupplyFan
+  DESCRIPTION
+    "A flag that indicates if the supply fan of the system 'Constant Volume'"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Type = "Supply" .AND. 
+        SumChildrenIf( Fan:FlowCap, Fan:CtrlMthd = "ConstantVolume" ) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:SupFanCap
+  DESCRIPTION
+    "The total supply fan capacity of the ZoneSystem"
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    cfm
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IsExhSys = 0 )
+    then SumChildren( Fan:FlowCap )
+    else 0
+    endif
+  ANNUAL
+    if( IsExhSys = 0 )
+    then SumChildren( Fan:FlowCap )
+    else 0
+    endif
+ENDRULE
+
+
+// The following tables are referenced for both fan and pump rules
+// Standard (Std) motor size table
+TABLE StdElecMtrSize
+   InputMotorHP   MotorHPIndex   MotorHPValue   
+   <=0.083        1              0.083          
+   <=0.125        2              0.125         
+   <=0.250        3              0.25          
+   <=0.500        4              0.5           
+   <=0.75         5              0.75          
+   <=1.0          6              1              
+   <=1.5          7              1.5           
+   <=2.0          8              2              
+   <=3.0          9              3              
+   <=5.0          10             5               
+   <=7.5          11             7.5           
+   <=10.0         12             10             
+   <=15.0         13             15             
+   <=20.0         14             20             
+   <=25.0         15             25             
+   <=30.0         16             30             
+   <=40.0         17             40             
+   <=50.0         18             50             
+   <=60.0         19             60             
+   <=75.0         20             75             
+   <=100.0        21             100           
+   <=125.0        22             125           
+   <=150.0        23             150           
+   <=200.0        24             200            
+   >=200.0        25             200           
+ENDTABLE 
+
+// Standard (Std) motor size efficiency table
+TABLE StdElecMtrPerf
+   MotorHPIndex   MotorHPString    MotorEfficiency   MotorHPValue     
+   1              "1/12"           0.855             0.083            
+   2              "1/8"            0.855             0.125            
+   3              "1/4"            0.855             0.25             
+   4              "1/2"            0.855             0.5              
+   5              "3/4"            0.855             0.75             
+   6              "1.0"            0.855             1                
+   7              "1.5"            0.865             1.5              
+   8              "2"              0.865             2                
+   9              "3"              0.895             3                
+   10             "5"              0.895             5                
+   11             "7.5"            0.917             7.5              
+   12             "10"             0.917             10               
+   13             "15"             0.924             15               
+   14             "20"             0.930             20               
+   15             "25"             0.936             25               
+   16             "30"             0.936             30               
+   17             "40"             0.941             40               
+   18             "50"             0.945             50               
+   19             "60"             0.950             60               
+   20             "75"             0.954             75               
+   21             "100"            0.954             100              
+   22             "125"            0.954             125              
+   23             "150"            0.958             150              
+   24             "200"            0.962             200              
+   25             "200+"           0.962             200   
+ENDTABLE  
+
+

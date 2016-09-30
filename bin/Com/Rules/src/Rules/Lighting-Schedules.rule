@@ -1,0 +1,173 @@
+// Interior Lighting - Schedules
+//
+// -------------------------------------------------------------------------
+//  Copyright (c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// ********** Input Lighting Schedules ****************************************
+// ---------- Space Regulated Lighting Schedules ------------------------------
+RULE Spc:IntLtgRegSchRef
+  DESCRIPTION
+    "Reference to a unique Schedule Name of interior type for association with
+     an interior lighting system." // ACM or SDD Definition
+  HELP
+    "" // ACM Applicability and other guidance 
+  REFERENCE 
+    NACM-5.4.3  
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( RegLtgPwr ) = 0 .OR.
+        LocalStatus( FuncSchGrp ) = 0 ) 
+    then ; no lighting defined
+      UNDEFINED
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. 
+             LocalStatus( SpcFunc ) < 5 )
+    then ; use space function defaults
+      SpcFuncDefaultsRef:IntLtgRegSchRef
+    else ; Undefined - schedules will be assigned in proposed and baseline xform
+      UNDEFINED
+    endif endif 
+  SIZING : T24N
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( RegLtgPwr ) = 0 .OR.
+        LocalStatus( FuncSchGrp ) = 0 ) 
+    then ; no lighting defined
+      UNDEFINED
+    else ; look up default for FunSchGroup
+      RuleLibrary( Schedule, 
+      ( SpaceFunctionGroups:IntLtgRegSchRef( "FuncGroup",FuncSchGrp ) ) )
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( IntLPDRegSim ) = 0) 
+    then ; no lighting defined
+      UNDEFINED    
+    else if( LocalCompAssigned( u:IntLtgRegSchRef ) )
+    then ; maintain user defined schedule
+      u:IntLtgRegSchRef
+    else if( LocalStatus( FuncSchGrp ) <> 0 )
+    then   ; look up default for FunSchGroup
+      RuleLibrary( Schedule, 
+      ( SpaceFunctionGroups:IntLtgRegSchRef( "FuncGroup",FuncSchGrp ) ) )
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE : S901G ECBC
+    if ( LocalStatus( zp:IntLtgRegSchRef ) <= 0 )
+    then ; no proposed schedule defined
+      UNDEFINED    
+    else
+      zp:IntLtgRegSchRef
+    endif    
+  ANNUAL
+    z:IntLtgRegSchRef
+ENDRULE
+// ---------- Space Non Regulated Lighting Schedules --------------------------
+RULE Spc:IntLtgNonRegSchRef
+  DESCRIPTION
+    "Reference to a unique Schedule Name of interior type for association with
+     an interior lighting system." // ACM or SDD Definition
+  HELP
+    "" // ACM Applicability and other guidance 
+  REFERENCE 
+    NACM-5.4.3  
+  INPUTCLASS 
+    Default // User MAY provide input if they apply to the proposed design.
+  DEFAULT 
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( IntLPDNonRegSim ) = 0 .OR.
+        LocalStatus( FuncSchGrp ) = 0 ) 
+    then ; no lighting defined
+      UNDEFINED
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) )
+    then ; use space function defaults
+      SpcFuncDefaultsRef:IntLtgNonRegSchRef
+    else ; Undefined - schedules will be assigned in proposed and baseline xform
+      UNDEFINED
+    endif endif
+  SIZING : T24N
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( IntLPDNonRegSim ) = 0 .OR.
+        LocalStatus( FuncSchGrp ) = 0 ) 
+    then ; no lighting defined
+      UNDEFINED
+    else ; look up default for FunSchGroup
+      RuleLibrary( Schedule, 
+      ( SpaceFunctionGroups:IntLtgRegSchRef( "FuncGroup",FuncSchGrp ) ) )
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( Spc:HasNoInternalLds = 1 .OR.
+        LocalStatus( IntLPDNonRegSim ) = 0) 
+    then ; no lighting defined
+      UNDEFINED    
+    else if( LocalCompAssigned( u:IntLtgNonRegSchRef ) )
+    then ; maintain user defined schedule
+      u:IntLtgNonRegSchRef
+    else if( LocalStatus( FuncSchGrp ) <> 0 )
+    then   ; look up default for FunSchGroup
+      RuleLibrary( Schedule, 
+      ( SpaceFunctionGroups:IntLtgRegSchRef( "FuncGroup",FuncSchGrp ) ) )
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE : S901G ECBC
+    if ( LocalStatus( zp:IntLtgNonRegSchRef ) <= 0 )
+    then ; no proposed schedule defined
+      UNDEFINED    
+    else
+      zp:IntLtgNonRegSchRef
+    endif 
+  ANNUAL
+    z:IntLtgNonRegSchRef
+ENDRULE
+// ---------- Interior Lighting System ----------------------------------------
+RULE IntLtgSys:SchRef
+  DESCRIPTION
+    "Reference to a unique Schedule Name of interior type for association with
+     an interior lighting system." // ACM or SDD Definition
+  HELP
+    "This property is for UI Reference only" // ACM Applicability and other guidance 
+  REFERENCE 
+    NACM-5.4.3  
+  INPUTCLASS 
+    NotInput // Currently, this property is used for reference/display only.
+  DEFAULT 
+    if( Parent( Spc:HasNoInternalLds ) = 1 )
+    then UNDEFINED
+    else Parent( IntLtgRegSchRef )
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE

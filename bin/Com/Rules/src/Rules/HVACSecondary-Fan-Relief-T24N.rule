@@ -1,0 +1,243 @@
+// HVAC Secondary Systems - Fans - Relief
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+
+
+
+// Calculate relief air flow rate for baseline relief fans
+RULE NEW AirSys:DsgnReliefFlow
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    DesignReliefFlow
+  DESCRIPTION
+    "The amount of relief air flow required for the system to maintain neutral
+     pressure in zones, assuming 100% OA supply by the system at design conditions
+     (not including infiltration or other external flows)."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( SupFanCap > 0 ) .AND.
+        IsExhSys = 0 )
+    then SupFanCap - SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:ExhFlow )
+    else 0
+    endif
+  ANNUAL
+    if( SupFanCap > 0 .AND.
+        IsExhSys = 0 )
+    then SupFanCap - SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:ExhFlow )
+    else 0
+    endif
+ENDRULE
+// Set AirSeg Type
+RULE AirSys:AirSeg:Type
+  ANNUAL : T24N
+    if( BaseSysNum > 0 .AND. Type = "Return" )
+    then 
+      if( ( AirSys:BaseSysNum = 3 .OR. // SZAC
+            AirSys:BaseSysNum = 5 .OR. // PVAV       
+            AirSys:BaseSysNum = 6 .OR. // VAV    
+            AirSys:BaseSysNum = 7 .OR. // SZVAVAC 
+            AirSys:BaseSysNum = 13 ) .AND.  // KITCH
+          AirSys:HasAirEcono > 0 )
+      then "Relief"
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+// Create relief fan
+RULE NEW AirSys:AirSeg:BaseReliefFanRef
+  DATATYPE
+    Fan
+  LONGFORM
+    BaselineReliefFanReference
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then 
+      if( Type = "Relief" .AND. AirSys:HasAirEcono > 0 )
+      then RuleLibrary( Fan, "BaseRelief Fan", 1, Name )
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+// Re-evaluate BaseSysNum rule for new relief fan
+RULE NEW AirSys:AirSeg:Fan:BaseSysNum
+  ANNUAL
+    if( LocalStatus( BaseSysNum ) = 0 )
+    then AirSys:BaseSysNum
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:FlowCap
+  REPORTPRECISION
+    0
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then Max( AirSys:DsgnReliefFlow - ( AirSys:TotCondFlrArea * 0.05 ), 0 )
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:FlowMin
+  REPORTPRECISION
+    0
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then 0
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:FlowEff
+  REPORTPRECISION
+    2
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then
+      if( FlowCap < 10000 )
+      then 0.4
+      else 0.5
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:TotStaticPress
+  REPORTPRECISION
+    2
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then
+      if( FlowCap < 10000 )
+      then 0.75
+      else 1.0
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:MtrBHP
+  REPORTPRECISION
+    3
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then FlowCap * TotStaticPress * ( 0.1175 / 745.6 ) / FlowEff  
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:MtrHP
+  REPORTPRECISION
+    2
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then StdElecMtrSize:MotorHPValue("InputMotorHP", MtrBHP) 
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW AirSys:AirSeg:Fan:MtrPerfIdx
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", MtrHP)
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:MtrEff
+  REPORTPRECISION
+    2
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then StdElecMtrPerf:MotorEfficiency("MotorHPIndex", MtrPerfIdx) 
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:TotEff
+  REPORTPRECISION
+    2
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then FlowEff * MtrEff
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:MtrPos
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then "InAirStream"
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:Pwr_fPLRCrvRef
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then Rulelibrary(CrvCubic, "FanVSDPwrRatio_fCFMRatio")
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ********** Simulated Capacities / Efficiency ********************************
+RULE AirSys:AirSeg:Fan:FlowCapSim
+  REPORTPRECISION
+    0
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then FlowCap * AirSys:Cnt
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE AirSys:AirSeg:Fan:FlowMinSim
+  REPORTPRECISION
+    0
+  ANNUAL
+    if( BaseSysNum > 0 .AND. AirSeg:Type = "Relief" )
+    then FlowMin * AirSys:Cnt
+    else UNCHANGED
+    endif
+ENDRULE
+
+ 

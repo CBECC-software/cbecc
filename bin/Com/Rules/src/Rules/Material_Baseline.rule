@@ -1,0 +1,462 @@
+// Material_Baseline
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//
+
+// No direct correlation of ACM topics - just miscellaneous rules pertaining to
+// Material objects
+//
+// The main objects in the SDD are:
+//     Mat / Material
+//
+
+// -----------------------------------------------------------------------------
+// no different from rule in Material.rule
+//RULE Mat:CavityIns
+//  DESCRIPTION
+//    "Nominal R-value of composite layer cavity insulation."
+//  INPUTCLASS
+//    Optional
+//  DEFAULT
+//    0
+//  SIZING
+//    UNCHANGED
+//  ANNUAL
+//    UNCHANGED
+//ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Mat:CavityInsVal
+//  DATATYPE
+//    Float
+//  LONGFORM
+//    CavityInsulationValue
+//  UNITS
+//    °F-ft2-h/Btu
+//  DESCRIPTION
+//    "Insulation R-value of composite layer cavity"
+  SIZING
+    if( CodeCat != "Composite" ) then 0
+    else if( FrmMat = "Metal" ) then
+           if( CavityInsOpt = "R-0"  ) then 0
+      else if( CavityInsOpt = "R-5"  ) then 5
+      else if( CavityInsOpt = "R-11" ) then 11
+      else if( CavityInsOpt = "R-13" ) then 13
+      else if( CavityInsOpt = "R-15" ) then 15
+      else if( CavityInsOpt = "R-19" ) then 19
+      else if( CavityInsOpt = "R-21" ) then 21
+      else if( CavityInsOpt = "R-22" ) then 22
+      else if( CavityInsOpt = "R-25" ) then 25
+      else if( CavityInsOpt = "R-30" ) then 30
+      else if( CavityInsOpt = "R-38" ) then 38
+      else 0  
+      endif endif endif endif endif
+      endif endif endif endif endif endif
+    else if( FrmMat = "Wood" ) then
+      CavityIns
+    else 0
+    endif endif endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// SAC 11/20/15 - added series of rules from Material.rule to ensure this is set properly for SIZING runs
+// -----------------------------------------------------------------------------
+RULE NEW Mat:FrmDepthVal
+//  DATATYPE
+//    Float
+//  LONGFORM
+//    FramingDepthValue
+//  UNITS
+//    in
+//  DESCRIPTION
+//    "Depth (in inches) of composite layer cavity"
+//  INPUTCLASS
+//    NotInput
+  SIZING : S901G ECBC
+    if( CodeCat != "Composite" ) then  0
+    else if( LocalStatus(FrmDepth) < 1 ) then  0
+//    else if( FrmDepth = "0_5In"   ) then  0.5
+//    else if( FrmDepth = "0_75In"  ) then  0.75
+//    else if( FrmDepth = "1In"     ) then  1.0
+    else if( FrmDepth = "2x2"     ) then  1.5
+//    else if( FrmDepth = "2In"     ) then  2.0
+    else if( FrmDepth = "2x3"     ) then  2.5
+//    else if( FrmDepth = "3In"     ) then  3.0
+    else if( FrmDepth = "2x4"     ) then  3.5
+//    else if( FrmDepth = "4In"     ) then  4.0
+//    else if( FrmDepth = "4_5In"   ) then  4.5
+//    else if( FrmDepth = "5In"     ) then  5.0
+    else if( FrmDepth = "2x6"     ) then  5.5
+    else if( FrmDepth = "2x8"     ) then  7.25
+    else if( FrmDepth = "2x10"    ) then  9.25
+    else if( FrmDepth = "2x12"    ) then  11.25
+    else if( FrmDepth = "AllSizes"     ) then  16.00
+    else  0  
+    endif endif endif endif endif 
+    endif endif endif endif endif 
+//    endif endif endif endif endif 
+//    endif endif endif
+  SIZING
+    if( CodeCat != "Composite" ) then  0
+    else if( LocalStatus(FrmDepth) < 1 ) then  0
+    else if( FrmDepth = "0_5In"   ) then  0.5
+    else if( FrmDepth = "0_75In"  ) then  0.75
+    else if( FrmDepth = "1In"     ) then  1.0
+    else if( FrmDepth = "1_5In"   ) then  1.5
+    else if( FrmDepth = "2In"     ) then  2.0
+    else if( FrmDepth = "2_5In"   ) then  2.5
+    else if( FrmDepth = "3In"     ) then  3.0
+    else if( FrmDepth = "3_5In"   ) then  3.5
+    else if( FrmDepth = "4In"     ) then  4.0
+    else if( FrmDepth = "4_5In"   ) then  4.5
+    else if( FrmDepth = "5In"     ) then  5.0
+    else if( FrmDepth = "5_5In"   ) then  5.5
+    else if( FrmDepth = "7_25In"  ) then  7.25
+    else if( FrmDepth = "9_25In"  ) then  9.25
+    else if( FrmDepth = "11_25In" ) then  11.25
+    else  0  
+    endif endif endif endif endif 
+    endif endif endif endif endif 
+    endif endif endif endif endif 
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Mat:IsMetalRoof
+//  DATATYPE
+//    Float
+//  DESCRIPTION
+//    "Flag with value of 1 if metal roof layer, otherwise 0"
+//  INPUTCLASS
+//    NotInput
+  SIZING
+    if( CodeCat = "Composite" .AND. FrmMat = "Metal" .AND.
+        (FrmConfig = "RoofMetalScrewDown" .OR. 
+         FrmConfig = "RoofMetalStandingSeam" .OR. 
+         FrmConfig = "RoofMetalStandingSeamFilledCavity") ) 
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:FrmFacMembers
+//  DESCRIPTION
+//    "Framing factor (fraction) of framing members"
+//  INPUTCLASS
+//    Prescribed
+  SIZING : S901G ECBC
+    if( CodeCat != "Composite" ) then
+      UNDEFINED
+    else if( LocalStatus(FrmMat) < 1 .OR. LocalStatus(FrmConfig) < 1 ) then
+      UNDEFINED
+    else if( IsMetalRoof = 1 ) then
+      UNDEFINED
+    else if( FrmConfig = "Floor16in24in36in48inOC" .OR.
+             FrmConfig = "Roof16in24in36in48inOC" ) then
+      UNDEFINED
+    else FramingFactors:FrmFactor("FrmMat",FrmMat,"FrmConfig",FrmConfig)
+    endif endif endif endif
+  SIZING
+    if( CodeCat != "Composite" ) then
+      UNDEFINED
+    else if( LocalStatus(FrmMat) < 1 .OR. LocalStatus(FrmConfig) < 1 ) then
+      UNDEFINED
+    else if( IsMetalRoof = 1 ) then
+      UNDEFINED
+    else FramingFactors:FrmFactor("FrmMat",FrmMat,"FrmConfig",FrmConfig)
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:FrmFacHeaders
+//  DESCRIPTION
+//    "Framing factor (fraction) of framing headers  (NOT CURRENTLY REFERENCED)"
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    0.0
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:FrmFacCav
+//  DESCRIPTION
+//    "Fraction of cavity in composite layer"
+//  INPUTCLASS
+//    Prescribed
+//  DEFAULT
+  SIZING
+    if( LocalStatus(FrmFacMembers) < 1 .OR. LocalStatus(FrmFacHeaders) < 1 )  then
+      UNDEFINED
+    else if( (FrmFacMembers + FrmFacHeaders) > 1 ) then
+      0.0
+    else 1.0 - FrmFacMembers - FrmFacHeaders
+    endif endif
+ENDRULE
+// SAC 11/20/15 - END OF - added series of rules from Material.rule to ensure this is set properly for SIZING runs
+// -----------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Mat:SimpleWallCompositeR
+//  DATATYPE
+//    Float
+//  LONGFORM
+//    SimpleWallCompositeRValue
+//  UNITS
+//    °F-ft2-h/Btu
+//  DESCRIPTION
+//    "Composite (wood framing) layer R-value"
+  SIZING
+    if( LocalStatus( SimpleWallCompositeR ) > 1 ) then
+      UNCHANGED
+    else if( CodeCat != "Composite" ) then
+      0
+    else if( LocalStatus( FrmMat) < 1 .OR. 
+             LocalStatus( FrmFacCav) < 1 .OR. 
+             LocalStatus( CavityInsVal) < 1 ) then 
+      0
+    else if( FrmMat != "Wood" .OR. FrmDepthVal <= 0 ) then
+      0
+    else if( FrmFacCav <= 0 ) then     // layer is ALL framing
+      Proj:WoodFrmRPerIn * FrmDepthVal
+    else if( FrmFacCav >= 1 ) then     // layer is ALL cavity/insulation
+      CavityInsVal
+    else                               // this is a valid wood framed composite Mat
+      (1 / ( (FrmFacCav / CavityInsVal) + 
+      (FrmFacMembers / (Proj:WoodFrmRPerIn * FrmDepthVal)) ))
+    endif endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:RVal
+//  DESCRIPTION
+//     ""
+//  INPUTCLASS
+//    Prescribed
+  SIZING : S901G ECBC
+    if( LocalStatus( RVal ) > 1 .AND. LocalStatus( RVal ) < 5 )
+    then  UNCHANGED   // retain rule/lib default
+    else
+      if( LocalStatus( RVal ) > 4 )
+      then
+        // repeat ENTIRE DEFAULT rule here, to ensure that OpenStudio/user file-specified value is overridden
+        if( CodeCat = "Composite" )
+	then
+          if( FrmMat = "Metal" )
+	  then
+            if( LocalStatus(FrmConfig) > 0 .AND. LocalStatus(CavityInsVal) > 0 )
+	    then
+              if( FrmConfig = "RoofMetalScrewDown" .OR.
+                  FrmConfig = "RoofMetalStandingSeam" .OR.
+                  FrmConfig = "RoofMetalStandingSeamFilledCavity" )
+	      then
+              MetalInsFrameLayers:Rvalue("FrmConfig",FrmConfig,"CavityIns",CavityInsVal)
+              else
+		if( LocalStatus(FrmDepth) > 0 )
+	        then
+                MetalInsFrameLayers:Rvalue("FrmConfig",FrmConfig,"FrmDepth",FrmDepth,"CavityIns",CavityInsVal )
+                else UNDEFINED
+                endif
+              endif
+            else UNDEFINED
+            endif
+          else
+	    if( IfValidAnd( SimpleWallCompositeR > 0 ) )
+	    then SimpleWallCompositeR       // to be replaced w/ construction-specific value
+            else 0.91                       // Placeholder !!
+            endif
+	  endif
+        else
+          if( LocalStatus(Thkns) > 0 .AND.
+	      LocalStatus(ThrmlCndct) > 0 ) 
+          then( (Thkns / 12) * (1/ThrmlCndct) )
+          else UNDEFINED
+          endif
+	endif
+      else
+	if( LocalStatus( CodeCat ) < 1 .OR. LocalStatus( FrmMat ) < 1 )
+	then UNDEFINED
+        else
+	  if( CodeCat = "Composite" )
+	  then
+            if( FrmMat = "Metal" )
+	    then
+              if( LocalStatus( FrmConfig ) > 0 .AND. 
+                  LocalStatus( FrmDepth ) > 0 .AND. 
+                  LocalStatus( CavityInsVal ) > 0 )
+              then
+              MetalInsFrameLayers:Rvalue( "FrmConfig", FrmConfig, "FrmDepth", FrmDepth, "CavityIns", CavityInsVal )
+              else UNDEFINED
+              endif
+            else UNDEFINED
+            endif
+          else UNDEFINED
+          endif
+	endif
+      endif
+    endif
+  SIZING
+    if( LocalStatus( RVal ) > 1 .AND. LocalStatus( RVal ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( LocalStatus( RVal ) > 4 ) then
+      // repeat ENTIRE DEFAULT rule here, to ensure that OpenStudio/user file-specified value is overridden
+      if( CodeCat = "Composite" ) then
+        if( FrmMat = "Metal" ) then
+          if( LocalStatus(FrmConfig) > 0 .AND. LocalStatus(CavityInsVal) > 0 ) then
+            if( FrmConfig = "RoofMetalScrewDown" .OR.
+                FrmConfig = "RoofMetalStandingSeam" .OR.
+                FrmConfig = "RoofMetalStandingSeamFilledCavity" ) then
+              MetalInsFrameLayers:Rvalue("FrmConfig",FrmConfig,"CavityIns",CavityInsVal)
+            else if( LocalStatus(FrmDepth) > 0 ) then
+              MetalInsFrameLayers:Rvalue("FrmConfig",FrmConfig,"FrmDepth",FrmDepth,"CavityIns",CavityInsVal )
+            else UNDEFINED
+            endif endif
+          else UNDEFINED
+          endif
+        else if( SimpleWallCompositeR > 0 ) then
+          SimpleWallCompositeR       // to be replaced w/ construction-specific value
+        else 10.0                    // Placeholder !!
+        endif endif
+      else if( LocalStatus(CodeItem) < 2 ) then 
+        UNDEFINED
+      else if( CodeItem = "- specify -" ) then 
+        UNDEFINED
+      else MaterialData:Rvalue("MatList",CodeItem)
+      endif endif endif
+    else if( LocalStatus( CodeCat ) < 1 .OR. LocalStatus( FrmMat ) < 1 ) then
+      UNDEFINED
+    else if( CodeCat = "Composite" ) then
+      if( FrmMat = "Metal" ) then
+        if( LocalStatus( FrmConfig ) > 0 .AND. 
+            LocalStatus( FrmDepth ) > 0 .AND. 
+            LocalStatus( CavityInsVal ) > 0 ) then
+          MetalInsFrameLayers:Rvalue( "FrmConfig", FrmConfig, "FrmDepth", FrmDepth, "CavityIns", CavityInsVal )
+        else UNDEFINED
+        endif
+      else if( IfValidAnd( SimpleWallCompositeR > 0 ) ) then
+        SimpleWallCompositeR       // to be replaced w/ construction-specific value
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:ThrmlCndct
+//  DESCRIPTION
+//     ""
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    if( LocalStatus( ThrmlCndct ) > 1 .AND. LocalStatus( ThrmlCndct ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( LocalStatus( CodeItem ) < 2 ) then UNDEFINED
+    else if( CodeItem = "- specify -" ) then UNDEFINED
+    else if( CodeCat = "Composite" ) then UNDEFINED
+    else MaterialData:ThrmlCndct( "MatList", CodeItem )
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:SpecHt
+//  DESCRIPTION
+//     ""
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    if( LocalStatus( SpecHt ) > 1 .AND. LocalStatus( SpecHt ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( LocalStatus( CodeItem ) < 2 ) then UNDEFINED
+    else if( CodeItem = "- specify -" ) then UNDEFINED
+    else if( CodeCat = "Composite" ) then UNDEFINED
+    else MaterialData:SpecHt( "MatList", CodeItem )
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:Dens
+//  DESCRIPTION
+//     ""
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    if( LocalStatus( Dens ) > 1 .AND. LocalStatus( Dens ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( LocalStatus( CodeItem ) < 2 ) then
+      0
+    else if( CodeItem = "- specify -" ) then
+      0
+    else if( CodeCat = "Composite" ) then
+      0
+    else MaterialData:Dens( "MatList", CodeItem )
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Mat:Thkns
+//  DESCRIPTION
+//     ""
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    if( LocalStatus( Thkns ) > 1 .AND. LocalStatus( Thkns ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( LocalStatus( CodeItem ) < 2 ) then
+      0
+    else if( CodeItem = "- specify -" ) then
+      0
+    else if( CodeCat = "Composite" ) then
+      0
+    else MaterialData:Thkns( "MatList", CodeItem )
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Mat:HeatCap
+//  DESCRIPTION
+//     "the heat capacity of the material"
+//  UNITS
+//    Btu/ft2-F
+//  INPUTCLASS
+//    Prescribed
+  SIZING
+    // thickness is in inches
+    if( LocalStatus( HeatCap ) > 1 .AND. LocalStatus( HeatCap ) < 5 ) then  UNCHANGED   // retain rule/lib default
+    else if( CodeCat = "Composite" ) then UNDEFINED
+    else if( IfValidAnd(SpecHt > 0) .AND.
+             IfValidAnd(Dens > 0) .AND.
+             IfValidAnd(Thkns > 0) ) then
+      SpecHt * Dens * Thkns / 12.0
+    else 0
+    endif endif endif
+  ANNUAL_BASELINE
+    z:HeatCap
+ENDRULE
+

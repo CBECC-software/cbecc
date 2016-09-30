@@ -1,0 +1,1584 @@
+// Opaque Envelope - Demising Ceilings and  Floors
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//
+
+
+// -------------- Ceiling Status -----------------------------------------------
+RULE Ceiling:Status
+  DESCRIPTION
+    "This sets the construction status to New.  There will be an option
+     to select New, Altered or Existing."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Existing
+    Altered
+  DEFAULT
+    Parent(EnvStatus)
+  CHECKCODE
+    if( Proj:IsNewEnv ) then
+      if( Status != "New" ) then
+        PostWarning( "Ceiling '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsExistingEnv ) then
+      if( Status != "Existing" ) then
+        PostWarning( "Ceiling '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Existing' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAdd ) then
+      if( Status = "Altered" ) then
+        PostWarning( "Ceiling '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAltOnly ) then
+      if( Status = "New" ) then
+        PostWarning( "Ceiling '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Altered' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING
+    if( Proj:IsNewEnv ) then "New"
+    else if( Proj:IsExistingEnv ) then "Existing"
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then "New"
+    else if( Proj:IsAltOnly .AND. u:Status = "New" ) then "Altered"
+    else u:Status
+    endif endif endif endif
+  ANNUAL
+    z:Status
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:IsNew
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNew
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is New"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 1
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then 1
+    else if( Proj:CompType = "ExistingAlteration" ) then 0
+    else if( u:Status = "New") then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:IsAltered
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsAltered
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Altered"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd ) then 0
+    else if( Proj:CompType = "ExistingAlteration" .AND. u:Status = "New" ) then 1
+    else if( u:Status = "Altered" ) then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:IsExisting
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsExisting
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Existing"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 1
+    else if( u:Status = "Existing" ) then 1
+    else 0
+    endif endif endif
+ENDRULE
+
+// -------------- Interior Floor Status ----------------------------------------
+RULE IntFlr:Status
+  DESCRIPTION
+    "This sets the construction status to New.  There will be an option
+     to select New, ExistingAlteration, ExistingUnchanged, Removed."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Existing
+    Altered
+  DEFAULT
+    Parent(EnvStatus)
+  CHECKCODE
+    if( Proj:IsNewEnv ) then
+      if( Status != "New" ) then
+        PostWarning( "Floor '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsExistingEnv )then
+      if( Status != "Existing" ) then
+        PostWarning( "Floor '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Existing' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAdd ) then
+      if( Status = "Altered" ) then
+        PostWarning( "Floor '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAltOnly ) then
+      if( Status = "New" ) then
+        PostWarning( "Floor '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Altered' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING
+    if( Proj:IsNewEnv ) then "New"
+    else if( Proj:IsExistingEnv ) then "Existing"
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then "New"
+    else if( Proj:IsAltOnly .AND. u:Status = "New" ) then "Altered"
+    else u:Status
+    endif endif endif endif
+  ANNUAL
+    z:Status
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:IsNew
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNew
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is New"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 1
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then 1
+    else if( Proj:CompType = "ExistingAlteration" ) then 0
+    else if( u:Status = "New") then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:IsAltered
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsAltered
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Altered"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd ) then 0
+    else if( Proj:CompType = "ExistingAlteration" .AND. u:Status = "New" ) then 1
+    else if( u:Status = "Altered" ) then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:IsExisting
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsExisting
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Existing"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 1
+    else if( u:Status = "Existing" ) then 1
+    else 0
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Ceiling:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a demising ceiling."
+  HELP
+    "A reference to a construction assembly. "
+  INPUTCLASS
+    Required
+  REFERENCE
+    ACM-5.5.3
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+  DEFAULT
+     ConsAssmRef
+  CHECKSIM
+    if( LocalCompAssigned(ConsAssmRef) = 0 ) then
+      PostError("A valid construction assembly must be assigned to surface '%s'
+                 in space '%s'.",Name,Spc:Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:ConsAssmRef
+  SIZING_BASELINE
+//   See below for baselinesizing
+  ANNUAL_PROPOSED
+    u:ConsAssmRef
+  ANNUAL_BASELINE
+//   See below for baseline
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE IntFlr:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a demising ceiling."
+  HELP
+    "A reference to a construction assembly. "
+  REFERENCE
+    ACM-5.5.3
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+  INPUTCLASS
+    Required
+  DEFAULT
+     ConsAssmRef
+  CHECKSIM
+    if( LocalCompAssigned(ConsAssmRef) = 0 ) then
+      PostError("A valid construction assembly must be assigned to surface '%s'
+                 in space '%s'.",Name,Spc:Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:ConsAssmRef
+  SIZING_BASELINE
+//   See below for baselinesizing
+  ANNUAL_PROPOSED
+    u:ConsAssmRef
+  ANNUAL_BASELINE
+//   See below for baseline
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// ------- Calculate area by Status - Ceiling
+RULE NEW Ceiling:AreaNew
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:AreaAltered
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:AreaExisting
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Existing" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// ------- Calculate area by Status - IntFlr
+RULE NEW IntFlr:AreaNew
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:AreaAltered
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:AreaExisting
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Existing" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -------------- Construction Heat Capacity -----------------------------------
+RULE NEW Ceiling:HtCapCat
+  RULESETS
+    T24N
+  DATATYPE
+    ENUMERATION
+  DESCRIPTION
+    "The category for the heat capacity of the proposed construction: Mass
+    Floor or Other Floor. Based on threshold of 5 Btu/ft²-F derived from 3in
+    of lightweight concrete with density of 100 lb/ft³ and specific heat of
+    0.2 Btu/lb-F."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  OPTION
+    Mass
+    Other
+    // Another floor type is a Heated Slab Floor that is not being included yet
+  DEFAULT
+    "Other"
+  SIZING
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      "Other"
+    else
+      UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    // HC>=5  is Mass
+    // 5>HC   is Other
+    if( LocalCompAssigned( ConsAssmRef ) .AND.
+        DemSurf = 1 .AND. 
+        Spc:CondgType != "Unconditioned" )
+    then
+      if( IfValidAnd( ConsAssmRef:SumMatHeatCap >= 5 ) )
+      then "Mass"
+      else "Other"
+      endif
+    else "Other"
+    endif
+  ANNUAL_BASELINE
+    z:HtCapCat
+ENDRULE
+
+
+// -------------- Floor Heat Capacity -------------------------------------------
+RULE NEW IntFlr:HtCapCat
+  RULESETS
+    T24N
+  DATATYPE
+    ENUMERATION
+  DESCRIPTION
+    "The category for the heat capacity of the proposed construction: Mass
+    Floor or Other Floor. Based on threshold of 5 Btu/ft²-F derived from 3in
+    of lightweight concrete with density of 100 lb/ft³ and specific heat of
+    0.2 Btu/lb-F."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  OPTION
+    Mass
+    Other
+  DEFAULT
+    "Other"
+  SIZING
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      "Other"
+    else
+      UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    // HC>=5  is Mass
+    // 5>HC   is Other
+    if( LocalCompAssigned( ConsAssmRef ) .AND.
+        DemSurf = 1 .AND. 
+        Spc:CondgType != "Unconditioned" )
+    then
+      if( IfValidAnd( ConsAssmRef:SumMatHeatCap >= 5 ) )
+      then "Mass"
+      else "Other"
+      endif
+    else "Other"
+    endif
+  ANNUAL_BASELINE
+    z:HtCapCat
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:ConsType
+  RULESETS
+    T24N
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "A demising ceiling classification defined in the baseline standard based
+    roofs or exterior floors."
+  HELP
+    "The construction type for a demising ceiling depending on the proposed
+    construction and whether the surface is above or below the conditioned
+    space and therefore needs to be assigned a floor or roof construction."
+  REFERENCE
+
+  LONGFORM
+    ConstructType
+  OPTION
+    WoodFramingAndOtherRoof
+    MetalBuildingRoof
+    MassFloor
+    OtherFloor
+  INPUTCLASS
+    NotInput
+//  SIZING_PROPOSED
+//    u:ConsType
+//  SIZING_BASELINE
+  SIZING
+    if( Proj:IsExistingEnv ) then
+      if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+        if( ConsAssmRef:ContainsMetalRoofMaterial = "true" ) then
+          "MetalBuildingRoof"
+        else
+          if( ConsAssmRef:ContainsMetalFrameMaterial = "true" ) then
+            "MetalBuildingRoof"
+          else
+            if( ConsAssmRef:ContainsWoodFrameMaterial = "true" ) then
+              "WoodFramingAndOtherRoof"
+            else
+              "WoodFramingAndOtherRoof"  // even if it does not contain a wood frame it would be an "other"
+            endif
+          endif
+        endif
+      else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+        if( HtCapCat = "Mass" ) then
+          "MassFloor"
+        else
+          "OtherFloor"
+        endif
+      else UNDEFINED
+      endif endif
+    else if( u:Proj:CompType = "ExistingAlteration" .OR.
+             u:Proj:CompType = "ExistingAdditionAndAlteration" ) then
+      if( Status = "Existing" .OR. 
+          Status = "Altered" ) then
+        if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+          if( ConsAssmRef:ContainsMetalRoofMaterial = "true" ) then
+            "MetalBuildingRoof"
+          else
+            if( ConsAssmRef:ContainsMetalFrameMaterial = "true" ) then
+              "MetalBuildingRoof"
+            else
+              if( ConsAssmRef:ContainsWoodFrameMaterial = "true" ) then
+                "WoodFramingAndOtherRoof"
+              else
+                "WoodFramingAndOtherRoof"  // even if it does not contain a wood frame it would be an "other"
+              endif
+            endif
+          endif
+        else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+          if( HtCapCat = "Mass" ) then
+            "MassFloor"
+          else
+            "OtherFloor"
+          endif
+        else UNDEFINED
+        endif endif
+      else   ; Status = New
+        if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+          "WoodFramingAndOtherRoof"
+        else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+          "OtherFloor"
+        else UNDEFINED
+        endif endif
+      endif
+    else   ; NewComplete, NewEnvelope, NewEnvelopeAndLighting, NewEnvelopeAndPartialLighting, NewEnvelopeAndMechanical, AdditionXXX
+      if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+        "WoodFramingAndOtherRoof"
+      else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+        "OtherFloor"
+      else UNDEFINED
+      endif endif
+    endif endif
+  ANNUAL
+    z:ConsType
+ENDRULE
+
+
+// -------------- Construction Type --------------------------------------------
+RULE NEW IntFlr:ConsType
+  RULESETS
+    T24N
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "A demising ceiling classification defined in the baseline standard based
+    roofs or exterior floors."
+  HELP
+    "The construction type for a demising ceiling depending on the proposed
+    construction and whether the surface is above or below the conditioned
+    space and therefore needs to be assigned a floor or roof construction."
+  REFERENCE
+
+  LONGFORM
+    ConstructType
+  OPTION
+    WoodFramingAndOtherRoof
+    MetalBuildingRoof
+    MassFloor
+    OtherFloor
+  INPUTCLASS
+    NotInput
+//  SIZING_PROPOSED
+//    u:ConsType
+//  SIZING_BASELINE
+  SIZING
+    if( Proj:IsExistingEnv ) then
+      if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+        if( ConsAssmRef:ContainsMetalRoofMaterial = "true" ) then
+          "MetalBuildingRoof"
+        else
+          if( ConsAssmRef:ContainsMetalFrameMaterial = "true" ) then
+            "MetalBuildingRoof"
+          else
+            if( ConsAssmRef:ContainsWoodFrameMaterial = "true" ) then
+              "WoodFramingAndOtherRoof"
+            else
+              "WoodFramingAndOtherRoof"  // even if it does not contain a wood frame it would be an "other"
+            endif
+          endif
+        endif
+      else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+        if( HtCapCat = "Mass" ) then
+          "MassFloor"
+        else
+          "OtherFloor"
+        endif
+      else UNDEFINED
+      endif endif
+    else if( u:Proj:CompType = "ExistingAlteration" .OR.
+             u:Proj:CompType = "ExistingAdditionAndAlteration" ) then
+      if( Status = "Existing" .OR. 
+          Status = "Altered" ) then
+        if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+          if( ConsAssmRef:ContainsMetalRoofMaterial = "true" ) then
+            "MetalBuildingRoof"
+          else
+            if( ConsAssmRef:ContainsMetalFrameMaterial = "true" ) then
+              "MetalBuildingRoof"
+            else
+              if( ConsAssmRef:ContainsWoodFrameMaterial = "true" ) then
+                "WoodFramingAndOtherRoof"
+              else
+                "WoodFramingAndOtherRoof"  // even if it does not contain a wood frame it would be an "other"
+              endif
+            endif
+          endif
+        else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+          if( HtCapCat = "Mass" ) then
+            "MassFloor"
+          else
+            "OtherFloor"
+          endif
+        else UNDEFINED
+        endif endif
+      else   ; Status = New
+        if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+          "WoodFramingAndOtherRoof"
+        else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+          "OtherFloor"
+        else UNDEFINED
+        endif endif
+      endif
+    else   ; NewComplete, NewEnvelope, NewEnvelopeAndLighting, NewEnvelopeAndPartialLighting, NewEnvelopeAndMechanical, AdditionXXX
+      if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+        "WoodFramingAndOtherRoof"
+      else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+        "OtherFloor"
+      else UNDEFINED
+      endif endif
+    endif endif
+  ANNUAL
+    z:ConsType
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:BldgTypeForRoof
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "Space type used when determining the demising surface u-factor and
+    construction."
+  HELP
+    ""
+  OPTION : S901G ECBC
+    Residential
+    Semiheated
+    NonResidential
+  OPTION
+    Residential
+    RelocClass
+    NonResidential
+  REFERENCE
+
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    if( (DemSurf = 1) .AND.
+        (Spc:Semiheated = 1 .OR. 
+         Spc:CondgType = "Unconditioned") )
+    then
+      if( Spc:Semiheated = 1 )
+      then "Semiheated"
+      else if( Spc:OccClass = "Residential" )
+      then "Residential"
+      else "NonResidential"
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      if( Bldg:RelocPubSchoolBldg = 1 ) then
+        "RelocClass"
+      else if( Spc:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+          Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" ) then
+        if( Spc:OccClass = "Residential" )
+          then "Residential"
+        else "NonResidential"
+        endif
+      else if( Spc:SpcFunc = "High-Rise Residential Living Spaces" .OR.
+          Spc:SpcFunc = "Hotel/Motel Guest Room" ) then
+        "Residential"
+      else "NonResidential"
+      endif endif endif
+    else
+      UNDEFINED
+    endif
+  ANNUAL : S901G ECBC
+    if( (DemSurf = 1) .AND. 
+        (Spc:CondgType != "Unconditioned" .OR.
+	 Spc:Semiheated = 0) )
+    then z:BldgTypeForRoof
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      z:BldgTypeForRoof
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:BldgTypeForRoof
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "Space type used when determining the demising surface u-factor and
+    construction."
+  HELP
+    ""
+  OPTION : S901G ECBC
+    Residential
+    Semiheated
+    NonResidential
+  OPTION
+    Residential
+    RelocClass
+    NonResidential
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    if( DemSurf = 1 )
+    then "Semiheated"
+    else UNDEFINED
+    endif
+//    if( (DemSurf = 1) .AND.
+//        (Spc:Semiheated = 1 .OR. 
+//         Spc:CondgType = "Unconditioned") )
+//    then
+//      if( Spc:Semiheated = 1 )
+//      then "Semiheated"
+//      else if( Spc:OccClass = "Residential" )
+//      then "Residential"
+//      else "NonResidential"
+//      endif endif
+//    else UNDEFINED
+//    endif
+  SIZING
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      if( Bldg:RelocPubSchoolBldg = 1 ) then
+        "RelocClass"
+      else if( Spc:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+          Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" ) then
+        if( Spc:OccClass = "Residential" )
+          then "Residential"
+        else "NonResidential"
+        endif
+      else if( Spc:SpcFunc = "High-Rise Residential Living Spaces" .OR.
+          Spc:SpcFunc = "Hotel/Motel Guest Room" ) then
+        "Residential"
+      else "NonResidential"
+      endif endif endif
+    else
+      UNDEFINED
+    endif
+  ANNUAL : S901G ECBC
+    z:BldgTypeForRoof
+  ANNUAL
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      z:BldgTypeForRoof
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -------------- Building Type - Res, Relocatable School, NonRes --------------
+RULE NEW Ceiling:BldgTypeForExtFlr
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "Space type used when determining the demising surface u-factor and
+    construction."
+  HELP
+    ""
+  OPTION : S901G ECBC
+    Residential
+    Semiheated
+    NonResidential
+  OPTION
+    Residential
+    RelocClass
+    NonResidential
+  REFERENCE
+
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    if( IfValidAnd( Spc:Semiheated = 1 ) .OR.
+        IfValidAnd( Spc:IsSemiheatedPlenum = 1 ) .OR.
+	      IfValidAnd( Spc:CondgType = "Unconditioned" ) .OR.
+        IfValidAnd( AdjacentSpcRef:Semiheated = 1 ) .OR. 
+        IfValidAnd( AdjacentSpcRef:IsSemiheatedPlenum = 1 ) .OR.
+        IfValidAnd( AdjacentSpcRef:CondgType = "Unconditioned" ) )
+    then "Semiheated"
+    else
+      if( IfValidAnd( Spc:OccClass = "Residential" ) .OR.
+          IfValidAnd( AdjacentSpcRef:OccClass = "Residential" ) )
+      then "Residential"
+      else "NonResidential"
+      endif
+    endif
+  SIZING
+;    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+    if( DemSurf = 1 ) then
+      if( Bldg:RelocPubSchoolBldg = 1 ) then
+        "RelocClass"
+      else if( Spc:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+          Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" ) then
+        if( Spc:OccClass = "Residential" )
+          then "Residential"
+        else "NonResidential"
+        endif
+      else if( Spc:SpcFunc = "High-Rise Residential Living Spaces" .OR.
+          Spc:SpcFunc = "Hotel/Motel Guest Room" ) then
+        "Residential"
+      else "NonResidential"
+      endif endif endif
+    else
+      UNDEFINED
+    endif
+  ANNUAL : S901G ECBC
+    z:BldgTypeForExtFlr
+  ANNUAL
+;    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+    if( DemSurf = 1 ) then
+      z:BldgTypeForExtFlr
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -------------- Building Type - Res, Relocatable School, NonRes --------------
+RULE NEW IntFlr:BldgTypeForExtFlr
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "Space type used when determining the demising surface u-factor and
+    construction."
+  HELP
+    ""
+  OPTION : S901G ECBC
+    Residential
+    Semiheated
+    NonResidential
+  OPTION
+    Residential
+    RelocClass
+    NonResidential
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    if( IfValidAnd( Spc:Semiheated = 1 ) .OR.
+        IfValidAnd( Spc:IsSemiheatedPlenum = 1 ) .OR.
+	      IfValidAnd( Spc:CondgType = "Unconditioned" ) .OR.
+        IfValidAnd( AdjacentSpcRef:Semiheated = 1 ) .OR. 
+        IfValidAnd( AdjacentSpcRef:IsSemiheatedPlenum = 1 ) .OR.
+        IfValidAnd( AdjacentSpcRef:CondgType = "Unconditioned" ) )
+    then "Semiheated"
+    else
+      if( IfValidAnd( Spc:OccClass = "Residential" ) .OR.
+          IfValidAnd( AdjacentSpcRef:OccClass = "Residential" ) )
+      then "Residential"
+      else "NonResidential"
+      endif
+    endif
+  SIZING
+;    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+    if( DemSurf = 1 ) then
+      if( Bldg:RelocPubSchoolBldg = 1 ) then
+        "RelocClass"
+      else if( Spc:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+          Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" ) then
+        if( Spc:OccClass = "Residential" )
+          then "Residential"
+        else "NonResidential"
+        endif
+      else if( Spc:SpcFunc = "High-Rise Residential Living Spaces" .OR.
+          Spc:SpcFunc = "Hotel/Motel Guest Room" ) then
+        "Residential"
+      else "NonResidential"
+      endif endif endif
+    else
+      UNDEFINED
+    endif
+  ANNUAL : S901G ECBC
+    z:BldgTypeForExtFlr
+  ANNUAL
+;    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+    if( DemSurf = 1 ) then
+      z:BldgTypeForExtFlr
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:OverallUFactor
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The overall computed u-factor"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( DemSurf = 1 ) then
+      ConsAssmRef:UFactor
+    else
+      UNDEFINED
+    endif
+  SIZING
+    if( DemSurf = 1 ) then
+      ConsAssmRef:UFactor
+    else
+      UNDEFINED
+    endif
+  ANNUAL
+    z:OverallUFactor
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:OverallUFactor
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The overall computed u-factor"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( DemSurf = 1 ) then
+      ConsAssmRef:UFactor
+    else
+      UNDEFINED
+    endif
+  SIZING
+    if( DemSurf = 1 ) then
+      ConsAssmRef:UFactor
+    else
+      UNDEFINED
+    endif
+  ANNUAL
+    z:OverallUFactor
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:NonCompIns
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    NonCompliantInsulation
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Flags demising ceilings that do not comply with ACM requirements for 
+     maximum u-value."
+  HELP
+    ""
+  REFERENCE
+    T24-Sec120.7
+  CHECKCODE
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      if( OverallUFactor > 0.0755 ) then 1
+      else 0
+      endif
+    else
+      UNCHANGED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:NonCompIns
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    NonCompliantInsulation
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Flags demising floors that do not comply with ACM requirements for 
+     maximum u-value."
+  HELP
+    ""
+  REFERENCE
+    T24-Sec120.7
+  CHECKCODE
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      if( OverallUFactor > 0.0755 ) then 1
+      else 0
+      endif
+    else
+      UNCHANGED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:MaxUFactor
+  DESCRIPTION
+    "Standard design U-Factor for demising surface based on roofs or floors
+    by Table 140.3-B,C,D and Section 120.7."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.5.3
+    Section 120.7
+    Table 140.3-B
+    Table 140.3-C
+    Table 140.3-D
+  UNITS
+    Btu/h-ft2-F
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    if( Spc:NotEnclosed = 1 .AND. AdjacentSpcRef:NotEnclosed = 0 )
+    then ExteriorRoofUFactor_S901G:UFactor("BldgType",BldgTypeForExtFlr, "ClimateZone",u:Proj:CliZn)
+    else
+      if( DemSurf = 1 .OR. NotEnclosedDemSurf = 1 )
+      then ExteriorFloorUFactor_S901G:UFactor("BldgType",BldgTypeForExtFlr, "ClimateZone",u:Project:CliZn)
+      else UNDEFINED
+      endif
+    endif
+  SIZING : T24N_2013
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      ExteriorRoofUFactor_T24N_2013:UFactor("BldgType",BldgTypeForRoof, 
+                                            "TypeOfCons",ConsType, 
+                                            "ClimateZone",u:Proj:CliZnNum)
+    else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      ExteriorFloorUFactor:UFactor("BldgType",BldgTypeForExtFlr, 
+                                   "TypeOfCons",ConsType, 
+                                   "ClimateZone",u:Project:CliZnNum)
+    else
+      UNDEFINED
+    endif endif
+  SIZING : T24N_2016
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      ExteriorRoofUFactor_T24N_2016:UFactor("BldgType",BldgTypeForRoof, 
+                                            "TypeOfCons",ConsType, 
+                                            "ClimateZone",u:Proj:CliZnNum)
+    else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      ExteriorFloorUFactor:UFactor("BldgType",BldgTypeForExtFlr, 
+                                   "TypeOfCons",ConsType, 
+                                   "ClimateZone",u:Project:CliZnNum)
+    else
+      UNDEFINED
+    endif endif
+  ANNUAL_PROPOSED
+    UNDEFINED
+  ANNUAL_BASELINE : S901G ECBC
+    z:MaxUFactor
+  ANNUAL_BASELINE
+    if( DemSurf = 1 ) then
+      z:MaxUFactor
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:MaxUFactor
+  DESCRIPTION
+    "Standard design U-Factor for demising surface based on roofs or floors
+    by Table 140.3-B,C,D and Section 120.7."
+  HELP
+    ""
+  REFERENCE
+    ACM-5.5.3
+    Section 120.7
+    Table 140.3-B
+    Table 140.3-C
+    Table 140.3-D
+  UNITS
+    Btu/h-ft2-F
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    UNDEFINED
+  SIZING_BASELINE : S901G ECBC
+    if( Spc:NotEnclosed = 1 .AND. AdjacentSpcRef:NotEnclosed = 0 )
+    then ExteriorRoofUFactor_S901G:UFactor("BldgType",BldgTypeForExtFlr, "ClimateZone",u:Proj:CliZn)
+    else
+      if( DemSurf = 1 .OR. NotEnclosedDemSurf = 1 )
+      then ExteriorFloorUFactor_S901G:UFactor("BldgType",BldgTypeForExtFlr, "ClimateZone",u:Project:CliZn)
+      else UNDEFINED
+      endif
+    endif
+  SIZING_BASELINE : T24N_2013
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      ExteriorRoofUFactor_T24N_2013:UFactor("BldgType",BldgTypeForRoof, 
+                                            "TypeOfCons",ConsType, 
+                                            "ClimateZone",u:Proj:CliZnNum)
+    else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      ExteriorFloorUFactor:UFactor("BldgType",BldgTypeForExtFlr, 
+                                   "TypeOfCons",ConsType, 
+                                   "ClimateZone",u:Project:CliZnNum)
+    else
+      UNDEFINED
+    endif endif
+  SIZING_BASELINE : T24N_2016
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      ExteriorRoofUFactor_T24N_2016:UFactor("BldgType",BldgTypeForRoof, 
+                                            "TypeOfCons",ConsType, 
+                                            "ClimateZone",u:Proj:CliZnNum)
+    else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      ExteriorFloorUFactor:UFactor("BldgType",BldgTypeForExtFlr, 
+                                   "TypeOfCons",ConsType, 
+                                   "ClimateZone",u:Project:CliZnNum)
+    else
+      UNDEFINED
+    endif endif
+  ANNUAL_PROPOSED
+    UNDEFINED
+  ANNUAL_BASELINE : S901G ECBC
+    z:MaxUFactor
+  ANNUAL_BASELINE
+    if( DemSurf = 1 ) then
+      z:MaxUFactor
+    else
+      UNDEFINED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE Ceiling:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a demising ceiling."
+  HELP
+    "A reference to a construction assembly. "
+  REFERENCE
+    ACM-5.5.3
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+  DEFAULT
+//   See above for Default
+  CHECKSIM
+//   See above for Checksim
+  SIZING_PROPOSED
+//   See above for Proposed
+  SIZING_BASELINE : S901G ECBC
+    if( DemSurf = 1 )
+    then
+      switch (MaxUFactor)
+        case 0.35:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.35")
+        case 0.069:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.069")
+        case 0.052:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.052")
+        default:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.052")
+      endswitch
+    else 
+      if( (SemiheatedNotEnclosedDemSurf = 1 .OR.
+           ResNotEnclosedDemSurf = 1 .OR.
+	   NonresNotEnclosedDemsurf = 1)
+	   .AND.
+	  (Spc:NotEnclosed = 1 .AND.
+	   AdjacentSpcRef:NotEnclosed = 0) )
+      then
+        switch (MaxUFactor)
+          case 0.218:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.218")
+          case 0.173:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.173")
+          case 0.119:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.119")
+          case 0.093:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.093")
+          case 0.063:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.063")
+          case 0.048:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+          default:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+        endswitch
+      else
+        if( (SemiheatedNotEnclosedDemSurf = 1 .OR.
+             ResNotEnclosedDemSurf = 1 .OR.
+	     NonresNotEnclosedDemsurf = 1)
+	     .AND.
+	    (Spc:NotEnclosed = 0 .AND.
+	     AdjacentSpcRef:NotEnclosed = 1) )
+	then
+          switch (MaxUFactor)
+            case 0.35:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.35")
+            case 0.069:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.069")
+            case 0.052:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.052")
+            case 0.038:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.038")
+            case 0.032:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.032")
+            default:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.032")
+          endswitch
+        else zp:ConsAssmRef
+        endif
+      endif
+    endif
+  SIZING_BASELINE : T24N
+    if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned" ) then
+      switch (MaxUFactor)
+        //MetalBuildingRoof
+        case 0.065:
+          RuleLibrary(ConsAssm,"MetalBuildingRoofU065")
+        case 0.048:
+          RuleLibrary(ConsAssm,"MetalBuildingRoofU048")
+        //WoodFramingAndOtherRoof
+        case 0.028:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU028")
+        case 0.034:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU034")
+        case 0.039:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU039")
+        case 0.049:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU049")
+        case 0.067:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU067")
+        case 0.075:
+          RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU075")
+        default:
+          RuleLibrary(ConsAssm,"MetalBuildingRoofU065")
+      endswitch
+    else if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      switch (Status)
+        case "New":
+          switch (MaxUFactor)
+            case 0.048:
+              RuleLibrary(ConsAssm,"OtherFloorU048")
+            case 0.039:
+              RuleLibrary(ConsAssm,"OtherFloorU039")
+            case 0.071:
+              RuleLibrary(ConsAssm,"OtherFloorU071")
+            default:
+              RuleLibrary(ConsAssm,"OtherFloorU071")
+          endswitch
+        case "Altered":
+          switch (u:ConsType)
+            case "MassFloor":
+              RuleLibrary(ConsAssm,
+                          MassFloorConstruct:AssemCons("UFact",MaxUFactor))
+            case "MetalFrameWall":
+              RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+            default:
+              RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+          endswitch
+        case "Existing":
+           u:ConsAssmRef
+        default:
+          RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+      endswitch
+    else
+      UNCHANGED
+    endif endif
+  ANNUAL_PROPOSED
+//   See above for Proposed
+  ANNUAL_BASELINE : S901G ECBC
+    zb:ConsAssmRef
+  ANNUAL_BASELINE
+    z:ConsAssmRef
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE IntFlr:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a demising ceiling."
+  HELP
+    "A reference to a construction assembly. "
+  REFERENCE
+    ACM-5.5.3
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+  DEFAULT
+//   See above for Default
+  CHECKSIM
+//   See above for Checksim
+  SIZING_PROPOSED
+//   See above for Proposed
+  SIZING_BASELINE : S901G ECBC
+    if( DemSurf = 1 )
+    then
+      switch (MaxUFactor)
+        case 0.35:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.35")
+        case 0.069:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.069")
+        case 0.052:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.052")
+        default:
+          RuleLibrary(ConsAssm,"FloorSteelJoistInteriorSemiheatedU0.052")
+      endswitch
+    else 
+      if( (SemiheatedNotEnclosedDemSurf = 1 .OR.
+           ResNotEnclosedDemSurf = 1 .OR.
+	   NonresNotEnclosedDemsurf = 1)
+	   .AND.
+	  (Spc:NotEnclosed = 1 .AND.
+	   AdjacentSpcRef:NotEnclosed = 0) )
+      then
+        switch (MaxUFactor)
+          case 0.218:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.218")
+          case 0.173:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.173")
+          case 0.119:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.119")
+          case 0.093:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.093")
+          case 0.063:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.063")
+          case 0.048:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+          default:
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+        endswitch
+      else
+        if( (SemiheatedNotEnclosedDemSurf = 1 .OR.
+             ResNotEnclosedDemSurf = 1 .OR.
+	     NonresNotEnclosedDemsurf = 1)
+	     .AND.
+	    (Spc:NotEnclosed = 0 .AND.
+	     AdjacentSpcRef:NotEnclosed = 1) )
+	then
+          switch (MaxUFactor)
+            case 0.35:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.35")
+            case 0.069:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.069")
+            case 0.052:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.052")
+            case 0.038:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.038")
+            case 0.032:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.032")
+            default:
+              RuleLibrary(ConsAssm,"FloorSteelJoistU0.032")
+          endswitch
+        else zp:ConsAssmRef
+        endif
+      endif
+    endif
+  SIZING_BASELINE
+    if( DemSurf = 1 .AND. Spc:CondgType = "Unconditioned" ) then
+      switch (Status)
+      case "New":
+        switch (MaxUFactor)
+          //MetalBuildingRoof
+          case 0.065:
+            RuleLibrary(ConsAssm,"MetalBuildingRoofU065")
+          case 0.048:
+            RuleLibrary(ConsAssm,"MetalBuildingRoofU048")
+          //WoodFramingAndOtherRoof
+          case 0.028:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU028")
+          case 0.034:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU034")
+          case 0.039:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU039")
+          case 0.049:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU049")
+          case 0.067:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU067")
+          case 0.075:
+            RuleLibrary(ConsAssm,"WoodFramingAndOtherRoofU075")
+          default:
+            RuleLibrary(ConsAssm,"MetalBuildingRoofU065")
+        endswitch
+      case "Existing":
+        u:ConsAssmRef
+      case "Altered":
+        u:ConsAssmRef
+      default:
+        u:ConsAssmRef
+      endswitch
+    else if( DemSurf = 1 .AND. Spc:CondgType != "Unconditioned") then
+      switch (Status)
+        case "New":
+          switch (MaxUFactor)
+            case 0.048:
+              RuleLibrary(ConsAssm,"OtherFloorU048")
+            case 0.039:
+              RuleLibrary(ConsAssm,"OtherFloorU039")
+            case 0.071:
+              RuleLibrary(ConsAssm,"OtherFloorU071")
+            default:
+              RuleLibrary(ConsAssm,"OtherFloorU071")
+          endswitch
+        case "Altered":
+          switch (u:ConsType)
+            case "MassFloor":
+              RuleLibrary(ConsAssm,
+                          MassFloorConstruct:AssemCons("UFact",MaxUFactor))
+            case "MetalFrameWall":
+              RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+            default:
+              RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+          endswitch
+        case "Existing":
+           u:ConsAssmRef
+        default:
+          RuleLibrary(ConsAssm,
+                          OtherFloorConstruct:AssemCons("UFact",MaxUFactor))
+      endswitch
+    else
+      switch (Status)
+        case "Existing":
+           u:ConsAssmRef
+        default:        // case "New": or "Altered":
+          if( Spc:CondgType = "Plenum" .OR. 
+              Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" )
+          then RuleLibrary(ConsAssm,"TypicalPlenumFloorInterior")
+          else RuleLibrary(ConsAssm,"TypicalFloorInterior")
+          endif
+      endswitch
+    endif endif
+  ANNUAL_PROPOSED
+//   See above for Proposed
+  ANNUAL_BASELINE : S901G ECBC
+    zb:ConsAssmRef
+  ANNUAL_BASELINE
+    z:ConsAssmRef
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE Ceiling:AdjacentSpcRef
+  DESCRIPTION
+    "The name of the space which establishes the other side conditions for 
+     interior surfaces."
+  HELP
+    "A reference to a space.  If none, the surface is adiabatic or exterior."
+  CHECKSIM
+    if( LocalCompAssigned( AdjacentSpcRef )) then 
+      if( Parent( Mult ) != AdjacentSpcRef:Mult ) then
+        PostError( "Ceiling '%s' is part of Space '%s' which has a multiplier
+                    that is different from the multiplier of the adjacent 
+                    space.  This is not allowed.  The multipliers must match, 
+                    or make the surface adiabatic by removing the adjacent 
+                    space reference.", Name, Parent(Name) )
+     else UNCHANGED
+     endif
+   else UNCHANGED
+   endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE IntFlr:AdjacentSpcRef
+  DESCRIPTION
+    "The name of the space which establishes the other side conditions for 
+     interior surfaces."
+  HELP
+    "A reference to a space.  If none, the surface is adiabatic or exterior."
+  CHECKSIM
+    if( LocalCompAssigned( AdjacentSpcRef )) then 
+      if( Parent( Mult ) != AdjacentSpcRef:Mult ) then
+        PostError( "Floor '%s' is part of Space '%s' which has a multiplier
+                    that is different from the multiplier of the adjacent 
+                    space.  This is not allowed.  The multipliers must match, 
+                    or make the surface adiabatic by removing the adjacent 
+                    space reference.", Name, Parent(Name) )
+     else UNCHANGED
+     endif
+   else UNCHANGED
+   endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ** debugging rule evaluation duration **
+RULE NEW Proj:RuleEvalDuration
+  DEFAULT
+    LogDuration( "            time to evaluate Fenestration, Lighting & Envelope DEFAULT rules:  %.3f seconds" )
+  SIZING_PROPOSED
+    LogDuration( "            time to evaluate Fenestration, Lighting & Envelope SIZING_PROPOSED rules:  %.3f seconds" )
+  SIZING_BASELINE
+    LogDuration( "            time to evaluate Fenestration, Lighting & Envelope SIZING_BASELINE rules:  %.3f seconds" )
+  ANNUAL_PROPOSED
+    LogDuration( "            time to evaluate Fenestration, Lighting & Envelope ANNUAL_PROPOSED rules:  %.3f seconds" )
+  ANNUAL_BASELINE
+    LogDuration( "            time to evaluate Fenestration, Lighting & Envelope ANNUAL_BASELINE rules:  %.3f seconds" )
+ENDRULE
+
+

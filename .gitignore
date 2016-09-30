@@ -1,0 +1,7 @@
+*.zip
+bin/Release_VC12/EPlus
+bin/Debug_VC12/EPlus
+bin/vendor/openssl*/
+bin/vendor/boost*/
+bin/vendor/OpenStudio*/
+bin/vendor/Qt*/

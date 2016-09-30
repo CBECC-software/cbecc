@@ -1,0 +1,16 @@
+;-------------------------------------------------------------------------
+; Table of Maximum Children Allowed by Child Type
+;-------------------------------------------------------------------------
+; CEC Title-24 Residential 2013
+; Compiled for the CEC by ...
+; Modification History:
+;    Aug 19, 2011 - Scott Criswell - skeleton ruleset setup
+;-------------------------------------------------------------------------
+;
+; The format of this file: ...
+;
+;-------------------------------------------------------------------------
+
+;ActArea, 4
+;LtSys,   3
+

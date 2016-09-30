@@ -1,0 +1,28 @@
+;,CEC Title-24 Residential Compliance Ruleset,,,,,,,,,
+;,DHW tank surface area formula coefficients table,,,,,,,,,
+;,Last modified:,,8/21/15 - SAC,,,,,,,
+;,,,,,,,,,,
+;,Source Data:,,"RACM, Appendix B, table B-8",,,,,,,
+;,,,,,,,,,,
+;,Mod history:,,8/21/15 - SAC created table,,,,,,,
+;,,,,,,,,,,
+;,Independents:,,,,,,,,,
+;,,1,DHW heater fuel (element type),,,,,,,
+;,,2,DHW heater tank type,,,,,,,
+;,,,,,,,,,,
+;,Dependents:,,,,,,,,,
+;,,1,Coeff E used to calculate DHW tank surface area from volume,,,,,,,
+;,,2,Coeff F used to calculate DHW tank surface area from volume,,,,,,,
+;,,3,Coeff G used to calculate DHW tank surface area from volume,,,,,,,
+;,,,,,,,,,,
+;,,,,,,,,,,
+,TABLE DHWTankAreaCoefs,,,,,,,,,
+,,Fuel,TankType,CoefE,CoefF,CoefG,,Fuel (element type),Tank type,Table columns
+,,0,*,0.0101,11.8,5,;,Electric Resistance,(any),Storage Electric and Heat Pumps
+,,3,*,0.0101,11.8,5,;,Air-Source Heat Pump,(any),
+,,6,*,0.0101,11.8,5,;,Ground-Source Heat Pump,(any),
+,,*,0,0.0113,11.8,5,;,"(nat gas, propane or oil)",boiler,Large Storage Gas & Indirect Gas
+,,*,1,0.0113,11.8,5,;,"(nat gas, propane or oil)",indirect           ,
+,,*,3,0.0113,11.8,5,;,"(nat gas, propane or oil)",large storage,
+,,*,*,0.00793,15.67,1.9,;,"(nat gas, propane or oil)",(any),Storage Gas
+,ENDTABLE,,,,,,,,,

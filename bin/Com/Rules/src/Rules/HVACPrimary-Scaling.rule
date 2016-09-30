@@ -1,0 +1,358 @@
+// HVAC Primary - Plant Scaling
+//
+// ----------------------------------------------------------------------
+//  Copyright (c) 2015, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALifORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// ----------------------------------------------------------------------
+
+
+
+// Calculcate Total and Existing PROPOSED secondary system cooling capacity that 
+// references the FluidSystem.  Calculate ratio of Existing:Total
+RULE NEW FluidSys:CoilClgTotCap
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingTotalCapacity
+  DESCRIPTION
+    "Total capacity of cooling coil components served by the FluidSystem."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  SIZING_PROPOSED
+    SumChildrenIf( FluidSeg:CoilClgTotCap, FluidSeg:Type = "PrimarySupply" ) 
+ENDRULE
+RULE NEW FluidSys:CoilClgTotCapExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingTotalCapacityExisting
+  DESCRIPTION
+    "Total EXISTING capacity of cooling coil components served by the FluidSystem."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  SIZING_PROPOSED
+    SumChildrenIf( FluidSeg:CoilClgTotCapExisting, FluidSeg:Type = "PrimarySupply" ) 
+ENDRULE
+RULE NEW FluidSys:CoilClgTotCapExistingRat
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingTotalCapacityExistingRatio
+  DESCRIPTION
+    "The ratio of existing to total capacity of cooling coils served by the
+     FluidSystem."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( Proj:IsAddOrAlt .AND. 
+        IsBaseSys = 0 .AND.
+        IsWSHPSys .AND. // This limits the scaling to only WSHP systems
+        CoilClgTotCap > 0 .AND.
+        CoilClgTotCapExisting > 0 )
+    then CoilClgTotCapExisting / CoilClgTotCap
+    else 1
+    endif
+  SIZING_BASELINE
+    if( IsBaseSys = 0 )
+    then zp:CoilClgTotCapExistingRat
+    else 1
+    endif
+ENDRULE
+
+// Calculcate Total and Existing PROPOSED secondary system heating capacity that 
+// references the FluidSystem.  Calculate ratio of Existing:Total
+RULE NEW FluidSys:CoilHtgTotCap
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingTotalCapacity
+  DESCRIPTION
+    "Total capacity of heating coil components served by the FluidSystem."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  SIZING_PROPOSED
+    SumChildrenIf( FluidSeg:CoilHtgTotCap, FluidSeg:Type = "PrimarySupply" ) 
+ENDRULE
+RULE NEW FluidSys:CoilHtgTotCapExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingTotalCapacityExisting
+  DESCRIPTION
+    "Total EXISTING capacity of heating coil components served by the FluidSystem."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  SIZING_PROPOSED
+    SumChildrenIf( FluidSeg:CoilHtgTotCapExisting, FluidSeg:Type = "PrimarySupply" ) 
+ENDRULE
+RULE NEW FluidSys:CoilHtgTotCapExistingRat
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingTotalCapacityExistingRatio
+  DESCRIPTION
+    "The ratio of existing to total capacity of heating coils served by the
+     FluidSystem."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  SIZING_PROPOSED
+    if( Proj:IsAddOrAlt .AND. 
+        IsBaseSys = 0 .AND.
+        IsWSHPSys .AND. // This limits the scaling to only WSHP systems
+        CoilHtgTotCap > 0 .AND.
+        CoilHtgTotCapExisting > 0 )
+    then CoilHtgTotCapExisting / CoilHtgTotCap
+    else 1
+    endif
+  SIZING_BASELINE
+    if( IsBaseSys = 0 )
+    then zp:CoilHtgTotCapExistingRat
+    else 1
+    endif
+ENDRULE
+
+// Revise existing primary equipment capacities in BASELINE design to reflect
+// the remaining Existing equipment
+// Revise Blr capacity
+RULE Blr:CapRtd
+  SIZING_BASELINE
+    if( IfValidAnd( CapRtd > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then
+      CapRtd * FluidSys:CoilHtgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then zb:CapRtd
+    else UNCHANGED
+    endif
+ENDRULE
+RULE Blr:WtrFlowCap
+  SIZING_BASELINE
+    if( IfValidAnd( WtrFlowCap > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then
+      WtrFlowCap * FluidSys:CoilHtgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then zb:WtrFlowCap
+    else UNCHANGED
+    endif
+ENDRULE
+RULE Blr:ParasiticLd
+  SIZING_BASELINE
+    if( IfValidAnd(ParasiticLd > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then
+      ParasiticLd * FluidSys:CoilHtgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilHtgTotCapExistingRat ) < 1 ) )
+    then zb:ParasiticLd
+    else UNCHANGED
+    endif
+ENDRULE
+
+// Revise HtRej capacity
+RULE HtRej:CapRtd
+  SIZING_BASELINE
+    if( IfValidAnd( CapRtd > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then
+      CapRtd * FluidSys:CoilClgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then zb:CapRtd
+    else UNCHANGED
+    endif
+ENDRULE
+RULE HtRej:AirFlowCap
+  SIZING_BASELINE
+    if( IfValidAnd( AirFlowCap > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then
+      AirFlowCap * FluidSys:CoilClgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then zb:AirFlowCap
+    else UNCHANGED
+    endif
+ENDRULE
+RULE HtRej:WtrFlowCap
+  SIZING_BASELINE
+    if( IfValidAnd( WtrFlowCap > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then
+      WtrFlowCap * FluidSys:CoilClgTotCapExistingRat
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+        IfValidAnd( ParentValid( CoilClgTotCapExistingRat ) < 1 ) )
+    then zb:WtrFlowCap
+    else UNCHANGED
+    endif
+ENDRULE
+
+// Revise Pump capacity/power
+RULE Pump:FlowCap
+  SIZING_BASELINE
+    if( IfValidAnd( FlowCap > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+          IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) )
+      )
+    then
+      if( ( ParentComponentType() = "HtRej" .OR.
+            ParentComponentType() = "Chlr" ) .AND. 
+          FluidSys:CoilClgTotCapExistingRat > 0 )
+      then FlowCap * FluidSys:CoilClgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "Blr" .AND. 
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then FlowCap * FluidSys:CoilHtgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "FluidSeg" .AND.
+          FluidSys:CoilClgTotCapExistingRat > 0 .AND.
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then 
+        FlowCap * Max( FluidSys:CoilClgTotCapExistingRat,
+                       FluidSys:CoilHtgTotCapExistingRat )
+      else UNCHANGED
+      endif endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+      ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+        IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) ) )
+    then zb:FlowCap
+    else UNCHANGED
+    endif
+ENDRULE
+RULE Pump:FlowMin
+  SIZING_BASELINE
+    if( IfValidAnd( FlowMin > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        SpdCtrl = "VariableSpeed" .AND.
+        ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+          IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) )
+      )
+    then
+      if( ( ParentComponentType() = "HtRej" .OR.
+            ParentComponentType() = "Chlr" ) .AND. 
+          FluidSys:CoilClgTotCapExistingRat > 0 )
+      then FlowMin * FluidSys:CoilClgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "Blr" .AND. 
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then FlowMin * FluidSys:CoilHtgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "FluidSeg" .AND.
+          FluidSys:CoilClgTotCapExistingRat > 0 .AND.
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then 
+        FlowMin * Max( FluidSys:CoilClgTotCapExistingRat,
+                       FluidSys:CoilHtgTotCapExistingRat )
+      else UNCHANGED
+      endif endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+      ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+        IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) ) )
+    then zb:FlowMin
+    else UNCHANGED
+    endif
+ENDRULE
+RULE Pump:Pwr
+  SIZING_BASELINE  
+    if( IfValidAnd( Pwr > 0 ) .AND.
+        FluidSys:IsBaseSys = 0 .AND.
+        ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+          IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) )
+      ) 
+    then
+      if( ( ParentComponentType() = "HtRej" .OR.
+            ParentComponentType() = "Chlr" ) .AND. 
+          FluidSys:CoilClgTotCapExistingRat > 0 )
+      then Pwr * FluidSys:CoilClgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "Blr" .AND. 
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then Pwr * FluidSys:CoilHtgTotCapExistingRat
+      else 
+      if( ParentComponentType() = "FluidSeg" .AND.
+          FluidSys:CoilClgTotCapExistingRat > 0 .AND.
+          FluidSys:CoilHtgTotCapExistingRat > 0 )
+      then 
+        Pwr * Max( FluidSys:CoilClgTotCapExistingRat,
+                   FluidSys:CoilHtgTotCapExistingRat )
+      else UNCHANGED
+      endif endif endif
+    else UNCHANGED
+    endif
+  ANNUAL_BASELINE
+    if( FluidSys:IsBaseSys = 0 .AND.
+      ( IfValidAnd( Parent2Valid( CoilClgTotCapExistingRat ) < 1 ) .OR. 
+        IfValidAnd( Parent2Valid( CoilHtgTotCapExistingRat ) < 1 ) ) )
+    then zb:Pwr
+    else UNCHANGED
+    endif
+ENDRULE

@@ -1,0 +1,1465 @@
+// Opaque Envelope - Roofs
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//
+
+
+// According to 5.5.3 ACM Draft April 5 2013, items:
+//     Roof Name
+//     Roof Type
+//     Roof Geometry
+//     Roof Construction
+//
+// The main objects in the SDD are:
+//     Project:Building:BuildingStory:Space:Roof
+//     Project:Building:BuildingStory:Space:Roof:PolyLoop
+//     Project:Building:BuildingStory:Space:Roof:Skylight (Part of fenestration and not included in this file)
+//     ConstructAssembly
+//     Material
+//
+
+// -------------- Roof Name --------------------
+// Input restriction summary:
+//      None
+// Baseline rule summary:
+//      If provided, same for all transformations.
+//
+RULE Roof:Name
+  DESCRIPTION
+    "A unique name that identifies the roof."
+  HELP
+    "A unique name or code that identifies the roof and ties it to the
+     construction documents submitted for energy code review. It is not
+     mandatory to name roofs."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    Required
+  // No transformations are needed since already copied initially.
+ENDRULE
+
+//*********************************************************************************
+//****************** Temporary ****************************************************
+//*********************************************************************************
+// TO DO: Remove this rule.  It fixes Status as New for ExtWall
+// There does not seem to be a status selection in CBECC at the Space:Surface level
+//*********************************************************************************
+// -------------- Exterior Wall Status -----------------------------
+RULE Roof:Status
+  DESCRIPTION
+    "This sets the Roof construction status to New.  There will be an option
+     to select New, ExistingAlteration, ExistingUnchanged, Removed."
+  HELP
+    ""
+  INPUTCLASS
+    Required
+  OPTION
+    New
+    Existing
+    Altered
+  DEFAULT
+    Parent(EnvStatus)
+  CHECKCODE
+    if( Proj:IsNewEnv ) then
+      if( Status != "New" ) then
+        PostWarning( "Roof '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsExistingEnv ) then
+      if( Status != "Existing" ) then
+        PostWarning( "Roof '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Existing' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAdd ) then
+      if( Status = "Altered" ) then
+        PostWarning( "Roof '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAltOnly ) then
+      if( Status = "New" ) then
+        PostWarning( "Roof '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Altered' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING
+    if( Proj:IsNewEnv ) then "New"
+    else if( Proj:IsExistingEnv ) then "Existing"
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then "New"
+    else if( Proj:IsAltOnly .AND. u:Status = "New" ) then "Altered"
+    else u:Status
+    endif endif endif endif
+  ANNUAL
+    z:Status
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:IsNew
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNew
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is New"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 1
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then 1
+    else if( Proj:CompType = "ExistingAlteration" ) then 0
+    else if( u:Status = "New") then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:IsAltered
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsAltered
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Altered"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 0
+    else if( Proj:IsAdd ) then 0
+    else if( Proj:CompType = "ExistingAlteration" .AND. u:Status = "New" ) then 1
+    else if( u:Status = "Altered" ) then 1
+    else 0
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:IsExisting
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsExisting
+  DESCRIPTION
+    "Flag to identify whether the status of the surface is Existing"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( Proj:IsNewEnv ) then 0
+    else if( Proj:IsExistingEnv ) then 1
+    else if( u:Status = "Existing" ) then 1
+    else 0
+    endif endif endif
+ENDRULE
+
+// -------------- Roof Geometry --------------------
+// Input restriction summary:
+//      None
+// Baseline rule summary:
+//      Identical in the proposed and baseline building designs
+
+// Still need to incorporate the following:
+//    "For alterations, roof geometry will be fixed, based on one
+//    of the building prototypes (office, retail, etc.)"
+
+// CartesianPt rules defined in PolyLoop.rule
+// RULE Roof:PolyLp:CartesianPt:Coord[1]  // x
+//   DESCRIPTION
+//     "The x-coordinate for one of the corners of a roof."
+//   HELP
+//     "The x-coordinate for one of the corners of a roof."
+//   REFERENCE
+//     ACM Section 5.5.3-Roofs
+//   INPUTCLASS
+//     Required
+//   UNITS
+//     feet
+//   COMMONMINIMUM
+//     -100000
+//   COMMONMAXIMUM
+//     100000
+//   // No transformations are needed since already copied initially.
+// ENDRULE
+// 
+// // -----------------------------------------------------------------------------
+// RULE Roof:PolyLp:CartesianPt:Coord[2]  // y
+//   DESCRIPTION
+//     "The y-coordinate for one of the corners of a roof."
+//   HELP
+//     "The y-coordinate for one of the corners of a roof."
+//   REFERENCE
+//     ACM Section 5.5.3-Roofs
+//   INPUTCLASS
+//     Required
+//   UNITS
+//     feet
+//   COMMONMINIMUM
+//     -100000
+//   COMMONMAXIMUM
+//     100000
+//   // No transformations are needed since already copied initially.
+// ENDRULE
+// 
+// // -----------------------------------------------------------------------------
+// RULE Roof:PolyLp:CartesianPt:Coord[3]  // z
+//   DESCRIPTION
+//     "The z-coordinate for one of the corners of a roof."
+//   HELP
+//     "The z-coordinate for one of the corners of a roof."
+//   REFERENCE
+//     ACM Section 5.5.3-Roofs
+//   INPUTCLASS
+//     Required
+//   UNITS
+//     feet
+//   MINIMUM
+//     0
+//   COMMONMINIMUM
+//     10
+//   COMMONMAXIMUM
+//     1200   // 12 ft x 100 stories
+//   // No transformations are needed since already copied initially.
+// ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Roof:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a roof."
+  HELP
+    "A reference to a construction assembly. "
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+  INPUTCLASS
+    Required
+  DEFAULT
+    ConsAssmRef
+  CHECKSIM
+    if( LocalCompAssigned(ConsAssmRef) = 0 ) then
+      PostError("A valid construction assembly must be assigned to surface '%s'
+                 in space '%s'.",Name,Spc:Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:ConsAssmRef
+  SIZING_BASELINE
+//  See below for baselinesizing
+  ANNUAL_PROPOSED
+    u:ConsAssmRef
+  ANNUAL_BASELINE
+//   See below for baseline
+ENDRULE
+
+
+// -------------- Roof Type ----------------------------------------------------
+// Input restriction summary:
+//      Input is optional
+// Baseline rule summary:
+//      baseline is metal building (insulation entirely above deck)
+
+RULE NEW Roof:ConsType
+  RULESETS
+    T24N
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "A roof classification defined in the baseline standard. "
+  HELP
+    "A roof classification defined in the Standards. This descriptor can be derived from
+    other building descriptors and it may not be necessary for the software user to specify
+    it directly."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  LONGFORM
+    ConstructType
+  OPTION
+    WoodFramingAndOtherRoof
+    MetalBuildingRoof
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(ConsAssmRef) = 0 ) then UNCHANGED
+    else if( ConsAssmRef:ContainsMetalRoofMaterial = "true" ) then
+      "MetalBuildingRoof"
+    else
+      if( ConsAssmRef:ContainsMetalFrameMaterial = "true" ) then
+        "MetalBuildingRoof"
+      else
+        if( ConsAssmRef:ContainsWoodFrameMaterial = "true" ) then
+          "WoodFramingAndOtherRoof"
+        else
+          "WoodFramingAndOtherRoof"  // even if it does not contain a wood frame it would be an "other" wall
+        endif
+      endif
+    endif endif
+  SIZING_PROPOSED
+    u:ConsType
+  SIZING_BASELINE
+    if( Proj:IsExistingEnv ) then
+      u:ConsType
+    else if( u:Proj:CompType = "ExistingAlteration" .OR.
+             u:Proj:CompType = "ExistingAdditionAndAlteration" ) then
+      if( Status = "Existing" .OR. 
+          Status = "Altered" ) then
+        u:ConsType
+      else "WoodFramingAndOtherRoof"
+      endif
+    else "WoodFramingAndOtherRoof"
+    endif endif
+  ANNUAL
+    z:ConsType
+ENDRULE
+
+
+
+// -------------- Roof Construction --------------------------------------------
+// Input restriction summary:
+//      The construction assembly, defined by a series of layers, must be equal
+//      to or more efficient than the mandatory U-factor requirements of
+//      Section 120.7 of the Standards for new construction, and Section 141.0
+//      of the Standards for alterations.  Each layer specified must be listed
+//      in the materials database in the ACM Appendix 5.5A.  Appropriate
+//      R-values for insulation can be calculated using the formula below.
+//
+//         Rinsulation = (1/U-factor) – Rlayer(1) – Rlayer(2) – Rlayer(3) – Rlayer(n)
+//         Rinsulation = Rins.continuous + Rins.framing
+
+// Baseline rule summary:
+//      For new construction, the standard design roof type is "wood framed
+//      and other."  The U-factor required for roof construction is defined in
+//      Table 140.3-B, C or D of the Standards.
+
+RULE NEW Roof:BldgTypeForRoof
+  DESCRIPTION
+    "Space type used when determining the roof u-factor"
+  HELP
+    ""
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    NotInput
+  OPTION : S901G ECBC
+    Residential
+    Semiheated
+    NonResidential
+  DEFAULT : S901G ECBC
+    if( Spc:Semiheated = 1 )
+    then "Semiheated"
+    else 
+      if( Spc:OccClass = "Residential" )
+      then "Residential"
+      else "NonResidential"
+      endif
+    endif
+  DEFAULT
+    if( Bldg:RelocPubSchoolBldg = 1 ) then
+      "RelocClass"
+    else if( Spc:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+             Spc:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" ) then
+      if( Spc:OccClass = "Residential" ) then
+        "Residential"
+      else "NonResidential"
+      endif
+    else if( Spc:SpcFunc = "High-Rise Residential Living Spaces" .OR.
+             Spc:SpcFunc = "Hotel/Motel Guest Room" ) then
+      "Residential"
+    else "NonResidential"
+    endif endif endif
+  SIZING
+    u:BldgTypeForRoof
+  ANNUAL
+    z:BldgTypeForRoof
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:SlopeType
+  DATATYPE
+    Enumeration
+  DESCRIPTION
+    "Roofs with a ratio of rise to run of greater than 2:12 (9.5 degrees from
+    the horizontal) is considered a steep-sloped roof.  Others are low-sloped."
+  HELP
+    ""
+  REFERENCE
+    Section 100.1
+  INPUTCLASS
+    NotInput
+  OPTION
+    Steep
+    Low
+  DEFAULT
+    if( Tilt > 9.5 ) then
+      "Steep"
+    else
+      "Low"
+    endif
+  SIZING
+    u:SlopeType
+  ANNUAL
+    z:SlopeType
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:OverallUFactor
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The overall computed u-factor"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    ConsAssmRef:UFactor
+  SIZING
+    ConsAssmRef:UFactor
+  ANNUAL
+    z:ConsAssmRef:UFactor
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:NonCompIns
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    NonCompliantInsulation
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Flags floors that do not comply with the Section 120.7,
+     Mandatory Insulation Requirements"
+  HELP
+    ""
+  REFERENCE
+    T24-Sec120.7
+  CHECKCODE
+    if( LocalCompAssigned(ConsAssmRef) = 0 ) then 
+      UNCHANGED
+    else if( LocalStatus(ConsType) < 1 ) then
+      PostError("A valid construction assembly must be assigned to surface '%s'
+                 in space '%s'.",Name,Spc:Name)
+    else
+      switch (Status)
+      case "New":
+        switch (ConsType)
+        case "MetalBuildingRoof":
+          if( OverallUFactor > Proj:MtlBldgRoofMaxUFac[1] + 0.001 ) then 1
+          else 0
+          endif
+        case "WoodFramingAndOtherRoof":
+          if( OverallUFactor > Proj:WoodFrmAndOtherRoofMaxUFac[1] + 0.001 ) then 1
+          else 0
+          endif
+        default:
+          PostError("Unknown roof contruction type for roof '%s'",Name)
+        endswitch
+      case "ExistingAlteration":
+        switch (BldgTypeForRoof)
+        case "Residential":
+          if( OverallUFactor > Proj:AltRoofMaxUFac[1] + 0.001 ) then 1
+          else 0
+          endif
+        case "NonResidential":
+          if( OverallUFactor > Proj:AltRoofMaxUFac[2] + 0.001 ) then 1
+          else 0
+          endif
+        case "RelocClass":
+          if( OverallUFactor > Proj:AltRoofMaxUFac[3] + 0.001 ) then 1
+          else 0
+          endif
+        default:
+          PostError("Unknown building type for roof '%s'",Name)
+        endswitch
+      default:
+        0
+      endswitch
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:MaxUFactor
+  DESCRIPTION
+    "Maximum U-Factor allowed for roofs by Table 140.3-B,C,D and Section 120.7"
+  HELP
+    ""
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+    Section 120.7
+    Table 140.3-B
+    Table 140.3-C
+    Table 140.3-D
+  UNITS
+    Btu/h-ft2-F
+  INPUTCLASS
+    NotInput
+  SIZING : S901G ECBC
+    ExteriorRoofUFactor_S901G:UFactor("BldgType",BldgTypeForRoof, "ClimateZone",u:Proj:CliZn)
+  SIZING : T24N_2013
+    ExteriorRoofUFactor_T24N_2013:UFactor("BldgType",BldgTypeForRoof, "TypeOfCons",ConsType, "ClimateZone",u:Proj:CliZnNum)
+  SIZING : T24N_2016
+    ExteriorRoofUFactor_T24N_2016:UFactor("BldgType",BldgTypeForRoof, "TypeOfCons",ConsType, "ClimateZone",u:Proj:CliZnNum)
+  ANNUAL_PROPOSED
+    UNCHANGED
+  ANNUAL_BASELINE
+    z:MaxUFactor
+ENDRULE
+
+// ============================================================================================================================================================================
+TABLE ExteriorRoofUFactor_S901G
+    BldgType           UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor
+    ClimateZone=       1A      1B      2A      2B      3A      3B      3C      4A      4B      4C      5A      5B      5C      6A      6B      7       8
+    NonResidential     0.063   0.063   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048
+    Residential        0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048
+    Semiheated         0.218   0.218   0.218   0.218   0.173   0.173   0.173   0.173   0.173   0.173   0.119   0.119   0.119   0.093   0.093   0.093   0.063
+ENDTABLE
+// ============================================================================================================================================================================
+
+// ============================================================================================================================================================================
+// Table 140.3-B Prescriptive Envelope Criteria For Nonresidential Buildings
+// Table 140.3-C Prescriptive Envelope Criteria For High-Rise Residential Buildings And Guest Rooms Of Hotel/Motel Buildings
+// Table 140.3-D Prescriptive Envelope Criteria For Relocatable Public School Buildings Where Manufacturer Certifiesfor Use In All Climate Zones
+TABLE ExteriorRoofUFactor_T24N_2013
+    BldgType         TypeOfCons                UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor
+    ClimateZone=                               1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16
+    NonResidential   MetalBuildingRoof         0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065
+    NonResidential   WoodFramingAndOtherRoof   0.049   0.039   0.039   0.039   0.049   0.075   0.067   0.067   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039
+    Residential      MetalBuildingRoof         0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065   0.065
+    Residential      WoodFramingAndOtherRoof   0.034   0.028   0.039   0.028   0.039   0.039   0.039   0.028   0.028   0.028   0.028   0.028   0.028   0.028   0.028   0.028
+    RelocClass       MetalBuildingRoof         0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048   0.048
+    RelocClass       WoodFramingAndOtherRoof   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039   0.039
+ENDTABLE
+// ============================================================================================================================================================================
+
+// ============================================================================================================================================================================
+// Table 140.3-B Prescriptive Envelope Criteria For Nonresidential Buildings
+// Table 140.3-C Prescriptive Envelope Criteria For High-Rise Residential Buildings And Guest Rooms Of Hotel/Motel Buildings
+// Table 140.3-D Prescriptive Envelope Criteria For Relocatable Public School Buildings Where Manufacturer Certifiesfor Use In All Climate Zones
+TABLE ExteriorRoofUFactor_T24N_2016
+    BldgType         TypeOfCons                UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor UFactor
+    ClimateZone=                               1       2       3       4       5       6       7       8       9       10      11      12      13      14      15      16
+    NonResidential   MetalBuildingRoof         0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041
+    NonResidential   WoodFramingAndOtherRoof   0.034   0.034   0.034   0.034   0.034   0.049   0.049   0.049   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034
+    Residential      MetalBuildingRoof         0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041
+    Residential      WoodFramingAndOtherRoof   0.028   0.028   0.034   0.028   0.034   0.034   0.039   0.028   0.028   0.028   0.028   0.028   0.028   0.028   0.028   0.028
+    RelocClass       MetalBuildingRoof         0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041   0.041
+    RelocClass       WoodFramingAndOtherRoof   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034   0.034
+ENDTABLE
+// ============================================================================================================================================================================
+
+// -----------------------------------------------------------------------------
+RULE Roof:ConsAssmRef
+  DESCRIPTION
+    "Construction assembly reference for a roof."
+  HELP
+    "A reference to a construction assembly. "
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+    App5.5C-Table5.5.1
+    JA4-Table4.2.7
+//DEFAULT
+//   See above for Default
+//CHECKSIM
+//   See above for Checksim
+  SIZING_PROPOSED
+//   See above for Proposed
+  SIZING_BASELINE : S901G ECBC
+    if( Spc:NotEnclosed = 1 )
+    then zp:ConsAssmRef
+    else
+      if( (Proj:CliZnNum > 33) .OR.
+         ((Proj:CliZnNum <= 33) .AND.
+          (Roof:SlopeType = "Steep" .OR.
+	   Spc:Semiheated = 1 .OR.
+	   Spc:CondgType = "Unconditioned")) )
+      then
+      switch (Status)
+        case "New":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckUnconditioned")
+          else
+            switch (MaxUFactor)
+              case 0.218:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.218")
+              case 0.173:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.173")
+              case 0.119:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.119")
+              case 0.093:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.093")
+              case 0.063:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.063")
+              case 0.048:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.048")
+              default:
+                RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.048")
+            endswitch
+          endif
+        default:
+          RuleLibrary(ConsAssm,"RoofHighAbsorptanceInsulationEntirelyAboveDeckUnconditioned")
+      endswitch
+      else  
+      switch (Status)
+        case "New":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckUnconditioned")
+          else
+            switch (MaxUFactor)
+              case 0.218:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.218")
+              case 0.173:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.173")
+              case 0.119:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.119")
+              case 0.093:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.093")
+              case 0.063:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.063")
+              case 0.048:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+              default:
+                RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048")
+            endswitch
+          endif
+        default:
+          RuleLibrary(ConsAssm,"RoofLowAbsorptanceInsulationEntirelyAboveDeckUnconditioned")
+      endswitch
+      endif
+    endif
+  SIZING_BASELINE : T24N_2013
+    switch (Status)
+    case "Existing":
+      u:ConsAssmRef
+    default:                             // case "New" or "Altered"
+      switch (BldgTypeForRoof)
+      case "NonResidential":
+        switch (SlopeType)
+        case "Low":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU065")
+            endswitch
+          endif
+        default:                        // Case "Steep"
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU065")
+            endswitch
+          endif
+        endswitch
+      default:                          // case "Residential"
+        switch (SlopeType)
+        case "Low":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU065")
+            endswitch
+          endif
+        default:                        // Case "Steep"
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+              //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU065")
+            endswitch
+          endif
+        endswitch
+      endswitch
+    endswitch
+  SIZING_BASELINE : T24N_2016
+    switch (Status)
+    case "Existing":
+      u:ConsAssmRef
+    default:                             // case "New" or "Altered"
+      switch (BldgTypeForRoof)
+      case "NonResidential":
+        switch (SlopeType)
+        case "Low":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU048")
+            case 0.041:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU041")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"FlatNonresWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"FlatNonresMetalBuildingRoofU065")
+            endswitch
+          endif
+        default:                        // Case "Steep"
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU048")
+            case 0.041:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU041")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"SteepNonresWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"SteepNonresMetalBuildingRoofU065")
+            endswitch
+          endif
+        endswitch
+      default:                          // case "Residential"
+        switch (SlopeType)
+        case "Low":
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+            //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"FlatResWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"FlatResMetalBuildingRoofU065")
+            endswitch
+          endif
+        default:                        // Case "Steep"
+          if( Spc:CondgType = "Unconditioned" ) then
+            RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofUnconditioned")
+          else
+            switch (MaxUFactor)
+              //MetalBuildingRoof
+            case 0.065:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU065")
+            case 0.048:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU048")
+            //WoodFramingAndOtherRoof
+            case 0.028:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU028")
+            case 0.034:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU034")
+            case 0.039:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU039")
+            case 0.049:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU049")
+            case 0.067:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU067")
+            case 0.075:
+              RuleLibrary(ConsAssm,"SteepResWoodFramingAndOtherRoofU075")
+            default:
+              RuleLibrary(ConsAssm,"SteepResMetalBuildingRoofU065")
+            endswitch
+          endif
+        endswitch
+      endswitch
+    endswitch
+//ANNUAL_PROPOSED
+//   See above for Proposed
+  ANNUAL_BASELINE
+    z:ConsAssmRef
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// ------- Calculate area by Status - Roof
+RULE NEW Roof:AreaNew
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaAltered
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaExisting
+  DESCRIPTION
+    "The surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Existing" ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// ------- Calculate area by Status - Roof
+RULE NEW Roof:AreaNewNonResCond
+  DESCRIPTION
+    "The NonResidential surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" .AND. BldgTypeForRoof = "NonResidential" .AND.
+      ( Parent(CondgType) = "DirectlyConditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaNewResCond
+  DESCRIPTION
+    "The Residential surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" .AND. BldgTypeForRoof = "Residential" .AND.
+      ( Parent(CondgType) = "Conditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaNewRelocCond
+  DESCRIPTION
+    "The Relocatable Clasroom surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" .AND. BldgTypeForRoof = "RelocClass" .AND.
+      ( Parent(CondgType) = "Conditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaAltNonResCond
+  DESCRIPTION
+    "The NonResidential surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" .AND. BldgTypeForRoof = "NonResidential" .AND.
+      ( Parent(CondgType) = "Conditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaAltResCond
+  DESCRIPTION
+    "The Residential surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" .AND. BldgTypeForRoof = "Residential" .AND.
+      ( Parent(CondgType) = "Conditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// -----------------------------------------------------------------------------
+RULE NEW Roof:AreaAltRelocCond
+  DESCRIPTION
+    "The Relocatable Clasroom surface area by status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" .AND. BldgTypeForRoof = "RelocClass" .AND.
+      ( Parent(CondgType) = "Conditioned" .OR. 
+        Parent(CondgType) = "IndirectlyConditioned" .OR. 
+        Parent(CondgType) = "Plenum" ) ) then
+      Area
+    else
+      UNCHANGED
+    endif
+ENDRULE    
+
+// ----------------- Roof CRRC Initial Emittance -------------------------------
+RULE Roof:CRRCInitialEmit
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Initial Emittance value from Cool Roof Rating Council testing of the
+    roofing."
+  HELP
+    "The Initial Emittance value from Cool Roof Rating Council testing of the
+    roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:CRRCInitialEmit
+  SIZING
+    ConsAssmRef:CRRCInitialEmit
+  ANNUAL
+    z:CRRCInitialEmit
+ENDRULE
+
+// ----------------- Roof CRRC Initial Reflectance -----------------------------
+RULE Roof:CRRCInitialRefl
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Initial Reflectance value from Cool Roof Rating Council testing of the
+    roofing."
+  HELP
+    "The Initial Reflectance value from Cool Roof Rating Council testing of the
+    roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:CRRCInitialRefl
+  SIZING
+//    IF "Steep" then 0.20
+//    IF "Residential" then 0.55
+//    else 0.63
+    ConsAssmRef:CRRCInitialRefl
+  ANNUAL
+    z:CRRCInitialRefl
+ENDRULE
+
+// ----------------- Roof CRRC Initial SRI -------------------------------------
+RULE Roof:CRRCInitialSRI
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Initial SRI (Solar Reflectance Index) value from Cool Roof Rating
+    Council testing of the roofing."
+  HELP
+    "The Initial SRI (Solar Reflectance Index) value from Cool Roof Rating
+    Council testing of the roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    100
+  DEFAULT
+    ConsAssmRef:CRRCInitialSRI
+  SIZING
+//    IF "Steep" then 16
+//    IF "Residential" then 64
+//    else 75
+    ConsAssmRef:CRRCInitialSRI
+  ANNUAL
+    z:CRRCInitialSRI
+ENDRULE
+
+// ----------------- Roof CRRC Aged Emittance ----------------------------------
+RULE Roof:CRRCAgedEmit
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Aged Emittance value from Cool Roof Rating Council testing of the
+    roofing."
+  HELP
+    "The Aged Emittance value from Cool Roof Rating Council testing of the
+    roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:CRRCAgedEmit
+  SIZING
+//    0.85
+    ConsAssmRef:CRRCAgedEmit
+  ANNUAL
+    z:CRRCAgedEmit
+ENDRULE
+
+// ----------------- Roof Aged Emittance ----------------------------------
+RULE Roof:RoofAgedThrmlEmit
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The Aged Emittance value."
+  HELP
+    "The Aged Emittance value."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:RoofAgedThrmlEmit
+  SIZING_PROPOSED
+    ConsAssmRef:RoofAgedThrmlEmit
+  ANNUAL_PROPOSED
+    zp:RoofAgedThrmlEmit
+ENDRULE
+
+
+// ----------------- Roof CRRC Aged Reflectance --------------------------------
+RULE Roof:CRRCAgedRefl
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Aged Reflectance value from Cool Roof Rating Council testing of the
+    roofing."
+  HELP
+    "The Aged Reflectance value from Cool Roof Rating Council testing of the
+    roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:CRRCAgedRefl
+  SIZING
+//    IF "Steep" then 0.20
+//    IF "Residential" then 0.55
+//    else 0.63
+    ConsAssmRef:CRRCAgedRefl
+  ANNUAL
+    z:CRRCAgedRefl
+ENDRULE
+
+// ----------------- Roof CRRC Aged Reflectance --------------------------------
+RULE Roof:RoofAgedSolRefl
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The Aged Reflectance value."
+  HELP
+    "The Aged Reflectance value."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    ConsAssmRef:RoofAgedSolRefl
+  SIZING_PROPOSED
+    ConsAssmRef:RoofAgedSolRefl
+  ANNUAL_PROPOSED
+    zp:RoofAgedSolRefl
+ENDRULE
+
+
+// ----------------- Roof CRRC Aged SRI ----------------------------------------
+RULE Roof:CRRCAgedSRI
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Aged SRI (Solar Reflectance Index) value from Cool Roof Rating Council
+    testing of the roofing."
+  HELP
+    "The Aged SRI (Solar Reflectance Index) value from Cool Roof Rating Council
+    testing of the roofing."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    100
+  DEFAULT
+    ConsAssmRef:CRRCAgedSRI
+  SIZING
+//    IF "Steep" then 16
+//    IF "Residential" then 64
+//    else 75
+    ConsAssmRef:CRRCAgedSRI
+  ANNUAL
+    z:CRRCAgedSRI
+ENDRULE
+
+// ----------------- Roof CRRC Product ID --------------------------------------
+RULE Roof:CRRCProdID
+  RULESETS
+    T24N
+  DESCRIPTION
+    "The Product ID shown on the report of the roofing solar properties from 
+     Cool Roof Rating Council testing of the roofing."
+  HELP
+    ""
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    if( LocalCompAssigned(ConsAssmRef) )
+      then ConsAssmRef:CRRCProdID
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    ConsAssmRef:CRRCProdID
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:CRRCProdID
+ENDRULE
+
+// ----------------- Roof Field Applied Coating? -------------------------------
+RULE Roof:FieldAppliedCoating
+  RULESETS
+    T24N
+  DESCRIPTION
+    "A flag to indicate if the roofing surface is from a coating applied on
+    site or not."
+  HELP
+    "A flag to indicate if the roofing surface is from a coating applied on
+    site or not."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    ConsAssmRef:FieldAppliedCoating
+  SIZING_PROPOSED
+    ConsAssmRef:FieldAppliedCoating
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:FieldAppliedCoating
+ENDRULE
+
+// ----------------- Roof Solar Absorptance ------------------------------------
+RULE Roof:ExtSolAbs
+  DESCRIPTION
+    "The fraction of incident solar radiation on the roof which is absorbed."
+  HELP
+    "The fraction of incident solar radiation on the roof which is absorbed.
+    Solar radiation includes the visible spectrum as well as infrared and
+    ultraviolet wavelengths."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    0.92
+//  SIZING : S901G ECBC
+//    ( 1 - z:RoofAgedSolRefl )
+  SIZING
+    if( SlopeType = "Low" .OR. ConsAssmRef:HasCRRCProdID = 1 ) then
+      ConsAssmRef:ExtSolAbs
+    else 0.92
+    endif
+  ANNUAL
+    z:ExtSolAbs
+ENDRULE
+
+// ----------------- Roof Thermal Absorptance ----------------------------------
+RULE Roof:ExtThrmlAbs
+  DESCRIPTION
+    "The fraction of incident long wavelength radiation on the roof which is
+    absorbed."
+  HELP
+    "The fraction of incident long wavelength radiation on the roof which is
+    absorbed."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    0.75
+//  SIZING : S901G ECBC
+//    z:RoofAgedThrmlEmit
+  SIZING
+//    0.85
+    ConsAssmRef:ExtThrmlAbs
+  ANNUAL
+    z:ExtThrmlAbs
+ENDRULE
+
+// ----------------- Roof Visible Absorptance ----------------------------------
+RULE Roof:ExtVisAbs
+  DESCRIPTION
+    "The fraction of incident visible wavelength radiation on the roof which is
+    absorbed."
+  HELP
+    "The fraction of incident visible wavelength radiation on the roof which is
+    absorbed."
+  REFERENCE
+    ACM Section 5.5.3-Roofs
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    0.75
+  SIZING
+//    0.85
+    ConsAssmRef:ExtVisAbs
+  ANNUAL_PROPOSED
+    ExtThrmlAbs
+  ANNUAL_BASELINE
+    z:ExtVisAbs
+ENDRULE
+
+// ----------------- Roof Surface Roughness ------------------------------------
+RULE Roof:ExtRoughness
+  DESCRIPTION
+    "The relative roughness of the exterior surface.  The roughness affects
+    convective heat transfer of the surface."
+  HELP
+    "The relative roughness of the exterior surface.  The roughness affects
+    convective heat transfer of the surface."
+  INPUTCLASS
+    NotInput
+  OPTION
+    VeryRough
+    Rough
+    MediumRough
+    MediumSmooth
+    Smooth
+    VerySmooth
+  DEFAULT
+    MediumRough
+;    ConsAssmRef:ExtRoughness
+  SIZING
+    MediumRough
+  ANNUAL
+    z:ExtRoughness
+ENDRULE
+

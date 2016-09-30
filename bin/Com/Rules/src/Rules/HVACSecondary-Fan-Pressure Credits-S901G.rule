@@ -1,0 +1,3126 @@
+// HVAC Secondary Systems - Fan - Pressure Credits
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+
+//      Process and Filtration Pressure Drop
+//      Pressure Drop Adjustment
+
+
+
+// ********** Pressure Drop Adjustments ***************************************
+
+// Input rules
+// =========================== AirSystem ======================================
+// *************************** Exhaust Systems ********************************
+
+// ---------- Fully Ducted Exhaust --------------------------------------------
+RULE AirSys:FullDuctExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with fully ducted 
+     exhaust."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:FullDuctExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted exhaust'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctExhFlag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:FullDuctExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Fully ducted exhaust air systems' fan pressure credit 
+                    (%g cfm) exceeds the total system exhaust fan flow
+                    (%g cfm).  Revise inputs for consistancy.",
+                     Name, FullDuctExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Fully Ducted Exhaust - Laboratory or Vivarium -------------------
+RULE AirSys:FullDuctExhLabOrVivFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system serves a laboratory or
+     vivarium, and is provided with fully ducted exhaust systems."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:FullDuctExhLabOrVivPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustLabOrVivariumPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted exhaust for systems, 
+     Laboratory or Vivarium spaces'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhLabOrVivFlag )
+    case 1 : 2.15
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:FullDuctExhLabOrVivDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhLabOrVivFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctExhLabOrVivDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Fully ducted exhaust air systems, lab or viavarium' fan 
+                     pressure credit (%g cfm) exceeds the total system exhaust 
+                     fan flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, FullDuctExhLabOrVivDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Exhaust filters, scrubbers, or other exhaust treatment ----------
+RULE AirSys:ExhFiltersFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with exhaust 
+     filters, scrubbers, or other exhaust treatment."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:ExhFiltersDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the exhaust treatment, at fan system design
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:ExhFiltersPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustFiltersPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Exhaust filters, scrubbers, or other exhaust 
+     treatment'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ExhFiltersFlag )
+    case 1 : ExhFiltersDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:ExhFiltersDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( ExhFiltersFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ExhFiltersDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Exhaust filters, scrubbers, or other exhaust treatment' 
+                     fan pressure credit (%g cfm) exceeds the
+                     total system exhaust fan flow (%g cfm).  Revise inputsfor 
+                     consistancy.",
+                     Name, ExhFiltersDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Biosafety Cabinet -----------------------------------------------
+RULE AirSys:BiosafCabinetFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed systems is an exhaust system serving
+     a biosafety cabinet"
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:BiosafCabinetDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the biosafety cabinet, at fan system design 
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:BiosafCabinetPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    BiosafetyCabinetPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Biosafety Cabinet'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( BiosafCabinetFlag )
+    case 1 : BiosafCabinetDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:BiosafCabinetDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( BiosafCabinetFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ExhFiltersDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Biosafety Cabinet' fan pressure credit (%g cfm) exceeds 
+                     the total system exhaust fan flow (%g cfm).  Revise inputs
+                     for consistancy.",
+                     Name, BiosafCabinetDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+
+// ---------- Exhaust system serving fume hood --------------------------------
+RULE AirSys:FumeHoodExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is an exhaust system serving
+     a fume hood."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:FumeHoodExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FumeHoodExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Exhaust system serving fume hood'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FumeHoodExhFlag )
+    case 1 : 0.35
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:FumeHoodExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FumeHoodExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FumeHoodExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Exhaust system serving fume hood' fan pressure credit 
+                    (%g cfm) exceeds the total system exhaust fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, FumeHoodExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+
+// ---------- Laboratory and vivarium exhaust systems in high-rise buildings ---
+RULE AirSys:LabOrVivExhHiRiseFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is an exhaust system serving a
+     laboratory or vivarium and located in a high-rise building."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:LabOrVivExhHiRiseVertDuctLen
+  DESCRIPTION
+    "The vertical duct length of the Lab/Vivarium exhaust system."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:LabOrVivExhHiRisePDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    LabOrVivariumExhaustHighRisePressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Laboratory and vivarium exhaust systems in 
+     high-rise buildings'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( LabOrVivExhHiRiseFlag )
+    case 1 : 0.25*Max(0,(LabOrVivExhHiRiseVertDuctLen-75)/100)
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:LabOrVivExhHiRiseDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( LabOrVivExhHiRiseFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( LabOrVivExhHiRiseDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Laboratory and vivarium exhaust systems in high-rise 
+                     buildings' fan pressure credit (%g cfm) exceeds the total 
+                     system exhaust fan flow (%g cfm).  Revise inputs for 
+                     consistancy.",
+                     Name, LabOrVivExhHiRiseDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+    
+// ---------- Sound Attenuation Section For Exhaust----------------------------
+RULE AirSys:SndAttnExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed exhaust system is provided with a
+     sound attenuation section."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:SndAttnExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Sound Attenuation Section'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnExhFlag )
+    case 1 : 0.15
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:SndAttnExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( SndAttnExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( SndAttnExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Sound Attenuation Section' fan pressure credit (%g cfm) 
+                     exceeds the total system exhaust fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, SndAttnExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// *************************** Supply Systems *********************************
+// ---------- Fully Ducted Return ---------------------------------------------
+RULE AirSys:FullDuctRetFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with fully ducted 
+     return."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:FullDuctRetPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted return'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:FullDuctRetDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : if( IfValidAnd( RetFanCap > 0 ) )
+      then RetFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctRetDevFlow > RetFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Fully ducted return systems' fan pressure credit (%g cfm) 
+                     exceeds the system return fan flow (%g cfm).  Revise 
+                     inputs for consistancy.",
+                     Name, FullDuctRetDevFlow, RetFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:FullDuctRetFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : FullDuctRetDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Fully Ducted Return - Laboratory or Vivarium --------------------
+RULE AirSys:FullDuctRetLabOrVivFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system serves a laboratory or
+     vivarium, and is provided with fully ducted return."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:FullDuctRetLabOrVivPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnLabOrVivariumPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted return for systems, 
+     Laboratory or Vivarium spaces'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetLabOrVivFlag )
+    case 1 : 2.15
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:FullDuctRetLabOrVivDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : if( IfValidAnd( RetFanCap > 0 ) )
+      then RetFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctRetDevFlow > RetFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Fully ducted return systems, lab or vivarium' fan pressure 
+                     credit (%g cfm) exceeds the system return fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, FullDuctRetDevFlow, RetFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:FullDuctRetLabOrVivFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnLabOrVivariumFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetLabOrVivFlag )
+    case 1 : FullDuctRetLabOrVivDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 9 through 12 --------------
+RULE AirSys:MERV9To12Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 9 
+     to MERV 12 filters"  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:MERV9To12PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERV9To12PDPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 9 through
+     12'."    
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:MERV9To12DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERV9To12Flag > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 9 through 12' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERV9To12Flag, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:MERV9To12FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERV9To12PDPressureDropAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : MERV9To12DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 13 through 15 --------------
+RULE AirSys:MERV13To15Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 13 
+     to MERV 15 filters"  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:MERV13To15PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERV13To15PressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 13 through
+     15'."    
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:MERV13To15DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERV13To15DevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 13 through 15' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERV13To15DevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:MERV13To15FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERV13To15FlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : MERV13To15DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 9 through 12 ----------------
+RULE AirSys:MERVGTE16Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 16 or 
+     greater filters, or electronically enhanced filters."    
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:MERVGTE16DsgnPD
+  DESCRIPTION
+    "The design pressure drop of the MERV 16 or greater filters, or 
+     electronically enhanced filters, at fan system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:MERVGTE16PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERVGreaterThanOrEqualTo16PressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 16 or greater
+     or electronically enhanced filters'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : 2*MERVGTE16DsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:MERVGTE16DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERVGTE16DevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 16 or greater' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERVGTE16DevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:MERVGTE16FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERVGreaterThanOrEqualTo16FlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : MERVGTE16DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Carbon and other gas-phase air cleaners -----------------------
+RULE AirSys:GasPhaseAirCleanersFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with carbon or 
+     other gas-phase air cleaners"
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:GasPhaseAirCleanersDsgnPD
+  DESCRIPTION
+    "The clean filter design pressure drop of the carbon or other gas-phase air
+     cleaners, at fan system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:GasPhaseAirCleanersPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    GasPhaseAirCleanersPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Carbon and other gas-phase air cleaners'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : GasPhaseAirCleanersDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:GasPhaseAirCleanersDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( GasPhaseAirCleanersDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Carbon and other gas phase air cleaners' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, GasPhaseAirCleanersDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:GasPhaseAirCleanersFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    GasPhaseAirCleanersFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : GasPhaseAirCleanersDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Energy recovery device, other than Coil Runaround Loop ----------
+RULE AirSys:ERVFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with an energy
+     recovery device, other than a coil runaround loop."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:ERVEff
+  DESCRIPTION
+    "The design pressure drop of the energy recovery device, at fan system design 
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:ERVPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    EnergyRecoveryVentilatiorPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Energy Recovery Devices, other than Coil 
+     Runaround Loop'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : Max(0,(2.2*ERVEff)-(2*0.5))
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:ERVDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ERVDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Energy recovery device, other than Coil Runaround Loop' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, ERVDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:ERVFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    EnergyRecoveryVentilatiorFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : ERVDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Evaporative humidifier/cooler in series w/ another cooling coil -
+RULE AirSys:EvapHumOrClrFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with an
+     evaporative humidifier/cooler in series w/ another cooling coil."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE AirSys:EvapHumOrClrDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the evaporative humidifier/cooler, at fan
+     system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:EvapHumOrClrPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    EvaporativeHumidifierOrCoolerPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Evaporative humidifier/coolerin series w/ another cooling coil'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : EvapHumOrClrDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:EvapHumOrClrDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( EvapHumOrClrDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Evaporative humidifier/cooler in series w/ another cooling
+                     coil' fan pressure credit (%g cfm) exceeds the system 
+                     supply fan flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, EvapHumOrClrDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:EvapHumOrClrFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    EvaporativeHumidifierOrCoolerFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : EvapHumOrClrDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Sound Attenuation Section ---------------------------------------
+RULE AirSys:SndAttnFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with a
+     sound attenuation section."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW AirSys:SndAttnPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Sound Attenuation Section'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : 0.15
+    default: 0
+    endswitch
+ENDRULE
+RULE AirSys:SndAttnDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( SndAttnDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Sound Attenuation Section' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, SndAttnDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW AirSys:SndAttnFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : SndAttnDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+
+// =========================== Zone System ====================================
+// *************************** Exhaust Systems ********************************
+// ---------- Fully Ducted Exhaust --------------------------------------------
+RULE ZnSys:FullDuctExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with fully ducted 
+     exhaust."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:FullDuctExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted exhaust'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctExhFlag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:FullDuctExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Fully ducted exhaust air systems' fan pressure credit 
+                    (%g cfm) exceeds the total system exhaust fan flow
+                    (%g cfm).  Revise inputs for consistancy.",
+                     Name, FullDuctExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Fully Ducted Exhaust - Laboratory or Vivarium -------------------
+RULE ZnSys:FullDuctExhLabOrVivFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system serves a laboratory or
+     vivarium, and is provided with fully ducted exhaust systems."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:FullDuctExhLabOrVivPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustLabOrVivariumPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted exhaust for systems, 
+     Laboratory or Vivarium spaces'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhLabOrVivFlag )
+    case 1 : 2.15
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:FullDuctExhLabOrVivDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctExhLabOrVivFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctExhLabOrVivDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Fully ducted exhaust air systems, lab or viavarium' fan 
+                     pressure credit (%g cfm) exceeds the total system exhaust 
+                     fan flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, FullDuctExhLabOrVivDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Exhaust filters, scrubbers, or other exhaust treatment ----------
+RULE ZnSys:ExhFiltersFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with exhaust 
+     filters, scrubbers, or other exhaust treatment."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:ExhFiltersDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the exhaust treatment, at fan system design
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:ExhFiltersPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustFiltersPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Exhaust filters, scrubbers, or other exhaust 
+     treatment'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ExhFiltersFlag )
+    case 1 : ExhFiltersDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:ExhFiltersDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( ExhFiltersFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ExhFiltersDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Exhaust filters, scrubbers, or other exhaust treatment' 
+                     fan pressure credit (%g cfm) exceeds the
+                     total system exhaust fan flow (%g cfm).  Revise inputsfor 
+                     consistancy.",
+                     Name, ExhFiltersDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Biosafety Cabinet -----------------------------------------------
+RULE ZnSys:BiosafCabinetFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed systems is an exhaust system serving
+     a biosafety cabinet"
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:BiosafCabinetDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the biosafety cabinet, at fan system design 
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:BiosafCabinetPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    BiosafetyCabinetPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Biosafety Cabinet'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( BiosafCabinetFlag )
+    case 1 : BiosafCabinetDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:BiosafCabinetDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( BiosafCabinetFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ExhFiltersDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Biosafety Cabinet' fan pressure credit (%g cfm) exceeds 
+                     the total system exhaust fan flow (%g cfm).  Revise inputs
+                     for consistancy.",
+                     Name, BiosafCabinetDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+
+// ---------- Exhaust system serving fume hood --------------------------------
+RULE ZnSys:FumeHoodExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is an exhaust system serving
+     a fume hood."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:FumeHoodExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FumeHoodExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Exhaust system serving fume hood'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FumeHoodExhFlag )
+    case 1 : 0.35
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:FumeHoodExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FumeHoodExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FumeHoodExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Exhaust system serving fume hood' fan pressure credit 
+                    (%g cfm) exceeds the total system exhaust fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, FumeHoodExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+
+// ---------- Laboratory and vivarium exhaust systems in high-rise buildings ---
+RULE ZnSys:LabOrVivExhHiRiseFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is an exhaust system serving a
+     laboratory or vivarium and located in a high-rise building."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:LabOrVivExhHiRiseVertDuctLen
+  DESCRIPTION
+    "The vertical duct length of the Lab/Vivarium exhaust system."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:LabOrVivExhHiRisePDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    LabOrVivariumExhaustHighRisePressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Laboratory and vivarium exhaust systems in 
+     high-rise buildings'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( LabOrVivExhHiRiseFlag )
+    case 1 : 0.25*Max(0,(LabOrVivExhHiRiseVertDuctLen-75)/100)
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:LabOrVivExhHiRiseDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( LabOrVivExhHiRiseFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( LabOrVivExhHiRiseDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Laboratory and vivarium exhaust systems in high-rise 
+                     buildings' fan pressure credit (%g cfm) exceeds the total 
+                     system exhaust fan flow (%g cfm).  Revise inputs for 
+                     consistancy.",
+                     Name, LabOrVivExhHiRiseDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE 
+    
+// ---------- Sound Attenuation Section For Exhaust----------------------------
+RULE ZnSys:SndAttnExhFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed exhaust system is provided with a
+     sound attenuation section."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:SndAttnExhPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Sound Attenuation Section'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnExhFlag )
+    case 1 : 0.15
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:SndAttnExhDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( SndAttnExhFlag )
+    case 1 : if( IfValidAnd( ExhFanCap > 0 ) )
+      then ExhFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( SndAttnExhDevFlow > ExhFanCap ) )
+    then PostError( "For Exhaust System '%s': The input device flow for the 
+                    'Sound Attenuation Section' fan pressure credit (%g cfm) 
+                     exceeds the total system exhaust fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, SndAttnExhDevFlow, ExhFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// *************************** Supply Systems *********************************
+// ---------- Fully Ducted Return ---------------------------------------------
+RULE ZnSys:FullDuctRetFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with fully ducted 
+     return."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:FullDuctRetPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted return'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:FullDuctRetDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctRetDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Fully ducted return systems' fan pressure credit (%g cfm) 
+                     exceeds the system return fan flow (%g cfm).  Revise 
+                     inputs for consistancy.",
+                     Name, FullDuctRetDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:FullDuctRetFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetFlag )
+    case 1 : FullDuctRetDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Fully Ducted Return - Laboratory or Vivarium --------------------
+RULE ZnSys:FullDuctRetLabOrVivFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system serves a laboratory or
+     vivarium, and is provided with fully ducted return."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:FullDuctRetLabOrVivPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnLabOrVivariumPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Fully ducted return for systems, 
+     Laboratory or Vivarium spaces'."  
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetLabOrVivFlag )
+    case 1 : 2.15
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:FullDuctRetLabOrVivDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( FullDuctRetLabOrVivFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( FullDuctRetLabOrVivDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Fully ducted return systems, lab or vivarium' fan pressure 
+                     credit (%g cfm) exceeds the system return fan flow (%g cfm).  
+                     Revise inputs for consistancy.",
+                     Name, FullDuctRetLabOrVivDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:FullDuctRetLabOrVivFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnLabOrVivariumFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( FullDuctRetLabOrVivFlag )
+    case 1 : FullDuctRetLabOrVivDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 9 through 12 --------------
+RULE ZnSys:MERV9To12Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 9 
+     to MERV 12 filters"  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:MERV9To12PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERV9To12PDPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 9 through
+     12'."    
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:MERV9To12DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERV9To12Flag > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 9 through 12' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERV9To12Flag, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:MERV9To12FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERV9To12PDPressureDropAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV9To12Flag )
+    case 1 : MERV9To12DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 13 through 15 --------------
+RULE ZnSys:MERV13To15Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 13 
+     to MERV 15 filters"  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:MERV13To15PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERV13To15PressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 13 through
+     15'."    
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : 0.5
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:MERV13To15DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERV13To15DevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 13 through 15' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERV13To15DevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:MERV13To15FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERV13To15FlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERV13To15Flag )
+    case 1 : MERV13To15DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Particulate Filtration Credit: MERV 9 through 12 ----------------
+RULE ZnSys:MERVGTE16Flag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with MERV 16 or 
+     greater filters, or electronically enhanced filters."    
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:MERVGTE16DsgnPD
+  DESCRIPTION
+    "The design pressure drop of the MERV 16 or greater filters, or 
+     electronically enhanced filters, at fan system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:MERVGTE16PDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    MERVGreaterThanOrEqualTo16PressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Particulate Filtration Credit: MERV 16 or greater
+     or electronically enhanced filters'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : 2*MERVGTE16DsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:MERVGTE16DevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( MERVGTE16DevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Particulate Filtration Credit, Merv 16 or greater' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, MERVGTE16DevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:MERVGTE16FlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    MERVGreaterThanOrEqualTo16FlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( MERVGTE16Flag )
+    case 1 : MERVGTE16DevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Carbon and other gas-phase air cleaners -----------------------
+RULE ZnSys:GasPhaseAirCleanersFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with carbon or 
+     other gas-phase air cleaners"
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:GasPhaseAirCleanersDsgnPD
+  DESCRIPTION
+    "The clean filter design pressure drop of the carbon or other gas-phase air
+     cleaners, at fan system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:GasPhaseAirCleanersPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    GasPhaseAirCleanersPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Carbon and other gas-phase air cleaners'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : GasPhaseAirCleanersDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:GasPhaseAirCleanersDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( GasPhaseAirCleanersDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Carbon and other gas phase air cleaners' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, GasPhaseAirCleanersDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:GasPhaseAirCleanersFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    GasPhaseAirCleanersFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( GasPhaseAirCleanersFlag )
+    case 1 : GasPhaseAirCleanersDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Energy recovery device, other than Coil Runaround Loop ----------
+RULE ZnSys:ERVFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with an energy
+     recovery device, other than a coil runaround loop."
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:ERVEff
+  DESCRIPTION
+    "The design pressure drop of the energy recovery device, at fan system design 
+     conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:ERVPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    EnergyRecoveryVentilatiorPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Energy Recovery Devices, other than Coil 
+     Runaround Loop'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : Max(0,(2.2*ERVEff)-(2*0.5))
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:ERVDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( ERVDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Energy recovery device, other than Coil Runaround Loop' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, ERVDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:ERVFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    EnergyRecoveryVentilatiorFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( ERVFlag )
+    case 1 : ERVDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Evaporative humidifier/cooler in series w/ another cooling coil -
+RULE ZnSys:EvapHumOrClrFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with an
+     evaporative humidifier/cooler in series w/ another cooling coil."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE ZnSys:EvapHumOrClrDsgnPD
+  DESCRIPTION
+    "The design pressure drop of the evaporative humidifier/cooler, at fan
+     system design conditions."  
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:EvapHumOrClrPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    EvaporativeHumidifierOrCoolerPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Evaporative humidifier/coolerin series w/ another cooling coil'."
+  HELP
+    ""
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : EvapHumOrClrDsgnPD
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:EvapHumOrClrDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( EvapHumOrClrDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Evaporative humidifier/cooler in series w/ another cooling
+                     coil' fan pressure credit (%g cfm) exceeds the system 
+                     supply fan flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, EvapHumOrClrDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:EvapHumOrClrFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    EvaporativeHumidifierOrCoolerFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( EvapHumOrClrFlag )
+    case 1 : EvapHumOrClrDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+// ---------- Sound Attenuation Section ---------------------------------------
+RULE ZnSys:SndAttnFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed system is provided with a
+     sound attenuation section."  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+RULE NEW ZnSys:SndAttnPDAdj
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationPressureDropAdjustment
+  DESCRIPTION
+    "The Fan Power Limitation Pressure Drop Adjustment as prescribed by ASHRAE
+     90.1 Table 6.5.3.1.1B, for 'Sound Attenuation Section'."  
+  HELP
+    ""     
+  UNITS
+    in. H2O
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : 0.15
+    default: 0
+    endswitch
+ENDRULE
+RULE ZnSys:SndAttnDevFlow
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  INPUTCLASS
+    Default
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : if( IfValidAnd( SupFanCap > 0 ) )
+      then SupFanCap
+      else 0
+      endif
+    default: 0
+    endswitch
+  CHECKCODE
+    if( IfVAlidAnd( SndAttnDevFlow > SupFanCap ) )
+    then PostError( "For HVAC System '%s': The input device flow for the 
+                    'Sound Attenuation Section' fan 
+                     pressure credit (%g cfm) exceeds the system supply fan 
+                     flow (%g cfm).  Revise inputs for consistancy.",
+                     Name, SndAttnDevFlow, SupFanCap)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ZnSys:SndAttnFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    SoundAttenuationFlowRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""     
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch( SndAttnFlag )
+    case 1 : SndAttnDevFlow/SupFanCap
+    default: 0
+    endswitch
+ENDRULE
+
+
+
+// Calculations
+// =========================== Thermal Zone ===================================
+// ---------- Zone Primary Airflow for Fan Power Credit Calcs -----------------
+RULE NEW ThrmlZn:FullDuctExhFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:FullDuctExhPDAdj *
+           ExhSysRef:FullDuctExhDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FullDuctExhFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:FullDuctExhLabOrVivFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedExhaustLabOrVivariumFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:FullDuctExhLabOrVivPDAdj *
+           ExhSysRef:FullDuctExhLabOrVivDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FullDuctExhLabOrVivFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:ExhFiltersFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustFiltersFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:ExhFiltersPDAdj *
+           ExhSysRef:ExhFiltersDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:ExhFiltersFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:BiosafCabinetFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    BiosafetyCabinetFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:BiosafCabinetPDAdj *
+           ExhSysRef:BiosafCabinetDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:BiosafCabinetFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:FumeHoodExhFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FumeHoodExhaustFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:FumeHoodExhPDAdj *
+           ExhSysRef:FumeHoodExhDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FumeHoodExhFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:LabOrVivExhHiRiseFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    LabOrVivariumExhaustHiRiseFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:LabOrVivExhHiRisePDAdj *
+           ExhSysRef:LabOrVivExhHiRiseDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:LabOrVivExhHiRiseFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:SndAttnExhFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    SoumdAttenuationExhaustFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ( ExhSysRef:SndAttnExhPDAdj *
+           ExhSysRef:SndAttnExhDevFlow *
+           ExhZnToSysFlowRat ) / 4131
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:SndAttnExhFanPwrAdj
+ENDRULE
+
+RULE NEW ThrmlZn:FullDuctRetFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:FullDuctRetPDAdj *
+            PriAirCondgSysRef:FullDuctRetDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:FullDuctRetPDAdj *
+            VentSysRef:FullDuctRetDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:FullDuctRetPDAdj *
+          PriAirCondgSysRef:FullDuctRetDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif       
+  SIZING_BASELINE
+    zp:FullDuctRetFanPwrAdj
+  ANNUAL_BASELINE
+    FullDuctRetFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:FullDuctRetLabOrVivFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:FullDuctRetLabOrVivPDAdj *
+            PriAirCondgSysRef:FullDuctRetLabOrVivDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:FullDuctRetLabOrVivPDAdj *
+            VentSysRef:FullDuctRetLabOrVivDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:FullDuctRetLabOrVivPDAdj *
+          PriAirCondgSysRef:FullDuctRetLabOrVivDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif      
+  SIZING_BASELINE
+    zp:FullDuctRetLabOrVivFanPwrAdj
+  ANNUAL_BASELINE
+    FullDuctRetLabOrVivFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:MERV9To12FanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:MERV9To12PDAdj *
+            PriAirCondgSysRef:MERV9To12DevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:MERV9To12PDAdj *
+            VentSysRef:MERV9To12DevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:MERV9To12PDAdj *
+          PriAirCondgSysRef:MERV9To12DevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif       
+  SIZING_BASELINE
+    zp:MERV9To12FanPwrAdj
+  ANNUAL_BASELINE
+    MERV9To12FanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:MERV13To15FanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:MERV13To15PDAdj *
+            PriAirCondgSysRef:MERV13To15DevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:MERV13To15PDAdj *
+            VentSysRef:MERV13To15DevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:MERV13To15PDAdj *
+          PriAirCondgSysRef:MERV13To15DevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif    
+  SIZING_BASELINE
+    zp:MERV13To15FanPwrAdj  
+  ANNUAL_BASELINE
+    MERV13To15FanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:MERVGTE16FanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:MERVGTE16PDAdj *
+            PriAirCondgSysRef:MERVGTE16DevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:MERVGTE16PDAdj *
+            VentSysRef:MERVGTE16DevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:MERVGTE16PDAdj *
+          PriAirCondgSysRef:MERVGTE16DevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif   
+  SIZING_BASELINE
+    zp:MERVGTE16FanPwrAdj
+  ANNUAL_BASELINE
+    MERVGTE16FanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:GasPhaseAirCleanersFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:GasPhaseAirCleanersPDAdj *
+            PriAirCondgSysRef:GasPhaseAirCleanersDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:GasPhaseAirCleanersPDAdj *
+            VentSysRef:GasPhaseAirCleanersDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:GasPhaseAirCleanersPDAdj *
+          PriAirCondgSysRef:GasPhaseAirCleanersDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif     
+  SIZING_BASELINE
+    zp:GasPhaseAirCleanersFanPwrAdj
+  ANNUAL_BASELINE
+    GasPhaseAirCleanersFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:ERVFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:ERVPDAdj *
+            PriAirCondgSysRef:ERVDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:ERVPDAdj *
+            VentSysRef:ERVDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:ERVPDAdj *
+          PriAirCondgSysRef:ERVDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif      
+  SIZING_BASELINE
+    zp:ERVFanPwrAdj
+  ANNUAL_BASELINE
+    ERVFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:EvapHumOrClrFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:EvapHumOrClrPDAdj *
+            PriAirCondgSysRef:EvapHumOrClrDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:EvapHumOrClrPDAdj *
+            VentSysRef:EvapHumOrClrDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:EvapHumOrClrPDAdj *
+          PriAirCondgSysRef:EvapHumOrClrDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif    
+  SIZING_BASELINE
+    zp:EvapHumOrClrFanPwrAdj
+  ANNUAL_BASELINE
+    EvapHumOrClrFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+RULE NEW ThrmlZn:SndAttnFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    FullyDuctedReturnFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( UniqueVentSysAssigned = 1 )
+      then
+        ( ( PriAirCondgSysRef:SndAttnPDAdj *
+            PriAirCondgSysRef:SndAttnDevFlow *
+            PriZnToSysFlowRat ) +
+          ( VentSysRef:SndAttnPDAdj *
+            VentSysRef:SndAttnDevFlow *
+            VentZnToSysFlowRat ) ) / 4131
+      else
+        ( PriAirCondgSysRef:SndAttnPDAdj *
+          PriAirCondgSysRef:SndAttnDevFlow *
+          PriZnToSysFlowRat ) / 4131
+      endif
+    else 0
+    endif     
+  SIZING_BASELINE
+    zp:SndAttnFanPwrAdj 
+  ANNUAL_BASELINE
+    SndAttnFanPwrAdj * BaseToPropDsgnFlowRat
+ENDRULE
+
+RULE NEW ThrmlZn:TotExhFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalExhaustFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    FullDuctExhFanPwrAdj +
+    FullDuctExhLabOrVivFanPwrAdj +
+    ExhFiltersFanPwrAdj +
+    BiosafCabinetFanPwrAdj +
+    FumeHoodExhFanPwrAdj +
+    LabOrVivExhHiRiseFanPwrAdj +
+    SndAttnExhFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:TotNonExhFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalNonExhaustFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    FullDuctRetFanPwrAdj +
+    FullDuctRetLabOrVivFanPwrAdj + 
+    MERV9To12FanPwrAdj +
+    MERV13To15FanPwrAdj +
+    MERVGTE16FanPwrAdj +
+    GasPhaseAirCleanersFanPwrAdj +
+    ERVFanPwrAdj +
+    EvapHumOrClrFanPwrAdj +
+    SndAttnFanPwrAdj
+ENDRULE
+RULE NEW ThrmlZn:TotFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFanPowerAdjustment
+  DESCRIPTION
+    ""  
+  HELP
+    ""
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    TotExhFanPwrAdj +
+    TotNonExhFanPwrAdj
+;   FullDuctExhFanPwrAdj +
+;   FullDuctExhLabOrVivFanPwrAdj +
+;   ExhFiltersFanPwrAdj +
+;   BiosafCabinetFanPwrAdj +
+;   FumeHoodExhFanPwrAdj +
+;   LabOrVivExhHiRiseFanPwrAdj +
+;   SndAttnExhFanPwrAdj +
+;   FullDuctRetFanPwrAdj +
+;   FullDuctRetLabOrVivFanPwrAdj + 
+;   MERV9To12FanPwrAdj +
+;   MERV13To15FanPwrAdj +
+;   MERVGTE16FanPwrAdj +
+;   GasPhaseAirCleanersFanPwrAdj +
+;   ERVFanPwrAdj +
+;   EvapHumOrClrFanPwrAdj +
+;   SndAttnFanPwrAdj
+ENDRULE
+
+
+// ********** Sum of System Fan Power Adjustment Credits***********************
+
+// =========================== AirSystem ======================================
+
+RULE NEW AirSys:TotExhSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalExhaustSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    ( FullDuctExhPDAdj * FullDuctExhDevFlow +
+      FullDuctExhLabOrVivPDAdj * FullDuctExhLabOrVivDevFlow +
+      ExhFiltersPDAdj * ExhFiltersDevFlow +
+      BiosafCabinetPDAdj * BiosafCabinetDevFlow +
+      FumeHoodExhPDAdj * FumeHoodExhDevFlow +
+      LabOrVivExhHiRisePDAdj * LabOrVivExhHiRiseDevFlow +
+      SndAttnExhPDAdj * SndAttnExhDevFlow ) / 4131
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotExhFanPwrAdj )
+ENDRULE
+RULE NEW AirSys:TotNonExhSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalNonExhaustSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total non-exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    ( FullDuctRetPDAdj * FullDuctRetDevFlow +
+      FullDuctRetLabOrVivPDAdj * FullDuctRetLabOrVivDevFlow + 
+      MERV9To12PDAdj * MERV9To12DevFlow +
+      MERV13To15PDAdj * MERV13To15DevFlow +
+      MERVGTE16PDAdj * MERVGTE16DevFlow +
+      GasPhaseAirCleanersPDAdj * GasPhaseAirCleanersDevFlow +
+      ERVPDAdj * ERVDevFlow +
+      EvapHumOrClrPDAdj * EvapHumOrClrDevFlow +
+      SndAttnPDAdj * SndAttnDevFlow ) / 4131
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotNonExhFanPwrAdj )
+ENDRULE
+RULE NEW AirSys:TotSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total non-exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    TotExhSysFanPwrAdj + TotNonExhSysFanPwrAdj
+ENDRULE
+
+// =========================== ZoneSystem =====================================
+
+RULE NEW ZnSys:TotExhSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalExhaustSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    ( FullDuctExhPDAdj * FullDuctExhDevFlow +
+      FullDuctExhLabOrVivPDAdj * FullDuctExhLabOrVivDevFlow +
+      ExhFiltersPDAdj * ExhFiltersDevFlow +
+      BiosafCabinetPDAdj * BiosafCabinetDevFlow +
+      FumeHoodExhPDAdj * FumeHoodExhDevFlow +
+      LabOrVivExhHiRisePDAdj * LabOrVivExhHiRiseDevFlow +
+      SndAttnExhPDAdj * SndAttnExhDevFlow ) / 4131
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:TotExhFanPwrAdj )
+ENDRULE
+RULE NEW ZnSys:TotNonExhSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalNonExhaustSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total non-exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    ( FullDuctRetPDAdj * FullDuctRetDevFlow +
+      FullDuctRetLabOrVivPDAdj * FullDuctRetLabOrVivDevFlow + 
+      MERV9To12PDAdj * MERV9To12DevFlow +
+      MERV13To15PDAdj * MERV13To15DevFlow +
+      MERVGTE16PDAdj * MERVGTE16DevFlow +
+      GasPhaseAirCleanersPDAdj * GasPhaseAirCleanersDevFlow +
+      ERVPDAdj * ERVDevFlow +
+      EvapHumOrClrPDAdj * EvapHumOrClrDevFlow +
+      SndAttnPDAdj * SndAttnDevFlow ) / 4131
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotNonExhFanPwrAdj )
+ENDRULE
+RULE NEW ZnSys:TotSysFanPwrAdj
+  DATATYPE
+    Float
+  LONGFORM
+    TotalSystemFanPowerAdjustment
+  DESCRIPTION
+    "The total non-exhaust system pressure drop adjustment."
+  UNITS
+    BHP
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    TotExhSysFanPwrAdj + TotNonExhSysFanPwrAdj
+ENDRULE
+
+

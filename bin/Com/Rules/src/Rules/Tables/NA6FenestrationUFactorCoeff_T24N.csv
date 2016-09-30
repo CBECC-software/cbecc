@@ -1,0 +1,32 @@
+;,CEC 2013 Nonresdiential ACM Ruleset,,,,,
+;,,,,,,
+;,TABLE NAME:,,,,,
+;,,NA6FenestrationUFactorCoeff,,,,
+;,,,,,,
+;,MODIFICATION HISTORY:,,,,,
+;,,Date,Name,Purpose,,
+;,,11/4/2012,L. Hovee,Re-arranged to match Standards layout,,
+;,,,,,,
+;,Standards/ACM Reference:,,,,,
+;,,Appendix NA-6  - Alternate Default Fenestration Procedure to Calculate Thermal Performance,,,,
+;,,,,,,
+;,Notes:,,,,,
+;,,,,,,
+;,,,,,,
+;,Syntax Examples:,,,,,
+;,,TO DO: Review SDD terms and update independent values and syntax examples as necessary.,,,,
+;,,"NA6FenestrationUFactorCoeff.C1(FenestrationType=u:FenType, SkylightCurb=u:SkylightCurb, FrameType=u:FrameType)",,,,
+;,,,,,,
+; ----------------------------------------------------- Start of Table -----------------------------------------------------,,,,,,
+,TABLE NA6FenestrationUFactorCoeff,,,,,
+,,FenestrationType,SkylightCurb,FrameType,C1,C2
+,,VerticalFenestration,*,MetalFraming,0.311,0.872
+,,VerticalFenestration,*,MetalFramingWithThermalBreak,0.202,0.867
+,,VerticalFenestration,*,NonMetalFraming,0.202,0.867
+,,Skylight,CurbMounted,MetalFraming,0.711,1.065
+,,Skylight,CurbMounted,MetalFramingWithThermalBreak,0.437,1.229
+,,Skylight,CurbMounted,NonMetalFraming,0.437,1.229
+,,Skylight,DeckMounted,MetalFraming,0.195,0.882
+,,Skylight,DeckMounted,MetalFramingWithThermalBreak,0.31,0.878
+,,Skylight,DeckMounted,NonMetalFraming,0.31,0.878
+,ENDTABLE,,,,,

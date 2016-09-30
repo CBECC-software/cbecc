@@ -1,0 +1,779 @@
+// Space - Schedule Groups
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+// Set flag for spaces that normally have process exhaust
+RULE NEW Spc:IsProcExhSpc
+  DATATYPE
+    Integer
+  LONGFORM
+    IsProcessExhaustSpace
+  DESCRIPTION
+    "Flag that indicates the space usually requires a process exhaust system.
+     Used to manage when 'HasProcessExhaust' can be specified in the UI."
+  INPUTCLASS
+    NotInput
+  DEFAULT  
+    if( IfValidAnd( SpcFunc = "Kitchen, Commercial Food Preparation" ) .OR.
+        IfValidAnd( SpcFunc = "Laboratory, Scientific" ) .OR.
+        IfValidAnd( SpcFunc = "Laboratory, Equipment Room" ) .OR.
+        IfValidAnd( SpcFunc = "Parking Garage Building, Parking Area" ) .OR.
+        IfValidAnd( SpcFunc = "Parking Garage Area Dedicated Ramps" ) .OR. 
+        IfValidAnd( SpcFunc = "Parking Garage Area Daylight Adaptation Zones" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+RULE Spc:HasProcExh
+  INPUTCLASS
+    Default
+  DEFAULT : T24N
+    if( IsProcExhSpc )
+    then 1
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+// TO DO: Need space function for 90.1
+    1
+ENDRULE
+
+
+// Heating/ventilation (HV) system exception 
+// -----------------------------------------------------------------------------
+RULE NEW Spc:HtgOnlySysArea
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : S901G ECBC
+// See GC issue 787
+    if( LocalCompAssigned( ThrmlZnRef ) .AND. 
+        ( IfValidAnd( SpcFunc = "Storage" ) .OR.
+          IfValidAnd( SpcFunc = "Stairway" ) .OR.
+          IfValidAnd( SpcFunc = "Electrical/Mechanical" ) .OR.
+          IfValidAnd( SpcFunc = "Restrooms" ) .OR.
+          IfValidAnd( SpcFunc = "Corridor/Transition" ) ) )
+    then
+      if( IfValidAnd( ThrmlZnRef:HasHtg = 1 ) .AND.
+          IfValidAnd( ThrmlZnRef:HasClg = 0 ) )
+      then CondFlrArea
+      else 0
+      endif
+    else 0
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    u:HtgOnlySysArea
+//SIZING_PROPOSED : T24N
+// See ThermalZone-ScheduleGroups.rule
+  SIZING_BASELINE
+    zp:HtgOnlySysArea
+ENDRULE
+
+// Computer Room
+// -----------------------------------------------------------------------------
+RULE NEW Spc:CompRmArea
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( IfValidAnd( SpcFunc = "Computer Room" ) )
+    then CondFlrArea
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+// TO DO: Need space function for 90.1
+    0 
+; CHECKCODE : T24N
+;   if( IfValidAnd( SpcFunc = "Computer Room" ) .AND. 
+;       CompRmArea = 0 )
+;   then // Not defined as conditioned
+;     PostWarning("Space '%s' has a 'Computer Room' space function, but is not 
+;                defined as conditioned.", Name)
+;   else UNCHANGED
+;   endif
+ENDRULE
+
+// Laboratory
+// -----------------------------------------------------------------------------
+RULE NEW Spc:LabArea
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( ( IfValidAnd( SpcFunc = "Laboratory, Scientific" ) .OR.
+          IfValidAnd( SpcFunc = "Laboratory, Equipment Room" ) ) 
+         .AND. HasProcExh )
+    then CondFlrArea
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( SpcFunc = "Laboratory - For Classrooms" ) .OR.
+        IfValidAnd( SpcFunc = "Laboratory - For Medical/Industrial/Research" ) )
+    then CondFlrArea
+    else 0
+    endif
+ENDRULE
+
+// Commercial Kitchen
+// -----------------------------------------------------------------------------
+RULE NEW Spc:CommKitArea
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( IfValidAnd( SpcFunc = "Kitchen, Commercial Food Preparation" ) 
+         .AND. HasProcExh )
+    then CondFlrArea
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+// TO DO: Need space function for 90.1
+    0
+  CHECKCODE : T24N
+    if( CommKitArea > 0 .AND. TotKitExhHoodFlow = 0 )
+    then // Has process exhaust and has 0 hood exhaust flow
+      PostError("Space '%s' is assigned a 'Kitchen, Commercial Food Preparation'
+                 space function, but does not have a kitchen exhaust system.
+                 Revise to a different SpaceFunction if there is no exhaust.", Name)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// Parking Garage
+// -----------------------------------------------------------------------------
+RULE NEW Spc:PrkgGarArea
+  DATATYPE
+    Float
+  LONGFORM
+    ParkingGarageArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( ( IfValidAnd( SpcFunc = "Parking Garage Building, Parking Area" ) .OR.
+          IfValidAnd( SpcFunc = "Parking Garage Area Dedicated Ramps" ) .OR. 
+          IfValidAnd( SpcFunc = "Parking Garage Area Daylight Adaptation Zones" ) )
+         .AND. HasProcExh )
+    then FlrArea
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( SpcFunc = "Parking Garage - Garage Area" ) )
+    then FlrArea
+    else 0
+    endif
+ENDRULE
+
+
+
+// A primary FuncSchGroup is determined for each floor based on the predominant 
+// FuncSchGrp of directly conditioned (DC) or indirectly conditioned (IC) spaces.
+
+// Step 1: Calculate function group conditioned area for Story
+RULE NEW Story:FuncGrpAreaAssembly
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaAssembly
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Assembly" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaAssembly
+  ANNUAL
+    z:FuncGrpAreaAssembly
+ENDRULE
+RULE NEW Story:FuncGrpAreaData
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaData
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Data" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaData
+  ANNUAL
+    z:FuncGrpAreaData
+ENDRULE
+RULE NEW Story:FuncGrpAreaHealth
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaHealth
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Health" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaHealth
+  ANNUAL
+    z:FuncGrpAreaHealth
+ENDRULE
+RULE NEW Story:FuncGrpAreaLab
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaLab
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Lab" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaLab
+  ANNUAL
+    z:FuncGrpAreaLab
+ENDRULE
+RULE NEW Story:FuncGrpAreaManufacturing
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaManufacturing
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Manufacturing" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaManufacturing
+  ANNUAL
+    z:FuncGrpAreaManufacturing
+ENDRULE
+RULE NEW Story:FuncGrpAreaOffice
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaOffice
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Office" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaOffice
+  ANNUAL
+    z:FuncGrpAreaOffice
+ENDRULE
+RULE NEW Story:FuncGrpAreaParking
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaParking
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+// Sum CondFlrArea
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Parking" ) + 
+    SumChildrenIf( Spc:FlrAreaWithMult, Spc:FuncSchGrp = "Parking" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaParking
+  ANNUAL
+    z:FuncGrpAreaParking
+ENDRULE
+RULE NEW Story:FuncGrpAreaResidentialCommon
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialCommon
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "ResidentialCommon" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialCommon
+  ANNUAL
+    z:FuncGrpAreaResidentialCommon
+ENDRULE
+RULE NEW Story:FuncGrpAreaResidentialLiving
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialLiving
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "ResidentialLiving" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialLiving
+  ANNUAL
+    z:FuncGrpAreaResidentialLiving
+ENDRULE
+RULE NEW Story:FuncGrpAreaRestaurant
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRestaurant
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Restaurant" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaRestaurant
+  ANNUAL
+    z:FuncGrpAreaRestaurant
+ENDRULE
+RULE NEW Story:FuncGrpAreaRetail
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRetail
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Retail" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaRetail
+  ANNUAL
+    z:FuncGrpAreaRetail
+ENDRULE
+RULE NEW Story:FuncGrpAreaSchool
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaSchool
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "School" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaSchool
+  ANNUAL
+    z:FuncGrpAreaSchool
+ENDRULE
+RULE NEW Story:FuncGrpAreaWarehouse
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaWarehouse
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:CondFlrAreaWithMult, Spc:FuncSchGrp = "Warehouse" )
+  SIZING_BASELINE
+    zp:FuncGrpAreaWarehouse
+  ANNUAL
+    z:FuncGrpAreaWarehouse
+ENDRULE
+
+// Step 2:  Calculate the FuncSchGrp classification with the most area on each Story
+RULE NEW Story:MaxFuncGrpArea
+  DATATYPE
+    Float
+  LONGFORM
+    MaxFunctionGroupArea
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+// Exclude process spaces Laboratory, Data, and ParkingGarage from consideration
+    Max(Max(Max(FuncGrpAreaAssembly,
+                FuncGrpAreaHealth),
+            Max(Max(FuncGrpAreaManufacturing,
+                    FuncGrpAreaOffice),
+                    FuncGrpAreaResidentialCommon)),
+        Max(Max(FuncGrpAreaRestaurant,
+                FuncGrpAreaRetail),            
+            Max(FuncGrpAreaSchool,
+                FuncGrpAreaWarehouse)))
+  SIZING_BASELINE
+    zp:MaxFuncGrpArea
+  ANNUAL  
+    z:MaxFuncGrpArea
+ENDRULE
+// Step 3: Determine the Story:FuncGrpAreaXXXX that corresponds to the 
+//         Story:MaxFuncGrpArea, and use to specify the PredominantFuncGrp 
+//         for the Story
+RULE NEW Story:PredominantFuncGrp
+  DATATYPE
+    String
+  LONGFORM
+    PredominantFunctionGroup
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+// Exclude process spaces Laboratory, Data, and ParkingGarage from consideration
+    if( MaxFuncGrpArea = FuncGrpAreaAssembly )
+    then "Assembly"
+    else if( MaxFuncGrpArea = FuncGrpAreaHealth )
+    then "Health"
+    else if( MaxFuncGrpArea = FuncGrpAreaManufacturing )
+    then "Manufacturing"
+    else if( MaxFuncGrpArea = FuncGrpAreaOffice )
+    then "Office"
+    else if( MaxFuncGrpArea = FuncGrpAreaResidentialCommon )
+    then "ResidentialCommon"
+    else if( MaxFuncGrpArea = FuncGrpAreaRestaurant )
+    then "Restaurant"
+    else if( MaxFuncGrpArea = FuncGrpAreaRetail )
+    then "Retail"
+    else if( MaxFuncGrpArea = FuncGrpAreaSchool )
+    then "School"
+    else if( MaxFuncGrpArea = FuncGrpAreaWarehouse )
+    then "Warehouse"
+    else "Office" // Default predominant group to be used if not other is determined
+    endif endif endif endif endif
+    endif endif endif endif
+  SIZING_BASELINE
+    zp:PredominantFuncGrp
+  ANNUAL  
+    z:PredominantFuncGrp
+ENDRULE
+// Step 4: Specify the Spc:FuncSchGrp to be the Story:PredominantFuncGrp
+// ********** Schedule Group ***************************************************
+RULE Spc:FuncSchGrp
+  DESCRIPTION
+    "The schedule group for the Space." 
+  HELP
+    "Currently there are 13 schedule groups defined in the ruleset library.
+     A schedule group is a set of schedules that represent the houly and daily
+     variation of design simulaiton parameters, such as occupancy, lighting, etc.
+     Internal load schedules are coordinated with HVAC schedules, such as
+     availability and thermostat setpoints.
+
+
+     Upon initiation of compliance analysis, rules determine the predominant
+     schedule group, based on floor area, for each BuildingStory. For T24
+     compliance, this determination is prescribed."
+  REFERENCE 
+    NACM Section 2.3.3
+    NACM Section 5.4.1
+    Appendix 5.4A
+  INPUTCLASS
+// DR: was previously defined as Precribed. Changed to NotInput for v3d.
+    NotInput
+// OPTION list defined in BEMEnums.txt to facilitate Building:FuncClassMthd & CompleteBldgFunc dependencies
+  DEFAULT
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else SpaceFunctionData:FuncSchGrp("FuncType", SpcFunc)
+    endif
+  SIZING_PROPOSED
+    if( CondgType = "Plenum" ) 
+    then UNDEFINED // See Issue 1848.  A default is needed for other HasNoInternalLds cases
+    // The following are exceptions to using the Story:PredominantFuncGrp
+    else if( IsRes )
+    then "ResidentialLiving"
+    else if( CompRmArea > 0 )
+    then "Data"
+    else if( LabArea > 0 )
+    then "Laboratory"
+    else if( CommKitArea > 0 )
+    then "Restaurant"
+    else if( PrkgGarArea > 0 )
+    then "Parking"
+    // For all other cases, use Story:PredominantFuncGrp
+    else Story:PredominantFuncGrp
+    endif endif endif endif 
+    endif endif  
+  SIZING_BASELINE
+    zp:FuncSchGrp
+  ANNUAL
+    z:FuncSchGrp
+ENDRULE
+
+// Step 5: Specify Spc:FuncGrpAreaXXXX, based on predominant Story condition.  
+//         Used to determine thermal zone thermostat and HVAC availability schedules  
+RULE NEW Spc:FuncGrpAreaAssembly
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaAssembly
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Assembly" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaAssembly
+  ANNUAL
+    z:FuncGrpAreaAssembly
+ENDRULE
+RULE NEW Spc:FuncGrpAreaData
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaData
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Data" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaData
+  ANNUAL
+    z:FuncGrpAreaData
+ENDRULE
+RULE NEW Spc:FuncGrpAreaHealth
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaHealth
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Health" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaHealth
+  ANNUAL
+    z:FuncGrpAreaHealth
+ENDRULE
+RULE NEW Spc:FuncGrpAreaLab
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaLab
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Laboratory" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaLab
+  ANNUAL
+    z:FuncGrpAreaLab
+ENDRULE
+RULE NEW Spc:FuncGrpAreaManufacturing
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaManufacturing
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Manufacturing" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaManufacturing
+  ANNUAL
+    z:FuncGrpAreaManufacturing
+ENDRULE
+RULE NEW Spc:FuncGrpAreaOffice
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaOffice
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Office" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaOffice
+  ANNUAL
+    z:FuncGrpAreaOffice
+ENDRULE
+RULE NEW Spc:FuncGrpAreaParking
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaParking
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Parking" )
+    then CondFlrAreaWithMult + FlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaParking
+  ANNUAL
+    z:FuncGrpAreaParking
+ENDRULE
+RULE NEW Spc:FuncGrpAreaResidentialCommon
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialCommon
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "ResidentialCommon" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialCommon
+  ANNUAL
+    z:FuncGrpAreaResidentialCommon
+ENDRULE
+RULE NEW Spc:FuncGrpAreaResidentialLiving
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialLiving
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "ResidentialLiving" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialLiving
+  ANNUAL
+    z:FuncGrpAreaResidentialLiving
+ENDRULE
+RULE NEW Spc:FuncGrpAreaRestaurant
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRestaurant
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Restaurant" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaRestaurant
+  ANNUAL
+    z:FuncGrpAreaRestaurant
+ENDRULE
+RULE NEW Spc:FuncGrpAreaRetail
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRetail
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Retail" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaRetail
+  ANNUAL
+    z:FuncGrpAreaRetail
+ENDRULE
+RULE NEW Spc:FuncGrpAreaSchool
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaSchool
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "School" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaSchool
+  ANNUAL
+    z:FuncGrpAreaSchool
+ENDRULE
+RULE NEW Spc:FuncGrpAreaWarehouse
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaWarehouse
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( FuncSchGrp = "Warehouse" )
+    then CondFlrAreaWithMult
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:FuncGrpAreaWarehouse
+  ANNUAL
+    z:FuncGrpAreaWarehouse
+ENDRULE
+
+
+// ---------- Section 2.3.3 - Space Use Classifications ------------------------
+// Calculate space internal loads
+RULE NEW Spc:CombinedInternalLds
+  DATATYPE
+    Float
+  LONGFORM
+    CombinedInternalLoads
+  DESCRIPTION
+    "The combined lighting, receptacle, and process equipment power density for
+     a space."  
+  HELP
+    "The combined lighting (regulated and nonregulated), receptacle, and 
+     process equipment power density is used to as the primary criteria for 
+     combining spaces into thermal zones."  
+  REFERENCE 
+    NACM Section 2.3.3
+  INPUTCLASS
+    NotInput
+;  MINIMUM 
+;    0
+;  COMMONMINIMUM
+;    0.1
+;  COMMONMAXIMUM
+;    10
+;  MAXIMUM 
+;    100
+  UNITS 
+    W/ft2
+  SIZING_PROPOSED
+    ( ValidOr( IntLPDRegSim, 0 ) * ( ValidOr( IntLtgRegHtGnSpcFrac, 0 ) + ValidOr( IntLtgRegHtGnRadFrac, 0 ) ) +
+      ValidOr( IntLPDNonRegSim, 0 ) * ( ValidOr( IntLtgNonRegHtGnSpcFrac, 0 ) + ValidOr( IntLtgNonRegHtGnRadFrac, 0 ) ) ) +
+    ValidOr( RecptPwrDens, 0 ) +
+    ( ValidOr( GasEqpPwrDens, 0 ) * ( 1 - ValidOr( GasEqpLostFrac, 0 ) ) / 3.412 ) +
+    ValidOr( ProcElecPwrDens, 0 ) + 
+    ( ValidOr( ProcGasPwrDens, 0 ) * ( 1- ValidOr( ProcGasLostFrac, 0 ) ) / 3.412 )
+  SIZING_BASELINE
+    zp:CombinedInternalLoads
+  ANNUAL 
+    z:CombinedInternalLoads
+ENDRULE

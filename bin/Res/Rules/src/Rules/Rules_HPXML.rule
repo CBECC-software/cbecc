@@ -1,0 +1,363 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Translation of residential model to HPXML
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2015, California Energy Commission
+; Copyright (c) 2012-2015, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+;*************************************************************************
+RULELIST  "HPXML" 1 0 0 0
+;*************************************************************************
+;*************************************************************************
+
+	"Create hpxBuilding"	Proj:HPBuilding		= {	CreateComp( hpxBuilding, "Building1" )  }
+
+	"Create hpxSite"		Proj:HPSite				= {	CreateComp( hpxSite, "Site1" )  }
+	"Set HPSite:Parent"	Proj:HPSite:Parent	= {	HPBuilding:Name  }
+
+	"Create hpxAddress"	hpxSite:Action			= {	CreateComp( hpxAddress, "StreetAddress", "HPXML_Address" )  }
+
+	"Create hpxBuildingDetails"		Proj:HPBuildingDetails			= {	CreateComp( hpxBuildingDetails, "Bldg Details" )  }
+	"Set HPBuildingDetails:Parent"	Proj:HPBuildingDetails:Parent	= {	HPBuilding:Name  }
+
+	"Create hpxEnclosure"				Proj:HPEnclosure					= {	CreateComp( hpxEnclosure, "enclosure object" )  }
+	"Set HPEnclosure:Parent"			Proj:HPEnclosure:Parent			= {	HPBuildingDetails:Name  }
+
+	"Create hpxWalls"						Proj:HPWalls						= {	CreateComp( hpxWalls, "walls object" )  }
+	"Set HPWalls:Parent"					Proj:HPWalls:Parent				= {	HPEnclosure:Name  }
+
+  ; ExtWall
+	"Create hpxWall by ExtWall"			ExtWall:HPWall						= {	CreateComp( hpxWall, Name + "-Wall" )  }
+	"Set ExtWall:HPWall:Parent"			ExtWall:HPWall:Parent			= {	Proj:HPWalls:Name  }
+	"Create hpxInsulation by ExtWall"	ExtWall:HPInsulation				= {	CreateComp( hpxInsulation, Name + "-insul" )  }
+	"Set ExtWall:HPInsulation:Parent"	ExtWall:HPInsulation:Parent	= {	HPWall:Name  }
+	"Set hpx ExtWall properties"			ExtWall:Action						= {	EvalRulelist( "HPXML_ExtWall", 1 )  }
+
+"Create hpxAtticAndRoof"						Proj:HPAtticAndRoof						= {	CreateComp( hpxAtticAndRoof, "attic and roof" )  }
+	"Set HPAtticAndRoof:Parent"					Proj:HPAtticAndRoof:Parent				= {	HPEnclosure:Name  }
+
+"Create hpxAttics"						Proj:HPAttics						= {	CreateComp( hpxAttics, "attics" )  }
+	"Set HPAttics:Parent"					Proj:HPAttics:Parent				= {	HPAtticAndRoof:Name  }
+
+
+	"Create hpxWall by CeilingBelowAttic"			CeilingBelowAttic:HPAttic						= {	CreateComp( hpxAttic, Name + "-Attic" )  }
+	"Set CeilingBelowAttic:HPAttic:Parent"			CeilingBelowAttic:HPAttic:Parent			= {	Proj:HPAttics:Name  }
+	"Create hpxInsulation by CeilingBelowAttic"	CeilingBelowAttic:HPAtticFloorInsul				= {	CreateComp( hpxAtticFloorInsulation, Name + "-insul" )  }
+	"Set CeilingBelowAttic:HPAtticFloorInsul:Parent"	CeilingBelowAttic:HPAtticFloorInsul:Parent	= {	HPAttic:Name  }
+	"Set hpx CeilingBelowAttic properties"			CeilingBelowAttic:Action						= {	EvalRulelist( "HPXML_CeilingBelowAttic", 1 )  }	 									
+
+	; SAC 2/23/16 - hpxModeledUsages
+	"Create hpxModeledUsages"				EUseSummary:HPModeledUsages			= {	if (ComponentIndex() > 1) then  UNDEFINED
+																											else	CreateComp( hpxModeledUsages, Name + "-ModUses" )  endif  }
+	"Set HPModeledUsages:Parent"			EUseSummary:HPModeledUsages:Parent	= {	Proj:HPBuilding:Name  }
+	"Set hpxModeledUsages properties"	EUseSummary:Action						= {	if (ComponentIndex() > 1 .OR. LocalCompAssigned( HPModeledUsages ) < 0.5) then  UNDEFINED
+																											else	EvalRulelist( "HPXML_ModeledUsages", 1 )  endif  }	 									
+
+END
+;*************************************************************************
+
+;*************************************************************************
+RULELIST  "HPXML_Address" 1 0 0 0
+	"Set hpxAddress:AddressType"			hpxAddress:AddressType			= {	"street"  }
+	"Set hpxAddress:Address1"				hpxAddress:Address1				= {	Proj:Address  }
+	"Set hpxAddress:CityMunicipality"	hpxAddress:CityMunicipality	= {	Proj:City  }
+;	"Set hpxAddress:StateCode"				hpxAddress:StateCode				= {	""  }		- strip out of Proj:City ??
+	"Set hpxAddress:ZipCode"				hpxAddress:ZipCode				= {	if (IfValidAnd( Proj:ZipCode >= 90000 ))
+																									then	Format( "%g", Proj:ZipCode )
+																									else	UNDEFINED  endif  }
+END
+;*************************************************************************
+
+;*************************************************************************
+RULELIST  "HPXML_ExtWall" 1 0 0 0
+
+	"Set ExtWall:HPWall:ExteriorAdjacentTo"					ExtWall:HPWall:ExteriorAdjacentTo				= {	"ambient"  }
+	"Set ExtWall:HPInsulation:AssemblyEffectiveRValue"		ExtWall:HPInsulation:AssemblyEffectiveRValue	= {	if (IfValidAnd( Construction:OverallCodeUValue > 0 ))
+																																				then	1 / Construction:OverallCodeUValue
+																																				else	UNDEFINED  endif  }
+
+  ; CAVITY insulation layer
+	"Create cavity hpxLayer by ExtWall"				ExtWall:HPLayer_Cav							= {	CreateComp( hpxLayer, Name + "-cavlayer" )  }
+	"Set ExtWall:HPLayer_Cav:Parent"					ExtWall:HPLayer_Cav:Parent					= {	HPInsulation:Name  }
+	"Set ExtWall:HPLayer_Cav:InstallationType"	ExtWall:HPLayer_Cav:InstallationType	= {	"cavity"  }
+	"Set ExtWall:HPLayer_Cav:NominalRValue"		ExtWall:HPLayer_Cav:NominalRValue		= {	if (IfValidAnd( Construction:CavityLayer > 0.5 )==0 .OR. IfValidAnd( Construction:CavityLayer < 101 )==0) then  0
+																															else	Construction:CavityLayer  endif  }
+
+  ; CONTINUOUS insulation layer
+	"Create continuous hpxLayer by ExtWall"		ExtWall:HPLayer_Cont							= {	CreateComp( hpxLayer, Name + "-contlayer" )  }
+	"Set ExtWall:HPLayer_Cont:Parent"				ExtWall:HPLayer_Cont:Parent				= {	HPInsulation:Name  }
+	"Set ExtWall:HPLayer_Cont:InstallationType"	ExtWall:HPLayer_Cont:InstallationType	= {	"continuous"  }
+	"Set ExtWall:HPLayer_Cont:NominalRValue"		ExtWall:HPLayer_Cont:NominalRValue		= {	if (IfValidAnd( Construction:SheathInsulLayer  >= 99001 ) .AND. IfValidAnd( Construction:SheathInsulLayer  <= 99100 ) .AND.
+																																 IfValidAnd( Construction:SheathInsul2Layer >= 99001 ) .AND. IfValidAnd( Construction:SheathInsul2Layer <= 99100 ))
+																															then	(Construction:SheathInsulLayer  - 99000) + (Construction:SheathInsul2Layer - 99000)
+																															else if (IfValidAnd( Construction:SheathInsulLayer  >= 99001 ) .AND. IfValidAnd( Construction:SheathInsulLayer  <= 99100 ))
+																															then	 Construction:SheathInsulLayer  - 99000
+																															else if (IfValidAnd( Construction:SheathInsul2Layer >= 99001 ) .AND. IfValidAnd( Construction:SheathInsul2Layer <= 99100 ))
+																															then	 Construction:SheathInsul2Layer - 99000
+																															else	0  endif endif endif  }
+; WALL STUDS
+	"Create hpxStuds by ExtWall"				ExtWall:HPStuds							= {	if (IfValidAnd( Construction:Type = 0 )) then CreateComp( hpxStuds, Name + "-stud" ) else UNDEFINED endif  }
+	"Set ExtWall:HPStuds:Parent"				ExtWall:HPStuds:Parent					= {	HPWall:Name }
+	"Set ExtWall:HPStuds:Size"		ExtWall:HPStuds:Size		= {	if (Construction:FrameLayer == 416 .OR. Construction:FrameLayer == 424 .OR. Construction:FrameLayer == 425) then "2x4"
+																			else if (Construction:FrameLayer == 616 .OR. Construction:FrameLayer == 624 .OR. Construction:FrameLayer == 625) then "2x6"
+																			else if (Construction:FrameLayer == 816 .OR. Construction:FrameLayer == 824) then "2x8"
+																			else if (Construction:FrameLayer == 1016 .OR. Construction:FrameLayer == 1024) then "2x10"
+																			else if (Construction:FrameLayer == 1216 .OR. Construction:FrameLayer == 1224) then "2x12"
+																			else 0 endif endif endif endif endif }
+
+
+	"Set ExtWall:HPStuds:Spacing"		ExtWall:HPStuds:Spacing		= {	if (Construction:FrameLayer == 416 .OR. Construction:FrameLayer == 616 .OR. Construction:FrameLayer == 816
+																		 .OR. Construction:FrameLayer == 1016 .OR. Construction:FrameLayer == 1216) then 16 
+																					else if (Construction:FrameLayer == 424 .OR. Construction:FrameLayer == 624 .OR. Construction:FrameLayer == 824 
+																					.OR. Construction:FrameLayer == 1024 .OR. Construction:FrameLayer == 1224) then 24 
+																					else 0 endif endif}  
+
+END
+;*************************************************************************
+
+
+												
+RULELIST  "HPXML_CeilingBelowAttic" 1 0 0 0
+
+	"Set CeilingBelowAttic:HPAttic:ExteriorAdjacentTo "					CeilingBelowAttic:HPAttic:ExteriorAdjacentTo			= {	"ambient"  }
+	"Set CeilingBelowAttic:HPAttic:InteriorAdjacentTo "					CeilingBelowAttic:HPAttic:InteriorAdjacentTo			= {	"conditioned"  }
+	"Set CeilingBelowAttic:HPAttic:AtticType "							CeilingBelowAttic:HPAttic:AtticType			= {	"vented attic"  }
+	"Set CeilingBelowAttic:HPAtticFloorInsul:AssemblyEffectiveRValue"		CeilingBelowAttic:HPAtticFloorInsul:AssemblyEffectiveRValue	= {	if (IfValidAnd( Construction:OverallCodeUValue > 0 ))
+  																																			then	1 / Construction:OverallCodeUValue
+																																				else	UNDEFINED  endif  }																					
+
+; CAVITY insulation layer
+;	"Create cavity hpxLayer by CeilingBelowAttic"				CeilingBelowAttic:HPLayer_Cav							= {	CreateComp( hpxLayer, Name + "-cavlayer" )  }
+;	"Set CeilingBelowAttic:HPLayer_Cav:Parent"					CeilingBelowAttic:HPLayer_Cav:Parent					= {	HPAttic:Name  }
+;	"Set CeilingBelowAttic:HPLayer_Cav:InstallationType"	CeilingBelowAttic:HPLayer_Cav:InstallationType	= {	"cavity"  }
+;	"Set CeilingBelowAttic:HPLayer_Cav:NominalRValue"		CeilingBelowAttic:HPLayer_Cav:NominalRValue		= {	if (IfValidAnd( Construction:CavityLayer > 0.5 )==0 .OR. IfValidAnd( Construction:CavityLayer < 101 )==0) then  0
+;																															else	Construction:CavityLayer  endif  }											 
+
+END
+;*************************************************************************
+
+
+
+												
+; SAC 2/23/16 - hpxModeledUsages
+;*************************************************************************
+RULELIST  "HPXML_ModeledUsages" 1 0 0 0
+
+	"Create hpxModeledUsage - Elec"			EUseSummary:HPModeledUsageElec			= {	if (LocalStatus( Enduse10[2] ) < 1) then  UNDEFINED
+																													else if (strlen( Enduse10[2] ) < 1) then  UNDEFINED
+																													else	CreateComp( hpxModeledUsage, Name + "-elec" )  endif endif  }
+	"Set hpxModeledUsage-Elec parent"				EUseSummary:HPModeledUsageElec:Parent					= {	HPModeledUsages:Name  }
+	"Set hpxModeledUsage-Elec EnergyType"			EUseSummary:HPModeledUsageElec:EnergyType				= {	"electricity"  }
+	"Set hpxModeledUsage-Elec UnitofMeasure"		EUseSummary:HPModeledUsageElec:UnitofMeasure			= {	"kWh"  }
+	"Set hpxModeledUsage-Elec AnnualConsumption"	EUseSummary:HPModeledUsageElec:AnnualConsumption	= {	StrToFlt( Enduse10[2] )  }
+;	"Set hpxModeledUsage-Elec AnnualFuelCost"		EUseSummary:HPModeledUsageElec:AnnualFuelCost		= {	??  }
+;	"Set hpxModeledUsage-Elec BaseLoad"				EUseSummary:HPModeledUsageElec:BaseLoad				= {	??  }
+
+	"Create hpxModeledUsage - Gas"			EUseSummary:HPModeledUsageGas				= {	if (LocalStatus( Enduse10[3] ) < 1) then  UNDEFINED
+																													else if (strlen( Enduse10[3] ) < 1) then  UNDEFINED
+																													else	CreateComp( hpxModeledUsage, Name + "-gas" )  endif endif  }
+	"Set hpxModeledUsage-Gas parent"					EUseSummary:HPModeledUsageGas:Parent					= {	HPModeledUsages:Name  }
+	"Set hpxModeledUsage-Gas EnergyType"			EUseSummary:HPModeledUsageGas:EnergyType				= {	if (Proj:GasType == 1) then  "natural gas"
+																																			else  "propane"  endif  }
+	"Set hpxModeledUsage-Gas UnitofMeasure"		EUseSummary:HPModeledUsageGas:UnitofMeasure			= {	"therms"  }
+	"Set hpxModeledUsage-Gas AnnualConsumption"	EUseSummary:HPModeledUsageGas:AnnualConsumption		= {	StrToFlt( Enduse10[3] )  }
+;	"Set hpxModeledUsage-Gas AnnualFuelCost"		EUseSummary:HPModeledUsageGas:AnnualFuelCost			= {	??  }
+;	"Set hpxModeledUsage-Gas BaseLoad"				EUseSummary:HPModeledUsageGas:BaseLoad					= {	??  }
+
+END
+;*************************************************************************
+
+
+;	<xs:complexType name="EndUseInfoType">
+;		<xs:sequence>
+;			<xs:element name="EndUse" type="endUseType"/>
+;			<xs:element name="EndUseValue" type="xs:double">
+;				<xs:annotation>
+;					<xs:documentation>Energy use will be negative for energy producing end uses such as PV and SolarThermal.</xs:documentation>
+;				</xs:annotation>
+;			</xs:element>
+
+;	<xs:simpleType name="endUseType">
+;		<xs:restriction base="xs:string">
+;			<xs:enumeration value="Heating"/>
+;			<xs:enumeration value="Cooling"/>
+;			<xs:enumeration value="HotWater"/>
+;			<xs:enumeration value="Appliance"/>
+;			<xs:enumeration value="Lighting"/>
+;			<xs:enumeration value="PV"/>
+;			<xs:enumeration value="SolarThermal"/>
+;			<xs:enumeration value="Other"/>
+
+
+;    <ModeledUsages>
+;      <ModeledUsage>
+;        <EnergyType>electricity</EnergyType>
+;        <UnitofMeasure>kWh</UnitofMeasure>
+;        <AnnualConsumption>15734.86</AnnualConsumption>
+;        <ConsumptionByEndUse>
+;          <EndUse>Heating</EndUse>
+;          <EndUseValue>224.7716685</EndUseValue>
+;        </ConsumptionByEndUse>
+;        <ConsumptionByEndUse>
+;          <EndUse>Cooling</EndUse>
+;          <EndUseValue>6346.974249</EndUseValue>
+;        </ConsumptionByEndUse>
+;        <ConsumptionByEndUse>
+;          <EndUse>Appliance</EndUse>
+;          <EndUseValue>1102.2</EndUseValue>
+;        </ConsumptionByEndUse>
+;        <ConsumptionByEndUse>
+;          <EndUse>Lighting</EndUse>
+;          <EndUseValue>1028</EndUseValue>
+;        </ConsumptionByEndUse>
+;        <ConsumptionByEndUse>
+;          <EndUse>Other</EndUse>
+;          <EndUseValue>7032.899712</EndUseValue>
+;        </ConsumptionByEndUse>
+;        <BaseLoad>9163.114082</BaseLoad>
+
+
+
+;     <AtticAndRoof> 
+;        <Attics>
+;          <Attic> 
+;              <SystemIdentifier id="BaseAttic1" />			x
+;              <AttachedToRoof idref="BaseAtticRoof1" />		x
+;              <ExteriorAdjacentTo>ambient</ExteriorAdjacentTo>
+;              <InteriorAdjacentTo>living space</InteriorAdjacentTo>
+;              <AtticType>vented attic</AtticType>
+;              <AtticFloorInsulation>
+;                <SystemIdentifier id="BaseAtticInsulation1" />			x 
+;                <InsulationGrade>1</InsulationGrade>					x
+;                <AssemblyEffectiveRValue>5.774903694</AssemblyEffectiveRValue>
+;                <MisalignedInsulation>false</MisalignedInsulation>					x
+;                <Layer>
+;                  <InstallationType>cavity</InstallationType>
+;                  <InsulationMaterial>								x
+;                    <LooseFill>cellulose</LooseFill>
+;                  </InsulationMaterial>
+;                  <NominalRValue>3.4</NominalRValue>
+;                  <Thickness>1</Thickness>				x
+;                </Layer>
+;              </AtticFloorInsulation>
+;              <Area>1168</Area>
+;              <Rafters>
+;                <Size>2x8</Size>
+;                <Spacing>16</Spacing>
+;                <FramingFactor>0.13</FramingFactor>
+;                <Material>wood</Material>
+;              </Rafters>
+;            </Attic>
+;          </Attics>
+
+
+;          <Wall>
+;            <Area>1104</Area>
+;            <Studs>
+;              <Size>2x4</Size>
+;              <Spacing>16</Spacing>
+;              <FramingFactor>0.23</FramingFactor>
+;            </Studs>
+;            <Siding>stucco</Siding>
+
+; existing Cons(truction) properties
+;   FrameSpacing = RVal: 16
+;   FramingFactor = RVal: 0.25
+
+
+;	<xs:simpleType name="InstallationType">
+;		<xs:restriction base="xs:string">
+;			<xs:enumeration value="cavity"/>
+;			<xs:enumeration value="continuous"/>
+;		</xs:restriction>
+
+;            <Insulation>
+;              <SystemIdentifier id="WallInsulation1" />
+;              <AssemblyEffectiveRValue>4.692426844</AssemblyEffectiveRValue>
+;              <MisalignedInsulation>false</MisalignedInsulation>
+;              <Layer>
+;                <InstallationType>cavity</InstallationType>
+;                <InsulationMaterial>
+;                  <None></None>
+;                </InsulationMaterial>
+;                <NominalRValue>0</NominalRValue>
+;              </Layer>
+;              <Layer>
+;                <InstallationType>continuous</InstallationType>
+;                <InsulationMaterial>
+;                  <None></None>
+;                </InsulationMaterial>
+;                <NominalRValue>0</NominalRValue>
+;              </Layer>
+
+
+;0,  "hpxLayer", "hpxLayer",  "hpxLayer <i>",       0,  0,  0,  "hpxInsulation",   "", "", "", "", "", "", "", "", "", "", "", "", "", "",  -1,  1,  0,  0,  0,  0,   8000
+;1,           "InstallationType",		  BEMP_Str,  1,  0,  0, "",             0,  0,                           1003, "InstallationType"   
+;1,           "NominalRValue",	   	  BEMP_Flt,  1,  0,  0, "°F-ft2-h/Btu", 0,  0,                           1003, "NominalRValue"   
+
+
+
+;	<xs:simpleType name="AdjacentTo">
+;		<xs:restriction base="xs:string">
+;			<xs:enumeration value="ambient"/>
+;			<xs:enumeration value="garage"/>
+;			<xs:enumeration value="attic"/>
+;			<xs:enumeration value="crawlspace"/>
+;			<xs:enumeration value="ground"/>
+;			<xs:enumeration value="living space"/>
+;			<xs:enumeration value="unconditioned basement"/>
+;			<xs:enumeration value="other housing unit"/>
+;			<xs:enumeration value="other"/>
+
+
+
+
+;  <Building>
+;    <BuildingID id="BaseBuilding1" />
+;    <CustomerID id="Customer1" />
+;    <Site>
+;      <SiteID id="Site1" />
+;      <Address>
+;        <AddressType>street</AddressType>
+;        <Address1>555 BaseCase Lane</Address1>
+;        <CityMunicipality>Fresno</CityMunicipality>
+;        <StateCode>CA</StateCode>
+;        <ZipCode>93727</ZipCode>
+;      </Address>
+;    </Site>
+
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

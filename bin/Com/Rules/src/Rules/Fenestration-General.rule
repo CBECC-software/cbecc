@@ -1,0 +1,2216 @@
+// Fenestration - General Information
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+// The main objects in the SDD are:
+// Project:Building:Story:Space:ExteriorWall:Window
+// Project:Building:Story:Space:Roof:Skylight
+// Project:FenestrationConstruction
+
+// -------------------- Fenestration - Name --------------------
+// Input restriction summary:
+//    None
+// Standard Design summary:
+//    If provided, same for all transformations
+
+// ---------- Windows ---------------------------------------------------------
+RULE Win:Name
+  DESCRIPTION
+    "A unique identifier for the Vertical Window"
+  HELP
+    "A brief description of the vertical window.  The description
+     should tie the vertical window to the identifier on the
+     building plans."
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    Required
+ENDRULE
+
+RULE Win:FenConsRef
+  DESCRIPTION
+    "Specifies the Fenestration Construction which is applied to the window"
+  INPUTCLASS
+    Compulsory
+  CHECKCODE
+    if( LocalCompAssigned( FenConsRef ) > 0.5 .AND.
+        IfValidAnd( FenConsRef:FenType = "Skylight" ) )
+    then   // Constructions of type 'Skylight' cannot be assigned to Vertical Fenestration
+      PostError( "Window '%s'is assigned a fenestration construction of
+                  type 'Skylight'.  This is not permitted; 
+                  assign a fenestration construction of Type 'VerticalFenestration'",
+                  Name )
+    else UNCHANGED
+    endif
+  CHECKSIM
+    if( LocalCompAssigned( FenConsRef ) < 0.5 )
+    then
+      PostError( "A valid fenestration construction must be applied to window '%s'.",
+                  Name )
+    else 
+      UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Window Status Assignment/QC/Flags -------------------------------
+RULE NEW Win:DefaultStatus
+  DATATYPE 
+    Enumeration
+  LONGFORM
+    DefaultStatus
+  DESCRIPTION
+    "This property holds the default Window Status based on project compliance
+     and envelope status."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Altered
+    Existing
+  DEFAULT 
+    if( Proj:IsNewEnv)
+    then "New"
+    else if( Proj:IsExistingEnv )
+    then "Existing"      
+    else if( ParentStatus( Status ) > 0 )
+    then ExtWall:Status
+    else "New"
+    endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE Win:Status
+  DESCRIPTION
+    "Specifies the Status of the windows Additions, Alterations
+     and Partial Compliance."
+  HELP
+    "Used to determine whether user specified or standard design values for
+     widnow performance and maximum areas are utilized in the proposed and
+     baseline models.
+
+     New:       An addition or alteration of a window which results in an increase in
+                total fenestration area.
+
+     Altered:   An alteration of a window which does not increase total fenestration
+                area.  For example, replacing an existing window with a window
+                of equal or smaller size.
+ 
+     Existing:  Existing windows which are not modified during the
+                addition/alteration"
+
+  REFERENCE 
+    ACM-5.2.1, Compliance Type
+  INPUTCLASS
+    Required
+  OPTION : S901G ECBC
+    New
+  OPTION
+    New
+    Altered
+    Existing
+  DEFAULT : S901G ECBC
+    "New"  
+  DEFAULT
+    DefaultStatus
+  SIZING : T24N
+    StatusForComp
+  SIZING : S901G ECBC
+    "New"  
+ENDRULE
+
+RULE NEW Win:IsValidStatus
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected window status is valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( ( IfValidAnd( Status = "New" ) .AND.
+          ValidCompStatus:Env_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        ( IfValidAnd( Status = "Altered" ) .AND.
+          ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        ( IfValidAnd( Status = "Existing" ) .AND.
+          ValidCompStatus:Env_Existing( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Win:StatusForComp
+  DATATYPE
+    String
+  LONGFORM
+    StatusForCompliance
+  DESCRIPTION
+    "A string to hold the true window status for the default/checkcode transform"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNewEnv ) then "New" else
+    if( Proj:IsExistingEnv ) then "Existing" else
+    if( IsValidStatus ) then Status else
+    DefaultStatus
+    endif endif endif
+  CHECKCODE : T24N
+    if( IfValidAnd( IsValidStatus = 0 ) )
+    then PostWarning( "For window '%s':  The Status '%s' is incompatible with 
+                       Compliance Type '%s'.  Window '%s' will be treated as
+                       '%s' for compliance purposes.",
+                        Name, Status, Proj:CompType, Name, StatusForComp )
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Win:IsNew
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNew
+  DESCRIPTION
+    "Flag to identify whether a window status is new"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "New" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Win:IsAltered
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsAltered
+  DESCRIPTION
+    "Flag to identify whether a window status is Altered"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "Altered" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Win:IsExisting
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsExisting
+  DESCRIPTION
+    "Flag to identify whether a window status is Existing"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "Existing" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// ---------- Additional Window Flags -----------------------------------------
+RULE NEW Win:IsNewCondWin
+  RULESETS
+    T24N
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNewConditionedWindow
+  DESCRIPTION
+    "Flag to identify whether a window adjacent to conditioned space has status
+     equal to new"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( ExtWall:IsCondExtEnv .AND.
+        u:Status = "New")
+    then 1
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Win:IsResWin
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialWindow 
+  DESCRIPTION
+    "Identifies whether a Window is located in an Enclosed Residential Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT : T24N
+    if( Parent( BldgTypeForExtWall ) == "Residential" )
+    then 1
+    else 0
+    endif 
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsResExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+RULE NEW Win:IsNonResWin 
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialWindow
+  DESCRIPTION
+    "Identifies whether a Window is located in a Nonresidential Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT : T24N
+    if( Parent( BldgTypeForExtWall ) == "NonResidential" )
+    then 1
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsNonResExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+
+RULE NEW Win:IsSemiExterior
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExterior
+  DESCRIPTION
+    "Identifies whether a Window is located in a Semiheated Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT : T24N
+    0
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsSemiExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif  
+ENDRULE
+RULE NEW Win:IsNotEnclosed
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNotEnclosed
+  DESCRIPTION
+    "Identifies whether a Window is located in a Not Enclosed Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT : T24N
+    0   
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsNonExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+
+RULE NEW Win:LowVTLPDAdjFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    LowVisibleTransmittanceLPDAdjustmentFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed design VT does not meet the minimum 
+     prescriptive requirements.  This condition triggers a a baseline LPD
+     adjustment in simplified geometry models intended to account for reductions
+     to daylighting potential associated with low VT values."  
+  INPUTCLASS
+    NotInput 
+  DEFAULT  : T24N
+    if( Proj:IsDetailedGeometry = 0 .AND.
+      ( Win:StatusForComp = "New" .OR. Win:StatusForComp = "Altered" ) .AND.
+        IfValidAnd( FenConsRef:MinPresVT > FenConsRef:VT ) )
+    then 1
+    else 0
+    endif
+  DEFAULT
+    0
+ENDRULE
+
+
+// ---------- Skylights -------------------------------------------------------
+RULE Skylt:Name
+  DESCRIPTION
+    "A unique identifier for the Skylight"
+  HELP
+    "A brief description of the skylight.  The description
+     should tie the skylight to the identifer on the building plans."
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    Required
+ENDRULE
+
+RULE Skylt:FenConsRef
+  DESCRIPTION
+    "Specifies the Fenestration Construction which is applied to the skylight"
+  INPUTCLASS
+    Compulsory
+  CHECKCODE
+    if( LocalCompAssigned( FenConsRef ) > 0.5 .AND.
+        IfValidAnd( FenConsRef:FenType = "VerticalFenestration" ) )
+    then   // Constructions of type 'VerticalFenestration' cannot be assigned to Skylights
+      PostError( "Skylight '%s'is assigned a fenestration construction of
+                  type 'VerticalFenestration'.  This is not permitted; 
+                  assign a fenestration construction of Type 'Skylight'",
+                  Name )
+    else UNCHANGED
+    endif
+  CHECKSIM
+    if( LocalCompAssigned( FenConsRef ) < 0.5 )
+    then
+      PostError( "A valid fenestration construction must be applied to skylight '%s'.",
+                  Name )
+    else 
+      UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Window Status Assignment/QC/Flags -------------------------------
+RULE NEW Skylt:DefaultStatus
+  DATATYPE 
+    Enumeration
+  LONGFORM
+    DefaultStatus
+  DESCRIPTION
+    "This property holds the default Skylight Status based on project compliance
+     and envelope status."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Altered
+    Existing
+  DEFAULT 
+    if( Proj:IsNewEnv)
+    then "New"
+    else if( Proj:IsExistingEnv )
+    then "Existing"      
+    else if( ParentStatus( Status ) > 0 )
+    then Roof:Status
+    else "New"
+    endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE Skylt:Status
+  DESCRIPTION
+    "Specifies the Status of the skylights Additions, Alterations
+     and Partial Compliance."
+  HELP
+    "Used to determine whether user specified or standard design values for
+     widnow performance and maximum areas are utilized in the proposed and
+     baseline models.
+
+     New:       An addition or alteration of a skylight which results in an increase in
+                total fenestration area.
+
+     Altered:   An alteration of a skylight which does not increase total fenestration
+                area.  For example, replacing an existing skylight with a skylight
+                of equal or smaller size.
+ 
+     Existing:  Existing skylights which are not modified during the
+                addition/alteration"
+
+  REFERENCE 
+    ACM-5.2.1, Compliance Type
+  INPUTCLASS
+    Required
+  OPTION : S901G ECBC
+    New
+  OPTION
+    New
+    Altered
+    Existing
+  DEFAULT : S901G ECBC
+    "New"  
+  DEFAULT
+    DefaultStatus
+  SIZING : T24N
+    StatusForComp
+  SIZING : S901G ECBC
+    "New"  
+ENDRULE
+
+RULE NEW Skylt:IsValidStatus
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected skylight status is valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( ( IfValidAnd( Status = "New" ) .AND.
+          ValidCompStatus:Env_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        ( IfValidAnd( Status = "Altered" ) .AND.
+          ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        ( IfValidAnd( Status = "Existing" ) .AND.
+          ValidCompStatus:Env_Existing( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Skylt:StatusForComp
+  DATATYPE
+    String
+  LONGFORM
+    StatusForCompliance
+  DESCRIPTION
+    "A string to hold the true skylight status for the default/checkcode transform"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNewEnv ) then "New" else
+    if( Proj:IsExistingEnv ) then "Existing" else
+    if( IsValidStatus ) then Status else
+    DefaultStatus
+    endif endif endif
+  CHECKCODE : T24N
+    if( IfValidAnd( IsValidStatus = 0 ) )
+    then PostWarning( "For skylight '%s':  The Status '%s' is incompatible with 
+                       Compliance Type '%s'.  Skylight '%s' will be treated as
+                       '%s' for compliance purposes.",
+                        Name, Status, Proj:CompType, Name, StatusForComp )
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Skylt:IsNew
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsNew
+  DESCRIPTION
+    "Flag to identify whether a skylight status is new"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "New" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Skylt:IsAltered
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsAltered
+  DESCRIPTION
+    "Flag to identify whether a skylight status is Altered"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "Altered" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Skylt:IsExisting
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsExisting
+  DESCRIPTION
+    "Flag to identify whether a skylight status is Existing"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if ( IfValidAnd( Status = "Existing" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// ---------- Additional Skylight Flags -----------------------------------------
+RULE NEW Skylt:IsResSkylt
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialSkylight
+  DESCRIPTION
+    "Identifies whether a Skylight is located in a Residential
+     or Nonresidential space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput   
+  DEFAULT : T24N
+    if( Parent( BldgTypeForRoof ) == "Residential" )
+    then 1
+    else 0
+    endif     
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsResExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+RULE NEW Skylt:IsNonResSkylt
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonresidentialSkylight
+  DESCRIPTION
+    "Identifies whether a Skylight is located in a Nonresidential
+     or Nonresidential space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT : T24N
+    if( Parent( BldgTypeForRoof ) == "NonResidential" )
+    then 1
+    else 0
+    endif     
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsNonResExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+
+RULE NEW Skylt:IsSemiExterior
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExterior
+  DESCRIPTION
+    "Identifies whether a Skylight is located in a Semiheated Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT : T24N
+    0     
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsSemiExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+RULE NEW Skylt:IsNotEnclosed
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNotEnclosed
+  DESCRIPTION
+    "Identifies whether a Skylight is located in a Not Enclosed Space
+     (Flag Value = 1)"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT : T24N
+    0   
+  DEFAULT : S901G ECBC
+    if( IfValidAnd( Parent( IsNonExtEnv ) == 1 ) )
+    then 1
+    else 0
+    endif 
+ENDRULE
+
+RULE NEW Skylt:LowVTLPDAdjFlag
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    LowVisibleTransmittanceLPDAdjustmentFlag
+  DESCRIPTION
+    "A flag to indicate that the proposed design VT does not meet the minimum 
+     prescriptive requirements.  This condition triggers a a baseline LPD
+     adjustment in simplified geometry models intended to account for reductions
+     to daylighting potential associated with low VT values."  
+  INPUTCLASS
+    NotInput 
+  DEFAULT : T24N
+    if( Proj:IsDetailedGeometry = 0 .AND.
+      ( Skylt:StatusForComp = "New" .OR. Skylt:StatusForComp = "Altered" ) .AND.
+        IfValidAnd( FenConsRef:MinPresVT > FenConsRef:VT ) )
+    then 1
+    else 0
+    endif
+  DEFAULT
+    0
+ENDRULE
+
+// ---------- Remove Fenestration from Data Center Baselines ------------------
+RULE NEW Win:InDataCenter
+  RULESETS
+    T24N  ; Requirement to Remove windows from data center baseline applies to T-24 only
+  DATATYPE 
+    Integer
+  LONGFORM
+    InDataCenter
+  DESCRIPTION
+    "Flag to identify whether a window is located in a 'Computer Room' or Data Center Space"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( IfValidAnd( Spc:SpcFunc = "Computer Room" ) )
+    then 1
+    else 0
+    endif
+  CHECKCODE : T24N
+    if( IfValidAnd( Win:InDataCenter = 1 ) )
+    then 
+      PostWarning ( "Space '%s' is a 'Computer Room'. Per NACM guidelines, 
+                     Window '%s' will be removed in the standard design.",
+                     Spc:Name, Win:Name )
+    else
+      UNCHANGED
+    endif
+  SIZING
+    u:InDataCenter
+  ANNUAL
+    u:InDataCenter
+ENDRULE
+RULE Win:Action
+  RULESETS
+    T24N  ; Requirement to Remove windows from data center baseline applies to T-24 only
+  DESCRIPTION
+    "Rule to remove windows from standard design in data center buildings." 
+  SIZING_PROPOSED
+    UNCHANGED
+  SIZING_BASELINE
+    if( IfValidAnd( Win:InDataCenter = 1 ) .AND.
+        IfValidAnd( Win:Status = "New" ) )
+    then DeleteComp()
+    else UNCHANGED
+    endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+RULE NEW Skylt:InDataCenter
+  RULESETS
+    T24N  ; Requirement to Remove skylights from data center baseline applies to T-24 only
+  DATATYPE 
+    Integer
+  LONGFORM
+    InDataCenter
+  DESCRIPTION
+    "Flag to identify whether a skylight is located in a Computer Room or 
+     Data Center Space"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( IfValidAnd( Spc:SpcFunc = "Computer Room" ) )
+    then 1
+    else 0
+    endif
+  CHECKCODE
+    if( IfValidAnd( Skylt:InDataCenter = 1 ) )
+    then 
+      PostWarning ( "Space '%s' is a 'Computer Room'. Per NACM guidelines, 
+                     Skylight '%s' will be removed in the standard design.",
+                     Spc:Name, Skylt:Name )
+    else
+      UNCHANGED
+    endif
+  SIZING
+    u:InDataCenter
+  ANNUAL
+    u:InDataCenter
+ENDRULE
+RULE Skylt:Action
+  RULESETS
+    T24N  ; Requirement to Remove skylights from data center baseline applies to T-24 only
+  DESCRIPTION
+    "Rule to remove windows from standard design in data center buildings." 
+  SIZING_PROPOSED
+    UNCHANGED
+  SIZING_BASELINE
+    if( IfValidAnd( Skylt:InDataCenter = 1 ) .AND.
+        IfValidAnd( Skylt:Status = "New" ) )
+    then DeleteComp()
+    else UNCHANGED
+    endif
+  ANNUAL
+    UNCHANGED
+
+ENDRULE
+
+// Identify what types of fenestration are assigned to a FenestrationConstruction
+RULE NEW FenCons:VertFenCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    VerticalFenestrationCount
+  DESCRIPTION
+    ""  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    CountRefs(Window:FenConsRef)
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW FenCons:SkyltCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    SkylightFlag
+  DESCRIPTION
+    ""  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    CountRefs(Skylight:FenConsRef)
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---- Identify whether FenCons is applicable to Residential or Nonresidential Occ Types ----
+RULE NEW FenCons:IsResFen
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialFenestration
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction has been assigned to a
+     Fenestration object in a Residential Occupanncy"
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT   
+    if(IfValidAnd( FenType == "VerticalFenestration" ) )
+    then if(SumRevRef(Win:FenConsRef,Win:IsResWin)>0)
+         then 1
+         else 0
+         endif
+    else if(IfValidAnd( FenType == "Skylight" ) )
+    then if(SumRevRef(Skylt:FenConsRef,Skylt:IsResSkylt)>0)
+         then 1
+         else 0
+         endif
+    else 0
+    endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW FenCons:IsNonResFen
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialFenestration
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction has been assigned to a
+     Fenestration object in a Nonresidential Occupanncy"
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT 
+    if(IfValidAnd( FenType == "VerticalFenestration" ) )
+    then if(SumRevRef(Win:FenConsRef,Win:IsNonResWin)>0)
+         then 1
+         else 0
+         endif
+    else if(IfValidAnd( FenType == "Skylight" ) )
+    then if(SumRevRef(Skylt:FenConsRef,Skylight:IsNonResSkylt)>0)
+         then 1
+         else 0
+         endif
+    else 0
+    endif endif
+ENDRULE
+RULE NEW FenCons:FenOcc
+  DATATYPE
+    Enumeration
+  LONGFORM
+    FenestrationOccupancy
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction is applicable to Residential
+     or Nonresidential Occupancies."  
+  HELP : T24N
+    "Baseline Fenestration perfomance requirements are identical for Residential
+     and Nonresidential occupancies."  
+  HELP : S901G ECBC
+    "In order to apply the baseline performance parameters at the 
+     FenestrationConstruction level, a single Fenestration Construction
+     cannot be applied to more than one occupancy Residential and Nonresidential occupancies"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  OPTION
+    Nonresidential
+    Residential
+    MixedOccupancyStatus
+    Unassigned
+  DEFAULT
+    if( IsNonResFen == 1 .AND. IsResFen == 0 ) then 
+      "Nonresidential"
+    else if( IsNonResFen == 0 .AND. IsResFen == 1 ) then
+      "Residential"
+    else if( IsNonResFen == 1 .AND. IsResFen == 1 ) then
+      "MixedOccupancyStatus"
+    else
+      "Unassigned"    ; defaults to Unassigned if no fen assigned
+    endif endif endif
+  CHECKCODE : S901G ECBC
+    if( u:FenCondStatus = "SemiExterior" ) then 
+      UNCHANGED
+    else if ( FenOcc="MixedOccupancyStatus" ) then
+      PostError("Fenestration construction '%s' is assigned to glazing located 
+                 in both residential and non-residential occupancies.  A fenestration
+                 construction cannot be referenced by fenestration located in 
+                 both residential and nonresidential spaces.", u:Name)
+    else UNCHANGED
+    endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+//------------------------------------------------------------------------------
+// ---- Identify the window status to which the fenestration construction applies ----
+RULE NEW FenCons:NewFenCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    NewFenestrationCount
+  DESCRIPTION
+    "Identifies the number of 'New' fenestration objects which are
+     assigned to a fenestration construction"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    SumRevRef( Win:FenConsRef, Win:IsNew ) +
+    SumRevRef( Skylt:FenConsRef, Skylt:IsNew)
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+//------------------------------------------------------------------------------
+RULE NEW FenCons:AlteredFenCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    AlteredFenestrationCount
+  DESCRIPTION
+    "Identifies the number of 'Altered' fenestration objects which are
+     assigned to a fenestration construction"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    SumRevRef( Win:FenConsRef, Win:IsAltered ) +
+    SumRevRef( Skylt:FenConsRef, Skylt:IsAltered )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+//------------------------------------------------------------------------------
+RULE NEW FenCons:ExistingFenCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    ExistingFenestrationCount
+  DESCRIPTION
+    "Identifies the number of 'Existing' of fenestration objects which are
+     assigned to a fenestration construction"   
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    SumRevRef( Win:FenConsRef, Win:IsExisting ) +
+    SumRevRef( Skylt:FenConsRef, Skylt:IsExisting)
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Fenestration - Type *********************************************
+RULE FenCons:FenType  
+// Input restriction summary:
+//    None
+// Standard Design summary:
+//    Required, same for all transformations
+  DESCRIPTION
+    "This property determines whether the FenestrationConstruction can be assigned
+     to Vertical Glazing or Skylights"
+  HELP
+  ""
+  REFERENCE 
+       ACM-5.5.7
+  INPUTCLASS
+    Required
+  OPTION
+    VerticalFenestration
+    Skylight
+  DEFAULT
+      ; will assign 'VerticalFenestration' if referenced 
+      ;by VertFen and Skylights - will address this condition 
+      ;in CheckSim below
+    if(VertFenCnt > 0)
+    then "VerticalFenestration" else  
+    if (SkyltCnt > 0)
+    then "Skylight" 
+    else "VerticalFenestration"
+    endif endif
+  CHECKCODE
+    if( u:VertFenCnt > 0 .AND. u:SkyltCnt > 0 )
+    then   // fenestration construction cannot be referenced by both Vertical Fenestration and Skylights
+      PostError( "Fenestration Construction '%s' may not be
+                  assigned to both Vertical Fenestration and Skylights.", 
+                  u:Name )
+    else UNCHANGED
+    endif
+  SIZING
+    u:FenType
+  ANNUAL
+    u:FenType
+ENDRULE
+
+// ********** Fenestration - Type Report ***************************************
+RULE FenCons:FenTypeRpt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "This translates FenType to FenTypeRpt."
+  HELP
+  ""
+  REFERENCE 
+       ACM-5.5.7
+  INPUTCLASS
+    NotInput
+  OPTION
+    Vertical Fenestration
+    Skylight
+  ANNUAL_PROPOSED
+    switch ( FenType )
+      case "VerticalFenestration" : "Vertical Fenestration"
+      case "Skylight"             : "Skylight"
+      default : UNDEFINED
+    endswitch
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ********** Fenestration - Assembly Context *********************************
+RULE FenCons:AssmContext
+  RULESETS
+    T24N  ; AssemblyContext is particular to T-24 only
+  DESCRIPTION
+    "Whether the Fenestration Product is Manufactured, Site Built or 
+     Field Fabricated"
+  HELP
+    "Determines how Proposed and Standard properties are selected"
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    Required
+  DEFAULT
+    "Manufactured"
+  CHECKCODE
+    if( FenType = "Skylight" .AND.
+        AssmContext = "FieldFabricated" )
+    then PostError("In Fenestration Construction '%s', FieldFabricated is not 
+                    a valid Assembly Context for Skylights.", u:Name)
+    else UNCHANGED
+    endif        
+  SIZING
+    u:AssmContext
+  ANNUAL
+    u:AssmContext
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ********** Fenestration - Certification Method *****************************
+RULE FenCons:CertificationMthd
+  DESCRIPTION
+    "Whether the Fenestration Construction represents and actual NFRC rated
+     product or is based on T-24 Default Assumptions"
+  HELP
+    "Determines how Proposed properties area selected"
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    Required
+  DEFAULT
+    "NFRCRated"
+  CHECKCODE : T24N
+    if( IfValidAnd( CertificationMthd = "COGEquations" ) .AND.
+        IfValidAnd( FenType = "VerticalFenestration" ) .AND. 
+        IfValidAnd( Status <> "Existing" ) )
+    then
+      if( IfValidAnd( AssmContext <> "SiteBuilt" ) )
+      then PostError( "Review inputs for fenestration construction '%s'.  
+                       Performance metrics for New/Altered manufactured or 
+                       field fabricated vertical fenestration products may 
+                       not be specified via the NA-6 'COG Equations' method.",
+                       Name )
+      else if ( IfValidAnd( Bldg:NewOrAltNA6SiteBuiltWinArea > 1000 ) )
+      then PostError( "Review inputs for fenestration construction '%s'.  
+                       No more than 1000 ft2 of New/Altered site built vertical
+                       fenestration may be specified using the The NA-6 
+                       'COG Equations' method.",
+                       Name )
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    u:CertificationMthd
+  ANNUAL
+    u:CertificationMthd
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ********** Fenestration - Certification Method Report ***********************
+RULE FenCons:CertificationMthdRpt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Translates CertificationMthd to CertificationMthdRpt."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    NotInput
+  OPTION
+    NFRC Rated
+    Default Performance
+    COG Equations
+  ANNUAL_PROPOSED
+    if( CertificationMthd = "NFRCRated" )
+    then "NFRC Rated"
+    else
+    if( CertificationMthd = "DefaultPerformance" )
+    then "Default Performance"
+    else
+    if( CertificationMthd = "COGEquations" )
+    then "COG Equations"
+    else UNDEFINED
+    endif endif endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ********** Fenestration - Status *******************************************
+RULE FenCons:Status  
+  DESCRIPTION
+    "This property identifies whether the fenestration construction is referenced
+     by new or existing windows"
+  HELP
+  ""
+  REFERENCE 
+       ACM-5.5.7
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Altered
+    Existing
+  DEFAULT
+// if FenCons is referenced by more than one Fenestration Status, assignment
+// will not be valid.  Will check for this condition in CheckCode rule below
+    if( NewFenCnt > 0 ) then "New" else
+    if( AlteredFenCnt > 0 ) then "Altered" else
+    if( ExistingFenCnt > 0 ) then "Existing" else
+     "New"
+    endif endif endif
+  CHECKCODE
+// check to ensure Fenestration construction is referenced by fenestration of 
+// only one compliance status
+    if( ( u:NewFenCnt > 0 .AND. u:ExistingFenCnt > 0 ) .OR.
+        ( u:NewFenCnt > 0 .AND. u:AlteredFenCnt > 0 ) .OR.
+        ( u:AlteredFenCnt > 0 .AND. u:ExistingFenCnt > 0 ) )
+    then
+      PostError("Fenestration Construction '%s' may not be
+                 assigned to fenestration with more than one Status, 
+                 i.e. New, Altered or Existing", 
+                 u:Name)
+    else
+      UNCHANGED
+    endif
+  SIZING
+    u:Status
+  ANNUAL
+    z:Status
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ------- Calculate surface areas by ConsAssm and Status
+RULE NEW FenCons:Area
+  DESCRIPTION
+    "The total area of fenestration referencing a Fenestration Construction."
+  LONGFORM
+    Area
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+      SumRevRef( Win:FenConsRef, Win:Area ) +
+      SumRevRef( Skylt:FenConsRef, Skylt:Area )
+ENDRULE
+
+RULE FenCons:AreaNew
+  DESCRIPTION
+    "The total area of the fenestration assembly by surface status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Status = "New" ) then
+      SumRevRef( Win:FenConsRef, Win:Area ) +
+      SumRevRef( Skylt:FenConsRef, Skylt:Area )
+    else 0
+    endif
+ENDRULE
+
+RULE FenCons:AreaAltered
+  DESCRIPTION
+    "The total area of the fenestration assembly by surface status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Status = "Altered" ) then
+      SumRevRef( Win:FenConsRef, Win:Area ) +
+      SumRevRef( Skylt:FenConsRef, Skylt:Area )
+    else 0
+    endif
+ENDRULE
+
+RULE FenCons:AreaExisting
+  DESCRIPTION
+    "The total area of the fenestration assembly by surface status."
+  UNITS
+    ft2
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Status = "Existing" ) then
+      SumRevRef( Win:FenConsRef, Win:Area ) +
+      SumRevRef( Skylt:FenConsRef, Skylt:Area )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW FenCons:FenPropRuleFlag  
+  DATATYPE
+    Integer
+  LONGFORM
+    FenestrationPropertiesRuleFlag
+  DESCRIPTION
+    "This property is a flag to identify whether fenestration properties should
+     be set based on user input, standard design, or baseline for altered glazing"
+  HELP
+  "This property is a flag to identify whether fenestration properties should
+     be set based on user input, standard design, or baseline for altered glazing
+     Enumerations:
+      0:  User Defined Performance Properties
+      1:  Standard Design Performmance Properties
+      2:  Minimum Performance for Altered Fenestration"
+  REFERENCE 
+       none
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    0  //  There are no conditions under which standard design rules are applied to the proposed design
+  SIZING_BASELINE
+    if( Proj:IsNewEnv = 1 ) then        // apply standard design properties
+      1 else
+    if( Proj:IsNewMech = 1 ) then       // apply user defined properties
+      0 else
+    if( Proj:IsAddOrAlt = 1 ) then      // apply standard design properties
+      if( u:Status = "New" )
+      then 1 else 
+      if ( u:Status = "Altered" )       // apply minimum performance for Altered Fenestration
+      then 2 else
+      0                                 // apply user defined properties
+      endif endif
+    else 1
+    endif endif endif
+  ANNUAL
+    z:FenPropRuleFlag
+ENDRULE
+
+// ---------- Fenestration - Product Type -------------------------------------
+RULE FenCons:FenProdType
+  DESCRIPTION
+    "This property describes the type of window or skylight and allows
+     for lookup of CEC default and Standard Design properties."
+  HELP
+  ""
+  REFERENCE 
+       ACM-5.5.7
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"
+  SIZING
+    u:FenProdType
+  ANNUAL
+    u:FenProdType
+ENDRULE
+RULE NEW FenCons:FenProdTypeReq  
+  DATATYPE
+    Integer
+  LONGFORM
+    FenestrationProductTypeRequired
+  DESCRIPTION
+    "This property identifies whether the property 'FenProdType' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:FenProdTypeReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( FenProdTypeReq = 1 ) 
+    then if ( LocalStatus( u:FenProdType ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', FestrationProductType 
+                   must be defined.  LocalStatus: %f, FenProdType = %s.  Condition 1", 
+                   u:Name, LocalStatus(FenProdType), u:FenProdType )
+      else if( u:FenProdType = "- specify -" .OR.
+               u:FenProdType = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', FestrationProductType 
+                   must be defined.  LocalStatus: %f, FenProdType = %s.  Condition 2", 
+                   u:Name, LocalStatus(FenProdType), u:FenProdType )
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Fenestration - Panes --------------------------------------------
+RULE FenCons:FenPanes
+  DESCRIPTION
+    "This property describes the window pane configuration and allows
+     for lookup of CEC default properties"
+  HELP
+  ""
+  REFERENCE 
+       
+  INPUTCLASS
+   CondRequired
+  DEFAULT
+    "- specify -"
+  CHECKCODE : T24N
+    if((u:VertFenCnt > 0 .OR. u:SkyltCnt > 0) .AND.
+    (u:FenType = "Skylight" .AND. u:FenPanes = "GlassBlock")) 
+    then PostError("For '%s' FenCons, a Skylight with a GlassBlock Pane is not a valid combination", u:Name)
+    else UNCHANGED
+    endif
+  SIZING
+    u:FenPanes
+  ANNUAL
+    u:FenPanes
+ENDRULE
+RULE NEW FenCons:FenPanesReq  
+  DATATYPE
+    Integer
+  LONGFORM
+    FenestrationPanesRequired
+  DESCRIPTION
+    "This property identifies whether the property 'FenPanes' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:FenPanesReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( FenPanesReq = 1 ) 
+    then if ( LocalStatus( FenPanes ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', FestrationPanes
+                   must be defined.", u:Name)
+      else if( FenPanes = "- specify -" .OR.
+               FenPanes = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', FestrationPanes
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Fenestration - Framing ------------------------------------------
+RULE NEW FenCons:FenFrmReq  
+  DATATYPE
+    Integer
+  LONGFORM
+    FenestrationFramingRequired
+  DESCRIPTION
+    "This property identifies whether the property 'FenFrm' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:FenFrmReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( FenFrmReq = 1 ) 
+    then if ( LocalStatus( FenFrm ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', FestrationFraming
+                   must be defined.", u:Name)
+      else if( FenFrm = "- specify -" .OR.
+               FenFrm = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', FestrationFraming
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:FenFrm
+  DESCRIPTION
+    "This property describes the window framing and allows for calculation 
+     of CEC default properties using the NA-6 calculation method."
+  HELP
+  ""
+  REFERENCE 
+    ACM-5.5.7 
+  INPUTCLASS
+//  Required only for Vertical Fenestration
+    CondRequired  
+  DEFAULT
+    "- specify -"
+  CHECKCODE : T24N
+    if((u:VertFenCnt > 0 .OR. u:SkyltCnt > 0) .AND.
+    (u:FenFrm = "MetalFramingWithThermalBreak" .AND. (u:FenPanes = "GlassBlock" .OR. u:FenPanes = "SinglePane"))) 
+    then PostError("For '%s' FenCons, MetalFramingWithThermalBreak with a GlassBlock/SinglePane is not a valid combination", u:Name)
+    else UNCHANGED
+    endif
+  SIZING
+    u:FenFrm
+  ANNUAL
+    u:FenFrm
+ENDRULE
+
+// ---------- Fenestration - Tint --------------------------------------------
+RULE NEW FenCons:GlazingTintReq  
+  DATATYPE
+    Integer
+  LONGFORM
+    GlazingTintRequired
+  DESCRIPTION
+    "This property identifies whether the property 'GlazingTint' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:GlazingTintReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( GlazingTintReq = 1 ) 
+    then if ( LocalStatus( GlazingTint ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', GlazingTint
+                   must be defined.", u:Name)
+      else if( GlazingTint = "- specify -" .OR.
+               GlazingTint = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', GlazingTint
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:GlazingTint
+  DESCRIPTION
+    "This property describes the window tinting and allows
+     for lookup of CEC default properties"
+  HELP
+  ""
+  REFERENCE       
+
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"
+  SIZING
+    u:GlazingTint
+  ANNUAL
+    u:GlazingTint
+ENDRULE
+
+// ---------- Fenestration - Skylight - Glazing -------------------------------
+RULE NEW FenCons:SkylightGlazingReq 
+  DATATYPE
+    Integer
+  LONGFORM
+    SkylightGlazingRequired
+  DESCRIPTION
+    "This property identifies whether the property 'SkylightGlazing' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:SkylightGlazingReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( SkylightGlazingReq = 1 ) 
+    then if ( LocalStatus( SkylightGlazing ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', SkylightGlazing
+                   must be defined.", u:Name)
+      else if( SkylightGlazing = "- specify -" .OR.
+               SkylightGlazing = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', SkylightGlazing
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:SkylightGlazing
+  DESCRIPTION
+    "This property describes the skylight glazing material and allows
+     for lookup of baseline performance parameters"
+  HELP
+  ""
+  REFERENCE 
+       
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"
+  SIZING
+    u:SkylightGlazing
+  ANNUAL
+    u:SkylightGlazing
+ENDRULE
+
+
+// ---------- Fenestration - Skylight - Curb -------------------------------
+RULE NEW FenCons:SkylightCurbReq 
+  DATATYPE
+    Integer
+  LONGFORM
+    SkylightCurbRequired
+  DESCRIPTION
+    "This property identifies whether the property 'SkylightCurb' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:SkylightCurbReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( SkylightCurbReq = 1 ) 
+    then if ( LocalStatus( SkylightCurb ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', SkylightCurb
+                   must be defined.", u:Name)
+      else if( SkylightCurb = "- specify -" .OR.
+               SkylightCurb = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', SkylightCurb
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:SkylightCurb
+  DESCRIPTION
+    "This property describes the skylight curb configuration and allows
+     for calculation of CEC default properties using the  NA-6 calculation 
+     method."
+  HELP
+  ""
+  REFERENCE 
+       
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"
+  CHECKCODE
+    if( u:FenType = "Skylight" .AND. 
+        u:SkyltCurb = "CurbMounted" .AND. 
+        u:AssmContext = "SiteBuilt" )
+    then PostError("In Fenestration Construction '%s', %s is not a valid 
+                    selection for %s Skylights.", 
+                    u:Name, u:SkyltCurb, u:AssmContext ) 
+    else if( IfValidAnd( SkyltCurb = "DeckMounted" ) .AND.
+             IfValidAnd( SkyltGlz = "Plastic" ) ) 
+         then PostError( "In Fenestration Construction '%s', %s is not a valid 
+                          selection for %s Skylights.",
+                          u:Name, u:SkyltCurb, u:SkyltGlz )
+         else UNCHANGED
+    endif endif
+  SIZING
+    u:SkylightCurb
+  ANNUAL
+    u:SkylightCurb
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ---------- Fenestration - Greenhouse/Garden Window -------------------------
+;  RULE NEW FenCons:ShowGrnhsGardenWin    
+;    DATATYPE
+;      Integer
+;    LONGFORM
+;      ShowGreenhouseGardenWindow
+;    DESCRIPTION
+;      "UI flag determining when to display the GreenhouseGardenWin checkbox"
+;    INPUTCLASS
+;      NotInput
+;    COMMONMINIMUM
+;       0
+;    DEFAULT
+;  	  if (FenType == "VerticalFenestration"  .AND.  CertificationMthd == "DefaultPerformance"  .AND.
+;         (FenProdType == "FixedWindow" .OR. FenProdType == "OperableWindow"))
+;      then  1  
+;      else  0
+;      endif
+;    SIZING
+;      UNDEFINED
+;    ANNUAL
+;      UNDEFINED
+;  ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW FenCons:GreenhouseGardenWinReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    GreenhouseGardenWindowRequired
+  DESCRIPTION
+    "This property identifies whether the property 'GreenhouseGardenWin' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:GreenhouseGardenWinReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( GreenhouseGardenWinReq = 1 ) 
+    then if ( LocalStatus( GreenhouseGardenWin ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', GreenhouseGardenWindow
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:GreenhouseGardenWin
+  RULESETS
+    T24N
+  DESCRIPTION
+    "This property identifies greenhouse/garden windows and allows
+     for lookup of CEC default properties"
+  HELP
+  ""
+  REFERENCE 
+       
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    if( IfValidAnd ( GreenhouseGardenWinReq = 1 ) )
+    then  0  
+    else  UNCHANGED
+    endif
+  SIZING
+    u:GreenhouseGardenWindow
+  ANNUAL
+    u:GreenhouseGardenWindow
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ---------- Fenestration - OperationalType ---------------------------------- 
+RULE NEW FenCons:OperableWinConfigurationReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    OperableWindowConfigurationRequired
+  DESCRIPTION
+    "This property identifies whether the property 'OperableWinConfiguration' 
+     is required to  be specified for the current combination of Fenestration 
+     Construction inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:OperableWinConfigurationReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( OperableWinConfigurationReq = 1 ) 
+    then if ( LocalStatus( OperableWinConfiguration ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', OperableWindowConfiguration
+                   must be defined.", u:Name)
+      else if( OperableWinConfiguration = "- specify -" .OR.
+               OperableWinConfiguration = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', OperableWindowConfiguration
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:OperableWinConfiguration
+  RULESETS
+    T24N
+  DESCRIPTION
+    "This property identifies the window operational type and allows 
+     calculation of CEC default properties using the NA-6 calculation method."
+  HELP
+  ""
+  REFERENCE 
+       
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"  
+  SIZING
+    u:OperableWinConfiguration
+  ANNUAL
+    u:OperableWinConfiguration
+
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ---------- Fenestration - Dividers -----------------------------------------
+RULE NEW FenCons:WinDividerReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    WindowDividerRequired
+  DESCRIPTION
+    "This property identifies whether the property 'WinDivider' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:WinDividerReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( WinDividerReq = 1 ) 
+    then if ( LocalStatus( WinDivider ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', WindowDivider
+                   must be defined.", u:Name)
+      else if( WinDivider = "- specify -" .OR.
+               WinDivider = "- n/a -" )
+      then 
+        PostError("In Fenestration Construction '%s', WindowDivider
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE FenCons:WinDivider
+  RULESETS
+    T24N
+  DESCRIPTION
+    "This property describes the window divider configuration and allows
+     for lookup of CEC default properties"
+  HELP
+  ""
+  REFERENCE 
+
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    "- specify -"   
+  SIZING
+    u:WinDivider
+  ANNUAL
+    u:WinDivider
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ---------- Fenestration - Center of Glass Properties -----------------------
+RULE NEW FenCons:UFactorCOGReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    UFactorCenterOfGlassRequired
+  DESCRIPTION
+    "This property identifies whether the property 'UFactorCOG' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:UFactorCOGReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( UFactorCOGReq = 1 ) 
+    then if ( LocalStatus( UFactorCOG ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', UFactorCOG
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FenCons:UFactorCOG
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Center of glass U Factor"
+  HELP
+    "Used in estimating U Factor from Center of Glass properties using the NA-6
+     Equations"
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    2
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW FenCons:SHGCCOGReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    SolarHeatGainCoefficientCenterOfGlassRequired
+  DESCRIPTION
+    "This property identifies whether the property 'SHGCCOG' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:SHGCCOGReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( SHGCCOGReq = 1 ) 
+    then if ( LocalStatus( SHGCCOG ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', SHGCCOG
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FenCons:SHGCCOG
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Center of glass SHGC"
+  HELP
+    "Used in estimating SHGC from Center of Glass properties using the NA-6
+     Equations"
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    2
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW FenCons:VTCOGReq 
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    VisibleTransmittanceCenterOfGlassRequired
+  DESCRIPTION
+    "This property identifies whether the property 'VTCOG' is required to 
+     be specified for the current combination of Fenestration Construction 
+     inputs"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    FenConsInputReqs:VTCOGReq
+      ("FenType",FenType,
+       "CertificationMethod",CertificationMthd,
+       "ProductType",FenProdType,
+       "Panes",FenPanes)
+  CHECKCODE
+    if( VTCOGReq = 1 ) 
+    then if ( LocalStatus( VTCOG ) < 1 ) 
+      then 
+        PostError("In Fenestration Construction '%s', VTCOG
+                   must be defined.", u:Name)
+      else UNCHANGED
+      endif
+    else
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FenCons:VTCOG
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Center of glass Visible Transmittance"
+  HELP
+    "Used in estimating VT from Center of Glass properties using the NA-6
+     Equations"
+  REFERENCE 
+    ACM-5.5.7    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    2
+ENDRULE
+
+
+// ********** Reporting Properties *********************************************
+// -----------------------------------------------------------------------------
+RULE FenCons:ShdgCred
+  DESCRIPTION
+    "A boolean (0/1) flag to indicate whether any fenestration in the building 
+     is taking complinace credit for shading, used for reporting."
+  INPUTCLASS
+    Required
+  DEFAULT
+    0
+  ANNUAL_PROPOSED
+    z:ShdgCred
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE FenCons:DynamicGlz
+  DESCRIPTION
+    "A boolean (0/1) flag to indicate whether the fenestration construction 
+     uses dynamic glazing, used for reporting."
+  INPUTCLASS
+    Required
+  DEFAULT
+    0
+  ANNUAL_PROPOSED
+    z:DynamicGlz
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:ShdgRpt
+  DESCRIPTION
+    "A boolean (0/1) flag to indicate whether the window will be included
+     in Table B of the ENV DETAILS section of the compliance form."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( HasWinShades = 1 .AND. IsExisting = 0 ) then 1
+    else 0
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OrientationRpt
+  DESCRIPTION
+    "A text string reporting the cardinal direction (N, S, E, W) of the 
+     window for inclusion in Table B of the ENV DETAILS section of the 
+     compliance form."
+  INPUTCLASS
+    NotInput
+  ANNUAL
+         if( Parent(RealAz) >  45 .AND. Parent(RealAz) <= 135 ) then "East"
+    else if( Parent(RealAz) > 135 .AND. Parent(RealAz) <= 225 ) then "South"
+    else if( Parent(RealAz) > 225 .AND. Parent(RealAz) <= 315 ) then "West"
+    else if( Parent(RealAz) > 315 .OR.  Parent(RealAz) <=  45 ) then "North"
+    else "Not Defined"
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangDepthRpt
+  DESCRIPTION
+    "A text string reporting the overhang depth for window shades or referring 
+     to Note A if the window is shaded by a building shade.  For inclusion in 
+     Table B of the ENV DETAILS section of the compliance form."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ShdgRpt = 1 .AND. IfValidAnd( OverhangDepth > 0 ) ) then
+      Format( "%s ft.", FltToStr(OverhangDepth,1,0,2) )
+    else "None"
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangDistRpt
+  DESCRIPTION
+    "A text string reporting the overhang distance for window shades or 
+     referring to Note A if the window is shaded by a building shade.  For 
+     inclusion in Table B of the ENV DETAILS section of the compliance form."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ShdgRpt = 1 .AND. IfValidAnd( OverhangDistance > 0 ) ) then
+      Format( "%s ft.", FltToStr(OverhangDistance,1,0,2) )
+    else "None"
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:FinDepthRpt
+  DESCRIPTION
+    "A text string reporting the fin depth for window shades or referring 
+     to Note A if the window is shaded by a building shade.  For inclusion in 
+     Table B of the ENV DETAILS section of the compliance form."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ShdgRpt = 1 ) then
+      if( IfValidAnd( LeftFinDepth >= 0 ) .AND. 
+          IfValidAnd( RightFinDepth >= 0 ) ) then 
+        Format( "Left: %s ft., Right: %s ft.", FltToStr(LeftFinDepth,1,0,2), 
+                 FltToStr(RightFinDepth,1,0,2) )
+      else if( IfValidAnd( RightFinDepth >= 0 ) ) then 
+        Format( "Left: 0 ft., Right: %s ft.", FltToStr(RightFinDepth,1,0,2) )
+      else if( IfValidAnd( LeftFinDepth >= 0 ) ) then 
+        Format( "Left: %s ft., Right: 0 ft.", FltToStr(LeftFinDepth,1,0,2) )
+      else
+        Format( "Left: 0 ft., Right: 0 ft." )
+      endif endif endif
+    else "None"
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+

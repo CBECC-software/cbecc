@@ -1,0 +1,275 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""res\\BEMProcUI.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    16,1,0,800
+ PRODUCTVERSION 16,1,0,800
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "BEM Processor User Interface DLL\0"
+            VALUE "FileVersion", "2016.1.0 (800)\0"
+            VALUE "InternalName", "BEMProcUI16c\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2016, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "BEMProcUI16c.dll\0"
+            VALUE "ProductName", "BEM Processor UI DLL\0"
+            VALUE "ProductVersion", "2016.1.0\0"
+            VALUE "SpecialBuild", "build 800\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SACWIZARD DIALOGEX 0, 0, 387, 213
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Building Creation Wizard"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "General Information",IDC_SACWIZFRAME,5,5,377,182
+    PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
+    PUSHBUTTON      "« &Previous",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next »",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "&Finish",IDOK,341,194,41,14
+    PUSHBUTTON      "&Cancel",IDCANCELBTN,3,195,41,14
+END
+
+IDD_SACBEMPROCDIALOG DIALOGEX 0, 0, 257, 135
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Building Model Data"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Close",IDOK,200,114,50,14
+END
+
+IDD_SACBLANKDLG DIALOG DISCARDABLE  0, 0, 20, 20
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_STATIC,0,0,0,0
+END
+
+IDD_SACDLG DIALOGEX 0, 0, 387, 213
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Building Creation Wizard"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "General Information",IDC_SACWIZFRAME,5,5,377,182
+    PUSHBUTTON      "&Help",IDC_WIZHELP,50,194,37,14
+    PUSHBUTTON      "« &Previous",IDC_PREVSCREEN,97,194,77,14
+    DEFPUSHBUTTON   "&Next »",IDC_NEXTTOPIC,186,194,67,14
+    PUSHBUTTON      "&Finish",IDOK,341,194,41,14
+    PUSHBUTTON      "&Cancel",IDCANCELBTN,3,195,41,14
+END
+
+IDD_RANGEERROR DIALOG DISCARDABLE  0, 0, 329, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Resume Navigation?"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "Continue",IDOK,216,135,50,14
+    PUSHBUTTON      "Return",IDCANCEL,273,135,50,14
+    EDITTEXT        IDC_RANGE_ERRMSG,15,21,297,69,ES_MULTILINE | ES_READONLY | 
+                    ES_WANTRETURN | WS_VSCROLL
+    LTEXT           "The following range checking violation(s) were found:",
+                    IDC_RANGE_LABEL,15,8,219,9
+    LTEXT           "Select 'Continue' to leave this screen without addressing these problems,\nor 'Return' to return to this screen.",
+                    IDC_RANGE_PROMPT,15,102,297,24
+END
+
+IDD_ERRORLIST DIALOG DISCARDABLE  0, 0, 373, 167
+STYLE WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME
+CAPTION "Resume Navigation?"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_STATIC,0,0,8,8
+    DEFPUSHBUTTON   "Continue",IDOK,257,146,50,14
+    PUSHBUTTON      "Return",IDCANCEL,315,146,50,14
+    LTEXT           "You must enter an explanation for every warning message that has occurred before being able to Continue.\nSelect 'Continue' to leave this screen without addressing these problems, or 'Return' to return to this screen.",
+                    IDC_RANGE_PROMPT,13,107,257,34
+    LTEXT           "The following range checking violation(s) were found:",
+                    IDC_RANGE_LABEL,12,9,219,9
+    PUSHBUTTON      "Apply Default Explanations",IDC_BTN_APPLY_DEFAULT,12,
+                    146,123,14
+END
+
+IDD_BLANKFORM DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE WS_CHILD
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SACWIZARD, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 382
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_SACBEMPROCDIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 128
+    END
+
+    IDD_SACDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 382
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_RANGEERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 322
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_ERRORLIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 365
+        BOTTOMMARGIN, 160
+    END
+
+    IDD_BLANKFORM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "res\BEMProcUI.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

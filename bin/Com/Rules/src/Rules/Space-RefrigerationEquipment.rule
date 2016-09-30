@@ -1,0 +1,557 @@
+// Space Use - Refrigeration Equipment
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+//
+// According to 5.4.6 ACM Draft October 2012, items:  
+//     Occupancy Type
+//     Refrigeration power density
+//     Remote Condenser Fraction
+//     Refrigeration Schedule
+// 
+// The main objects in the SDD are:
+//     Project:Building:BuildingClassificationMethod
+//     Proj:Bldg:Story:Space
+//     SpaceUseDefaults
+//     Proj:Bldg:Story:Space:CommercialRefrigerationEPD
+//     Proj:Bldg:Story:Space:CommercialRefrigerationEquipmentCOP
+//     Proj:Bldg:Story:Space:CommercialRefrigerationEquipmentScheduleReference
+//     Proj:Bldg:Story:Space:CommercialRefrigerationFractionLost
+//
+//
+
+// -------------- Refrigeration Equipment Power Density --------------------
+RULE Spc:CommRfrgEPDExcptCond
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "Used when the baseline refrigeration EPD is different than the proposed."
+  HELP
+    ""  
+  INPUTCLASS
+    Optional
+  DEFAULT
+    1
+  SIZING
+    u:CommRfrgEPDExcptCond
+  ANNUAL
+    z:CommRfrgEPDExcptCond
+ENDRULE
+
+// -------------- Baseline Refrigeration Power --------------------
+// Input restriction summary: 
+//      Use value from Appendix 5.4A based on occupancy type
+// Baseline rule summary: 
+//      Same as proposed.
+RULE Spc:BaseCommRfrgEPD
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The baseline energy consumption of commercial refrigeration equipment in a space 
+    expressed in watts per square foot of space floor area."  
+  HELP
+    "Commercial refrigeration EPD is used for walk in freezers, walk in coolers,
+    and refrigerated casework.  Other equipment such as Plug in coolers, 
+    vending machines and plug in refrigerators should be accounted for in 
+    receptacle loads."  
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    5
+  MAXIMUM 
+    20
+  UNITS 
+    W/ft2
+  DEFAULT
+    if( CommRfrgEPDExcptCond = 0 )
+    then
+      if( HasNoInternalLds )
+      then UNDEFINED
+      else SpaceFunctionData:CommRfrgEPD( "FuncType",SpcFunc )
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( u:BaseCommRfrgEPD = 0 .OR.
+        LocalStatus(u:BaseCommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( CommRfrgEPDExcptCond = 0 )
+      then u:BaseCommRfrgEPD
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseCommRfrgEPD
+ENDRULE
+
+// -------------- Refrigeration Power --------------------
+// Input restriction summary: 
+//      Use value from Appendix 5.4A based on occupancy type
+// Baseline rule summary: 
+//      Same as proposed.
+RULE Spc:CommRfrgEPD
+  DESCRIPTION
+    "The energy consumption of commercial refrigeration equipment in a space 
+    expressed in watts per square foot of space floor area."  
+  HELP
+    "Commercial refrigeration EPD is used for walk in freezers, walk in coolers,
+    and refrigerated casework.  Other equipment such as Plug in coolers, 
+    vending machines and plug in refrigerators should be accounted for in 
+    receptacle loads."  
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    5
+  MAXIMUM 
+    20
+  UNITS 
+    W/ft2
+  DEFAULT
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. CondgType = "Plenum" )
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:CommRfrgEPD
+    else if( SpaceFunctionData:CommRfrgEPD( "FuncType",SpcFunc ) = 0 )
+    then UNDEFINED
+    else SpaceFunctionData:CommRfrgEPD( "FuncType",SpcFunc )
+    endif endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( u:SpcFunc = "Unoccupied-Include in Gross Floor Area"
+         .OR. u:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+         .OR. LocalStatus(u:SpcFunc) < 2
+         .OR. u:CondgType = "Plenum" )
+      then UNDEFINED
+      else if( SpaceFunctionData:CommRfrgEPD( "FuncType",u:SpcFunc ) = 0 )
+      then UNDEFINED
+      else u:CommRfrgEPD
+      endif endif
+    endif
+  SIZING_PROPOSED
+    if( u:SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. u:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(u:SpcFunc) < 2
+       .OR. u:CondgType = "Plenum" )
+    then UNDEFINED
+    else if( SpaceFunctionData:CommRfrgEPD( "FuncType",u:SpcFunc ) = 0 )
+    then UNDEFINED
+    else SpaceFunctionData:CommRfrgEPD( "FuncType",u:SpcFunc )
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( CommRfrgEPDExcptCond = 0 )
+      then zb:BaseCommRfrgEPD
+      else zp:CommRfrgEPD
+      endif
+    endif
+  SIZING_BASELINE
+    if( u:SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. u:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(u:SpcFunc) < 2
+       .OR. u:CondgType = "Plenum" )
+    then UNDEFINED
+    else if( SpaceFunctionData:CommRfrgEPD( "FuncType",u:SpcFunc ) = 0 )
+    then UNDEFINED
+    else SpaceFunctionData:CommRfrgEPD( "FuncType",u:SpcFunc )
+    endif endif
+  ANNUAL
+    z:CommRfrgEPD
+ENDRULE
+
+
+// -------------- Baseline Refrigeration Schedule --------------------
+RULE Spc:BaseCommRfrgEqpSchRef
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "Reference to a baseline schedule that describes the fraction of
+     refrigeration equipment usage on an hourly basis"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+//  DEFAULT
+//    if( CommRfrgEPDExcptCond = 0 )
+//    then RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+//    else UNDEFINED
+//    endif
+  SIZING
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( CommRfrgEPDExcptCond = 0 )
+      then
+        if( (u:BaseCommRfrgEqpSchRef = "- none -" .OR.
+             LocalCompAssigned(u:BaseCommRfrgEqpSchRef) = 0) .AND.
+             IfValidAnd(u:CommRfrgEPD > 0) )
+        then RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",u:FuncSchGrp)))
+        else 
+          if( (u:BaseCommRfrgEqpSchRef = "- none -" .OR.
+               LocalCompAssigned(u:BaseCommRfrgEqpSchRef) = 0) .AND.
+               LocalStatus(u:CommRfrgEPD) = 0 )
+          then UNDEFINED
+          else u:BaseCommRfrgEqpSchRef
+	  endif
+        endif
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseCommRfrgEqpSchRef
+ENDRULE
+
+// -------------- Refrigeration Schedule --------------------
+RULE Spc:CommRfrgEqpSchRef
+  DESCRIPTION
+    "Reference to a schedule that describes the fraction of refrigeration
+     equipment usage on an hourly basis"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Prescribed
+  DEFAULT : T24N S901G ECBC
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1
+       .OR. CondgType = "Plenum" )
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:CommRfrgEqpSchRef
+    else u:CommRfrgEqpSchRef
+    endif
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+         .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+         .OR. LocalStatus(SpcFunc) < 2
+         .OR. LocalStatus(CommRfrgEPD) < 1 )
+      then UNDEFINED
+      else
+        if( (u:CommRfrgEqpSchRef = "- none -" .OR. 
+             LocalCompAssigned(u:CommRfrgEqpSchRef) = 0) .AND.
+	     IfValidAnd(u:CommRfrgEPD > 0) )
+        then RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+        else if( u:CommRfrgEqpSchRef != "- none -" .AND.
+	         IfValidAnd(u:CommRfrgEPD > 0) )
+        then u:CommRfrgEqpSchRef
+        else if( (u:CommRfrgEqpSchRef = "- none -" .OR. 
+                  LocalCompAssigned(u:CommRfrgEqpSchRef) = 0) .AND.
+	          LocalStatus(u:CommRfrgEPD) = 0 )
+        then UNDEFINED
+        else UNDEFINED
+        endif endif endif
+      endif
+    endif
+//
+//    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+//       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+//       .OR. LocalStatus(SpcFunc) < 2
+//       .OR. LocalStatus(CommRfrgEPD) < 1 )
+//    then UNDEFINED
+//    else RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+//    endif
+  SIZING_PROPOSED
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1 )
+    then UNDEFINED
+    else RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+    endif
+  SIZING_BASELINE : S901G ECBC
+    if( CommRfrgEPDExcptCond = 0 )
+    then zb:BaseCommRfrgEqpSchRef
+    else zp:CommRfrgEqpSchRef
+    endif
+//
+//    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+//       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+//       .OR. LocalStatus(SpcFunc) < 2
+//       .OR. LocalStatus(CommRfrgEPD) < 1 )
+//    then UNDEFINED
+//    else RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+//    endif
+  SIZING_BASELINE
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1 )
+    then UNDEFINED
+    else RuleLibrary(Schedule,(SpaceFunctionGroups:CommRfrgEqpSchRef("FuncGroup",FuncSchGrp)))
+    endif
+  ANNUAL
+    z:CommRfrgEqpSchRef
+ENDRULE
+
+// -------------- Refrigeration Heat to Space --------------------
+RULE Spc:CommRfrgRadFrac
+  DESCRIPTION
+    "The fraction of input energy to the commercial refrigeration
+    equipment in a space which results in radiant heat gain to the
+    space the equipment is located in."
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  MAXIMUM 
+    1.0
+  DEFAULT 
+    0
+  SIZING : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( SpcFunc = "Unoccupied-Include in Gross Floor Area" 
+         .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+         .OR. LocalStatus(SpcFunc) < 2
+         .OR. LocalStatus(CommRfrgEPD) < 1 )
+      then UNDEFINED
+      else if( Proj:AnalysisType = "Research")
+	   then CommRfrgRadFrac
+	   else 0
+      endif endif
+    endif
+  SIZING
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area" 
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1 )
+    then UNDEFINED
+    else if( Proj:AnalysisType = "Research")
+	 then CommRfrgRadFrac
+	 else 0
+    endif endif
+  ANNUAL
+    z:CommRfrgRadFrac
+ENDRULE
+
+RULE Spc:CommRfrgLatFrac
+  DESCRIPTION
+    "The fraction of input energy to the commercial refrigeration
+    equipment in a space which results in latent heat gain to the
+    space the equipment is located in."
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  MAXIMUM 
+    1.0
+  DEFAULT 
+    0
+  SIZING : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+         .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+         .OR. LocalStatus(SpcFunc) < 2
+         .OR. LocalStatus(CommRfrgEPD) < 1 )
+      then UNDEFINED
+      else if( Proj:AnalysisType = "Research" )
+	   then u:CommRfrgLatFrac
+	   else 0
+      endif endif
+    endif
+  SIZING
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1 )
+    then UNDEFINED
+    else if( Proj:AnalysisType = "Research" )
+	 then u:CommRfrgLatFrac
+	 else 0
+    endif endif
+  ANNUAL
+    z:CommRfrgLatFrac
+ENDRULE
+
+RULE Spc:CommRfrgLostFrac
+  DESCRIPTION
+    "The fraction of input energy to the commercial refrigeration 
+    equipment in a space which is lost, i.e., does not result in a 
+    heat gain to the space.  " 
+  HELP
+    "Commercial refrigeration inputs are used for walk in freezers, walk in 
+    coolers, and refrigerated casework.  Other equipment such as Plug in
+    coolers, vending machines and plug in refrigerators should be accounted for
+    in receptacle loads. Refrigeration equipment which has remotely located 
+    condensers will have negative heat gain to the space, while self-contained 
+    condensers will have positive heat gains.  For compliance the fraction lost
+    is set to 1, meaning the heat gain to the space will be zero. "  
+  REFERENCE 
+    ACM-5.4.7 Commercial Refrigeration Equipment
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  MAXIMUM 
+    1.00
+  DEFAULT 
+    max( 0, (1 - CommRfrgRadFrac - CommRfrgLatFrac) )
+  SIZING : S901G ECBC
+    if( u:CommRfrgEPD = 0 .OR.
+        LocalStatus(u:CommRfrgEPD) = 0 )
+    then UNDEFINED
+    else
+      if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+         .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+         .OR. LocalStatus(SpcFunc) < 2
+         .OR. LocalStatus(CommRfrgEPD) < 1 )
+      then UNDEFINED
+      else if( Proj:AnalysisType = "Research" )
+        then u:CommRfrgLostFrac
+        else 1
+        endif
+      endif
+    endif
+  SIZING
+    if( SpcFunc = "Unoccupied-Include in Gross Floor Area"
+       .OR. SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+       .OR. LocalStatus(SpcFunc) < 2
+       .OR. LocalStatus(CommRfrgEPD) < 1 )
+    then UNDEFINED
+    else if( Proj:AnalysisType = "Research" )
+      then u:CommRfrgLostFrac
+      else 1
+      endif
+    endif
+  ANNUAL
+    z:CommRfrgLostFrac
+ENDRULE
+
+
+
+;// -------------- Refrigeration Type --------------------
+;RULE NEW Proj:Bldg:Story:Space:CommRfrgType
+;  DATATYPE
+;    Enumeration
+;  LONGFORM
+;    CommercialRefrigerationType
+;  DESCRIPTION
+;    "The Refrigeration Type determines the COP used in the simulation."
+;  HELP
+;    ""
+;  REFERENCE 
+;    ACM-5.4.6
+;    App-5.4A
+;  INPUTCLASS
+;    Required
+;  OPTION
+;    Refrigerator
+;    Freezer
+;    RefrigeratorAndFreezer
+;  DEFAULT
+;    "Refrigerator"
+;  SIZING
+;    u:CommRfrgType
+;  ANNUAL
+;    z:CommRfrgType
+;ENDRULE
+
+
+// -------------- Refrigeration COP --------------------
+// DR: Not currently used for T24 compliance analysis
+;RULE Spc:CommRfrgEqpCOP
+;  DESCRIPTION
+;    "The coefficient of performance of the refrigeration system. This is used
+;     only to determine the heat removed or added to the space, not to determine
+;     the refrigeration power or energy. "
+;  HELP
+;    "This value is prescribed to be 3.6 for refrigerators and 1.8 for freezers.
+;     These values are consistent with the assumptions for the default values
+;     for walk-ins, which assume an EER of 12.39 for refrigerators and 6.33 for
+;     freezers"
+;  REFERENCE 
+;    ACM-5.4.6
+;    App-5.4A
+;  INPUTCLASS
+;    Prescribed
+;  DEFAULT
+;    3.6
+;  SIZING_BASELINE
+;    if( u:SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+;        u:SpcFunc = "Unoccupied-Exclude from Gross Floor Area" 
+;       .OR. LocalStatus(u:SpcFunc) < 2
+;       .OR. LocalStatus(u:CommRfrgEPD) < 1)
+;    then UNDEFINED
+;    else 3.6
+;    endif
+;;    IF CommRfrgType = "Refrigerator"
+;;    then 3.6
+;;    else if CommRfrgType = "Freezer"
+;;    then 1.8
+;;    else if CommRfrgType = "Refrigerator and Freezer"
+;;    then 2.7
+;;    endif endif endif
+;  ANNUAL_PROPOSED
+;    z:CommRfrgEqpCOP
+;ENDRULE
+

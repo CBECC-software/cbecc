@@ -1,0 +1,1355 @@
+// Daylighting and Daylighting Controls - General
+//
+// -------------------------------------------------------------------------
+//  Copyright ( c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES ( INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT ( INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.4.5 - Daylighting Control
+//      Installed General Lighting Power
+//      Daylighting Control Requirements
+//      Fraction of Controlled Lighting
+//      Daylight Illuminance Setpoint
+//      Illumination Adjustment Factor
+//      Daylighting Control Type
+//      Minimum Dimming Light Fraction
+//      Minimum Dimming Power Fraction
+//      Controlled Luminaire Type
+//      Number of Control Steps
+//      ..
+
+
+// ********** Section 5.4.5 - Daylighting Control Spc *************************
+
+// This section populates space level daylighting reference point and control 
+// properties.  These space level properties enable detailed user input, but 
+// are not simulated directly.  Space level properties are aggregated to the 
+// thermal zone level for simulation.
+
+// ********** Interior Lighting System Level Inputs *************************** 
+RULE IntLtgSys:DaylitAreaType
+  DESCRIPTION
+    "Identifies the type of daylit area ( Skylit, Primary Sidelit, Secondary Sidelit )
+     in which 100% of the lights associated with the Interior Lighting System are located."  
+  HELP
+    "Type of daylit area in which the associated lighting fixtures are located.
+     If specified, all of the luminaires belonging to the interior lighting 
+     system are assumed to be controlled.  This property assigns the Interior
+     Lighting System to an existing Daylighting Control Object"  
+  REFERENCE 
+    ACM Section 5.4.5
+  INPUTCLASS
+    Default
+;  OPTION
+;    Identified in BEMEnums.txt
+;  DEFAULT
+;    Identified in BEMEnums.txt    
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Flags to control if/when daylighting controls are applied
+
+RULE NEW Spc:MandDayltgExcepFlag
+  DESCRIPTION
+    "A Flag to determine whether a space is exempt from the mandatory daylighting 
+     rules"  
+  DATATYPE
+    Integer
+  LONGFORM
+    MandatoryDaylightingExceptionFlag
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    if ( Spc:OccClass = "Residential" .OR.
+         Spc:SpcFunc = "Parking Garage Area Dedicated Ramps" .OR.
+         Spc:SpcFunc = "Parking Garage Area Daylight Adaptation Zones" .OR.
+         Spc:HasNoInternalLds = 1 ) 
+   then // Dayltg Ctrls not required for above conditions
+     1 
+   else
+     0
+   endif
+  SIZING
+    u:MandDayltgExcepFlag
+  ANNUAL
+    u:MandDayltgExcepFlag
+ENDRULE
+
+RULE NEW Spc:ApplyStdDayltg
+  DESCRIPTION
+    "A Flag to determine whether to Apply Standard Design Daylighting Rules to 
+     a Transform"  
+  DATATYPE
+    Integer
+  LONGFORM
+    ApplyStandardDaylighting
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( IsFutureLtg)
+    then // apply standard design lighting rules to proposed design, regardless of user input
+      1
+    else // apply proposed design (user input) rules to proposed design
+      0
+    endif
+  SIZING_BASELINE
+    if ( IsExistingLtg ) 
+    then // daylighting controls are set equal to proposed design for existing lighting
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( u:RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // daylighting controls area equal to proposed design for altered lighting resulting in LPD <= .85* Baseline LPD.  Note that proposed lighting power used in this calculation INCLUDES the impact of lighting control credits.
+      0
+    else
+      1
+    endif endif
+  ANNUAL
+    z:ApplyStdDayltg
+ENDRULE
+
+
+// ********** Installed General Lighting Power - Daylit Areas *****************
+RULE Spc:SkylitDayltgInstalledLtgPwr 
+  DESCRIPTION
+    "The total lighting power of all luminaires located within the Skylit Daylit Zone"  
+  REFERENCE 
+    ACM 5.4.5 - Installed Lighting Power
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  DEFAULT
+    if ( IntLtgSysChildren > 0 )
+    then // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+      sumchildrenif( IntLtgSys:RegInstLtgPwr,
+                     IntLtgSys:DaylitAreaType = "SkylitDaylit" )
+    else if ( FlrArea > 0 .AND.
+              IfValidAnd( RegInstLtgPwr > 0 )) 
+    then // assume lighting power is evenly distributed throughout space
+      RegInstLtgPwr*MIN( 1,( SkylitDaylitArea/FlrArea ))
+    else 0
+    endif endif
+  CHECKCODE
+    if( MandDayltgExcepFlag = 1 .OR.
+        Spc:SkylitDaylitArea <= 0 )
+    then UNCHANGED
+    else if( SkylitDayltgInstalledLtgPwr <= 0 )
+    then if( IntLtgSysChildren > 0)
+      then
+        PostWarning( "Space '%s' has %.0f ft2 in the skylit daylit zone,
+                      but has 0 W of installed lighting assigned to the skylit
+                      daylit zone. Check for proper assignment of interior 
+                      lighting systems to daylit zones See Property 
+                     'IntLtgSys:DaylitAreaType'.",
+                      Spc:Name, Spc:SkylitDaylitArea )
+      else 
+        PostWarning( "Space '%s' has %.0f ft2 in the skylit daylit zone,
+                      but has 0 W of installed lighting assigned to the skylit
+                      daylit zone.  Check for proper assignment of Installed 
+                      Power in the daylit zone See Property 
+                     'Spc:SkylitDayltgInstalledLtgPwr'.",
+                      Spc:Name, Spc:SkylitDaylitArea )
+      endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) ) 
+        then RegLtgPwr*MIN( 1,( SkylitDaylitArea/FlrArea ) )
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        u:SkylitDayltgInstalledLtgPwr
+    endswitch
+  ANNUAL
+    z:SkylitDayltgInstalledLtgPwr
+ENDRULE
+RULE Spc:PriSideDayltgInstalledLtgPwr
+  DESCRIPTION
+    "The total lighting power of all luminaires located within the Primary Sidelit Daylit Zone"  
+  HELP
+    "The total lighting power of all luminaires located within the Primary Sidelit Daylit Zone"  
+  REFERENCE 
+    ACM 5.4.5 - Installed Lighting Power
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  DEFAULT
+    if ( IntLtgSysChildren > 0 )
+    then // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+      sumchildrenif( IntLtgSys:RegInstLtgPwr,
+                     IntLtgSys:DaylitAreaType = "PrimarySidelit" )
+    else if ( FlrArea > 0 .AND.
+              IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then // assume lighting power is evenly distributed throughout space
+      RegInstLtgPwr*MIN( 1,( PriSideDaylitArea/FlrArea ) )
+    else 0
+    endif endif
+  CHECKCODE
+    if( MandDayltgExcepFlag = 1 .OR.
+        Spc:PriSideDaylitArea <= 0 )
+    then UNCHANGED
+    else if( PriSideDayltgInstalledLtgPwr <= 0 )
+    then if( IntLtgSysChildren > 0)
+      then
+        PostWarning( "Space '%s' has %.0f ft2 in the primary sidelit daylit 
+                      zone, but has 0 W of installed lighting assigned to the 
+                      primary sidelit daylit zone. Check for proper assignment 
+                      of interior lighting systems to daylit zones See Property
+                     'IntLtgSys:DaylitAreaType'.",
+                     Spc:Name, Spc:PriSideDaylitArea )
+      else 
+        PostWarning( "Space '%s' has %.0f ft2 in the primary sidelit daylit zone,
+                      but has 0 W of installed lighting assigned to the primary 
+                      sidelit daylit zone.  Check for proper assignment of 
+                      Installed Power in the daylit zone. See Property 
+                     'Spc:PriSideDayltgInstalledLtgPwr'.",
+                      Spc:Name, Spc:PriSideDaylitArea )
+      endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if ( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) ) 
+        then RegLtgPwr*MIN( 1,( PriSideDaylitArea/FlrArea ) )
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        u:PriSideDayltgInstalledLtgPwr
+    endswitch
+  ANNUAL
+    z:PriSideDayltgInstalledLtgPwr
+ENDRULE
+RULE Spc:SecSideDayltgInstalledLtgPwr
+  DESCRIPTION
+    "The total lighting power of all luminaires located within the Secondary Sidelit Daylit Zone"  
+  HELP
+    "The total lighting power of all luminaires located within the Secondary Sidelit Daylit Zone"  
+  REFERENCE 
+    ACM 5.4.5 - Installed Lighting Power
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  DEFAULT
+    if ( IntLtgSysChildren > 0 )
+    then  // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+      sumchildrenif( IntLtgSys:RegInstLtgPwr,
+                     IntLtgSys:DaylitAreaType = "SecondarySidelit" )
+    else if ( FlrArea > 0 .AND. IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then  // assume lighting power is evenly distributed throughout space
+      RegInstLtgPwr*MIN( 1,( SecSideDaylitArea/FlrArea ) )
+    else 0
+    endif
+    endif
+  CHECKCODE
+    if( MandDayltgExcepFlag = 1 .OR.
+        Spc:SecSideDaylitArea <= 0 )
+    then UNCHANGED
+    else if( SecSideDayltgInstalledLtgPwr <= 0 )
+    then if( IntLtgSysChildren > 0)
+      then
+        PostWarning( "Space '%s' has %.0f ft2 in the secondary sidelit daylit 
+                      zone, but has 0 W of installed lighting assigned to the 
+                      secondary sidelit daylit zone. Check for proper 
+                      assignment of interior lighting systems to daylit zones.
+                      See Property 'IntLtgSys:DaylitAreaType'",
+                      Spc:Name, Spc:SecSideDaylitArea )
+      else 
+        PostWarning( "Space '%s' has %.0f ft2 in the secondary sidelit daylit 
+                      zone, but has 0 W of installed lighting assigned to the 
+                      secondary sidelit daylit zone.  Check for proper 
+                      assignment of Installed Power in the daylit zone. See 
+                      Property 'Spc:SecSideDayltgInstalledLtgPwr'",
+                      Spc:Name, Spc:SecSideDaylitArea )
+      endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if ( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 )) 
+        then RegLtgPwr*MIN( 1,( SecSideDaylitArea/FlrArea ))
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        u:SecSideDayltgInstalledLtgPwr
+    endswitch
+  ANNUAL
+    z:SecSideDayltgInstalledLtgPwr
+ENDRULE
+
+
+// ********** Simulated General Lighting Power - Daylit Areas *****************
+RULE NEW Spc:SkylitDayltgSimLtgPwr 
+  DESCRIPTION
+    "The total simulated lighting power of all luminaires located within the 
+     Skylit Daylit Zone"  
+  LONGFORM
+    SkylitDaylightingSimulatedLightingPower
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  SIZING
+// this rule calculates the 'simulated' lighting power in the daylit zone 
+// i.e. this rule adjusts for Lighting Control Credits simulated via PAFs
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) ) 
+        then RegLtgPwr*MIN( 1,( SkylitDaylitArea/FlrArea ) )
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        if ( u:IntLtgSysChildren > 0 )
+        then // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+        sumchildrenif( u:IntLtgSys:RegLtgPwr,
+                       u:IntLtgSys:DaylitAreaType = "SkylitDaylit" )
+        else     // installed lighting power specified by user at space level - not subject to PAFs
+          u:SkylitDayltgInstalledLtgPwr
+        endif
+    endswitch
+  ANNUAL
+    z:SkylitDayltgSimLtgPwr
+ENDRULE
+RULE NEW Spc:PriSideDayltgSimLtgPwr 
+  DESCRIPTION
+    "The total simulated lighting power of all luminaires located within the 
+     Primary Sidelit Daylit Zone"  
+  LONGFORM
+    PrimarySidelitDaylightingSimulatedLightingPower
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  SIZING
+// this rule calculates the 'simulated' lighting power in the daylit zone 
+// i.e. this rule adjusts for Lighting Control Credits simulated via PAFs
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) ) 
+        then RegLtgPwr*MIN( 1,( PriSideDaylitArea/FlrArea ) )
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        if ( u:IntLtgSysChildren > 0 )
+        then // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+        sumchildrenif( u:IntLtgSys:RegLtgPwr,
+                       u:IntLtgSys:DaylitAreaType = "PrimarySidelit" )
+        else     // installed lighting power specified by user at space level - not subject to PAFs
+          u:PriSideDayltgInstalledLtgPwr
+        endif
+    endswitch
+  ANNUAL
+    z:PriSideDayltgSimLtgPwr
+ENDRULE
+RULE NEW Spc:SecSideDayltgSimLtgPwr 
+  DESCRIPTION
+    "The total simulated lighting power of all luminaires located within the 
+     Secondary Sidelit Daylit Zone"  
+  LONGFORM
+    SecondarySidelitDaylightingSimulatedLightingPower
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  SIZING
+// this rule calculates the 'simulated' lighting power in the daylit zone 
+// i.e. this rule adjusts for Lighting Control Credits simulated via PAFs
+    switch( ApplyStdDayltg )
+      case 1:    // baseline lighting - lighting power is assumed evenly distributed throughout the space
+        if( FlrArea > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) ) 
+        then RegLtgPwr*MIN( 1,( SecSideDaylitArea/FlrArea ) )
+        else 0
+        endif
+      default:   // proposed lighting - user inputs for installed lighting power in the daylit zone are applied
+        if ( u:IntLtgSysChildren > 0 )
+        then // installed power in daylit zones specified at interior lighting system, by assigning the system to a daylit zone.
+        sumchildrenif( u:IntLtgSys:RegLtgPwr,
+                       u:IntLtgSys:DaylitAreaType = "SecondarySidelit" )
+        else     // installed lighting power specified by user at space level - not subject to PAFs
+          u:SecSideDayltgInstalledLtgPwr
+        endif
+    endswitch
+  ANNUAL
+    z:SecSideDayltgSimLtgPwr
+ENDRULE
+
+
+
+// ********** Daylighting Control Requirements ********************************
+RULE NEW Spc:SkylitDayltgCtrlReq
+  DESCRIPTION
+    "Whether daylighting controls are mandatory in the Skylit Daylit Zone as per Standards section 130.1( d )"  
+  REFERENCE 
+    ACM 5.4.5 - Daylighting Control Requirements
+  DATATYPE
+    Integer
+  LONGFORM
+    SkylitDaylightingControlRequired
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+      if ( Spc:MandDayltgExcepFlag = 1 .OR.
+           Spc:SkylitDaylitArea <= 0 .OR.
+           Spc:SkylitDayltgInstalledLtgPwr + 
+           Spc:PriSideDayltgInstalledLtgPwr <= 120 ) 
+      then // Dayltg Ctrls not required
+        0 
+      else if ( IsExistingLtg ) 
+      then // Daylighting Controls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+        0 
+      else if ( IsAlteredLtg .AND. 
+                IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+      then // Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+        0
+      else // Dayltg Ctrls required for Ltg Status = NEW, FUTURE, and ALTERED w/ LPD > .85 * Base LPD
+        1
+      endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    //  recalculate for cases where the standard design lighting or fenestration parameters have changed daylighting control requriements
+    if( Spc:MandDayltgExcepFlag = 1 .OR.
+        Spc:SkylitDaylitArea <= 0 .OR.
+        Spc:SkylitDayltgInstalledLtgPwr + 
+        Spc:PriSideDayltgInstalledLtgPwr <= 120 ) 
+    then // Dayltg Ctrls not required
+      0 
+    else if ( IsExistingLtg ) 
+    then // Skylit Dayltg Ctrls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // Skylit Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+      0
+    else // Skylit Dayltg Ctrls required for Ltg Status = NEW, FUTURE, and ALTERED w/ LPD > .85 * Base LPD
+      1
+    endif endif endif
+ENDRULE
+RULE NEW Spc:PriSideDayltgCtrlReq
+  DESCRIPTION
+    "Whether daylighting controls are mandatory in the Primary Sidelit Daylit
+     Zone as per Standards section 130.1( d )"  
+  REFERENCE 
+    ACM 5.4.5 - Daylighting Control Requirements
+  DATATYPE
+    Integer
+  LONGFORM
+    PrimarySidelitDaylightingControlRequired
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    if( Spc:MandDayltgExcepFlag = 1 .OR.
+        Spc:PriSideDaylitArea <= 0 .OR.
+        Spc:SkylitDayltgInstalledLtgPwr + 
+        Spc:PriSideDayltgInstalledLtgPwr <= 120 ) 
+    then // Dayltg Ctrls not required
+      0 
+    else if ( IsExistingLtg ) 
+    then // Daylighting Controls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+      0
+    else // Dayltg Ctrls required for Ltg Status = NEW, FUTURE, and ALTERED w/ LPD > .85 * Base LPD
+      1
+    endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    //  recalculate for cases where the standard design lighting or fenestration parameters have changed daylighting control requriements
+    if(  Spc:MandDayltgExcepFlag = 1 .OR.
+        Spc:PriSideDaylitArea <= 0 .OR.
+        Spc:SkylitDayltgInstalledLtgPwr + 
+        Spc:PriSideDayltgInstalledLtgPwr <= 120 ) 
+    then // Dayltg Ctrls not required
+      0 
+    else if ( IsExistingLtg ) 
+    then // Primary Dayltg Ctrls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // Primary Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+      0
+    else // Primary Dayltg Ctrls required for Ltg Status = NEW, FUTURE, and ALTERED w/ LPD > .85 * Base LPD
+      1
+    endif endif endif
+ENDRULE
+RULE NEW Spc:SecSideDayltgCtrlReq
+  DESCRIPTION
+    "Whether daylighting controls are required in the Secondary Sidelit Daylit
+     Zone as per Standards section 130.1( d )"  
+  REFERENCE 
+    ACM 5.4.5 - Daylighting Control Requirements
+  DATATYPE
+    Integer
+  LONGFORM
+    SecondarySidelitDaylightingControlRequired
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT
+    if( Spc:MandDayltgExcepFlag = 1 .OR.
+        Spc:SecSideDaylitArea <= 0 .OR.
+        Spc:SecSideDayltgInstalledLtgPwr <= 120 ) 
+    then // Dayltg Ctrls not required
+      0 
+    else if ( IsExistingLtg ) 
+    then // Secondary Dayltg Ctrls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // Secondary Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+      0
+    else if ( IsFutureLtg ) 
+    then //Secondary Dayltg Ctrls required for proposed design for Envelope Only compliance
+      1
+    else if (Spc:SpcFunc = "Parking Garage Building, Parking Area" )
+    then  //Secondary Dayltg Ctrls mandatory for parking garages, except daylight adaptation zones and ramps
+      1 
+    else switch( ApplyStdDayltg )
+           case 1:  // baseline lighting - secondary sidelit daylighting controls are prescruptively required
+             1
+           default:  // proposed - secondary sidelit daylighting controls are not required
+             0
+         endswitch
+    endif endif endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    if( Spc:MandDayltgExcepFlag = 1 .OR.
+        Spc:SecSideDaylitArea <= 0 .OR.
+        Spc:SecSideDayltgInstalledLtgPwr <= 120 ) 
+    then // Dayltg Ctrls not required
+      0 
+    else if ( IsExistingLtg ) 
+    then // Secondary Dayltg Ctrls not required for Add/Alt/Partial compliance when lighting systems are unchanged
+      0 
+    else if ( IsAlteredLtg .AND. 
+              IfValidAnd( RegLtgPwr <= .85 * ACMBaseGenPwr ) ) 
+    then // Secondary Dayltg Ctrls not required for Alterations where the installed space lpd is <= 85% of the baseline LPD
+      0
+    else if ( IsFutureLtg ) 
+    then //Secondary Dayltg Ctrls required for proposed design for Envelope Only compliance
+      1
+    else if (Spc:SpcFunc = "Parking Garage Building, Parking Area" )
+    then  //Secondary Dayltg Ctrls mandatory for parking garages, except daylight adaptation zones and ramps
+      1 
+    else switch( ApplyStdDayltg )
+           case 1:  // baseline lighting - secondary sidelit daylighting controls are prescruptively required
+             1
+           default:  // proposed - secondary sidelit daylighting controls are not required
+             0
+         endswitch
+    endif endif endif endif endif
+ENDRULE
+
+RULE Spc:Skylit100PctControlled
+  DESCRIPTION
+    "Whether all luminaires located in a skylit daylit zone are controlled by
+     daylighting controls.  Used only for defaulting purposes."  
+  DEFAULT
+    if( SkylitDayltgCtrlReq = 0 ) 
+    then // default 100% controlled to 0
+      0
+    else if( Proj:DefaultDayltgCtrls = 1 .OR.
+             IsFutureLtg )
+    then // Automatically install Dayltg Ctrls where they are required
+      1 
+    else 
+      0 
+    endif endif
+ENDRULE
+RULE Spc:PriSide100PctControlled
+  DESCRIPTION
+    "Whether all luminaires located in a primary sidelit daylit zone are
+     controlled by daylighting controls.  Used only for defaulting purposes."  
+  DEFAULT
+    if( PriSideDayltgCtrlReq = 0 )
+    then // default 100% controlled to 0
+      0
+    else if( Proj:DefaultDayltgCtrls = 1 .OR.
+             IsFutureLtg)
+    then // Automatically install Dayltg Ctrls where they are required
+      1 
+    else 
+      0 
+    endif endif
+ENDRULE
+RULE Spc:SecSide100PctControlled
+  DESCRIPTION
+    "Whether all luminaires located in a secondary sidelit daylit zone are
+     controlled by daylighting controls.  Used only for defaulting purposes."  
+  DEFAULT
+    if( SecSideDayltgCtrlReq = 0 ) 
+    then // default 100% controlled to 0
+      0
+    else if( Proj:DefaultDayltgCtrls = 1 .OR.
+             IsFutureLtg )
+    then // Automatically install Dayltg Ctrls where they are required
+      1 
+    else 
+      0 
+    endif endif
+ENDRULE
+
+
+// ********** Fraction of Controlled Lighting *********************************
+// ---------- Controlled General Lighting Power - Daylit Areas ----------------
+RULE Spc:SkylitDayltgCtrlLtgPwr
+  DESCRIPTION
+    "The total power lighitng located within the Skylit Daylit Zone that is 
+     controlled by daylight sensors"  
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  UNITS 
+    Watts
+  DEFAULT
+    if ( Skylit100PctControlled = 1 )
+    then //Default controlled power equal to installed power
+      SkylitDayltgInstalledLtgPwr    
+    else // user must specify
+      0
+    endif
+  CHECKCODE 
+    if( IsFutureLtg )
+    then // user inputs for daylighting are ignored for Envelope only, i.e. "Future" lighting status
+      UNCHANGED
+    else
+    if( u:SkylitDayltgCtrlLtgPwr > u:SkylitDayltgInstalledLtgPwr+1 ) // +1 allows for rounding errors
+    then
+      PostError("In Space: '%s' - For the Skylit Daylit Zone, controlled
+                 lighting power cannot exceed installed lighting power",
+                 Spc:Name)
+    else if( u:SkylitDayltgCtrlReq = 1 .AND.
+             u:SkylitDayltgCtrlLtgPwr < u:SkylitDayltgInstalledLtgPwr )
+    then
+      PostError("In Space: '%s' - Mandatory Daylighting Control Requirements
+                 for the Skylit Daylit Zone require thatcontrolled lighting
+                 power equal the installed lighting power.",
+                 Spc:Name)
+    else UNCHANGED
+    endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    switch( ApplyStdDayltg )
+      case 1:    //  baseline case
+        if( SkylitDayltgCtrlReq = 1 )
+        then  // if controlls are required in standard design model, set equal to installed power
+          SkylitDayltgInstalledLtgPwr
+        else // no controlled power where not required
+          0
+        endif
+      default:    // proposed case - apply user input
+        MIN(u:SkylitDayltgCtrlLtgPwr, SkylitDayltgSimLtgPwr)
+    endswitch
+ENDRULE
+RULE Spc:PriSideDayltgCtrlLtgPwr
+  DESCRIPTION
+    "The total power lighitng located within the Primary Sidelit Daylit Zone 
+     that is controlled by daylight sensors"  
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  UNITS 
+    Watts
+  DEFAULT
+    if ( PriSide100PctControlled = 1 )
+    then //Set controlled power to installed power
+      PriSideDayltgInstalledLtgPwr    
+    else // user must specify
+      0
+    endif
+  CHECKCODE
+    if( IsFutureLtg )
+    then // user inputs for daylighting are ignored for Envelope only, i.e. "Future" lighting status
+      UNCHANGED
+    else
+    if ( u:PriSideDayltgCtrlLtgPwr > u:PriSideDayltgInstalledLtgPwr+1 ) // +1 allows for rounding errors
+    then
+      PostError("In Space: '%s' - For the Primary Sidelit Daylit Zone,
+                 controlled lighting power cannot exceed installed lighting
+                 power",
+                 Spc:Name)
+    else if( u:PriSideDayltgCtrlReq = 1 .AND.
+             u:PriSideDayltgCtrlLtgPwr < u:PriSideDayltgInstalledLtgPwr )
+    then
+      PostError("In Space: '%s' - Mandatory Daylighting Control Requirements
+                 for the Primary Sidelit Daylit Zone require that controlled
+                 lighting power equal the installed lighting power.",
+                Spc:Name)
+    else UNCHANGED
+    endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    switch( ApplyStdDayltg )
+      case 1:    //  baseline case
+        if( PriSideDayltgCtrlReq = 1 )
+        then  // if controlls are required in standard design model, set equal to installed power
+          PriSideDayltgInstalledLtgPwr
+        else // no controlled power where not required
+          0
+        endif
+      default:    // proposed case - apply user input
+        MIN(u:PriSideDayltgCtrlLtgPwr, PriSideDayltgSimLtgPwr)
+    endswitch
+ENDRULE
+RULE Spc:SecSideDayltgCtrlLtgPwr
+  DESCRIPTION
+    "The total power of controlled lighitng located within the Secondary Sidelit
+     Daylit Zone"  
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1000000
+  UNITS 
+    Watts
+  DEFAULT
+    if ( SecSide100PctControlled = 1 )
+    then //Set controlled power to installed power
+      SecSideDayltgInstalledLtgPwr    
+    else // user must specify
+      0
+    endif
+  CHECKCODE
+    if( IsFutureLtg )
+    then // user inputs for daylighting are ignored for Envelope only, i.e. "Future" lighting status
+      UNCHANGED
+    else    
+    if ( u:SecSideDayltgCtrlLtgPwr > u:SecSideDayltgInstalledLtgPwr ) // +1 allows for rounding errors
+    then
+      PostError("In Space: '%s' - For the Seconndary Sidelit Daylit Zone,
+                 controlled lighting power cannot exceed installed lighting
+                 power",
+                Spc:Name)
+    else if( u:SecSideDayltgCtrlReq = 1 .AND.
+             u:SecSideDayltgCtrlLtgPwr < u:SecSideDayltgInstalledLtgPwr )
+    then
+      PostError("In Space: '%s' - Mandatory Daylighting Control Requirements
+                 for the Secondary Sidelit Daylit Zone require that controlled
+                 lighting power equal the installed lighting power.",
+                 Spc:Name)
+    else UNCHANGED
+    endif endif endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    switch( ApplyStdDayltg )
+      case 1:    //  baseline case
+        if( SecSideDayltgCtrlReq = 1 )
+        then  // if controlls are required in standard design model, set equal to installed power
+          SecSideDayltgInstalledLtgPwr
+        else // no controlled power where not required
+          0
+        endif
+      default:    // proposed case - apply user input
+        MIN(u:SecSideDayltgCtrlLtgPwr, SecSideDayltgSimLtgPwr)
+    endswitch
+ENDRULE
+
+RULE Spc:SkylitDayltgCtrlLtgFrac
+  DESCRIPTION
+    "The Fraction of the total space lighting power that is controlled by
+     the daylighting control in the skylit daylit area"
+  REFERENCE 
+    ACM 5.4.5 - Fraction of Controlled Lighting
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT 
+    if( SkylitDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SkylitDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL_PROPOSED
+    if( SkylitDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SkylitDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  ANNUAL_BASELINE
+    if( SkylitDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SkylitDayltgCtrlLtgPwr/RegLtgPwr ) 
+    else 
+      0
+    endif
+ENDRULE
+RULE Spc:PriSideDayltgCtrlLtgFrac
+  DESCRIPTION
+    "The Fraction of the total space lighting power that is controlled by
+     the daylighting control in the primary sidelit daylit area"
+  REFERENCE 
+    ACM 5.4.5 - Fraction of Controlled Lighting
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT 
+    if( PriSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,PriSideDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL_PROPOSED
+    if( PriSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,PriSideDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  ANNUAL_BASELINE
+    if( PriSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegLtgPwr > 0 ) ) 
+    then
+      MIN( 1,PriSideDayltgCtrlLtgPwr/RegLtgPwr ) 
+    else 
+      0
+    endif
+ENDRULE
+RULE Spc:SecSideDayltgCtrlLtgFrac
+  DESCRIPTION
+    "The Fraction of the total space lighting power that is controlled by
+     the daylighting control in the secondary sidelit daylit area"
+  REFERENCE 
+    ACM 5.4.5 - Fraction of Controlled Lighting
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+    1
+  DEFAULT 
+    if( SecSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SecSideDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL_PROPOSED
+    if( SecSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegInstLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SecSideDayltgCtrlLtgPwr/RegInstLtgPwr ) 
+    else 
+      0
+    endif
+  ANNUAL_BASELINE
+    if( SecSideDayltgCtrlLtgPwr > 0 .AND.
+        IfValidAnd( RegLtgPwr > 0 ) ) 
+    then
+      MIN( 1,SecSideDayltgCtrlLtgPwr/RegLtgPwr ) 
+    else 
+      0
+    endif
+ENDRULE
+
+RULE NEW Spc:DayltgCtrlLtgPwr
+  DESCRIPTION
+    "Total lighting power in a space controlled by daylighting controls"  
+  DATATYPE
+    Integer
+  LONGFORM
+    DaylightingControlledLightnigPower
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SkylitDayltgCtrlLtgPwr +
+    PriSideDayltgCtrlLtgPwr +
+    SecSideDayltgCtrlLtgPwr
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    SkylitDayltgCtrlLtgPwr +
+    PriSideDayltgCtrlLtgPwr +
+    SecSideDayltgCtrlLtgPwr
+ENDRULE
+
+RULE NEW Spc:HasDayltgCtrl
+  DESCRIPTION
+    "Whether daylighting controls are present in a space.  Primarily used for UI
+     control and mandatory checks"  
+  DATATYPE
+    Integer
+  LONGFORM
+    HaveDaylightingControl
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SkylitDayltgCtrlLtgPwr > 0 .OR.
+        PriSideDayltgCtrlLtgPwr > 0 .OR.
+        SecSideDayltgCtrlLtgPwr > 0 )
+    then  1
+    else  0  endif
+;  CHECKSIM
+;    if( IfValidAnd( FlrZ < 0 ) .AND.
+;        HasDayltgCtrl = 1 )
+;    then PostError( "Space '%s' has elevation < 0.  A current known bug does 
+;                     not permit daylighting controls in spaces with elevation 
+;                     < 0.  To simulate daylighting, space geometry must be 
+;                     modified such that elevation > 0.  ", 
+;                     Name )
+;    else UNCHANGED
+;    endif
+  SIZING
+    0  // no daylighting controls in sizing runs
+  ANNUAL
+    if( SkylitDayltgCtrlLtgPwr > 0 .OR.
+       PriSideDayltgCtrlLtgPwr > 0 .OR.
+       SecSideDayltgCtrlLtgPwr > 0 )
+    then  1
+    else  0  endif
+ENDRULE
+
+
+// ********** Controlled Luminaire Type ***************************************
+RULE Spc:DayltgCtrlType
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Default
+; defined in BEMEnums for backward Compatibility
+;  OPTION
+;    None
+;    Continuous
+;    ContinuousPlusOff
+;    SteppedSwitching
+  DEFAULT
+    if( HasDayltgCtrl = 1 )
+    then "Continuous"
+    else  UNCHANGED
+    endif
+  SIZING
+    "None"
+  ANNUAL
+    switch( ApplyStdDayltg )
+    case 1:  // standard design daylighting rules
+      if( HasDayltgCtrl = 1 )
+      then "Continuous"
+      else  UNCHANGED
+      endif
+    default:  // proposed design daylighting rules
+      if( LocalStatus( u:DayltgCtrlType ) > 0 ) 
+      then u:DayltgCtrlType
+      else UNDEFINED
+      endif
+    endswitch
+ENDRULE
+RULE Spc:MinDimPwrFrac
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus (DayltgCtrlType) > 0 )
+    then if( DayltgCtrlType = "None" .OR.
+             DayltgCtrlType = "SteppedSwitching" .OR. 
+             RegLtgPwr = 0 )
+      then UNDEFINED
+      else if ( IntLtgSysChildren > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) )
+      then // calculate from interior lighting system properties
+        SumChildrenIf( IntLtgSys:MinDimPwrFracXPwr,
+                       IntLtgSys:DaylitAreaType <> "- none -" )/
+                       RegLtgPwr
+      else  // simplified lighting case defaults to standard design values for Linear Fluorescent
+        0.2
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( LocalStatus (DayltgCtrlType) > 0 )
+    then if( DayltgCtrlType = "None" .OR.
+             DayltgCtrlType = "SteppedSwitching" .OR. 
+             RegLtgPwr = 0 )
+      then UNDEFINED
+      else switch( ApplyStdDayltg )
+        case 1:  // standard design daylighting rules
+          0.2 
+        default:  // proposed design daylighting rules
+          u:MinDimPwrFrac
+        endswitch
+      endif
+    else 
+      UNDEFINED
+    endif
+ENDRULE
+RULE Spc:MinDimLtgFrac
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus (DayltgCtrlType) > 0 )
+    then if( DayltgCtrlType = "None" .OR.
+             DayltgCtrlType = "SteppedSwitching" .OR. 
+             RegLtgPwr = 0 )
+      then UNDEFINED
+      else if ( IntLtgSysChildren > 0 .AND. IfValidAnd( RegLtgPwr > 0 ) )
+      then // calculate from interior lighting system properties
+        SumChildrenIf( IntLtgSys:MinDimLtgFracXPwr,
+                       IntLtgSys:DaylitAreaType <> "- none -" )/
+                       RegLtgPwr
+      else  // simplified lighting case defaults to standard design values for Linear Fluorescent
+        0.2
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    0
+  ANNUAL
+    if( LocalStatus (DayltgCtrlType) > 0 )
+    then if( DayltgCtrlType = "None" .OR.
+             DayltgCtrlType = "SteppedSwitching" .OR. 
+             RegLtgPwr = 0 )
+      then UNDEFINED
+      else switch( ApplyStdDayltg )
+        case 1:  // standard design daylighting rules
+          0.2 
+        default:  // proposed design daylighting rules
+          u:MinDimLtgFrac
+        endswitch
+      endif
+    else 
+      UNDEFINED
+    endif
+ENDRULE
+RULE Spc:NumOfCtrlSteps
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus(DayltgCtrlType) < 1 ) 
+    then UNDEFINED
+    else if( DayltgCtrlType = "SteppedSwitching" ) 
+    then 2 
+    else UNDEFINED
+    endif endif 
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( LocalStatus(DayltgCtrlType) < 1 ) 
+    then UNDEFINED
+    else switch( ApplyStdDayltg )
+      case 1:  // standard design daylighting rules
+        UNDEFINED
+      default:  // proposed design daylighting rules
+        u:NumOfCtrlSteps
+      endswitch
+    endif
+ENDRULE
+
+
+// ********** Section 5.5.7 - Skylight Requirement Exception Fraction *********
+RULE Spc:SkyltReqExcptFrac
+  DESCRIPTION
+    "Fraction of Space Area Excepted from the daylight requirements of section 140.3C"
+  HELP
+    ""
+  REFERENCE 
+    ACM 5.4.7 - Skylight Requirement Exception Fraction
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0 
+  MAXIMUM 
+    100
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    u:SkyltReqExcptFrac
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:SkyltReqExcptFrac
+ENDRULE
+RULE Spc:SkyltReqExcptArea
+  DESCRIPTION
+    "Area Excepted from the daylight requirements of section 140.3C"
+  HELP
+    ""
+  REFERENCE 
+    ACM 5.4.7 - Skylight Requirement Exception Fraction
+  INPUTCLASS
+    CondRequired
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    if( IfValidAnd( SkyltReqExcptFrac >= 0 ) .AND. #IVA( FlrArea >= 0 ) ) then
+      SkyltReqExcptFrac * FlrArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:SkyltReqExcptArea
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:SkyltReqExcptArea
+ENDRULE
+
+RULE NEW  Spc:DaylitAreaReqFlag
+  DESCRIPTION
+    "Flag identifying spaces which have Minimum Daylit Area Requirements"   
+  REFERENCE 
+    ACM 5.4.7 - Skylight Requirement Exception Fraction
+  DATATYPE
+    Integer
+  LONGFORM
+    DaylitAreaRequirementFlag
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1
+  DEFAULT
+    if ( Proj:IsDetailedGeometry = 1 .AND.
+        Proj:CliZnNum > 1 .AND.
+        Proj:CliZnNum < 16 .AND.
+        ChildCount( Roof ) > 0 .AND.
+        IfValidAnd( ( FlrArea-SkyltReqExcptArea ) > 5000 ) .AND.
+        IfValidAnd( FlrToCeilingHgt > 15 ) .AND.
+        IfValidAnd( RegInstLPD > 0.5 ) .AND.
+        (IsNewEnv .OR. ( IsAddOrAlt .AND. EnvStatus = "New" ) ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE Spc:MandMinDaylitArea
+  DESCRIPTION
+    "Area Required to be daylit ( Skylit + Primary Sidelit ) by Section 140.3c"   
+  REFERENCE 
+    ACM 5.4.7 - Skylight Requirement Exception Fraction
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0 
+  MAXIMUM 
+   1000000
+  DEFAULT
+    if ( DaylitAreaReqFlag = 1 ) 
+    then 0.75*( FlrArea-SkyltReqExcptArea )
+    else 0
+    endif
+  CHECKCODE
+    if ( IfValidAnd( u:MandMinDaylitArea > 
+                  ( u:SkylitDaylitArea + u:PriSideDaylitArea ) ))
+    then if ( Proj:IsDetailedGeometry == 0 )
+      then PostError( "Standards Section 140.3C requires %.0f ft2 of top and/or
+                      primary sidelit daylit area for Space '%s'.  Prescritpive
+                      trade-offs for daylit area required by 140.3C are not
+                      available in simplified geometry mode", 
+                      u:MandMinDaylitArea, u:Space:Name )
+      else PostError( "Standards Section 140.3C requires %.0f ft2 of top and/or
+                      primary sidelit daylit area for Space '%s'.
+		                  Calculated daylit area for the proposed design is less
+                      than the prescriptive requirement.  Current CBECC-Com
+                      functionality does not include prescriptive trade-offs
+                      for daylit area required by 140.3C", 
+                      u:MandMinDaylitArea, u:Space:Name )
+      endif
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:MandMinDaylitArea
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:MandMinDaylitArea
+ENDRULE
+
+RULE Spc:SkyltReqExcpt
+  DESCRIPTION
+    "Reason to Except Space Area from the requirements of section 140.3C"
+  HELP
+    ""
+  REFERENCE 
+    ACM 5.4.7 - Skylight Requirement Exception Fraction
+  INPUTCLASS
+    Optional
+  CHECKCODE
+    if( IfValidAnd( u:SkyltReqExcptFrac > 0 ) .AND.
+        IfValidAnd( u:SkyltReqExcpt = "- none -" ))
+    then PostError( "Space '%s' has a Skylight Requirement Exception Fraction
+                     greater than 0, but no exception has been specified.",u:Name )
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:SkyltReqExcpt
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL
+    z:SkyltReqExcpt    
+ENDRULE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

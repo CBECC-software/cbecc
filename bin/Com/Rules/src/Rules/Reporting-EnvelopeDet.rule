@@ -1,0 +1,1624 @@
+// Space - Reporting
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+// This rule identifies which transform for which the report is currently being generated
+RULE NEW Proj:XFormFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    TransformFlag
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    1
+  SIZING_BASELINE
+    2
+  ANNUAL_PROPOSED
+    3
+  ANNUAL_BASELINE
+    4
+ENDRULE
+
+//  This rule file addresses REPORTING OF Envelope properties
+
+// ********** General Information Reporting **********
+RULE NEW Proj:ProjRpt
+  DATATYPE
+    String
+  LONGFORM
+    ProjectReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile( "General Information\nProject Address,City,ZipCode,ClimateZone,Compliance Software,Compliance Manager,RulesetFile Name,Compliance Type\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Proj:ProjRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ProjectReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format( "%c%s%c,%c%s%c,%g,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,StAddress,34,34,City,34,ZipCode,34,CliZn,34,34,SoftwareVersion,34,34,CompManagerVersion,34,34,Ruleset,34,34,CompType,34 )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:ProjRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ProjRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE 
+
+// General HVAC Information
+
+RULE NEW Proj:ProjHVACRpt
+  DATATYPE
+    String
+  LONGFORM
+    ProjectHVACReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile( "\nNo. of Thermal Zones,No. of Thermal Zones (cond),No. of Air Systems,No. of Zonal Systems,No. of Terminal Units\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Proj: ProjHVACRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ProjectHVACReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format( "%g,%g,%g,%g,%g",NumThrmlZn,NumThrmlZnCond,NumAirSys,NumZnSys,NumTrmlUnit )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:ProjHVACRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ProjHVACRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE 
+ 
+ // ********** Building Reporting **********
+// Story Count
+
+RULE NEW Proj:Bldg:Story_1EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Story_1EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNo. of Stories\nTotal,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_1EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Story_1EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g",TotStoryCnt,TotStoryCntNew,TotStoryCntExisting,TotStoryCntAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_1EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Story_1EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_2EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Story_2EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNo. of Above Grade Stories\nTotal,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_2EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Story_2EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g",AboveGrdStoryCnt,AboveGrdStoryCntNew,AboveGrdStoryCntExisting,AboveGrdStoryCntAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_2EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Story_2EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_3EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Story_3EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNo. of Dwelling Units (Conditioned)\nTotal,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_3EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Story_3EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g",LivingUnitCntRpt,LivingUnitCntNew,LivingUnitCntExisting,LivingUnitCntAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story_3EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Story_3EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+//Building Areas
+
+RULE NEW Proj:Bldg:Area_1EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Area_1EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNonRes Floor Area (Conditioned)\nTotal,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_1EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Area_1EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g",NonResFlrArea,NonResFlrAreaNew,NonResFlrAreaExisting,NonResFlrAreaAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_1EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Story_1EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_2EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Area_2EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nRes Floor Area (Conditioned)\nTotal,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_2EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Area_2EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g",ResFlrArea,ResFlrAreaNew,ResFlrAreaExisting,ResFlrAreaAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_2EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Area_2EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_3EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    Area_3EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n,Conditioned Floor Area\nTotal Floor Area,Total,New,Existing,Altered\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_3EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    Area_3EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%g,%g,%g,%g,%g",TotFlrArea,TotCondFlrArea,TotCondFlrAreaNew,TotCondFlrAreaExisting,TotCondFlrAreaAltered)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Area_3EnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",Area_3EnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+
+// Building Information
+//Building Wall Areas
+RULE NEW Proj:Bldg:WallEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    WallEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nBuilding Wall Area\nTotal ExtWall,N ExtWall,E ExtWall,S ExtWall,W ExtWall,\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:WallEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    WallEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondExtWallArea,NorthCondExtWallArea,EastCondExtWallArea,SouthCondExtWallArea,WestCondExtWallArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:WallEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",WallEnvRpt_Name)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:NewWallEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    NewWallEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nBuilding New Wall Area\nTotal ExtWall,N ExtWall,E ExtWall,S ExtWall,W ExtWall,\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    NewWallEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondNewExtWallArea,NorthCondNewExtWallArea,EastCondNewExtWallArea,SouthCondNewExtWallArea,WestCondNewExtWallArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",NewWallEnvRpt_Name)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltWallEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("Building Existing or Altered Wall Area\nTotal ExtWall,N ExtWall,E ExtWall,S ExtWall,W ExtWall,\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondExsOrAltExtWallArea,NorthCondExsOrAltExtWallArea,EastCondExsOrAltExtWallArea,SouthCondExsOrAltExtWallArea,WestCondExsOrAltExtWallArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltWallEnvRpt_Name)
+    else  UNCHANGED  endif
+ENDRULE
+ 
+//Building Window Areas
+RULE NEW Proj:Bldg:WindowEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    WindowEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\nBuilding Window Area,\nTotal Window Area,North Window,E Window,S Window,W Window\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:WindowEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    WindowEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondExtWinArea,NorthCondExtWinArea,EastCondExtWinArea,SouthCondExtWinArea,WestCondExtWinArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:WindowEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",WindowEnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:NewWallNewWindowEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    NewWallNewWindowEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nBuilding New Window Area on New Walls,\nTotal Window Area,North Window,E Window,S Window,W Window\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallNewWindowEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    NewWallNewWindowEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondNewWallNewWinArea,NorthCondNewWallNewWinArea,EastCondNewWallNewWinArea,SouthCondNewWallNewWinArea,WestCondNewWallNewWinArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallNewWindowEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",NewWallNewWindowEnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltWallNewWindowEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallNewWindowEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("Building New Window Area on Existing or Altered Walls,\nTotal Window Area,North Window,E Window,S Window,W Window\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallNewWindowEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallNewWindowEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondExsOrAltWallNewWinArea,NorthCondExsOrAltWallNewWinArea,EastCondExsOrAltWallNewWinArea,SouthCondExsOrAltWallNewWinArea,WestCondExsOrAltWallNewWinArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallNewWindowEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltWallNewWindowEnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWindowEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallExsOrAltWindowEnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("Building Existing or Altered Window Area on Existing or Altered Walls,\nTotal Window Area,North Window,E Window,S Window,W Window\n(ft2),(ft2),(ft2),(ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWindowEnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallExsOrAltWindowEnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.2f,%.2f,%.2f,%.2f,%.2f",CondExsOrAltWallExsOrAltWinArea,NorthCondExsOrAltWallExsOrAltWinArea,EastCondExsOrAltWallExsOrAltWinArea,SouthCondExsOrAltWallExsOrAltWinArea,WestCondExsOrAltWallExsOrAltWinArea)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWindowEnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltWallExsOrAltWindowEnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+//Building WWR
+RULE NEW Proj:Bldg:WWREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    WWREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\nWindow to Wall Ratio\nBldg. WWR,North WWR,East WWR,South WWR,West WWR\n(frac.),(frac.),(frac.),(frac.),(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:WWREnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    WWREnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.4f,%.4f,%.4f,%.4f,%.4f",WWR,NorthWWR,EastWWR,SouthWWR,WestWWR)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:WWREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",WWREnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:NewWallNewWinWWREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    NewWallNewWinWWREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNew Window to New Wall Ratio\nBldg. WWR,North WWR,East WWR,South WWR,West WWR\n(frac.),(frac.),(frac.),(frac.),(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallNewWinWWREnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    NewWallNewWinWWREnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.4f,%.4f,%.4f,%.4f,%.4f",NewWallNewWinWWR,NorthNewWallNewWinWWR,EastNewWallNewWinWWR,SouthNewWallNewWinWWR,WestNewWallNewWinWWR)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:NewWallNewWinWWREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",NewWallNewWinWWREnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltWallNewWinWWREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallNewWinWWREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("New Window to Existing or Altered Wall Ratio\nBldg. WWR,North WWR,East WWR,South WWR,West WWR\n(frac.),(frac.),(frac.),(frac.),(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallNewWinWWREnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallNewWinWWREnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.4f,%.4f,%.4f,%.4f,%.4f",ExsOrAltWallNewWinWWR,NorthExsOrAltWallNewWinWWR,EastExsOrAltWallNewWinWWR,SouthExsOrAltWallNewWinWWR,WestExsOrAltWallNewWinWWR)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallNewWinWWREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltWallNewWinWWREnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWinWWREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallExsOrAltWinWWREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("Existing or Altered Window to Existing or Altered Wall Ratio\nBldg. WWR,North WWR,East WWR,South WWR,West WWR\n(frac.),(frac.),(frac.),(frac.),(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWinWWREnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltWallExsOrAltWinWWREnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%.4f,%.4f,%.4f,%.4f,%.4f",ExsOrAltWallExsOrAltWinWWR,NorthExsOrAltWallExsOrAltWinWWR,EastExsOrAltWallExsOrAltWinWWR,SouthExsOrAltWallExsOrAltWinWWR,WestExsOrAltWallExsOrAltWinWWR)
+    else  UNCHANGED  endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltWallExsOrAltWinWWREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltWallExsOrAltWinWWREnvRpt_Name )
+    else  UNCHANGED  endif
+ENDRULE
+
+//Building SRR & Display Perimeter
+RULE NEW Proj:Bldg:SRREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    SRREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\nSkylight to Roof Ratio (SRR),Display Perimeter\SRR,West,Total\n(frac.),(ft),(ft)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:SRREnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    SRREnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.4f,%.2f,%.2f",CondSRR,WestCondDisplayPerim,CondDisplayPerim)
+ENDRULE
+RULE NEW Proj:Bldg:SRREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",SRREnvRpt_Geom )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:NewRoofNewSkyltSRREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    NewRoofNewSkyltSRREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\nNew Skylight to New Roof Ratio (SRR)\n(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:NewRoofNewSkyltSRREnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    NewRoofNewSkyltSRREnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.4f",NewRoofNewSkyltSRR)
+ENDRULE
+RULE NEW Proj:Bldg:NewRoofNewSkyltSRREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",NewRoofNewSkyltSRREnvRpt_Geom )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:ExsOrAltRoofNewSkyltSRREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltRoofNewSkyltSRREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("New Skylight to Existing or Altered Roof Ratio (SRR)\n(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltRoofNewSkyltSRREnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltRoofNewSkyltSRREnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.4f",ExsOrAltRoofNewSkyltSRR)
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltRoofNewSkyltSRREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltRoofNewSkyltSRREnvRpt_Geom )
+    else  UNCHANGED  endif
+ENDRULE
+ 
+RULE NEW Proj:Bldg:ExsOrAltRoofExsOrAltSkyltSRREnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltRoofExsOrAltSkyltSRREnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("Existing or Altered Skylight to Existing or Altered Roof Ratio (SRR)\n(frac.)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltRoofExsOrAltSkyltSRREnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    ExsOrAltRoofExsOrAltSkyltSRREnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.4f",ExsOrAltRoofNewSkyltSRR)
+ENDRULE
+RULE NEW Proj:Bldg:ExsOrAltRoofExsOrAltSkyltSRREnvRpt
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s\n",ExsOrAltRoofExsOrAltSkyltSRREnvRpt_Geom )
+    else  UNCHANGED  endif
+ENDRULE
+
+// ********** Exterior Roof Reporting **********
+  
+RULE NEW Proj:Bldg:Story:Spc:Roof:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile( "\n\n\nExterior Roofs\n,,,,,,,,,,,,Aged Thermal Emittance,,ThrmlAbs,,Aged Solar Reflectance,,SolAbs,\nName,Status,Name,Occupancy Classification,Conditioning Status,Assigned Occ Class (Ref),Area,Tilt,Slope Category,Cons Name,Construction Type,U-Factor,Roof,Cons,Roof,Cons,Roof,Cons,Roof,Cons\n,,,,,,(ft2),(deg),,,,(Btu/h-°F-ft2),(frac.),(frac.),(frac.),(frac.),(frac.),(frac.),(frac.),(frac.),\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34,34,BldgTypeForRoof,34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g,%c%s%c",Area,Tilt,34,SlopeType,34)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%.3f,%g,%g,%g,%g,%g,%g,%g,%g",34,ConsAssmRef:Name,34,34,ConsType,34,ConsAssmRef:UFactor,Roof:CRRCAgedEmittance,ConsAssmRef:CRRCAgedEmittance,Roof:ExtThrmlAbs,ConsAssmRef:ExtThrmlAbs,Roof:CRRCAgedRefl,ConsAssmRef:CRRCAgedRefl,Roof:ExtSolAbs,ConsAssmRef:ExtSolAbs)
+ENDRULE
+
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE 
+
+ // ********** Exterior Wall Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nExterior Wall\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Building Type,Area,Azimuth,Cons Name,Construction Type,U Factor,Window Area\n,,,,,,(ft2),(deg),,,(Btu/h-°F-ft2),(ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34,34,BldgTypeForExtWall,34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g",Area,RealAz)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%.3f,%.2f",34,ConsAssmRef:Name,34,34,ConsType,34,ConsAssmRef:UFactor,ExtWall:WinArea)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Exterior Floor Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:ExtFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nExterior Floor\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Building Type,Area,Cons Name,Construction Type,U Factor\n,,,,,,(ft2),,,(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtFlr:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34,34,BldgTypeForExtFlr,34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtFlr:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%c%s%c,%c%s%c,%.3f,",Area,34,ConsAssmRef:Name,34,34,ConsType,34,ConsAssmRef:UFactor)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s\n",EnvRpt_Name,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Underground Floor Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:UndgrFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nUnderground Floor\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Slab Type,Area,Exposed Perimeter,Cons Name,Slab Insulation Orientation,Overall 'F' Factor\n,,,,,(Heated/Unheated),(ft2),(ft),,,(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:UndgrFlr:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34,34,ConsAssmRef:HtdOrUnhtd,34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:UndgrFlr:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%.2f",Area,PerimExposed)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:UndgrFlr:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%.3f",34,ConsAssmRef:Name,34,34,ConsAssmRef:SlabInsOrientation,34,ConsAssmRef:FFactor)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:UndgrFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Window Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:Win:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nWindow\n,,,,Exterior Wall,Window\nName,Status,Occupancy Classification,Conditioning Status,Name,Area,Azimuth,Product Type,Cert Method,Cons Name,Frame Type,Glazing Type,U Factor,SHGC,Visual Transmittance, U Factor Simulated,Inside Convection Coefficient\n,,,,,(ft2),(Deg),,,,,,(Btu/h-°F-ft2),,,(Btu/h-°F-ft2),(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:Win:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent2(OccClass),34,34,Parent2(CondgType),34,34,Parent(Name),34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:Win:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g",Area,Parent(RealAz))
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:Win:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f,%.3f,%.5f,%.5f",34,FenConsRef:FenProdType,34,34,FenConsRef:CertificationMthd,34,34,FenConsRef:Name,34,34,FenConsRef:FenFrm,34, 34,FenConsRef:GlzTint,34,FenConsRef:UFactor,FenConsRef:SHGC,FenConsRef:VT,FenConsRef:UFactorSim,FenConsRef:InsideConvCoef )
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:ExtWall:Win:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom, EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+
+
+ // ********** Skylight Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:Skylt:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nSkylight\n,,Space,,Exterior Roof,,,Skylight\nName,Status,Occupancy Classification,Conditioning Status,Name,Area,Tilt,Cons Name,Curb,Glazing,U Factor,SHGC,Visual Transmittance, U Factor Simulated,Inside Convection Coefficient\n,,,,,(ft2),(Deg),,,,(Btu/h-°F-ft2),,,(Btu/h-°F-ft2),(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:Skylt:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent2(OccClass),34,34,Parent2(CondgType),34,34,Parent(Name),34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:Skylt:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g",Area,Parent(Tilt))
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:Skylt:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%c%s%c,%.3f,%g,%g,%.5f,%.5f",34,FenConsRef:Name,34,34,FenConsRef:SkyltCurb,34,34,FenConsRef:SkyltGlz,34,FenConsRef:UFactor,FenConsRef:SHGC,FenConsRef:VT,FenConsRef:UFactorSim,FenConsRef:InsideConvCoef )
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Roof:Skylt:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Ceiling Reporting **********
+  
+RULE NEW Proj:Bldg:Story:Spc:Ceiling:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile( "\n\n\nCeiling\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Area,Tilt,Cons Name,U-Factor\n,,,,,(ft2),(deg),,(Btu/h-°F-ft2),\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Proj:Bldg:Story:Spc:Ceiling:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Ceiling:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g",Area,Tilt)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:Ceiling:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%.3f",34,ConsAssmRef:Name,34,ConsAssmRef:UFactor)
+ENDRULE
+
+
+RULE NEW Proj:Bldg:Story:Spc:Ceiling:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE 
+
+ // ********** Interior Wall Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:IntWall:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nInterior Wall\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Area,Azimuth,Cons Name,Construction Type,U Factor\n,,,,,(ft2),(deg),,,(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntWall:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntWall:EnvRpt_Geom
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Geometry
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%g",Area,Tilt)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntWall:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%c%s%c,%c%s%c,%.3f",34,ConsAssmRef:Name,34,34,ConsType,34,ConsAssmRef:UFactor)
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntWall:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s,%s\n",EnvRpt_Name,EnvRpt_Geom,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Interior Floor Reporting **********
+
+RULE NEW Proj:Bldg:Story:Spc:IntFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nInterior Floor\n,,Space\nName,Status,Name,Occupancy Classification,Conditioning Status,Area,Cons Name,Construction Type,U Factor\n,,,,,(ft2),,,(Btu/h-°F-ft2)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntFlr:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Status,34,34,Parent(Name),34,34,Parent(OccClass),34,34,Parent(CondgType),34)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Bldg:Story:Spc:IntFlr:EnvRpt_Cons
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Construction
+  INPUTCLASS
+    NotInput
+  REPORT
+    Format("%.2f,%c%s%c,%c%s%c,%.3f",Area,34,ConsAssmRef:Name,34,34,ConsType,34,ConsAssmRef:UFactor)
+ENDRULE
+                                       
+RULE NEW Proj:Bldg:Story:Spc:IntFlr:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s\n",EnvRpt_Name,EnvRpt_Cons )
+    else  UNCHANGED  endif
+ENDRULE
+
+ // ********** Construction Materials Reporting **********
+
+ RULE NEW Proj:ConsAssm:ConsEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  if( Proj:XFormFlag = 1 .OR. Proj:XFormFlag = 3 )
+            then WriteToFile("\n\n\nConstruction Assembly\nName,Surface Type,Material Layer 1 (CodeItem),Material Layer 2 (CodeItem),Material Layer 3 (CodeItem),Material Layer 4 (CodeItem),Material Layer 5 (CodeItem), Material Layer 6 (CodeItem), Material Layer 7 (CodeItem), Material Layer 8 (CodeItem), Material Layer 9 (CodeItem), Material Layer 10 (CodeItem)\n")
+            else WriteToFile("\n\n\nConstruction Assembly\nName,Surface Type,Material Layer 1,Material Layer 2,Material Layer 3,Material Layer 4,Material Layer 5, Material Layer 6, Material Layer 7, Material Layer 8, Material Layer 9, Material Layer 10\n")
+            endif
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:ConsAssm:ConsEnvRpt_Name_1
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then if( Proj:XFormFlag = 1 .OR. Proj:XFormFlag = 3 )
+          then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c", 34, Name, 34, 34, CompatibleSurfType, 34, 34, ValidOr( MatRef[1]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[2]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[3]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[4]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[5]:CodeItemRpt, "" ), 34)
+          else Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c", 34, Name, 34, 34, CompatibleSurfType, 34, 34, ValidOr( MatRef[1]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[2]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[3]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[4]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[5]:CodeItemRpt, "" ), 34)
+         endif
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:ConsAssm:ConsEnvRpt_Name_2
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then if( Proj:XFormFlag = 1 .OR. Proj:XFormFlag = 3 )
+          then Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c", 34, ValidOr( MatRef[6]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[7]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[8]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[9]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[10]:CodeItemRpt, "" ), 34)
+          else Format("%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c", 34, ValidOr( MatRef[6]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[7]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[8]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[9]:CodeItemRpt, "" ), 34, 34, ValidOr( MatRef[10]:CodeItemRpt, "" ), 34)
+         endif
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:ConsAssm:ConsEnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s\n",ConsEnvRpt_Name_1,ConsEnvRpt_Name_2 )
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Mat:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if(ComponentIndex() == 1)
+    then
+      if (Proj:RuleReportType == "ModelRpt_Envelope")
+      then  WriteToFile("\n\n\nConstruction Materials\nName,Code Item,Type,R-value,Thickness,Frame Type,Frame Configuration,Frame Depth, Frame Cavity Insulation(for composite material)\n,,,(°F-ft2-h/Btuh),(in),,,,(°F-ft2-h/Btuh)\n")
+      else  UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW Proj:Mat:EnvRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f",34,Name,34,34,CodeItemRpt,34,34,CodeCat,34,RVal,Thkns)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Mat:EnvRpt_Frame
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport_Name
+  INPUTCLASS
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then Format("%c%s%c,%c%s%c,%c%s%c,%.3f",34,FrmMat,34,34,FrmConfig,34,34,FrmDepth,34,CavityInsVal)
+    else  UNCHANGED  endif
+ENDRULE
+
+RULE NEW Proj:Mat:EnvRpt
+  DATATYPE
+    String
+  LONGFORM
+    EnvelopeReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if (Proj:RuleReportType == "ModelRpt_Envelope")
+    then  WriteToFile( "%s,%s\n",EnvRpt_Name,EnvRpt_Frame )
+    else  UNCHANGED  endif
+ENDRULE
+
+

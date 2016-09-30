@@ -1,0 +1,1232 @@
+// ThermalZone - Schedule Groups
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+// Calculate function group areas for thermal zone
+RULE NEW ThrmlZn:FuncGrpAreaAssembly
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaAssembly
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaAssembly )
+  SIZING_BASELINE
+    zp:FuncGrpAreaAssembly
+  ANNUAL
+    z:FuncGrpAreaAssembly
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaData
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaData
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaData )
+  SIZING_BASELINE
+    zp:FuncGrpAreaData
+  ANNUAL
+    z:FuncGrpAreaData
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaHealth
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaHealth
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaHealth )
+  SIZING_BASELINE
+    zp:FuncGrpAreaHealth
+  ANNUAL
+    z:FuncGrpAreaHealth
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaLab
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaLab
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaLab )
+  SIZING_BASELINE
+    zp:FuncGrpAreaLab
+  ANNUAL
+    z:FuncGrpAreaLab
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaManufacturing
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaManufacturing
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaManufacturing )
+  SIZING_BASELINE
+    zp:FuncGrpAreaManufacturing
+  ANNUAL
+    z:FuncGrpAreaManufacturing
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaOffice
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaOffice
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaOffice )
+  SIZING_BASELINE
+    zp:FuncGrpAreaOffice
+  ANNUAL
+    z:FuncGrpAreaOffice
+ENDRULE  
+RULE NEW ThrmlZn:FuncGrpAreaParking
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaParking
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaParking )
+  SIZING_BASELINE
+    zp:FuncGrpAreaParking
+  ANNUAL
+    z:FuncGrpAreaParking
+ENDRULE  
+RULE NEW ThrmlZn:FuncGrpAreaResidentialCommon
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialCommon
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaResidentialCommon )
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialCommon
+  ANNUAL
+    z:FuncGrpAreaResidentialCommon
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaResidentialLiving
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialLiving
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaResidentialLiving )
+  SIZING_BASELINE
+    zp:FuncGrpAreaResidentialLiving
+  ANNUAL
+    z:FuncGrpAreaResidentialLiving
+ENDRULE  
+RULE NEW ThrmlZn:FuncGrpAreaRestaurant
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRestaurant
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaRestaurant )
+  SIZING_BASELINE
+    zp:FuncGrpAreaRestaurant
+  ANNUAL
+    z:FuncGrpAreaRestaurant
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaRetail
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRetail
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaRetail )
+  SIZING_BASELINE
+    zp:FuncGrpAreaRetail
+  ANNUAL
+    z:FuncGrpAreaRetail
+ENDRULE 
+RULE NEW ThrmlZn:FuncGrpAreaSchool
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaSchool
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaSchool )
+  SIZING_BASELINE
+    zp:FuncGrpAreaSchool
+  ANNUAL
+    z:FuncGrpAreaSchool
+ENDRULE
+RULE NEW ThrmlZn:FuncGrpAreaWarehouse
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaWarehouse
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:FuncGrpAreaWarehouse )
+  SIZING_BASELINE
+    zp:FuncGrpAreaWarehouse
+  ANNUAL
+    z:FuncGrpAreaWarehouse
+ENDRULE 
+// Determine the function group with the most area in the zone
+RULE NEW ThrmlZn:MaxFuncGrpArea
+  DATATYPE
+    Float
+  LONGFORM
+    MaxFunctionGroupArea
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( IsRes )
+    then FuncGrpAreaResidentialLiving
+    else
+    Max(Max(Max(Max(FuncGrpAreaAssembly,
+                    FuncGrpAreaData),
+                Max(FuncGrpAreaHealth,
+                    FuncGrpAreaLab)),
+            Max(Max(FuncGrpAreaManufacturing,
+                    FuncGrpAreaOffice),
+                Max(FuncGrpAreaParking,
+                    FuncGrpAreaResidentialCommon))),
+            Max(Max(FuncGrpAreaRestaurant,
+                    FuncGrpAreaRetail),            
+                Max(FuncGrpAreaSchool,
+                    FuncGrpAreaWarehouse)))
+    endif
+  SIZING_BASELINE
+    zp:MaxFuncGrpArea
+  ANNUAL  
+    z:MaxFuncGrpArea
+ENDRULE 
+// Identify predominant function group for ThrmlZn.  This is currently
+// based on the FuncSchGrp that comprises the largest floor area of the ThrmlZn.
+RULE NEW ThrmlZn:PredominantFuncGrp
+  DATATYPE
+    String
+  LONGFORM
+    PredominantFunctionGroup
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( MaxFuncGrpArea = 0 ) 
+    then // Space is unconditioned or other, default to the largest Space schedule group
+      ValidOr( SpcWithMaxAreaRef:FuncSchGrp, "Office" )
+    else if( IsRes )
+    then "ResidentialLiving"
+    else if( MaxFuncGrpArea = FuncGrpAreaAssembly )
+    then "Assembly"
+    else if( MaxFuncGrpArea = FuncGrpAreaData )
+    then "Data"
+    else if( MaxFuncGrpArea = FuncGrpAreaHealth )
+    then "Health"
+    else if( MaxFuncGrpArea = FuncGrpAreaLab )
+    then "Laboratory"
+    else if( MaxFuncGrpArea = FuncGrpAreaManufacturing )
+    then "Manufacturing"
+    else if( MaxFuncGrpArea = FuncGrpAreaOffice )
+    then "Office"
+    else if( MaxFuncGrpArea = FuncGrpAreaParking )
+    then "Parking"
+    else if( MaxFuncGrpArea = FuncGrpAreaResidentialCommon )
+    then "ResidentialCommon"
+    else if( MaxFuncGrpArea = FuncGrpAreaRestaurant )
+    then "Restaurant"
+    else if( MaxFuncGrpArea = FuncGrpAreaRetail )
+    then "Retail"
+    else if( MaxFuncGrpArea = FuncGrpAreaSchool )
+    then "School"
+    else if( MaxFuncGrpArea = FuncGrpAreaWarehouse )
+    then "Warehouse"
+    else UNDEFINED
+    endif endif endif endif endif
+    endif endif endif endif endif
+    endif endif endif endif
+  SIZING_BASELINE
+    zp:PredominantFuncGrp
+  ANNUAL
+    z:PredominantFuncGrp
+ENDRULE 
+
+
+
+// ********** System Exception Areas *******************************************
+
+// Heating/ventilation (HV) system exception 
+// -----------------------------------------------------------------------------
+// Space rule here for ordering purposes. PredominantFuncGrp not known until rule 
+// above is evaluated
+RULE NEW Spc:HtgOnlySysArea
+  SIZING_PROPOSED : T24N
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then
+      if( ThrmlZnRef:PredominantFuncGrp = "Warehouse" .AND.
+          ThrmlZnRef:HasHtg = 1 .AND.
+          ThrmlZnRef:HasClg = 0 )
+      then CondFlrArea
+      else 0
+      endif
+    else 0
+    endif
+  SIZING_BASELINE : T24N
+    zp:HtgOnlySysArea
+ENDRULE
+
+// ThrmlZn level values
+RULE NEW ThrmlZn:HtgOnlySysArea
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT : S901G ECBC
+    SumRevRef( Spc:ThrmlZnRef, Spc:HtgOnlySysArea )
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:HtgOnlySysArea )
+  SIZING_BASELINE
+    zp:HtgOnlySysArea
+ENDRULE
+
+RULE NEW ThrmlZn:HtgOnlySysAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( HtgOnlySysArea > 0 )
+    then HVACAreaNew
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaNew
+ENDRULE
+
+RULE NEW ThrmlZn:HtgOnlySysAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( HtgOnlySysArea > 0 )
+    then HVACAreaExisting
+    else 0
+    endif
+  SIZING_BASELINE  
+    zp:HtgOnlySysAreaExisting
+ENDRULE
+
+RULE NEW ThrmlZn:HtgOnlySysAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( HtgOnlySysArea > 0 )
+    then HVACAreaAltered
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaAltered
+ENDRULE
+
+
+// Story level values
+RULE NEW Story:HtgOnlySysArea
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemArea
+  DESCRIPTION
+    "The total (conditioned) HtgOnly system floor area." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT : S901G ECBC
+    SumChildren( Spc:HtgOnlySysArea )
+  SIZING_PROPOSED
+    SumChildren( Spc:HtgOnlySysArea )  
+  SIZING_BASELINE
+    zp:HtgOnlySysArea
+ENDRULE
+
+RULE NEW Story:HtgOnlySysAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaNew
+  DESCRIPTION
+    "The total (conditioned) HtgOnly system floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2     
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:HtgOnlySysArea, Spc:HVACAreaNew > 0 )
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaNew
+ENDRULE
+
+RULE NEW Story:HtgOnlySysAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaExisting
+  DESCRIPTION
+    "The total (conditioned) HtgOnly system floor area with EXISTING status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:HtgOnlySysArea, Spc:HVACAreaExisting > 0 )  
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaExisting 
+ENDRULE
+
+RULE NEW Story:HtgOnlySysAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaAltered
+  DESCRIPTION
+    "The total (conditioned) HtgOnly system floor area with ALTERED status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    SumChildrenIf( Spc:HtgOnlySysArea, Spc:HVACAreaAltered > 0 )   
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaAltered   
+ENDRULE
+
+// Bldg level values
+RULE NEW Bldg:HtgOnlySysAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:HtgOnlySysAreaNew )
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaNew
+ENDRULE 
+
+RULE NEW Bldg:HtgOnlySysAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:HtgOnlySysAreaExisting )
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaExisting
+ENDRULE 
+
+RULE NEW Bldg:HtgOnlySysAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    HeatingOnlySystemAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:HtgOnlySysAreaAltered )
+  SIZING_BASELINE
+    zp:HtgOnlySysAreaAltered
+ENDRULE 
+
+
+// Calculate areas that qualify for process space for exceptions
+
+// Computer Room
+// -----------------------------------------------------------------------------
+// ThrmlZn level values
+RULE NEW ThrmlZn:CompRmArea
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:CompRmArea )
+ENDRULE
+
+RULE NEW ThrmlZn:CompRmAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 )
+    then HVACAreaNew
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmAreaNew
+ENDRULE
+
+RULE NEW ThrmlZn:CompRmAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 )
+    then HVACAreaExisting
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmAreaExisting
+ENDRULE
+
+RULE NEW ThrmlZn:CompRmAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 )
+    then HVACAreaAltered
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmAreaAltered
+ENDRULE
+
+// Story level values
+RULE NEW Story:CompRmAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaNew
+  DESCRIPTION
+    "The total (conditioned) 'Computer Room' floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CompRmArea, Spc:HVACAreaNew > 0 ) 
+ENDRULE
+
+RULE NEW Story:CompRmAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaExisting
+  DESCRIPTION
+    "The total (conditioned) 'Computer Room' floor area with EXISTING status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CompRmArea, Spc:HVACAreaExisting > 0 ) 
+ENDRULE
+
+RULE NEW Story:CompRmAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaAltered
+  DESCRIPTION
+    "The total (conditioned) 'Computer Room' floor area with ALTERED status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CompRmArea, Spc:HVACAreaAltered > 0 ) 
+ENDRULE
+
+// Calculate receptacle power for Computer Room zones.  Summed to Bldg
+// to determine baseline HVAC system (CRAC vs CRAH)
+RULE NEW ThrmlZn:CompRmPwrNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerNew
+  DESCRIPTION
+    "The receptacle end-use power for the zone, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:CompRmPwrNew )
+  SIZING_BASELINE
+    zp:CompRmPwrNew
+ENDRULE
+
+RULE NEW ThrmlZn:CompRmPwrExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerExisting
+  DESCRIPTION
+    "The receptacle end-use power for the zone, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:CompRmPwrExisting )
+  SIZING_BASELINE
+    zp:CompRmPwrExisting
+ENDRULE
+
+RULE NEW ThrmlZn:CompRmPwrAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerAltered
+  DESCRIPTION
+    "The receptacle end-use power for the zone, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumRevRef( Spc:ThrmlZnRef, Spc:CompRmPwrAltered )
+  SIZING_BASELINE
+    zp:CompRmPwrAltered
+ENDRULE
+
+
+// Bldg level values
+RULE NEW Bldg:CompRmAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaNew )
+  SIZING_BASELINE
+    zp:CompRmAreaNew
+ENDRULE 
+
+RULE NEW Bldg:CompRmAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaExisting )
+  SIZING_BASELINE
+    zp:CompRmAreaExisting
+ENDRULE 
+
+RULE NEW Bldg:CompRmAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaAltered )
+  SIZING_BASELINE
+    zp:CompRmAreaAltered
+ENDRULE 
+
+RULE NEW Bldg:CompRmPwrNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerNew
+  DESCRIPTION
+    "The NEW receptacle end-use power for the bldg, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmPwrNew )
+  SIZING_BASELINE
+    zp:CompRmPwrNew
+ENDRULE
+
+RULE NEW Bldg:CompRmPwrExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerExisting
+  DESCRIPTION
+    "The EXISTING receptacle end-use power for the bldg, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmPwrExisting )
+  SIZING_BASELINE
+    zp:CompRmPwrExisting
+ENDRULE
+
+RULE NEW Bldg:CompRmPwrAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerAltered
+  DESCRIPTION
+    "The ALTERED receptacle end-use power for the bldg, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmPwrAltered )
+  SIZING_BASELINE
+    zp:CompRmPwrAltered
+ENDRULE
+
+
+// Laboratory
+// -----------------------------------------------------------------------------
+// ThrmlZn level values
+RULE NEW ThrmlZn:LabArea
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:LabArea ) 
+ENDRULE
+
+RULE NEW ThrmlZn:LabAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( LabArea > 0 )
+    then HVACAreaNew
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:LabAreaNew
+ENDRULE
+
+RULE NEW ThrmlZn:LabAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( LabArea > 0 )
+    then HVACAreaExisting
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:LabAreaExisting
+ENDRULE
+
+RULE NEW ThrmlZn:LabAreaAltered
+  DATATYPE
+    Float
+  INPUTCLASS 
+    NotInput
+  LONGFORM
+    LaboratoryAreaAltered
+  SIZING_PROPOSED
+    if( LabArea > 0 )
+    then HVACAreaAltered
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:LabAreaAltered
+ENDRULE
+
+// Story level
+RULE NEW Story:LabAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaNew
+  DESCRIPTION
+    "The total (conditioned) 'Laboratory' floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:LabArea, Spc:HVACAreaNew > 0 ) 
+ENDRULE
+
+RULE NEW Story:LabAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaExisting
+  DESCRIPTION
+    "The total (conditioned) 'Laboratory' floor area with EXISTING status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:LabArea, Spc:HVACAreaExisting > 0 ) 
+ENDRULE
+
+RULE NEW Story:LabAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaAltered
+  DESCRIPTION
+    "The total (conditioned) 'Laboratory' floor area with ALTERED status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:LabArea, Spc:HVACAreaAltered > 0 ) 
+ENDRULE
+
+// Bldg level values
+RULE NEW Bldg:LabAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:LabAreaNew )
+  SIZING_BASELINE
+    zp:LabAreaNew
+ENDRULE 
+
+RULE NEW Bldg:LabAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:LabAreaExisting )
+  SIZING_BASELINE
+    zp:LabAreaExisting
+ENDRULE 
+
+RULE NEW Bldg:LabAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:LabAreaAltered )
+  SIZING_BASELINE
+    zp:LabAreaAltered
+ENDRULE 
+
+// Commercial Kitchen
+// -----------------------------------------------------------------------------
+// ThrmlZn level values
+RULE NEW ThrmlZn:CommKitArea
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:CommKitArea )
+ENDRULE
+
+RULE NEW ThrmlZn:CommKitAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CommKitArea > 0 )
+    then HVACAreaNew
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CommKitAreaNew
+ENDRULE
+
+RULE NEW ThrmlZn:CommKitAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CommKitArea > 0 )
+    then HVACAreaExisting
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CommKitAreaExisting
+ENDRULE
+
+RULE NEW ThrmlZn:CommKitAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    if( CommKitArea > 0 )
+    then HVACAreaAltered
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CommKitAreaAltered
+ENDRULE
+
+// Story level values
+RULE NEW Story:CommKitAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaNew
+  DESCRIPTION
+    "The total (conditioned) 'Commercial Kitchen' floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CommKitArea, Spc:HVACAreaNew > 0 ) 
+ENDRULE
+
+RULE NEW Story:CommKitAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaExisting
+  DESCRIPTION
+    "The total (conditioned) 'Commercial Kitchen' floor area with EXISTING status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CommKitArea, Spc:HVACAreaExisting > 0 ) 
+ENDRULE
+
+RULE NEW Story:CommKitAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaAltered
+  DESCRIPTION
+    "The total (conditioned) 'Commercial Kitchen' floor area with ALTERED status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  DEFAULT 
+    SumChildrenIf( Spc:CommKitArea, Spc:HVACAreaAltered > 0 ) 
+ENDRULE
+
+
+// Bldg level values
+RULE NEW Bldg:CommKitAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CommKitAreaNew )
+  SIZING_BASELINE
+    zp:CommKitAreaNew
+ENDRULE 
+
+RULE NEW Bldg:CommKitAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CommKitAreaExisting )
+  SIZING_BASELINE
+    zp:CommKitAreaExisting
+ENDRULE 
+
+RULE NEW Bldg:CommKitAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CommKitAreaAltered )
+  SIZING_BASELINE
+    zp:CommKitAreaAltered
+ENDRULE 
+
+
+// ParkingGarage
+// -----------------------------------------------------------------------------
+// ThrmlZn level values
+RULE NEW ThrmlZn:PrkgGarArea
+  DATATYPE
+    Float
+  LONGFORM
+    ParkingGarageArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:PrkgGarArea )
+ENDRULE
+
+// Bldg level values
+RULE NEW Bldg:PrkgGarArea
+  DATATYPE
+    Float
+  LONGFORM
+    ParkingGarageArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    SumChildren( ThrmlZn:PrkgGarArea )
+ENDRULE 
+
+
+// Process Area
+// -----------------------------------------------------------------------------
+// Space level value
+RULE NEW Spc:ProcArea
+  DATATYPE
+    Float
+  LONGFORM
+    ProcArea
+  DESCRIPTION
+    "The total (conditioned) process space floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    CompRmArea + LabArea + CommKitArea
+  SIZING_BASELINE
+    zp:ProcArea
+ENDRULE
+
+
+RULE NEW Story:ProcAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaNew
+  DESCRIPTION
+    "The total (conditioned) process space floor area with NEW status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    CompRmAreaNew + LabAreaNew + CommKitAreaNew 
+  SIZING_BASELINE
+    zp:ProcAreaNew
+ENDRULE
+
+RULE NEW Story:ProcAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaExisting
+  DESCRIPTION
+    "The total (conditioned) process space floor area with EXISTING status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    CompRmAreaExisting + LabAreaExisting + CommKitAreaExisting 
+  SIZING_BASELINE
+    zp:ProcAreaExisting
+ENDRULE
+
+RULE NEW Story:ProcAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaAltered
+  DESCRIPTION
+    "The total (conditioned) process space floor area with ALTERED status." 
+  INPUTCLASS
+    NotInput
+  UNITS 
+    ft2    
+  SIZING_PROPOSED
+    CompRmAreaAltered + LabAreaAltered + CommKitAreaAltered 
+  SIZING_BASELINE
+    zp:ProcAreaAltered
+ENDRULE
+
+// Bldg level values
+RULE NEW Bldg:ProcAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaNew
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaNew ) +
+    SumChildren( ThrmlZn:LabAreaNew ) +
+    SumChildren( ThrmlZn:CommKitAreaNew )
+  SIZING_BASELINE
+    zp:ProcAreaNew
+ENDRULE 
+
+RULE NEW Bldg:ProcAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaExisting
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaExisting ) +
+    SumChildren( ThrmlZn:LabAreaExisting ) +
+    SumChildren( ThrmlZn:CommKitAreaExisting )
+  SIZING_BASELINE
+    zp:ProcAreaExisting
+ENDRULE 
+
+RULE NEW Bldg:ProcAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ProcAreaAltered
+  INPUTCLASS 
+    NotInput
+  SIZING_PROPOSED
+    SumChildren( ThrmlZn:CompRmAreaAltered ) +
+    SumChildren( ThrmlZn:LabAreaAltered ) +
+    SumChildren( ThrmlZn:CommKitAreaAltered )
+  SIZING_BASELINE
+    zp:ProcAreaAltered
+ENDRULE 
+
+// ---------- Section 2.3.3 - Space Use Classifications ------------------------
+;RULE NEW ThrmlZn:CombiningSpcCriteria
+;  DATATYPE
+;    Integer
+;  LONGFORM
+;    CombiningSpaceCriteria
+;  DESCRIPTION
+;    "A flag that indicates whether spaces are properly combined into ThermalZones"  
+;  HELP
+;    "Cannot combine spaces that have the following parameters:
+;     1) Combined lighting, receptacle, and process equipment power densities 
+;        that differ by no more than 2.0 W/ft² or a factor of two shall be 
+;        considered similar."
+;  REFERENCE
+;    NACM Section 2.3.3 
+;    NACM Section 5.1.1
+;  INPUTCLASS
+;    Prescribed
+;  SIZING_PROPOSED
+;    if( IsCond )
+;    then // Zone is conditioned
+;      if( MaxRevRef( Spc:ThrmlZnRef, Spc:CombinedInternalLoads ) - 
+;          MinRevRef( Spc:ThrmlZnRef, Spc:CombinedInternalLoads ) > 2 )
+;      then
+;        PostError("ThermalZone '%s' combines spaces with design internal load densities
+;                   (lighting, receptacle, and process equipment) that differ by
+;                   >2 W/sf. This is not allowed.", Name)
+;      else if( SumRevRef( Spc:ThrmlZnRef, Spc:CompRmArea ) > 0 .AND. 
+;               SumRevRef( Spc:ThrmlZnRef, Spc:CompRmArea ) != FlrArea )
+;      then
+;        PostError("ThermalZone '%s' combines 'Computer Room' space with other
+;                   space functions. This is not allowed.", Name)
+;      else if( SumRevRef( Spc:ThrmlZnRef, Spc:LabArea ) > 0 .AND.
+;               SumRevRef( Spc:ThrmlZnRef, Spc:LabArea ) != FlrArea )
+;      then
+;        PostError("ThermalZone '%s' combines 'Laboratory ...' space with other
+;                   space functions. This is not allowed.", Name)
+;      else if( SumRevRef( Spc:ThrmlZnRef, Spc:CommKitArea ) > 0 .AND.
+;               SumRevRef( Spc:ThrmlZnRef, Spc:CommKitArea ) != FlrArea )
+;      then
+;        PostError("ThermalZone '%s' combines 'Kitchen, Commercial' space with other
+;                   space functions. This is not allowed.", Name)
+;      else UNDEFINED
+;      endif endif endif endif
+;    else UNDEFINED
+;    endif
+;ENDRULE

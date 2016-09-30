@@ -1,0 +1,85 @@
+;,CEC 2013 Nonresidential ACM Ruleset,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,TABLE NAME:,,,,,,,,,,,,,,,,,,,
+;,,LtgInputRestrictions,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,MODIFICATION HISTORY:,,,,,,,,,,,,,,,,,,,
+;,,Date,Name,Purpose,,,,,,,,,,,,,,,,
+;,,6/5/2015,L. Hovee,Lighting Allowance and PAF validity verification,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,Standards/ACM Reference:,,,,,,,,,,,,,,,,,,,
+;,,Table 140.6-A,,,,,,,,,,,,,,,,,,
+;,,TABLE 140.6-C Footnotes,,,,,,,,,,,,,,,,,,
+;,Notes:,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,Syntax Examples:,,,,,,,,,,,,,,,,,,,
+;,,,,,,,,,,,,,,,,,,,,
+;,NOTE:  Lookups Resulting in 'na' are to should be handled exclusively in rules,,,,,,,,,,,,,,,,"Note: Assigned in Rules, no table lookup",,,
+;,,,,,,,,,,,,,,,,,,,,
+; ####################################  Start of Table ####################################,,,,,,,,,,,,,,,,,,,,
+,TABLE LtgInputRestrictions,,,,,,,,,,,,,,,,,,,
+,,SpaceFunction,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,AreaCatAllowType,PAFCredType,PAFCredType,PAFCredType,PAFCredType,PAFCredType,PAFCredType,PAFCredType,PAFCredType,;,Sort Order (for future updates)
+,,AllowanceType = ,SpecializedLabTaskWork,SpecializedTaskWork,Ornamental,PrecisionCommercialIndustrial,WhiteOrChalkBoard,AccentDisplayFeature,Decorative,VideoconferencingStudioLighting,PartialOnOccupantSensingControl,OccupantSensingControls-1to125SF,OccupantSensingControls-126to250SF,OccupantSensingControls-251to500SF,ManualDimming,MultisceneProgrammableControls,DemandResponsiveControl,CombinedManualDimmingPlusPartialOnOccupantSensingControl,,
+,,;,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,Allowance Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,PAF Permitted?,,
+,,Auditorium Area,0,0,1,0,0,0,0,0,1,0,0,0,1,0,na,0,;,1
+,,Auto Repair Area,0,1,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,2
+,,"Bar, Cocktail Lounge and Casino Areas",0,0,0,0,0,0,0,0,1,0,0,0,1,0,na,0,;,3
+,,Beauty Salon Area,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,4
+,,"Classrooms, Lecture, Training, Vocational Areas",0,0,0,0,1,0,0,0,1,0,0,0,0,0,na,1,;,5
+,,Civic Meeting Place Area,0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,6
+,,Commercial and Industrial Storage Areas (conditioned or unconditioned),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,7
+,,Commercial and Industrial Storage Areas (refrigerated),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,8
+,,Computer Room,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,9
+,,"Convention, Conference, Multipurpose and Meeting Center Areas",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,1,;,10
+,,"Corridors, Restrooms, Stairs, and Support Areas",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,11
+,,Dining Area,0,0,1,0,0,0,0,0,1,0,0,0,1,0,na,0,;,12
+,,Dry Cleaning (Coin Operated),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,13
+,,Dry Cleaning (Full Service Commercial),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,14
+,,"Electrical, Mechanical, Telephone Rooms",0,1,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,15
+,,Exercise Room,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,16
+,,"Exhibit, Museum Areas",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,17
+,,Financial Transaction Area,0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,18
+,,"General Commercial and Industrial Work Areas, High Bay",0,1,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,19
+,,"General Commercial and Industrial Work Areas, Low Bay",0,1,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,20
+,,"General Commercial and Industrial Work Areas, Precision",0,0,0,1,0,0,0,0,1,0,0,0,0,0,na,0,;,21
+,,Grocery Sales Areas,0,0,0,0,0,1,1,0,1,0,0,0,0,0,na,0,;,22
+,,Gymnasium/Sports Arena,,,,,,,,,1,0,0,0,0,0,na,0,;,23
+,,High-Rise Residential Living Spaces,0,0,0,0,0,0,0,0,0,0,0,0,0,0,na,0,;,24
+,,Hotel Function Area,0,0,1,0,0,0,0,0,1,0,0,0,1,0,na,0,;,25
+,,Hotel/Motel Guest Room,0,0,0,0,0,0,0,0,0,0,0,0,0,0,na,0,;,26
+,,"Housing, Public and Common Areas: Multi-family, Dormitory",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,27
+,,"Housing, Public and Common Areas: Senior Housing",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,28
+,,"Kitchen, Commercial Food Preparation",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,29
+,,Kitchenette or Residential Kitchen,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,30
+,,"Laboratory, Scientific",1,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,31
+,,"Laboratory, Equipment Room",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,32
+,,Laundry,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,33
+,,"Library, Reading Areas",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,34
+,,"Library, Stacks",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,35
+,,"Lobby, Hotel",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,36
+,,"Lobby, Main Entry",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,37
+,,Locker/Dressing Room,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,38
+,,"Lounge, Recreation",0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,39
+,,Malls and Atria,0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,40
+,,Medical and Clinical Care,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,41
+,,Nurseries for Children - Day Care,,,,,,,,,1,0,0,0,0,0,na,0,;,42
+,,Office (Greater than 250 square feet in floor area),0,0,0,0,0,0,0,0,0,1,1,1,0,0,na,0,;,43
+,,Office (250 square feet in floor area or less),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,44
+,,"Parking Garage Building, Parking Area",0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,45
+,,Parking Garage Area Dedicated Ramps,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,46
+,,Parking Garage Area Daylight Adaptation Zones,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,47
+,,Police Station and Fire Station,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,48
+,,Religious Worship Area,0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,0,;,49
+,,"Retail Merchandise Sales, Wholesale Showroom",0,0,0,0,0,1,1,0,1,0,0,0,0,0,na,0,;,50
+,,"Theater, Motion Picture",0,0,1,0,0,0,0,0,1,0,0,0,1,0,na,0,;,52
+,,"Theater, Performance",0,0,1,0,0,0,0,0,1,0,0,0,1,0,na,0,;,53
+,,Transportation Function,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,54
+,,Unleased Tenant Area,,,,,,,,,1,0,0,0,0,0,na,0,;,55
+,,Unoccupied-Exclude from Gross Floor Area,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,56
+,,Unoccupied-Include in Gross Floor Area,0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,57
+,,Videoconferencing Studio,0,0,0,0,0,0,0,1,1,0,0,0,0,0,na,0,;,58
+,,Waiting Area,0,0,1,0,0,0,0,0,1,0,0,0,0,0,na,1,;,59
+,,All Others (including unleased tenant space in multi-tenant facilities),0,0,0,0,0,0,0,0,1,0,0,0,0,0,na,0,;,60
+,ENDTABLE,,,,,,,,,,,,,,,,,,,

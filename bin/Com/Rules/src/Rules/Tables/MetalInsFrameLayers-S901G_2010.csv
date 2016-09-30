@@ -1,0 +1,137 @@
+//Metal Ins and Framing List,,,,,,,,,
+//Save this TAB as MetalInsFrameLayers.csv,,,,,,,,,
+TABLE MetalInsFrameLayers,,,,,,,,,
+CodeCat,MatList,FrmMat,FrmConfig,FrmDepth,FrmSize,CavityIns,Rvalue,// References 01,Reference 02
+//Material Category,Material Name,FramingMaterial,Framing Configuration,Framing Depth,FramingSize,CavityInsulation (R-XX),Assembly R Value (h-ft2.F/Btu),Table 2013 JA4-10,S90.1G-2010
+Metal Building Roof,Metal Screw Down Roof - No Thrml Blk - R10 ins.,Metal,RoofMetalScrewDown,NA,NA,10,5.756,// Table 4.2.7,
+Metal Building Roof,Metal Screw Down Roof - No Thrml Blk - R11 ins.,Metal,RoofMetalScrewDown,NA,NA,11,6.414,// Table 4.2.7,
+Metal Building Roof,Metal Screw Down Roof - No Thrml Blk - R13ins.,Metal,RoofMetalScrewDown,NA,NA,13,6.912,// Table 4.2.7,
+Metal Building Roof,Metal Screw Down Roof - No Thrml Blk - R16 ins.,Metal,RoofMetalScrewDown,NA,NA,16,8.654,// Table 4.2.7,
+Metal Building Roof,Metal Screw Down Roof - No Thrml Blk - R19 ins.,Metal,RoofMetalScrewDown,NA,NA,19,9.424,// Table 4.2.7,
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - R10 ins.,Metal,RoofMetalStandingSeam,NA,NA,10,7.916,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - R11 ins.,Metal,RoofMetalStandingSeam,NA,NA,11,8.566,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - R13 ins.,Metal,RoofMetalStandingSeam,NA,NA,13,9.121,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - R16 ins.,Metal,RoofMetalStandingSeam,NA,NA,16,9.637,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - R19 ins.,Metal,RoofMetalStandingSeam,NA,NA,19,11.415,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R10 + R10 Ins.,Metal,RoofMetalStandingSeam,NA,NA,20,10.584,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R10 + R11 Ins.,Metal,RoofMetalStandingSeam,NA,NA,21,10.848,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R11 + R11 Ins.,Metal,RoofMetalStandingSeam,NA,NA,22,10.985,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R10 + R13 Ins.,Metal,RoofMetalStandingSeam,NA,NA,23,11.125,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R11 + R13 Ins.,Metal,RoofMetalStandingSeam,NA,NA,24,11.415,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R13 + R13 Ins.,Metal,RoofMetalStandingSeam,NA,NA,26,12.553,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R10 + R19 Ins.,Metal,RoofMetalStandingSeam,NA,NA,29,12.734,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R11 + R19 Ins.,Metal,RoofMetalStandingSeam,NA,NA,30,13.109,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R13 + R19 Ins.,Metal,RoofMetalStandingSeam,NA,NA,32,13.926,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R16 + R19 Ins.,Metal,RoofMetalStandingSeam,NA,NA,35,14.605,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Dbl Ins. Layer - R19 + R19 Ins.,Metal,RoofMetalStandingSeam,NA,NA,36,15.887,// 2016 Table 4.2.7,"90.1-13, Table A2.3.3"
+Metal Building Roof,Metal Standing Seam Roof - Thrml Blk - Ins. and Filled Cavity - R19 + R10 Ins.,Metal,RoofMetalStandingSeamFilledCavity,NA,NA,29,23.61,// Table 4.2.7,
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x4 - R0 ins.,Metal,Wall16inOC,2x4,2x4,0,0.79,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x4 - R11 ins.,Metal,Wall16inOC,2x4,2x4,11,5.5,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x4 - R13 ins.,Metal,Wall16inOC,2x4,2x4,13,6,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x4 - R15 ins.,Metal,Wall16inOC,2x4,2x4,15,6.4,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x6 - R0 ins.,Metal,Wall16inOC,2x6,2x6,0,0.79,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x6 - R19 ins.,Metal,Wall16inOC,2x6,2x6,19,7.1,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x6 - R21 ins.,Metal,Wall16inOC,2x6,2x6,21,7.4,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x8 - R0 ins.,Metal,Wall16inOC,2x8,2x8,0,0.79,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 16inOC - 2x8 - R25 ins.,Metal,Wall16inOC,2x8,2x8,25,7.8,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x4 - R0 ins.,Metal,Wall24inOC,2x4,2x4,0,0.91,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x4 - R11 ins.,Metal,Wall24inOC,2x4,2x4,11,6.6,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x4 - R13 ins.,Metal,Wall24inOC,2x4,2x4,13,7.2,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x4 - R15 ins.,Metal,Wall24inOC,2x4,2x4,15,7.8,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x6 - R0 ins.,Metal,Wall24inOC,2x6,2x6,0,0.91,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x6 - R19 ins.,Metal,Wall24inOC,2x6,2x6,19,8.6,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x6 - R21 ins.,Metal,Wall24inOC,2x6,2x6,21,9,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x8 - R0 ins.,Metal,Wall24inOC,2x8,2x8,0,0.91,//,Table A9.2B
+Metal Framed Wall,Metal Framed Wall - 24inOC - 2x8 - R25 ins.,Metal,Wall24inOC,2x8,2x8,25,9.6,//,Table A9.2B
+Other Floor,Metal Framed Floor - 16inOC - 2x6 - R0 ins.,Metal,Floor16inOC,2x6,2x6,0,0.003,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x6 - R11 ins.,Metal,Floor16inOC,2x6,2x6,11,5.309,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x6 - R13 ins.,Metal,Floor16inOC,2x6,2x6,13,5.854,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x6 - R19 ins.,Metal,Floor16inOC,2x6,2x6,19,6.92,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x8 - R19 ins.,Metal,Floor16inOC,2x8,2x8,19,7.414,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x8 - R22 ins.,Metal,Floor16inOC,2x8,2x8,22,7.815,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x10 - R30 ins.,Metal,Floor16inOC,2x10,2x10,30,9.383,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 16inOC - 2x12 - R38 ins.,Metal,Floor16inOC,2x12,2x12,38,10.756,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x6 - R0 ins.,Metal,Floor24inOC,2x6,2x6,0,0.003,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x6 - R11 ins.,Metal,Floor24inOC,2x6,2x6,11,6.576,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x6 - R13 ins.,Metal,Floor24inOC,2x6,2x6,13,7.544,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x6 - R19 ins.,Metal,Floor24inOC,2x6,2x6,19,9.037,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x8 - R19 ins.,Metal,Floor24inOC,2x8,2x8,19,9.564,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x8 - R22 ins.,Metal,Floor24inOC,2x8,2x8,22,10.336,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x10 - R30 ins.,Metal,Floor24inOC,2x10,2x10,30,12.443,// Table 4.4.5,
+Other Floor,Metal Framed Floor - 24inOC - 2x12 - R38 ins.,Metal,Floor24inOC,2x12,2x12,38,14.569,// Table 4.4.5,
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R0 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,0,0.91,//,Table A9.2b
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R4 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,4,3.88,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R5 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,5,4.8,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R8 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,8,7.52,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R10 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,10,9.2,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R11 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,11,10.01,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R12 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,12,10.8,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R13 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,13,11.7,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R15 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,15,13.2,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R16 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,16,13.92,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R19 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,19,16.34,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R20 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,20,17,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R21 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,21,17.64,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R24 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,24,19.68,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R25 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,25,20.25,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R30 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,30,23.7,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R35 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,35,26.6,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R38 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,38,28.112,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R40 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,40,29.2,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R45 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,45,31.95,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R50 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,50,34.5,//,Table A9.2A
+Other Floor,Floor Steel Joist - 16in24in36in48inOC - R55 ins.,Metal,Floor16in24in36in48inOC,AllSizes,AllSizes,55,36.85,//,Table A9.2A
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x4 - R11 ins.,Metal,Roof16inOC,2x4,2x4,11,6.01,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x4 - R13 ins.,Metal,Roof16inOC,2x4,2x4,13,6.52,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x4 - R15 ins.,Metal,Roof16inOC,2x4,2x4,15,6.96,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x4 - R19 ins.,Metal,Roof16inOC,2x4,2x4,19,6.52,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x6 - R11 ins.,Metal,Roof16inOC,2x6,2x6,11,6.39,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x6 - R13 ins.,Metal,Roof16inOC,2x6,2x6,13,6.96,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x6 - R15 ins.,Metal,Roof16inOC,2x6,2x6,15,8.16,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x6 - R19 ins.,Metal,Roof16inOC,2x6,2x6,19,8.26,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x8 - R19 ins.,Metal,Roof16inOC,2x8,2x8,19,8.68,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x8 - R21 ins.,Metal,Roof16inOC,2x8,2x8,21,9.01,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x10 - R25 ins.,Metal,Roof16inOC,2x10,2x10,25,10.16,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x10 - R30 ins.,Metal,Roof16inOC,2x10,2x10,30,10.92,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x12 - R30 ins.,Metal,Roof16inOC,2x12,2x12,30,11.42,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x12 - R38 ins.,Metal,Roof16inOC,2x12,2x12,38,12.34,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 16inOC - 2x14 - R38 ins.,Metal,Roof16inOC,2x14,2x14,38,12.97,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x4 - R11 ins.,Metal,Roof24inOC,2x4,2x4,11,7.27,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x4 - R13 ins.,Metal,Roof24inOC,2x4,2x4,13,8.06,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x4 - R15 ins.,Metal,Roof24inOC,2x4,2x4,15,8.68,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x4 - R19 ins.,Metal,Roof24inOC,2x4,2x4,19,8.06,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x6 - R11 ins.,Metal,Roof24inOC,2x6,2x6,11,7.61,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x6 - R13 ins.,Metal,Roof24inOC,2x6,2x6,13,8.36,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x6 - R15 ins.,Metal,Roof24inOC,2x6,2x6,15,9.89,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x6 - R19 ins.,Metal,Roof24inOC,2x6,2x6,19,10.31,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x8 - R19 ins.,Metal,Roof24inOC,2x8,2x8,19,10.76,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x8 - R21 ins.,Metal,Roof24inOC,2x8,2x8,21,11.42,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x10 - R25 ins.,Metal,Roof24inOC,2x10,2x10,25,12.97,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x10 - R30 ins.,Metal,Roof24inOC,2x10,2x10,30,14.13,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x12 - R30 ins.,Metal,Roof24inOC,2x12,2x12,30,14.65,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x12 - R38 ins.,Metal,Roof24inOC,2x12,2x12,38,16.44,// Table 4.2.5,
+Metal Building Roof,Metal Framed Roof - 24inOC - 2x14 - R38 ins.,Metal,Roof24inOC,2x14,2x14,38,17.13,// Table 4.2.5,
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R0 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,0,0.91,//,Table A9.2b
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R4 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,4,3.88,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R5 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,5,4.8,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R8 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,8,7.52,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R10 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,10,9.2,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R11 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,11,10.01,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R12 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,12,10.8,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R13 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,13,11.7,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R15 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,15,13.2,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R16 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,16,13.92,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R19 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,19,16.34,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R20 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,20,17,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R21 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,21,17.64,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R24 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,24,19.68,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R25 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,25,20.25,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R30 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,30,23.7,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R35 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,35,26.6,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R38 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,38,28.112,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R40 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,40,29.2,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R45 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,45,31.95,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R50 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,50,34.5,//,Table A9.2A
+Metal Building Roof,Roof Steel Joist - 16in24in36in48inOC - R55 ins.,Metal,Roof16in24in36in48inOC,AllSizes,AllSizes,55,36.85,//,Table A9.2A
+ENDTABLE,,,,,,,,,
+//,,,,,,,,,

@@ -1,0 +1,281 @@
+// Exterior Shading
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+// 
+// The main objects in the SDD are:
+//     ExtShdgObj/ExteriorShadingObject
+// Proj:CompType options:
+//    NewComplete                            New
+//    NewEnvelope                            New
+//    NewEnvelopeAndLighting                 New          
+//    NewEnvelopeAndPartialLighting          New          
+//    NewEnvelopeAndMechanical               New          
+//    NewMechanical                          Existing     
+//    NewMechanicalAndLighting               Existing     
+//    NewMechanicalAndPartialLighting        Existing     
+//    ExistingAlteration                     New, Existing
+//    ExistingAdditionAndAlteration          New, Existing
+//    AdditionComplete                       New, Existing
+//    AdditionEnvelope                       New, Existing
+//    AdditionEnvelopeAndLighting            New, Existing
+//    AdditionEnvelopeAndPartialLighting     New, Existing
+//    AdditionEnvelopeAndMechanical          New, Existing
+//    AdditionMechanical                     Existing
+//    AdditionMechanicalAndLighting          Existing
+//    AdditionMechanicalAndPartialLighting   Existing
+
+      // SAC 9/14/16 - added logic referencing Win this shade shades (tic #1891)
+RULE ExtShdgObj:Status
+   DESCRIPTION
+     "The Visible Reflectance of Exterior Shading Objects." 
+   HELP
+     "Current tool capabilities do not support simulation of reflections from shading surfaces"
+   MINIMUM
+     0
+   MAXIMUM
+     1
+   OPTION
+     New
+     Existing
+   DEFAULT
+    if( Proj:IsNewEnv = 1 ) then "New"
+    else if( Proj:IsExistingEnv ) then "Existing"
+    else if( Proj:IsAddOrAlt = 1 .AND.
+             IfValidAnd( WinRef:Status = "Existing" ) )
+    then "Existing"
+    else "New"
+    endif endif endif
+  CHECKCODE
+    if( Proj:IsNewEnv ) then
+      if( Status != "New" ) then
+        PostWarning( "External Shade '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, EnvStatus, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsExistingEnv ) then
+      if( Status != "Existing" ) then
+        PostWarning( "External Shade '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Existing' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAdd ) then
+      if( Status = "Altered" ) then
+        PostWarning( "External Shade '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'New' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else if( Proj:IsAltOnly ) then
+      if( Status = "New" ) then
+        PostWarning( "External Shade '%s':  Status '%s' is incompatible with 
+                      Compliance Type '%s'.  Status will be treated as
+                      'Altered' for simulation.", Name, Status, Proj:CompType )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING
+    if( Proj:IsNewEnv ) then "New"
+    else if( Proj:IsExistingEnv ) then "Existing"
+    else if( Proj:IsAddOrAlt = 1 .AND.
+             IfValidAnd( WinRef:Status = "Existing" ) )
+    then "Existing"
+    else if( Proj:IsAddOrAlt = 1 .AND.
+             IfValidAnd( WinRef:Status = "New" ) )
+    then "New"
+    else if( Proj:IsAdd .AND. u:Status = "Altered" ) then "New"
+    else if( Proj:IsAltOnly .AND. u:Status = "New" ) then "Altered"
+    else u:Status
+    endif endif endif endif endif endif
+  ANNUAL
+    z:Status
+ENDRULE
+
+RULE ExtShdgObj:TransOption
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  OPTION
+    Constant
+    Scheduled
+  CHECKSIM
+    if (TransOption = "Constant" .AND. LocalStatus( Trans ) < 1)
+    then  PostError( "ExtShdgObj '%s' missing value for shade transmittance (Trans)", Name )
+    else if (TransOption = "Scheduled" .AND. LocalCompAssigned( TransSchRef ) < 1)
+    then  PostError( "ExtShdgObj '%s' missing assignment of shade transmittance schedule (TransSchRef)", Name )
+    else  UNCHANGED
+    endif endif
+  DEFAULT
+    if (LocalCompAssigned( u:TransSchRef ))
+    then  "Scheduled"
+    else  "Constant"
+    endif
+  SIZING
+    u:TransOption
+  ANNUAL
+    z:TransOption
+ENDRULE
+
+RULE ExtShdgObj:Trans
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    frac.
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+  DEFAULT
+    if (TransOption = "Constant")
+    then  0
+    else  UNDEFINED
+    endif
+  SIZING
+    u:Trans
+  ANNUAL
+    z:Trans
+ENDRULE
+
+RULE ExtShdgObj:VisRefl
+   DESCRIPTION
+     "The Visible Reflectance of Exterior Shading Objects." 
+   HELP
+     "Current tool capabilities do not support simulation of reflections from shading surfaces"
+   MINIMUM
+     0
+   MAXIMUM
+     1
+   DEFAULT
+     0
+ SIZING
+    u:VisRefl
+  ANNUAL
+    z:VisRefl
+ENDRULE
+
+RULE ExtShdgObj:SolRefl
+  DESCRIPTION
+    "The Solar Reflectance of Exterior Shading Objects." 
+  HELP
+    "Current tool capabilities do not support simulation of reflections from shading surfaces"
+  MINIMUM
+    0
+  MAXIMUM
+    1
+  DEFAULT
+    0
+  SIZING
+    u:SolRefl
+  ANNUAL
+    z:SolRefl
+ENDRULE
+
+RULE NEW ExtShdgObj:ApplyStdShdg
+  DATATYPE
+    Integer
+  LONGFORM
+    ApplyStandardShading
+  DESCRIPTION
+    "A Flag to identify whether Standard Design shading rules are to be applied
+     to the proposed or baseline models"  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    0
+  SIZING_BASELINE
+    if( Status = "Existing" )
+    then 0
+    else 1
+    endif
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW ExtShdgObj:IsWinShade
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Flag identifying objects created based on simplified window shade inputs"  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput
+// no rule expressions - default is UNDEFINED - set only via source code
+ENDRULE
+
+RULE ExtShdgObj:Action
+  DESCRIPTION
+    "Rule to remove Exterior Shading Objects from the various transforms.  Site shading is not simulated for proposed or standard simulations.  All other exterior shading devices are to be removed from standard simulations" 
+  SIZING_PROPOSED : T24N
+    if ( Proj:IsDetailedGeometry = 0 .AND. Proj:NumWinsHavingShades > 0 .AND.
+    		IfValidAnd( IsWinShade > 0 ) )
+    then  UNCHANGED		; SAC 1/9/15 - rely on source code to remove all ExtShdgObjs prior to analysis, and retain those created for shading windows
+    else if( Proj:IsDetailedGeometry = 0 .OR.
+             ParentComponentType() = "Proj" .OR.
+             ApplyStdShdg = 1 )    ; NOTE: changes to these conditions MAY require corresponding chnages in compliance manager source code
+    then DeleteComp()
+    else UNCHANGED
+    endif endif
+  SIZING_PROPOSED : S901G ECBC 
+    if ( Proj:IsDetailedGeometry = 0 .AND. Proj:NumWinsHavingShades > 0 .AND.
+    		IfValidAnd( IsWinShade > 0 ) )
+    then  UNCHANGED		; SAC 1/9/15 - rely on source code to remove all ExtShdgObjs prior to analysis, and retain those created for shading windows
+    else if( ParentComponentType() = "Proj" ) then
+      UNCHANGED  //site shading is identical in proposed and baseline designs
+    else if( Proj:IsDetailedGeometry = 0 .OR.
+            ApplyStdShdg = 1 ) then    ; NOTE: changes to these conditions MAY require corresponding chnages in compliance manager source code
+      DeleteComp()
+    else 
+      UNCHANGED
+    endif endif endif
+  SIZING_BASELINE 
+    if (IfValidAnd( ApplyStdShdg = 0 ))
+    then  UNCHANGED
+    else  DeleteComp()     ; delete all window shades created based on simplified shade inputs
+    endif
+  ANNUAL
+    UNCHANGED
+ENDRULE

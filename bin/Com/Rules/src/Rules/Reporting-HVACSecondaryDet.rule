@@ -1,0 +1,597 @@
+// AirSystem - Reporting
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+// =========================== Other Objects =================================== 
+RULE NEW CoilClg:ZnServed
+  DATATYPE
+    String
+  LONGFORM
+    ZoneServed
+  DESCRIPTION
+    "The name of a zone that the HVAC object is associated with. If the object 
+     is a central AirSys object that does not have a specified 'primary' zone,
+     then ZnServed is not applicable and is reported as 'n/a'. See SysServed 
+     for reporting of the applicable system."
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"  : ZnSys:CtrlZnRef
+      case "AirSeg" : 
+        if( Parent2Valid(CtrlZnRef) )
+        then AirSys:CtrlZnRef
+        else "n/a"
+        endif
+//      case "TrmlUnit" : ZnServedRef
+      default : "n/a"
+    endswitch
+ENDRULE
+RULE NEW CoilHtg:ZnServed
+  DATATYPE
+    String
+  LONGFORM
+    ZoneServed
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"  : ZnSys:CtrlZnRef
+      case "AirSeg" : 
+        if( Parent2Valid(CtrlZnRef) )
+        then AirSys:CtrlZnRef
+        else "n/a"
+        endif
+      case "TrmlUnit" : ZnServedRef
+      default : "n/a"
+    endswitch
+ENDRULE
+RULE NEW Fan:ZnServed
+  DATATYPE
+    String
+  LONGFORM
+    ZoneServed
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"  : ZnSys:CtrlZnRef
+      case "AirSeg" : 
+        if( Parent2Valid(CtrlZnRef) )
+        then AirSys:CtrlZnRef
+        else "n/a"
+        endif
+      case "TrmlUnit" : ZnServedRef
+      default : "n/a"
+    endswitch
+ENDRULE
+// System served
+RULE NEW CoilClg:SysServed
+  DATATYPE
+    String
+  LONGFORM
+    SystemServed
+  DESCRIPTION
+    "The name of the system (AirSys or ZnSys) that the HVAC object is associated with."
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"    : ZnSys:Name
+      case "AirSeg"   : AirSys:Name
+      case "TrmlUnit" : AirSys:Name
+      default : "n/a"
+    endswitch
+ENDRULE
+RULE NEW CoilHtg:SysServed
+  DATATYPE
+    String
+  LONGFORM
+    SystemServed
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"    : ZnSys:Name
+      case "AirSeg"   : AirSys:Name
+      case "TrmlUnit" : AirSys:Name
+      default : "n/a"
+    endswitch
+ENDRULE
+RULE NEW Fan:SysServed
+  DATATYPE
+    String
+  LONGFORM
+    SystemServed
+  INPUTCLASS 
+    NotInput
+  REPORT
+    switch( ParentComponentType() )
+      case "ZnSys"    : ZnSys:Name
+      case "AirSeg"   : AirSys:Name
+      case "TrmlUnit" : AirSys:Name
+      default : "n/a"
+    endswitch
+ENDRULE
+RULE NEW CoilClg:SizingRatCalculated
+  DATATYPE
+    Float
+  LONGFORM
+    SizingRatioCalculated
+  INPUTCLASS 
+    NotInput
+  SIZING
+    1
+  ANNUAL
+    if( ParentComp = "AirSys" )
+    then // Is AirSys
+      if( IfValidAnd( z:CapTotGrossRtdSim > 0 ) .AND.
+          IfValidAnd( Parent2( FanHtDsgn ) >= 0 ) .AND.
+          IfValidAnd( CapTotGrossRtd > 0 ) )
+      then ( CapTotGrossRtd - AirSys:FanHtDsgn ) / ( z:CapTotGrossRtdSim / SysCnt )
+      else -1
+      endif
+    else if( ParentComp = "ZnSys" )
+    then // Is ZnSys
+      if( IfValidAnd( z:CapTotGrossRtdSim > 0 ) .AND.
+          IfValidAnd( Parent( FanHtDsgn ) >= 0 ) .AND.
+          IfValidAnd( CapTotGrossRtd > 0 ) )
+      then ( CapTotGrossRtd - ZnSys:FanHtDsgn ) / ( z:CapTotGrossRtdSim / SysCnt )
+      else -1
+      endif
+    else 1
+		endif endif
+ENDRULE
+RULE NEW CoilHtg:SizingRatCalculated
+  DATATYPE
+    Float
+  LONGFORM
+    SizingRatioCalculated
+  INPUTCLASS 
+    NotInput
+  SIZING
+    1
+  ANNUAL
+    if( IfValidAnd( z:CapTotGrossRtdSim > 0 ) .AND.
+        IfValidAnd( CapTotGrossRtd > 0 ) )
+    then CapTotGrossRtd / ( z:CapTotGrossRtdSim / SysCnt )
+    else -1
+    endif
+ENDRULE
+
+
+ // ********** AirSystem Reporting **********
+RULE NEW AirSys:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "AirSystems\n,,,,,Cooling,,,,Heating,,,Fan/Ventilation,,,Controls\nName,Type,Status,System Count,Floor Area Served,Net Capacity,Design Supply T,Capacity/Area,Supply Flow/Ton,Net Capacity,Design Supply T,Capacity/Area,Supply Flow,Supply Flow/Area,Design OA,OA/Area,Control Zone Name,Temp Control,FixedT,Supply HiT,At Outdoor,Supply LowT,At OutdoorT,ReheatCtrlMthd,Availability Schedule,Night Cycle Control\n,,,(#),(ft2),(Btu/hr),(degF),(Btu/ft2),(cfm/ton),(Btu/hr),(degF),(Btu/ft2),(cfm),(cfm/ft2),(cfm),(cfm/ft2),,,(degF),(degF),(degF),(degF),( degF),,,\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW AirSys:HVACSecRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport_Name
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%g,%g", 34,Name,34, 34,Type,34, 34,Status,34, Cnt, TotCondFlrArea )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW AirSys:HVACSecRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g", ClgCap, ClgDsgnSupAirTemp, ClgCapPerArea, SupFlowPerTon, HtgCap, HtgDsgnSupAirTemp, HtgCapPerArea, SupFanCap, SupFlowPerArea, SysVentFlow, OAFlowPerArea )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW AirSys:HVACSecRpt_Part2
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport_Part2
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then
+      if( LocalStatus( ClgFixedSupTemp ) < 1 .AND. LocalStatus( ClRstOutdrHi ) < 1 .AND. LocalStatus( ClRstOutdrLow ) < 1 )
+        then Format( "%c%s%c,%c%s%c,,%g,,%g,,%c%s%c,%c%s%c,%c%s%c", 34,CtrlZnRef,34, 34,ClgCtrl,34, ClRstSupHi, ClRstSupLow, 34,ReheatCtrlMthd,34, 34,AvailSchRef,34, 34,NightCycleFanCtrl,34 )
+        else  Format( "%c%s%c,%c%s%c,%g,%g,%g,%g,%g,%c%s%c,%c%s%c,%c%s%c", 34,CtrlZnRef,34, 34,ClgCtrl,34, ClgFixedSupTemp, ClRstSupHi, ClRstOutdrHi, ClRstSupLow, ClRstOutdrLow, 34,ReheatCtrlMthd,34, 34,AvailSchRef,34, 34,NightCycleFanCtrl,34)
+        endif
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW AirSys:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1, HVACSecRpt_Part2 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** ZoneSystem Reporting **********
+RULE NEW ZnSys:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nZoneSystems\n,,,,Cooling,,,,Heating,,,Fan/Ventilation,,,Controls\nName,Type,System Count,Floor Area Served,Net Capacity,Design Supply T,Capacity/Area,Supply Flow/Ton,Net Capacity,Design Supply T,Capacity/Area,Supply Flow,Supply Flow/Area,Design OA,OA/Area,Control Zone Name,Temp Control,Availability Schedule\n,,(#),(ft2),(Btu/hr),(degF),(Btu/ft2),(cfm/ton),(Btu/hr),(degF),(Btu/ft2),(cfm),(cfm/ft2),(cfm),( cfm/ft2),,,,,,,,,,\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW ZnSys:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%g,%g", 34,Name,34, 34,Type,34, Cnt, TotCondFlrArea )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ZnSys:HVACSecRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g", ClgCap, ClgDsgnSupAirTemp, ClgCapPerArea, SupFlowPerTon, HtgCap, HtgDsgnSupAirTemp, HtgCapPerArea, SupFanCap, SupFlowPerArea, SysVentFlow, OAFlowPerArea )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ZnSys:HVACSecRpt_Part2
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c", 34,CtrlZnRef,34, 34,ClgCtrl,34, 34,AvailSchRef,34 )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ZnSys:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1, HVACSecRpt_Part2 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** TerminalUnit Reporting **********
+RULE NEW TrmlUnit:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nTerminal Units\n,,,,Relationships,,,,,AirFlow,,VAV,,Fan Powered Terminal\nName,Type,Status,Qty,System,System Qty,Zone,Floor Area,HVAC Zones,Primary Max,Primary Min,Heating Max,Reheat Control,Induced Air Zone,Induction Ratio,Fan Power,Parallel Box Control,Flow Fraction\n,,,(#),,(#),,(ft2),(#),(cfm),(cfm),(cfm),,,,( W/cfm)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW TrmlUnit:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c,%g,%c%s%c,%g,%g", 34,Name,34, 34,Type,34, 34,Status,34, Cnt, 34,Parent( Name),34, SysCnt, 34,ZnServedRef,34, ZnServedRef:FlrArea, ZnServedRef:HVACZnCnt )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW TrmlUnit:HVACSecRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%g,%c%s%c,%c%s%c,%g,%g,%c%s%c,%g", PriAirFlowMax, PriAirFlowMin, HtgAirFlowMax, 34,ReheatCtrlMthd,34, 34,InducedAirZnRef,34, InductionRat, FanPwrPerFlow, 34,ParallelBoxFanCtrlMthd,34, ParallelBoxFanFlowFrac )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW TrmlUnit:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** CoilCooling Reporting **********
+RULE NEW CoilClg:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nCooling Coils\n,,,,Relationships,,,Capacity,,,,ChilledWater,,,DirectExpansion\nName,Type,Status,Fuel Src,System,System Qty,Zone,Total-Net,Total-Gross,FluidSegIn,FluidSegOut,Design Flow Rate,Condenser Type,Number Stages,SEER,CodeMin SEER,EER,CodeMin EER,IEER,CodeMin IEER,EIR,Sizing Ratio\n,,,,,(#),,(Btu/hr),(Btu/hr),(Btu/hr),(Btu/hr),( gpm)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW CoilClg:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c", 34,Name,34, 34,Type,34, 34,Status,34, 34,FuelSrc,34, 34,SysServed,34, SysCnt, 34,ZnServed,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilClg:HVACSecRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%c%s%c,%c%s%c,%g", CapTotNetRtd, CapTotGrossRtd, 34,FluidSegInRef,34, 34,FluidSegOutRef,34, FluidFlowRtDsgn )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilClg:HVACSecRpt_Part2
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%g,%g,%g,%g,%g,%g,%g,%g,%g", 34,CndsrType,34, NumClgStages, DXSEER, CodeMinSEER, DXEER, CodeMinEER, DXIEER, CodeMinIEER, DXEIR, SizingRatCalculated )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilClg:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1, HVACSecRpt_Part2 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** CoilHeating Reporting **********
+RULE NEW CoilHtg:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nHeating Coils\n,,,,Relationships,,,Capacity,,HotWater,,,HeatPump,,,,,,,,,Furnace\nName,Type,Status,Fuel Src,System,System Qty,Zone,Total-Net,Total-Gross,FluidSeg In,FluidSeg Out,Design Flow Rate,Condenser Type,Number Stages,HSPF,CodeMin HSPF,COP,CodeMin COP,EIR,Comp Lockout Temp,Supp Htr Temp,AFUE,CodeMin AFUE,Thrml Eff,CodeMin Thrml Eff,SizingRatio\n,,,,,(#),,(Btu/hr),(Btu/hr),,,(gpm),,,,,,,,(°F),( °F)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW CoilHtg:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c", 34,Name,34, 34,Type,34, 34,Status,34, 34,FuelSrc,34, 34,SysServed,34, SysCnt, 34,ZnServed,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%c%s%c,%c%s%c,%g", CapTotNetRtd, CapTotGrossRtd, 34,FluidSegInRef,34, 34,FluidSegOutRef,34, FluidFlowRtDsgn )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecRpt_Part2
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%g,%g,%g,%g,%g,%g,%g,%g", 34,CndsrType,34,NumHtgStages, HtPumpHSPF, CodeMinHSPF, HtPumpCOP, CodeMinCOP, HtPumpEIR, HtPumpCprsrLockoutTemp, HtPumpSuppTemp )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecRpt_Part3
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%g,%g,%g", FurnAFUE, CodeMinAFUE, FurnThrmlEff, CodeMinThrmlEff,SizingRatCalculated )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s,%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1, HVACSecRpt_Part2,  HVACSecRpt_Part3  )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** Fans Reporting **********
+RULE NEW Fan:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nFans\n,,,,,Relationships,,,Capacity,,,Power,,,,Motor\nName,Control Method,Status,Class,Cent Type,System,System Qty,Zone,Maximum,Minimum,Efficiency,Modeling Method,Brake HP,Total Static,Power Index,Nameplate HP,Position,Efficiency\n,,,,,,(#),,(cfm),(cfm),,,(hp),(inH2O),(W/cfm),( hp)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW Fan:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c", 34,Name,34, 34,CtrlMthd,34, 34,Status,34, 34,Class,34, 34,CentType,34, 34,SysServed,34, SysCnt, 34,ZnServed,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Fan:HVACSecRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%g,%g,%g,%c%s%c,%g,%g,%g,%g,%c%s%c,%g", FlowCap, FlowMin, FlowEff, 34, ModelingMthd, 34, MtrBHP, TotStaticPress, PwrIdx, MtrHP, 34,MtrPos,34, MtrEff )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Fan:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** OutsideAirControl Reporting **********
+RULE NEW OACtrl:HVACSecRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondaryReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+      then WriteToFile( "\n\n\nOutside Air Control\n,,,,Relationships,,Control\nName,Control,Status,Design OA,Name,System Count,Econo Integration,Max OA Ratio,High DB Lockout,Low DB Lockout,High Enthalpy Lockout,OA Schedule Method,Delay,Schedule Name\n,,,(cfm),,(#),,,(F),(F),(Btu/lb),,( hrs)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW OACtrl:HVACSecRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c,%g", 34,Name,34, 34,EconoCtrlMthd,34, 34,Status,34, DsgnOAFlow, 34,Parent( Name),34, SysCnt )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW OACtrl:HVACSecRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then Format( "%c%s%c,%g,%g,%g,%g,%c%s%c,%g,%c%s%c", 34,EconoIntegration,34, MaxOARat, EconoHiTempLockout, EconoLowTempLockout, EconoHiEnthLockout, 34,OASchMthd,34, StartUpDelay, 34,OASchRef,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW OACtrl:HVACSecRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondary" )
+    then WriteToFile( "%s,%s\n", HVACSecRpt_Name, HVACSecRpt_Part1 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+

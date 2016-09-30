@@ -1,0 +1,1995 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Setup HVAC & AirNet objects for CSE Energy Simulation
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2014, California Energy Commission
+; Copyright (c) 2012-2014, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+RULELIST "CSE_SimulationPrep_HVAC" 1 0 0 1
+;*************************************************************************
+	"Setup CSE HVAC system components"
+			Proj:Action = {	switch (Local( AnalysisType ))
+										case  0 :  EvalRulelist( "HVACSys_CSE_Defaulting" )	; simulation only
+										case 12 :  EvalRulelist( "HVACSys_CSE_Defaulting" )	; Proposed Only
+										case 13 :  EvalRulelist( "HVACSys_CSE_Defaulting" )	; Proposed and Standard
+										default :  UNCHANGED
+									endswitch  }
+
+	"Setup AirNet IZXFER objects"		Proj:Action		= {	EvalRulelist( "SimPrep_CSE_AirNet" )  }
+
+  ; Assign elec/fuel meters to RSYS components
+	"Set cseRSYS:rsElecMtr"		cseRSYS:rsElecMtr		= {	     if (Local( Fuel_HaveElec   ) > 0.5) then  Global( Proj:CSE_ElecMETER )
+																			else  UNDEFINED  endif  }
+	"Set cseRSYS:rsFuelMtr"		cseRSYS:rsFuelMtr		= {	     if (Local( Fuel_HaveNatGas ) > 0.5) then  Global( Proj:CSE_NatGasMETER )
+																			else if (Local( Fuel_HaveOther  ) > 0.5) then  Global( Proj:CSE_OtherFuelMETER )
+																			else  UNDEFINED  endif endif  }
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "HVACSys_CSE_Defaulting" 0 0 0 1
+;*************************************************************************
+
+;	"Blast Proj:cseElecHVACMtr"			Proj:cseElecHVACMtr		= {	if (LocalCompAssigned( cseElecHVACMtr   )) then  DeleteComp()  else  UNCHANGED  endif  }
+;	"Blast Proj:cseNatGasHVACMtr"			Proj:cseNatGasHVACMtr	= {	if (LocalCompAssigned( cseNatGasHVACMtr )) then  DeleteComp()  else  UNCHANGED  endif  }
+;
+;  ; CSE METERs to track HVAC energy use
+;	"Create Proj:cseElecHVACMtr"			Proj:cseElecHVACMtr		= {	CreateComp( cseMETER, "ElecHVACMtr" )  }
+;	"Create Proj:cseNatGasHVACMtr"		Proj:cseNatGasHVACMtr	= {	if (Local( NatGasAvailable ) < 0.5) then  UNDEFINED
+;																							else  CreateComp( cseMETER, "NatGasHVACMtr" )  endif  }
+
+
+	"Blast all cseRSYS components"		Proj:Action		= {	DeleteAllComps( cseRSYS )  }
+
+  ; CSE RSYS creation & setup
+	"Create a CSE RSYS for each HVACSys"	HVACSys:cseRSYS					= {	if (Local( FloorAreaServed[1] ) > 1 .AND.
+																												(HaveHeating .OR.
+																												 (NumCoolSystemTypes > 0 .AND. LocalCompAssigned( CoolSystem[1] ))))
+																										then  CreateComp( cseRSYS, "rsys-" + Local( Name ) )
+																										else  UNDEFINED  endif  }
+	"Set HVACSys:cseRSYS:SourceHVACSys"		HVACSys:cseRSYS:SourceHVACSys	= {	Local( Name )  }
+
+  ; SAC 1/10/13 - added logic to set new rsType selection
+  ; SAC 2/19/13 - revised to reference new cooling- and heating-only system types
+  ; SAC 10/27/15 - added check for design rating run abbreviation (Proj:RunAbbrev == "dr")
+; "store BEMProc details"		Proj:Action = {  StoreBEMProc( "Before RSYS setup", 0 )  }
+; "debug"	Proj:Action	= {	MessageBox( "inside HVACSys_CSE_Defaulting" )  }
+	"Set HVACSys:cseRSYS:rsType"		HVACSys:cseRSYS:rsType	= {
+					if (Type < 1 .OR. Type > 3) then																														0		; -- ERROR --
+					else if (Type == 2)
+					then	if (NumHtPumpSystemTypes > 0 .AND. IfValidAnd( HtPumpSystem[1]:Type == 11 ) .AND. 
+								 Proj:RunAbbrev != "s" .AND. Proj:RunAbbrev != "S" .AND.
+								 Proj:RunAbbrev != "dr" .AND. Proj:RunAbbrev != "DR") then																		7		; ASHPHydronic
+							else if (HaveHeating .AND. HaveCooling) then																								3		; ASHP
+							else																																					0		; -- ERROR --
+							endif endif
+					else if (NumCoolSystemTypes > 0 .AND. LocalCompAssigned( CoolSystem[1] ) .AND. HaveHeating)
+					then	if (HaveCooling < 1)
+							then	if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then		6		; Resistance
+									else																																			5		; Furnace
+									endif
+							else	if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then		2		; ACResistance
+									else																																			1		; ACFurnace
+									endif
+							endif
+					else if (LocalCompAssigned( CoolSystem )) then																									4		; AC
+					else if (HaveHeating)
+					then	if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then		6		; Resistance
+							else																																					5		; Furnace
+							endif
+					else																																							1		; ACFurnace
+					endif endif endif endif endif  }
+			;		if (NumCoolSystemTypes > 0 .AND. LocalCompAssigned( CoolSystem[1] ) .AND. HaveHeating)
+			;		then	if (     CA13CoolingEquipment:IsHP(    "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", CoolSysTypeAbbrev ) > 0.5 .AND.
+			;					      CA13HeatingEquipment:IsHP(    "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then  3		; ASHP
+			;				else if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then  2		; ACResistance
+			;				else																																					  1		; ACFurnace
+			;				endif endif
+			;		else if (LocalCompAssigned( CoolSystem ))
+			;		then	if (     CA13CoolingEquipment:IsHP(    "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", CoolSysTypeAbbrev ) > 0.5) then  3		; ASHP
+			;				else																																					  4		; AC
+			;				endif
+			;		else if (HaveHeating)
+			;		then	if (     CA13HeatingEquipment:IsHP(    "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then  3		; ASHP
+			;				else if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5) then  6		; Resistance
+			;				else																																					  5		; Furnace
+			;				endif endif
+			;		else																																							  1		; ACFurnace
+			;		endif endif endif  }
+
+;  ; SAC 1/3/13 - added auto-sizing stuff
+;	"Set HVACSys:AutoSizeCool"		HVACSys:AutoSizeCool	= {	if (LocalCompAssigned( CoolSystem ) == 0)	then  0
+;																				else if (CoolSystem:AutoSize > 0.5)	then  1
+;																				else	0  endif endif  }
+;  ; SAC 1/10/13 - revised to prevent setting AUTOSIZE for rsCapH when system is of type ASHP
+;	"Set HVACSys:AutoSizeHeat"		HVACSys:AutoSizeHeat	= {	if (LocalCompAssigned( HeatSystem ) == 0)	then  0
+;																				else if (HeatSystem:AutoSize > 0.5 .AND.
+;																							CA13HeatingEquipment:IsHP( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSystem:TypeAbbrevStr ) < 0.5)	then  1
+;																				else	0  endif endif  }
+; SAC 10/3/13 - added logic to AUTOSIZE rules to always autosize rsCapAuxH for RSYSs of type ASHP (3) (as of CSE version 0.732)
+; SAC 5/22/14 - expanded specification of rsCapAuxH to include cseRSYS:rsType = ASHPHydronic
+; SAC 10/20/14 - added logic to set AUTOSIZE rsCap47  - ONLY FOR Standard design heat pump simulations
+	"Set HVACSys:HtPumpCap47AutoSz"			HVACSys:HtPumpCap47AutoSz		= {	if (HVACSys:cseRSYS:rsType != 3) then  0
+																										else if (IfValidAnd( HPSysCap47 > 0 )) then  0
+																										else if (Proj:RunID == "Standard" .OR. Proj:RunAbbrev == "dr") then  1
+																										else	if (Type == 2)
+																												then	if (CA13HeatingEquipment:PropEqStd( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) > 0.1)
+																														then  1  else  0  endif
+																												else  0  endif
+																										endif endif endif  }
+
+	"Set HVACSys:cseRSYS:AUTOSIZE_x[1]"		HVACSys:cseRSYS:AUTOSIZE_x[1]	= {	if (     AutoSizeCool[1] .AND. HaveCooling > 0    ) then  "rsCapC"
+																										else if (AutoSizeHeat[1]    ) then  "rsCapH"
+																										else if (LocalRef( cseRSYS:rsType ) == 3 .OR. LocalRef( cseRSYS:rsType ) == 7) then  "rsCapAuxH"
+																										else	UNDEFINED  endif endif endif  }
+	"Set HVACSys:cseRSYS:AUTOSIZE_x[2]"		HVACSys:cseRSYS:AUTOSIZE_x[2]	= {	if (AutoSizeCool[1] .AND. HaveCooling > 0 .AND. AutoSizeHeat[1]) then  "rsCapH"
+																										else if (LocalRef( cseRSYS:rsType ) == 3 .OR. LocalRef( cseRSYS:rsType ) == 7) then  "rsCapAuxH"
+																										else if (HtPumpCap47AutoSz > 0.5 .AND. LocalStatus( cseRSYS:AUTOSIZE_x[1] ) > 0.5) then  "rsCap47"
+																										else	UNDEFINED  endif endif endif  }
+	"Set HVACSys:cseRSYS:AUTOSIZE_x[3]"		HVACSys:cseRSYS:AUTOSIZE_x[3]	= {	if (AutoSizeCool[1] .AND. HaveCooling > 0 .AND. AutoSizeHeat[1] .AND.
+																												(LocalRef( cseRSYS:rsType ) == 3 .OR. LocalRef( cseRSYS:rsType ) == 7)) then  "rsCapAuxH"
+																										else if (HtPumpCap47AutoSz > 0.5 .AND. LocalStatus( cseRSYS:AUTOSIZE_x[2] ) > 0.5 .AND.
+																												IfValidAnd( HVACSys:cseRSYS:AUTOSIZE_x[2] == "rsCap47" )==0 ) then  "rsCap47"
+																										else	UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:AUTOSIZE_x[4]"		HVACSys:cseRSYS:AUTOSIZE_x[4]	= {	if (HtPumpCap47AutoSz > 0.5 .AND. LocalStatus( cseRSYS:AUTOSIZE_x[3] ) > 0.5 .AND.
+																												IfValidAnd( HVACSys:cseRSYS:AUTOSIZE_x[3] == "rsCap47" )==0 ) then  "rsCap47"
+																										else	UNDEFINED  endif  }
+
+; SAC 10/20/14 - added logic to set rsFxCapH = .75  WHENEVER  AUTOSIZE rsCap47  is set above (for Standard design heat pump simulations)
+	"Set HVACSys:cseRSYS:rsFxCapH"			HVACSys:cseRSYS:rsFxCapH		= {	if (HtPumpCap47AutoSz > 0.5) then  0.75
+																										else if (AutoSizeHeat[1] == 0) then  UNDEFINED
+																										else if (HtSysSizingFactor > 0)
+																										then  HtSysSizingFactor
+																										else	UNDEFINED  endif endif endif  }
+;	"Set HVACSys:cseRSYS:rsFxCapH"			HVACSys:cseRSYS:rsFxCapH		= {	if (AutoSizeHeat == 0 .OR. LocalCompAssigned( HeatSystem ) == 0) then  UNDEFINED
+;																										else if (HeatSystem:SizingFactor > 0)
+;																										then  HeatSystem:SizingFactor
+;																										else	UNDEFINED  endif endif  }
+
+	"Set HVACSys:cseRSYS:rsFxCapC"			HVACSys:cseRSYS:rsFxCapC		= {	if (AutoSizeCool[1] == 0 .OR. HaveCooling < 1) then  UNDEFINED
+																										else if (ClSysSizingFactor > 0)
+																										then  ClSysSizingFactor
+																										else	UNDEFINED  endif endif  }
+
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "b4 set of cseRSYS-Cr8SupplyDuct", 0 )  }
+;	"debug"		Proj:Action	= {	MessageBox( "Just stored 'b4 set of cseRSYS-Cr8SupplyDuct' BEMBase details" )  }
+; SAC 5/13/13 - moved up from BELOW to include in logic related to setting rsDSEC & rsDSEH
+	"Set cseRSYS:Cr8SupplyDuct"		cseRSYS:Cr8SupplyDuct	= {
+				if (LocalCompAssigned( SourceHVACSys:DistribSystem ) == 0) then  0
+				else if (SourceHVACSys:DistribSystem:Type == 8) then  0				; "DuctsNone - ..."  SAC 12/12/14 - treat just like none assigned
+		;		else if (SourceHVACSys:DistribSystem:DuctsPresent == 0) then  0	; SAC 9/4/13 - GC issue 162 - ducts still need to be modeled in most cases where DuctsPresent == 0
+				else if (SourceHVACSys:DistribSystem:Type == 12) then  0				; "LowLlCod - Verified low-leakage ducts in conditioned space"
+				else if (SourceHVACSys:DistribSystem:DuctLeakageValUse <= 0 .OR.
+		;					SourceHVACSys:DistribSystem:DuctInsAdjRval <= 0 .OR.		; SAC 6/27/16 - remove this condition to ensure ducts present for leakage but not conduction are simulated properly (tic #654)
+		;					SourceHVACSys:DistribSystem:SupplyDuctArea <= 0 .OR.		; SAC 9/4/13 - GC issue 162 - ducts still need to be modeled in some cases where *DuctArea == 0
+							SourceHVACSys:DistribSystem:SupplyDuctDiam <= 0 ) then  0
+				else  1  endif endif endif endif  }
+
+	"Set cseRSYS:Cr8ReturnDuct"		cseRSYS:Cr8ReturnDuct	= {
+				if (LocalCompAssigned( SourceHVACSys:DistribSystem ) == 0) then  0
+				else if (SourceHVACSys:DistribSystem:Type == 8) then  0				; "DuctsNone - ..."  SAC 12/12/14 - treat just like none assigned
+		;		else if (SourceHVACSys:DistribSystem:DuctsPresent == 0) then  0	; SAC 9/4/13 - GC issue 162 - ducts still need to be modeled in most cases where DuctsPresent == 0
+				else if (SourceHVACSys:DistribSystem:Type == 12) then  0				; "LowLlCod - Verified low-leakage ducts in conditioned space"
+				else if (SourceHVACSys:DistribSystem:DuctLeakageValUse <= 0 .OR.
+		;					SourceHVACSys:DistribSystem:RetDuctInsAdjRval <= 0 .OR.	; SAC 6/27/16 - remove this condition to ensure ducts present for leakage but not conduction are simulated properly (tic #654)
+		;					SourceHVACSys:DistribSystem:ReturnDuctArea <= 0 .OR.		; SAC 9/4/13 - GC issue 162 - ducts still need to be modeled in some cases where *DuctArea == 0
+							SourceHVACSys:DistribSystem:ReturnDuctDiam <= 0 ) then  0
+				else  1  endif endif endif endif  }
+		; SAC 5/13/13 -  HVACSys:HtOrClDucted => 1-Heat / 2-Cool / 3-Ht&Cl / 0-neither
+	; SAC 12/22/14 - REMOVED logic referencing cseRSYS:Cr8SupplyDuct & :Cr8ReturnDuct when setting rsDSEH/rsDSEC so that combination of NO ht or cl ducts & LowLlCod or related settings don't prevent setting of '1' (GC issue 432)
+	"Set HVACSys:cseRSYS:rsDSEH"				HVACSys:cseRSYS:rsDSEH			= {	if (	; removed - (LocalRef(cseRSYS:Cr8SupplyDuct) > 0 .OR. LocalRef(cseRSYS:Cr8ReturnDuct) > 0) .AND.
+																												(HtOrClDucted == 0 .OR. HtOrClDucted == 2) ) then  1.0  else  UNDEFINED  endif  }
+	"Set HVACSys:cseRSYS:rsDSEC"				HVACSys:cseRSYS:rsDSEC			= {	if (	; removed - (LocalRef(cseRSYS:Cr8SupplyDuct) > 0 .OR. LocalRef(cseRSYS:Cr8ReturnDuct) > 0) .AND.
+																												(HtOrClDucted == 0 .OR. HtOrClDucted == 1) .AND. HaveCooling > 0 ) then  1.0  else  UNDEFINED  endif  }
+
+; mjb 12/1/15 - RESNET mods to set rsDSEH and rsDSEC to 0.8 for Design Rating calcs
+	"Reset HVACSys:cseRSYS:rsDSEH"				HVACSys:cseRSYS:rsDSEH			= {	if (Proj:DRtgRefRunID == 2014) then  0.8
+	                                                                              else UNCHANGED endif }
+	"Reset HVACSys:cseRSYS:rsDSEC"				HVACSys:cseRSYS:rsDSEC			= {	if (Proj:DRtgRefRunID == 2014) then  0.8
+	                                                                              else UNCHANGED endif }
+
+  ; SAC 3/4/13
+	"Set HVACSys:cseRSYS:rsFChg"				HVACSys:cseRSYS:rsFChg			= {	if (HaveCooling == 0) then  UNDEFINED
+																										else if (LocalStatus( ClSysRefrigChgAdjFctr ) < 2) then  UNDEFINED
+																										else if (ClSysRefrigChgAdjFctr > 0 .AND. ClSysRefrigChgAdjFctr <= 1) then  ClSysRefrigChgAdjFctr
+																										else  UNDEFINED  endif endif endif    }
+
+	"Set HVACSys:cseRSYS:rsCapH"				HVACSys:cseRSYS:rsCapH			= {	if (HaveHeating == 0 .OR. AutoSizeHeat[1] == 1) then  UNDEFINED
+																										else if (IfValidAnd( HtSysCapacity > 0 ))
+																										then  HtSysCapacity
+																										else	UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCapC"				HVACSys:cseRSYS:rsCapC			= {	if (HaveCooling == 0 .OR. AutoSizeCool[1] == 1) then  UNDEFINED
+																										else if (IfValidAnd( ClSysCapacity > 0 ))
+																										then  ClSysCapacity
+																										else	UNDEFINED  endif endif  }
+
+;	"Set HVACSys:cseRSYS:rsEffH"				HVACSys:cseRSYS:rsEffH			= {	if (LocalCompAssigned( HeatSystem ) == 0) then  0
+	"Set HVACSys:cseRSYS:rsAFUE"				HVACSys:cseRSYS:rsAFUE			= {	if (IfValidAnd( HtSysAFUE > 0 )) then  HtSysAFUE / 100  else  UNDEFINED  endif  }
+;	"Set HVACSys:cseRSYS:rsAFUE"				HVACSys:cseRSYS:rsAFUE			= {	if (LocalCompAssigned( HeatSystem ) == 0) then  UNDEFINED
+;																										else if (LocalRef( HeatSystem:AFUE ) > 0)
+;																										then  LocalRef( HeatSystem:AFUE ) / 100
+;																										else  UNDEFINED  endif endif  }
+
+
+;	"Set HVACSys:cseRSYS:rsEffC"				HVACSys:cseRSYS:rsEffC			= {	if (LocalCompAssigned( CoolSystem ) == 0) then  0
+;																										else if (LocalRef( CoolSystem:SEER ) > 0)
+;																										then  (0.875 * LocalRef( CoolSystem:SEER )) / 3.412		; SEER -> COP
+;																										else if (LocalRef( CoolSystem:EER ) > 0)
+;																										then  LocalRef( CoolSystem:EER ) / 3.412						; EER -> COP
+;																										else	2.8  endif endif endif  }
+	"Set HVACSys:cseRSYS:rsSEER"				HVACSys:cseRSYS:rsSEER			= {	if (HaveCooling == 0) then  UNDEFINED
+																										else if (IfValidAnd( ClSysSEER > 0 ))
+																										then  ClSysSEER							; SEER
+																										else if (IfValidAnd( ClSysEER > 0 ))
+																										then  ClSysEER / 0.875					; EER -> SEER   ???
+																										else	UNDEFINED  endif endif endif  }
+
+	"Set HVACSys:cseRSYS:rsEER"				HVACSys:cseRSYS:rsEER			= {	if (HaveCooling == 0) then  UNDEFINED
+																										else if (IfValidAnd( ClSysEER > 0 ))
+																										then  ClSysEER								; EER
+																										else	UNDEFINED  endif endif  }
+
+  ; SAC 12/7/12 - added heat pump stuff
+	"Set HVACSys:cseRSYS:rsHSPF"				HVACSys:cseRSYS:rsHSPF			= {	if (HaveHtPump < 1 .OR. LocalRef( cseRSYS:rsType ) == 7) then  UNDEFINED
+																										else if (IfValidAnd( HPSysHSPF > 0 ))
+																										then  HPSysHSPF
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCap47"				HVACSys:cseRSYS:rsCap47			= {	if (HaveHtPump < 1) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCap47 > 0 ))
+																										then  HPSysCap47
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCOP47"				HVACSys:cseRSYS:rsCOP47			= {	if (HaveHtPump < 1 .OR. (Proj:AnalysisType > 0 .AND. LocalRef( cseRSYS:rsType ) != 7)) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCOP47 > 0 ))
+																										then  HPSysCOP47
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCap35"				HVACSys:cseRSYS:rsCap35			= {	if (HaveHtPump < 1 .OR. Proj:AnalysisType > 0) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCap35 > 0 ))
+																										then  HPSysCap35
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCOP35"				HVACSys:cseRSYS:rsCOP35			= {	if (HaveHtPump < 1 .OR. Proj:AnalysisType > 0) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCOP35 > 0 ))
+																										then  HPSysCOP35
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCap17"				HVACSys:cseRSYS:rsCap17			= {	if (HaveHtPump < 1) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCap17 > 0 ))
+																										then  HPSysCap17
+																										else  UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsCOP17"				HVACSys:cseRSYS:rsCOP17			= {	if (HaveHtPump < 1 .OR. (Proj:AnalysisType > 0 .AND. LocalRef( cseRSYS:rsType ) != 7)) then  UNDEFINED
+																										else if (IfValidAnd( HPSysCOP17 > 0 ))
+																										then  HPSysCOP17
+																										else  UNDEFINED  endif endif  }
+; SAC 10/3/13 - removed AuxHtgCap from UI due to it being unnecessary as of CSE version 0.732
+;  ; SAC 12/7/12 - added additional heat pump item - rsCapAuxH
+;	"Set HVACSys:cseRSYS:rsCapAuxH"			HVACSys:cseRSYS:rsCapAuxH		= {	if (HaveHtPump < 1) then  UNDEFINED
+;																										else if (IfValidAnd( HPSysAuxHtgCap > 0 ))
+;																										then  HPSysAuxHtgCap
+;																										else  UNDEFINED  endif endif  }
+
+  ; SAC 8/29/13 - quick fix for heat pumps from Bruce via e-mail
+	"Set HVACSys:cseRSYS:rsParElec_x"		HVACSys:cseRSYS:rsParElec_x	= {	if (HaveHtPump < 1 .OR. NumHtPumpSysUnits < 1) then  UNDEFINED
+																										else	Format( "($tdboHrAv < 50) * 40 * %g", NumHtPumpSysUnits )  endif  }
+
+; "debug" HVACSys:action = { MessageBox( "HVACSys '%s' HaveCooling = %g / ClSysCFMperTon = %g", Name, HaveCooling, ClSysCFMperTon ) }
+	"Set HVACSys:cseRSYS:rsVfPerTon"			HVACSys:cseRSYS:rsVfPerTon		= {	if (HaveCooling == 0) then  UNDEFINED
+																										else if (IfValidAnd( ClSysCFMperTon > 0 ))
+																										then  ClSysCFMperTon
+																										else	UNDEFINED  endif endif  }
+
+  ; SAC 5/13/13 - logic to account for ht/cl ducts toggled off
+	"Set HVACSys:cseRSYS:rsFanPwrH"			HVACSys:cseRSYS:rsFanPwrH		= {	if (LocalCompAssigned( Fan ) == 0) then  UNDEFINED
+																										else if (IfValidAnd( Fan:WperCFMCool > 0 ))
+																										then  if (LocalRef( cseRSYS:rsDSEH ) == 1) then  0.0
+																												else  Fan:WperCFMCool  endif
+																										else	UNDEFINED  endif endif  }
+	"Set HVACSys:cseRSYS:rsFanPwrC"			HVACSys:cseRSYS:rsFanPwrC		= {	if (LocalCompAssigned( Fan ) == 0 .OR. HaveCooling < 1) then  UNDEFINED
+																										else if (IfValidAnd( Fan:WperCFMCool > 0 ))
+																										then  if (LocalRef( cseRSYS:rsDSEC ) == 1) then  0.0
+																												else  Fan:WperCFMCool  endif
+																										else	UNDEFINED  endif endif  }
+
+; SAC 8/26/13 - added OAV (CFI (Central Fan Integrated) Cool Vent stuff)
+; SAC 9/4/13 - revised to reflect NEW primary inputs of HVACSys:CFIClVentFlow & CFIClVentPwr  (as opposed to CFIClVentFan)
+	"Set HVACSys:cseRSYS:rsOAVType"			HVACSys:cseRSYS:rsOAVType		= {	if (Proj:EnableClVent > 0.5 .AND. Proj:UnitClVentOption == 3)
+																							;			then	if ( LocalCompAssigned( CFIClVentFan ) .AND.
+																										then	if ( 
+																													  ( Type == 3 .OR. 
+																														 ((Type == 1 .OR. Type == 2) .AND. CFIClVentOption > 0) ) )
+																							;					then	if (LocalStatus( CFIClVentFan:CoolingVent ) < 2 .OR. LocalStatus( CFIClVentFan:WperCFMCool ) < 2) then  0
+																							;							else if (CFIClVentFan:CoolingVent <= 0 .OR. CFIClVentFan:WperCFMCool < 0) then  0
+																												then	if (LocalStatus( CFIClVentFlow ) < 2 .OR. LocalStatus( CFIClVentPwr ) < 2) then  0
+																														else if (CFIClVentFlow <= 0 .OR. CFIClVentPwr < 0) then  0
+																														else if (Type == 3)
+																														then	2				; "VarFlow"
+																														else	1				; "FixedFlow"
+																														endif endif endif
+																												else  0  endif
+																										else  0  endif  }
+
+;	"Set HVACSys:cseRSYS:rsOAVReliefZn-1"		HVACSys:cseRSYS:Action	= {	if (GlobalCompAssigned( Attic:CSE_ZONE ))
+;																									then	MessageBox( "GlobalCompAssigned( Attic:CSE_ZONE ) return TRUE" )
+;																									else	MessageBox( "GlobalCompAssigned( Attic:CSE_ZONE ) return FALSE" )  endif  }
+;	"Set HVACSys:cseRSYS:rsOAVReliefZn-2"		HVACSys:cseRSYS:Action	= {	MessageBox( "GlobalRef( Attic:CSE_ZONE:Name ) = '%s'", GlobalRef( Attic:CSE_ZONE:Name ) )  }
+;	"Set HVACSys:cseRSYS:rsOAVReliefZn-msg"	HVACSys:cseRSYS:Action	= {	if (LocalRef( cseRSYS:rsOAVType ) < 0.5 .OR. LocalCompAssigned( CFIClVentAttic ) < 0.5) then  UNCHANGED
+;																									else if (LocalCompAssigned( CFIClVentAttic:CSE_ZONE ) < 0.5) then  UNCHANGED
+;																									else	PostMessageToLog( "   assigning Attic '%s' as rsOAVReliefZn for CSE RSYS '%s'", LocalRef( CFIClVentAttic:CSE_ZONE:Name ), Localref( cseRSYS:Name ) )  endif endif  }
+;	"Set HVACSys:cseRSYS:rsOAVReliefZn"		HVACSys:cseRSYS:rsOAVReliefZn	= {	if (LocalRef( cseRSYS:rsOAVType ) > 0.5 .AND. GlobalCompAssigned( Attic:CSE_ZONE ) > 0.5) then  GlobalRef( Attic:CSE_ZONE:Name )  else  UNDEFINED  endif  }
+	"Set HVACSys:cseRSYS:rsOAVReliefZn"		HVACSys:cseRSYS:rsOAVReliefZn	= {	if (LocalRef( cseRSYS:rsOAVType ) < 0.5 .OR. LocalCompAssigned( CFIClVentAttic ) < 0.5) then  UNDEFINED
+																										else if (LocalCompAssigned( CFIClVentAttic:CSE_ZONE ) < 0.5) then  UNDEFINED
+																										else	LocalRef( CFIClVentAttic:CSE_ZONE:Name )  endif endif  }
+; SAC 9/4/13 - revised to reflect NEW primary inputs of HVACSys:CFIClVentFlow & CFIClVentPwr  (as opposed to CFIClVentFan)
+	"Set HVACSys:cseRSYS:rsOAVVfDs"			HVACSys:cseRSYS:rsOAVVfDs		= {	if (LocalCompAssigned( cseRSYS:rsOAVReliefZn )) then  CFIClVentFlow  else  UNDEFINED  endif  }
+	"Set HVACSys:cseRSYS:rsOAVFanPwr"		HVACSys:cseRSYS:rsOAVFanPwr	= {	if (LocalCompAssigned( cseRSYS:rsOAVReliefZn )) then  CFIClVentPwr   else  UNDEFINED  endif  }
+
+
+;	"Set HVACSys:cseRSYS:rsMtrH"				HVACSys:cseRSYS:rsMtrH			= {	if (LocalCompAssigned( HeatSystem ) == 0) then  UNDEFINED
+;																										else if (Global( Proj:NatGasAvailable ) > 0.5)
+;																										then  Global( Proj:cseNatGasHVACMtr )
+;																										else  Global( Proj:cseElecHVACMtr )  endif endif  }
+;	"Set HVACSys:cseRSYS:rsMtrC"				HVACSys:cseRSYS:rsMtrC			= {	if (LocalCompAssigned( CoolSystem ) == 0) then  UNDEFINED
+;																										else  Global( Proj:cseElecHVACMtr )  endif  }
+
+; TO DO - default properly based on the TYPE of HVAC equipment defined
+	"Set HVACSys:cseRSYS:Fuel_HaveElec"		HVACSys:cseRSYS:Fuel_HaveElec    = {	1  }
+;	"Set HVACSys:cseRSYS:Fuel_HaveNatGas"	HVACSys:cseRSYS:Fuel_HaveNatGas  = {	1  }
+;	"Set HVACSys:cseRSYS:Fuel_HaveOther"	HVACSys:cseRSYS:Fuel_HaveOther   = {	0  }
+	"Set HVACSys:cseRSYS:Fuel_HaveNatGas"	HVACSys:cseRSYS:Fuel_HaveNatGas  = {	if (Proj:Fuel_HaveNatGas > 0.5) then  1  else  0  endif  }
+	"Set HVACSys:cseRSYS:Fuel_HaveOther"	HVACSys:cseRSYS:Fuel_HaveOther   = {	if (Proj:Fuel_HaveNatGas > 0.5) then  0  else  1  endif  }
+
+  ; Assignment of CSE ZONEs to CSE RSYSs
+;	"Set cseZONE:znRSysH"	cseZONE:znRSysH	= {	if (LocalCompAssigned( SourceZone ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem:HeatSystem ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem:cseRSYS ) == 0) then  UNDEFINED
+;																	else  LocalRef( SourceZone:HVACSystem:cseRSYS )  endif endif endif endif  }
+;	"Set cseZONE:znRSysC"	cseZONE:znRSysC	= {	if (LocalCompAssigned( SourceZone ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem:CoolSystem ) == 0) then  UNDEFINED
+;																	else if (LocalCompAssigned( SourceZone:HVACSystem:cseRSYS ) == 0) then  UNDEFINED
+;																	else  LocalRef( SourceZone:HVACSystem:cseRSYS )  endif endif endif endif  }
+;	"debugging"		cseZONE:Action		= {	MessageBox( "cseZONE:znRSys rule:  SourceZone = '%s' | Proj:RunScope = %g | SourceZone:HVACSysStatus = %g | SourceZone:HVACSystem = '%s' | SourceZone:HVACSystem:cseRSYS = '%s' | SourceZone:HVACSystem:HaveHeating = %g | SourceZone:HVACSystem:HaveCooling = %g",
+;																			SourceZone:Name, Proj:RunScope, SourceZone:HVACSysStatus, SourceZone:HVACSystem:Name, SourceZone:HVACSystem:cseRSYS:Name, SourceZone:HVACSystem:HaveHeating, SourceZone:HVACSystem:HaveCooling )  }
+; SAC 12/16/13 - mods to rule to assign appropriate new vs. E+A+A system to cseZONE
+	"Set cseZONE:znRSys"		cseZONE:znRSys		= {	if (LocalCompAssigned( SourceZone ) == 0) then  UNDEFINED
+																	else if (Proj:RunScope == 2 .AND. SourceZone:HVACSysStatus == 2)
+																	then       if (LocalCompAssigned( SourceZone:AltHVACSystem ) == 0) then  UNDEFINED
+																			else if (LocalCompAssigned( SourceZone:AltHVACSystem:cseRSYS ) == 0) then  UNDEFINED
+																			else if (SourceZone:AltHVACSystem:HaveHeating == 0 .AND.
+																						SourceZone:AltHVACSystem:HaveCooling == 0) then  UNDEFINED
+																			else  LocalRef( SourceZone:AltHVACSystem:cseRSYS )  endif endif endif
+																	else if (Proj:RunScope == 2 .AND. SourceZone:HVACSysStatus == 1)
+																	then       if (LocalCompAssigned( SourceZone:exHVACSystem ) == 0) then  UNDEFINED
+																			else if (LocalCompAssigned( SourceZone:exHVACSystem:cseRSYS ) == 0) then  UNDEFINED
+																			else if (SourceZone:exHVACSystem:HaveHeating == 0 .AND.
+																						SourceZone:exHVACSystem:HaveCooling == 0) then  UNDEFINED
+																			else  LocalRef( SourceZone:exHVACSystem:cseRSYS )  endif endif endif
+																	else       if (LocalCompAssigned( SourceZone:HVACSystem ) == 0) then  UNDEFINED
+																			else if (LocalCompAssigned( SourceZone:HVACSystem:cseRSYS ) == 0) then  UNDEFINED
+																			else if (SourceZone:HVACSystem:HaveHeating == 0 .AND.
+																						SourceZone:HVACSystem:HaveCooling == 0) then  UNDEFINED
+																			else  LocalRef( SourceZone:HVACSystem:cseRSYS )  endif endif endif
+																	endif endif endif  }
+
+; SAC 5/16/12 - experiment w/out ducts...
+;	"Create new cseRSYS:DuctWrapMaterial"  			cseRSYS:DuctWrapMaterial				= {	CreateComp( cseMATERIAL, "DuctWrap-" + Local( Name ) )  }
+;	"Default cseRSYS:DuctWrapMaterial:matCond"		cseRSYS:DuctWrapMaterial:matCond  	= {	0.032  } 		; prioperties based on contents of sample CSE input from CB ACtest1x.cse 5/9/12
+;	"Default cseRSYS:DuctWrapMaterial:matCondCT"		cseRSYS:DuctWrapMaterial:matCondCT	= {	0.00418  }
+;	"Default cseRSYS:DuctWrapMaterial:matSpHt"		cseRSYS:DuctWrapMaterial:matSpHt  	= {	0.2  }
+;	"Default cseRSYS:DuctWrapMaterial:matDens"		cseRSYS:DuctWrapMaterial:matDens  	= {	0.7  }
+;	"Default cseRSYS:DuctWrapMaterial:matThk"			cseRSYS:DuctWrapMaterial:matThk   	= {	4/12  }
+
+
+; SAC 5/13/13 - moved UP to include in logic related to setting rsDSEC & rsDSEH
+;	"Set cseRSYS:Cr8SupplyDuct"		cseRSYS:Cr8SupplyDuct	= {
+;				if (LocalCompAssigned( SourceHVACSys:DistribSystem ) == 0) then  0
+;				else if (SourceHVACSys:DistribSystem:DuctsPresent == 0) then  0
+;				else if (SourceHVACSys:DistribSystem:DuctLeakageValUse <= 0 .OR.
+;							SourceHVACSys:DistribSystem:DuctInsAdjRval <= 0 .OR.
+;							SourceHVACSys:DistribSystem:SupplyDuctArea <= 0 .OR.
+;							SourceHVACSys:DistribSystem:SupplyDuctDiam <= 0 ) then  0
+;				else  1  endif endif endif  }
+;
+;	"Set cseRSYS:Cr8ReturnDuct"		cseRSYS:Cr8ReturnDuct	= {
+;				if (LocalCompAssigned( SourceHVACSys:DistribSystem ) == 0) then  0
+;				else if (SourceHVACSys:DistribSystem:DuctsPresent == 0) then  0
+;				else if (SourceHVACSys:DistribSystem:DuctLeakageValUse <= 0 .OR.
+;							SourceHVACSys:DistribSystem:RetDuctInsAdjRval <= 0 .OR.
+;							SourceHVACSys:DistribSystem:ReturnDuctArea <= 0 .OR.
+;							SourceHVACSys:DistribSystem:ReturnDuctDiam <= 0 ) then  0
+;				else  1  endif endif endif  }
+
+
+	"Create a CSE Supply DUCTSEG for each cseRSYS"	cseRSYS:SupplyDuct	= {	if (Cr8SupplyDuct < 0.5) then  UNCHANGED
+																										else  CreateComp( cseDUCTSEG, "SupplyDuct-" + Local( Name ) )  endif  }
+	"Set cseRSYS:SupplyDuct:Parent"			cseRSYS:SupplyDuct:Parent		= {	Local( Name )  }
+	"Set cseRSYS:SupplyDuct:dsTy"				cseRSYS:SupplyDuct:dsTy			= {	"SUPPLY"  }
+	"Set cseRSYS:SupplyDuct:dsInArea"		cseRSYS:SupplyDuct:dsInArea	= {	SourceHVACSys:DistribSystem:SupplyDuctArea  }
+	"Set cseRSYS:SupplyDuct:dsDiameter"		cseRSYS:SupplyDuct:dsDiameter	= {	SourceHVACSys:DistribSystem:SupplyDuctDiam / 12  }
+	"Set cseRSYS:SupplyDuct:dsInsulR"		cseRSYS:SupplyDuct:dsInsulR	= {	SourceHVACSys:DistribSystem:DuctInsAdjRval  }
+	"Set cseRSYS:SupplyDuct:dsLeakF"			cseRSYS:SupplyDuct:dsLeakF		= {	SourceHVACSys:DistribSystem:DuctLeakageValUse * 0.585 / 100  }
+	"Set cseRSYS:SupplyDuct:dsExCnd"			cseRSYS:SupplyDuct:dsExCnd		= {	if (SourceHVACSys:DistribSystem:DuctLocation == 6) then  "AMBIENT"		; DuctLocation = "Outside"  - SAC 9/4/13 - to address GC issue 164
+																										else  UNDEFINED  endif  }
+; SupplyDuctLoc could point to several different object types, meaning eval-time parsing of LocalRef() is required
+	"Set cseRSYS:SupplyDuct:dsAdjZn"			cseRSYS:SupplyDuct:dsAdjZn		= {	if (SourceHVACSys:DistribSystem:DuctLocation == 6 .OR.
+																											 LocalCompAssigned( SourceHVACSys:DistribSystem:SupplyDuctLocUse ) < 0.5) then  UNDEFINED
+																										else  SourceHVACSys:DistribSystem:SupplyDuctLocUse:CSE_ZONE  endif  }
+
+;	"Set cseRSYS:SupplyDuct:dsAdjZn - 1"	cseRSYS:SupplyDuct:dsAdjZn		= {	if (ComponentCount( Attic ) > 0.5)
+;																										then	if (GlobalCompAssigned( Attic:CSE_ZONE ) > 0.5)
+;																												then	Global( Attic:CSE_ZONE )
+;																												else  UNDEFINED  endif
+;																										else  UNDEFINED  endif  }
+;	"Set cseRSYS:SupplyDuct:dsAdjZn - 2"	cseRSYS:SupplyDuct:dsAdjZn		= {	if (LocalCompAssigned( SupplyDuct:dsAdjZn ) > 0.5) then  UNCHANGED
+;																										else	if (ComponentCount( CrawlSpace ) > 0.5)
+;																												then	if (GlobalCompAssigned( CrawlSpace:CSE_ZONE ) > 0.5)
+;																														then	Global( CrawlSpace:CSE_ZONE )
+;																														else  UNCHANGED  endif
+;																												else  UNCHANGED  endif endif  }
+;	"Set cseRSYS:SupplyDuct:dsAdjZn - 3"	cseRSYS:SupplyDuct:dsAdjZn		= {	if (LocalCompAssigned( SupplyDuct:dsAdjZn ) > 0.5) then  UNCHANGED
+;																										else	if (ComponentCount( cseZONE ) > 0.5)
+;																												then	MaxAllComp( cseZONE:znVol )
+;																												else	UNCHANGED  endif endif  }
+;	"Set cseRSYS:SupplyDuct:dsInsulMat"		cseRSYS:SupplyDuct:dsInsulMat	= {	Local( DuctWrapMaterial )  }
+
+
+	"Create a CSE Return DUCTSEG for each cseRSYS"	cseRSYS:ReturnDuct	= {	if (Cr8ReturnDuct < 0.5) then  UNCHANGED
+																										else  CreateComp( cseDUCTSEG, "ReturnDuct-" + Local( Name ) )  endif  }
+	"Set cseRSYS:ReturnDuct:Parent"			cseRSYS:ReturnDuct:Parent		= {	Local( Name )  }
+	"Set cseRSYS:ReturnDuct:dsTy"				cseRSYS:ReturnDuct:dsTy			= {	"RETURN"  }
+	"Set cseRSYS:ReturnDuct:dsInArea"		cseRSYS:ReturnDuct:dsInArea	= {	SourceHVACSys:DistribSystem:ReturnDuctArea  }
+	"Set cseRSYS:ReturnDuct:dsDiameter"		cseRSYS:ReturnDuct:dsDiameter	= {	SourceHVACSys:DistribSystem:ReturnDuctDiam / 12  }
+	"Set cseRSYS:ReturnDuct:dsInsulR"		cseRSYS:ReturnDuct:dsInsulR	= {	SourceHVACSys:DistribSystem:RetDuctInsAdjRval  }
+	"Set cseRSYS:ReturnDuct:dsLeakF"			cseRSYS:ReturnDuct:dsLeakF		= {	SourceHVACSys:DistribSystem:DuctLeakageValUse * 0.415 / 100  }
+	"Set cseRSYS:ReturnDuct:dsExCnd"			cseRSYS:ReturnDuct:dsExCnd		= {	if (SourceHVACSys:DistribSystem:DuctLocation == 6) then  "AMBIENT"		; DuctLocation = "Outside"  - SAC 9/4/13 - to address GC issue 164
+																										else  UNDEFINED  endif  }
+; ReturnDuctLoc could point to several different object types, meaning eval-time parsing of LocalRef() is required
+	"Set cseRSYS:ReturnDuct:dsAdjZn"			cseRSYS:ReturnDuct:dsAdjZn		= {	if (SourceHVACSys:DistribSystem:DuctLocation == 6 .OR.
+																											 LocalCompAssigned( SourceHVACSys:DistribSystem:ReturnDuctLocUse ) < 0.5) then  UNDEFINED
+																										else  SourceHVACSys:DistribSystem:ReturnDuctLocUse:CSE_ZONE  endif  }
+
+;	"Set cseRSYS:ReturnDuct:dsAdjZn - 1"	cseRSYS:ReturnDuct:dsAdjZn		= {	if (ComponentCount( Attic ) > 0.5)
+;																										then	if (GlobalCompAssigned( Attic:CSE_ZONE ) > 0.5)
+;																												then	Global( Attic:CSE_ZONE )
+;																												else  UNDEFINED  endif
+;																										else  UNDEFINED  endif  }
+;	"Set cseRSYS:ReturnDuct:dsAdjZn - 2"	cseRSYS:ReturnDuct:dsAdjZn		= {	if (LocalCompAssigned( ReturnDuct:dsAdjZn ) > 0.5) then  UNCHANGED
+;																										else	if (ComponentCount( CrawlSpace ) > 0.5)
+;																												then	if (GlobalCompAssigned( CrawlSpace:CSE_ZONE ) > 0.5)
+;																														then	Global( CrawlSpace:CSE_ZONE )
+;																														else  UNCHANGED  endif
+;																												else  UNCHANGED  endif endif  }
+;	"Set cseRSYS:ReturnDuct:dsAdjZn - 3"	cseRSYS:ReturnDuct:dsAdjZn		= {	if (LocalCompAssigned( ReturnDuct:dsAdjZn ) > 0.5) then  UNCHANGED
+;																										else	if (ComponentCount( cseZONE ) > 0.5)
+;																												then	MaxAllComp( cseZONE:znVol )
+;																												else	UNCHANGED  endif endif  }
+;	"Set cseRSYS:ReturnDuct:dsInsulMat"		cseRSYS:ReturnDuct:dsInsulMat	= {	Local( DuctWrapMaterial )  }
+
+
+;  0,  "Zone",     "Zone (not attic)",    100,  0,  0, "Project", "", "", "", "", -1,  1,  0,   3000
+;  1,           "Type",              BEMP_Sym,  1, "",                 0, "",         0, "",             3004, "Zone type"    
+;	1,           "HVACSystem",        BEMP_Obj,  1,  0,  0, "",         0,  1, "HVACSys",  1, "Type",  3006, "HVAC system assignment" 
+;	1,           "CoolVentSystem",    BEMP_Obj,  1,  0,  0, "",         0,  1, "HVACSys", 10, "Type",  3006, "Cooling Ventilation System assignment" 
+;	1,           "IAQVentSystem",     BEMP_Obj,  1,  0,  0, "",         0,  1, "HVACSys", 20, "Type",  3006, "IAQ Ventilation System assignment" 
+;  
+;  0,  "cseZONE",  "cseZONE",            200,  0,  0, "Project", "", "", "", "", -1,  1,  0,   3400
+;  1,           "SourceZone",        BEMP_Obj,  1, "",                 0, "Zone",     0, "",             6095, "CZone that is the source of this component" 
+;  1,           "znRSysH",           BEMP_Obj,  1, "",                 0, "cseRSYS",  0, "",             6095, "RSYS component supplying Space Heating to this ZONE" 
+;  1,           "znRSysC",           BEMP_Obj,  1, "",                 0, "cseRSYS",  0, "",             6095, "RSYS component supplying Cooling to this ZONE" 
+;  
+;  0,  "HVACSys", "HVAC System",         100,  0,  0, "",        "", "", "", "", -1,  1,  0,   8000
+;  1,           "Type",              BEMP_Sym,  1, "",                 0, "",            0, "",             8001, "HVAC system type"    
+;  1,           "HeatSystem",        BEMP_Obj,  1, "",                 0, "HVACHeat",    0, "",             8004, "Heating component"    
+;  1,           "CoolSystem",        BEMP_Obj,  1, "",                 0, "HVACCool",    0, "",             8006, "Cooling component"    
+;  1,           "DistribSystem",     BEMP_Obj,  1, "",                 0, "HVACDist",    0, "",             8008, "Distribution system"    
+;  1,           "Fan",               BEMP_Obj,  1, "",                 0, "HVACFan",     0, "",             8010, "Fan type/system"    
+;  1,           "FloorAreaServed",   BEMP_Flt,  1, "ft2",              0, "",            0, "",             8008, "Floor area served by this system"    
+;  1,           "HasCentralFurnace", BEMP_Int,  1, "",                 0, "",            0, "",             8008, "Flag indicating presence of central furnace"    
+;  1,           "CSE_RSYS",          BEMP_Obj,  1, "",                 0, "cseRSYS",     0, "",             7010, "CSE RSYS component" 
+;  
+;  0,  "cseMETER", "cseMETER",            100,  0,  0, "",        "", "", "", "", -1,  1,  0,   1800
+;  
+;  0,  "cseRSYS",  "cseRSYS",            1000,  0,  0, "",        "", "", "", "", -1,  1,  0,   3000
+;  1,           "rsEffH",            BEMP_Flt,  1, "??",               0, "",         0, "",            3208, "Heating efficiency"    
+;  1,           "rsEffC",            BEMP_Flt,  1, "??",               0, "",         0, "",            3208, "Cooling efficiency"    
+;  1,           "rsMtrH",            BEMP_Obj,  1, "",                 0, "cseMETER", 0, "",            3208, "Heating energy use meter"    
+;  1,           "rsMtrC",            BEMP_Obj,  1, "",                 0, "cseMETER", 0, "",            3208, "Cooling energy use meter"    
+;  1,           "SourceHVACSys",     BEMP_Obj,  1, "",                 0, "HVACSys",  0, "",            7010, "HVACSys that is the source of this component" 
+
+
+ ;-----------------------
+ ; HVACSys AirNet
+ ;-----------------------
+; old (second round version) of cool vent (ClVent) data
+; SAC 8/27/13 - RESTORED use of HVACSys:AirNet_CoolVent & HVACSys:AirNet_CoolVentWpCFM for CFI-based CoolVent
+	"Set HVACSys:AirNet_CoolVent"			HVACSys:AirNet_CoolVent			= {	CFIClVentFlow  }
+	"Set HVACSys:AirNet_CoolVentWpCFM"	HVACSys:AirNet_CoolVentWpCFM	= {	CFIClVentPwr   }
+;	"Set HVACSys:AirNet_CoolVent"			HVACSys:AirNet_CoolVent			= {	if (Local( Type ) == 1 .OR. Local( Type ) == 10)  ; central cool/heat or cooling vent systems
+;																									then	if (LocalCompAssigned( Fan ))
+;																											then	LocalRef( Fan:CoolingVent )
+;																											else	0  endif
+;																									else	0  endif  }
+;	"Set HVACSys:AirNet_CoolVentWpCFM"	HVACSys:AirNet_CoolVentWpCFM	= {	if (Local( Type ) == 1 .OR. Local( Type ) == 10)  ; central cool/heat or cooling vent systems
+;																									then	if (LocalCompAssigned( Fan ))
+;																											then	LocalRef( Fan:WperCFMCool )
+;																											else	0  endif
+;																									else	0  endif  }
+
+;	mjb	use Evap Cond Effectiveness in CSE string to define outdoor air temp seen by HVACSys (if CoolSystem = EvapCond)	7/29/14
+;	"Set HVACSys:cseRSYS:rsTdbOut_x"			HVACSys:cseRSYS:rsTdbOut_x		= {	if (HaveEvapCond > 0 .AND. Proj:RunNumber < 2) then
+;																											Format("%g * $tWbO + %g * $tDbO", SysEvapCondEff, (1 - SysEvapCondEff))
+;																										else  UNDEFINED  endif  }
+;	"debugging"		HVACSys:Action	= {	MessageBox( "cseRSYS rsTdbOut:  %s", HVACSys:cseRSYS:rsTdbOut_x )  }
+
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "ForceDefault_CSE_AirNet_ELA" 1 0 0 1
+;*************************************************************************
+; "debug"		Proj:Action	= {	if (LocalStatus( RunNumber ) < 1) then  MessageBox( "Force-default CSE_AirNet_ELA:  RunNumber undefined" )
+; 										else  MessageBox( "Force-default CSE_AirNet_ELA:  RunNumber = %.0f", RunNumber )  endif  }
+	"Blast Proj:EffLeakageArea"		Proj:EffLeakageArea			= {	UNDEFINED  }
+	"Blast Proj:SlabRatio"				Proj:SlabRatio					= {	UNDEFINED  }
+	"Blast Proj:GarageTotSF"			Proj:GarageTotSF				= {	UNDEFINED  }
+   "Blast Proj:BldgELA_CeilSF"		Proj:BldgELA_CeilSF			= {   UNDEFINED  }
+   "Blast Proj:BldgELA_RaisedFlrSF"	Proj:BldgELA_RaisedFlrSF	= {   UNDEFINED  }
+   "Blast Proj:BldgELA_GarageSF"		Proj:BldgELA_GarageSF		= {   UNDEFINED  }
+   "Blast Proj:BldgELA_WallSF"		Proj:BldgELA_WallSF			= {   UNDEFINED  }
+END
+;*************************************************************************
+RULELIST "Default_CSE_AirNet_ELA" 0 0 0 1
+;*************************************************************************
+; SAC 2/2/15 - moved here from following rulelist (SimPrep_CSE_AirNet) to facilitate review and mods in BypassRuleLimits scenarios (analysis R&D)
+	"Set Proj:EffLeakageArea"		Proj:EffLeakageArea		= {	Local( CondFloorArea ) * Local( ACH50 ) / (2 * 10000)  }    ; SAC 9/7/12 - restore original formula per write-up v7 // SAC 8/31/12 - revise formula per update in airnet write-up (rev 5->6)
+	"Set Proj:SlabRatio"				Proj:SlabRatio				= {	if (Local( BldgSlabFloorArea ) < 0.0001 .AND. Local( BldgExtFloorArea ) < 0.0001) then  0
+																					else  Local( BldgSlabFloorArea ) / (Local( BldgSlabFloorArea ) + Local( BldgExtFloorArea ))  endif  }
+	"Set Proj:GarageTotSF"			Proj:GarageTotSF			= {	if (HasGarage < 0.1) then  0
+																					else  SumAll( IntWall:ParGarAdjCndZnArea ) + SumAll( InteriorFloor:ParCndZnAdjGarArea ) +
+																							SumAll( IntWall:ParCndZnAdjGarArea ) + SumAll( InteriorCeiling:ParGarAdjCndZnArea )  endif  }
+
+   "Set Proj:BldgELA_CeilSF"			Proj:BldgELA_CeilSF			= {   if (Local( BldgClgBlwAtticArea ) < 0.0001 .AND. Local( BldgCathCeilingArea ) < 0.0001) then  0
+																							else  Local( EffLeakageArea ) * (0.4 + (0.1 * Local( SlabRatio ))) / (Local( BldgClgBlwAtticArea ) + Local( BldgCathCeilingArea ))  endif  }
+   "Set Proj:BldgELA_RaisedFlrSF"	Proj:BldgELA_RaisedFlrSF	= {   if (Local( BldgExtFloorArea ) < 0.0001) then  0
+																							else  Local( EffLeakageArea ) * (0.2 * (  1 - Local( SlabRatio ))) /  Local( BldgExtFloorArea )  endif  }
+   "Set Proj:BldgELA_GarageSF"		Proj:BldgELA_GarageSF		= {   if (Local( GarageTotSF ) < 0.0001) then  0
+																							else  Local( EffLeakageArea ) * 0.1 / Local( GarageTotSF )  endif  }
+   "Set Proj:BldgELA_WallSF"			Proj:BldgELA_WallSF			= {   if (BldgExtWallArea < 0.0001) then  0
+																							else if (GarageTotSF < 0.0001)
+																							then  EffLeakageArea * (0.4 + (0.1 * SlabRatio)) / BldgExtWallArea
+																							else  EffLeakageArea * (0.3 + (0.1 * SlabRatio)) / BldgExtWallArea  endif endif  }
+	; added for screen display
+	"Set Proj:BldgELA_Total"		Proj:BldgELA_Total	= {	(BldgELA_CeilSF * (BldgClgBlwAtticArea + BldgCathCeilingArea)) + (BldgELA_RaisedFlrSF * BldgExtFloorArea) +
+																				(BldgELA_GarageSF * GarageTotSF) + (BldgELA_WallSF * BldgExtWallArea)  }
+	"Set Proj:BldgELA_Msg[1]"		Proj:BldgELA_Msg[1]	= {	Format( "x  %.1f ft2", (BldgClgBlwAtticArea + BldgCathCeilingArea) )  }
+	"Set Proj:BldgELA_Msg[2]"		Proj:BldgELA_Msg[2]	= {	Format( "x  %.1f ft2",  BldgExtFloorArea )  }
+	"Set Proj:BldgELA_Msg[3]"		Proj:BldgELA_Msg[3]	= {	Format( "x  %.1f ft2",  GarageTotSF      )  }
+	"Set Proj:BldgELA_Msg[4]"		Proj:BldgELA_Msg[4]	= {	Format( "x  %.1f ft2",  BldgExtWallArea  )  }
+	"Set Proj:BldgELA_Msg[5]"		Proj:BldgELA_Msg[5]	= {	Format( "Total above = %.3f ft2  (vs. total ELA of %.3f)", BldgELA_Total, EffLeakageArea )  }
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet" 0 0 0 1
+;*************************************************************************
+
+;;	"Set Proj:BldgExtWallArea"			Proj:BldgExtWallArea			= {	SumAll( Zone:ExtWallArea     )  }
+;;	"Set Proj:BldgClgBlwAtticArea"	Proj:BldgClgBlwAtticArea	= {	SumAll( Zone:ClgBlwAtticArea )  }
+;;	"Set Proj:BldgCathCeilingArea"	Proj:BldgCathCeilingArea	= {	SumAll( Zone:CathCeilingArea )  }
+;;	"Set Proj:BldgSlabFloorArea"		Proj:BldgSlabFloorArea		= {	SumAll( Zone:SlabFloorArea   )  }
+;;	"Set Proj:BldgExtFloorArea"		Proj:BldgExtFloorArea		= {	SumAll( Zone:ExtFloorArea    )  }
+;;
+;;	"Set Proj:CondFloorArea"			Proj:CondFloorArea			= {	SumAll( Zone:CondFloorArea   )  }
+
+; SAC 2/9/15 - rules to force re-default of (possibly user-defined) AirNet properties
+; "debug"		Proj:Action	= {	if (LocalStatus( RunNumber ) < 1) then  MessageBox( "SimPrep_CSE_AirNet:  RunNumber undefined" )
+; 										else  MessageBox( "SimPrep_CSE_AirNet:  RunNumber = %.0f", RunNumber )  endif  }
+	"force-default of (possibly user-defined) AirNet properties"		Proj:Action	= {	if (BypassRuleLimits > 0.5 .AND. 
+																															(	(AllOrientations < 0.5 .AND. RunNumber < 2) .OR.
+																																(AllOrientations > 0.5 .AND. RunNumber < 5) ) ) then  UNCHANGED
+																													else	EvalRulelist( "ForceDefault_CSE_AirNet_ELA" )  endif  }
+; SAC 2/2/15 - moved various AirNet ELA setting rules from this rulelist to 'Default_CSE_AirNet_ELA' in order to facilitate review and mods in BypassRuleLimits scenarios (analysis R&D)
+	"Default various AirNet ELA settings"	Proj:Action		= {	EvalRulelist( "Default_CSE_AirNet_ELA" )  }
+;	"Set Proj:EffLeakageArea"		Proj:EffLeakageArea		= {	Local( CondFloorArea ) * Local( ACH50 ) / (2 * 10000)  }    ; SAC 9/7/12 - restore original formula per write-up v7 // SAC 8/31/12 - revise formula per update in airnet write-up (rev 5->6)
+;	"Set Proj:SlabRatio"				Proj:SlabRatio				= {	if (Local( BldgSlabFloorArea ) < 0.0001 .AND. Local( BldgExtFloorArea ) < 0.0001) then  0
+;																					else  Local( BldgSlabFloorArea ) / (Local( BldgSlabFloorArea ) + Local( BldgExtFloorArea ))  endif  }
+;	"Set Proj:GarageTotSF"			Proj:GarageTotSF			= {	if (HasGarage < 0.1) then  0
+;																					else  SumAll( IntWall:ParGarAdjCndZnArea ) + SumAll( InteriorFloor:ParCndZnAdjGarArea ) +
+;																							SumAll( IntWall:ParCndZnAdjGarArea ) + SumAll( InteriorCeiling:ParGarAdjCndZnArea )  endif  }
+;
+;   "Set Proj:BldgELA_CeilSF"			Proj:BldgELA_CeilSF			= {   if (Local( BldgClgBlwAtticArea ) < 0.0001 .AND. Local( BldgCathCeilingArea ) < 0.0001) then  0
+;																							else  Local( EffLeakageArea ) * (0.4 + (0.1 * Local( SlabRatio ))) / (Local( BldgClgBlwAtticArea ) + Local( BldgCathCeilingArea ))  endif  }
+;   "Set Proj:BldgELA_RaisedFlrSF"	Proj:BldgELA_RaisedFlrSF	= {   if (Local( BldgExtFloorArea ) < 0.0001) then  0
+;																							else  Local( EffLeakageArea ) * (0.2 * (  1 - Local( SlabRatio ))) /  Local( BldgExtFloorArea )  endif  }
+;   "Set Proj:BldgELA_GarageSF"		Proj:BldgELA_GarageSF		= {   if (Local( GarageTotSF ) < 0.0001) then  0
+;																							else  Local( EffLeakageArea ) * 0.1 / Local( GarageTotSF )  endif  }
+;   "Set Proj:BldgELA_WallSF"			Proj:BldgELA_WallSF			= {   if (BldgExtWallArea < 0.0001) then  0
+;																							else if (GarageTotSF < 0.0001)
+;																							then  EffLeakageArea * (0.4 + (0.1 * SlabRatio)) / BldgExtWallArea
+;																							else  EffLeakageArea * (0.3 + (0.1 * SlabRatio)) / BldgExtWallArea  endif endif  }
+
+
+;           "BldgExtWallArea",       BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Sum of areas of children ExtWall:Area"    
+;           "BldgClgBlwAtticArea",   BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Sum of areas of children CeilingBelowAttic:Area"    
+;           "BldgCathCeilingArea",   BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Sum of areas of children CathedralCeiling:Area"    
+;           "BldgSlabFloorArea",     BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Sum of areas of children SlabFloor:Area"    
+;           "BldgExtFloorArea",      BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Sum of areas of children ExteriorFloor:Area"    
+;
+;           "EffLeakageArea",        BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Effective leakage area (ELAtot for AirNet)"    
+;           "SlabRatio",             BEMP_Flt,  1, "",                 0, "",         0, "",             3008, "Ratio of slab/total floor area (for AirNet)"    
+;           "GarageTotSF",           BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Total area of all surfaces adjacent to garage zones (for AirNet)"    
+;
+;           "BldgELA_CeilSF",        BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Effective Leakage Area through Ceiling surfaces (for AirNet)"
+;           "BldgELA_RaisedFlrSF",   BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Effective Leakage Area through Raised Floor surfaces (for AirNet)"
+;           "BldgELA_GarageSF",      BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Effective Leakage Area through Garage surfaces (for AirNet)"
+;           "BldgELA_WallSF",        BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Effective Leakage Area through Other Wall surfaces (for AirNet)"
+
+	; SAC 5/1/13 - new rulelists to handle IAQ summing into referenced ZONES
+	"Set Zone:IAQ*"		Proj:Action	= {	if (IsMultiFamily < 0.5)
+														then  EvalRulelist( "Set_ZoneIAQ_SFam" )
+														else	EvalRulelist( "Set_ZoneIAQ_MFam" )  endif  }
+
+; SAC 7/25/14 - moved some Zone AirNet rules out of subordinate rulelist to ensure they are evaluated across entire model before evaluating individual Zone AirNet stuff
+	"Set Zone:ZoneBotZ"				Zone:ZoneBotZ     		= {	Local( Bottom )  }
+	"Set Zone:ZoneTopZ"				Zone:ZoneTopZ     		= {	Local( ZoneBotZ ) + (Local( NumStories ) * Local( FloorHeight )) - max( 0, (Local( FloorHeight ) - Local( CeilingHeight )) )  }
+	"Set Zone:ZoneHeight"			Zone:ZoneHeight   		= {	Local( ZoneTopZ ) - Local( ZoneBotZ )  }
+  ; SAC 9/12/12 - restored this rule that was previously commented out
+;	"Set Zone:WinHHTop"				Zone:WinHHTop     		= {	Local( ZoneBotZ ) + (Local( FloorHeight ) * (Local( NumStories ) - 1)) + Local( WinHeadHeight )  }
+;	"Set Zone:WinHHTopUse"			Zone:WinHHTopUse			= {	Local( ZoneBotZ ) + Local( WinHeadHeight )  }   ; SAC 5/22/13 - adjust for airnet algorithm 14
+	"Set Zone:WinHHTopUse[1]"		Zone:WinHHTopUse[1]		= {	if (IfValidAnd( FloorHeight > 1 ) .AND. IfValidAnd( NumStories > 0.5 ))
+																					then	if (WinHeadHeight > FloorHeight)
+																							then	ZoneBotZ + WinHeadHeight		; user accounting for multi-stories in WinHeadHeight already
+																							else	ZoneBotZ + WinHeadHeight + (FloorHeight * (NumStories - 1))    endif
+																					else			ZoneBotZ + WinHeadHeight    endif  }
+; SAC 7/24/14 - revised WinHHTopUse[1] (above) to take into account multi-story zones (essentially reverting back to a earlier logic) AND added second array value (below) to account for SFam/MFam differences
+	"Set Zone:WinHHTopUse[2]"		Zone:WinHHTopUse[2]		= {	if (Proj:IsMultiFamily > 0.5) then  WinHHTopUse[1]
+																					else  MaxAll( Zone:WinHHTopUse[1] )  endif  }
+
+	"Setup AirNet Zone IZXFER objects"			Zone:Action		= {	if (Local( Type ) == 10) then  UNCHANGED		; Unconditioned
+																						else  EvalRulelist( "SimPrep_CSE_AirNet_Zone", 1 )  endif  }
+
+	"Setup AirNet (other) IZXFER objects"		Proj:Action		= {	EvalRulelist( "SimPrep_CSE_AirNet_Other" )  }
+
+END
+
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Zone" 0 0 0 1
+;*************************************************************************
+
+   "Set Zone:ELA_ACeil"				Zone:ELA_ACeil				= {   Global( Proj:BldgELA_CeilSF      ) *  Local( ClgBlwAtticArea )  }
+   "Set Zone:ELA_XCeil"				Zone:ELA_XCeil				= {   Global( Proj:BldgELA_CeilSF      ) * (				0				  + Local( CathCeilingArea ))  }   ; AtticEdgeArea to be inserted for 0 here
+   "Set Zone:ELA_XWall"				Zone:ELA_XWall				= {   Global( Proj:BldgELA_WallSF      ) *  Local( ExtWallArea     )  }
+;   "Set Zone:ELA_GWall"				Zone:ELA_GWall				= {   0  }     ; Global( Proj:BldgELA_GarageSF    ) *  Local( <area of zone walls adjacent to garage spaces> )  }
+   "Set Zone:ELA_Floor"				Zone:ELA_Floor				= {   Global( Proj:BldgELA_RaisedFlrSF ) *  Local( ExtFloorArea    )  }
+;   "Set Zone:ELA_GFloor"			Zone:ELA_GFloor			= {   if (Proj:HasGarage > 0.1) then  SumAll( Garage:Area ) * Local( FlrOverGarageArea ) * 1.45
+;																					else  0  endif  }
+
+; SAC 7/25/14 - moved following rules into calling rulelist to ensure they are evaluated across entire model before evaluating individual Zone AirNet stuff
+;		"Set Zone:ZoneBotZ"				Zone:ZoneBotZ     		= {	Local( Bottom )  }
+;		"Set Zone:ZoneTopZ"				Zone:ZoneTopZ     		= {	Local( ZoneBotZ ) + (Local( NumStories ) * Local( FloorHeight )) - max( 0, (Local( FloorHeight ) - Local( CeilingHeight )) )  }
+;		"Set Zone:ZoneHeight"			Zone:ZoneHeight   		= {	Local( ZoneTopZ ) - Local( ZoneBotZ )  }
+;	  ; SAC 9/12/12 - restored this rule that was previously commented out
+;	;	"Set Zone:WinHHTop"				Zone:WinHHTop     		= {	Local( ZoneBotZ ) + (Local( FloorHeight ) * (Local( NumStories ) - 1)) + Local( WinHeadHeight )  }
+;	;	"Set Zone:WinHHTopUse"			Zone:WinHHTopUse			= {	Local( ZoneBotZ ) + Local( WinHeadHeight )  }   ; SAC 5/22/13 - adjust for airnet algorithm 14
+;		"Set Zone:WinHHTopUse[1]"		Zone:WinHHTopUse[1]		= {	if (IfValidAnd( FloorHeight > 1 ) .AND. IfValidAnd( NumStories > 0.5 ))
+;																						then	if (WinHeadHeight > FloorHeight)
+;																								then	ZoneBotZ + WinHeadHeight		; user accounting for multi-stories in WinHeadHeight already
+;																								else	ZoneBotZ + WinHeadHeight + (FloorHeight * (NumStories - 1))    endif
+;																						else			ZoneBotZ + WinHeadHeight    endif  }
+;	; SAC 7/24/14 - revised WinHHTopUse[1] (above) to take into account multi-story zones (essentially reverting back to a earlier logic) AND added second array value (below) to account for SFam/MFam differences
+;		"Set Zone:WinHHTopUse[2]"		Zone:WinHHTopUse[2]		= {	if (Proj:IsMultiFamily > 0.5) then  WinHHTopUse[1]
+;																						else  MaxAll( Zone:WinHHTopUse[1] )  endif  }
+
+	"Set Zone:WallHoleSize"			Zone:WallHoleSize			= {	Local( ELA_XWall ) * 1.45 / 8  }
+
+	"Create & setup Zone:AirNetIZXFERs[1-6] iff WallHoleSize > 0"
+			Zone:Action	 = {	if (WallHoleSize <= 0) then  UNCHANGED
+									else  EvalRulelist( "SimPrep_CSE_AirNet_Zone_ExtWall", 1 )  endif  }
+
+ ;-----------------------
+ ; WINDOW AirNet
+ ;-----------------------
+; SAC 6/17/14 - switched to array of 3 for nat vent testing
+;	"Set Zone:WinVentHtDiff"		Zone:WinVentHtDiff 	= {	2.0  }
+	; Expression describing hourly window hole area (1=>WnLU/LD, 2=>WnLS)
+	; from AirNetAlgorithm2.txt -- WnHole = 0.5*(WnVentArea/8.)*Win_hr*Windowmode // 1/8th in each hole,  ft2.  1/2 of nominal area to account for screens etc.  Hourly and seasonal availability 
+
+				; 2.  Cooling Ventilation Setup:  4 types:  Windows only (all types have windows for some part of the year), Whole house fan, Smart Vent, NightBreeze
+				;       Set up seasonal window control
+				;  #if Smart Vent or NightBreeze //Windows are on in Winter, but off in summer when mechanical ventilation is on
+				; 	   #redefine Windowmode select( @weather.taDbAvg07 >60., 0.00001,default 1.) 
+				; 	   #define VentDiffMult  select( @top.tDbOSh < (@znRes[Single].prior.S.tAir-VentDiff), 1,default 0.000001) //Vent off if Tin-Vendiff > Tout  !! 110413  XXX
+				; 	#Else  //everything but Econ and NightBreeeze Windows are on year round
+				; 	   #reDefine Windowmode 1.       //Always available
+				; 	   #Define VentDiff 0          // Differential.  No differential for windows or WWF  110309 BAW
+
+	"Create & setup Zone:WinAirNetIZXFERs[1-6] iff WinVentArea > 0"
+			Zone:Action	 = {	if (WinVentArea < 0.0001) then  UNCHANGED
+									else	EvalRulelist( "SimPrep_CSE_AirNet_Zone_Windows_1Story", 1 )  endif  }
+; SAC 7/24/14 - revised logic to ALWAYS generate window AirNet objects using the single story logic (removing below)
+;									else if (NumStories < 1.5)
+;									then  EvalRulelist( "SimPrep_CSE_AirNet_Zone_Windows_1Story", 1 )
+;									else  EvalRulelist( "SimPrep_CSE_AirNet_Zone_Windows_MultiStory", 1 )  endif endif  }
+
+; SAC 8/29/13 - moved to "SimPrep_CSE_AirNet_Other" rulelist, since rules here need to be evaluated on Proj as well as Zone
+; ;-----------------------
+; ; AirNet for ceiling below attic in Conditioned Zone
+; ;-----------------------
+
+	; for garage wall
+	"Set Zone:AdjGarageWallArea"							Zone:AdjGarageWallArea			=	{	SumChildren( IntWall:ParCndZnAdjGarArea)
+																													+ SumRevRef( IntWall:Outside, IntWall:ParGarAdjCndZnArea)	}
+	"Set Zone:GrgWallH"										Zone:GrgWallH						=	{	Global(Proj:BldgELA_GarageSF) * AdjGarageWallArea / 2.		}
+	"Set Zone:GrgWallTopZ"									Zone:GrgWallTopZ					=	{	min( Local(Top), Local(Top) )						}	;Global(Garage:Top)
+	"Set Zone:GrgWallBotZ"									Zone:GrgWallBotZ					=	{	min( Local(Bottom), Local(Bottom) )					}	;Global(Garage:Bottom)
+	"Set Zone:GrgWallHt"										Zone:GrgWallHt						=	{	Local(GrgWallTopZ) - Local(GrgWallBotZ)						}
+	"Set Zone:GrgWallHoleHiZ"								Zone:GrgWallHoleHiZ				=	{	Local(GrgWallBotZ) + (0.75 * Local(GrgWallHt))				}
+	"Set Zone:GrgWallHoleLoZ"								Zone:GrgWallHoleLoZ				=	{	Local(GrgWallBotZ) + (0.25 * Local(GrgWallHt))				}
+
+	"Create Zone:GrgWallAirNetIZXFERs[1]"					Zone:GrgWallAirNetIZXFERs[1]		=	{	if ( Local(GrgWallH) > 0. ) 
+																															then CreateComp( cseIZXFER, Local( Name ) + "-xGarageH")
+																															else UNDEFINED
+																															endif  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izNVType"			Zone:GrgWallAirNetIZXFERs[1]:izNVType	=	{	3  }		; AIRNETIZ - Single opening to another zone
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izZn1"				Zone:GrgWallAirNetIZXFERs[1]:izZn1		=	{	Local( CSE_ZONE )  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izALo"				Zone:GrgWallAirNetIZXFERs[1]:izALo		=	{	Local( GrgWallH )  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izHD"				Zone:GrgWallAirNetIZXFERs[1]:izHD   	=	{	Local( GrgWallHoleHiZ )  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izNVEff"			Zone:GrgWallAirNetIZXFERs[1]:izNVEff	=	{	1.0  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izExp"				Zone:GrgWallAirNetIZXFERs[1]:izExp  	=	{	0.65  }
+	"Set Zone:GrgWallAirNetIZXFERs[1]:izZN2"				Zone:GrgWallAirNetIZXFERs[1]:izZN2  	=	{	Global( Garage:CSE_ZONE )  }
+																					
+	"Create Zone:GrgWallAirNetIZXFERs[2]"					Zone:GrgWallAirNetIZXFERs[2]		=	{	if ( Local(GrgWallH) > 0. ) 
+																															then CreateComp( cseIZXFER, Local( Name ) + "-xGarageL")
+																															else UNDEFINED
+																															endif  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izNVType"			Zone:GrgWallAirNetIZXFERs[2]:izNVType	=	{	3  }		; AIRNETIZ - Single opening to another zone
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izZn1"				Zone:GrgWallAirNetIZXFERs[2]:izZn1		=	{	Local( CSE_ZONE )  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izALo"				Zone:GrgWallAirNetIZXFERs[2]:izALo		=	{	Local( GrgWallH )  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izHD"				Zone:GrgWallAirNetIZXFERs[2]:izHD   	=	{	Local( GrgWallHoleLoZ )  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izNVEff"			Zone:GrgWallAirNetIZXFERs[2]:izNVEff	=	{	1.0  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izExp"				Zone:GrgWallAirNetIZXFERs[2]:izExp  	=	{	0.65  }
+	"Set Zone:GrgWallAirNetIZXFERs[2]:izZN2"				Zone:GrgWallAirNetIZXFERs[2]:izZN2  	=	{	Global( Garage:CSE_ZONE )  }
+
+ ;-----------------------
+ ; AirNet for IAQ Ventilation
+ ;-----------------------
+	;   IAQ ventilation  For MF flows may be summed accross units being modelled together in a single zone with W/CFM and ASEF flow weighted.  130517
+	;       Inputs for each zone
+	;         IAQVentCFM     	// CFM of IAQ vent   
+	;         IAQfanWperCFM  	// W/CFM of IAQ vent   
+	;         Type IAQExhaust     	// "IAQExhaust", "IAQSupply", "IAQBalanced" "NoIAQVent"
+	;	 ASEF     	// If type is IAQBalanced, the apparent sensible effectiveness, fraction (includes fan heat).  Range 0 - 1, default 0  130517
+	;		Write Airnet Objects to CSE Input		
+	;    
+	;	 If Exhaust 
+	;	    IZXFER (Zone)IAQfan izNVTYPE = AirNetExtFan izZN1 = (Zone) izVFmin=-IAQVentCFM izVFmax=-IAQVentCFM izFanVfDs=IAQVentCFM izFanElecPwr=IAQfanWperCFM izFanMtr=IAQventMtr
+	;	
+	;	 If IAQSupply
+	;            IZXFER (Zone)IAQfan izNVTYPE = AirNetExtFan izZN1 = (Zone) izVFmin=IAQVentCFM izVFmax=-IAQVentCFM izFanVfDs=IAQVentCFM izFanElecPwr=IAQfanWperCFM izFanMtr=IAQventMtr
+	;	
+	;	 If IAQBalanced  // Balanced or Heat recovery ventilator 130517
+	;	     IZXFER (Zone)IAQHRV  izNVTYPE = AIRNETHERV izZN1 = (Zone) izFanVFDS = IAQVentCFM  izFanElecPwr=IAQfanWperCFM izFanMtr=IAQventMtr izASEF=ASEF  
+
+	;					where:		0, HVACFan:IAQFanType,  1
+	;									2,              1,    "Exhaust"
+	;									2,              2,    "Supply"
+	;									2,              3,    "Balanced"
+
+	"Create Zone:IAQVentAirNetIZXFERs[1] (supply)"		Zone:IAQVentAirNetIZXFERs[1]	= {	if (IAQCFM_Supply <= 0 .OR. IAQPwr_Supply <= 0) then  UNCHANGED
+																														else  CreateComp( cseIZXFER, Local( Name ) + "-IAQFanS" )  endif  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izNVType"			Zone:IAQVentAirNetIZXFERs[1]:izNVType		=	{	6  }		; AIRNETEXTFAN  - Fan from exterior to zone
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izZn1"				Zone:IAQVentAirNetIZXFERs[1]:izZn1			=	{	CSE_ZONE  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izVFmin"			Zone:IAQVentAirNetIZXFERs[1]:izVFmin		=	{	IAQCFM_Supply  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izVFmax"			Zone:IAQVentAirNetIZXFERs[1]:izVFmax   	=	{	IAQCFM_Supply  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanVfDs"			Zone:IAQVentAirNetIZXFERs[1]:izFanVfDs 	=	{	IAQCFM_Supply  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanElecPwr"		Zone:IAQVentAirNetIZXFERs[1]:izFanElecPwr	=	{	IAQPwr_Supply / IAQCFM_Supply   }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanMtr"			Zone:IAQVentAirNetIZXFERs[1]:izFanMtr  	=	{	Proj:CSE_ElecMETER  }
+	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanEndUse"		Zone:IAQVentAirNetIZXFERs[1]:izFanEndUse	=	{	"FANV"          }
+
+	"Create Zone:IAQVentAirNetIZXFERs[2] (exhaust)"		Zone:IAQVentAirNetIZXFERs[2]	= {	if (IAQCFM_Exhaust <= 0 .OR. IAQPwr_Exhaust <= 0) then  UNCHANGED
+																														else  CreateComp( cseIZXFER, Local( Name ) + "-IAQFanE" )  endif  }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izNVType"			Zone:IAQVentAirNetIZXFERs[2]:izNVType		=	{	6  }		; AIRNETEXTFAN  - Fan from exterior to zone
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izZn1"				Zone:IAQVentAirNetIZXFERs[2]:izZn1			=	{	CSE_ZONE  }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izVFmin"			Zone:IAQVentAirNetIZXFERs[2]:izVFmin		=	{	IAQCFM_Exhaust * -1  }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izVFmax"			Zone:IAQVentAirNetIZXFERs[2]:izVFmax   	=	{	IAQCFM_Exhaust * -1  }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanVfDs"			Zone:IAQVentAirNetIZXFERs[2]:izFanVfDs 	=	{	IAQCFM_Exhaust       }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanElecPwr"		Zone:IAQVentAirNetIZXFERs[2]:izFanElecPwr	=	{	IAQPwr_Exhaust / IAQCFM_Exhaust   }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanMtr"			Zone:IAQVentAirNetIZXFERs[2]:izFanMtr  	=	{	Proj:CSE_ElecMETER  }
+	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanEndUse"		Zone:IAQVentAirNetIZXFERs[2]:izFanEndUse	=	{	"FANV"          }
+
+	"Create Zone:IAQVentAirNetIZXFERs[3] (balanced)"	Zone:IAQVentAirNetIZXFERs[3]	= {	if (IAQHRVCFM <= 0 .OR. IAQHRVPwr <= 0) then  UNCHANGED
+																														else  CreateComp( cseIZXFER, Local( Name ) + "-IAQHRV" )  endif  }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izNVType"			Zone:IAQVentAirNetIZXFERs[3]:izNVType		=	{	10  }		; AIRNETHERV  - IAQ balanced / heat recovery ventilator
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izZn1"				Zone:IAQVentAirNetIZXFERs[3]:izZn1			=	{	CSE_ZONE  }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izFanVfDs"			Zone:IAQVentAirNetIZXFERs[3]:izFanVfDs 	=	{	IAQHRVCFM       }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izFanElecPwr"		Zone:IAQVentAirNetIZXFERs[3]:izFanElecPwr	=	{	IAQHRVPwr / IAQHRVCFM   }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izASEF"				Zone:IAQVentAirNetIZXFERs[3]:izASEF			=	{	if (IAQHRVCFMxRcvEff <= 0 .OR. IAQHRVCFMxRcvEff > (IAQHRVCFM * 100)) then  UNDEFINED
+																																		else  (IAQHRVCFMxRcvEff / IAQHRVCFM) / 100  endif  }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izFanMtr"			Zone:IAQVentAirNetIZXFERs[3]:izFanMtr  	=	{	Proj:CSE_ElecMETER  }
+	"Set Zone:IAQVentAirNetIZXFERs[3]:izFanEndUse"		Zone:IAQVentAirNetIZXFERs[3]:izFanEndUse	=	{	"FANV"          }
+
+; previous version
+;	"Create Zone:IAQVentAirNetIZXFERs[1] (supply)"		Zone:IAQVentAirNetIZXFERs[1]	= {	if (LocalCompAssigned( IAQVentSystem ) == 0) then  UNCHANGED
+;																														else if (LocalRef( IAQVentSystem:Fan:IAQCFM ) > 0 .AND.
+;																																	LocalRef( IAQVentSystem:Fan:IAQFanType ) > 1.1)  ; Supply or Balanced
+;																														then  CreateComp( cseIZXFER, Local( Name ) + "-IAQFanS" )
+;																														else  UNCHANGED  endif endif  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izNVType"			Zone:IAQVentAirNetIZXFERs[1]:izNVType		=	{	6  }		; AIRNETEXTFAN  - Fan from exterior to zone
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izZn1"				Zone:IAQVentAirNetIZXFERs[1]:izZn1			=	{	CSE_ZONE  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izVFmin"			Zone:IAQVentAirNetIZXFERs[1]:izVFmin		=	{	IAQVentSystem:Fan:IAQCFM * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izVFmax"			Zone:IAQVentAirNetIZXFERs[1]:izVFmax   	=	{	IAQVentSystem:Fan:IAQCFM * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanVfDs"			Zone:IAQVentAirNetIZXFERs[1]:izFanVfDs 	=	{	IAQVentSystem:Fan:IAQCFM * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanElecPwr"		Zone:IAQVentAirNetIZXFERs[1]:izFanElecPwr	=	{	IAQVentSystem:Fan:WperCFMIAQ   }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanMtr"			Zone:IAQVentAirNetIZXFERs[1]:izFanMtr  	=	{	Proj:CSE_ElecMETER  }
+;	"Set Zone:IAQVentAirNetIZXFERs[1]:izFanEndUse"		Zone:IAQVentAirNetIZXFERs[1]:izFanEndUse	=	{	"FANV"          }
+;
+;	"Create Zone:IAQVentAirNetIZXFERs[2] (exhaust)"		Zone:IAQVentAirNetIZXFERs[2]	= {	if (LocalCompAssigned( IAQVentSystem ) == 0) then  UNCHANGED
+;																														else if (LocalRef( IAQVentSystem:Fan:IAQCFM ) > 0 .AND.
+;																																	LocalRef( IAQVentSystem:Fan:IAQFanType ) != 2)  ; Exhaust or Balanced
+;																														then  CreateComp( cseIZXFER, Local( Name ) + "-IAQFanE" )
+;																														else  UNCHANGED  endif endif  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izNVType"			Zone:IAQVentAirNetIZXFERs[2]:izNVType		=	{	6  }		; AIRNETEXTFAN  - Fan from exterior to zone
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izZn1"				Zone:IAQVentAirNetIZXFERs[2]:izZn1			=	{	CSE_ZONE  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izVFmin"			Zone:IAQVentAirNetIZXFERs[2]:izVFmin		=	{	IAQVentSystem:Fan:IAQCFM * -1 * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izVFmax"			Zone:IAQVentAirNetIZXFERs[2]:izVFmax   	=	{	IAQVentSystem:Fan:IAQCFM * -1 * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanVfDs"			Zone:IAQVentAirNetIZXFERs[2]:izFanVfDs 	=	{	IAQVentSystem:Fan:IAQCFM      * CondFloorArea / IAQVentSystem:FloorAreaServed  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanElecPwr"		Zone:IAQVentAirNetIZXFERs[2]:izFanElecPwr	=	{	IAQVentSystem:Fan:WperCFMIAQ   }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanMtr"			Zone:IAQVentAirNetIZXFERs[2]:izFanMtr  	=	{	Proj:CSE_ElecMETER  }
+;	"Set Zone:IAQVentAirNetIZXFERs[2]:izFanEndUse"		Zone:IAQVentAirNetIZXFERs[2]:izFanEndUse	=	{	"FANV"          }
+
+; SAC 4/18/13 - revised CoolVent whole house fan air net stuff to generate a single whole house fan per system, rather than per zone
+; SAC 5/2/13 - RESTORED this call w/ revised logic, since now generating whole house fans (again) by zone and not system
+ ;-----------------------
+ ; AirNet for Cooling Ventilation (whole house fan / economizer / night breeze)
+ ;-----------------------
+ ; SAC 8/3/14 - added logic to prevent creation of IZXFER if no valid attic exists (and log this issue to project log file)
+ 	"Log invalid WHF generation issue"	Zone:Action	= {	if (ClVentAirFlow > 0 .AND. ClVentPower > 0)
+																			then	if (ComponentCount( Attic ) < 1)
+																					then	PostWarning( "Zone '%s' should be modeled with whole house fan, but cannot be due to no Attic present.", Name )
+																					else	if (IfValidAnd( Proj:CondFloorArea > 1 ))
+																							then	if ((SumAll( Attic:FloorAreaOverCond ) / Proj:CondFloorArea) < 0.1)
+																									then  PostWarning( "Zone '%s' should be modeled with whole house fan, but cannot be due to Attic not adjacent to at least 10% of overall conditioned floor area.", Name )
+																									else	UNCHANGED  endif
+																							else	UNCHANGED  endif
+																					endif
+																			else	UNCHANGED  endif  }
+	"Call subordinate rulelist to setup ClVent IZXFER object(s)"
+		;	Zone:Action		= {	if (LocalCompAssigned( CoolVentSystem ) == 0) then  UNCHANGED
+		;								else if (LocalRef( CoolVentSystem:Fan:Type ) == 2 .AND.		; Whole House Fan
+		;											LocalRef( CoolVentSystem:Fan:CoolingVent ) > 0)
+			Zone:Action		= {	if (ClVentAirFlow > 0 .AND. ClVentPower > 0 .AND. LocalCompAssigned( MaxClVentableAttic ) > 0.5)
+										then  if (IfValidAnd( Proj:CondFloorArea > 1 ) .AND. LocalCompAssigned( MaxClVentableAttic:CSE_ZONE ) > 0.5)
+												then	if ((SumAll( Attic:FloorAreaOverCond ) / Proj:CondFloorArea) >= 0.1)
+														then	EvalRulelist( "SimPrep_CSE_AirNet_Zone_WholeHouseFan", 1 )
+														else  UNCHANGED  endif
+												else  UNCHANGED  endif
+										else  UNCHANGED  endif  }
+
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Zone_WholeHouseFan" 0 0 0 1
+;RULELIST "SimPrep_CSE_AirNet_System_WholeHouseFan" 0 0 0 1   - second round mechanism that defined cool vent (ClVent) air net by System
+;*************************************************************************
+	; from AirNetAlogorithm9.txt:
+	;	7.  Mechanical Cooling Ventilation   //  The following does not work for multi-zone systems with Econ, NightBreeze.  Revise along with ducts model
+	;		For each Cooling Ventilation System
+	;		Inputs 
+	;	         CoolVentType		//type of MECHANICAL cooling ventilation,  Choice of WHF, Econ, NightBreeze
+	;		 CoolVentCFM		//Rated air flow of the mechanical cooling system
+	;		 CoolVent W/CFM		// 
+	;		 ReturnRegister		// If WHF the conditoned zone where it is located
+	;		 
+	;		 Calculate
+	;			Relief = CoolVentCFM/375  // The minimum size of the attic vents required to let the WHF flow out of the attic
+	;			
+	;		If WHF  		// Whole House Fan
+	;		   Calculate
+	;		   	Relief = CoolVentCFM/375  // The minimum size of the attic vent required for this fan to let the WHF flow out of the attic
+	;		   Write Airnet Objects to CSE Input
+	;		   	       	IZXFER (Zone)WHF izNVTYPE=AirNetIZFan izZN1=(Zone) izVFmin=0. izVFMax=-CoolVentCFM*Win_hr izFanVfDs=CoolVentCFM izZn2=Attic izFanElecPwr=CoolVentWperCFM izFanMtr=CoolVentMtr
+	;
+	;  SAC 9/19/12 - now dividing user-specified CoolingVent by 4 per Bruce's bug rpt 027
+
+; SAC 5/2/13 - new mechanism based on zone again (w/ original Zone version commented out)
+	"Create Zone:ClVentAirNetIZXFERs[1] (WHF)"			Zone:ClVentAirNetIZXFERs[1]					= {	CreateComp( cseIZXFER, Local( Name ) + "-WHF" )  }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izNVType"			Zone:ClVentAirNetIZXFERs[1]:izNVType		= {	7         }		; AIRNETIZFAN - Fan between two zones
+	"Set Zone:ClVentAirNetIZXFERs[1]:izZn1"				Zone:ClVentAirNetIZXFERs[1]:izZn1			= {	CSE_ZONE  }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izZn2"				Zone:ClVentAirNetIZXFERs[1]:izZn2			= {	MaxClVentableAttic:CSE_ZONE  }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izVFmin"				Zone:ClVentAirNetIZXFERs[1]:izVFmin			= {	0         }
+;	"Set Zone:ClVentAirNetIZXFERs[1]:izVFmax_x"			Zone:ClVentAirNetIZXFERs[1]:izVFmax_x 		= {	Format( "%.1f * WINDOWVENTAVAIL",
+;																											((CoolVentSystem:Fan:CoolingVent / 4) * -1 * CondFloorArea / CoolVentSystem:FloorAreaServed) )  }
+;	"Set Zone:ClVentAirNetIZXFERs[1]:izFanVfDs"			Zone:ClVentAirNetIZXFERs[1]:izFanVfDs 		= {	(CoolVentSystem:Fan:CoolingVent / 4) * CondFloorArea / CoolVentSystem:FloorAreaServed  }
+;	"Set Zone:ClVentAirNetIZXFERs[1]:izFanElecPwr"		Zone:ClVentAirNetIZXFERs[1]:izFanElecPwr	= {	CoolVentSystem:Fan:WperCFMCool   }
+; KN 04/17/2015 to support change in assumptions on WHF cfm for 2016 standards
+;	"Set Zone:ClVentAirNetIZXFERs[1]:izVFmax_x"			Zone:ClVentAirNetIZXFERs[1]:izVFmax_x 		= {	Format( "%.1f * WINDOWVENTAVAIL * FANVENTAVAIL", ((ClVentAirFlow / 4) * -1) )  }
+;	"Set Zone:ClVentAirNetIZXFERs[1]:izFanVfDs"			Zone:ClVentAirNetIZXFERs[1]:izFanVfDs 		= {	ClVentAirFlow / 4  }
+; SAC 12/31/15 - added reference to new Proj:ClVentAirFlowMult used to reduce WHF CFM for reduced attic relief vent free area (tic #596)
+	"Set Zone:ClVentAirNetIZXFERs[1]:izVFmax_x"			Zone:ClVentAirNetIZXFERs[1]:izVFmax_x 		= {	Format( "%.1f * WINDOWVENTAVAIL * FANVENTAVAIL", ((ClVentAirFlow * Proj:ClVentAirFlowMult / CAClimateZoneCodeBase:WHFcfmdivisor( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )) * -1) )  }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izFanVfDs"			Zone:ClVentAirNetIZXFERs[1]:izFanVfDs 		= {	ClVentAirFlow * Proj:ClVentAirFlowMult / CAClimateZoneCodeBase:WHFcfmdivisor( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  }
+
+	"Set Zone:ClVentAirNetIZXFERs[1]:izFanElecPwr"		Zone:ClVentAirNetIZXFERs[1]:izFanElecPwr	= {	ClVentPower / ClVentAirFlow   }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izFanMtr"			Zone:ClVentAirNetIZXFERs[1]:izFanMtr  		= {	Proj:CSE_ElecMETER  }
+	"Set Zone:ClVentAirNetIZXFERs[1]:izFanEndUse"		Zone:ClVentAirNetIZXFERs[1]:izFanEndUse	= {	"FANC"          }
+
+; SAC 4/18/13 - revision where there is a single WHF zone air net object PER WHF SYSTEM
+; second gen mechanism that setup ClVent airnet by system - replaced 5/2/13 by revised mechanism by zone (above)
+;	"Create HVACSys:ClVentAirNetIZXFERs[1] (WHF)"		HVACSys:ClVentAirNetIZXFERs[1]					= {	CreateComp( cseIZXFER, Local( Name ) + "-WHF" )  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izNVType"		HVACSys:ClVentAirNetIZXFERs[1]:izNVType		= {	7         }		; AIRNETIZFAN - Fan between two zones
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izZn1"			HVACSys:ClVentAirNetIZXFERs[1]:izZn1			= {	AirNet_CoolVentZone:CSE_ZONE  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izZn2"			HVACSys:ClVentAirNetIZXFERs[1]:izZn2			= {	Attic:CSE_ZONE  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izVFmin"			HVACSys:ClVentAirNetIZXFERs[1]:izVFmin			= {	0         }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izVFmax_x"		HVACSys:ClVentAirNetIZXFERs[1]:izVFmax_x 		= {	Format( "%.1f * WINDOWVENTAVAIL * FANVENTAVAIL", ((Fan:CoolingVent / 4) * -1) )  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izFanVfDs"		HVACSys:ClVentAirNetIZXFERs[1]:izFanVfDs 		= {	(Fan:CoolingVent / 4)  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izFanElecPwr"	HVACSys:ClVentAirNetIZXFERs[1]:izFanElecPwr	= {	Fan:WperCFMCool   }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izFanMtr"		HVACSys:ClVentAirNetIZXFERs[1]:izFanMtr  		= {	Proj:CSE_ElecMETER  }
+;	"Set HVACSys:ClVentAirNetIZXFERs[1]:izFanEndUse"	HVACSys:ClVentAirNetIZXFERs[1]:izFanEndUse	= {	"FANC"          }
+
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Zone_ExtWall" 0 0 0 1
+;*************************************************************************
+	"Create Zone:AirNetIZXFERs[1] - WlLU"		Zone:AirNetIZXFERs[1]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlLU", "Default_ZoneIZXFER" )  }
+	"Create Zone:AirNetIZXFERs[2] - WlLS"		Zone:AirNetIZXFERs[2]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlLS", "Default_ZoneIZXFER" )  }
+	"Create Zone:AirNetIZXFERs[3] - WlLD"		Zone:AirNetIZXFERs[3]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlLD", "Default_ZoneIZXFER" )  }
+	"Create Zone:AirNetIZXFERs[4] - WlHU"		Zone:AirNetIZXFERs[4]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlHU", "Default_ZoneIZXFER" )  }
+	"Create Zone:AirNetIZXFERs[5] - WlHS"		Zone:AirNetIZXFERs[5]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlHS", "Default_ZoneIZXFER" )  }
+	"Create Zone:AirNetIZXFERs[6] - WlHD"		Zone:AirNetIZXFERs[6]	= {	CreateComp( cseIZXFER, Local( Name ) + "-WlHD", "Default_ZoneIZXFER" )  }
+
+	"Set Zone:AirNetIZXFERs[1]:izZn1 - WlLU"		Zone:AirNetIZXFERs[1]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:AirNetIZXFERs[2]:izZn1 - WlLS"		Zone:AirNetIZXFERs[2]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:AirNetIZXFERs[3]:izZn1 - WlLD"		Zone:AirNetIZXFERs[3]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:AirNetIZXFERs[4]:izZn1 - WlHU"		Zone:AirNetIZXFERs[4]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:AirNetIZXFERs[5]:izZn1 - WlHS"		Zone:AirNetIZXFERs[5]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:AirNetIZXFERs[6]:izZn1 - WlHD"		Zone:AirNetIZXFERs[6]:izZn1	= {	Local( CSE_ZONE )  }
+
+	"Set Zone:AirNetIZXFERs[1]:izALo - WlLU"		Zone:AirNetIZXFERs[1]:izALo	= {	Local( WallHoleSize )      }
+	"Set Zone:AirNetIZXFERs[2]:izALo - WlLS"		Zone:AirNetIZXFERs[2]:izALo	= {	Local( WallHoleSize ) * 2  }
+	"Set Zone:AirNetIZXFERs[3]:izALo - WlLD"		Zone:AirNetIZXFERs[3]:izALo	= {	Local( WallHoleSize )      }
+	"Set Zone:AirNetIZXFERs[4]:izALo - WlHU"		Zone:AirNetIZXFERs[4]:izALo	= {	Local( WallHoleSize )      }
+	"Set Zone:AirNetIZXFERs[5]:izALo - WlHS"		Zone:AirNetIZXFERs[5]:izALo	= {	Local( WallHoleSize ) * 2  }
+	"Set Zone:AirNetIZXFERs[6]:izALo - WlHD"		Zone:AirNetIZXFERs[6]:izALo	= {	Local( WallHoleSize )      }
+
+; SAC 11/18/14 - allow negative airnet hole positions
+	"Set Zone:AirNetIZXFERs[1]:izHD - WlLU"		Zone:AirNetIZXFERs[1]:izHD		= {	Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight )) )  }
+	"Set Zone:AirNetIZXFERs[2]:izHD - WlLS"		Zone:AirNetIZXFERs[2]:izHD		= {	Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight )) )  }
+	"Set Zone:AirNetIZXFERs[3]:izHD - WlLD"		Zone:AirNetIZXFERs[3]:izHD		= {	Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.25 * Local( ZoneHeight )) )  }
+	"Set Zone:AirNetIZXFERs[4]:izHD - WlHU"		Zone:AirNetIZXFERs[4]:izHD		= {	Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight )) )  }
+	"Set Zone:AirNetIZXFERs[5]:izHD - WlHS"		Zone:AirNetIZXFERs[5]:izHD		= {	Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight )) )  }
+	"Set Zone:AirNetIZXFERs[6]:izHD - WlHD"		Zone:AirNetIZXFERs[6]:izHD		= {	Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight ))   }  ; max( 0.1, Local( ZoneBotZ ) + (0.75 * Local( ZoneHeight )) )  }
+
+;	"Set Zone:AirNetIZXFERs[1]:izCpr - WlLU"		Zone:AirNetIZXFERs[1]:izCpr	= {	 0.6   }
+	"Set Zone:AirNetIZXFERs[2]:izCpr - WlLS"		Zone:AirNetIZXFERs[2]:izCpr	= {	-0.65  }
+	"Set Zone:AirNetIZXFERs[3]:izCpr - WlLD"		Zone:AirNetIZXFERs[3]:izCpr	= {	-0.3   }
+;	"Set Zone:AirNetIZXFERs[4]:izCpr - WlHU"		Zone:AirNetIZXFERs[4]:izCpr	= {	 0.6   }
+	"Set Zone:AirNetIZXFERs[5]:izCpr - WlHS"		Zone:AirNetIZXFERs[5]:izCpr	= {	-0.65  }
+	"Set Zone:AirNetIZXFERs[6]:izCpr - WlHD"		Zone:AirNetIZXFERs[6]:izCpr	= {	-0.3   }
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Zone_Windows_1Story" 0 0 0 1
+;*************************************************************************
+	"Set Zone:WinHoleAreaExp[1]"		Zone:WinHoleAreaExp[1]	= {	Format( "%.3f * WINDOWVENTAVAIL", (Local( WinVentArea ) / 16) )  }
+	"Set Zone:WinHoleAreaExp[2]"		Zone:WinHoleAreaExp[2]	= {	Format( "%.3f * WINDOWVENTAVAIL", (Local( WinVentArea ) /  8) )  }
+
+	"Create Zone:WinAirNetIZXFERs[1] - WnLU"			Zone:WinAirNetIZXFERs[1]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnLU", "Default_ZoneWinIZXFER" )  }
+	"Create Zone:WinAirNetIZXFERs[2] - WnLS"			Zone:WinAirNetIZXFERs[2]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnLS", "Default_ZoneWinIZXFER" )  }
+	"Create Zone:WinAirNetIZXFERs[3] - WnLD"			Zone:WinAirNetIZXFERs[3]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnLD", "Default_ZoneWinIZXFER" )  }
+	"Create Zone:WinAirNetIZXFERs[4] - WnHU"			Zone:WinAirNetIZXFERs[4]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnHU", "Default_ZoneWinIZXFER" )  }
+	"Create Zone:WinAirNetIZXFERs[5] - WnHS"			Zone:WinAirNetIZXFERs[5]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnHS", "Default_ZoneWinIZXFER" )  }
+	"Create Zone:WinAirNetIZXFERs[6] - WnHD"			Zone:WinAirNetIZXFERs[6]			= {	CreateComp( cseIZXFER, Local( Name ) + "-WnHD", "Default_ZoneWinIZXFER" )  }
+
+	"Set Zone:WinAirNetIZXFERs[1]:izZn1 - WnLU"		Zone:WinAirNetIZXFERs[1]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:WinAirNetIZXFERs[2]:izZn1 - WnLS"		Zone:WinAirNetIZXFERs[2]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:WinAirNetIZXFERs[3]:izZn1 - WnLD"		Zone:WinAirNetIZXFERs[3]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:WinAirNetIZXFERs[4]:izZn1 - WnHU"		Zone:WinAirNetIZXFERs[4]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:WinAirNetIZXFERs[5]:izZn1 - WnHS"		Zone:WinAirNetIZXFERs[5]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Zone:WinAirNetIZXFERs[6]:izZn1 - WnHD"		Zone:WinAirNetIZXFERs[6]:izZn1	= {	Local( CSE_ZONE )  }
+
+	"Set Zone:WinAirNetIZXFERs[1]:izAHi_x - WnLU"	Zone:WinAirNetIZXFERs[1]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+	"Set Zone:WinAirNetIZXFERs[2]:izAHi_x - WnLS"	Zone:WinAirNetIZXFERs[2]:izAHi_x	= {	Local( WinHoleAreaExp[2] )  }
+	"Set Zone:WinAirNetIZXFERs[3]:izAHi_x - WnLD"	Zone:WinAirNetIZXFERs[3]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+	"Set Zone:WinAirNetIZXFERs[4]:izAHi_x - WnHU"	Zone:WinAirNetIZXFERs[4]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+	"Set Zone:WinAirNetIZXFERs[5]:izAHi_x - WnHS"	Zone:WinAirNetIZXFERs[5]:izAHi_x	= {	Local( WinHoleAreaExp[2] )  }
+	"Set Zone:WinAirNetIZXFERs[6]:izAHi_x - WnHD"	Zone:WinAirNetIZXFERs[6]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+
+;	"Set Zone:WinAirNetIZXFERs[1]:izHD - WnLU"		Zone:WinAirNetIZXFERs[1]:izHD		= {	max( 0.1, Local( WinHHTopUse ) - (3 + Local( WinVentHtDiff )) )  }
+;	"Set Zone:WinAirNetIZXFERs[2]:izHD - WnLS"		Zone:WinAirNetIZXFERs[2]:izHD		= {	max( 0.1, Local( WinHHTopUse ) - (3 + Local( WinVentHtDiff )) )  }
+;	"Set Zone:WinAirNetIZXFERs[3]:izHD - WnLD"		Zone:WinAirNetIZXFERs[3]:izHD		= {	max( 0.1, Local( WinHHTopUse ) - (3 + Local( WinVentHtDiff )) )  }
+; SAC 7/24/14 - switched to second element of WinHHTopUse[] to address SFam vs. MFam differences
+; SAC 11/18/14 - allow negative airnet hole positions
+	"Set Zone:WinAirNetIZXFERs[1]:izHD - WnLU"		Zone:WinAirNetIZXFERs[1]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 3                                  ; max( 0.1, Local( WinHHTopUse[2] ) - 3 )                   
+																														else	Local( WinHHTopUse[2] ) - 3 + WinVentHtDiff[1]   endif  }    ; max( 0.1, Local( WinHHTopUse[2] ) - 3 + WinVentHtDiff[1] )
+	"Set Zone:WinAirNetIZXFERs[2]:izHD - WnLS"		Zone:WinAirNetIZXFERs[2]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 3 
+																														else	Local( WinHHTopUse[2] ) - 3 + WinVentHtDiff[1]   endif  }
+	"Set Zone:WinAirNetIZXFERs[3]:izHD - WnLD"		Zone:WinAirNetIZXFERs[3]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 3 
+																														else	Local( WinHHTopUse[2] ) - 3 + WinVentHtDiff[1]   endif  }
+	"Set Zone:WinAirNetIZXFERs[4]:izHD - WnHU"		Zone:WinAirNetIZXFERs[4]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 1 
+																														else	Local( WinHHTopUse[2] ) - 1 + WinVentHtDiff[2]   endif  }
+	"Set Zone:WinAirNetIZXFERs[5]:izHD - WnHS"		Zone:WinAirNetIZXFERs[5]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 1 
+																														else	Local( WinHHTopUse[2] ) - 1 + WinVentHtDiff[2]   endif  }
+	"Set Zone:WinAirNetIZXFERs[6]:izHD - WnHD"		Zone:WinAirNetIZXFERs[6]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+																														then	Local( WinHHTopUse[2] ) - 1 
+																														else	Local( WinHHTopUse[2] ) - 1 + WinVentHtDiff[2]   endif  }
+
+;	"Set Zone:WinAirNetIZXFERs[1]:izCpr - WnLU"		Zone:WinAirNetIZXFERs[1]:izCpr	= {	 0.6   }
+	"Set Zone:WinAirNetIZXFERs[2]:izCpr - WnLS"		Zone:WinAirNetIZXFERs[2]:izCpr	= {	-0.65  }
+	"Set Zone:WinAirNetIZXFERs[3]:izCpr - WnLD"		Zone:WinAirNetIZXFERs[3]:izCpr	= {	-0.3   }
+;	"Set Zone:WinAirNetIZXFERs[4]:izCpr - WnHU"		Zone:WinAirNetIZXFERs[4]:izCpr	= {	 0.6   }
+	"Set Zone:WinAirNetIZXFERs[5]:izCpr - WnHS"		Zone:WinAirNetIZXFERs[5]:izCpr	= {	-0.65  }
+	"Set Zone:WinAirNetIZXFERs[6]:izCpr - WnHD"		Zone:WinAirNetIZXFERs[6]:izCpr	= {	-0.3   }
+END
+
+; SAC 7/24/14 - revised logic to ALWAYS generate window AirNet objects using the single story logic (hence removal of the following rulelist)
+;		;*************************************************************************
+;		RULELIST "SimPrep_CSE_AirNet_Zone_Windows_MultiStory" 0 0 0 1
+;		;*************************************************************************
+;			"Set Zone:WinHoleAreaExp[1]"		Zone:WinHoleAreaExp[1]	= {	Format( "%.3f * WINDOWVENTAVAIL", (WinVentArea / (8 * NumStories)) )  }
+;			"Set Zone:WinHoleAreaExp[2]"		Zone:WinHoleAreaExp[2]	= {	Format( "%.3f * WINDOWVENTAVAIL", (WinVentArea / (4 * NumStories)) )  }
+;		
+;			"Create Zone:WinAirNetIZXFERs[1] - Wn1U"			Zone:WinAirNetIZXFERs[1]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn1U", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[2] - Wn1S"			Zone:WinAirNetIZXFERs[2]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn1S", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[3] - Wn1D"			Zone:WinAirNetIZXFERs[3]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn1D", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[4] - Wn2U"			Zone:WinAirNetIZXFERs[4]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn2U", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[5] - Wn2S"			Zone:WinAirNetIZXFERs[5]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn2S", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[6] - Wn2D"			Zone:WinAirNetIZXFERs[6]			= {	CreateComp( cseIZXFER, Local( Name ) + "-Wn2D", "Default_ZoneWinIZXFER" )  }
+;			"Create Zone:WinAirNetIZXFERs[7] - Wn3U"			Zone:WinAirNetIZXFERs[7]			= {	if (NumStories < 2.5) then  UNCHANGED
+;																																else	CreateComp( cseIZXFER, Local( Name ) + "-Wn3U", "Default_ZoneWinIZXFER" )  endif  }
+;			"Create Zone:WinAirNetIZXFERs[8] - Wn3S"			Zone:WinAirNetIZXFERs[8]			= {	if (NumStories < 2.5) then  UNCHANGED
+;																																else	CreateComp( cseIZXFER, Local( Name ) + "-Wn3S", "Default_ZoneWinIZXFER" )  endif  }
+;			"Create Zone:WinAirNetIZXFERs[9] - Wn3D"			Zone:WinAirNetIZXFERs[9]			= {	if (NumStories < 2.5) then  UNCHANGED
+;																																else	CreateComp( cseIZXFER, Local( Name ) + "-Wn3D", "Default_ZoneWinIZXFER" )  endif  }
+;		
+;			"Set Zone:WinAirNetIZXFERs[1]:izZn1 - Wn1U"		Zone:WinAirNetIZXFERs[1]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[2]:izZn1 - Wn1S"		Zone:WinAirNetIZXFERs[2]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[3]:izZn1 - Wn1D"		Zone:WinAirNetIZXFERs[3]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[4]:izZn1 - Wn2U"		Zone:WinAirNetIZXFERs[4]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[5]:izZn1 - Wn2S"		Zone:WinAirNetIZXFERs[5]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[6]:izZn1 - Wn2D"		Zone:WinAirNetIZXFERs[6]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[7]:izZn1 - Wn3U"		Zone:WinAirNetIZXFERs[7]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[8]:izZn1 - Wn3S"		Zone:WinAirNetIZXFERs[8]:izZn1	= {	Local( CSE_ZONE )  }
+;			"Set Zone:WinAirNetIZXFERs[9]:izZn1 - Wn3D"		Zone:WinAirNetIZXFERs[9]:izZn1	= {	Local( CSE_ZONE )  }
+;		
+;			"Set Zone:WinAirNetIZXFERs[1]:izAHi_x - Wn1U"	Zone:WinAirNetIZXFERs[1]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;			"Set Zone:WinAirNetIZXFERs[2]:izAHi_x - Wn1S"	Zone:WinAirNetIZXFERs[2]:izAHi_x	= {	Local( WinHoleAreaExp[2] )  }
+;			"Set Zone:WinAirNetIZXFERs[3]:izAHi_x - Wn1D"	Zone:WinAirNetIZXFERs[3]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;			"Set Zone:WinAirNetIZXFERs[4]:izAHi_x - Wn2U"	Zone:WinAirNetIZXFERs[4]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;			"Set Zone:WinAirNetIZXFERs[5]:izAHi_x - Wn2S"	Zone:WinAirNetIZXFERs[5]:izAHi_x	= {	Local( WinHoleAreaExp[2] )  }
+;			"Set Zone:WinAirNetIZXFERs[6]:izAHi_x - Wn2D"	Zone:WinAirNetIZXFERs[6]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;			"Set Zone:WinAirNetIZXFERs[7]:izAHi_x - Wn3U"	Zone:WinAirNetIZXFERs[7]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;			"Set Zone:WinAirNetIZXFERs[8]:izAHi_x - Wn3S"	Zone:WinAirNetIZXFERs[8]:izAHi_x	= {	Local( WinHoleAreaExp[2] )  }
+;			"Set Zone:WinAirNetIZXFERs[9]:izAHi_x - Wn3D"	Zone:WinAirNetIZXFERs[9]:izAHi_x	= {	Local( WinHoleAreaExp[1] )  }
+;		
+;			"Set Zone:WinAirNetIZXFERs[1]:izHD - Wn1U"		Zone:WinAirNetIZXFERs[1]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[1] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[2]:izHD - Wn1S"		Zone:WinAirNetIZXFERs[2]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[1] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[3]:izHD - Wn1D"		Zone:WinAirNetIZXFERs[3]:izHD		= {	if (WinVentHtDiff[1] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[1] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[4]:izHD - Wn2U"		Zone:WinAirNetIZXFERs[4]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + FloorHeight )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[2] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[5]:izHD - Wn2S"		Zone:WinAirNetIZXFERs[5]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + FloorHeight )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[2] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[6]:izHD - Wn2D"		Zone:WinAirNetIZXFERs[6]:izHD		= {	if (WinVentHtDiff[2] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + FloorHeight )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[2] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[7]:izHD - Wn3U"		Zone:WinAirNetIZXFERs[7]:izHD		= {	if (WinVentHtDiff[3] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + (2 * FloorHeight) )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[3] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[8]:izHD - Wn3S"		Zone:WinAirNetIZXFERs[8]:izHD		= {	if (WinVentHtDiff[3] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + (2 * FloorHeight) )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[3] )  endif  }
+;			"Set Zone:WinAirNetIZXFERs[9]:izHD - Wn3D"		Zone:WinAirNetIZXFERs[9]:izHD		= {	if (WinVentHtDiff[3] < -900 .OR. Proj:BypassRuleLimits < 0.5)
+;																																then	max( 0.1, Local( WinHHTopUse ) - 2 + (2 * FloorHeight) )
+;																																else	max( 0.1, Local( WinHHTopUse ) - 2 + WinVentHtDiff[3] )  endif  }
+;		
+;		;	"Set Zone:WinAirNetIZXFERs[1]:izCpr - Wn1U"		Zone:WinAirNetIZXFERs[1]:izCpr	= {	 0.6   }
+;			"Set Zone:WinAirNetIZXFERs[2]:izCpr - Wn1S"		Zone:WinAirNetIZXFERs[2]:izCpr	= {	-0.65  }
+;			"Set Zone:WinAirNetIZXFERs[3]:izCpr - Wn1D"		Zone:WinAirNetIZXFERs[3]:izCpr	= {	-0.3   }
+;		;	"Set Zone:WinAirNetIZXFERs[4]:izCpr - Wn2U"		Zone:WinAirNetIZXFERs[4]:izCpr	= {	 0.6   }
+;			"Set Zone:WinAirNetIZXFERs[5]:izCpr - Wn2S"		Zone:WinAirNetIZXFERs[5]:izCpr	= {	-0.65  }
+;			"Set Zone:WinAirNetIZXFERs[6]:izCpr - Wn2D"		Zone:WinAirNetIZXFERs[6]:izCpr	= {	-0.3   }
+;		;	"Set Zone:WinAirNetIZXFERs[7]:izCpr - Wn3U"		Zone:WinAirNetIZXFERs[7]:izCpr	= {	 0.6   }
+;			"Set Zone:WinAirNetIZXFERs[8]:izCpr - Wn3S"		Zone:WinAirNetIZXFERs[8]:izCpr	= {	-0.65  }
+;			"Set Zone:WinAirNetIZXFERs[9]:izCpr - Wn3D"		Zone:WinAirNetIZXFERs[9]:izCpr	= {	-0.3   }
+;		END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Other" 0 0 0 1
+;*************************************************************************
+
+; SAC 8/29/13 - moved from "SimPrep_CSE_AirNet_Zone" rulelist (since rules here need to be evaluated on Proj as well as Zone)
+ ;-----------------------
+ ; AirNet for ceiling below attic in Conditioned Zone
+ ;-----------------------
+   ; d.  Ceiling
+   ;    		Calculate
+   ;           		If ceiling below attic
+	;			ELA_Aceil(zone) = ELAceilsf * AceilGross(zone)  //knee walls to attic not included in determining the conditioned to attic leakage distribution of
+	;		If Whole House fan, Ceiling leak through WWF when off   
+	;		     	If Improved WHFAe = .05  //  This is Effective Area Ae, not ELA, so doesn't get the 1.45 conversion multiplier Rev 11
+	;		     	else  WHFAe = .11  // This is Effective Area Ae, not ELA, so doesn't get the 1.45 conversion multiplier Rev 11
+	;      		If ceiling to outside
+   ;             		ELA_Xceil(zone) = ELAceilsf * AEdge(zone) + area of exterior ceilings(zone) 
+   ;       
+   ;         CeilHole     = (ELA_Aceil(zone) * 1.45) + WHFAe   //Ceil Hole size.  Conversion from ELA to airnet infiltration opening is 1.45* 					Rev 9
+   ;  		 CathCeilHole =  ELA_Xceil(zone) * 1.45       		//Cathedral Ceil  Hole size.  Conversion from ELA to airnet infiltration opening is 1.45* 	Rev 9
+   ;
+   ;             Write Airnet Objects to CSE Input
+   ;             
+	;		IZXFER (ZoneName)xAttic  izNVTYPE = AirNetIZ  izZN1=(ZoneName) izALo=CeilHole     izHD = ZoneTopZ izNVEff=1. izExp=0.65 izZN2 = Attic 		Rev 9
+   ;  	IZXFER (ZoneName)CC  	 izNVTYPE = AirNetExt izZN1=(ZoneName) izALo=CathCeilHole izHD = ZoneTopZ izNVEff=1. izExp=0.65    					Rev 9
+
+  ; SAC 1/14/13 - removed logic adjusting WHFanHole based on "Improved" status - logic was referencing WRONG Std/Improved property.  Improved WHFan not yet provded in data model.
+	"Init Zone:WHFanHole to 0"		Zone:WHFanHole		= {	0  }
+	"Set Whole house fan hole (for AirNet) - 1"
+			Proj:UnitClVentZone[1]:WHFanHole = {	if (UnitClVentZone[1]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption == 3) then  UNCHANGED
+																else if ((UnitClVentOption == 2 .AND. LocalCompAssigned( UnitClVentFan[1] )) .OR. UnitClVentOption == 1) then  0.11  else  UNCHANGED  endif endif  }
+	"Set Whole house fan hole (for AirNet) - 2"
+			Proj:UnitClVentZone[2]:WHFanHole = {	if (UnitClVentZone[2]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption != 2) then  UNCHANGED
+																else if (LocalCompAssigned( UnitClVentFan[2] )) then  0.11  else  UNCHANGED  endif endif  }
+	"Set Whole house fan hole (for AirNet) - 3"
+			Proj:UnitClVentZone[3]:WHFanHole = {	if (UnitClVentZone[3]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption != 2) then  UNCHANGED
+																else if (LocalCompAssigned( UnitClVentFan[3] )) then  0.11  else  UNCHANGED  endif endif  }
+	"Set Whole house fan hole (for AirNet) - 4"
+			Proj:UnitClVentZone[4]:WHFanHole = {	if (UnitClVentZone[4]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption != 2) then  UNCHANGED
+																else if (LocalCompAssigned( UnitClVentFan[4] )) then  0.11  else  UNCHANGED  endif endif  }
+	"Set Whole house fan hole (for AirNet) - 5"
+			Proj:UnitClVentZone[5]:WHFanHole = {	if (UnitClVentZone[5]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption != 2) then  UNCHANGED
+																else if (LocalCompAssigned( UnitClVentFan[5] )) then  0.11  else  UNCHANGED  endif endif  }
+	"Set Whole house fan hole (for AirNet) - 6"
+			Proj:UnitClVentZone[6]:WHFanHole = {	if (UnitClVentZone[6]:ClVentAirFlow <= 0 .OR. EnableClVent < 0.5 .OR. UnitClVentOption != 2) then  UNCHANGED
+																else if (LocalCompAssigned( UnitClVentFan[6] )) then  0.11  else  UNCHANGED  endif endif  }
+; SAC 8/29/13 - replaced below w/ above and removed old zone cool vent system references to address GC issue 149
+;	"Set Zone:WHFanHole - Whole house fan hole (for AirNet)"
+;			Zone:WHFanHole	= {	if (LocalCompAssigned( CoolVentSystem ))
+;										then  0.11
+;							;			then	if (Proj:InsulConsQuality == 2) then  0.05		; improved
+;							;					else  0.11
+;							;					endif
+;										else  0  endif  }
+
+	; for Ceilings below attic -
+; ; DEBUGGING
+; 	"Debug log message - Zone:Type"							Zone:Action		= {	PostMessageToLog( "Zone '%s' Type = %g", Name, Type )  }
+; 	"Debug log message - Zone:ELA_ACeil"					Zone:Action		= {	PostMessageToLog( "Zone '%s' ELA_ACeil = %g", Name, ELA_ACeil )  }
+; 	"Debug log message - Zone:ZoneTopZ"						Zone:Action		= {	PostMessageToLog( "Zone '%s' ZoneTopZ = %g", Name, ZoneTopZ )  }
+; 	"Debug log message - Attic count"						Proj:Action		= {	PostMessageToLog( "ComponentCount( Attic ) = %g", ComponentCount( Attic ) )  }
+; 	"Debug log message - Attic:CSE_ZONE assignment"		Proj:Action		= {	PostMessageToLog( "GlobalCompAssigned( Attic:CSE_ZONE ) = %g", GlobalCompAssigned( Attic:CSE_ZONE ) )  }
+;	"Create Zone:CeilAirNetIZXFERs[1] - xAttic"				Zone:CeilAirNetIZXFERs[1]	= {	if (Type == 10 .OR. ELA_ACeil <= 0 .OR. ZoneTopZ <= 0 .OR. ComponentCount( Attic ) < 1 .OR.
+;																															 GlobalCompAssigned( Attic:CSE_ZONE ) == 0) then  UNDEFINED
+;																														else  CreateComp( cseIZXFER, Local( Name ) + "-xAttic" )  endif  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izZn1 - xAttic"			Zone:CeilAirNetIZXFERs[1]:izZn1		= {	Local( CSE_ZONE )  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izNVType - xAttic"		Zone:CeilAirNetIZXFERs[1]:izNVType	= {	3  }		; AIRNETIZ" - Single opening to another zone
+;	"Set Zone:CeilAirNetIZXFERs[1]:izALo - xAttic"			Zone:CeilAirNetIZXFERs[1]:izALo	 	= {	if (Global( Attic:Type ) == 1)
+;																																	then	(ELA_ACeil * 1.45) * 10				; SAC 4/25/14 - crank up zone-attic hole for conditioned attics, since not sealed
+;																																	else	(ELA_ACeil * 1.45) + WHFanHole  	; SAC 3/19/13 - excluded WHFanHole from 1.45 multiplication (from AirNetAlgorithm11.txt)
+;																																	endif  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izHD - xAttic"			Zone:CeilAirNetIZXFERs[1]:izHD   	= {	ZoneTopZ  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izNVEff - xAttic"		Zone:CeilAirNetIZXFERs[1]:izNVEff  	= {	1  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izExp - xAttic"			Zone:CeilAirNetIZXFERs[1]:izExp   	= {	0.65  }
+;	"Set Zone:CeilAirNetIZXFERs[1]:izZN2 - xAttic"			Zone:CeilAirNetIZXFERs[1]:izZN2   	= {	Attic:CSE_ZONE  }
+; SAC 10/16/14 - replaced above w/ following to accommodate multiple Attics
+	"Create CeilingBelowAttic:CeilAirNetIZXFER - xAttic"			CeilingBelowAttic:CeilAirNetIZXFER	= {	if (ParentComponentType() != "Zone" .OR. LocalCompAssigned( AtticZone ) < 1 .OR. LocalCompAssigned( AtticZone:CSE_ZONE ) < 1) then  UNCHANGED
+																																			else if (Zone:Type == 10 .OR. IfValidAnd( Zone:ELA_ACeil > 0 )==0 .OR. Zone:ZoneTopZ <= 0 .OR. Area < 0.1) then  UNDEFINED
+																																			else  CreateComp( cseIZXFER, Local( Name ) + "-xAttic" )  endif endif  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izZn1 - xAttic"		CeilingBelowAttic:CeilAirNetIZXFER:izZn1		= {	Zone:CSE_ZONE  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izNVType - xAttic"	CeilingBelowAttic:CeilAirNetIZXFER:izNVType	= {	3  }		; AIRNETIZ" - Single opening to another zone
+
+;	"Post debug message"    CeilingBelowAttic:Action = {
+;PostMessageToLog( "      setting CeilingBelowAttic:CeilAirNetIZXFER:izALo -- Proj:BldgELA_CeilSF = %g / Area  = %g / Zone:WHFanHole = %g / ClVentableArea = %g / Zone:ClVentableClgArea = %g -- for ceiling '%s'",
+;          Proj:BldgELA_CeilSF, Area, Zone:WHFanHole, ClVentableArea, Zone:ClVentableClgArea, Name )  }
+
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izALo - xAttic"		CeilingBelowAttic:CeilAirNetIZXFER:izALo	 	= {
+																													if (AtticZone:Type == 1 .OR. ClVentableArea < 0.1)
+																													then	(Proj:BldgELA_CeilSF * ClVentableClgArea* 1.45) * 10						; SAC 4/25/14 - crank up zone-attic hole for conditioned attics, since not sealed
+																													else if (ParentComponentType() == "Zone")
+																													then	((Proj:BldgELA_CeilSF *ClVentableClgArea* 1.45) + Zone:WHFanHole )* ClVentableArea / Zone:ClVentableClgArea  	; SAC 3/19/13 - excluded WHFanHole from 1.45 multiplication (from AirNetAlgorithm11.txt)
+																													else	(Proj:BldgELA_CeilSF *ClVentableClgArea * 1.45)+ Zone:WHFanHole 			; SAC 12/17/14 - generic IZXFER w/out any ClVent adjustment ??
+																													endif endif  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izHD - xAttic"		CeilingBelowAttic:CeilAirNetIZXFER:izHD   	= {	Zone:ZoneTopZ  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izNVEff - xAttic"	CeilingBelowAttic:CeilAirNetIZXFER:izNVEff  	= {	1  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izExp - xAttic"		CeilingBelowAttic:CeilAirNetIZXFER:izExp   	= {	0.65  }
+	"Set CeilingBelowAttic:CeilAirNetIZXFER:izZN2 - xAttic"		CeilingBelowAttic:CeilAirNetIZXFER:izZN2   	= {	AtticZone:CSE_ZONE  }
+
+	; for Cathedral Ceilings -
+	"Create Zone:CeilAirNetIZXFER - CC"				Zone:CeilAirNetIZXFER				= {	if (Type == 10 .OR. IfValidAnd( ELA_XCeil > 0 )==0 .OR. ZoneTopZ <= 0) then  UNDEFINED
+																													else  CreateComp( cseIZXFER, Local( Name ) + "-CC" )  endif  }
+	"Set Zone:CeilAirNetIZXFER:izZn1 - CC"			Zone:CeilAirNetIZXFER:izZn1		= {	Local( CSE_ZONE )  }
+	"Set Zone:CeilAirNetIZXFER:izNVType - CC"		Zone:CeilAirNetIZXFER:izNVType	= {	4  }		; AIRNETEXT - Single opening to ambient
+;"Post debug message"    Zone:CeilAirNetIZXFER:Action = {
+;PostMessageToLog( "      setting Zone:CeilAirNetIZXFER:izALo -- ELA_XCeil= %g-- '%s'",
+;          ELA_XCeil, Name )  }
+	"Set Zone:CeilAirNetIZXFER:izALo - CC"			Zone:CeilAirNetIZXFER:izALo	 	= {	ELA_XCeil * 1.45  }
+	"Set Zone:CeilAirNetIZXFER:izHD - CC"			Zone:CeilAirNetIZXFER:izHD   		= {	ZoneTopZ  }
+	"Set Zone:CeilAirNetIZXFER:izNVEff - CC"		Zone:CeilAirNetIZXFER:izNVEff  	= {	1  }
+	"Set Zone:CeilAirNetIZXFER:izExp - CC"			Zone:CeilAirNetIZXFER:izExp   	= {	0.65  }
+
+
+; SAC 4/18/13 - revised CoolVent whole house fan air net stuff to generate a single whole house fan per system, rather than per zone
+ ;-----------------------
+ ; AirNet for Cooling Ventilation (whole house fan / economizer / night breeze)
+ ;-----------------------
+; second gen mechanism that setup ClVent airnet by system - now replaced by mechanism by zone
+;	"Call subordinate rulelist to setup ClVent IZXFER object(s)"
+;			HVACSys:Action	= {	if (Type != 10 .OR. Proj:IsMultiFamily > 0.5 .OR. LocalCompAssigned( AirNet_CoolVentZone ) == 0) then  UNCHANGED
+;										else if (LocalRef( Fan:Type ) == 2 .AND.		; Whole House Fan
+;													LocalRef( Fan:CoolingVent ) > 0)
+;										then  EvalRulelist( "SimPrep_CSE_AirNet_System_WholeHouseFan", 1 )
+;										else  UNCHANGED  endif endif  }
+
+
+ ;-----------------------
+ ; CEILING AirNet
+ ;-----------------------
+
+
+ ;-----------------------
+ ; EXTERIOR FLOOR AirNet
+ ;-----------------------
+ ;      2.  ELAraisedFloorsf   = ELAtot* (.2* 1-SlabRatio)/( ExFloortotSF-ExFloorSlabSF)
+ ;
+ ;      e.  Floor over outside
+ ;              For each floor over outside calculate       	     	
+ ;                     ELAfloor(Name) = ELAraisedFloorsf * AreaExtfloor * 1.45   (floors whose outside condition is Ambiant)
+ ;         Write Airnet Object to CSE Input
+ ;            IZXFER (Name)  izNVTYPE = AirNetExt izZN1 = (ZoneName) izALo = ELAfloor(Name)  izHD = Floor Height izNVEff = 1 izExp=0.65 izCpr=0.  // located at the Extfloor elevation, no wind effect
+ ;       
+ ;      e.  Floor over Crawl
+ ;              For each floor over outside calculate       	     	
+ ;                     ELAfloor(Name) = ELAraisedFloorsf * AreaCrawlfloor * 1.45   (floors whose outside condition is  Crawl)
+ ;         Write Airnet Object to CSE Input
+ ;            IZXFER (Name)xCrawl  izNVTYPE = AirNetIZ izZN1=(ZoneName) izALo=ELAfloor(Name) izHD = Floor Height izNVEff=1. izExp=0.65 izZN2 = Crawl 
+
+   "Set Proj:BldgELA_RaisedFlrSF"	Proj:BldgELA_RaisedFlrSF	= {   if (Local( BldgExtFloorArea ) < 0.0001) then  0
+																							else  Local( EffLeakageArea ) * (0.2 * (  1 - Local( SlabRatio ))) /  Local( BldgExtFloorArea )  endif  }
+
+	"Set ExteriorFloor:FloorELA_Ext"		ExteriorFloor:FloorELA_Ext		= {	if (Local( Area ) < 0.1) then  -1
+																									else  Global( Proj:BldgELA_RaisedFlrSF ) * Local( Area ) * 1.45  endif  }
+	"Create ExteriorFloor:AirNetIZXFER_Ext"			ExteriorFloor:AirNetIZXFER_Ext				= {	if (Local( FloorELA_Ext ) < 0.00001) then  UNCHANGED
+																																	else  CreateComp( cseIZXFER, Local( Name ) + "-Ext" )  endif  }
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izNVType"	ExteriorFloor:AirNetIZXFER_Ext:izNVType	= {	"AIRNETEXT"  }		; Single opening to ambient
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izZn1"		ExteriorFloor:AirNetIZXFER_Ext:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izALo"		ExteriorFloor:AirNetIZXFER_Ext:izALo		= {	Local( FloorELA_Ext )  }
+	; SAC 11/18/14 - allow negative airnet hole positions
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izHD"			ExteriorFloor:AirNetIZXFER_Ext:izHD			= {	max( FloorZ, Parent( Bottom ) )  }   ; max( FloorZ, max( 0.1, Parent( Bottom ) ) )  }   ; SAC 1/26/13 - added reference to FloorZ
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izNVEff"		ExteriorFloor:AirNetIZXFER_Ext:izNVEff		= {	1.0   }
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izExp"		ExteriorFloor:AirNetIZXFER_Ext:izExp		= {	0.65  }
+	"Set ExteriorFloor:AirNetIZXFER_Ext:izCpr"		ExteriorFloor:AirNetIZXFER_Ext:izCpr		= {	0.0   }
+
+	"Set FloorOverCrawl:FloorELA_Crawl"		FloorOverCrawl:FloorELA_Crawl		= {	if (Local( Area ) < 0.1) then  -1
+																											else  Global( Proj:BldgELA_RaisedFlrSF ) * Local( Area ) * 1.45  endif  }
+	"Create FloorOverCrawl:AirNetIZXFER_Crl"			FloorOverCrawl:AirNetIZXFER_Crl				= {	if (Local( FloorELA_Crawl ) < 0.00001 .OR. ComponentCount( CrawlSpace ) < 0.5) then  UNCHANGED
+																																	else  CreateComp( cseIZXFER, Local( Name ) + "-Crawl" )  endif  }
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izNVType"	FloorOverCrawl:AirNetIZXFER_Crl:izNVType	= {	"AIRNETIZ"  }			; Single opening to another zone
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izZn1"		FloorOverCrawl:AirNetIZXFER_Crl:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izALo"		FloorOverCrawl:AirNetIZXFER_Crl:izALo		= {	Local( FloorELA_Crawl )  }
+	; SAC 11/18/14 - allow negative airnet hole positions
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izHD"		FloorOverCrawl:AirNetIZXFER_Crl:izHD		= {	max( FloorZ, Parent( Bottom ) )  }   ; max( FloorZ, max( 0.1, Parent( Bottom ) ) )  }   ; SAC 1/26/13 - added reference to FloorZ
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izNVEff"	FloorOverCrawl:AirNetIZXFER_Crl:izNVEff	= {	1.0   }
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izExp"		FloorOverCrawl:AirNetIZXFER_Crl:izExp		= {	0.65  }
+	"Set FloorOverCrawl:AirNetIZXFER_Crl:izZn2"		FloorOverCrawl:AirNetIZXFER_Crl:izZn2		= {	Global( CrawlSpace:CSE_ZONE )  }
+
+
+ ;-----------------------
+ ; ATTIC AirNet
+ ;-----------------------
+;	"Set Zone:AtticBottom"		Zone:AtticBottom	= {	if (SumChildren( CeilingBelowAttic:Area ) > 1) then  min( 99999, Local( ZoneTopZ ) )
+;																		else  99999  endif  }
+;	"Set Attic:Bottom"			Attic:Bottom		= {	MinAll( Zone:AtticBottom )  }
+; SAC 10/16/14 - replaced above w/ below to accommodate multiple Attics
+	"Set CeilingBelowAttic:AtticBottom"		CeilingBelowAttic:AtticBottom		= {
+															if (LocalCompAssigned( AtticZone ) < 0.5) then  99999
+															else if (ParentComponentType() == "Zone") then  min( 99999, Zone:ZoneTopZ )
+															else if (ParentComponentType() == "Garage")
+															then	if (IfValidAnd( Garage:Volume > 0.1 ) .AND. IfValidAnd( Garage:Area > 0.1 ) .AND. IfValidAnd( Garage:Bottom > -9999 ))
+																	then	Garage:Bottom + (Garage:Volume / Garage:Area)
+																	else  99999  endif
+															else  99999  endif endif endif  }
+	"Set Attic:Bottom"	Attic:Bottom	= {	MinRevRef( CeilingBelowAttic:AtticZone, CeilingBelowAttic:AtticBottom )  }
+
+; SAC 12/28/14 - revised EvalRulelist() calls to include second argument of '1' so that those rules get evaluated ONLY on the active Attic.  W/o this, N times too many attic vents are created PER Attic, where N is the total # of attics
+	"Setup Attic AirNet properties via subordinate rulelist"
+			Attic:Action	 = {	if (Local( FloorArea ) > 0.1 .AND. Local( Bottom ) <= 99990)
+										then	switch (Local( Type ))
+													case  0 :	EvalRulelist( "SimPrep_CSE_AirNet_Attic_Vented", 1 )			; "Ventilated"
+													case  1 :	EvalRulelist( "SimPrep_CSE_AirNet_Attic_Conditioned", 1 )	; "Conditioned"
+													default :	UNCHANGED
+												endswitch
+										else	UNCHANGED  endif  }
+
+
+ ;-----------------------
+ ; Interior Floor over Garage AirNet
+ ;-----------------------
+ ; - based on Floor of a conditioned zone -
+	"Set InteriorFloor:ELA_Floor"		InteriorFloor:ELA_Floor		 = {	Proj:BldgELA_GarageSF * ParCndZnAdjGarArea * 1.45  }
+	"Create CondZone/Garage IZXFER InteriorFloor:AirNetGarIZXFER"
+			InteriorFloor:AirNetGarIZXFER		= {	if (ELA_Floor < 0.000001) then  UNCHANGED
+																else  CreateComp( cseIZXFER, Local( Name ) + "xGarage" )  endif  }
+	"Set InteriorFloor:AirNetGarIZXFER:izNVType"	InteriorFloor:AirNetGarIZXFER:izNVType	= {	"AIRNETIZ"  }		; Single opening to another zone
+	"Set InteriorFloor:AirNetGarIZXFER:izZn1"		InteriorFloor:AirNetGarIZXFER:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set InteriorFloor:AirNetGarIZXFER:izALo"		InteriorFloor:AirNetGarIZXFER:izALo		= {	ELA_Floor  }
+	; SAC 11/18/14 - allow negative airnet hole positions
+	"Set InteriorFloor:AirNetGarIZXFER:izHD"		InteriorFloor:AirNetGarIZXFER:izHD		= {	if (LocalStatus( FloorZ ) > 0.1) then  FloorZ
+																															else if (IfValidAnd( Outside:Volume > 0 ) && IfValidAnd( Outside:Area > 0 ))
+																															then	Outside:Volume / Outside:Area
+																															else  UNDEFINED  endif endif  }
+																														;	if (FloorZ > 0.1) then	FloorZ	   ; SAC 1/26/13 - added reference to FloorZ
+																														;	else if (LocalRef( Outside:Volume ) > 0 && LocalRef( Outside:Area ) > 0)
+																														;	then	max( 0.1, LocalRef( Outside:Volume ) / LocalRef( Outside:Area ) )
+																														;	else  UNDEFINED  endif endif  }
+	"Set InteriorFloor:AirNetGarIZXFER:izNVEff"	InteriorFloor:AirNetGarIZXFER:izNVEff	= {	1.0   }
+	"Set InteriorFloor:AirNetGarIZXFER:izExp"		InteriorFloor:AirNetGarIZXFER:izExp		= {	0.65  }
+	"Set InteriorFloor:AirNetGarIZXFER:izZn2"		InteriorFloor:AirNetGarIZXFER:izZn2		= {	LocalRef( Outside:CSE_ZONE )   }     ; SAC 4/9/13 - fixed bug izCpr -> izZn2
+
+ ; - based on Ceiling of a Garage zone -
+	"Set InteriorCeiling:ELA_Floor"		InteriorCeiling:ELA_Floor		 = {	Proj:BldgELA_GarageSF * ParGarAdjCndZnArea * 1.45  }
+	"Create CondZone/Garage IZXFER InteriorCeiling:AirNetGarIZXFER"
+			InteriorCeiling:AirNetGarIZXFER	= {	if (ELA_Floor < 0.000001) then  UNCHANGED
+																else  CreateComp( cseIZXFER, Local( Name ) + "xGarage" )  endif  }
+	"Set InteriorCeiling:AirNetGarIZXFER:izNVType"	InteriorCeiling:AirNetGarIZXFER:izNVType	= {	"AIRNETIZ"  }		; Single opening to another zone
+	"Set InteriorCeiling:AirNetGarIZXFER:izZn1"		InteriorCeiling:AirNetGarIZXFER:izZn1		= {	LocalRef( Outside:CSE_ZONE )  }
+	"Set InteriorCeiling:AirNetGarIZXFER:izALo"		InteriorCeiling:AirNetGarIZXFER:izALo		= {	ELA_Floor  }
+	; SAC 11/18/14 - allow negative airnet hole positions
+	"Set InteriorCeiling:AirNetGarIZXFER:izHD"		InteriorCeiling:AirNetGarIZXFER:izHD		= {	if (Parent( Volume ) > 0 && Parent( Area ) > 0)
+																																	then	Parent( Volume ) / Parent( Area )		; max( 0.1, Parent( Volume ) / Parent( Area ) )
+																																	else  UNDEFINED  endif  }
+	"Set InteriorCeiling:AirNetGarIZXFER:izNVEff"	InteriorCeiling:AirNetGarIZXFER:izNVEff	= {	1.0   }
+	"Set InteriorCeiling:AirNetGarIZXFER:izExp"		InteriorCeiling:AirNetGarIZXFER:izExp		= {	0.65  }
+	"Set InteriorCeiling:AirNetGarIZXFER:izZn2"		InteriorCeiling:AirNetGarIZXFER:izZn2		= {	Parent( CSE_ZONE )   }		; SAC 4/9/13 - fixed bug izCpr -> izZn2
+
+
+ ;-----------------------
+ ; AirNet for Garage zone
+ ;-----------------------
+ ;  Assume California garage with a water heater and combustion air vents so it is pretty leaky  Guess 1 ft2 of free area (ignore other infiltration)
+ ;     IZXFER GarageU   izNVTYPE = AirNetExt   izZN1 = Garage   izALo = Gvent     izHD = GarageBotZ +1   izNVEff = .6   izExp=0.65   izCpr=0.6
+ ;     IZXFER GarageS   izNVTYPE = AirNetExt   izZN1 = Garage   izALo = 2*Gvent   izHD = GarageBotZ +1   izNVEff = .6   izExp=0.65   izCpr=-.65
+ ;     IZXFER GarageD   izNVTYPE = AirNetExt   izZN1 = Garage   izALo = Gvent     izHD = GarageBotZ +1   izNVEff = .6   izExp=0.65   izCpr=-0.3 
+ ;     IZXFER GarageDH  izNVTYPE = AirNetExt   izZN1 = Garage   izALo = Gvent     izHD = GarageBotZ +8   izNVEff = .6   izExp=0.65   izCpr=-0.3   <<-- this one added from phone call w/ Bruce 1/31/13
+ ;-----------------------
+	"Set Garage:GrgVent"			Garage:GrgVent		= {	0.20  }
+
+	"Create Garage:GrgAirNetIZXFERs[1]"				Garage:GrgAirNetIZXFERs[1]		=	{	if (Proj:HasGarage < 0.5 .OR. Volume < 1) then  UNDEFINED
+																												else CreateComp( cseIZXFER, Local( Name ) + "-GrgU")  endif  }
+	"Set Garage:GrgAirNetIZXFERs[1]:izNVType"		Garage:GrgAirNetIZXFERs[1]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set Garage:GrgAirNetIZXFERs[1]:izZn1"			Garage:GrgAirNetIZXFERs[1]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set Garage:GrgAirNetIZXFERs[1]:izALo"			Garage:GrgAirNetIZXFERs[1]:izALo		= {	GrgVent     }
+	"Set Garage:GrgAirNetIZXFERs[1]:izHD"			Garage:GrgAirNetIZXFERs[1]:izHD		= {	Bottom + 1  }
+	"Set Garage:GrgAirNetIZXFERs[1]:izNVEff"		Garage:GrgAirNetIZXFERs[1]:izNVEff  = {	 0.6   }
+	"Set Garage:GrgAirNetIZXFERs[1]:izExp"			Garage:GrgAirNetIZXFERs[1]:izExp		= {	 0.65  }
+	"Set Garage:GrgAirNetIZXFERs[1]:izCpr"			Garage:GrgAirNetIZXFERs[1]:izCpr		= {	 0.6   }
+
+	"Create Garage:GrgAirNetIZXFERs[2]"				Garage:GrgAirNetIZXFERs[2]		=	{	if (Proj:HasGarage < 0.5 .OR. Volume < 1) then  UNDEFINED
+																												else CreateComp( cseIZXFER, Local( Name ) + "-GrgS")  endif  }
+	"Set Garage:GrgAirNetIZXFERs[2]:izNVType"		Garage:GrgAirNetIZXFERs[2]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set Garage:GrgAirNetIZXFERs[2]:izZn1"			Garage:GrgAirNetIZXFERs[2]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set Garage:GrgAirNetIZXFERs[2]:izALo"			Garage:GrgAirNetIZXFERs[2]:izALo		= {	GrgVent * 2  }
+	"Set Garage:GrgAirNetIZXFERs[2]:izHD"			Garage:GrgAirNetIZXFERs[2]:izHD		= {	Bottom + 1   }
+	"Set Garage:GrgAirNetIZXFERs[2]:izNVEff"		Garage:GrgAirNetIZXFERs[2]:izNVEff  = {	 0.6   }
+	"Set Garage:GrgAirNetIZXFERs[2]:izExp"			Garage:GrgAirNetIZXFERs[2]:izExp		= {	 0.65  }
+	"Set Garage:GrgAirNetIZXFERs[2]:izCpr"			Garage:GrgAirNetIZXFERs[2]:izCpr		= {	-0.65  }
+
+	"Create Garage:GrgAirNetIZXFERs[3]"				Garage:GrgAirNetIZXFERs[3]		=	{	if (Proj:HasGarage < 0.5 .OR. Volume < 1) then  UNDEFINED
+																												else CreateComp( cseIZXFER, Local( Name ) + "-GrgD")  endif  }
+	"Set Garage:GrgAirNetIZXFERs[3]:izNVType"		Garage:GrgAirNetIZXFERs[3]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set Garage:GrgAirNetIZXFERs[3]:izZn1"			Garage:GrgAirNetIZXFERs[3]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set Garage:GrgAirNetIZXFERs[3]:izALo"			Garage:GrgAirNetIZXFERs[3]:izALo		= {	GrgVent     }
+	"Set Garage:GrgAirNetIZXFERs[3]:izHD"			Garage:GrgAirNetIZXFERs[3]:izHD		= {	Bottom + 1  }
+	"Set Garage:GrgAirNetIZXFERs[3]:izNVEff"		Garage:GrgAirNetIZXFERs[3]:izNVEff  = {	 0.6   }
+	"Set Garage:GrgAirNetIZXFERs[3]:izExp"			Garage:GrgAirNetIZXFERs[3]:izExp		= {	 0.65  }
+	"Set Garage:GrgAirNetIZXFERs[3]:izCpr"			Garage:GrgAirNetIZXFERs[3]:izCpr		= {	-0.3   }
+
+	"Create Garage:GrgAirNetIZXFERs[4]"				Garage:GrgAirNetIZXFERs[4]		=	{	if (Proj:HasGarage < 0.5 .OR. Volume < 1) then  UNDEFINED
+																												else CreateComp( cseIZXFER, Local( Name ) + "-GrgDH")  endif  }
+	"Set Garage:GrgAirNetIZXFERs[4]:izNVType"		Garage:GrgAirNetIZXFERs[4]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set Garage:GrgAirNetIZXFERs[4]:izZn1"			Garage:GrgAirNetIZXFERs[4]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set Garage:GrgAirNetIZXFERs[4]:izALo"			Garage:GrgAirNetIZXFERs[4]:izALo		= {	GrgVent     }
+	"Set Garage:GrgAirNetIZXFERs[4]:izHD"			Garage:GrgAirNetIZXFERs[4]:izHD		= {	Bottom + 8  }
+	"Set Garage:GrgAirNetIZXFERs[4]:izNVEff"		Garage:GrgAirNetIZXFERs[4]:izNVEff  = {	 0.6   }
+	"Set Garage:GrgAirNetIZXFERs[4]:izExp"			Garage:GrgAirNetIZXFERs[4]:izExp		= {	 0.65  }
+	"Set Garage:GrgAirNetIZXFERs[4]:izCpr"			Garage:GrgAirNetIZXFERs[4]:izCpr		= {	-0.3   }
+
+
+ ;-----------------------
+ ; AirNet for CrawlSpace zone
+ ;-----------------------
+ ;  from AirNetAlgorithm12.txt  (3/27/13)
+ ;  	c.  Crawl space.  Has wall leakage plus optional vents.  3 types of vent.  Leakage = 10 sq.in. per 1,000 sq.ft. of floor area.  1.45 * 10/(144*1000)/ft2 of crawl.  (rev 12)
+ ;  	             CrawlWallHeight DEFAULT IS 0.75 FT.  Need new input on Crawlspace screen.
+ ;  		          Assume no stack inside crawl so all vents at top of foundation concrete wall, 8" above ground = 0.67  (rev 12)
+ ;  		 Calculate  CrwlLeak = Sum of (Floor areas over Crawl) * 0.0001
+ ;  		 Write Wall leakage objects:	      
+ ;  		      IZXFER CrwlWu  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlLeak/4  izHD = 0.67  izNVEff = 1 izExp=0.65 izCpr=0.6 
+ ;  		      IZXFER CrwlWs  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlLeak/2  izHD = 0.67  izNVEff = 1 izExp=0.65 izCpr=-.65
+ ;  		      IZXFER CrwlWd  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlLeak/4  izHD = 0.67  izNVEff = 1 izExp=0.65 izCpr=-0.3
+ ;  	      	 Vent area    CrwlV  for three crawl types:
+ ;  		1.  Conventional vented Crawl. CrwlVent = Sum of (Floor areas over Crawl)/150
+ ;  		2.  Reduced vent Crawl.  CrwlVent = Sum of (Floor areas over Crawl)/1500
+ ;  		3.  Sealed Crawl    CrwlVent = 0  (May have an exhaust fan)
+ ;  		Center of vent above grade -- assume 4" vent at top of conc wall, center is 10" above grade  (rev 12)
+ ;  		Write Crawl Vent Objects to CSE Input
+ ;  			IZXFER CrwlVU  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlVent/4  izHD = 10/12  izNVEff = .6 izExp=0.65 izCpr=0.6 
+ ;  			IZXFER CrwlVS  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlVent/2  izHD = 10/12  izNVEff = .6 izExp=0.65 izCpr=-.65
+ ;  			IZXFER CrwlVD  izNVTYPE = AirNetExt izZN1 = (CrawlName) izALo = CrwlVent/4  izHD = 10/12  izNVEff = .6 izExp=0.65 izCpr=-0.3
+ ;-----------------------
+	"Set CrawlSpace:WallLeakageArea"		CrawlSpace:WallLeakageArea		= {	Area * 0.0001  }     ; for ver. 11 was:  Area / 14400  }
+	"Set CrawlSpace:VentArea"				CrawlSpace:VentArea				= {	switch (Type)
+																										case 0 :	 Area /  150   ; "Normal (vented)"                   
+																										case 1 :  Area / 1500   ; "Insulated w/ Reduced Ventilation"  
+																										case 2 :  0             ; "Sealed and Mechanically Ventilated"
+																										default:  0
+																									endswitch  }
+	"Set CrawlSpace:VentHeight"			CrawlSpace:VentHeight			= {	0.67  }		; for ver. 11 was:  0.66 + (AvgWallHeight - 0.66) / 2  }
+
+  ; AirNet for CrawlSpace Walls
+	"Create CrawlSpace:AirNetCSWallIZXFERs[1]"				CrawlSpace:AirNetCSWallIZXFERs[1]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-WU")  endif  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izNVType"		CrawlSpace:AirNetCSWallIZXFERs[1]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izZn1"			CrawlSpace:AirNetCSWallIZXFERs[1]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izALo"			CrawlSpace:AirNetCSWallIZXFERs[1]:izALo		= {	WallLeakageArea / 4  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izHD"				CrawlSpace:AirNetCSWallIZXFERs[1]:izHD			= {	VentHeight  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izNVEff"			CrawlSpace:AirNetCSWallIZXFERs[1]:izNVEff		= {	 1.0   }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izExp"			CrawlSpace:AirNetCSWallIZXFERs[1]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[1]:izCpr"			CrawlSpace:AirNetCSWallIZXFERs[1]:izCpr		= {	 0.6   }
+
+	"Create CrawlSpace:AirNetCSWallIZXFERs[2]"				CrawlSpace:AirNetCSWallIZXFERs[2]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-WS")  endif  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izNVType"		CrawlSpace:AirNetCSWallIZXFERs[2]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izZn1"			CrawlSpace:AirNetCSWallIZXFERs[2]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izALo"			CrawlSpace:AirNetCSWallIZXFERs[2]:izALo		= {	WallLeakageArea / 2  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izHD"				CrawlSpace:AirNetCSWallIZXFERs[2]:izHD			= {	VentHeight  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izNVEff"			CrawlSpace:AirNetCSWallIZXFERs[2]:izNVEff		= {	 1.0   }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izExp"			CrawlSpace:AirNetCSWallIZXFERs[2]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[2]:izCpr"			CrawlSpace:AirNetCSWallIZXFERs[2]:izCpr		= {	-0.65  }
+
+	"Create CrawlSpace:AirNetCSWallIZXFERs[3]"				CrawlSpace:AirNetCSWallIZXFERs[3]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-WD")  endif  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izNVType"		CrawlSpace:AirNetCSWallIZXFERs[3]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izZn1"			CrawlSpace:AirNetCSWallIZXFERs[3]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izALo"			CrawlSpace:AirNetCSWallIZXFERs[3]:izALo		= {	WallLeakageArea / 4  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izHD"				CrawlSpace:AirNetCSWallIZXFERs[3]:izHD			= {	VentHeight  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izNVEff"			CrawlSpace:AirNetCSWallIZXFERs[3]:izNVEff		= {	 1.0   }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izExp"			CrawlSpace:AirNetCSWallIZXFERs[3]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSWallIZXFERs[3]:izCpr"			CrawlSpace:AirNetCSWallIZXFERs[3]:izCpr		= {	-0.3   }
+
+
+  ; AirNet for CrawlSpace Venting
+  ; SAC 10/17/13 - added checks to prevent IZXFERs from being created when VentArea <= 0
+	"Create CrawlSpace:AirNetCSVentIZXFERs[1]"				CrawlSpace:AirNetCSVentIZXFERs[1]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5 .OR. VentArea <= 0) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-VU")  endif  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izNVType"		CrawlSpace:AirNetCSVentIZXFERs[1]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izZn1"			CrawlSpace:AirNetCSVentIZXFERs[1]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izALo"			CrawlSpace:AirNetCSVentIZXFERs[1]:izALo		= {	VentArea / 4  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izHD"				CrawlSpace:AirNetCSVentIZXFERs[1]:izHD			= {	VentHeight + 0.1667  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izNVEff"			CrawlSpace:AirNetCSVentIZXFERs[1]:izNVEff		= {	 0.6   }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izExp"			CrawlSpace:AirNetCSVentIZXFERs[1]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[1]:izCpr"			CrawlSpace:AirNetCSVentIZXFERs[1]:izCpr		= {	 0.6   }
+
+	"Create CrawlSpace:AirNetCSVentIZXFERs[2]"				CrawlSpace:AirNetCSVentIZXFERs[2]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5 .OR. VentArea <= 0) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-VS")  endif  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izNVType"		CrawlSpace:AirNetCSVentIZXFERs[2]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izZn1"			CrawlSpace:AirNetCSVentIZXFERs[2]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izALo"			CrawlSpace:AirNetCSVentIZXFERs[2]:izALo		= {	VentArea / 2  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izHD"				CrawlSpace:AirNetCSVentIZXFERs[2]:izHD			= {	VentHeight + 0.1667  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izNVEff"			CrawlSpace:AirNetCSVentIZXFERs[2]:izNVEff		= {	 0.6   }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izExp"			CrawlSpace:AirNetCSVentIZXFERs[2]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[2]:izCpr"			CrawlSpace:AirNetCSVentIZXFERs[2]:izCpr		= {	-0.65  }
+
+	"Create CrawlSpace:AirNetCSVentIZXFERs[3]"				CrawlSpace:AirNetCSVentIZXFERs[3]		=	{	if (LocalStatus( Area ) < 1 .OR. Area < 0.5 .OR. VentArea <= 0) then  UNDEFINED
+																																		else CreateComp( cseIZXFER, Local( Name ) + "-VD")  endif  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izNVType"		CrawlSpace:AirNetCSVentIZXFERs[3]:izNVType	= {	4  }   ; AIRNETEXT - Single opening to ambient
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izZn1"			CrawlSpace:AirNetCSVentIZXFERs[3]:izZn1		= {	Local( CSE_ZONE )  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izALo"			CrawlSpace:AirNetCSVentIZXFERs[3]:izALo		= {	VentArea / 4  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izHD"				CrawlSpace:AirNetCSVentIZXFERs[3]:izHD			= {	VentHeight + 0.1667  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izNVEff"			CrawlSpace:AirNetCSVentIZXFERs[3]:izNVEff		= {	 0.6   }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izExp"			CrawlSpace:AirNetCSVentIZXFERs[3]:izExp		= {	 0.65  }
+	"Set CrawlSpace:AirNetCSVentIZXFERs[3]:izCpr"			CrawlSpace:AirNetCSVentIZXFERs[3]:izCpr		= {	-0.3   }
+
+
+ ;-----------------------
+ ; AirNet for Inter-Zone (conditioned) Doors & Stairs
+ ;-----------------------
+ ;  from AirNetAlgorithm12.txt  (3/27/13)
+ ;  	5.  Interzone Holes  --  Assume an open door or stair between any 2 conditioned zones with common surfaces, except between units in multi-family
+ ;  		If 2 or more conditioned zones 
+ ;  			Error if not at least one common surface for every conditioned zone (a surface in zone A whose outside condition is another conditoned zone)
+ ;  			Door calculation for each pair of zones with a common wall surface (zoneA<>zoneB, zoneB<>zoneC, zoneA<>zoneC, etc)
+ ;  				DoortopZ 	= Min(ZoneTopZ(zone A),(ZoneTopZ(zone B))    	//The top of the shared wall
+ ;  	              		DoorBotZ 	= Max(ZoneBotZ(zone A),(ZoneBotZ(zone B))    	//The bottom of the shared wall
+ ;  	              		DoorH		= DoortopZ - DoorBotZ				// Height of shared opening
+ ;  	              		DH		= 20/						// Area of half of assumed door
+ ;  	              		DHhZ		= GwallBotZ + .75 GwallH			// Height of top hole
+ ;  	              		DHHlZ		= GwallBotZ + .25 GwallH			// Height of bottom hole
+ ;  			For each zone pair write Airnet Objects to CSE Input		
+ ;  				IZXFER (ZoneNameA)DHx(ZoneNameB)DH  izNVTYPE = AirNetIZ izZN1=(ZoneNameA) izALo=DH izHD = DHhZ izNVEff=1. izExp=0.5 izZN2 = (ZoneNameB) 
+ ;  				IZXFER (ZoneNameA)DLx(ZoneNameB)DL  izNVTYPE = AirNetIZ izZN1=(ZoneNameA) izALo=DH izHD = DHlZ izNVEff=1. izExp=0.5 izZN2 = (ZoneNameB)
+ ;  			Stair calculation for each pair of zones with only a floor/ceiling surface (zoneA<>zoneB, zoneB<>zoneC, zoneA<>zoneC, etc)
+ ;  				StairZ		= Max(ZoneBotZ(zone A),(ZoneBotZ(zone B))    	//The height of the stair hole is at the upper floor floor
+ ;  			For each zone pair write Airnet Objects to CSE Input	Note that izZN1 MUST be the lower of the 2 zones or the model doesn't work	
+ ;  				IZXFER (ZoneNameA)Sx(ZoneNameB)S  izNVType = AIRNETHORIZ izZN1=(ZoneName of lowerzone) izZN2 = (ZoneName of upper zone) izL1=3 izL1=10 izHD =StairZ 
+ ;-----------------------
+
+  ; AirNet for Door between Conditioned Zones
+	; SAC 6/5/13 - modified rule to REMOVE interior door holes if this is a multifamily project and the Zone on the other side is that of a different dwelling unit
+	"Set IntWall:InterCondWallHt"			IntWall:InterCondWallHt		= {	if (LocalCompAssigned( Outside ) == 0) then  0
+																								else if (ParentComponentType() == "Zone")
+																								then	if (LocalCompAssigned( Outside ) == ComponentType( "Zone" ))
+																										then	min( Parent( Top ), Outside:Top ) - max( Parent( Bottom ), Outside:Bottom )
+																										else if (LocalCompAssigned( Outside ) == ComponentType( "Garage" ))
+																										then	if (IfValidAnd( Outside:Area > 0.1 ) .AND. IfValidAnd( Outside:Volume > 0.1 ) .AND. LocalStatus( Outside:Bottom ) > 0)
+																												then	min( Parent( Top ), (Outside:Bottom + (Outside:Volume / Outside:Area)) ) - max( Parent( Bottom ), Outside:Bottom )
+																												else	0  endif
+																										else if (LocalCompAssigned( Outside ) == ComponentType( "Attic" ))
+																										then	min( Parent( Top ), (Outside:Bottom + Outside:Height) ) - max( Parent( Bottom ), Outside:Bottom )
+																										else	0  endif endif endif
+																								else if (ParentComponentType() == "Garage")
+																								then	if (IfValidAnd( Outside:Area > 0.1 ) .AND. IfValidAnd( Outside:Volume > 0.1 ) .AND. LocalStatus( Outside:Bottom ) > 0)
+																										then	if (LocalCompAssigned( Outside ) == ComponentType( "Zone" ))
+																												then	min( (Parent( Bottom ) + (Parent( Volume ) / Parent( Area ))), Outside:Top ) - max( Parent( Bottom ), Outside:Bottom )
+																												else if (LocalCompAssigned( Outside ) == ComponentType( "Garage" ))
+																												then	if (IfValidAnd( Outside:Area > 0.1 ) .AND. IfValidAnd( Outside:Volume > 0.1 ) .AND. LocalStatus( Outside:Bottom ) > 0)
+																														then	min( (Parent( Bottom ) + (Parent( Volume ) / Parent( Area ))), (Outside:Bottom + (Outside:Volume / Outside:Area)) ) - max( Parent( Bottom ), Outside:Bottom )
+																														else	0  endif
+																												else if (LocalCompAssigned( Outside ) == ComponentType( "Attic" ))
+																												then	min( (Parent( Bottom ) + (Parent( Volume ) / Parent( Area ))), (Outside:Bottom + Outside:Height) ) - max( Parent( Bottom ), Outside:Bottom )
+																												else	0  endif endif endif
+																										else	0  endif
+																								else	0	endif endif endif  }
+
+  ; SAC 10/7/13 - revised rule to PREVENT creation of Door IZXFER for any party surface (IntWall:IsPartySurface)
+	"Create IntWall:AirNetDoorIZXFER[1]"				IntWall:AirNetDoorIZXFER[1]		= {	if (InterCondZnArea < 0.5 .OR. InterCondWallHt < 0.5 .OR. IsPartySurface > 0.5) then  UNDEFINED
+																														else if (CompExists( cseIZXFER, Format( "%sDHx%sDH", Parent( CSE_ZONE ), Outside:CSE_ZONE ) )) then  UNDEFINED
+																														else if (CompExists( cseIZXFER, Format( "%sDHx%sDH", Outside:CSE_ZONE, Parent( CSE_ZONE ) ) )) then  UNDEFINED
+																														else CreateComp( cseIZXFER, Parent( CSE_ZONE ) + "DHx" + Outside:CSE_ZONE + "DH")  endif endif endif  }
+	"Set IntWall:AirNetDoorIZXFER[1]:izNVType"		IntWall:AirNetDoorIZXFER[1]:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone
+	"Set IntWall:AirNetDoorIZXFER[1]:izZn1"			IntWall:AirNetDoorIZXFER[1]:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set IntWall:AirNetDoorIZXFER[1]:izALo"			IntWall:AirNetDoorIZXFER[1]:izALo		= {	20 / 2  }
+	"Set IntWall:AirNetDoorIZXFER[1]:izHD"				IntWall:AirNetDoorIZXFER[1]:izHD			= {	max( Parent( Bottom ), Outside:Bottom ) + (6.67 * 0.75)  }  ; SAC 10/9/13 - revised to use typical door height - was: (InterCondWallHt * 0.75)  }
+	"Set IntWall:AirNetDoorIZXFER[1]:izNVEff"			IntWall:AirNetDoorIZXFER[1]:izNVEff		= {	 1.0   }
+	"Set IntWall:AirNetDoorIZXFER[1]:izExp"			IntWall:AirNetDoorIZXFER[1]:izExp		= {	 0.5  }
+	"Set IntWall:AirNetDoorIZXFER[1]:izZn2"			IntWall:AirNetDoorIZXFER[1]:izZn2		= {	Outside:CSE_ZONE  }
+
+  ; SAC 10/7/13 - revised rule to PREVENT creation of Door IZXFER for any party surface (IntWall:IsPartySurface)
+	"Create IntWall:AirNetDoorIZXFER[2]"				IntWall:AirNetDoorIZXFER[2]		= {	if (InterCondZnArea < 0.5 .OR. InterCondWallHt < 0.5 .OR. IsPartySurface > 0.5) then  UNDEFINED
+																														else if (CompExists( cseIZXFER, Format( "%sDLx%sDL", Parent( CSE_ZONE ), Outside:CSE_ZONE ) )) then  UNDEFINED
+																														else if (CompExists( cseIZXFER, Format( "%sDLx%sDL", Outside:CSE_ZONE, Parent( CSE_ZONE ) ) )) then  UNDEFINED
+																														else CreateComp( cseIZXFER, Parent( CSE_ZONE ) + "DLx" + Outside:CSE_ZONE + "DL")  endif endif endif  }
+	"Set IntWall:AirNetDoorIZXFER[2]:izNVType"		IntWall:AirNetDoorIZXFER[2]:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone
+	"Set IntWall:AirNetDoorIZXFER[2]:izZn1"			IntWall:AirNetDoorIZXFER[2]:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set IntWall:AirNetDoorIZXFER[2]:izALo"			IntWall:AirNetDoorIZXFER[2]:izALo		= {	20 / 2  }
+	"Set IntWall:AirNetDoorIZXFER[2]:izHD"				IntWall:AirNetDoorIZXFER[2]:izHD			= {	max( Parent( Bottom ), Outside:Bottom ) + (6.67 * 0.25)  }  ; SAC 10/9/13 - revised to use typical door height - was: (InterCondWallHt * 0.25)  }
+	"Set IntWall:AirNetDoorIZXFER[2]:izNVEff"			IntWall:AirNetDoorIZXFER[2]:izNVEff		= {	 1.0   }
+	"Set IntWall:AirNetDoorIZXFER[2]:izExp"			IntWall:AirNetDoorIZXFER[2]:izExp		= {	 0.5  }
+	"Set IntWall:AirNetDoorIZXFER[2]:izZn2"			IntWall:AirNetDoorIZXFER[2]:izZn2		= {	Outside:CSE_ZONE  }
+
+  ; AirNet for Stairway between Conditioned Zones (via floor or ceiling)
+	"Create InteriorCeiling:AirNetStairIZXFER"			InteriorCeiling:AirNetStairIZXFER		= {	if (InterCondZnArea < 0.5 .OR.
+																													;						(Proj:IsMultiFamily > 0.5 .AND. IfValidAnd( OutsideDiffUnit > 0.5 ))) then  UNDEFINED
+																																			(IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))) then  UNDEFINED
+																																	else CreateComp( cseIZXFER, Parent( CSE_ZONE ) + "SCx" + Outside:CSE_ZONE + "SC")  endif  }
+	"Set InteriorCeiling:AirNetStairIZXFER:izNVType"	InteriorCeiling:AirNetStairIZXFER:izNVType	= {	5  }   ; AIRNETHORIZ - Horizontal (large) opening between two zones
+	"Set InteriorCeiling:AirNetStairIZXFER:izZn1"		InteriorCeiling:AirNetStairIZXFER:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set InteriorCeiling:AirNetStairIZXFER:izZn2"		InteriorCeiling:AirNetStairIZXFER:izZn2		= {	Outside:CSE_ZONE  }
+	"Set InteriorCeiling:AirNetStairIZXFER:izL1"			InteriorCeiling:AirNetStairIZXFER:izL1			= {	3   }
+	"Set InteriorCeiling:AirNetStairIZXFER:izL2"			InteriorCeiling:AirNetStairIZXFER:izL2			= {	10  }
+	"Set InteriorCeiling:AirNetStairIZXFER:izHD"			InteriorCeiling:AirNetStairIZXFER:izHD			= {	max( Parent( Bottom ), Outside:Bottom )  }
+
+; SAC 6/5/13 - modified rule to REMOVE stairwell hole if this is a multifamily project and the Zone on the other side is that of a different dwelling unit
+	"Create InteriorFloor:AirNetStairIZXFER"				InteriorFloor:AirNetStairIZXFER			= {	if (InterCondZnArea < 0.5 .OR.
+																													;						(Proj:IsMultiFamily > 0.5 .AND. IfValidAnd( OutsideDiffUnit > 0.5 ))) then  UNDEFINED
+																																			(IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))) then  UNDEFINED
+																																	else CreateComp( cseIZXFER, Outside:CSE_ZONE + "Sx" + Parent( CSE_ZONE ) + "S")  endif  }
+	"Set InteriorFloor:AirNetStairIZXFER:izNVType"		InteriorFloor:AirNetStairIZXFER:izNVType		= {	5  }   ; AIRNETHORIZ - Horizontal (large) opening between two zones
+	"Set InteriorFloor:AirNetStairIZXFER:izZn1"			InteriorFloor:AirNetStairIZXFER:izZn1			= {	Outside:CSE_ZONE    }
+	"Set InteriorFloor:AirNetStairIZXFER:izZn2"			InteriorFloor:AirNetStairIZXFER:izZn2			= {	Parent( CSE_ZONE )  }
+	"Set InteriorFloor:AirNetStairIZXFER:izL1"			InteriorFloor:AirNetStairIZXFER:izL1			= {	3   }
+	"Set InteriorFloor:AirNetStairIZXFER:izL2"			InteriorFloor:AirNetStairIZXFER:izL2			= {	10  }
+	"Set InteriorFloor:AirNetStairIZXFER:izHD"			InteriorFloor:AirNetStairIZXFER:izHD			= {	max( Parent( Bottom ), Outside:Bottom )  }
+
+
+ ;-----------------------
+ ; AirNet for Inter-Zone (conditioned) Party Walls - separating dwelling units
+ ;-----------------------
+ ;  from Google Code issue #114   (6/6/13)
+ ;  	Add an interzone airnet hole between any 2 zones where one or more party surfaces exist.
+ ;    The hole size is the area of the party surface(s) in ft2 * 0.0005.
+ ;    The Z of the hole should be the midheight of the Party surface(s).
+ ;    The area of party surfaces between zones can be summed and one hole created or a a hole can be created for each surface individually.
+ ;    Here is an example of the hole for a party floor:
+ ;        IZXFER   "Conditioned-znPSxConditioned-2-znPS"     ; switched 'S' to 'PS' to distinguish from Stairwell holes above
+ ;           izNVType = "AIRNETIZ"
+ ;           izZn1 = "Conditioned-zn"
+ ;           izZn2 = "Conditioned-2-zn"
+ ;           izALo = 1.3715
+ ;           izHD = 9.7
+ ;           izNVEff = 1
+ ;           izExp = 0.65
+ ;
+ ;  correction sent from Bruce Wilcox via e-mail 10/8/13  (and posted back to Google Code issue #114)
+ ;    after discussing this with Chip we are sure that 2 holes are needed in order to get the correct behavior.  So just like the airnet
+ ;    leakage objects in exterior walls:  2 holes each 1/2 the area at 1/4 and 3/4 the absolute height of the wall.
+ ;    MODS THEREFORE TO:  IZXFER names "..PSx..PS" -> "..PSHx..PSH" & "..PSLx..PSL"  /  each area (izALo / 2)  /  Hi/Low location mods to izHD (*0.5 -> *0.75/*0.25)
+ ;-----------------------
+ ; IntWall inter-party surface hole:
+  ; SAC 10/7/13 - revised rule to ENSURE creation of PartySurface IZXFERs based on new party surface property (IntWall:IsPartySurface)
+	"Create IntWall:AirNetPrtySrfIZXFER[1]"				IntWall:AirNetPrtySrfIZXFER[1]		= {	if (Area < 0.1 .OR. InterCondWallHt < 0.1) then  UNCHANGED
+																													;			else if (Proj:IsMultiFamily > 0.5 .AND. OutsideDiffUnit > 0.5)
+																																else if (IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))
+																																then  CreateComp( cseIZXFER, Name + "PSHx" + Outside:Name + "PSH")
+																																else  UNDEFINED  endif endif  }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izNVType"		IntWall:AirNetPrtySrfIZXFER[1]:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izZn1"			IntWall:AirNetPrtySrfIZXFER[1]:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izZn2"			IntWall:AirNetPrtySrfIZXFER[1]:izZn2		= {	Outside:CSE_ZONE  }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izALo"			IntWall:AirNetPrtySrfIZXFER[1]:izALo		= {	Area * 0.00025  }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izHD"				IntWall:AirNetPrtySrfIZXFER[1]:izHD			= {	max( Parent( Bottom ), Outside:Bottom ) + (InterCondWallHt * 0.75)  }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izNVEff"			IntWall:AirNetPrtySrfIZXFER[1]:izNVEff		= {	 1.0   }
+	"Set IntWall:AirNetPrtySrfIZXFER[1]:izExp"			IntWall:AirNetPrtySrfIZXFER[1]:izExp		= {	 0.65  }
+	"Create IntWall:AirNetPrtySrfIZXFER[2]"				IntWall:AirNetPrtySrfIZXFER[2]		= {	if (Area < 0.1 .OR. InterCondWallHt < 0.1) then  UNCHANGED
+																													;			else if (Proj:IsMultiFamily > 0.5 .AND. OutsideDiffUnit > 0.5)
+																																else if (IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))
+																																then  CreateComp( cseIZXFER, Name + "PSLx" + Outside:Name + "PSL")
+																																else  UNDEFINED  endif endif  }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izNVType"		IntWall:AirNetPrtySrfIZXFER[2]:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izZn1"			IntWall:AirNetPrtySrfIZXFER[2]:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izZn2"			IntWall:AirNetPrtySrfIZXFER[2]:izZn2		= {	Outside:CSE_ZONE  }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izALo"			IntWall:AirNetPrtySrfIZXFER[2]:izALo		= {	Area * 0.00025  }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izHD"				IntWall:AirNetPrtySrfIZXFER[2]:izHD			= {	max( Parent( Bottom ), Outside:Bottom ) + (InterCondWallHt * 0.25)  }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izNVEff"			IntWall:AirNetPrtySrfIZXFER[2]:izNVEff		= {	 1.0   }
+	"Set IntWall:AirNetPrtySrfIZXFER[2]:izExp"			IntWall:AirNetPrtySrfIZXFER[2]:izExp		= {	 0.65  }
+ ;
+ ; InteriorFloor inter-party surface hole:
+	"Create InteriorFloor:AirNetPrtySrfIZXFER"			InteriorFloor:AirNetPrtySrfIZXFER		= {	if (Area < 0.1) then  UNCHANGED
+																													;				else if (Proj:IsMultiFamily > 0.5 .AND. IfValidAnd( OutsideDiffUnit > 0.5 ))
+																																	else if (IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))
+																																	then  CreateComp( cseIZXFER, Outside:Name + "PSx" + Name + "PS")
+																																	else  UNCHANGED  endif endif  }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izNVType"	InteriorFloor:AirNetPrtySrfIZXFER:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone     -?->  5  }   ; AIRNETHORIZ - Horizontal (large) opening between two zones
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izZn1"		InteriorFloor:AirNetPrtySrfIZXFER:izZn1		= {	Outside:CSE_ZONE    }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izZn2"		InteriorFloor:AirNetPrtySrfIZXFER:izZn2		= {	Parent( CSE_ZONE )  }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izALo"		InteriorFloor:AirNetPrtySrfIZXFER:izALo		= {	Area * 0.0005   }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izHD"			InteriorFloor:AirNetPrtySrfIZXFER:izHD			= {	Parent( Bottom )  }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izNVEff"		InteriorFloor:AirNetPrtySrfIZXFER:izNVEff		= {	1.0   }
+	"Set InteriorFloor:AirNetPrtySrfIZXFER:izExp"		InteriorFloor:AirNetPrtySrfIZXFER:izExp		= {	0.65  }
+  ; SAC 8/25/14 - added InteriorCeiling IZXFER (based on int flr)
+	"Create InteriorCeiling:AirNetPrtySrfIZXFER"			InteriorCeiling:AirNetPrtySrfIZXFER		= {	if (Area < 0.1) then  UNCHANGED
+																													;				else if (Proj:IsMultiFamily > 0.5 .AND. IfValidAnd( OutsideDiffUnit > 0.5 ))
+																																	else if (IsPartySurface > 0.5 .AND. OtherSideModeled > 0.5 .AND. LocalCompAssigned( Outside ))
+																																	then  CreateComp( cseIZXFER, Outside:Name + "PSCx" + Name + "PSC")
+																																	else  UNCHANGED  endif endif  }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izNVType"	InteriorCeiling:AirNetPrtySrfIZXFER:izNVType	= {	3  }   ; AIRNETIZ - Single opening to another zone     -?->  5  }   ; AIRNETHORIZ - Horizontal (large) opening between two zones
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izZn1"		InteriorCeiling:AirNetPrtySrfIZXFER:izZn1		= {	Parent( CSE_ZONE )  }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izZn2"		InteriorCeiling:AirNetPrtySrfIZXFER:izZn2		= {	Outside:CSE_ZONE    }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izALo"		InteriorCeiling:AirNetPrtySrfIZXFER:izALo		= {	Area * 0.0005   }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izHD"		InteriorCeiling:AirNetPrtySrfIZXFER:izHD		= {	Outside:Bottom  }		; Parent( Bottom )  }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izNVEff"	InteriorCeiling:AirNetPrtySrfIZXFER:izNVEff	= {	1.0   }
+	"Set InteriorCeiling:AirNetPrtySrfIZXFER:izExp"		InteriorCeiling:AirNetPrtySrfIZXFER:izExp		= {	0.65  }
+
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Attic_Vented" 1 0 0 0
+;*************************************************************************
+; SAC 10/17/14 - added logic to scale cool vent CFM by ratio of (cool-ventable) attic volumes
+; KN 04/14/2015 Replaced code below to look up attic relief in codebase 
+;	"Set Attic:AirNet_AtticRelief"	Attic:AirNet_AtticRelief	= {
+;														if (ClVentableVolume < 0.1) then  0
+;														else if (Proj:UnitClVentOption == 3)		; CFI Cool Vent
+;														then	(ClVentableVolume / SumAll( Attic:ClVentableVolume )) * SumAll( HVACSys:AirNet_CoolVent   ) / 375
+;														else	(ClVentableVolume / SumAll( Attic:ClVentableVolume )) * ValidOr( Proj:UnitClVentCFMTot, 0 ) / 375		endif endif  }
+  ; SAC 12/31/15 - added reference to new Proj:UnitClVenTAreaMult property used to apply reduced attic vent free area (tic #596)
+	"Set Attic:AirNet_AtticRelief"	Attic:AirNet_AtticRelief	= {
+														if (ClVentableVolume < 0.1) then  0
+														else if (Proj:UnitClVentOption == 3)		; CFI Cool Vent
+														then	(ClVentableVolume / SumAll( Attic:ClVentableVolume )) * SumAll( HVACSys:AirNet_CoolVent   ) * Proj:UnitClVenTAreaMult / CAClimateZoneCodeBase:WHFatticrelief( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+														else	(ClVentableVolume / SumAll( Attic:ClVentableVolume )) * ValidOr( Proj:UnitClVentCFMTot, 0 ) * Proj:UnitClVenTAreaMult / CAClimateZoneCodeBase:WHFatticrelief( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )		endif endif  }
+
+	"Set Attic:AirNet_PitchType"		Attic:AirNet_PitchType	= {		  if (Local( RoofPitch ) <= 0.00) then  0
+																						else if (Local( RoofPitch ) <= 0.18) then  1
+																						else if (Local( RoofPitch ) <= 0.27) then  2
+																						else if (Local( RoofPitch ) <= 0.47) then  3
+																						else if (Local( RoofPitch ) <= 0.70) then  4
+																																		 else  5  endif endif endif endif endif  }
+
+	"Set Attic:AirNet_AventTot"		Attic:AirNet_AventTot	= {	FloorArea * AVentFraction  }	; AceilGross * AVent
+	"Set Attic:AirNet_SoffitVent"		Attic:AirNet_SoffitVent	= {	0.5 * 0.25 * (1.0 - FractionHigh) * max( AirNet_AventTot, AirNet_AtticRelief )  }
+	"Set Attic:AirNet_DeckVent"		Attic:AirNet_DeckVent	= {	0.5 * 0.25 *        FractionHigh  * max( AirNet_AventTot, AirNet_AtticRelief )  }
+
+	"Create Attic:AirNetIZXFERs[1] - SU"		Attic:AirNetIZXFERs[1]	= {	if (AirNet_SoffitVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-SU", "Default_AtticIZXFER" )  endif  }
+	"Create Attic:AirNetIZXFERs[2] - SS"		Attic:AirNetIZXFERs[2]	= {	if (AirNet_SoffitVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-SS", "Default_AtticIZXFER" )  endif  }
+	"Create Attic:AirNetIZXFERs[3] - SD"		Attic:AirNetIZXFERs[3]	= {	if (AirNet_SoffitVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-SD", "Default_AtticIZXFER" )  endif  }
+	"Create Attic:AirNetIZXFERs[4] - DU"		Attic:AirNetIZXFERs[4]	= {	if (AirNet_DeckVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-DU", "Default_AtticIZXFER" )  endif  }
+	"Create Attic:AirNetIZXFERs[5] - DS"		Attic:AirNetIZXFERs[5]	= {	if (AirNet_DeckVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-DS", "Default_AtticIZXFER" )  endif  }
+	"Create Attic:AirNetIZXFERs[6] - DD"		Attic:AirNetIZXFERs[6]	= {	if (AirNet_DeckVent <= 0) then  UNCHANGED
+																									else  CreateComp( cseIZXFER, Local( Name ) + "-DD", "Default_AtticIZXFER" )  endif  }
+
+	"Set Attic:AirNetIZXFERs[1]:izZn1 - SU"		Attic:AirNetIZXFERs[1]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[2]:izZn1 - SS"		Attic:AirNetIZXFERs[2]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[3]:izZn1 - SD"		Attic:AirNetIZXFERs[3]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[4]:izZn1 - DU"		Attic:AirNetIZXFERs[4]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[5]:izZn1 - DS"		Attic:AirNetIZXFERs[5]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[6]:izZn1 - DD"		Attic:AirNetIZXFERs[6]:izZn1	= {	Local( CSE_ZONE )  }
+
+	"Set Attic:AirNetIZXFERs[1]:izALo - SU"		Attic:AirNetIZXFERs[1]:izALo	= {	Local( AirNet_SoffitVent )      }
+	"Set Attic:AirNetIZXFERs[2]:izALo - SS"		Attic:AirNetIZXFERs[2]:izALo	= {	Local( AirNet_SoffitVent ) * 2  }
+	"Set Attic:AirNetIZXFERs[3]:izALo - SD"		Attic:AirNetIZXFERs[3]:izALo	= {	Local( AirNet_SoffitVent )      }
+	"Set Attic:AirNetIZXFERs[4]:izALo - DU"		Attic:AirNetIZXFERs[4]:izALo	= {	Local( AirNet_DeckVent   )      }
+	"Set Attic:AirNetIZXFERs[5]:izALo - DS"		Attic:AirNetIZXFERs[5]:izALo	= {	Local( AirNet_DeckVent   ) * 2  }
+	"Set Attic:AirNetIZXFERs[6]:izALo - DD"		Attic:AirNetIZXFERs[6]:izALo	= {	Local( AirNet_DeckVent   )      }
+
+	"Set Attic:AirNetIZXFERs[1]:izHD - SU"			Attic:AirNetIZXFERs[1]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+	"Set Attic:AirNetIZXFERs[2]:izHD - SS"			Attic:AirNetIZXFERs[2]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+	"Set Attic:AirNetIZXFERs[3]:izHD - SD"			Attic:AirNetIZXFERs[3]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+	"Set Attic:AirNetIZXFERs[4]:izHD - DU"			Attic:AirNetIZXFERs[4]:izHD	= {	max( 0.1, Local( Bottom ) + (Local( Height ) * 0.67) )  }
+	"Set Attic:AirNetIZXFERs[5]:izHD - DS"			Attic:AirNetIZXFERs[5]:izHD	= {	max( 0.1, Local( Bottom ) + (Local( Height ) * 0.67) )  }
+	"Set Attic:AirNetIZXFERs[6]:izHD - DD"			Attic:AirNetIZXFERs[6]:izHD	= {	max( 0.1, Local( Bottom ) + (Local( Height ) * 0.67) )  }
+
+	"Set Attic:AirNetIZXFERs[4]:izExp - DU"		Attic:AirNetIZXFERs[4]:izExp	= {	0.5  }
+	"Set Attic:AirNetIZXFERs[5]:izExp - DS"		Attic:AirNetIZXFERs[5]:izExp	= {	0.5  }
+	"Set Attic:AirNetIZXFERs[6]:izExp - DD"		Attic:AirNetIZXFERs[6]:izExp	= {	0.5  }
+
+	"Set Attic:AirNetIZXFERs[2]:izCpr - SS"		Attic:AirNetIZXFERs[2]:izCpr	= {	-0.65  }
+	"Set Attic:AirNetIZXFERs[3]:izCpr - SD"		Attic:AirNetIZXFERs[3]:izCpr	= {	-0.30  }
+	"Set Attic:AirNetIZXFERs[4]:izCpr - DU"		Attic:AirNetIZXFERs[4]:izCpr	= {	switch( Local( AirNet_PitchType ) )
+																													case 0 : -0.5		case 1 : -0.8		case 2 : -0.5
+																													case 3 : -0.3		case 4 :  0.1		case 5 :  0.3
+																													default : 0.0		endswitch  }
+	"Set Attic:AirNetIZXFERs[5]:izCpr - DS"		Attic:AirNetIZXFERs[5]:izCpr	= {	-0.5  }
+	"Set Attic:AirNetIZXFERs[6]:izCpr - DD"		Attic:AirNetIZXFERs[6]:izCpr	= {	switch( Local( AirNet_PitchType ) )
+																													case  1 : -0.3
+																													default : -0.5		endswitch  }
+END
+
+;*************************************************************************
+RULELIST "SimPrep_CSE_AirNet_Attic_Conditioned" 1 0 0 0
+;*************************************************************************
+	"Create Attic:AirNetIZXFERs[1] - U"				Attic:AirNetIZXFERs[1]			= {	CreateComp( cseIZXFER, Local( Name ) +  "-U", "Default_AtticIZXFER" )  }
+	"Create Attic:AirNetIZXFERs[2] - S"				Attic:AirNetIZXFERs[2]			= {	CreateComp( cseIZXFER, Local( Name ) +  "-S", "Default_AtticIZXFER" )  }
+	"Create Attic:AirNetIZXFERs[3] - D"				Attic:AirNetIZXFERs[3]			= {	CreateComp( cseIZXFER, Local( Name ) +  "-D", "Default_AtticIZXFER" )  }
+
+	"Set Attic:AirNetIZXFERs[1]:izZn1 - U"			Attic:AirNetIZXFERs[1]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[2]:izZn1 - S"			Attic:AirNetIZXFERs[2]:izZn1	= {	Local( CSE_ZONE )  }
+	"Set Attic:AirNetIZXFERs[3]:izZn1 - D"			Attic:AirNetIZXFERs[3]:izZn1	= {	Local( CSE_ZONE )  }
+
+	"Set Attic:AirNetIZXFERs[1]:izALo - U"			Attic:AirNetIZXFERs[1]:izALo	= {	Proj:BldgELA_CeilSF * FloorArea * 1.45 * 0.25  }
+	"Set Attic:AirNetIZXFERs[2]:izALo - S"			Attic:AirNetIZXFERs[2]:izALo	= {	Proj:BldgELA_CeilSF * FloorArea * 1.45 * 0.5   }
+	"Set Attic:AirNetIZXFERs[3]:izALo - D"			Attic:AirNetIZXFERs[3]:izALo	= {	Proj:BldgELA_CeilSF * FloorArea * 1.45 * 0.25  }
+
+	"Set Attic:AirNetIZXFERs[1]:izHD - U"			Attic:AirNetIZXFERs[1]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+	"Set Attic:AirNetIZXFERs[2]:izHD - S"			Attic:AirNetIZXFERs[2]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+	"Set Attic:AirNetIZXFERs[3]:izHD - D"			Attic:AirNetIZXFERs[3]:izHD	= {	max( 0.1, Local( Bottom ) )  }
+
+	"Set Attic:AirNetIZXFERs[1]:izNVEff - U"		Attic:AirNetIZXFERs[1]:izNVEff ={	1  }
+	"Set Attic:AirNetIZXFERs[2]:izNVEff - S"		Attic:AirNetIZXFERs[2]:izNVEff ={	1  }
+	"Set Attic:AirNetIZXFERs[3]:izNVEff - D"		Attic:AirNetIZXFERs[3]:izNVEff ={	1  }
+
+	"Set Attic:AirNetIZXFERs[2]:izCpr - S"			Attic:AirNetIZXFERs[2]:izCpr	= {	-0.65  }
+	"Set Attic:AirNetIZXFERs[3]:izCpr - D"			Attic:AirNetIZXFERs[3]:izCpr	= {	-0.30  }
+END
+
+
+;*************************************************************************
+RULELIST "Set_ZoneIAQ_SFam"  0 0 0 0
+;*************************************************************************
+	"Init Zone:IAQCFM_Exhaust"		Zone:IAQCFM_Exhaust	= {	0  }
+	"Init Zone:IAQPwr_Exhaust"		Zone:IAQPwr_Exhaust	= {	0  }
+	"Init Zone:IAQCFM_Supply"		Zone:IAQCFM_Supply	= {	0  }
+	"Init Zone:IAQPwr_Supply"		Zone:IAQPwr_Supply	= {	0  }
+   "Init Zone:IAQHRVCFM"  			Zone:IAQHRVCFM			= {	0  }		; SAC 5/20/13
+   "Init Zone:IAQHRVPwr"  			Zone:IAQHRVPwr			= {	0  }
+   "Init Zone:IAQHRVCFMxRcvEff"  Zone:IAQHRVCFMxRcvEff ={	0  }
+
+	"Setup remaining IAQ if not disabled"	Proj:Action	= {	if (IAQDisabled < 0.5) then  EvalRulelist( "Set_ZoneIAQ_SFam_Details" )  else  UNCHANGED  endif  }
+END
+
+;*************************************************************************
+RULELIST "Set_ZoneIAQ_SFam_Details"  0 0 0 0
+  ; Fan #1
+   ; SAC 8/12/16 - revised rules to reference new Proj:DefaultSimIAQCFM, in place of Proj:UnitMinIAQCFM[1], to use proper simulated value for addition alone analyses (tic #729) 
+   "Set Proj:UnitIAQZone1[1]:IAQCFM_Exhaust" 	Proj:UnitIAQZone1[1]:IAQCFM_Exhaust	= {	if (UnitIAQOption[1] == 1) then  DefaultSimIAQCFM
+																														else if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 1) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1]  else  UNCHANGED  endif
+																														else	UNCHANGED  endif endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQPwr_Exhaust" 	Proj:UnitIAQZone1[1]:IAQPwr_Exhaust	= {	if (UnitIAQOption[1] == 1) then  DefaultSimIAQCFM * 0.25
+																														else if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 1) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1] * UnitIAQFan1[1]:WperCFMIAQ  else  UNCHANGED  endif
+																														else	UNCHANGED  endif endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQCFM_Supply"  	Proj:UnitIAQZone1[1]:IAQCFM_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 2) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1]  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQPwr_Supply"  	Proj:UnitIAQZone1[1]:IAQPwr_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 2) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1] * UnitIAQFan1[1]:WperCFMIAQ  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQHRVCFM"  			Proj:UnitIAQZone1[1]:IAQHRVCFM		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 3) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1]  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQHRVPwr"  			Proj:UnitIAQZone1[1]:IAQHRVPwr		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 3) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1] * UnitIAQFan1[1]:WperCFMIAQ  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone1[1]:IAQHRVCFMxRcvEff"  Proj:UnitIAQZone1[1]:IAQHRVCFMxRcvEff	={	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan1[1] ) > 0.5)
+																														then	if (UnitIAQFan1[1]:IAQFanType == 3) then  UnitIAQFan1[1]:IAQCFM * UnitIAQFanCnt1[1] * UnitIAQFan1[1]:IAQRecovEffect  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+  ; Fan #2
+   "Set Proj:UnitIAQZone2[1]:IAQCFM_Exhaust" 	Proj:UnitIAQZone2[1]:IAQCFM_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 1) then  UnitIAQZone2[1]:IAQCFM_Exhaust + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQPwr_Exhaust" 	Proj:UnitIAQZone2[1]:IAQPwr_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 1) then  UnitIAQZone2[1]:IAQPwr_Exhaust + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1] * UnitIAQFan2[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQCFM_Supply"  	Proj:UnitIAQZone2[1]:IAQCFM_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 2) then  UnitIAQZone2[1]:IAQCFM_Supply  + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQPwr_Supply"  	Proj:UnitIAQZone2[1]:IAQPwr_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 2) then  UnitIAQZone2[1]:IAQPwr_Supply  + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1] * UnitIAQFan2[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQHRVCFM"  			Proj:UnitIAQZone2[1]:IAQHRVCFM		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 3) then  UnitIAQZone2[1]:IAQHRVCFM  + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQHRVPwr"  			Proj:UnitIAQZone2[1]:IAQHRVPwr		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 3) then  UnitIAQZone2[1]:IAQHRVPwr  + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1] * UnitIAQFan2[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone2[1]:IAQHRVCFMxRcvEff"  Proj:UnitIAQZone2[1]:IAQHRVCFMxRcvEff	={	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan2[1] ) > 0.5)
+																														then	if (UnitIAQFan2[1]:IAQFanType == 3) then  UnitIAQZone2[1]:IAQHRVCFMxRcvEff  + (UnitIAQFan2[1]:IAQCFM * UnitIAQFanCnt2[1] * UnitIAQFan2[1]:IAQRecovEffect)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+  ; Fan #3
+   "Set Proj:UnitIAQZone3[1]:IAQCFM_Exhaust" 	Proj:UnitIAQZone3[1]:IAQCFM_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 1) then  UnitIAQZone3[1]:IAQCFM_Exhaust + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQPwr_Exhaust" 	Proj:UnitIAQZone3[1]:IAQPwr_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 1) then  UnitIAQZone3[1]:IAQPwr_Exhaust + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1] * UnitIAQFan3[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQCFM_Supply"  	Proj:UnitIAQZone3[1]:IAQCFM_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 2) then  UnitIAQZone3[1]:IAQCFM_Supply  + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQPwr_Supply"  	Proj:UnitIAQZone3[1]:IAQPwr_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 2) then  UnitIAQZone3[1]:IAQPwr_Supply  + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1] * UnitIAQFan3[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQHRVCFM"  			Proj:UnitIAQZone3[1]:IAQHRVCFM		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 3) then  UnitIAQZone3[1]:IAQHRVCFM  + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQHRVPwr"  			Proj:UnitIAQZone3[1]:IAQHRVPwr		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 3) then  UnitIAQZone3[1]:IAQHRVPwr  + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1] * UnitIAQFan3[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone3[1]:IAQHRVCFMxRcvEff"  Proj:UnitIAQZone3[1]:IAQHRVCFMxRcvEff	={	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan3[1] ) > 0.5)
+																														then	if (UnitIAQFan3[1]:IAQFanType == 3) then  UnitIAQZone3[1]:IAQHRVCFMxRcvEff  + (UnitIAQFan3[1]:IAQCFM * UnitIAQFanCnt3[1] * UnitIAQFan3[1]:IAQRecovEffect)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+  ; Fan #4
+   "Set Proj:UnitIAQZone4[1]:IAQCFM_Exhaust" 	Proj:UnitIAQZone4[1]:IAQCFM_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 1) then  UnitIAQZone4[1]:IAQCFM_Exhaust + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQPwr_Exhaust" 	Proj:UnitIAQZone4[1]:IAQPwr_Exhaust	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 1) then  UnitIAQZone4[1]:IAQPwr_Exhaust + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1] * UnitIAQFan4[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQCFM_Supply"  	Proj:UnitIAQZone4[1]:IAQCFM_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 2) then  UnitIAQZone4[1]:IAQCFM_Supply  + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQPwr_Supply"  	Proj:UnitIAQZone4[1]:IAQPwr_Supply	= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 2) then  UnitIAQZone4[1]:IAQPwr_Supply  + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1] * UnitIAQFan4[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQHRVCFM"  			Proj:UnitIAQZone4[1]:IAQHRVCFM		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 3) then  UnitIAQZone4[1]:IAQHRVCFM  + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1])  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQHRVPwr"  			Proj:UnitIAQZone4[1]:IAQHRVPwr		= {	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 3) then  UnitIAQZone4[1]:IAQHRVPwr  + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1] * UnitIAQFan4[1]:WperCFMIAQ)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+   "Set Proj:UnitIAQZone4[1]:IAQHRVCFMxRcvEff"  Proj:UnitIAQZone4[1]:IAQHRVCFMxRcvEff	={	if (UnitIAQOption[1] == 2 .AND. LocalCompAssigned( UnitIAQFan4[1] ) > 0.5)
+																														then	if (UnitIAQFan4[1]:IAQFanType == 3) then  UnitIAQZone4[1]:IAQHRVCFMxRcvEff  + (UnitIAQFan4[1]:IAQCFM * UnitIAQFanCnt4[1] * UnitIAQFan4[1]:IAQRecovEffect)  else  UNCHANGED  endif
+																														else	UNCHANGED  endif  }
+END
+
+;*************************************************************************
+RULELIST "Set_ZoneIAQ_MFam"  0 0 0 0
+;*************************************************************************
+	"Init Zone:IAQCFM_Exhaust"		Zone:IAQCFM_Exhaust	= {	0  }
+	"Init Zone:IAQPwr_Exhaust"		Zone:IAQPwr_Exhaust	= {	0  }
+	"Init Zone:IAQCFM_Supply"		Zone:IAQCFM_Supply	= {	0  }
+	"Init Zone:IAQPwr_Supply"		Zone:IAQPwr_Supply	= {	0  }
+   "Init Zone:IAQHRVCFM"  			Zone:IAQHRVCFM			= {	0  }		; SAC 5/20/13
+   "Init Zone:IAQHRVPwr"  			Zone:IAQHRVPwr			= {	0  }
+   "Init Zone:IAQHRVCFMxRcvEff"  Zone:IAQHRVCFMxRcvEff ={	0  }
+
+; SAC 6/24/14 - revisions to enable new DwellUnit objects
+   "Set Zone:IAQCFM_Exhaust" 		Zone:IAQCFM_Exhaust		= {	SumChildren( DwellUnit:TotalIAQCFM )  }
+	"Set Zone:IAQPwr_Exhaust" 		Zone:IAQPwr_Exhaust		= {	SumChildren( DwellUnit:IAQPwr_Exhaust )  }
+	"Set Zone:IAQCFM_Supply"  		Zone:IAQCFM_Supply		= {	SumChildren( DwellUnit:IAQCFM_Supply )  }
+	"Set Zone:IAQPwr_Supply"  		Zone:IAQPwr_Supply		= {	SumChildren( DwellUnit:IAQPwr_Supply )  }
+	"Set Zone:IAQHRVCFM"  			Zone:IAQHRVCFM				= {	0  }
+	"Set Zone:IAQHRVPwr"  			Zone:IAQHRVPwr				= {	0  }
+	"Set Zone:IAQHRVCFMxRcvEff"	Zone:IAQHRVCFMxRcvEff	= {	0  }
+
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "Default_ZoneIZXFER" 1 0 0 0
+;*************************************************************************
+	"Set cseIZXFER:izNVType"	cseIZXFER:izNVType	= {	4  }		; "AIRNETEXT"
+	"Set cseIZXFER:izNVEff"		cseIZXFER:izNVEff 	= {	1  }
+	"Set cseIZXFER:izExp"		cseIZXFER:izExp   	= {	0.65  }
+	"Set cseIZXFER:izCpr"		cseIZXFER:izCpr   	= {	0.6  }
+END
+
+;*************************************************************************
+RULELIST "Default_AtticIZXFER" 1 0 0 0
+;*************************************************************************
+	"Set cseIZXFER:izNVType"	cseIZXFER:izNVType	= {	4     }		; "AIRNETEXT"
+	"Set cseIZXFER:izNVEff"		cseIZXFER:izNVEff 	= {	0.6   }
+	"Set cseIZXFER:izExp"		cseIZXFER:izExp   	= {	0.65  }
+	"Set cseIZXFER:izCpr"		cseIZXFER:izCpr   	= {	0.6   }
+END
+
+;*************************************************************************
+RULELIST "Default_ZoneWinIZXFER" 1 0 0 0
+;*************************************************************************
+	"Set cseIZXFER:izNVType"	cseIZXFER:izNVType	= {	4  }		; "AIRNETEXT"
+	"Set cseIZXFER:izALo"		cseIZXFER:izALo   	= {	0 }
+	"Set cseIZXFER:izNVEff"		cseIZXFER:izNVEff   	= {	0.5  }
+	"Set cseIZXFER:izCpr"		cseIZXFER:izCpr   	= {	0.6  }
+
+;           "izNVType",          BEMP_Sym,  1, "",                 0, "",         0, "",             1801, "Choice determining interzone ventilation"    
+;           "izZn1",             BEMP_Obj,  1, "",                 0, "cseZONE",  0, "",             7010, "Name of primary zone (flow rates > 0 are into the primary zone)" 
+;           "izZn2",             BEMP_Obj,  1, "",                 0, "cseZONE",  0, "",             7010, "Name of secondary zone" 
+;           "izALo",             BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Area of low or only vent (typically VentOff)"    
+;           "izAHi",             BEMP_Flt,  1, "ft2",              0, "",         0, "",             3008, "Additional vent area (high vent or VentOn)"    
+;           "izL1",              BEMP_Flt,  1, "ft",               0, "",         0, "",             3008, "Length or width of AIRNETHORIZ opening"    
+;           "izL2",              BEMP_Flt,  1, "ft",               0, "",         0, "",             3008, "Width or length of AIRNETHORIZ opening"    
+;           "izHD",              BEMP_Flt,  1, "ft",               0, "",         0, "",             3008, "Vent center-to-center height difference (for TWOWAY) or vent height above nominal 0 level (for AirNet types)"
+;           "izNVEff",           BEMP_Flt,  1, "",                 0, "",         0, "",             3008, "Vent discharge coefficient coefficient"
+;           "izFanVfDs",         BEMP_Flt,  1, "cfm",              0, "",         0, "",             3008, "Fan design or rated flow at rated pressure"
+;           "izCpr",             BEMP_Flt,  1, "",                 0, "",         0, "",             3008, "Wind pressure coefficient (for AIRNETEXT)"
+;           "izExp",             BEMP_Flt,  1, "",                 0, "",         0, "",             3008, "Opening exponent"
+END
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

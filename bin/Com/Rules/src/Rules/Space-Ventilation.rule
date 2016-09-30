@@ -1,0 +1,2502 @@
+// Space - Ventilation
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+//
+
+
+
+// ********** Ventilation Source ***********************************************
+RULE ThrmlZn:VentSrc
+  DESCRIPTION
+    "The source of ventilation for an ThermalZone."
+  REFERENCE 
+    NACM Section 5.6.5.4
+  INPUTCLASS 
+    Required
+// Enums defined in BEMEnums.txt for backward compatibility
+; OPTION
+;   None
+;   Forced
+;   Natural  // Only supported for OccClass = 'Residential'
+  DEFAULT
+    if( LocalCompAssigned( VentSysRef ) )
+    then "Forced"
+    else if( IsCond )
+    then
+      if( IsRes )
+      then "Natural" // Per CEC, to make transition from 
+      else "Forced"
+      endif
+    else "None"
+    endif endif
+  CHECKCODE : T24N
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then UNCHANGED // No check for partial envelope
+    else
+    if( IsRes = 0 .AND. IsCond .AND. VentSrc = "Natural" )
+    then 
+      PostError("ThermalZone '%s' is a nonresidential zone with ventilation source
+                 = 'Natural'. This is not currently supported.", Name)
+// This check is covered in ThrmlZn:VentFlow rule
+// else
+//  if( IsRes .AND. IsCond .AND. VentSrc = "Forced" .AND. 
+//      VentFlow < CodeVentFlow * ( 1 - Proj:VentTolLim ) )
+//  then
+//    PostError("ThermalZone '%s' is comprised of residential space with forced
+//               mechanical ventilation and has a design ventilation flow rate that
+//               is less than the required code minimum. Additional
+//               ventilation air must be provided to spaces.", Name)
+    else
+    if( VentIsRequired .AND. VentSrc = "None" )
+    then
+      PostWarning("Ventilation is required for ThermalZone '%s', but the ventilation
+                 source = 'None'. Sufficient additional ventilation air flow
+                 must be provided to Spaces on the BuildingStory to meet transfer air
+                 requirements.", Name)
+    else
+    if( PrkgGarArea > 0 .AND. VentSrc = "Forced" .AND.
+        ( LocalCompAssigned( VentSysRef ) = 0  
+        .OR.
+        LocalCompAssigned( ExhSysRef ) = 0 ) )
+    then 
+      PostError("ThermalZone '%s' is comprised of Parking Garage space, but no
+                 ventilation or exhaust system is defined.", Name)
+    else UNCHANGED
+    endif endif endif endif
+  CHECKCODE : S901G ECBC
+    if( VentIsRequired .AND. VentStd != "Other" .AND. VentSrc = "None" ) 
+    then
+      PostWarning("Ventilation is required for ThermalZone '%s', but VentilationSource
+                   is set to 'None'.", Name)
+    else if( PrkgGarArea > 0 .AND. VentSrc = "Forced" .AND.
+             ( LocalCompAssigned( VentSysRef ) = 0  
+               .OR.
+               LocalCompAssigned( ExhSysRef ) = 0 ) )
+    then 
+      PostError("ThermalZone '%s' is comprised of Parking Garage space, but no
+                 ventilation or exhaust system is defined.", Name)
+    else UNCHANGED
+    endif endif
+  CHECKSIM
+    if( Proj:CreateHVAC = 0 .AND. 
+        VentSrc = "Forced" .AND. 
+        LocalCompAssigned( VentSysRef ) = 0 )
+    then
+      PostError("ThermalZone '%s' has 'Forced' ventilation, but no ventilation
+                 system is defined.", Name)
+    else
+    if( VentSrc != "Forced" .AND. 
+        LocalCompAssigned( VentSysRef ) )
+    then
+      PostError("ThermalZone '%s' has a ventilation system defined, but the
+                 source = 'None' or 'Natural'. Revise to 'Forced' or remove
+                 reference to the ventilation system.", Name)
+    else UNCHANGED
+    endif endif
+  SIZING : T24N
+    if( IsCond .AND. BaseSysNum > 0 )
+    then
+      if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+      then // Partial envelope
+        "Forced"
+      else if( VentIsRequired )
+      then // Baseline ventilation source is same as the proposed.
+        u:VentSrc
+      else "None"
+      endif endif
+    else u:VentSrc
+    endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then
+      if( VentIsRequired .AND. IsCond )
+      then "Forced"
+      else "None"
+      endif
+    else u:VentSrc
+    endif
+  ANNUAL
+    z:VentSrc
+ENDRULE
+// Echo ThrmlZn value to Space for local ventilation calculations used for compliance
+RULE NEW Spc:VentSrc
+  DATATYPE
+    Enumeration
+  LONGFORM
+    VentilationSource
+  DESCRIPTION
+    "The source of ventilation for the Space."
+  HELP
+    "This property is specified at the ThermalZone; it is shown here only for
+     reference. To change the specification method, click on the '...' button to
+     navigate to the ThermalZone."
+  INPUTCLASS
+    NotInput
+  OPTION
+    None
+    Forced
+    Natural
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentSrc
+    else "None"
+    endif
+ENDRULE
+
+// Default ventilation system reference
+RULE ThrmlZn:VentSysRef
+  DEFAULT
+    if( VentSrc = "Forced" )
+    then
+      if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) > 0 )
+      then PriAirCondgSysRef // Default to the exhaust system specified
+      else if( Type = "Unconditioned" .AND. LocalCompAssigned( ExhSysRef ) )
+      then ExhSysRef // Default to the exhaust system specified
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+// Set flags to indicate if the space is part of a zone with a Vent or Exhaust system
+// and if the ventilation system is an exhaust system
+RULE NEW ThrmlZn:HasVentSys
+  DATATYPE
+    Integer
+  LONGFORM
+     HasVentilationSystem
+  DESCRIPTION
+    "A flag set to indicate if the ThrmlZn has a ventilation system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( VentSysRef ) .AND. VentSrc = "Forced" )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:HasVentSys
+  DATATYPE
+    Integer
+  LONGFORM
+     HasVentilationSystem
+  DESCRIPTION
+    "A flag set to indicate if the Space has a ventilation system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef) )
+    then ThrmlZnRef:HasVentSys
+    else 0
+    endif
+ENDRULE
+
+RULE NEW ThrmlZn:HasExhSys
+  DATATYPE
+    Integer
+  LONGFORM
+     HasExhaustSystem
+  DESCRIPTION
+    "A flag set to indicate if the Space has an exhaust system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ExhSysRef ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:HasExhSys
+  DATATYPE
+    Integer
+  LONGFORM
+     HasExhaustSystem
+  DESCRIPTION
+    "A flag set to indicate if the Space has an exhaust system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:HasExhSys
+    else 0
+    endif
+ENDRULE
+
+// Set a flag if the ventilation is system is exhaust
+RULE NEW ThrmlZn:VentSysIsExh
+  DATATYPE
+    Integer
+  LONGFORM
+    VentilationSystemIsExhaust
+  DESCRIPTION
+    "An integer flag that indicates the ventilation system is an exhaust system.
+    
+     If flag = 0, the ventilation system is not exhaust, or there is no ventilation 
+     air flow specified.
+
+     If flag = 1, then it is an exhaust system.
+
+     If flag = 2, then it is a residential exhaust system."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( HasVentSys .AND. IfValidAnd( VentFlow > 0 ) )
+    then
+      if( IsRes .AND. IfValidAnd( VentSysRef:IsExhSys = 1 ) )
+      then 2
+      else if( IfValidAnd( VentSysRef:IsExhSys = 1) )
+      then 1
+      else 0
+      endif endif
+    else 0
+    endif
+  SIZING : T24N
+    if( BaseSysNum > 0 )
+    then 
+      if( VentSrc = "Forced" .AND. IsRes )
+      then 2 // Baseline vent system for Residential is exhaust
+      else 0
+      endif
+    else u:VentSysIsExh
+    endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then 0 // Baseline vent system is PriAirCondgSys
+    else u:VentSysIsExh
+    endif
+ENDRULE
+RULE NEW Spc:VentSysIsExh
+  DATATYPE
+    Integer
+  LONGFORM
+    VentilationSystemIsExhaust
+  DESCRIPTION
+    "An integer flag that indicates the ventilation system is an exhaust system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HasVentSys )
+    then ThrmlZnRef:VentSysIsExh
+    else 0
+    endif 
+ SIZING
+   ThrmlZnRef:VentSysIsExh 
+ENDRULE
+
+// A flag set to indicate if ventilation (OA) is required for the conditioned space
+// Ventilation for unconditioned spaces (i.e. parking garage) handled separately
+RULE NEW Spc:VentIsRequired
+  DATATYPE
+    Integer
+  LONGFORM
+    VentilationIsRequired
+  DESCRIPTION
+    "A flag set to indicate if the nonresidential Space is required to have ventilation.
+     Residential spaces are handled separately."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus( SpcFunc ) = 0 .OR. 
+        LocalStatus( CondgType ) = 0 .OR. 
+        HasNoInternalLds )
+    then 0 // SpcFunc or CondgType is unknown
+    else
+    if( PrkgGarArea = 0 .AND. CondgType = "Unconditioned" ) 
+    then 0 // Unconditioned space (except ParkingGarage)
+    else 1
+    endif endif
+ENDRULE
+// Set flag to indicate if ventilation flows are included in BuildingStory
+// air balance calculations
+RULE NEW Spc:IncludeInBal
+  DATATYPE
+    Integer
+  LONGFORM 
+    IncludeInBalance
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .OR.
+        IsRes .OR. // Residential spaces excluded from balance 
+        LabArea > 0 .OR. 
+        PrkgGarArea > 0 )
+    then 0 
+    else 1
+    endif
+  DEFAULT : S901G ECBC
+    if( VentIsRequired = 0 .OR.  
+        PrkgGarArea > 0 )
+    then 0 
+    else 1
+    endif
+ENDRULE
+
+// Set project level specification for OccDens for DCV
+RULE NEW Proj:OccDensForReqDCV
+  DATATYPE
+    Float
+  LONGFORM
+     OccupancyDensityForRequiredDCV
+  DESCRIPTION
+    "The occupant density threshold for requiring DCV."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    25
+  DEFAULT : S901G ECBC
+    40
+ENDRULE
+RULE NEW Spc:DCVExceptionArea
+  DATATYPE
+    Float
+  LONGFORM
+    DemandControlledVentilationExceptionArea
+  DESCRIPTION : T24N
+    "Space area that MAY qualify for EXCEPTION 1 to Section 120.1(c)3."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    if( SpcFunc = "Classrooms, Lecture, Training, Vocational Areas" )
+;        SpcFunc = "Medical and Clinical Care" .OR.   
+;        SpcFunc = "Office (Greater than 250 square feet in floor area)" ) 
+    then FlrArea
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    0 // Not used
+ENDRULE
+RULE NEW ThrmlZn:DCVExceptionArea
+  DATATYPE
+    Float
+  LONGFORM
+    DemandControlledVentilationExceptionArea
+  DESCRIPTION : T24N
+    "ThermalZone area that qualifies for EXCEPTION 1 to Section 120.1(c)3."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    SumRevRef( Spc:ThrmlZnRef, Spc:DCVExceptionArea )
+  DEFAULT : S901G ECBC
+    0 // Not used
+  CHECKCODE : T24N
+    if( VentIsRequired .AND. DCVExceptionArea > 0 .AND.
+        IfValidAnd( DCVIsRequired = 1 ) .AND.
+        IfValidAnd( HasDCV = 0 ) .AND.
+        IfValidAnd( DCVExceptionArea != FlrArea ) )
+    then
+      PostError("ThermalZone '%s' does not have 'CO2Sensor' control of ventilation,
+                 but is comprised of spaces that both do and do not qualify for
+                 DCV exceptions.", Name)
+    else UNCHANGED
+    endif                                   
+ENDRULE
+
+// Tolerance for minimum ventilation air flow rates
+RULE NEW Spc:VentTolLim
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationToleranceLimit
+  DESCRIPTION
+    "The tolerance limit for how close the proposed design Space
+     ventilation air flow must be with respect to the code minimum."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Proj:VentTolLim
+ENDRULE
+
+
+// ********** Ventilation Standard *********************************************
+RULE ThrmlZn:VentStd
+  DESCRIPTION
+    "The ventilation Standard for the project."
+  HELP
+    "This input is defaulted to Project specified value. Models can utilize this
+     one Standard and 'Other' in the analysis."
+  INPUTCLASS
+    Default
+// Enums defined in BEMEnums.txt
+; OPTION : T24N
+;   T24-2013
+; OPTION : S901G ECBC
+;   T24-2013
+;   62.1-2010
+;   IMC-2012
+;   Other
+  DEFAULT
+    Proj:VentStd 
+  CHECKCODE
+    if( VentStd != Proj:VentStd .AND. VentStd != "Other" )
+    then 
+      PostError("The VentilationStandard for ThermalZone '%s' does not match the
+                 Standard specified at the Project level. Re-default this property
+                 or change to 'Other' if the ventilation Standard does not apply
+                 to the current zone.", Name)
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentStdIdx
+  DATATYPE
+    Integer
+  LONGFORM
+    VentilationStandardIndex
+  DESCRIPTION
+    "The index of the VentStd option. For Project CHECKCODE rule."
+  DEFAULT
+    switch( VentStd )
+      case "T24-2013"  : 1
+      case "62.1-2010" : 2
+      case "IMC-2012"  : 3
+      case "Other"     : 4
+      default          : 0
+   endswitch
+ENDRULE
+// Echo ThrmlZn value to Space for local ventilation calculations used for compliance
+RULE NEW Spc:VentStd
+  DATATYPE
+    Enumeration
+  LONGFORM
+    VentilationStandard
+  DESCRIPTION
+    "Type ventilation standard for the space's ThermalZone."
+  HELP
+    "This property is specified at the ThermalZone; it is shown here only for
+     reference. To change the specification method, click on the '...' button to
+     navigate to the ThermalZone."
+  INPUTCLASS
+    NotInput
+  OPTION : T24N
+    T24-2013
+  OPTION : S901G ECBC
+    T24-2013
+    62.1-2010
+    IMC-2012
+    Other
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentStd
+    else Proj:VentStd
+    endif
+ENDRULE
+
+
+// ********** Ventilation Multiplier *******************************************
+RULE Spc:VentMult
+  DESCRIPTION
+    "A multiplier applied to ventilation inputs to uniformly increase ventilation
+     rates for the project."
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Default
+  DEFAULT : T24N
+    1.0
+  DEFAULT : S901G ECBC
+    Proj:VentMult
+ENDRULE
+
+
+// ********** Ventilation Air Distribution Effectiveness ***********************
+RULE AirSys:VentAirDistEff
+  DESCRIPTION
+    "The ventilation air distribution effectiveness (Ez) for the AirSystem."
+  HELP
+    "Used only to default the value for ThermalZones ventilated by the current
+     AirSystem."
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Default
+  COMMONMINIMUM
+    0.8
+  COMMONMAXIMUM
+    1.0
+  DEFAULT : T24N
+    1.0
+  DEFAULT : S901G ECBC
+    1.0
+ENDRULE
+RULE ZnSys:VentAirDistEff
+  DESCRIPTION
+    "The ventilation air distribution effectiveness (Ez) for the ZoneSystem."
+  HELP
+    "Used only to default the value for the ThermalZone ventilated by the current
+     ZoneSystem."
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Default
+  COMMONMINIMUM
+    0.8
+  COMMONMAXIMUM
+    1.0
+  DEFAULT : T24N
+    1.0
+  DEFAULT : S901G ECBC
+    1.0
+ENDRULE
+RULE ThrmlZn:VentAirDistEff
+  DESCRIPTION
+    "The ventilation air distribution effectiveness (Ez) for the ThermalZone."
+  HELP
+// TO DO: Add list from ASHRAE 62.1
+    ""
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Default
+  COMMONMINIMUM
+    0.8
+  COMMONMAXIMUM
+    1.0
+  DEFAULT : T24N
+    1.0
+  DEFAULT : S901G ECBC
+    if(LocalCompAssigned( VentSysRef ) )
+    then VentSysRef:VentAirDistEff
+    else 1.0
+    endif
+  SIZING : T24N
+    1.0
+  SIZING_PROPOSED : S901G ECBC
+    u:VentAirDistEff
+  SIZING_BASELINE : S901G ECBC
+    Min( zp:VentAirDistEff, 1.0 )
+  ANNUAL
+    z:VentAirDistEff
+ENDRULE
+RULE NEW Spc:VentAirDistEff
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The ventilation air distribution effectiveness (Ez) for the Space's
+     ThermalZone."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentAirDistEff
+    else 1.0
+    endif
+ENDRULE
+
+
+// ********** System Ventilation Efficiency ************************************
+RULE AirSys:VentSysEff
+  DESCRIPTION
+    "The ventilation efficiency of the system (Ev)."
+  HELP
+    ""
+  INPUTCLASS 
+    NotInput
+  COMMONMINIMUM
+    0.6
+  MAXIMUM
+    1.0
+  DEFAULT
+    if( IfValidAnd( SysVentFlowUncorrected >= 0 ) .AND.
+        IfValidAnd( SysVentFlow > 0 ) )
+    then SysVentFlowUncorrected / SysVentFlow
+    else 1.0
+    endif
+ENDRULE
+RULE ZnSys:VentSysEff
+  DESCRIPTION
+    "The ventilation efficiency of the system (Ev)."
+  HELP
+    ""
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( IfValidAnd( SysVentFlowUncorrected >= 0 ) .AND.
+        IfValidAnd( SysVentFlow > 0 ) )
+    then SysVentFlowUncorrected / SysVentFlow
+    else 1.0
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentSysEff
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The ventilation efficiency of the system (Ev) that serves the ThermalZone."
+  HELP
+    "This input is defined at the system."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    1.0
+  DEFAULT : S901G ECBC
+    if( LocalCompAssigned( VentSysRef ) )
+    then ValidOr( VentSysRef:VentSysEff, 1.0 )
+    else 1.0
+    endif
+  SIZING : T24N
+    1.0
+  SIZING_PROPOSED : S901G ECBC
+    if( LocalCompAssigned( VentSysRef ) )
+    then VentSysRef:VentSysEff
+    else 1.0
+    endif
+  SIZING_BASELINE : S901G ECBC
+    zp:VentSysEff
+  ANNUAL
+    z:VentSysEff
+ENDRULE
+RULE NEW Spc:VentSysEff
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The ventilation efficiency of the system (Ev) that serves the Space's
+     ThermalZone."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentSysEff
+    else 1.0
+    endif
+ENDRULE
+
+
+// ********** Ventilation Specification Method *********************************
+RULE ThrmlZn:VentSpecMthd
+  DESCRIPTION
+    "The method used to calculate the design ventilation flow for the ThermalZone.
+     Rates are specified at the Space, and a weighted average is calculated for the
+     ThermalZone, based on the selected specification method."
+  HELP
+    "For each of the methods, the design ventilation air flow is calculated as follows:
+
+
+     Maximum = The maximum of all the various input values.
+
+
+     Sum = The sum of all the various input values.
+  
+
+     FlowPerPerson = Only using the Space:VentPerPerson (cfm/person) input value;
+     other inputs are ignored. NOTE: A value non-zero FlowPerPerson must be
+     defined if 'CO2Sensor' control is used; i.e. DCV control of ventilation
+     air flow is intended.
+
+
+     FlowPerArea = Only using the Space:VentPerArea (cfm/ft2) input value.
+     Other inputs are ignored.
+
+
+     AirChangesPerHour = Only using the Space:VentACH (ACH) input value.
+     Other inputs are ignored.
+
+
+     FlowPerZone = Only using the FlowPerSpace (cfm) input value.
+     Other inputs are ignored."
+  INPUTCLASS
+    Default
+  OPTION : T24N
+    NoVentilation
+    Maximum
+    Sum
+    FlowPerPerson
+    FlowPerArea
+    AirChangesPerHour
+    FlowPerZone
+  OPTION : S901G ECBC
+    NoVentilation
+    Maximum
+    Sum
+  DEFAULT : T24N
+    if( VentSrc != "None" )
+    then
+      if( SumRevRef( Spc:ThrmlZnRef, Spc:HighRiseResCondFlrArea ) > 0 )
+      then "Sum"
+      else "Maximum"
+      endif
+    else "NoVentilation"
+    endif
+  DEFAULT : S901G ECBC
+    if( VentSrc != "None" )
+    then
+      switch( VentStd )
+        case "T24N-2013" : "Maximum"
+        case "62.1-2010" : "Sum"
+        case "IMC-2012"  : "Sum"
+        case "Other"     : "Sum"
+        default          : "Maximum"
+      endswitch
+    else "NoVentilation"
+    endif
+  CHECKCODE : S901G ECBC
+    if( VentIsRequired .AND. VentStd != "Other" )
+    then
+      if( VentStd = "T24-2013" .AND. VentSpecMthd != "Maximum" )
+      then
+        PostWarning("The Ventilation Specification Method for ThermalZone '%s' 
+                     and its Spaces) will be reset to 'Maximum' to follow the
+                     Ventilation Standard, 'T24-2013', specified for the zone.",
+                     Name)
+      else if( VentSpecMthd != "Sum" )
+      then
+        PostWarning("The Ventilation Specification Method for ThermalZone '%s' 
+                     and its Spaces) will be reset to 'Sum' to follow the
+                     Ventilation Standard, '%s', specified for the zone.",
+                     Name, VentStd)
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING : T24N
+    if( BaseSysNum > 0 )
+    then // Follow baseline rules
+      if( VentIsRequired )
+      then "Maximum"
+      else "NoVentilation"
+      endif
+;   else if( IsRes )
+;   then "NoVentilation" // Always set to "NoVentilation" for res spaces.
+    else u:VentSpecMthd // User input
+    endif ; endif
+  SIZING : S901G ECBC
+    if( BaseSysNum > 0 )
+    then // Follow baseline rules
+      if( VentIsRequired )
+      then "Sum"
+      else if( VentStd = "Other")
+      then u:VentSpecMthd
+      else "NoVentilation"
+      endif endif
+    else if( VentStd = "Other" .OR. VentIsRequired = 0 )
+    then u:VentSpecMthd // User input
+    else if( VentStd = "T24-2013" )
+    then "Maximum"
+    else "Sum"
+    endif endif endif
+  ANNUAL
+    z:VentSpecMthd
+ENDRULE
+RULE ThrmlZn:VentSpecMthdSim
+  DESCRIPTION
+    "The method used to specify the design ventilation flow for the ThermalZone, 
+     for simulation."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    NoVentilation
+    Maximum
+    Sum
+  DEFAULT : T24N
+    if( VentSrc != "Forced" .OR. ( VentSrc = "Forced" .AND. VentSysIsExh ) )
+    then "NoVentilation"
+    else if( VentStd = "T24N-2013" )
+    then "Maximum"
+    else "Sum"
+    endif endif 
+  DEFAULT : S901G ECBC
+    if( VentSrc != "Forced" )
+    then "NoVentilation"
+    else if( VentStd = "Other" )
+    then VentSpecMthd // Set equal to user input
+    else if( VentStd = "T24N-2013" )
+    then "Maximum"
+    else "Sum"
+    endif endif endif
+  SIZING : T24N
+    if( VentSrc != "Forced" .OR. ( VentSrc = "Forced" .AND. VentSysIsExh ) )
+    then "NoVentilation"
+    else if( VentSpecMthd = "Maximum" )
+    then "Maximum"
+    else "Sum"
+    endif endif
+  SIZING : S901G ECBC
+    if( VentSrc != "Forced" )
+    then "NoVentilation"
+    else if( VentStd = "Other" )
+    then u:VentSpecMthd // Set equal to user input
+    else if( VentStd = "T24N-2013" )
+    then "Maximum"
+    else "Sum"
+    endif endif endif
+  ANNUAL
+    z:VentSpecMthdSim
+ENDRULE
+RULE NEW Spc:VentSpecMthd
+  DATATYPE
+    Enumeration
+  LONGFORM
+    VentilationSpecificationMethod
+  DESCRIPTION
+    "The method used to calculate the design ventilation flow the space."
+  HELP
+    "This property is specified at the ThermalZone; it is shown here only for
+     reference. To change the specification method, click on the '...' button to
+     navigate to the ThermalZone.
+
+
+     For each of the methods, the design ventilation air flow is calculated as follows:
+
+
+     Maximum = The maximum of all the various input values.
+
+
+     Sum = The sum of all the various input values.
+  
+
+     FlowPerPerson = Only using the Space:VentPerPerson (cfm/person) input value;
+     other inputs are ignored. NOTE: A value non-zero FlowPerPerson must be
+     defined if 'CO2Sensor' control is used; i.e. DCV control of ventilation
+     air flow is intended.
+
+
+     FlowPerArea = Only using the Space:VentPerArea (cfm/ft2) input value.
+     Other inputs are ignored.
+
+
+     AirChangesPerHour = Only using the Space:VentACH (ACH) input value.
+     Other inputs are ignored.
+
+
+     FlowPerZone = Only using the FlowPerSpace (cfm) input value.
+     Other inputs are ignored."
+  INPUTCLASS
+    NotInput
+  OPTION : T24N
+    NoVentilation
+    Maximum
+    Sum
+    FlowPerPerson
+    FlowPerArea
+    AirChangesPerHour
+    FlowPerZone
+  OPTION : S901G ECBC
+    NoVentilation
+    Maximum
+    Sum    
+  DEFAULT : T24N
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentSpecMthd
+    else "NoVentilation"
+    endif
+  DEFAULT : S901G ECBC
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentSpecMthdSim
+    else "NoVentilation"
+    endif
+  SIZING : T24N
+    ThrmlZnRef:VentSpecMthd
+  SIZING : S901G ECBC
+    ThrmlZnRef:VentSpecMthdSim
+  ANNUAL
+    z:VentSpecMthd
+ENDRULE
+
+
+// ********** Ventilation Control Method ***************************************
+RULE ThrmlZn:VentCtrlMthd
+  DESCRIPTION
+    "The method used to control ventilation air flow." 
+  HELP
+    "Ventilation air flow is typically 'Fixed' at the design rate.  For
+     intermittent or high-occupancy spaces, 'CO2Sensor' (i.e DCV) control can
+     be used to reduce ventilation based on the actual occupancy. CO2Sensor control
+     can only be used for AirSystems that have an economizer, and for multizone
+     systems, 'DDCToZone' controls."
+  REFERENCE 
+    NACM Section 5.6.5.4
+  INPUTCLASS 
+    Default
+  OPTION
+    Fixed
+    CO2Sensors
+;    OccupantSensors
+  DEFAULT
+    if( VentSrc = "Forced" )
+    then "Fixed"
+    else UNDEFINED
+    endif
+  CHECKCODE : T24N
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then UNCHANGED // No check for partial envelope
+    else
+    if( HasDCV .AND. DCVIsNotAllowed = 1 )
+    then 
+      PostError("ThermalZone '%s' is ventilated by a ZoneSystem. 'CO2Sensor'
+                 ventilation control (DCV) is not allowed for this 
+                 configuration.", Name)
+    else
+    if( HasDCV .AND. DCVIsNotAllowed = 2 )
+    then 
+      PostError("ThermalZone '%s' is a Laboratory, ParkingGarage, or CommercialKithen
+                 process space. 'CO2Sensor' ventilation control (DCV) is not supported
+                 for these applications.", Name)
+    else 
+    if( LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+    then // VentSys is AirSys
+      if( HasDCV .AND.
+          VentSysRef:IsMultiZnSys = 0 .AND. 
+          VentSysRef:HasAirEcono = 0 )
+      then 
+        PostWarning("ThermalZone '%s' is ventilated by a single-zone AirSystem
+                   with no economizer to modulate OA flow. 'CO2Sensor' 
+                   ventilation control (DCV) may not be appropriate. Check
+                   inputs for consistency with the actual design.", Name)
+      else
+      if( HasDCV .AND.
+          VentSysRef:IsMultiZnSys = 1 .AND. 
+          ( VentSysRef:HasAirEcono = 0 .OR. HasDDCCtrl = 0 ) )
+      then 
+        PostWarning("ThermalZone '%s' is ventilated by a multizone AirSystem
+                   with no economizer or no 'DDCToZone' controls. 'CO2Sensor' 
+                   ventilation control (DCV) may not be appropriate. Check
+                   inputs for consistency with the actual design.", Name)
+// The following check is covered by ThrmlZn:DCVIsRequired
+;     else
+;     if( VentIsRequired .AND. VentSrc = "Forced" .AND. 
+;         IfValidAnd ( MinOccDens > Proj:OccDensForReqDCV ) .AND.
+;         IfValidAnd ( VentCtrlMthd = "Fixed" ) .AND.
+;         ( ( VentSysRef:IsMultiZnSys = 0 .AND. VentSysRef:HasAirEcono = 1 )
+;           .OR.
+;         ( ( VentSysRef:IsMultiZnSys = 1 .AND. VentSysRef:HasAirEcono = 1 
+;           .AND. VentSysRef:CtrlSysType = "DDCToZone" ) ) ) )
+;     then
+;       PostError("The minimum design occupancy of ThermalZone '%s' is greater than %g
+;                  people/1000ft2, the ventilation system '%s' has an economizer,
+;                  and if is a multizone system, 'DDCToZone' control. Therefore,
+;                  'CO2Sensor' ventilation control (DCV) is likely mandatory
+;                  for this zone.", Name, Proj:OccDensForReqDCV, VentSysRef:Name )
+      else UNCHANGED
+      endif endif ;endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING : T24N
+    if( VentSrc != "Forced" ) 
+    then UNDEFINED
+    else if( BaseSysNum > 0 .AND. VentIsRequired .AND. VentSrc = "Forced" )
+    then "Fixed"
+// The following conditions would override the user specification based on other model attributes
+// They are not currently implemented.
+;   else if( LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+;   then
+;     if( VentSysRef:IsMultiZnSys = 0 .AND. VentSysRef:HasAirEcono = 0 )
+;     then // AirSystem is single-zone and has no economizer
+;       "Fixed"
+;     else if( VentSysRef:IsMultiZnSys = 1 .AND.
+;              ( VentSysRef:CtrlSysType != "DDCToZone" .OR. VentSysRef:HasAirEcono = 0 ) )
+;     then // AirSystem is multi-zone and has no economizer or no DDC to zone
+;       "Fixed"
+;     else u:VentCtrlMthd
+;     endif endif
+    else u:VentCtrlMthd
+    endif endif
+  SIZING : S901G ECBC
+    if( VentSrc != "Forced" ) 
+    then UNDEFINED
+    else if( BaseSysNum > 0 .AND. VentIsRequired )
+    then "Fixed" // For baseline sizing
+    else u:VentCtrlMthd
+    endif endif
+// See ThermalZone-Ventilation.rule for ANNUAL rules
+ENDRULE
+RULE NEW Spc:VentCtrlMthd
+  DATATYPE
+    Enumeration
+  LONGFORM
+    VentilationControlMethod
+  DESCRIPTION
+    "The method used to control ventilation air flow."
+  HELP
+    "This property is specified at the ThermalZone; it is shown here only for
+     reference. To change the specification method, click on the '...' button to
+     navigate to the ThermalZone.
+
+
+     Ventilation air flow is typically 'Fixed' at the design rate. For
+     intermittent or high-occupancy spaces, 'CO2Sensor' (i.e DCV) control can
+     be used to reduce ventilation based on the actual occupancy. CO2Sensor control
+     can only be used for AirSystems that have an economizer, and for multizone
+     systems, 'DDCToZone' controls."
+  INPUTCLASS
+    NotInput
+  OPTION
+    Fixed
+    CO2Sensors
+;    OccupantSensors   
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:VentCtrlMthd
+    else UNDEFINED
+    endif
+  SIZING
+    ThrmlZnRef:VentCtrlMthd
+ENDRULE
+RULE ThrmlZn:HasDCV
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( VentSrc = "Forced" .AND. IfValidAnd( VentCtrlMthd = "CO2Sensors" ) )
+    then 1
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:HasDCV
+  DATATYPE
+    Integer
+  LONGFORM
+    HasDemandControlVentilation
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ValidOr( ThrmlZnRef:HasDCV, 0 )
+    else 0
+    endif 
+ENDRULE
+
+
+// ********** Code Minimum Ventilation Components ******************************
+// Per Area basis
+RULE NEW Spc:CodeVentPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationPerArea
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air) per floor area."
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow." 
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/ft2
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .AND. VentStd != "Other" )
+    then 0
+    else if( IsHotelMotelGuestRm .AND. HotelMotelGuestRmAveArea >= 500 )
+    then 0.15 // Avg room size is >= 500 SF, use floor area
+    else if( IsHotelMotelGuestRm .AND. HotelMotelGuestRmAveArea < 500 )
+    then 0 // Avg room size is < 500 SF, use 30cfm per room (see below)
+    else // Look up minimum cfm/ft2
+      SpaceFunctionData:CodeVentPerArea("FuncType", SpcFunc)
+    endif endif endif
+  DEFAULT : S901G ECBC
+    if( VentIsRequired = 0 .AND. VentStd != "Other" )
+    then 0
+    else 
+    switch( VentStd )
+      case "T24N-2013" : SpaceFunctionData:T24N2013_CodeVentPerArea("FuncType", SpcFunc)
+      case "IMC-2012"  : SpaceFunctionData:IMC2012_CodeVentPerArea("FuncType", SpcFunc)
+      default: SpaceFunctionData:S6212010_CodeVentPerArea("FuncType", SpcFunc)
+    endswitch      
+    endif
+ENDRULE
+RULE Spc:CodeOtherVentPerArea
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air) per floor area for 'Other'
+      ventilation standards." 
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow."
+  INPUTCLASS
+    Default
+  UNITS
+    cfm/ft2
+  DEFAULT : S901G ECBC
+    if( VentIsRequired = 0 )
+    then 0
+    else 
+    switch( Proj:VentStd )
+      case "T24N-2013" : SpaceFunctionData:T24N2013_CodeVentPerArea("FuncType", SpcFunc)
+      case "IMC-2012"  : SpaceFunctionData:IMC2012_CodeVentPerArea("FuncType", SpcFunc)
+      default: SpaceFunctionData:S6212010_CodeVentPerArea("FuncType", SpcFunc)
+    endswitch      
+    endif
+ENDRULE
+RULE NEW Spc:CodeVentPerAreaFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationPerAreaFlow
+  DESCRIPTION
+     "The code required outside air flow rate, in CFM, associated with the VentPerArea input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+   if( VentStd = "Other" )
+   then CodeOtherVentPerArea * FlrArea
+   else CodeVentPerArea * FlrArea
+   endif
+  SIZING
+   if( VentStd = "Other" )
+   then CodeOtherVentPerArea * FlrArea
+   else CodeVentPerArea * FlrArea
+   endif
+  ANNUAL
+    z:CodeVentPerAreaFlow
+ENDRULE
+// Per Person basis
+RULE NEW Spc:CodeVentPerPerson
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationPerPerson
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air) per person."
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow."
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm/person
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .AND. VentStd != "Other" )
+    then 0
+    else
+    if( HotelMotelGuestRmCondFlrArea > 0 .OR. 
+        LabArea > 0 .OR. 
+        PrkgGarArea > 0 )
+    then 0
+    else
+    if( HighRiseResCondFlrArea > 0 )
+    then 5
+    else 15
+    endif endif endif
+  DEFAULT : S901G ECBC
+    if( VentIsRequired = 0 .AND. VentStd != "Other" )
+    then 0
+    else 
+    switch( VentStd )
+      case "T24N-2013" : 
+        if( HighRiseResCondFlrArea > 0 )
+        then 5
+        else
+        if( HotelMotelGuestRmCondFlrArea > 0 .OR. 
+            LabArea > 0 .OR. 
+            PrkgGarArea > 0 )
+        then 0
+        else 15
+        endif endif
+      case "IMC-2012":   SpaceFunctionData:IMC2012_CodeVentPerPerson("FuncType", SpcFunc)
+      default: SpaceFunctionData:S6212010_CodeVentPerPerson("FuncType", SpcFunc)
+    endswitch      
+    endif
+ENDRULE
+RULE Spc:CodeOtherVentPerPerson
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air) per person for 'Other'
+      ventilation standards."
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow."
+  INPUTCLASS
+    Default
+  UNITS
+    cfm/person
+  DEFAULT : T24N
+    if( VentIsRequired = 0 )
+    then 0
+    else
+    if( HotelMotelGuestRmCondFlrArea > 0 .OR. 
+        LabArea > 0 .OR. 
+        PrkgGarArea > 0 )
+    then 0
+    else
+    if( HighRiseResCondFlrArea > 0 )
+    then 5
+    else 15
+    endif endif endif
+  DEFAULT : S901G ECBC
+    if( VentIsRequired = 0 )
+    then 0
+    else 
+    switch( Proj:VentStd )
+      case "T24N-2013" :
+        if( HighRiseResCondFlrArea > 0 )
+        then 5
+        else
+        if( HotelMotelGuestRmCondFlrArea > 0 .OR. 
+            LabArea > 0 .OR. 
+            PrkgGarArea > 0 )
+        then 0
+        else 15
+        endif endif
+      case "IMC-2012":   SpaceFunctionData:IMC2012_CodeVentPerPerson("FuncType", SpcFunc)
+      default: SpaceFunctionData:S6212010_CodeVentPerPerson("FuncType", SpcFunc)
+    endswitch      
+    endif
+ENDRULE
+RULE NEW Spc:CodeVentPerPersonFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationPerPersonFlow
+  DESCRIPTION
+     "The code required outside air flow rate, in CFM, associated with the VentPerPerson input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+   if( VentStd = "Other" )
+   then CodeOtherVentPerPerson * Max( OccNumSim, MinOccNumSim )
+   else CodeVentPerPerson * Max( OccNumSim, MinOccNumSim )
+   endif
+  SIZING
+   if( VentStd = "Other" )
+   then CodeOtherVentPerPerson * Max( OccNumSim, MinOccNumSim )
+   else CodeVentPerPerson * Max( OccNumSim, MinOccNumSim )
+   endif
+  ANNUAL
+    z:CodeVentPerPersonFlow
+ENDRULE
+// ACH
+RULE NEW Spc:CodeVentACH
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationAirChangesPerHour
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air), in cubic feet per hour,
+      divided by the volume of the space."
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow."
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    NotInput
+  UNITS
+    changes/hr
+  DEFAULT : T24N
+    if( VentIsRequired = 0 .AND. VentStd != "Other" )
+    then 0
+    else if( LabArea > 0 )
+    then 
+      if( IfValidAnd( LabExhRtType = "HoodDominated" ) )
+      then 15
+      else 6 // LoadDominated
+      endif
+    else 0
+    endif endif
+  DEFAULT : S901G ECBC
+    0
+ENDRULE
+RULE Spc:CodeOtherVentACH
+  DESCRIPTION
+     "The code mininum amount of ventilation (outside air), in cubic feet per hour,
+      divided by the volume of the space for 'Other' ventilation standards."
+  HELP
+     "This is one component of the code minimum ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total code minimum ventilation air flow."
+  INPUTCLASS
+    Default
+  UNITS
+    changes/hr
+  DEFAULT : T24N
+    if( VentIsRequired = 0 )
+    then 0
+    else if( LabArea > 0 )
+    then 
+      if( IfValidAnd( LabExhRtType = "HoodDominated" ) )
+      then 15
+      else 6 // LoadDominated
+      endif
+    else 0
+    endif endif
+  DEFAULT : S901G ECBC
+    0
+ENDRULE
+RULE NEW Spc:CodeVentACHFlow
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationAirChangesPerHourFlow
+  DESCRIPTION
+     "The code required outside air flow rate, in CFM, associated with the CodeVentACH input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+   if( VentStd = "Other" )
+   then CodeOtherVentACH * ValidOr( Vol, 0 ) / 60
+   else CodeVentACH * ValidOr( Vol, 0 ) / 60
+   endif
+  SIZING
+   if( VentStd = "Other" )
+   then CodeOtherVentACH * Vol / 60
+   else CodeVentACH * Vol / 60
+   endif
+  ANNUAL
+    z:CodeVentACHFlow
+ENDRULE
+// Flow basis, used for setting the baseline ventilation rate to equal the proposed
+// for commercial kitchen spaces
+RULE NEW Spc:CodeVentPerSpc
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationPerSpace
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+    if( IfValidAnd( HotelMotelGuestRmCnt > 0 ) .AND.
+        IfValidAnd( HotelMotelGuestRmAveArea < 500 ) )
+    then // Avg room size is < 500 SF, use 30cfm per room (see below)
+      30 * HotelMotelGuestRmCnt 
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    0
+ENDRULE
+
+
+// ********** Proposed Ventilation Components **********************************
+// Per Area basis
+RULE Spc:VentPerArea
+  DESCRIPTION
+     "The proposed (user-defined) amount of outside air per floor area." 
+  HELP
+     "This is one component of the proposed design ventilation air calculation. 
+      Component rates are used, along with the VentilationSpecificationMethod, 
+      to determine the total proposed ventilation air flow."
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    Default
+  MINIMUM
+    0
+  COMMONMAXIMUM
+    1.5
+  UNITS
+    cfm/ft2
+  DEFAULT
+    if( VentSrc = "None" )
+    then 0
+    else
+    if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then
+      if( IsHotelMotelGuestRm .AND.
+          IfValidAnd( HotelMotelGuestRmAveArea < 500 ) )
+      then 0 // Use VentPerSpc criteria
+      else SpcFuncDefaultsRef:VentPerArea
+      endif
+    else
+    if( IsHotelMotelGuestRm .AND.
+        IfValidAnd( HotelMotelGuestRmAveArea < 500 ) )
+    then 0 // Use VentPerSpc criteria
+    else CodeVentPerArea
+    endif endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM ventilation rates
+      CodeVentPerArea
+    else if( VentSrc = "None" )
+    then 0
+    else u:VentPerArea
+    endif endif
+  SIZING_BASELINE : T24N
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. CommKitArea > 0 .OR. LabArea > 0 )
+    then // HVAC is existing or CommKit/Lab, use proposed vent rates
+      zp:VentPerArea 
+    else CodeVentPerArea
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. IncludeInBal = 0 )
+    then // Baseline = proposed
+      zp:VentPerArea
+    else CodeVentPerArea
+    endif endif
+  ANNUAL
+    z:VentPerArea
+ENDRULE
+RULE NEW Spc:VentPerAreaFlow
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationPerAreaFlow
+  DESCRIPTION
+     "The outside air flow rate, in CFM, associated with the VentPerArea input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( IfValidAnd( VentPerArea > 0 ) )
+    then VentPerArea * FlrArea
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( VentPerArea > 0 ) )
+    then VentPerArea * FlrArea
+    else 0
+    endif
+  ANNUAL
+    z:VentPerAreaFlow
+ENDRULE
+// Per Person basis
+RULE Spc:VentPerPerson
+  DESCRIPTION
+     "The user input outside air flow rate divided by the design or hourly 
+      occupancy of the space."  
+  REFERENCE
+    NACM Section 5.6.5.4
+  INPUTCLASS
+    Default
+  MINIMUM
+    0
+  COMMONMAXIMUM
+    30
+  UNITS
+    cfm/person
+  DEFAULT
+    if( VentSrc = "None" )
+    then 0
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then SpcFuncDefaultsRef:VentPerPerson
+    else CodeVentPerPerson
+    endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM ventilation rates
+      CodeVentPerPerson
+    else if( VentSrc = "None" )
+    then 0
+    else u:VentPerPerson
+    endif endif
+  SIZING_BASELINE : T24N
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. CommKitArea > 0 .OR. LabArea > 0 )
+    then // HVAC is existing or CommKit/Lab, use proposed vent rates
+      zp:VentPerPerson
+    else CodeVentPerPerson
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. IncludeInBal = 0 )
+    then // Baseline = proposed
+      zp:VentPerPerson
+    else CodeVentPerPerson
+    endif endif
+  ANNUAL
+    z:VentPerPerson
+ENDRULE
+RULE NEW Spc:VentPerPersonFlow
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationPerPersonFlow
+  DESCRIPTION
+     "The outside air flow rate, in CFM, associated with the VentPerPerson input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( IfValidAnd( VentPerPerson > 0 ) )
+    then VentPerPerson * OccNumSim
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( VentPerPerson > 0 ) )
+    then VentPerPerson * OccNumSim
+    else 0
+    endif
+  ANNUAL
+    z:VentPerPersonFlow
+ENDRULE
+// ACH
+RULE Spc:VentACH
+  DESCRIPTION
+    "The user input outside air flow rate in cubic feet per hour divided by the
+     volume of the space."  
+  INPUTCLASS
+    Optional
+  UNITS
+    changes/hr
+  MINIMUM
+    0
+  DEFAULT
+    if( VentSrc = "None" )
+    then 0
+    else if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 .AND.
+             LabArea = 0 ) 
+    then Max( SpcFuncDefaultsRef:VentACH, CodeVentACH )
+    else CodeVentACH
+    endif endif
+  SIZING_PROPOSED
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then  // Partial Envelope, use NACM ventilation rates
+      CodeVentACH
+    else if( VentSrc = "None" )
+    then 0
+    else u:VentACH
+    endif endif
+  SIZING_BASELINE : T24N
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. CommKitArea > 0 .OR. LabArea > 0 )
+    then // HVAC is existing or CommKit/Lab, use proposed vent rates
+      zp:VentACH
+    else CodeVentACH 
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. IncludeInBal = 0 .OR. VentStd = "Other" )
+    then // Baseline = proposed
+      zp:VentACH
+    else CodeVentACH 
+    endif endif
+  ANNUAL
+    u:VentACH
+ENDRULE
+RULE NEW Spc:VentACHFlow
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationAirChangesPerHourFlow
+  DESCRIPTION
+     "The outside air flow rate, in CFM, associated with the VentACH input."  
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    if( IfValidAnd( VentACH > 0 ) )
+    then VentACH * Vol / 60
+    else 0
+    endif
+  SIZING
+    if( IfValidAnd( VentACH > 0 ) )
+    then VentACH * Vol / 60
+    else 0
+    endif
+  ANNUAL
+    z:VentACHFlow
+ENDRULE
+// Per Spc
+
+
+RULE Spc:VentPerSpc
+  DESCRIPTION
+    "The user input outside air flow rate in cubic feet per minute for the space."  
+  INPUTCLASS
+    Optional
+  UNITS
+    cfm
+  MINIMUM
+    0
+  DEFAULT : T24N
+    if( LocalCompAssigned( SpcFuncDefaultsRef ) .AND. LocalStatus( SpcFunc ) < 5 )
+    then
+      if( IfValidAnd( HotelMotelGuestRmCnt > 0 ) .AND.
+          IfValidAnd( HotelMotelGuestRmAveArea < 500 ) )
+      then SpcFuncDefaultsRef:VentPerSpc * HotelMotelGuestRmCnt // 30cfm per unit
+      else if( IfValidAnd( HotelMotelGuestRmAveArea >= 500 ) )
+      then 0
+      else SpcFuncDefaultsRef:VentPerSpc
+      endif endif
+    else
+    if( IfValidAnd( HotelMotelGuestRmCnt > 0 ) .AND.
+        IfValidAnd( HotelMotelGuestRmAveArea < 500 ) )
+    then 30 * HotelMotelGuestRmCnt // 30cfm per unit 
+    else 0
+    endif endif
+  DEFAULT : S901G ECBC
+    0
+  SIZING_PROPOSED : T24N
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then // Partial Envelope, use NACM ventilation rates
+      0 
+    else if( VentSrc = "None" )
+    then 0
+    else u:VentPerSpc   
+    endif endif
+  SIZING_BASELINE : T24N
+    if( VentSrc = "None" )
+    then 0
+    else if( IsNewVent = 0 .OR. CommKitArea > 0 )
+    then // HVAC is existing or CommKit, use proposed vent rates
+      zp:VentPerSpc 
+    else 0
+    endif endif
+  SIZING : S901G ECBC
+    0
+  ANNUAL
+    z:VentPerSpc
+ENDRULE
+
+
+// ********** Design Ventilation Flow Rates ************************************
+// User-input
+RULE Spc:VentFlow
+  DESCRIPTION
+    "The quantity of design ventilation air provided to the Space, in cfm,
+     based on user inputs (for reference only)."
+  HELP
+    "The design air flow rate is determined from the specification method
+     (Maximum, Sum, etc) defined at the ThermalZone, and the user-defined 
+     Space ventilation components (cfm/person, cfm/ft2, etc). 
+
+
+     Ventilation component rates are defaulted to the code minimum. However, the
+     design ventilation air flow can be changed by modifying the individual
+     component values and/or occupancy density.
+
+
+     For compliance analysis, inidvidual Space ventilation air flows may vary above
+     or below code minimums provided the sufficient total ventilation air is
+     delivered to the combination of children Spaces of each BuildingStory."
+  REFERENCE 
+    NACM Section 5.6.5.4
+  INPUTCLASS : T24N
+    NotInput
+  INPUTCLASS : S901G ECBC
+    Default 
+  UNITS 
+    cfm
+  DEFAULT : T24N
+    if( VentSrc = "None" )
+    then 0
+    else
+      switch( VentSpecMthd )
+        case "NoVentilation"     : 0
+        case "Maximum"           : 
+          Max( Max(VentPerPersonFlow, VentPerAreaFlow), Max(VentACHFlow, VentPerSpc) )
+          / VentAirDistEff * VentMult
+        case "Sum"               :
+          ( VentPerPersonFlow + VentPerAreaFlow + VentACHFlow + VentPerSpc ) 
+          / VentAirDistEff * VentMult
+        case "FlowPerPerson"     : VentPerPersonFlow / VentAirDistEff * VentMult
+        case "FlowPerArea"       : VentPerAreaFlow / VentAirDistEff * VentMult
+        case "AirChangesPerHour" : VentACHFlow / VentAirDistEff * VentMult
+        case "FlowPerZone"       : VentPerSpc / VentAirDistEff * VentMult
+        default : 0
+      endswitch
+    endif
+  DEFAULT : S901G ECBC
+    if( VentSpecMthd != "NoVentilation" )
+    then
+      if( VentSpecMthd = "Maximum" )
+      then
+        if( VentStd = "Other" )
+        then 
+          Max( Max( VentPerPersonFlow, VentPerAreaFlow ), VentACHFlow )
+          / VentAirDistEff * VentMult
+        else 
+          Max( VentPerPersonFlow, VentPerAreaFlow )
+          / VentAirDistEff * VentMult
+        endif
+      else if( VentSpecMthd = "Sum" )
+      then
+        if( VentStd = "Other" )
+        then 
+          ( VentPerPersonFlow + VentPerAreaFlow + VentACHFlow )
+          / VentAirDistEff * VentMult
+        else 
+          ( VentPerPersonFlow + VentPerAreaFlow )
+          / VentAirDistEff * VentMult
+        endif
+      else 0
+      endif endif
+    else 0
+    endif
+  CHECKCODE : T24N
+    if( CondgType = "Unconditioned" .AND. 
+        HasVentSys .AND. VentFlow > 0 .AND.
+        PrkgGarArea = 0 )   
+    then 
+      PostWarning("Space '%s' is 'Unconditioned', but has ventilation flow
+                   defined. The ventilation system serving the space's zone
+                   will be simulated the same in the proposed and standard
+                   design.", Name) 
+    else
+    if( LabArea > 0 .AND. 
+        VentFlow < CodeVentFlow * ( 1 - VentTolLim ) )
+    then 
+      PostWarning("Space '%s' is Laboratory, but the user-specified ventilation flow rate
+                 is less than the required amount for the specified 'Lab Exhaust Type'.
+                 For compliance analysis, the minimum ventilation air for 
+                 Laboratory spaces must be at minimum 6ACH or 15ACH (total), depending 
+                 on the user-specified 'Lab Exhaust Type'.", Name)
+    else
+    if( IsRes .AND. IsCond .AND. HasVentSys .AND. 
+        VentFlow < CodeVentFlow * ( 1 - VentTolLim ) )
+    then
+      PostWarning("Space '%s' is a residential space with forced mechanical ventilation
+                 and has a design ventilation flow rate that is less than the 
+                 required code minimum. Sufficient additional ventilation air
+                 must be provided to other residential spaces in the ThermalZone
+                 to meet transfer air requirements.", Name)
+    else
+    if( IsCond .AND. HasVentSys .AND. 
+        VentFlow < CodeVentFlow * ( 1 - VentTolLim ) )
+    then
+      PostWarning("Space '%s' is a nonresidential space with forced mechanical ventilation
+                 and has a design ventilation flow rate that is less than the 
+                 required code minimum. Sufficient additional ventilation air
+                 must be provided to other nonresidential spaces on the BuildingStory
+                 to meet transfer air requirements.", Name)
+    else
+    if( VentFlow > CodeVentFlow * ( 1 + VentTolLim ) )
+    then 
+      PostWarning("Space '%s' ventilation flow rate is greater than the required
+                   code minimum.", Name)
+    else UNCHANGED
+    endif endif endif endif endif
+  CHECKCODE : S901G ECBC
+    if( CondgType = "Unconditioned" .AND. 
+        HasVentSys .AND. VentFlow > 0 )   
+    then 
+      PostWarning("Space '%s' is 'Unconditioned', but has ventilation flow
+                   defined. The ventilation system serving the space's zone
+                   will be simulated the same in the proposed proposed and standard
+                   design.", Name) 
+    else
+    if( HasDCV .AND. LocalStatus( VentFlow ) > 4 )
+    then // Check for consistency in component inputs if using DCV and VentFlow is user-defined
+      if( ( VentSpecMthd = "Maximum" .AND.  
+            ( Max( Max( VentPerAreaFlow, VentACHFlow ), VentPerPersonFlow ) / VentAirDistEff * VentMult
+              * ( 1 - Proj:VentTolLim ) ) > VentFlow // Less than calc - tolerance
+            .OR.
+            ( Max( Max( VentPerAreaFlow, VentACHFlow ), VentPerPersonFlow ) / VentAirDistEff * VentMult
+              * ( 1 + Proj:VentTolLim ) ) < VentFlow // Greater than calc + tolerance
+           )
+          .OR. // Check for Sum method
+          ( ( VentPerAreaFlow + VentACHFlow + VentPerPersonFlow ) / VentAirDistEff * VentMult
+            * ( 1 - Proj:VentTolLim ) > VentFlow // Less than calc - tolerance
+            .OR.
+            ( ( VentPerAreaFlow + VentACHFlow + VentPerPersonFlow) / VentAirDistEff * VentMult
+            * ( 1 - Proj:VentTolLim ) < VentFlow ) // Greater than calc + tolerance
+          )
+        )
+      then
+        PostError("Space '%s' has 'CO2Sensor' control, but the Design
+                   component ventilation inputs (Ra, Rp and/or ACH) are 
+                   not consistent with the user-specified Design Ventilation Total
+                   flow rate (in CFM). Update the Design component values and/or the
+                   Ventilation Total flow value so there is consistency 
+                   between the components and the input CFM for the given 
+                   specification method.", Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif
+  SIZING_PROPOSED : T24N
+    if( VentSrc = "None" )
+    then 0
+    else
+      switch( VentSpecMthd )
+        case "NoVentilation"     : 0
+        case "Maximum"           : 
+          Max( Max(VentPerPersonFlow, VentPerAreaFlow), Max(VentACHFlow, VentPerSpc) )
+          / VentAirDistEff * VentMult
+        case "Sum"               :
+          ( VentPerPersonFlow + VentPerAreaFlow + VentACHFlow + VentPerSpc )
+          / VentAirDistEff * VentMult
+        case "FlowPerPerson"     : VentPerPersonFlow / VentAirDistEff * VentMult
+        case "FlowPerArea"       : VentPerAreaFlow / VentAirDistEff * VentMult
+        case "AirChangesPerHour" : VentACHFlow / VentAirDistEff * VentMult
+        case "FlowPerZone"       : VentPerSpc / VentAirDistEff * VentMult
+        default : 0
+      endswitch
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( VentSrc = "None" )
+    then 0
+    else u:VentFlow
+    endif
+//SIZING_BASELINE
+// Moved to rule below for ordering purposes
+ENDRULE
+// Code minimum
+RULE Spc:CodeVentFlow
+  DESCRIPTION
+    "The code minimum design ventilation air flow rate for the Space."
+  HELP : T24N
+    "The default value shall be the larger of 15 cfm times the design occupancy
+     from Appendix 5.4A or the conditioned floor area times the applicable 
+     ventilation rate from Appendix 5.4A or Table 120.1-A of the Standards."  
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT : T24N
+    if( VentIsRequired )
+    then
+      if( LabArea > 0 )
+      then // Lab min based on ACH
+        Max( CodeVentACHFlow, VentFlow ) 
+        / VentAirDistEff
+      else if( CommKitArea > 0 )
+      then // CommKit rate is max of NACM rate or proposed flow
+        Max( Max( CodeVentPerPersonFlow, CodeVentPerAreaFlow ), VentFlow )
+        / VentAirDistEff
+      else if( PrkgGarArea > 0 )
+      then // PrkgGar min based on cfm/ft2
+        CodeVentPerAreaFlow
+      else if( IsHighRiseRes )
+      then // Is a High-rise residential Spc, use Sum
+        ( CodeVentPerPersonFlow + CodeVentPerAreaFlow )
+      else if( IsHotelMotelGuestRm )
+      then // Is a hotel guest room
+        Max( CodeVentPerAreaFlow, CodeVentPerSpc )
+      else // All other spaces is Max of PerArea/PerPerson
+        Max( CodeVentPerPersonFlow, CodeVentPerAreaFlow )
+      endif endif endif endif endif
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    if( VentIsRequired .AND. VentSrc != "None")
+    then
+      if( VentStd = "T24N-2013" )
+      then
+        if( LabArea > 0 )
+        then // Lab min based on ACH
+          Max( CodeVentACHFlow, VentFlow ) 
+        else if( CommKitArea > 0 )
+        then // CommKit rate is max of NACM rate or proposed flow
+          Max( Max( CodeVentPerPersonFlow, CodeVentPerAreaFlow ), VentFlow )
+        else if( PrkgGarArea > 0 )
+        then // PrkgGar min based on cfm/ft2
+          CodeVentPerAreaFlow
+        else if( IsHighRiseRes)
+        then // Is a High-rise residential Spc, use Sum
+          ( CodeVentPerPersonFlow + CodeVentPerAreaFlow )
+        else if( IsHotelMotelGuestRm )
+        then // Is a hotel guest room
+          CodeVentPerSpc
+        else // All other spaces is Max of PerArea/PerPerson
+          Max( CodeVentPerPersonFlow, CodeVentPerAreaFlow )
+        endif endif endif endif endif
+      else if( VentStd = "62.1-2010" .OR. VentStd = "IMC-2012" )
+      then // Sum of Ra and Rp rates
+        ( CodeVentPerPersonFlow + CodeVentPerAreaFlow )
+      else 0
+      endif endif
+    else 0
+    endif
+ENDRULE
+// 'Other' code minimum
+RULE Spc:CodeOtherVentFlow
+  DESCRIPTION
+    "The 'Other' code minimum design ventilation air flow rate for the Space." 
+  INPUTCLASS
+    Default
+  UNITS 
+    cfm
+  DEFAULT : S901G ECBC
+// Rule is difference from CodeVentFlow since it includes CodeOtherVentACH
+    if( VentIsRequired .AND. VentStd = "Other" )
+      then
+      if( VentSpecMthd = "Maximum" )
+      then // 'Maximum' method
+        Max( Max( CodeVentPerPersonFlow, CodeVentPerAreaFlow ),
+             CodeVentACHFlow )
+        / VentAirDistEff
+      else  // 'Sum' method
+        ( CodeVentPerPersonFlow + CodeVentPerAreaFlow + CodeVentACHFlow )
+        / VentAirDistEff
+      endif
+    else 0
+    endif
+  CHECKCODE : S901G ECBC
+    if( HasDCV .AND. LocalStatus( CodeOtherVentFlow ) > 4 )
+    then // Check for consistency in component inputs if using DCV and CodeOtherVentFlow is user-defined
+      if( ( VentSpecMthd = "Maximum" .AND.  
+            ( Max( Max( VentPerAreaFlow, VentACHFlow ), VentPerPersonFlow ) / VentAirDistEff
+              * ( 1 - Proj:VentTolLim ) ) > CodeOtherVentFlow // Less than calc - tolerance
+            .OR.
+            ( Max( Max( VentPerAreaFlow, VentACHFlow ), VentPerPersonFlow ) / VentAirDistEff
+              * ( 1 + Proj:VentTolLim ) ) < CodeOtherVentFlow // Greater than calc + tolerance
+           )
+          .OR. // Check for Sum method
+          ( ( VentPerAreaFlow + VentACHFlow + VentPerPersonFlow ) / VentAirDistEff
+            * ( 1 - Proj:VentTolLim ) > CodeOtherVentFlow // Less than calc - tolerance
+            .OR.
+            ( ( VentPerAreaFlow + VentACHFlow + VentPerPersonFlow) / VentAirDistEff
+            * ( 1 - Proj:VentTolLim ) < CodeOtherVentFlow ) // Greater than calc + tolerance
+          )
+        )
+      then
+        PostError("Space '%s' has 'CO2Sensor' control, but the Code Min.
+                   component ventilation inputs (Ra, Rp and/or ACH) are 
+                   not consistent with the user-specified Code Min. Ventilation Total
+                   flow rate (in CFM). Update the Code Min. component values and/or the
+                   Ventilation Total flow value so there is consistency 
+                   between the components and the input CFM for the given 
+                   specification method.", Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// ********** Minimum Ventilation Flow Rates ***********************************
+// Minimum flow rate for the zone if usign DCV
+// User-input
+RULE Spc:MinVentFlow
+  DESCRIPTION
+    "The minimum ventilation air flow rate for the Space when unoccupied."
+  HELP
+    "If CO2Sensors are used, this represents the minimum ventilation flow rate
+     when the space is unoccupied. Otherwise, this is equal to the design
+     ventilation flow rate."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT : T24N
+    if( VentSrc = "None" )
+    then 0
+    else
+    if( HasDCV )
+    then // Does not include VentPerPersonFlow
+      switch( VentSpecMthd )
+        case "Maximum"           : 
+              Max(Max(VentPerAreaFlow, VentACHFlow), VentPerSpc)
+        case "Sum"               : 
+              (VentPerAreaFlow + VentACHFlow + VentPerSpc)
+        case "FlowPerPerson"     : 
+              VentPerPersonFlow
+        case "FlowPerArea"       :
+              VentPerAreaFlow
+        case "AirChangesPerHour" :
+              VentACHFlow
+        case "FlowPerZone" :
+              VentPerSpc
+        default : 0
+      endswitch
+    else VentFlow
+    endif endif
+  DEFAULT : S901G ECBC
+    if( VentSrc = "None" )
+    then 0
+    else
+    if( HasDCV )
+    then
+      if( VentSpecMthd = "Maximum" )
+      then // 'Maximum' method
+        Max( VentPerAreaFlow, VentACHFlow )
+        / VentAirDistEff * VentMult
+      else  // 'Sum' method
+        ( VentPerAreaFlow + VentACHFlow )
+        / VentAirDistEff * VentMult
+      endif
+    else VentFlow
+    endif endif
+  CHECKCODE  : S901G ECBC
+    if( HasDCV .AND. LocalStatus( MinVentFlow ) > 4 )
+    then // Check for consistency in component inputs if using DCV and VentFlow is user-defined
+      if( ( VentSpecMthd = "Maximum" .AND.  
+            ( Max( VentPerAreaFlow, VentACHFlow ) / VentAirDistEff * VentMult
+              * ( 1 - Proj:VentTolLim ) ) > MinVentFlow // Less than calc - tolerance
+            .OR.
+            ( Max( VentPerAreaFlow, VentACHFlow ) / VentAirDistEff * VentMult
+              * ( 1 + Proj:VentTolLim ) ) < MinVentFlow // Greater than calc + tolerance
+           )
+          .OR. // Check for Sum method
+          ( ( VentPerAreaFlow + VentACHFlow ) / VentAirDistEff * VentMult
+            * ( 1 - Proj:VentTolLim ) > MinVentFlow // Less than calc - tolerance
+            .OR.
+            ( ( VentPerAreaFlow + VentACHFlow ) / VentAirDistEff * VentMult
+            * ( 1 - Proj:VentTolLim ) < MinVentFlow ) // Greater than calc + tolerance
+          )
+        )
+      then
+        PostError("Space '%s' has 'CO2Sensor' control, but the Design
+                   component ventilation inputs (Ra and/or ACH) are 
+                   not consistent with the user-specified Design Ventilation Min.
+                   flow rate (in CFM). Update the Design component values and/or the
+                   Ventilation Min. flow value so there is consistency 
+                   between the components and the input CFM for the given 
+                   specification method.", Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+// Code minimum
+RULE Spc:CodeMinVentFlow
+  DESCRIPTION
+    "The code minimum ventilation air flow rate for the Space when unoccupied."
+  HELP
+    "If CO2Sensors are used, this represents the minimum ventilation flow rate
+     when the space is unoccupied. Otherwise, the minimum is equal to the design
+     ventilation flow rate."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT
+// Is the CodeVentFlow unless CO2Sensor controls are required or provided,
+// in which case, is the CodeVentPerAreaFlow.
+    if( IfValidAnd( DCVIsRequired = 1 ) .OR. IfValidAnd( HasDCV = 1 ) )
+    then // Zone requires CO2Sensor control, or DCV is provided and it is
+         // allowed; use CodeVentPerArea rate
+      CodeVentPerAreaFlow  / VentAirDistEff
+    else // Use CodeVentFlow
+      CodeVentFlow
+    endif
+ENDRULE
+// 'Other' code minimum
+RULE Spc:CodeOtherMinVentFlow
+  DESCRIPTION
+    "The 'Other' code minimum ventilation air flow rate for the Space when unoccupied."
+  HELP
+    "If CO2Sensors are used, this represents the minimum ventilation flow rate
+     when the space is unoccupied. Otherwise, the minimum is equal to the design
+     ventilation flow rate."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT : S901G ECBC
+// Is the CodeOtherVentFlow unless CO2Sensor controls are required or provided,
+// in which case, is the balance of flow after subtracting 
+    if( IfValidAnd( DCVIsRequired = 1 ) .OR. IfValidAnd( HasDCV = 1 ) )
+    then // Zone requires CO2Sensor control, or DCV is provided
+      if( VentSpecMthd = "Maximum" )
+      then // 'Maximum' method
+        Max( CodeVentPerAreaFlow, CodeVentACHFlow )
+        / VentAirDistEff
+      else  // 'Sum' method
+        ( CodeVentPerAreaFlow + CodeVentACHFlow )
+        / VentAirDistEff
+      endif
+    else CodeOtherVentFlow
+    endif
+  CHECKCODE : S901G ECBC
+    if( HasDCV .AND. LocalStatus( CodeOtherMinVentFlow ) > 4 )
+    then // Check for consistency in component inputs if using DCV and VentFlow is user-defined
+      if( ( VentSpecMthd = "Maximum" .AND.  
+            ( Max( CodeVentPerAreaFlow, CodeVentACHFlow ) / VentAirDistEff
+              * ( 1 - Proj:VentTolLim ) ) > CodeOtherMinVentFlow // Less than calc - tolerance
+            .OR.
+            ( Max( CodeVentPerAreaFlow, CodeVentACHFlow ) / VentAirDistEff
+              * ( 1 + Proj:VentTolLim ) ) < CodeOtherMinVentFlow // Greater than calc + tolerance
+           )
+          .OR. // Check for Sum method
+          ( ( CodeVentPerAreaFlow + CodeVentACHFlow ) / VentAirDistEff
+            * ( 1 - Proj:VentTolLim ) > CodeOtherMinVentFlow // Less than calc - tolerance
+            .OR.
+            ( ( CodeVentPerAreaFlow + CodeVentACHFlow ) / VentAirDistEff
+            * ( 1 - Proj:VentTolLim ) < CodeOtherMinVentFlow ) // Greater than calc + tolerance
+          )
+        )
+      then
+        PostError("Space '%s' has 'CO2Sensor' control, but the Code
+                   component ventilation inputs (Ra and/or ACH) are 
+                   not consistent with the user-specified Code Ventilation Min.
+                   flow rate (in CFM). Update the Code component values and/or the
+                   Ventilation Min. flow value so there is consistency 
+                   between the components and the input CFM for the given 
+                   specification method.", Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// ----------------------------------------------------------------------------
+// Properties for Story ventilation air balance calculations
+RULE NEW Spc:VentFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    VentilationFlowForBalance
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+// Changed to follow 90.1 rules. Old T24 rules assume the minimum vent flow for DCV is used in balance.
+; OLD RULE
+;   if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 ) 
+;   then MinVentFlow * IncludeInBal
+;   else MinVentFlow * IncludeInBal * HasVentSys
+;   endif
+; NEW RULE
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IfValidAnd( IsExistingHVAC <= 0 ) ) )
+    then VentFlow * IncludeInBal
+    else VentFlow * IncludeInBal * HasVentSys
+    endif
+  DEFAULT : S901G ECBC
+    if( VentStd != "Other" )
+    then VentFlow * IncludeInBal * HasVentSys
+    else 0
+    endif
+; ANNUAL : T24N
+;   MinVentFlow * IncludeInBal * HasVentSys
+  ANNUAL : T24N
+    VentFlow * IncludeInBal * HasVentSys
+  ANNUAL : S901G ECBC
+    if( VentStd != "Other" )
+    then VentFlow * IncludeInBal * HasVentSys
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:OtherVentFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    OtherVentilationFlowForBalance
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+    0
+  DEFAULT : S901G ECBC
+    if( VentStd = "Other" )
+    then VentFlow * IncludeInBal * HasVentSys
+    else 0
+    endif
+  ANNUAL : T24N
+    0
+  ANNUAL : S901G ECBC
+    if( VentStd = "Other" )
+    then VentFlow * IncludeInBal * HasVentSys
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:CodeVentFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    CodeVentilationFlowForBalance
+  DESCRIPTION
+    "The minimum design ventilation flow used for determining the BuildingStory
+     air flow balance."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+// Is equal to CodeVentFlow unless CO2Sensor controls are required, in which case,
+// is equal to CodeVentPerAreaFlow.
+; OLD RULE
+;   CodeMinVentFlow * IncludeInBal
+; NEW RULE
+    CodeVentFlow * IncludeInBal
+  DEFAULT : S901G ECBC
+    if( VentStd != "Other" )
+    then CodeVentFlow * IncludeInBal
+    else 0
+    endif
+  ANNUAL : T24N
+    CodeVentFlow * IncludeInBal
+  ANNUAL : S901G ECBC
+    if( VentStd != "Other" )
+    then CodeVentFlow * IncludeInBal
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:CodeOtherVentFlowForBal
+  DATATYPE
+    Float
+  LONGFORM 
+    CodeOtherVentilationFlowForBalance
+  DESCRIPTION
+    "The minimum design ventilation flow used for determining the BuildingStory
+     air flow balance."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT : T24N
+    0
+  DEFAULT : S901G ECBC
+    if( VentStd = "Other" )
+    then CodeOtherVentFlow * IncludeInBal
+    else 0
+    endif
+  ANNUAL : T24N
+    0
+  ANNUAL : S901G ECBC
+    if( VentStd = "Other" )
+    then CodeOtherVentFlow * IncludeInBal
+    else 0
+    endif
+ENDRULE
+
+
+// ----------------------------------------------------------------------------
+// Ventilation Multipliers
+RULE NEW Spc:CodeVentMult
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationMultiplier
+  DESCRIPTION
+    "Echo of the multiplier calculated at the BuildingStory level." 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IncludeInBal )
+    then
+      if( VentStd = "Other" )
+      then Story:CodeOtherVentMult
+      else Story:CodeVentMult
+      endif
+    else 1.0
+    endif
+  SIZING : T24N
+    if( LabArea > 0 .OR. PrkgGarArea > 0 .OR. CommKitArea > 0 )
+    then 1.0 // Process space ventilation is same as proposed, ratio = 1
+    else Story:CodeVentMult
+    endif
+  SIZING : S901G ECBC
+    if( IsNewVent .AND. IncludeInBal )
+    then
+      if( VentStd = "Other" )
+      then Story:CodeOtherVentMult
+      else Story:CodeVentMult
+      endif
+    else 1.0
+    endif
+  ANNUAL
+    z:CodeVentMult
+ENDRULE
+RULE NEW Spc:ExhVentMult
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustVentilationMultiplier
+  DESCRIPTION
+    "Echo of the ventilation multiplier calculated at the BuildingStory level." 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IncludeInBal )
+    then
+      if( VentStd = "Other" )
+      then Story:OtherExhVentMult
+      else Story:ExhVentMult
+      endif
+    else 1.0
+    endif
+  SIZING : T24N
+    if( LabArea > 0 .OR. PrkgGarArea > 0 .OR. CommKitArea > 0 )
+    then 1.0 // Process space ventilation is same as proposed, multiplier = 1
+    else Story:ExhVentMult
+    endif
+  SIZING : S901G ECBC
+    if( IsNewVent .AND. IncludeInBal )
+    then
+      if( VentStd = "Other" )
+      then Story:OtherExhVentMult
+      else Story:ExhVentMult
+      endif
+    else 1.0
+    endif
+  ANNUAL
+    z:ExhVentMult
+ENDRULE
+// This is the target DESIGN ventilation air flow for the space in the baseline design
+RULE NEW Spc:CodeVentFlowTarget
+  DATATYPE
+    Float
+  LONGFORM
+    CodeVentilationFlowTarget
+  DESCRIPTION
+    "The ventilation air flow rate for the Space after adjusting the proposed
+     rate to match the baseline allowance."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT
+    VentFlow * ValidOr( CodeVentMult, 1 ) * ValidOr( ExhVentMult, 1 )
+  SIZING
+    u:CodeVentFlowTarget
+ENDRULE
+
+
+// ----------------------------------------------------------------------------
+// For Reporting
+// Calculate ventilation flows in other units for reference
+// Proposed design
+RULE NEW Spc:DsgnVentPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    DesignVentilationPerArea
+  DESCRIPTION
+    "The quantity of design ventilation air provided to the Space, in cfm/ft2,
+     based on user inputs (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm/ft2
+  DEFAULT
+    if( IfValidAnd( FlrArea > 0 ) )
+    then VentFlow / FlrArea
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:DsgnVentPerPerson
+  DATATYPE
+    Float
+  LONGFORM
+    DesignVentilationPerPerson
+  DESCRIPTION
+    "The quantity of design ventilation air provided to the Space, in cfm/person,
+     based on user inputs (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm/person
+  DEFAULT
+    if( OccNumSim > 0 .AND. IfValidAnd( VentFlow > 0 ) )
+    then VentFlow / OccNumSim
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:DsgnVentACH
+  DATATYPE
+    Float
+  LONGFORM
+    DesignVentilationAirChangesPerHour
+  DESCRIPTION
+    "The quantity of design ventilation air provided to the Space, in ACH,
+     based on user inputs (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    changes/hr
+  DEFAULT
+    if( IfValidAnd( Vol > 0 ) )
+    then VentFlow * 60 / Vol 
+    else 0
+    endif   
+ENDRULE
+// Code baseline
+RULE NEW Spc:CodeDsgnVentPerArea
+  DATATYPE
+    Float
+  LONGFORM
+    CodeDesignVentilationPerArea
+  DESCRIPTION
+    "The quantity of minimum required ventilation air for the Space, in cfm/ft2,
+     based on NACM requirements (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm/ft2
+  DEFAULT
+    if( IfValidAnd( FlrArea > 0 ) )
+    then
+      if( VentStd = "Other" )
+      then CodeOtherVentFlow / FlrArea
+      else CodeVentFlow / FlrArea
+      endif
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:CodeDsgnVentPerPerson
+  DATATYPE
+    Float
+  LONGFORM
+    CodeDesignVentilationPerPerson
+  DESCRIPTION
+    "The quantity of minimum required ventilation air for the Space, in cfm/person,
+     based on NACM requirements (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm/person
+  DEFAULT
+    if( MinOccNumSim > 0 .AND. PrkgGarArea = 0 )
+    then
+      if( VentStd = "Other" )
+      then CodeOtherVentFlow / Max( OccNumSim, MinOccNumSim )
+      else CodeVentFlow / Max( OccNumSim, MinOccNumSim )
+      endif
+    else 0
+    endif
+ENDRULE
+RULE NEW Spc:CodeDsgnVentACH
+  DATATYPE
+    Float
+  LONGFORM
+    CodeDesignVentilationAirChangesPerHour
+  DESCRIPTION
+    "The quantity of minimum required ventilation air for the Space, in ACH,
+     based on NACM requirements (for reference only)."
+  INPUTCLASS
+    NotInput
+  UNITS 
+    cfm
+  DEFAULT
+    if( IfValidAnd( Vol > 0 ) )
+    then
+      if( VentStd = "Other" )
+      then CodeOtherVentFlow * 60 / Vol 
+      else CodeVentFlow * 60 / Vol 
+      endif
+    else 0
+    endif   
+ENDRULE
+
+RULE Spc:VentFlow
+  ANNUAL_BASELINE : T24N
+    if( VentSrc = "None" )
+    then 0
+    else Max( MinVentFlow, VentPerPersonFlowSim )
+    endif
+ENDRULE
+

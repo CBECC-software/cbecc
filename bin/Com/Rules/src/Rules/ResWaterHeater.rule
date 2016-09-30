@@ -1,0 +1,2870 @@
+// Residential Water Heaters
+// For Space Types equal to High-Rise Residential and Hotel / Motel
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+//
+
+// -----------------------------------------------------------------------------
+// ---------- Baseline Residential DHW System Flag -----------------------------
+RULE ResDHWSys:IsBaseSys
+  DESCRIPTION
+    "An integer value used to identify that this water heating system is a baseline system."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    0 
+ENDRULE
+
+// ---------- Residential DHW System Status -------------------------------
+RULE ResDHWSys:Status
+  DESCRIPTION
+    "The status of the system or component, used for additions and alterations."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Required
+  DEFAULT
+    if( IfValidAnd( SumChildren(ResWtrHtr:IsNewDHWHtr) > 0 ) .AND.
+        IfValidAnd( SumChildren(ResWtrHtr:IsExistingDHWHtr) > 0 ) )
+    then 
+      "Altered"
+    else if( Proj:IsAlt )
+    then 
+      "Existing"
+    else 
+      "New"
+    endif endif
+  CHECKCODE
+    if( CentralSys = 0 .AND. Status = "Altered" ) 
+    then
+      PostError("Residential DHW system '%s' is specified as none central, and 
+                 has a status of Altered.  This is not allowed.  Individual 
+                 dwelling unit DHW systems may be only New or Existing.  Change 
+                 the status input.",Name)
+    else if( IfValidAnd( SumChildren(ResWtrHtr:IsNewDHWHtr) > 0 ) .AND.
+             IfValidAnd( SumChildren(ResWtrHtr:IsExistingDHWHtr) > 0 ) )
+    then
+      PostError("Residential DHW system '%s' has a mix of New and Existing 
+                 water heaters, so the status must be Altered.  Change 
+                 the status input.",Name)
+    else UNCHANGED
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResDHWSys:IsNewDHWSys
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewDHWSystem
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then 1 else 0 endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResDHWSys:IsAlteredDHWSys
+  DATATYPE
+    Integer
+  LONGFORM
+    IsAlteredDHWSystem
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Altered" ) then 1 else 0 endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResDHWSys:IsExistingDHWSys
+  DATATYPE
+    Integer
+  LONGFORM
+    IsExistingDHWSystem
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Existing" ) then 1 else 0 endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- Residential Water Heater Status -------------------------------
+RULE ResWtrHtr:Status
+  DESCRIPTION
+    "The status of the system or component, used for additions and alterations."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Required
+  DEFAULT
+    if( Parent(Status) = "Altered" ) 
+    then "New"
+    else Parent(Status)
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:IsNewDHWHtr
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewDHWHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then 1 else 0 endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:IsExistingDHWHtr
+  DATATYPE
+    Integer
+  LONGFORM
+    IsExistingDHWHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "Existing" ) then 1 else 0 endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- Any DHW Fluid Systems in the Building Are New --------------
+RULE NEW Proj:IsNewDHWSys
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewDHWSystems
+  DESCRIPTION
+    "This is the boolean for yes(1) all DHW fluid systems are new
+     or no (0), not all of the DHW fluid systems are new."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll(ResDHWSys:IsExistingDHWSys) + 
+//        SumAll(ResDHWSys:IsAlteredDHWSys) > 0 )
+        SumAll(ResDHWSys:IsAlteredDHWSys) <= 0 )                 
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- All Water Heaters in the building are New --------------
+RULE NEW Proj:IsNewDHWHtr
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewDomesticHotWaterHeater
+  DESCRIPTION
+    "This is the boolean for yes(1) all water heaters on the fluid system are new
+     or no (0), not all of the water heaters on the fluid system are new."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  DEFAULT
+//    if( SumAll(ResWtrHtr:IsExistingDHWHtr) > 0 )
+    if( SumAll(ResWtrHtr:IsExistingDHWHtr) <= 0 )   
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- Any DHW Fluid Systems in the Building Are Existing --------------
+RULE NEW Proj:IsNewDHWFluidSys
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewDHWFluidSystem
+  DESCRIPTION
+    "This is the boolean for yes(1) one DHW Fluid Systems in the building is new
+     or no (0), none of the SHW Fluid Systems in the building are new."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNewDHWSys > 0 .OR. Proj:IsNewDHWHtr > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Water Heater Count (default exression only) --------------------
+// - moved default expression up here to ensure it is valid prior to several references prior to the main ResWtrHtr:Cnt RULE
+RULE ResWtrHtr:Cnt
+  DEFAULT
+    1
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- New Residential Water Heater Count in Building --------------
+RULE NEW ResWtrHtr:NewResDHWHtr
+  DATATYPE
+    Integer
+  LONGFORM
+    NewInBuilding
+  DESCRIPTION
+    "This is the count of new Residential Water Heaters in the building."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsNewDHWHtr .AND. IfValidAnd(Cnt > 0) )
+    then Cnt
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+//// ---------- Create baseline Residential Water Heater -------------------------------
+//RULE ResDHWSys:BaseResWtrHtrRef
+//  DESCRIPTION
+//    "This is the baseline water heater."
+//  HELP
+//    ""
+//  REFERENCE 
+//    Res ACM-2.10 Domestic Hot Water
+//  INPUTCLASS
+//    Optional
+//  SIZING_PROPOSED
+//    UNDEFINED
+//  SIZING_BASELINE
+//    UNDEFINED
+//// SAC 6/4/15 - removed retrieval of BaseResWtrHtr from library, as ResWtrHtr properties are being modified individually
+////    if( u:IsNew )
+////    then RuleLibrary(ResWtrHtr, "BaseResWtrHtr", 1, Name)
+////    else UNDEFINED
+////    endif
+//  ANNUAL_PROPOSED
+//    UNDEFINED
+//  ANNUAL_BASELINE 
+//    zb:BaseResWtrHtrRef
+//ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ---------- Residential Domestic Hot Water Fluid System Name --------------
+RULE ResDHWSys:Name
+  DESCRIPTION
+    "A unique name for each Residential water heating system."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ----------- Floor area served by an individual residential System -----------------
+RULE ResDHWSys:SysFlrArea
+  DESCRIPTION
+    "This is the total floor area of all living units served by the DHW system."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0 
+  UNITS
+    ft2
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumRevRef(Spc:ResDHWSysRef, Spc:DwellingUnitSpcTotAreaWithMult)
+  SIZING
+    SysFlrArea
+  ANNUAL
+    SysFlrArea
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Distribution System Type --------------------
+RULE ResDHWSys:CentralSys
+  DESCRIPTION
+    "Whether or not this system serves more than 1 dwelling unit."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0
+    else if( Proj:SHWBothBaseline )
+    then 0
+    else CentralSys
+    endif endif
+  SIZING_BASELINE
+    if (IfValidAnd( IsBaseSys > 0 ))
+    then 0
+    else if( zp:CentralSys = 1 )
+    then 1
+    else 0
+    endif endif
+  ANNUAL
+    z:CentralSys
+ENDRULE
+
+// -------------------------------------------------------------------
+// 
+RULE ResDHWSys:Type
+  DESCRIPTION
+    "Distribution system types for systems serving individual dwelling units"
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Required
+  DEFAULT
+    "Standard"
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then "Standard"
+    else u:Type
+    endif
+  SIZING_BASELINE
+    "Standard"
+  ANNUAL
+    z:Type
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ------ Distribution Type -------
+// 
+RULE ResDHWSys:DistType
+  DESCRIPTION
+    "This is the selection of the type of residential system coupled to the
+     water heater."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    CondRequired
+// enums must be defined via Enums.txt in order to map to numeric values expected by the T24 DHW simulation engine
+//  OPTION
+//    No Loops or central system pump
+//    No Control
+//    Demand Control
+//    Temperature modulation
+//    Temperature modulation & monitoring
+  DEFAULT
+    "Demand Control (Standard Design for new construction)"
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then "Demand Control (Standard Design for new construction)"
+    else u:DistType
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )
+      then
+        if ( zp:DistType = "No loops or central system pump" )
+        then
+          "No loops or central system pump"
+        else  
+        "Demand Control (Standard Design for new construction)"
+        endif
+      else
+        UNDEFINED                                    // not applicable to individual unit ResDHW
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )
+      then
+        zp:DistType
+      else
+        UNDEFINED                                    // not applicable to individual unit ResDHW
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                      // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:DistType
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ------ Residential DHW System Living Unit Count -------
+// 
+RULE ResDHWSys:LivingUnitCnt
+  DESCRIPTION
+    "The number of living units served by a central residential DHW System."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Removed prior to release of 2013-3e and 2016.2"
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumRevRef( Spc:ResDHWSysRef, Spc:ResLivingUnitCntWithMult ) +
+    SumRevRef( Spc:ResDHWSysRef, Spc:HotelMotelGuestRmCntWithMult )
+  CHECKCODE
+    if( IfValidAnd(CentralSys = 1) .AND. IfValidAnd(LivingUnitCnt <= 1) )
+    then
+      PostError("Residential DHW system '%s' is specified to serve more than 
+                 one dwelling unit but the Number of Living Units is less 
+                 than or equal to 1.",Name)
+    else
+      UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1
+    else LivingUnitCnt
+    endif
+  SIZING_BASELINE
+    if (IfValidAnd( IsBaseSys > 0 ))
+    then SumRevRef( Spc:ResDHWSysRef, Spc:ResLivingUnitCntWithMult ) +
+         SumRevRef( Spc:ResDHWSysRef, Spc:HotelMotelGuestRmCntWithMult )
+    else if( CentralSys )
+    then
+      LivingUnitCnt
+    else
+      1
+    endif endif
+  ANNUAL
+    z:LivingUnitCnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ------ Residential DHW System Story Count -------
+// 
+RULE ResDHWSys:SysStoryCnt
+  DESCRIPTION
+    "The number stories served by an individual Residential DHW System.
+    Typical number of stories assigned to one system is 1 - 10. For projects
+    having more than 10 stories it is suggested that the user create a separate 
+    Residential DHW System for every 90 feet of vertical plumbing height."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    CondRequired
+  COMMONMAXIMUM
+    10
+  REPORTPRECISION
+    0
+  DEFAULT
+    0
+  CHECKCODE
+    if( CentralSys .AND. IfValidAnd(SysFlrArea > 0) .AND. 
+        IfValidAnd(SysStoryCnt = 0) )
+    then
+      PostError("For Central Systems, more than 0 stories must be assigned 
+                 at '%s'.",Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1
+    else u:SysStoryCnt
+    endif
+  SIZING_BASELINE
+    if (IfValidAnd( IsBaseSys > 0 ))
+    then 1
+    else if( CentralSys )
+    then
+      u:SysStoryCnt
+    else
+      1
+    endif endif
+  ANNUAL
+    z:SysStoryCnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Recirculating Pump Horsepower --------------------
+RULE ResDHWSys:PumpBHP
+  DESCRIPTION
+    "The Brake Horsepower of the recirculating water heater pump."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0
+  MAXIMUM
+    250
+  UNITS
+    bhp
+  REPORTPRECISION
+    2
+  DEFAULT
+    0.5
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0.5
+    else u:PumpBHP
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline .OR.
+        Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )  
+      then
+        u:PumpBHP
+      else                                       // individual ResDHW system
+        0.6
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif
+  ANNUAL
+    PumpBHP
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Recirculating Pump Efficiency --------------------
+// 
+RULE ResDHWSys:PumpEff
+  DESCRIPTION
+    "The efficiency of the pump."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0.00
+  MAXIMUM
+    0.99
+  REPORTPRECISION
+    2
+  DEFAULT
+    0.6
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0.6
+    else u:PumpEff
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline .OR.
+        Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )  
+      then
+        u:PumpEff
+      else                                       // individual ResDHW system
+        0.6
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif
+  ANNUAL
+    z:PumpEff
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Recirc Loop count --------------------
+// 
+RULE ResDHWSys:LpCnt
+  DESCRIPTION
+    "The number of loops in the residential system."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    1
+  MAXIMUM
+    5
+  REPORTPRECISION
+    0
+  DEFAULT
+    1
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1
+    else u:LpCnt
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if( IfValidAnd( LivingUnitCnt > 8 ) )
+        then 1
+        else 1
+        endif
+      else
+        UNDEFINED
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 1
+        else u:LpCnt
+        endif
+      else
+        UNDEFINED
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:LpCnt
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Pipe Location --------------------
+//
+RULE ResDHWSys:PipeLctn
+  DESCRIPTION
+    "This is the general location of a recirculation pipe."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    CondRequired
+// enums must be defined via Enums.txt in order to map to numeric values expected by the T24 DHW simulation engine
+//  OPTION
+//    Conditioned
+//    Unconditioned
+//    Underground
+  DEFAULT
+    "Conditioned"
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then "Conditioned"
+    else u:PipeLctn
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        "Conditioned"
+      else
+        UNDEFINED
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then "Conditioned"
+        else u:PipeLctn
+        endif
+      else UNDEFINED
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:PipeLctn  
+ENDRULE
+
+
+// ---------------------------------------------------------------------
+RULE ResDHWSys:LpPipeInsThkns
+  DESCRIPTION
+    "Thickness of loop pipe insulation"
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Required
+  DEFAULT
+    1.5
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1.5
+    else u:LpPipeInsThkns
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        1.5
+      else
+        UNDEFINED
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 1.5
+        else u:LpPipeInsThkns
+        endif
+      else UNDEFINED
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:LpPipeInsThkns
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential DHW Water Heater Count --------------------
+//
+RULE ResDHWSys:WtrHtrCnt
+  DESCRIPTION
+    "This determines the number of Residential water heaters in the building."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3c to 2016.1.0 / 2013 v3d"
+  MINIMUM
+    0
+//  MAXIMUM
+//    100
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(ResWtrHtr:Cnt)
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1
+    else SumChildren(ResWtrHtr:Cnt)
+    endif
+  ANNUAL_PROPOSED
+    z:WtrHtrCnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential DHW Solar Fraction Type --------------------
+//
+RULE ResDHWSys:SolFracType
+  DESCRIPTION
+    "This is the type of solar fraction data used."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    1      // Annual, not monthly
+  SIZING
+    1
+  ANNUAL
+    1
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential DHW Annual Solar Fraction --------------------
+//
+RULE ResDHWSys:AnnualSolFrac
+  DESCRIPTION
+    "This is the Annual Solar Fraction."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0 
+  MAXIMUM
+    1.0
+  REPORTPRECISION
+    2
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 
+      if( Proj:GasType = "None" )
+      then 
+        0.50
+      else 
+        0
+      endif  
+    else u:AnnualSolFrac
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if( Proj:CliZnNum < 10 )
+        then 0.20
+        else 0.35
+        endif 
+      else if( Proj:GasType = "None" )
+      then 
+        0.50
+      else 
+        0
+      endif endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        if( Proj:CliZnNum < 10 )
+        then 0.20
+        else 0.35
+        endif 
+      else u:AnnualSolFrac
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:AnnualSolFrac
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResDHWSys:SolCollectorCnt
+  DESCRIPTION
+    ""
+  PREVIOUSNAMES
+    Number
+  INPUTCLASS
+    Optional
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW ResDHWSys:SysHotWtrHtgRtSizing
+  LONGFORM
+    BaselineResidentialWaterHeatingTotal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Total gal/hr baseline requirements for one Residential DHW System."
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    SumRevRef(Spc:ResDHWSysRef, Spc:HotWtrHtgRtSizing)
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW Proj:ProjHotWtrHtgRtSizing
+  LONGFORM
+    BaselineResidentialWaterHeatingTotal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Total gal/hr baseline requirements for all Residential DHW Systems in a project."
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    SumChildren(ResDHWSys:SysHotWtrHtgRtSizing)
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW ResWtrHtr:BasePropResWtrHtgTot
+  LONGFORM
+    BaselineProposedResidentialWaterHeatingTotal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Total gal/hr of one Residential DHW System that takes the Input Rating and
+     converts it to gal/hr then add it to the tank volume."
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    if( IfValidAnd(TankVol > 0) .AND. IfValidAnd(InpRating > 0) )
+    then( (TankVol + (InpRating / (8.4 * (135 - 55)))) * Cnt )
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW ResDHWSys:BasePropResWtrHtgTot
+  LONGFORM
+    BaselineProposedResidentialWaterHeatingTotal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Total gal/hr of one Residential DHW System that takes the Input Rating and
+     converts it to gal/hr then add it to the tank volume."
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    SumChildren(ResWtrHtr:BasePropResWtrHtgTot)
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW Proj:BasePropResWtrHtgTot
+  LONGFORM
+    BaselineProposedResidentialWaterHeatingTotal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Total gal/hr of all Residential DHW Systems in the building that takes
+     the Input Rating and converts it to gal/hr then add it to the tank volume."
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    SumChildren(ResDHWSys:BasePropResWtrHtgTot)
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Name --------------------
+// 
+RULE ResWtrHtr:Name
+  DESCRIPTION
+    "A unique name for each Residential water heater."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Duplicate Water Heater Count --------------------
+//
+RULE ResWtrHtr:Cnt
+  DESCRIPTION
+    "This is the number of identical water heaters."
+  HELP
+    "For Individual ResDHW Sytems: This is the number of duplicate water heaters 
+     in a dwelling unit that are identical in every way.     
+
+
+     For Central ResDHW Systems: This is the number of duplicate water heaters in 
+     the parent Central System that are identical in every way."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    1000 
+  REPORTPRECISION
+    0
+;  DEFAULT   - SAC 6/22/16 - expression moved up above to ensure valid when referenced by other rules
+;    1
+  CHECKCODE
+    if( IfValidAnd(Cnt = 0) )
+    then
+      PostError("Residential water heater '%s' must have a count greater than zero.",Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 1
+    else u:Cnt
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 1
+        else u:Cnt
+        endif
+      else                                           // individual ResDHW system
+        1
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 1
+      else u:Cnt
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        UNDEFINED                                    // won't have central system
+      else
+        1                                            // individual ResDHW system
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                      // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+//    endif
+  ANNUAL
+    z:Cnt
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Fuel Source --------------------
+//
+RULE ResWtrHtr:ElementType
+  DESCRIPTION
+    "This is the selection of the Residential Water Heater Fuel Source."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+// enums must be defined via Enums.txt in order to map to numeric values expected by the T24 DHW simulation engine
+//  OPTION
+//    Electric Resistance
+//    Gas
+//    Oil
+  DEFAULT
+    "Gas"
+  CHECKCODE
+    if( ElementType = "Heat Pump" .AND. Parent( CentralSys ) )
+    then
+      PostError("Residential water heater '%s' is a Heat Pump, which is not 
+                 allowed for use on a central system.  Change the Element Type.",
+                 Name)
+    else if( Proj:GasType = "None" .AND. ElementType = "Gas" )
+    then
+      PostError("Residential water heater '%s' is gas fired but the project 
+                 gas type is specified as none.  Change the Element Type 
+                 for the water heater or the project gas type.", Name)
+    else UNCHANGED
+    endif endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then
+      if( Proj:GasType = "None" )
+      then
+        "Electric Resistance"
+      else
+        "Gas"
+      endif
+    else u:ElementType
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( Proj:GasType = "None" )
+      then
+        "Electric Resistance"
+      else
+        "Gas"
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then "Gas"
+      else u:ElementType
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:ElementType
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Fuel Source Report --------------
+//
+RULE ResWtrHtr:ElementTypeRpt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Translates ElementType to ElementTypeRpt."
+  INPUTCLASS
+    NotInput
+  OPTION
+    Electric Resistance
+    Natural Gas
+    Propane
+    Heat Pump
+    Oil
+  ANNUAL_PROPOSED
+    if( Proj:NatGasAvail = 1 )
+    then
+      switch( ElementType ) 
+        case "Electric Resistance" : "Electric Resistance"
+        case "Gas"                 : "Natural Gas"
+        case "Heat Pump"           : "Heat Pump"
+        case "Oil"                 : "Oil"
+        default : UNDEFINED
+      endswitch
+    else
+      switch( ElementType ) 
+        case "Electric Resistance" : "Electric Resistance"
+        case "Gas"                 : "Propane"
+        case "Heat Pump"           : "Heat Pump"
+        case "Oil"                 : "Oil"
+        default : UNDEFINED
+      endswitch
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -------------- Residential HPWH NEEA Certification --------------
+//
+RULE ResWtrHtr:HtPumpWtrHtrNEEA
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Whether the HPWH is NEEA certified."
+  INPUTCLASS
+    Optional
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( ElementType = "Heat Pump" )
+    	then UNCHANGED
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+   if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then UNDEFINED
+      else 
+		    if( ElementType = "Heat Pump" )
+		    then u:HtPumpWtrHtrNEEA
+		    else UNDEFINED
+		    endif      
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then UNDEFINED 
+      else u:HtPumpWtrHtrNEEA
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:HtPumpWtrHtrNEEA
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Total Water Heater Input Rating --------------------
+// 
+RULE ResWtrHtr:InpRating
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  UNITS
+    btu per h
+  REPORTPRECISION
+    -2
+  DEFAULT
+    if( LocalStatus( InpRatingElec ) >= 7 ) then  // if there is a user input value
+      Int(InpRatingElec / 3.412142)
+    else if( Proj:AutoHardSize = 1 .AND. TankCat != "Indirect" .AND. TankCat != "Instantaneous")
+    then
+      MAX( 0, ( Parent(SysHotWtrHtgRtSizing) * 0.6 * 8.4 * (135 - 55) ) / 0.80 )    // Convert Output to Input -> divide by ThrmlEff 0.80. 60% of the capacity is for the burner and conversion from gal/hr to btu/h
+    else
+      if( Proj:AutoHardSize = 1 .AND. TankCat = "Instantaneous" )
+      then
+        MAX( 0, ( (Parent(SysHotWtrHtgRtSizing) - 1) * 8.4 * (135 - 55) ) / 0.80 )  // Convert Output to Input -> divide by ThrmlEff 0.80. 100% of the capacity minus 1 gallon is for the burner and conversion from gal/hr to btu/h when instant.
+      else 0
+      endif
+    endif endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 200000
+    else if( ElementType = "Electric Resistance" .OR.
+             ElementType = "Heat Pump" )
+    then Int(u:InpRatingElec * 3.412142)
+    else u:InpRating
+    endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 200000
+        else zp:InpRating                          // Just in case the baseline system has been pulled from the library.  The input rating is supposed to be whatever is in the proposed, but if the system was pulled from the library we don't know that value, so I put in the value for an individual unit water heater.
+        endif
+      else                                         // individual ResDHW system
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 200000
+        else MIN(200000,zp:InpRating)
+        endif
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 200000
+      else zp:InpRating                            // individual unit ResDHW or no DHW modeled
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                    // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:InpRating
+ENDRULE
+
+
+// -------------- Total Water Heater Input Rating - Electric --------------------
+// 
+RULE ResWtrHtr:InpRatingElec
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  UNITS
+    Watts
+  REPORTPRECISION
+    -1
+  DEFAULT
+    Int( InpRating / 3.412142 )
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Tank Category --------------------
+//
+RULE ResWtrHtr:TankCat
+  DESCRIPTION
+    "This is the selection of the Residential Water Heater Tank Category.
+     This paramter is used to determine the Tank Type."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+// enums must be defined via Enums.txt in order to map to numeric values expected by the T24 DHW simulation engine
+//  OPTION
+//    Boiler
+//    Indirect
+//    Instantaneous
+//    Storage
+  DEFAULT
+    if( ElementType = "Electric Resistance" .OR. ElementType = "Gas" )
+    then
+      if( ( LocalStatus( InpRating ) >= 0 .OR. LocalStatus( InpRatingElec ) >= 0 ) .AND.
+            LocalStatus( TankVol ) >= 0 )
+      then
+        if( TankVol = 0 )
+        then
+          "Instantaneous"
+        else if( InpRating > 0 .AND. TankVol > 0 )
+        then
+          if( InpRating / TankVol < 4000 )
+          then "Storage"
+          else "Instantaneous"
+          endif
+        else "Storage"
+        endif endif
+      else "Instantaneous"
+      endif
+    else if( ElementType = "Heat Pump" )
+    then "Storage"
+    else "Storage"
+    endif endif
+  CHECKCODE
+    if( ElementType = "Electric Resistance" .OR. ElementType = "Gas" )
+    then
+      if( LocalStatus( InpRating ) >= 7 .AND. LocalStatus( TankVol ) >= 7 )
+      then
+        if( TankVol = 0 .AND. TankCat = "Storage" )
+        then
+          PostError("Residential water heater '%s' has a storage volume of 0 but
+                     the Tank Type is set to Storage.  These inputs are 
+                     incompatible. Please correct the inputs.",Name)
+        else if( InpRating > 0 .AND. TankVol > 0 )
+        then
+          if( InpRating / TankVol < 4000 .AND. TankCat = "Instantaneous" )
+          then
+            PostError("Residential water heater '%s' has an input rating less 
+                       than 4,000 Btu/hr/gal but the Tank Type is set to 
+                       Instantaneous.  These inputs are incompatible. Please 
+                       correct the inputs.",Name)
+          else if( InpRating / TankVol >= 4000 .AND. TankCat = "Storage" )
+          then
+            PostError("Residential water heater '%s' has an input rating of 
+                       4,000 Btu/hr/gal or more, but the Tank Type is set to 
+                       Storage.  These inputs are incompatible. Please 
+                       correct the inputs.",Name)
+          else UNCHANGED
+          endif endif
+        else UNCHANGED
+        endif endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then "Storage"
+    else if( zp:ElementType = "Heat Pump" )
+    then "Storage"
+    else u:TankCat
+    endif endif
+  SIZING_BASELINE : T24N_2013
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then "Storage"
+        else zp:TankCat
+        endif
+      else 
+        "Storage"
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then "Storage"
+      else zp:TankCat                                  // existing ResDHW
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      "Storage"                                 // existing ResDHW
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                   // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then "Instantaneous"
+        else zp:TankCat
+        endif
+      else 
+        "Storage"
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then "Instantaneous"
+      else zp:TankCat                                  // existing ResDHW
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      "Storage"                                 // existing ResDHW
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                   // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  ANNUAL
+    z:TankCat
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Tank Category --------------------
+//
+RULE ResWtrHtr:AmbCond
+  DESCRIPTION
+    "This is the surrounding condition of the residential water heater."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+// enums must be defined via Enums.txt in order to map to numeric values expected by the T24 DHW simulation engine
+//  OPTION
+//    Unconditioned
+//    Conditioned
+  DEFAULT
+    "Unconditioned"
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then "Conditioned"
+    else u:AmbCond
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then "Conditioned"
+        else u:AmbCond
+        endif
+      else
+        "Conditioned"
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then "Conditioned"
+      else u:AmbCond
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      "Conditioned"
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  ANNUAL
+    z:AmbCond
+ENDRULE
+
+
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Tank Volume --------------------
+// 
+RULE ResWtrHtr:TankVol
+  DESCRIPTION
+    "The residential water heater tank volume."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  UNITS
+    gal
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:AutoHardSize = 1 )
+    then 
+      if( TankCat = "Instantaneous" )
+      then 0
+      else Int( (Parent(SysHotWtrHtgRtSizing) * 0.4) * 1.30 )  // 40% of the capacity is for the tank volume plus 30% oversizing
+      endif
+    else
+      if( TankCat = "Instantaneous" )
+      then 0
+      else UNDEFINED
+      endif
+    endif
+  SIZING_PROPOSED : T24N_2013
+    if( ExcludeWtrHtg )
+    then 50
+    else u:TankVol
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0
+    else 
+     if( IfValidAnd(ElementType = "Heat Pump") .AND. IfValidAnd(HtPumpWtrHtrNEEA = 1) )
+     then UNDEFINED
+     else u:TankVol
+    endif endif
+  SIZING_BASELINE : T24N_2013
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 50
+        else zp:TankVol
+        endif
+      else 
+        50
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 50
+      else zp:TankVol
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      50
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 0
+        else zp:TankVol
+        endif
+      else 
+        0
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 0
+      else zp:TankVol
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      0
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  ANNUAL
+    z:TankVol
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Tank Type --------------------
+//
+RULE ResWtrHtr:TankType
+  DESCRIPTION
+    "This is the selection of the Residential Water Heater Tank Type."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "ResWtrHtr:TankType removed in transition from 2013 version 3c to 3e and 2016.2.0 to 2016.2.1"
+  DEFAULT
+    if( ExcludeWtrHtg )
+    then 
+      if( Proj:StdsYr = 2013 )
+      then
+        "Small Storage"
+      else
+        "Small Instantaneous"
+      endif
+    else if( TankCat = "Boiler" )
+    then 
+      "Boiler"
+    else if( TankCat = "Indirect" )
+    then 
+      "Indirect"
+    else if( TankCat = "Instantaneous" )
+    then 
+      if( ( ElementType = "Gas" .AND. InpRating > 200000 ) .OR.
+          ( ElementType = "Oil" .AND. InpRating > 210000 ) .OR.
+          ( ElementType = "Electric Resistance" .AND. InpRatingElec > 12000 ) )
+      then 
+        "Large Instantaneous"
+      else if( ( ElementType = "Gas" .AND. InpRating <= 200000 ) .OR.
+               ( ElementType = "Oil" .AND. InpRating <= 210000 ) .OR.
+               ( ElementType = "Electric Resistance" .AND. InpRatingElec <= 12000 ) )
+      then 
+        "Small Instantaneous"
+      else UNDEFINED
+      endif endif
+    else if( TankCat = "Storage" )
+    then 
+      if( ( ElementType = "Gas" .AND. InpRating > 75000 ) .OR.
+          ( ElementType = "Oil" .AND. InpRating > 105000 ) .OR.
+          ( ElementType = "Electric Resistance" .AND. InpRatingElec > 12000 ) )
+      then 
+        "Large Storage"
+      else if( ( ElementType = "Gas" .AND. InpRating <= 75000 ) .OR.
+               ( ElementType = "Oil" .AND. InpRating <= 105000 ) .OR.
+               ( ElementType = "Electric Resistance" .AND. InpRatingElec <= 12000 ) .OR.
+               ( ElementType = "Heat Pump" ) )
+      then 
+        "Small Storage"
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif endif endif endif endif
+  SIZING_PROPOSED
+    if( Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then
+          if( Proj:StdsYr = 2013 )
+          then
+            "Small Storage"
+          else
+            "Small Instantaneous"
+          endif
+        else zp:TankType
+        endif
+      else 
+        if( Proj:StdsYr = 2013 )
+        then
+          "Small Storage"
+        else
+          "Small Instantaneous"
+        endif
+      endif
+    else if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        if( Proj:StdsYr = 2013 )
+        then
+          "Small Storage"
+        else
+          "Small Instantaneous"
+        endif
+      else TankType
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then
+          if( Proj:StdsYr = 2013 )
+          then
+            "Small Storage"
+          else
+            "Small Instantaneous"
+          endif
+        else zp:TankType
+        endif
+      else 
+        if( Proj:StdsYr = 2013 )
+        then
+          "Small Storage"
+        else
+          "Small Instantaneous"
+        endif
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        if( Proj:StdsYr = 2013 )
+        then
+          "Small Storage"
+        else
+          "Small Instantaneous"
+        endif
+      else zp:TankType
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:TankType
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------- Baseline Residential Water Heater Tank Volume ---------------
+// 
+RULE NEW ResDHWSys:TankVolTotBase
+  LONGFORM
+    TankVolumeTotalBaseline
+  DATATYPE
+    Float
+  DESCRIPTION
+    ""
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Int((SysHotWtrHtgRtSizing * 0.40) * 1.30)
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------- Baseline Residential Water Heater Input Rating ---------------
+// 
+RULE NEW ResDHWSys:InpRatingTotBase
+  LONGFORM
+    InputRatingTotalBaseline
+  DATATYPE
+    Float
+  DESCRIPTION
+    ""
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Int( ((SysHotWtrHtgRtSizing * 0.60) * (8.4 * (135 - 55))) / 0.80 ) // Convert required burner capacity to input capacity -> divide by thrml eff 0.80
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+//review electric InpRating requirement
+// ------- Thermal Efficiency Required Boolean - Used for screen control
+RULE NEW ResWtrHtr:ThrmlEffReq
+  RULESETS
+    T24N
+  LONGFORM
+    ThermalEfficiencyRequired
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( ElementType = "Heat Pump" )
+    then 0
+    else
+	    if( (TankCat = "Boiler") .OR. 
+	        (TankCat = "Storage" .AND. ElementType = "Gas" .AND. InpRating > 75000) .OR.
+	        (TankCat = "Instantaneous" .AND. ElementType = "Gas" .AND. InpRating > 200000) .OR.
+	        (TankCat = "Instantaneous" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec > 12000)) .OR.
+	        (TankCat = "Storage" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec > 12000)) .OR.
+	        (TankCat = "Indirect") )
+	    then 1
+	    else 0
+    endif endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+//This may need to be UNDEFINED because the Baseline is always small tanks with EF, not ThrmlEFF.
+// -------- Residential Water Heater Thermal Efficiency ---------------
+// 
+RULE ResWtrHtr:ThrmlEff
+  DESCRIPTION
+    "Thermal Efficiency of the Residential Water Heater."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( ElementType = "Electric Resistance" )
+    then 0.93
+    else 0.80
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then UNDEFINED
+    else u:ThrmlEff
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( TankType = "Large Storage" .OR. TankType = "Large Instantaneous" .OR.
+          TankType = "Boiler" .OR. TankType = "Indirect" )
+      then 0.80
+      else UNDEFINED
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 
+        if( TankType = "Large Storage" .OR. TankType = "Large Instantaneous" .OR.
+            TankType = "Boiler" .OR. TankType = "Indirect" )
+        then 0.80
+        else UNDEFINED
+        endif
+      else u:ThrmlEff
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:ThrmlEff
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Energy Factor --------------------
+// 
+// -----------------------------------------------------------------------------
+//review electric InpRating requirement
+// -------- Energy Factor Required Boolean - Used for screen control
+RULE NEW ResWtrHtr:EngyFacReq
+  RULESETS
+    T24N
+  LONGFORM
+    EnergyFactorRequired
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( (TankCat = "Storage" .AND. ElementType = "Gas" .AND. InpRating <= 75000) .OR.
+        (TankCat = "Instantaneous" .AND. ElementType = "Gas" .AND. InpRating <= 200000) .OR.
+        (TankCat = "Instantaneous" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec <= 12000)) .OR.
+        (TankCat = "Storage" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec <= 12000)) .OR.
+        (ElementType = "Heat Pump" .AND. StdsYr = 2016 .AND. HtPumpWtrHtrNEEA = 0) )
+    then 1
+    else 0     
+    endif
+  DEFAULT : T24N_2013
+    if( (TankCat = "Storage" .AND. ElementType = "Heat Pump") .OR.
+        (TankCat = "Storage" .AND. ElementType = "Gas" .AND. InpRating <= 75000) .OR.
+        (TankCat = "Instantaneous" .AND. ElementType = "Gas" .AND. InpRating <= 200000) .OR.
+        (TankCat = "Instantaneous" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec <= 12000)) .OR.
+        (TankCat = "Storage" .AND. ElementType = "Electric Resistance" .AND. IfValidAnd(InpRatingElec <= 12000)) )
+    then 1
+    else 0     
+    endif
+
+
+ENDRULE
+
+//--------------------------------------------------------------------------------
+RULE ResWtrHtr:EngyFac
+  DESCRIPTION
+    "The residential water heater Energy Factor."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0.0 
+  MAXIMUM
+    3.00
+  REPORTPRECISION
+    2
+  DEFAULT : T24N_2016
+    if( Proj:AutoEffInput = 1)
+    then
+      if( Parent(CentralSys) = 1 )
+      then 0.60
+      else 0.82
+      endif
+    else UNDEFINED
+    endif
+  DEFAULT : T24N_2013
+    if( Proj:AutoEffInput = 1)
+    then 
+      if( StdsVersion = "Compliance2014" )
+      then
+        if( ElementType = "Electric Resistance" )
+        then 0.904
+        else 0.575
+        endif
+      else           // "Compliance2015"
+        if( ElementType = "Electric Resistance" )
+        then 0.945
+        else 0.60
+        endif
+      endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( LocalStatus(u:EngyFac) < 1 .AND.
+        LocalStatus(u:ThrmlEff) < 1 .AND.
+        InpRating > 0 )
+    then
+      PostError("Residential water heater '%s' requires either a thermal 
+                 efficiency or energy factor input.",Name)
+    else if( ( (ElementType = "Gas" .AND. TankType = "Small Storage") .OR.
+               (ElementType = "Gas" .AND. TankType = "Small Instantaneous") .OR.
+               (ElementType = "Electric Resistance" .AND. TankType = "Small Storage") .OR.
+               (ElementType = "Electric Resistance" .AND. TankType = "Small Instantaneous") .OR.
+               (ElementType = "Heat Pump" .AND. HtPumpWtrHtrNEEA = 0) ) .AND.
+                LocalStatus(u:EngyFac) < 1 ) 
+    then
+      PostError("ResDHW water heater '%s' requires an Energy Factor input.",Name)
+    else UNCHANGED
+    endif endif
+  SIZING_PROPOSED : T24N_2013
+    if( ExcludeWtrHtg )
+    then
+      if( Proj:GasType = "None" )
+      then 
+        0.945
+      else 
+        0.60    
+      endif              
+    else u:EngyFac
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0.82 - (0.0019 * TankVol)              
+    else 
+     if( IfValidAnd(ElementType = "Heat Pump") .AND. IfValidAnd(HtPumpWtrHtrNEEA = 1) )
+     then UNDEFINED
+     else u:EngyFac
+    endif endif
+  SIZING_BASELINE
+    if( LocalStatus(TankVol) > 0 ) 
+    then
+      if( u:StdsVersion = "Compliance2014" )
+      then
+        if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+        then
+          if( ElementType = "Gas" .AND. TankType = "Small Storage" )
+          then 
+            0.670 - (0.0019 * TankVol)
+          else if( ElementType = "Electric Resistance" .AND. TankType = "Small Storage" )
+          then
+            0.970 - (0.00132 * TankVol)
+          else if( ElementType = "Gas" .AND. TankType = "Small Instantaneous" ) 
+          then
+            max( 0.62 - (0.0019 * TankVol) , 0.6162 )    // limited to 2 gallon max TankVol
+          else if( ElementType = "Electric Resistance" .AND. TankType = "Small Instantaneous" )
+          then
+            max( 0.93 - (0.00132 * TankVol) , 0.92736 )  // limited to 2 gallon max TankVol
+          else if( ElementType = "Heat Pump" .AND. HtPumpWtrHtrNEEA = 0 )
+          then
+            0.97 - (0.00132 * TankVol)
+          else
+            UNDEFINED
+          endif endif endif endif endif
+        else if( Proj:ResDHWPropOnly )
+        then 
+          if (IfValidAnd( IsBaseSys > 0 ))
+          then 0.3
+          else zp:EngyFac
+          endif
+        else if( Proj:ResDHWNone )
+        then 
+          UNDEFINED                                  // no DHW modeled
+        else 
+          UNDEFINED
+        endif endif endif
+      else           // "Compliance2015" or "Compliance2016"
+        if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+        then
+          if( ElementType = "Gas" .AND. TankType = "Small Storage" )
+          then 
+            if( TankVol <= 55 ) 
+            then
+              0.675 - (0.0015 * TankVol)
+            else
+              if( StdsYr = 2013 )
+              then
+                max( 0.8012 - (0.00078 * TankVol) , 0.7232 )      // limited to 100 gallon max TankVol
+              else
+                0.8012 - (0.00078 * TankVol)
+              endif
+            endif
+          else if( ElementType = "Electric Resistance" .AND. TankType = "Small Storage" )
+          then
+            if( TankVol <= 55 ) 
+            then
+              0.960 - (0.0003 * TankVol)
+            else
+              if( StdsYr = 2013 )
+              then
+                max( 2.057 - (0.00113 * TankVol) , 1.944 )        // limited to 100 gallon max TankVol
+              else
+                2.057 - (0.00113 * TankVol)
+              endif
+            endif
+          else if( ElementType = "Gas" .AND. TankType = "Small Instantaneous" ) 
+          then
+            if( Proj:StdsYr = 2013 ) 
+            then
+              max( 0.82 - (0.0019 * TankVol) , 0.8162 )    // limited to 2 gallon max TankVol
+            else
+              0.82 - (0.0019 * TankVol)
+            endif
+          else if( ElementType = "Electric Resistance" .AND. TankType = "Small Instantaneous" )
+          then
+            if( Proj:StdsYr = 2013 ) 
+            then
+              max( 0.93 - (0.00132 * TankVol) , 0.92736 )    // limited to 2 gallon max TankVol
+            else
+              0.93 - (0.00132 * TankVol)
+            endif
+          else if( ElementType = "Heat Pump" .AND. HtPumpWtrHtrNEEA = 0 )
+          then
+            0.97 - (0.00132 * TankVol)
+          else
+            UNDEFINED
+          endif endif endif endif endif
+        else if( Proj:ResDHWPropOnly )
+        then 
+          if (IfValidAnd( IsBaseSys > 0 ))
+          then 0.3
+          else zp:EngyFac
+          endif
+        else if( Proj:ResDHWNone )
+        then 
+          UNDEFINED                                  // no DHW modeled
+        else 
+          UNDEFINED
+        endif endif endif
+      endif
+    else
+      0
+    endif
+  ANNUAL
+    z:EngyFac
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Exterior Tank Insulation --------------------
+// 
+RULE ResWtrHtr:TankExtInsR
+  DESCRIPTION
+    "The residential water heater's exterior insulation."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    1
+  DEFAULT
+    12
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 12
+    else 
+     if( IfValidAnd(ElementType = "Heat Pump") .AND. IfValidAnd(HtPumpWtrHtrNEEA = 1) )
+     then UNDEFINED
+     else u:TankExtInsR
+    endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      12
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 12
+      else zp:TankExtInsR
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:TankExtInsR
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Interior Tank Insulation --------------------
+// 
+RULE ResWtrHtr:TankIntInsR
+  DESCRIPTION
+    "The residential water heater's interior insulation."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    1
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0
+        else 
+     if( IfValidAnd(ElementType = "Heat Pump") .AND. IfValidAnd(HtPumpWtrHtrNEEA = 1) )
+     then UNDEFINED
+     else u:TankIntInsR
+    endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      0
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 0
+      else zp:TankIntInsR
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:TankIntInsR
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// screens condition
+// check when Pilot loss is required
+RULE NEW ResWtrHtr:PilotEnergyBoolean
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( ElementType ="Heat Pump" )
+    then 0
+    else
+	    if( (TankCat = "Boiler") .OR.
+	        (TankCat = "Indirect") ) //.OR. 
+//	        (TankCat = "Instantaneous" .AND. ElementType ="Gas" .AND. IfValidAnd(InpRating > 200000)) .OR.
+//	        (TankCat = "Instantaneous" .AND. ElementType ="Electric Resistance" .AND. IfValidAnd(Int(InpRatingElec) > 12000)) )
+	    then 1
+	    else 0
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// screens condition
+// check when standby loss is required
+RULE NEW ResWtrHtr:StdbyLossFracReq
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( ElementType ="Heat Pump" )
+    then 0
+    else
+	    if( ( ElementType = "Gas" .AND. TankType = "Large Storage" ) .OR.
+	        ( ElementType = "Gas" .AND. TankType = "Large Instantaneous" .AND. TankVol >= 10 ) .OR.
+	        ( ElementType = "Electric Resistance" .AND. TankType = "Large Storage" ) )
+	    then 1
+	    else 0
+    endif endif
+  ANNUAL_PROPOSED
+    StdbyLossFracReq
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Standby Loss Fraction --------------------
+// 
+RULE ResWtrHtr:StdbyLossFrac
+  DESCRIPTION
+    "The residential water heater's standby loss fraction or pilot energy
+     depending on Tank Category and Rated Capacity."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0.0
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( PilotEnergyBoolean = 1 ) // Boiler and Indirect only
+    then 750
+    else if( ElementType = "Gas" )
+    then
+      if( TankType = "Large Storage" .OR.
+        ( TankType = "Large Instantaneous" .AND. TankVol >= 10 ) )
+      then
+        (InpRating/800 + 110*SQRT( TankVol )) / (8.25 * 70 * TankVol)
+      else UNDEFINED
+      endif
+    else if( ElementType = "Electric Resistance" )
+    then
+      if( TankType = "Large Storage" )
+      then
+        ( 0.3 + 27/TankVol ) / 100
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif endif endif
+  CHECKCODE
+    if(      PilotEnergyBoolean = 0 
+       .AND. StdbyLossFracReq = 1
+       .AND. StdbyLossFrac = 0 
+       .AND. InpRating > 0 )
+    then
+      PostError("The standby loss fraction for residential water heater '%s' 
+                 must be greater than 0.",Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then
+          0
+        else if( ElementType = "Gas" )
+        then
+          if( TankType = "Large Storage" .OR.
+            ( TankType = "Large Instantaneous" .AND. TankVol >= 10 ) )
+          then
+            (InpRating/800 + 110*SQRT( TankVol )) / (8.25 * 70 * TankVol)
+          else UNDEFINED
+          endif
+        else if( ElementType = "Electric Resistance" )
+        then
+          if( TankType = "Large Storage" )
+          then
+            ( 0.3 + 27/TankVol ) / 100
+          else UNDEFINED
+          endif
+        else UNDEFINED
+        endif endif endif
+      else
+        0
+      endif
+    else if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        0
+      else zp:StdbyLossFrac
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then
+          0
+        else if( ElementType = "Gas" )
+        then
+          if( TankType = "Large Storage" .OR.
+            ( TankType = "Large Instantaneous" .AND. TankVol >= 10 ) )
+          then
+            (InpRating/800 + 110*SQRT( TankVol )) / (8.25 * 70 * TankVol)
+          else UNDEFINED
+          endif
+        else if( ElementType = "Electric Resistance" )
+        then
+          if( TankType = "Large Storage" )
+          then
+            ( 0.3 + 27/TankVol ) / 100
+          else UNDEFINED
+          endif
+        else UNDEFINED
+        endif endif endif
+      else
+        0
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        0
+      else zp:StdbyLossFrac
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    if( ElementType = "Gas" .AND. TankType = "Large Instantaneous" .AND. 
+        IfValidAnd( TankVol >= 10 ) )
+    then
+      z:StdbyLossFrac * (8.25 * 70 * TankVol)  // Based on CBECC-Res using StandbyLossFrac for Standby Loss in this case
+    else
+      z:StdbyLossFrac
+    endif   
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResDHWSys:SolFracFluidSysName
+  DESCRIPTION
+    "Name of the service hot water fluid system with a solar hot water collector."
+  REFERENCE 
+    ACM Section 5.2.1-General Information
+  INPUTCLASS 
+    Optional
+  DEFAULT
+    if( IfValidAnd(AnnualSolFrac > 0) )
+    then Name
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResDHWSys:SolFracRpt
+  DESCRIPTION
+    "Solar Fraction value from Fluid System Data Tab."
+  REFERENCE 
+    ACM Section 5.2.1-General Information
+  INPUTCLASS 
+    Optional
+  REPORTPRECISION
+    2
+  DEFAULT
+    AnnualSolFrac
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Residential Water Heater Pilot Energy --------------------
+// 
+RULE ResWtrHtr:PilotEnergy
+  DESCRIPTION
+    "The residential water heater's pilot energy."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( PilotEnergyBoolean = 1 )
+    then 750
+    else 0
+    endif
+  SIZING_PROPOSED
+    if( Proj:ResDHWBothBaseline )
+    then 
+      0
+    else if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        0
+      else
+        PilotEnergy
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+    then 
+      0
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then
+        0
+      else
+        zp:PilotEnergy
+      endif
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:PilotEnergy
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+// ----------------- Efficiency for Report -------------------------------------
+RULE ResWtrHtr:EffRpt
+  RULESETS
+    T24N
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ThrmlEffReq = 1 ) then
+      Format("Thrml. Eff.: %s", FltToStr( ThrmlEff, 3 ) )
+    else
+      Format("EF: %s", FltToStr( EngyFac, 3 ) )
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ----------------- Standby Loss for Report -----------------------------------
+RULE ResWtrHtr:StdbyLossRpt
+  RULESETS
+    T24N
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( StdbyLossFracReq = 1 ) then
+      FltToStr( StdbyLossFrac, 4 )
+    else
+      "NA"
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Total Water Heater Input Rating --------------------
+// 
+RULE ResWtrHtr:InpRatingRpt
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    NotInput
+  UNITS
+    kbtu per h
+  REPORTPRECISION
+    0
+  DEFAULT
+    UNDEFINED
+  SIZING_PROPOSED
+    UNDEFINED
+  SIZING_BASELINE
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( ExcludeWtrHtg )
+    then UNDEFINED
+    else InpRating / 1000  //this div by 1000 is a conversion for reporting from Btu/h to kBtu/h
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResWtrHtr:ElecMiniTank
+  DESCRIPTION
+    ""
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( Proj:AutoHardSize = 1 .AND. TankCat = "Instantaneous")
+    then 0
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResWtrHtr:ElecMiniTankPwr
+  DESCRIPTION
+    ""
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  UNITS
+    Watts  
+  DEFAULT
+    if ( ElecMiniTank = 1 )
+    then 100
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( ExcludeWtrHtg )
+    then 0
+    else u:ElecMiniTankPwr
+    endif
+  SIZING_BASELINE
+    if( Proj:ResDHWUserAndBaseline )
+    then 
+      if( CentralSys )  
+      then
+        if (IfValidAnd( IsBaseSys > 0 ))
+        then 0
+        else zp:ElecMiniTankPwr
+        endif
+      else 0
+      endif
+    else if( Proj:ResDHWPropOnly )
+    then 
+      if (IfValidAnd( IsBaseSys > 0 ))
+      then 0
+      else
+        zp:ElecMiniTankPwr
+      endif
+    else if( Proj:ResDHWBothBaseline )
+    then 0
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // individual unit ResDHW or no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif endif
+  ANNUAL
+    z:ElecMiniTankPwr
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ResWtrHtr:TankZn
+  DESCRIPTION
+    ""
+  REFERENCE 
+    Res ACM-2.10 Domestic Hot Water
+  INPUTCLASS
+    Optional
+  DEFAULT : T24N_2016
+    "Conditioned"
+  DEFAULT : T24N_2013
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:TankCatDisp
+  DESCRIPTION
+    "Screens condition to not display Tank Category for Heat Pump when StdsYr = 2016"
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( Proj:StdsYr = 2016 .AND. ElementType = "Heat Pump") 
+      then 1
+    else 0
+    endif
+  DEFAULT : T24N_2013
+     0
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:TankZnDisp
+  DESCRIPTION
+    "Screens condition to not display Tank Zone location when StdsYr = 2016"
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( (Proj:StdsYr = 2016 .AND. ElementType = "Heat Pump") .OR.
+        (Proj:StdsYr = 2016 .AND. ElementType = "Electric Resistance" .AND. 
+        TankCat = "Storage" .AND. IfValidAnd(InpRatingElec <= 12000)) ) 
+      then 1
+    else 0
+    endif
+  DEFAULT : T24N_2013
+     0
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:HtPumpDisp
+  DESCRIPTION
+    "Screens condition to not display Heat Pump Options when StdsYr = 2016"
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( Proj:StdsYr = 2016 .AND. ElementType = "Heat Pump" ) 
+      then 1
+    else 0
+    endif
+  DEFAULT : T24N_2013
+     0
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:TankInsDisp
+  DESCRIPTION
+    "Screens condition to not display Tank Insulation options"
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( (TankCat = "Boiler" .OR. TankCat = "Indirect") .AND. ElementType = "Gas" )
+      then 1
+    else 0
+    endif
+  DEFAULT : T24N_2013
+    if( (TankCat = "Boiler" .OR. TankCat = "Indirect") .AND. ElementType = "Gas" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW ResWtrHtr:TankVolDisp
+  DESCRIPTION
+    "Screens condition to not display Tank Volume options"
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    if( HtPumpWtrHtrNEEA = 1 .AND. ElementType = "Heat Pump" )
+      then 1
+    else 0
+    endif
+  DEFAULT : T24N_2013
+     0
+ENDRULE
+
+// -------------- Tank Location Report --------------------
+// 
+RULE ResWtrHtr:TankZnRpt
+  RULESETS
+    T24N
+  DESCRIPTION
+    "Reporting variable for Tank Location or Ambient Condition"
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( ExcludeWtrHtg )
+    then UNDEFINED
+    else 
+      if( ElementType = "Gas" .AND. TankCat = "Indirect") 
+      then AmbCond
+      else if( ElementType = "Heat Pump" )
+      then TankZn
+      else UNDEFINED
+      endif endif
+    endif 
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// -------- Added to facilitate CSE DHW system inputs -----------
+//  SAC 5/26/16
+RULE NEW Spc:ResDHWFlrHgtArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResDHWFlrHgtArea
+  DESCRIPTION
+    "Flr area used to calculate average floor height for ResDHWSys."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( HaveResDHW > 0.5 ))
+    then  DwellingUnitSpcTotAreaWithMult
+    else  0
+    endif
+ENDRULE
+
+RULE NEW Spc:ResDHWFlrHgtAreaXHgt
+  DATATYPE
+    Float
+  LONGFORM
+    ResDHWFlrHgtAreaXHgt
+  DESCRIPTION
+    "Flr area x ceiling height used to calculate average floor height for ResDHWSys."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( HaveResDHW > 0.5 ))
+    then  DwellingUnitSpcTotAreaWithMult * FlrToCeilingHgt
+    else  0
+    endif
+ENDRULE
+
+RULE NEW ResDHWSys:AvgFlrHgt
+  DATATYPE
+    Float
+  LONGFORM
+    AverageFloorHeight
+  DESCRIPTION
+    "Average (flr area-weighted) floor height for across all served spaces."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (SumRevRef( Spc:ResDHWSysRef, Spc:ResDHWFlrHgtArea ) > 1)
+    then  SumRevRef( Spc:ResDHWSysRef, Spc:ResDHWFlrHgtAreaXHgt ) /
+          SumRevRef( Spc:ResDHWSysRef, Spc:ResDHWFlrHgtArea )
+    else  0
+    endif
+ENDRULE
+
+RULE NEW ResDHWSys:HWSupplyTemp
+  DATATYPE
+    Float
+  LONGFORM
+    HotWaterSupplyTemperature
+  DESCRIPTION
+    "Temperature of water supplied to the fixture."
+  INPUTCLASS
+    NotInput
+  UNITS
+    °F
+ENDRULE
+
+RULE NEW ResDHWSys:HWDeltaTemp
+  DATATYPE
+    Float
+  LONGFORM
+    HotWaterDeltaTemperature
+  DESCRIPTION
+    "Temperature drop from heater to fixture."
+  INPUTCLASS
+    NotInput
+  UNITS
+    °F
+ENDRULE
+
+RULE NEW ResDHWSys:DistribSysMult
+  DATATYPE
+    Float
+  LONGFORM
+    DistributionSystemMultiplier
+  DESCRIPTION
+    "Multiplier used to adjust HW distribution losses."
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE NEW ResDHWSys:NumDUsServed
+  DATATYPE
+    Float
+  LONGFORM
+    NumberOfDwellingUnitsServed
+  DESCRIPTION
+    "Number of dwelling units served by this DHW system (used for central systems)."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ResDHWSysRef, Spc:ResLivingUnitCntWithMult ) +
+    SumRevRef( Spc:ResDHWSysRef, Spc:HotelMotelGuestRmCntWithMult )
+ENDRULE
+
+RULE NEW ResWtrHtr:ElementTypeNum
+  DATATYPE
+    Integer
+  LONGFORM
+    ElementTypeNumber
+  DESCRIPTION
+    "Map back to CBECC-Res HeaterElementType."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    switch ( ElementType )
+      case  "Electric Resistance" :	 0
+      case  "Gas"                 :  1
+      case  "Heat Pump"           :  if (Proj:CSE_DHWUseMthd == "New (via wsDayUse)")
+                                     then  5
+                                     else  3
+                                     endif
+      default :  -1
+    endswitch
+  SIZING
+    switch ( ElementType )
+      case  "Electric Resistance" :	 0
+      case  "Gas"                 :  1
+      case  "Heat Pump"           :  if (Proj:CSE_DHWUseMthd == "New (via wsDayUse)")
+                                     then  5
+                                     else  3
+                                     endif
+      default :  -1
+    endswitch
+  ANNUAL
+    switch ( ElementType )
+      case  "Electric Resistance" :	 0
+      case  "Gas"                 :  1
+      case  "Heat Pump"           :  if (Proj:CSE_DHWUseMthd == "New (via wsDayUse)")
+                                     then  5
+                                     else  3
+                                     endif
+      default :  -1
+    endswitch
+ENDRULE
+
+RULE NEW ResWtrHtr:CSE_SimulateTank
+  DATATYPE
+    Integer
+  LONGFORM
+    CSE_SimulateTank
+  DESCRIPTION
+    "Flag indicating that heater tank is of a type that requires simulation."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( TankType = "Large Storage" ) .OR.
+        IfValidAnd( TankType = "Small Storage" ) .OR.
+        ( IfValidAnd( TankVolume > 0.001 )==0 .AND.
+          IfValidAnd( TankType = "Indirect" )==0 ))
+    then  0
+    else  1
+    endif
+  SIZING
+    if (IfValidAnd( TankType = "Large Storage" ) .OR.
+        IfValidAnd( TankType = "Small Storage" ) .OR.
+        ( IfValidAnd( TankVolume > 0.001 )==0 .AND.
+          IfValidAnd( TankType = "Indirect" )==0 ))
+    then  0
+    else  1
+    endif
+  ANNUAL
+    if (IfValidAnd( TankType = "Large Storage" ) .OR.
+        IfValidAnd( TankType = "Small Storage" ) .OR.
+        ( IfValidAnd( TankVolume > 0.001 )==0 .AND.
+          IfValidAnd( TankType = "Indirect" )==0 ))
+    then  0
+    else  1
+    endif
+ENDRULE
+
+

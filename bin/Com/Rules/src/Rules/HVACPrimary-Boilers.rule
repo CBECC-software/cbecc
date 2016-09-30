@@ -1,0 +1,1076 @@
+// HVAC Primary Systems - Boilers
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALifORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.8.1 - Boilers
+//      Boiler FuelSource
+//      Boiler Type
+//      Boiler Draft Type
+//      Number of Identical Boiler Units
+//      Boiler Design Capacity
+//      Boiler AFUE
+//      Boiler Combustion Efficiency
+//      Boiler Thermal Efficiency
+//      Boiler EIR
+//      Boiler Part-Load Performance Curve
+//      Boiler Minimum Unloading Ratio
+//      Hot Water Supply Temperature
+//      Hot Water Return Temperature
+//      Max OA for supply temperature reset
+//      Min OA for supply temperature reset
+//      Hot Water Supply Temp at Max OA Point
+//      Hot Water Supply Temp at Min OA Point
+//
+
+// ---------- Section 5.8.1 - Boilers -------------------------------
+//
+// TEST of commit process under SourceForge
+// Lines 56-59 can be deleted.
+//
+// ********** <Boiler Plant Capacity> ******************************************
+RULE NEW FluidSys:HWLoopLd
+  DATATYPE
+    FLOAT
+  DESCRIPTION
+    "The total peak load on boilers from sizing run."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( IsBaseSys .AND. Type = "HotWater" ) 
+    then SumChildren(z:Blr:CapRtd)
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW FluidSys:AreaServed
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    AreaServed
+  DESCRIPTION
+    "The floor area which is served by the fluid system."
+  INPUTCLASS
+    NotInput
+  SIZING
+    if( IsBaseSys ) then
+      if( Type = "HotWater" ) then
+        if( ( Bldg:BaseNonResPredominantSysNum = 5 .OR. 
+              Bldg:BaseNonResPredominantSysNum = 7 ) .AND.
+              Bldg:BaseResPredominantSysNum = 1 ) then
+          Bldg:NonResPredominantFlrArea + Bldg:ResFlrArea 
+        else if( ( Bldg:BaseNonResPredominantSysNum = 5 .OR. 
+                   Bldg:BaseNonResPredominantSysNum = 7 ) .AND.
+                   Bldg:BaseResPredominantSysNum != 1 ) then
+          Bldg:NonResPredominantFlrArea 
+        else if( Bldg:BaseResPredominantSysNum = 1 ) then
+          Bldg:ResFlrArea
+        else UNDEFINED
+        endif endif endif
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:AreaServed
+ENDRULE
+
+
+// ********** <Number of Boilers in Hot Water System> **************************
+RULE NEW FluidSys:BlrCnt
+  DATATYPE
+    INTEGER
+  DESCRIPTION
+    "The number of boilers in a FluidSystem:Type = HotWater or CondenserWater."
+  HELP
+    ""
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  COMMONMINIMUM
+    1
+  DEFAULT
+    if( Type = "HotWater" .OR. Type = "CondenserWater" )
+      then ChildCount(Blr)
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HotWater" ) then
+      if( IsBaseSys ) then
+        1
+      else ChildCount(Blr)
+      endif
+    else if( Type = "CondenserWater" ) then
+      ChildCount(Blr)
+    else UNDEFINED
+    endif endif
+  ANNUAL : S901G ECBC
+    if( Type = "HotWater" ) then
+      if( IsBaseSys ) then
+        if( AreaServed > 15000 ) then
+          2
+        else 1
+        endif
+      else ChildCount(Blr)
+      endif
+    else if( Type = "CondenserWater" ) then
+      ChildCount(Blr)
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    if( Type = "HotWater" ) then
+      if( IsBaseSys ) then
+        if( Bldg:TotCondFlrArea > 15000 ) then
+          2
+        else 1
+        endif
+      else ChildCount(Blr)
+      endif
+    else if( Type = "CondenserWater" ) then
+      ChildCount(Blr)
+    else UNDEFINED
+    endif endif
+ENDRULE
+
+
+// ********** <Number of Boilers in Project> ***********************************
+RULE Proj:BlrCnt
+  DESCRIPTION
+    "The number of boilers in the project."
+  HELP
+    ""
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+;  INPUTCLASS  Set in BEMBase
+;    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(FluidSys:BlrCnt)
+  SIZING
+    u:BlrCnt
+  ANNUAL
+    z:BlrCnt
+ENDRULE
+
+
+// ********** <Create a second baseline boiler> ********************************
+RULE NEW FluidSys:Blr2Ref
+  DATATYPE
+    Blr
+  DESCRIPTION
+    "Creates a second boiler for the baseline for buildings over 15,000 ft²."
+  HELP
+    "If the building is larger than 15,000 ft², the project needs 2 baseline
+    boilers.  The second boiler is created here."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    NotInput
+  ANNUAL
+    if( IsBaseSys .AND.
+        Type = "HotWater" .AND. 
+        IfValidAnd(FluidSys:BlrCnt > 1) )
+      then RuleLibrary(Blr, "Base Blr", 1, "BaseHWSystem")
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// ********** Connect Blr2, if present, to primary hot water fluid segments ****
+// ---------- Outlet -----------------------------------------------------------
+RULE Blr:FluidSegOutRef
+  ANNUAL
+    if( ParentCompAssigned(Blr2Ref) )
+      then
+      if( Name = Parent(Blr2Ref) )
+        then "BaseHWPriSupSeg"
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ---------- Inlet ------------------------------------------------------------
+RULE Blr:FluidSegInRef
+  ANNUAL
+    if( ParentCompAssigned(Blr2Ref) )
+      then
+      if( Name = Parent(Blr2Ref) )
+        then "BaseHWPriRetSeg"
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// ********** Status *********************************************************** 
+RULE Blr:Status
+  DESCRIPTION
+    "The status of the system or component, used for additions and alterations."
+  INPUTCLASS 
+    Default
+; OPTION
+;   * Defined in BEMEnums, shown here for reference. Default is 'New'
+;   New
+;   Existing 
+  DEFAULT
+// Status defined from top-down
+    if( Parent( IsNew ) ) then "New" else "Existing" endif
+  CHECKCODE
+    if( ( Proj:IsNewMech .AND. Status != "New" ) .OR.
+        ( Proj:IsAlt = 0 .AND. Status = "Altered" ) )
+    then
+      PostWarning("Boiler '%s' has a Status of '%s', but Compliance Type is '%s'.
+                   The status of the system will be changed to 'New' for compliance
+                   analysis.", Name, Status, Proj:CompType)
+    else UNCHANGED
+    endif
+   SIZING
+    if( IfValidAnd( FluidSys:IsBaseSys > 0 ) .OR. Proj:IsNewMech )
+    then "New"
+    else u:Status
+    endif
+  ANNUAL
+    if( IfValidAnd( FluidSys:IsBaseSys > 0 ) .OR. Proj:IsNewMech )
+    then "New"
+    else z:Status
+    endif
+ENDRULE
+
+RULE NEW Blr:IsNew
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" .OR. Proj:IsNewMech ) then 1 else 0 endif
+  SIZING
+    if( Status = "New" .OR. Proj:IsNewMech ) then 1 else 0 endif
+  ANNUAL
+    if( Status = "New" .OR. Proj:IsNewMech ) then 1 else 0 endif
+ENDRULE
+
+RULE NEW Blr:IsExisting
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsNew ) then 0 else 1 endif
+  SIZING
+    if( IsNew ) then 0 else 1 endif
+  ANNUAL
+    if( IsNew ) then 0 else 1 endif
+ENDRULE
+
+
+// ********** <Boiler FuelSource> **********************************************
+RULE Blr:FuelSrc
+  DESCRIPTION
+    "The fuel used by the boiler"
+  HELP
+    "The primary fuel used by the boiler to generate heat.  Options
+    are gas, or electric.  Others may be added later."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Required
+//  OPTION     - moved to Enums.txt to allow for backward compatibility
+//    Gas
+//    Oil
+//    Electric
+  CHECKSIM
+    if( LocalStatus(FuelSrc) < 1 ) then
+      PostError( "No selection of fuel type made for boiler '%s'", Name )
+    else if( FuelSrc != "Gas" .AND. FuelSrc != "Electric" ) then
+      PostError( "Gas and Electric are the only currently supported fuels 
+                  in CBECC-Com.  Revise the input for boiler '%s'", Name )
+    else if( Proj:GasType = "None" .AND. FuelSrc = "Gas" )
+    then
+      PostError("Boiler '%s' is gas fired but the project 
+                 gas type is specified as none.  Change the fuel source 
+                 for the boiler or the project gas type.", Name)
+    else
+      UNCHANGED
+    endif endif endif
+  SIZING
+    if( IsBaseSys ) then
+      "Gas"
+    else u:FuelSrc
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      "Gas"
+    else z:FuelSrc
+    endif
+ENDRULE
+
+
+// ********** <Boiler Type> ****************************************************
+RULE Blr:Type
+  DESCRIPTION
+    "The type of boiler output provided - steam or hot water"
+  HELP
+    "Type of boiler in terms of steam or hot water.  Boiler type in terms
+    of fuel used or draft type are defined in other descriptors and rules."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Required
+  OPTION
+    HotWater
+    Steam
+  SIZING
+    if( IsBaseSys ) then
+      "HotWater"
+    else u:Type
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      "HotWater"
+    else z:Type
+    endif
+ENDRULE
+
+
+// ********** <Boiler Draft Type> **********************************************
+RULE Blr:DraftType
+  DESCRIPTION
+    "The type of boiler output provided - steam or hot water"
+  HELP
+    "Type of boiler in terms of steam or hot water.  Boiler type in terms
+    of fuel used or draft type are defined in other descriptors and rules."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    CondRequired
+  OPTION
+    MechanicalNoncondensing
+    Condensing
+    Natural
+  CHECKCODE
+    // A draft type selection is required for fuel fired boilers
+    if( IsBaseSys ) then
+      if( FuelSrc = "Gas" .OR. FuelSrc = "Oil" ) then
+        if( LocalStatus(DraftType) < 1 ) then
+          PostError( "Draft type must be input for fuel fired boiler '%s'", Name )
+        else
+          UNCHANGED
+        endif
+      else
+        UNCHANGED
+      endif
+    else
+      UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      "Natural"
+    else
+      if( u:FuelSrc = "Gas" .OR. u:FuelSrc = "Oil" ) then
+        u:DraftType
+      else UNDEFINED
+      endif
+    endif
+  SIZING : T24N
+    if( IsBaseSys ) then
+      "MechanicalNoncondensing"
+    else
+      if( u:FuelSrc = "Gas" .OR. u:FuelSrc = "Oil" ) then
+        u:DraftType
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL : S901G ECBC
+    if( IsBaseSys ) then
+      "Natural"
+    else
+      if( u:FuelSrc = "Gas" .OR. u:FuelSrc = "Oil" ) then
+        u:DraftType
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL : T24N
+    if( IsBaseSys ) then
+      "MechanicalNoncondensing"
+    else
+      if( u:FuelSrc = "Gas" .OR. u:FuelSrc = "Oil" ) then
+        u:DraftType
+      else UNDEFINED
+      endif
+    endif
+ENDRULE
+
+
+// ********** <Boiler Capacity> ************************************************
+RULE Blr:CapRtd
+  DESCRIPTION
+    "Heat output of the boiler at full load and rated conditions."
+  HELP
+    "The nominal full load output of the boiler at design operating conditions."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Required
+  MINIMUM
+    0
+  COMMONMINIMUM
+    10000
+  UNITS
+    Btu/hr
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( Proj:AutoHardSize = 1
+       .AND. LocalCompAssigned(FluidSegInRef) ) then
+    // For PROPOSED AutoHardSizing only
+    ;  Non-coincident total capacity of all heating coils
+      if( Parent(Type) = "HotWater" ) then
+        FluidSegOutRef:CoilHtgTotCap / Parent(BlrCnt)
+      else if( Parent(Type) = "CondenserWater" ) then
+        FluidSegOutRef:CoilHtExtractionLd / Parent(BlrCnt)
+    else UNDEFINED
+      endif endif  
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      UNDEFINED // AutoSize
+    else u:CapRtd
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      if( Parent(HWLoopLd) > 0 ) then
+        Parent(HWLoopLd) / Parent(BlrCnt) * Proj:HtgSizingRat
+      else 10
+      endif
+    else if( IsExisting )
+    then zp:CapRtd
+    else z:CapRtd
+    endif endif
+ENDRULE
+
+
+// ********** <Boiler AFUE> ****************************************************
+RULE Blr:AFUE
+  DESCRIPTION
+    "The Annual Fuel Utilzation Efficiency of the boiler.  Applies only to
+    fuel-fired boilers with capacities of less than 300,000 Btu/hr."
+  HELP
+    "The efficiency of the boiler specified as AFUE.  Applies only to smaller
+    gas, propane, or oil fired boilers with output heating capacities of less
+    than 300,000 Btu/hr.  For larger fuel-fired boilers, use thermal
+    efficiency, and for electric boilers use EIR."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0.0
+  COMMONMINIMUM
+    0.6
+  COMMONMAXIMUM
+    0.98
+  MAXIMUM
+    1.0
+  SIZING
+    // use 30 Btuh/sq ft as a proxy for sizing to determine efficiency
+    // 10000 sq ft -> 300000 Btuh
+    if( IsBaseSys ) then
+      if( Bldg:NonResFlrArea < 10000 ) then
+      0.82
+      else UNDEFINED
+      endif
+    else if( FuelSrc = "Electric" ) then
+      UNDEFINED
+    else if( IfValidAnd(CapRtd < 300000) ) then
+      u:AFUE
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    if( IsBaseSys ) then
+      if( CapRtd < 300000 ) then
+      0.82
+      else UNDEFINED
+      endif
+    else z:AFUE
+    endif
+ENDRULE
+
+
+// ********** <Boiler Combustion Efficiency> ***********************************
+RULE Blr:CombEff
+  DESCRIPTION
+    "The thermal efficiency of the boiler.  Applies only to fuel-fired boilers
+    with capacities of more than 2,500,000 Btu/hr."
+  HELP
+    "The Combustion Efficiency of the boiler.  Applies only to large gas,
+    propane or oil fired boilers with output heating capacities over 2,500,000
+    Btu/hr.  For smaller fuel-fired boilers use AFUE or Thermal Efficiency.
+    For electric boilers use EIR.  The difference between combustion efficeincy
+    and thermal efficiency is that thermal efficiency includes jacket losses,
+    combustion efficiency does not."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0.0
+  COMMONMINIMUM
+    0.6
+  COMMONMAXIMUM
+    0.98
+  MAXIMUM
+    1.0
+  SIZING
+    if( IsBaseSys ) then
+      UNDEFINED
+    else if( FuelSrc = "Electric" )
+      then UNDEFINED
+    else if( IfValidAnd(CapRtd >= 2500000) )
+      then CombEff
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    if( IsBaseSys ) then
+      if( CapRtd >= 2500000 ) then
+        0.82
+      else UNDEFINED
+      endif
+    else z:CombEff
+    endif
+ENDRULE
+
+
+// ********** <Boiler Thermal Efficiency> **************************************
+RULE Blr:ThrmlEff
+  DESCRIPTION
+    "The thermal efficiency of the boiler.  Applies only to fuel-fired boilers
+    with capacities of 300,000 Btu/hr to 2,500,000 Btu/hr.  However, other
+    efficiency descriptors are converted to thermal efficiency for EnergyPlus
+    simulation."
+  HELP
+    "The Thermal Efficiency of the boiler.  Applies only to larger gas,
+    propane or oil fired boilers with output heating capacities of 300,000
+    Btu/hr to 2,500,000 Btu/hr, although other efficiency descriptors are
+    converted to thermal efficiency for EnergyPlus simulation.  For smaller
+    fuel-fired boilers use AFUE.  For larger fuel-fired boilers, use combustion
+    efficiency.  For electric boilers use EIR.  The difference between
+    combustion efficiency and thermal efficiency is that thermal efficiency
+    includes jacket losses, combustion efficiency does not."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Default
+  MINIMUM
+    0.0
+  COMMONMINIMUM
+    0.6
+  COMMONMAXIMUM
+    0.98
+  MAXIMUM
+    1.0
+  REPORTPRECISION
+    2
+  DEFAULT : S901G ECBC
+    if( IfValidAnd(CapRtd < 300000) ) then
+      0.875 * 0.80 + 0.105    // AFUE = 0.80 -> ThrmlEff = 0.805
+    else if( IfValidAnd(CapRtd > 2500000) ) then
+      0.82 - 0.020            // CombEff = 0.82 -> ThrmlEff = 0.80
+    else 0.80
+    endif endif
+  DEFAULT
+    if( IfValidAnd(CapRtd < 300000) ) then
+      0.875 * 0.82 + 0.105    // AFUE = 0.82 -> ThrmlEff = 0.8225
+    else if( IfValidAnd(CapRtd > 2500000) ) then
+      0.82 - 0.015            // CombEff = 0.82 -> ThrmlEff = 0.805
+    else 0.80
+    endif endif
+  CHECKCODE
+    if( IsBaseSys ) then
+      if( IfValidAnd(u:AFUE <= 0) .AND.
+          IfValidAnd(u:CombEff <= 0) .AND.
+          IfValidAnd(u:ThrmlEff <= 0) .AND.
+          IfValidAnd(u:FuelSrc != "Electric") ) then
+        PostError( "A non-zero efficiency input is required for boiler '%s'", Name )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  SIZING : S901G ECBC
+    if( IsBaseSys ) then
+      0.80 // Blr sizing is not dependant on ThrmlEff, default 0.80 used
+    else if( FuelSrc = "Electric" ) then
+      0.98
+    else if( IfValidAnd(CapRtd < 300000) ) then
+      if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else if( IfValidAnd(u:AFUE >= 0.80) ) then
+        0.875 * u:AFUE + 0.105
+      else if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else
+        u:CombEff - 0.020
+      endif endif endif
+    else if( IfValidAnd(CapRtd > 2500000) ) then
+      if( IfValidAnd(u:CombEff > 0) ) then
+        u:CombEff - 0.020
+      else if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else
+        0.875 * u:AFUE + 0.105
+      endif endif endif
+    else
+      if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else if( IfValidAnd(u:CombEff > 0) ) then
+        u:CombEff - 0.020
+      else if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else
+        0.875 * u:AFUE + 0.105
+      endif endif endif
+    endif endif endif endif
+  SIZING : T24N
+    if( IsBaseSys ) then
+      0.80 // Blr sizing is not dependant on ThrmlEff, default 0.80 used
+    else if( FuelSrc = "Electric" ) then
+      0.98
+    else if( IfValidAnd(CapRtd < 300000) ) then
+      if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else if( IfValidAnd(u:AFUE >= 0.80) ) then
+        0.875 * u:AFUE + 0.105
+      else if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else
+        u:CombEff - 0.015
+      endif endif endif
+    else if( IfValidAnd(CapRtd > 2500000) ) then
+      if( IfValidAnd(u:CombEff > 0) ) then
+        u:CombEff - 0.015
+      else if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else
+        0.875 * u:AFUE + 0.105
+      endif endif endif
+    else
+      if( IfValidAnd(u:ThrmlEff > 0) ) then
+        u:ThrmlEff
+      else if( IfValidAnd(u:CombEff > 0) ) then
+        u:CombEff - 0.015
+      else if( IfValidAnd(u:AFUE < 0.80) ) then
+        0.1 * u:AFUE + 0.725
+      else
+        0.875 * u:AFUE + 0.105
+      endif endif endif
+    endif endif endif endif
+  ANNUAL : S901G ECBC
+    if( IsBaseSys ) then
+      if( IfValidAnd(CapRtd < 300000) ) then
+         0.875 * 0.80 + 0.105 // AFUE = 0.80, ThrmlEff = 0.805
+      else if( IfValidAnd(CapRtd > 2500000) ) then
+         0.82 - 0.020         // CombEff = 0.82, ThrmlEff = 0.80
+      else 0.80
+      endif endif
+    else z:ThrmlEff
+    endif
+  ANNUAL : T24N
+    if( IsBaseSys ) then
+      if( IfValidAnd(CapRtd < 300000) ) then
+         0.875 * 0.82 + 0.105 // AFUE = 0.82, ThrmlEff = 0.8225
+      else if( IfValidAnd(CapRtd > 2500000) ) then
+         0.82 - 0.015         // CombEff = 0.82, ThrmlEff = 0.805
+      else 0.80
+      endif endif
+    else z:ThrmlEff
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE Blr:EffRpt
+  DESCRIPTION
+    "A text string describing boiler effiicency for compliance reporting."
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( IfValidAnd(CapRtd < 300000) ) then
+      if( IfValidAnd(AFUE > 0) ) then
+        Format( "AFUE: %s", FltToStr(AFUE,2) )
+      else
+        Format( "Thrml. Eff.: %s", FltToStr(ThrmlEff,2) )
+      endif
+    else if( IfValidAnd(CapRtd >= 2500000) ) then
+      if( IfValidAnd(CombEff > 0) ) then
+        Format( "Comb. Eff.: %s", FltToStr(CombEff,2) )
+      else
+        Format( "Thrml. Eff: %s", FltToStr(ThrmlEff,2) )
+      endif
+    else
+      Format( "Thrml. Eff: %s", FltToStr(ThrmlEff,2) )
+    endif endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+// ********** <Boiler Draft Fan HP> ********************************************
+RULE Blr:DraftFanHp
+  DESCRIPTION
+    "The nameplate horsepower of the draft fan motor for boilers with
+    mechanical draft."
+  HELP
+    "For boilers with draft fans, enter the nameplate horsepower of the
+    draft fan motor."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0.0
+  REPORTPRECISION
+    3
+  DEFAULT
+    if( LocalStatus(DraftFanHp) < 5 .AND. Proj:AutoHardSize = 1 .AND.
+        (IfValidAnd(FuelSrc = "Gas") .OR. IfValidAnd(FuelSrc = "Oil")) )
+    // For PROPOSED AutoHardSizing only
+      then CapRtd * 0.0000008
+    else
+      UNDEFINED
+    endif
+  CHECKCODE
+    // A draft fan is required for condensing & mechanical noncondensing boilers
+    if( IfValidAnd(DraftType = "Condensing") .OR.
+        IfValidAnd(DraftType = "MechanicalNoncondensing") ) then
+      if( IsBaseSys ) then
+        if( IfValidAnd(DraftFanHp > 0) ) then
+          UNCHANGED
+        else
+          PostError( "Draft Fan HP input required for condensing or mechanical
+                      noncondensing fuel fired boiler '%s'", Name )
+        endif
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      // use 30 Btuh/sq ft as a proxy for sizing to determine efficiency
+      Bldg:NonResFlrArea * 30 *  0.0000008
+    else if( IfValidAnd(DraftType = "MechanicalNoncondensing") .OR.
+             IfValidAnd(DraftType = "Condensing") ) then
+      u:DraftFanHp
+    else UNDEFINED
+    endif endif
+  ANNUAL : S901G ECBC
+    if( IsBaseSys ) then
+      0
+    else z:DraftFanHp
+    endif
+  ANNUAL : T24N
+    if( IsBaseSys ) then
+      CapRtd * 0.0000008
+    else z:DraftFanHp
+    endif
+ENDRULE
+
+
+// ********** <Boiler Parasitic Electric Load> *********************************
+RULE Blr:ParasiticLd
+  DESCRIPTION
+    "The electrical consumption of the draft fan motor for boilers with
+    mechanical draft."
+  HELP
+    "Calculated from the nameplate horsepower of the draft fan motor."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    CondRequired
+  SIZING
+    if( IsBaseSys ) then
+      DraftFanHp * 746 / 2
+    else if( IfValidAnd(u:DraftFanHP > 0) )
+      then u:DraftFanHp * 746 / 2
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    if( IsBaseSys ) then
+      DraftFanHp * 746 / 2
+    else z:ParasiticLd
+    endif
+ENDRULE
+
+
+// ********** <Boiler Part Load Performance Curve> *****************************
+RULE Blr:HIR_fPLRCrvRef
+  DESCRIPTION
+    "The name of the performance curve which modifies the boiler efficiency
+    as a function of the part load ratio for the time step."
+  HELP
+    "The name of the performance curve which modifies the boiler efficiency
+    (heat input ratio) for the time step as a function of the part load ratio."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Prescribed
+  SIZING
+    if( IsBaseSys ) then
+      RuleLibrary(CrvQuad,"BlrHWBlrFIRRatio_fQRatioSI")
+    else if( FuelSrc = "Electric" ) then
+      UNDEFINED
+    else if( DraftType = "Condensing" ) then
+      RuleLibrary(CrvDblQuad,"BlrHWCondBlrFIRRatio_fQRatioTewtSI")
+    else RuleLibrary(CrvQuad,"BlrHWBlrFIRRatio_fQRatioSI")
+    endif endif endif
+  ANNUAL
+    if( IsBaseSys ) then
+      RuleLibrary(CrvQuad,"BlrHWBlrFIRRatio_fQRatioSI")
+    else z:HIR_fPLRCrvRef
+    endif
+ENDRULE
+
+
+// ********** <Boiler Minimum Unloading Ratio> *********************************
+RULE Blr:UnldRatMin
+  DESCRIPTION
+    "The minimum load at which the boiler can operate continuously without
+    cycling, expressed as a fraction of the full load capacity."
+  HELP
+    "The minimum load on the boiler at which the boiler can operate without
+    cycling, expressed as a fraction of the full load capacity.  At loads
+    less than this, the boiler cycles at the minimum capacity as needed to
+    meet the load."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Default
+  MINIMUM
+    0.0
+  COMMONMINIMUM
+    0.01
+  MAXIMUM
+    1.0
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( FuelSrc = "Electric" )
+      then 0.01
+    else 0.25
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      0.25
+    else
+      u:UnldRatMin
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      0.25
+    else
+      z:UnldRatMin
+    endif
+ENDRULE
+
+
+// ********** <Boiler Supply Water Temp> ***************************************
+RULE Blr:LvgTempDsgn
+  DESCRIPTION
+    "The temperature of the hot water supplied by the boiler at design
+    conditions."
+  HELP
+    "The temperature of the hot water supplied by the boiler at design
+    conditions.  This may not be the supply water temperature during normal
+    operation."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Default
+  MINIMUM
+    50
+  COMMONMINIMUM
+    90
+  COMMONMAXIMUM
+    300
+  MAXIMUM
+    400
+  UNITS
+    °F
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ParentStatus(HtgDsgnSupWtrTemp) > 0 ) then
+      Parent(HtgDsgnSupWtrTemp)
+    else if( ParentStatus(DsgnSupWtrTemp) > 0 ) then
+      Parent(DsgnSupWtrTemp)
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IsBaseSys ) then
+      Parent(DsgnSupWtrTemp)
+    else
+      u:LvgTempDsgn
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      Parent(DsgnSupWtrTemp)
+    else
+      z:LvgTempDsgn
+    endif
+ENDRULE
+
+
+// ********** <Boiler Return Water Temp> ***************************************
+RULE Blr:EntTempDsgn
+  DESCRIPTION
+    "The temperature of the hot water returned to the boiler at design
+    conditions."
+  HELP
+    "The temperature of the hot water returned to the boiler at design
+    conditions.  This may not be the return water temperature during normal
+    operation."
+  REFERENCE
+    ACM Section 5.8.1-Boilers
+  INPUTCLASS
+    Default
+  MINIMUM
+    32
+  COMMONMINIMUM
+    75
+  COMMONMAXIMUM
+    150
+  MAXIMUM
+    210
+  UNITS
+    °F
+  REPORTPRECISION
+    0
+  DEFAULT 
+    if( ParentStatus( DsgnSupWtrDelT ) > 0 .AND.
+        LocalStatus( LvgTempDsgn ) > 0 )         
+    then LvgTempDsgn-Parent(DsgnSupWtrDelT)
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      LvgTempDsgn-Parent(DsgnSupWtrDelT)
+    else
+      u:EntTempDsgn
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      LvgTempDsgn-Parent(DsgnSupWtrDelT)
+    else
+      z:EntTempDsgn
+    endif
+ENDRULE
+
+// -------------- Boiler Water Flow --------------------------------------------
+RULE Blr:WtrFlowCap
+  DESCRIPTION
+    "The boiler water flow rate."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    gpm
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( IfValidAnd( CapRtd > 0 ) .AND.
+        IfValidAnd( ParentValid( DsgnSupWtrDelT ) > 0 ) ) then
+    // gpm = Btuh / 8.3365 (lb/gal) / 60 (min/hr) / Design loop dT
+      CapRtd/500.19/Parent(DsgnSupWtrDelT)
+    else UNDEFINED
+    endif
+  SIZING
+    if( IsBaseSys ) then
+      UNDEFINED   // AutoSize
+    else
+      u:WtrFlowCap
+    endif
+  ANNUAL
+    if( IsBaseSys ) then
+      CapRtd/500.19/Parent(DsgnSupWtrDelT)
+    else
+      z:WtrFlowCap
+    endif
+ENDRULE
+
+
+
+RULE NEW Blr:CapRtdNew
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( CapRtd > 0 ) ) then CapRtd * IsNew else 0 endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( IfValidAnd( CapRtd > 0 ) ) then CapRtd * IsNew else 0 endif
+ENDRULE
+
+RULE NEW Blr:CapRtdExisting
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( CapRtd > 0 ) ) then CapRtd * IsExisting else 0 endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( IfValidAnd( CapRtd > 0 ) ) then CapRtd * IsExisting else 0 endif
+ENDRULE

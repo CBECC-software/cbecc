@@ -1,0 +1,74 @@
+TABLE OffMedS901GElectric030032TrmlUnit,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,PriAirFlowMax,PriAirFlowMin,HtgAirFlowMax,ReheatCtrlMthd,,,,
+;,,,,,(cfm),(cfm),( cfm),,,,,
+CoreBottomZn TU,BasePFPBox TrmlUnit,ParallelFanBox,BaseAirSys6,Core_bottom Thermal Zone,5618.348,1685.505,-99996,,,,,
+PerimeterBottomZn1 TU,BasePFPBox TrmlUnit-2,ParallelFanBox,BaseAirSys6,Perimeter_bot_ZN_1 Thermal Zone,1700.438,510.132,-99996,,,,,
+PerimeterBottomZn2 TU,BasePFPBox TrmlUnit-3,ParallelFanBox,BaseAirSys6,Perimeter_bot_ZN_2 Thermal Zone,1412.824,423.847,-99996,,,,,
+PerimeterBottomZn3 TU,BasePFPBox TrmlUnit-4,ParallelFanBox,BaseAirSys6,Perimeter_bot_ZN_3 Thermal Zone,1543.528,463.058,-99996,,,,,
+PerimeterBottomZn4 TU,BasePFPBox TrmlUnit-5,ParallelFanBox,BaseAirSys6,Perimeter_bot_ZN_4 Thermal Zone,1572.027,471.608,-99996,,,,,
+CoreMidZn TU,BasePFPBox TrmlUnit-6,ParallelFanBox,BaseAirSys6-2,Core_mid Thermal Zone,5741.894,1722.568,-99996,,,,,
+PerimeterMidZn1 TU,BasePFPBox TrmlUnit-7,ParallelFanBox,BaseAirSys6-2,Perimeter_mid_ZN_1 Thermal Zone,1872.001,561.6,-99996,,,,,
+PerimeterMidZn2 TU,BasePFPBox TrmlUnit-8,ParallelFanBox,BaseAirSys6-2,Perimeter_mid_ZN_2 Thermal Zone,1587.292,476.188,-99996,,,,,
+PerimeterMidZn3 TU,BasePFPBox TrmlUnit-9,ParallelFanBox,BaseAirSys6-2,Perimeter_mid_ZN_3 Thermal Zone,1666.529,499.959,-99996,,,,,
+PerimeterMidZn4 TU,BasePFPBox TrmlUnit-10,ParallelFanBox,BaseAirSys6-2,Perimeter_mid_ZN_4 Thermal Zone,1789.054,536.716,-99996,,,,,
+Core Top Zn TU,BasePFPBox TrmlUnit-11,ParallelFanBox,BaseAirSys6-3,Core_top Thermal Zone,5847.76,1754.328,-99996,,,,,
+PerimeterTopZn1 TU,BasePFPBox TrmlUnit-12,ParallelFanBox,BaseAirSys6-3,Perimeter_top_ZN_1 Thermal Zone,1921.59,576.477,-99996,,,,,
+PerimeterTopZn2 TU,BasePFPBox TrmlUnit-13,ParallelFanBox,BaseAirSys6-3,Perimeter_top_ZN_2 Thermal Zone,1591.517,477.455,-99996,,,,,
+PerimeterTopZn3 TU,BasePFPBox TrmlUnit-14,ParallelFanBox,BaseAirSys6-3,Perimeter_top_ZN_3 Thermal Zone,1738.778,521.633,-99996,,,,,
+PerimeterTopZn4 TU,BasePFPBox TrmlUnit-15,ParallelFanBox,BaseAirSys6-3,Perimeter_top_ZN_4 Thermal Zone,1845.714,553.714,-99996,,,,,
+ENDTABLE,,,,,,,,,,,,
+TABLE OffMedS901GElectric030032CoilClg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,DXSEER,DXEER,NumClgStages,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+Bottom VAV CoilCooling,BaseSys6 CoilClg,DirectExpansion,BaseAirSys6,NONE,343108.813,357969.063,-99996,-99996,10,2,,
+Mid VAV CoilCooling,BaseSys6 CoilClg-2,DirectExpansion,BaseAirSys6-2,NONE,366556.031,382431.781,-99996,-99996,10,2,,
+Top VAV CoilCooling,BaseSys6 CoilClg-3,DirectExpansion,BaseAirSys6-3,NONE,374913.969,391151.719,-99996,-99996,10,2,,
+ENDTABLE,,,,,,,,,,,,
+TABLE OffMedS901GElectric030032CoilHtg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,FurnAFUE,FurnThrmlEff,,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+CoreBottomReheatCoil,BasePFPBox CoilHtg,Resistance,BaseAirSys6,Core_bottom Thermal Zone,206534.922,206534.922,0,-99996,-99996,,,
+PerimeterBottom1ReheatCoil,BasePFPBox CoilHtg-2,Resistance,BaseAirSys6,Perimeter_bot_ZN_1 Thermal Zone,55403.711,55403.711,0,-99996,-99996,,,
+PerimeterBottom2ReheatCoil,BasePFPBox CoilHtg-3,Resistance,BaseAirSys6,Perimeter_bot_ZN_2 Thermal Zone,42945.023,42945.023,0,-99996,-99996,,,
+PerimeterBottom3ReheatCoil,BasePFPBox CoilHtg-4,Resistance,BaseAirSys6,Perimeter_bot_ZN_3 Thermal Zone,51764.488,51764.488,0,-99996,-99996,,,
+PerimeterBottom4ReheatCoil,BasePFPBox CoilHtg-5,Resistance,BaseAirSys6,Perimeter_bot_ZN_4 Thermal Zone,46693.148,46693.148,0,-99996,-99996,,,
+CoreMidReheatCoil,BasePFPBox CoilHtg-6,Resistance,BaseAirSys6-2,Core_mid Thermal Zone,209328.672,209328.672,0,-99996,-99996,,,
+PerimeterMid1ReheatCoil,BasePFPBox CoilHtg-7,Resistance,BaseAirSys6-2,Perimeter_mid_ZN_1 Thermal Zone,59403.223,59403.223,0,-99996,-99996,,,
+PerimeterMid2ReheatCoil,BasePFPBox CoilHtg-8,Resistance,BaseAirSys6-2,Perimeter_mid_ZN_2 Thermal Zone,47053.949,47053.949,0,-99996,-99996,,,
+PerimeterMid3ReheatCoil,BasePFPBox CoilHtg-9,Resistance,BaseAirSys6-2,Perimeter_mid_ZN_3 Thermal Zone,54615.738,54615.738,0,-99996,-99996,,,
+PerimeterMid4ReheatCoil,BasePFPBox CoilHtg-10,Resistance,BaseAirSys6-2,Perimeter_mid_ZN_4 Thermal Zone,51818.313,51818.313,0,-99996,-99996,,,
+CoreTopReheatCoil,BasePFPBox CoilHtg-11,Resistance,BaseAirSys6-3,Core_top Thermal Zone,211733.5,211733.5,0,-99996,-99996,,,
+PerimeterTop1ReheatCoil,BasePFPBox CoilHtg-12,Resistance,BaseAirSys6-3,Perimeter_top_ZN_1 Thermal Zone,60562.102,60562.102,0,-99996,-99996,,,
+PerimeterTop2ReheatCoil,BasePFPBox CoilHtg-13,Resistance,BaseAirSys6-3,Perimeter_top_ZN_2 Thermal Zone,47153.398,47153.398,0,-99996,-99996,,,
+PerimeterTop3ReheatCoil,BasePFPBox CoilHtg-14,Resistance,BaseAirSys6-3,Perimeter_top_ZN_3 Thermal Zone,56295.738,56295.738,0,-99996,-99996,,,
+PerimeterTop4ReheatCoil,BasePFPBox CoilHtg-15,Resistance,BaseAirSys6-3,Perimeter_top_ZN_4 Thermal Zone,53158.188,53158.188,0,-99996,-99996,,,
+ENDTABLE,,,,,,,,,,,,
+TABLE OffMedS901GElectric030032Fan,,,,,,,,,,,,
+PropName,BaseName,CtrlMthd,System,Zone,FlowCap,FlowMin,FlowEff,ModelingMthd,TotStaticPress,MtrHP,MtrPos,MtrEff
+;,,,,,(cfm),(cfm),,,(inH2O),( hp),,
+BottomVAV SupplyFan,BaseSys6 Fan,VariableSpeedDrive,BaseAirSys6,NONE,11847.165,3554.15,0.65,BrakeHorsePower,5.362,20,InAirStream,0.93
+MidVAV SupplyFan,BaseSys6 Fan-2,VariableSpeedDrive,BaseAirSys6-2,NONE,12656.77,3797.031,0.65,BrakeHorsePower,5.362,20,InAirStream,0.93
+TopVAV SupplyFan,BaseSys6 Fan-3,VariableSpeedDrive,BaseAirSys6-3,NONE,12945.359,3883.608,0.65,BrakeHorsePower,5.362,20,InAirStream,0.93
+CoreBottom PFPB Fan,BasePFPBox Fan,ConstantVolume,BaseAirSys6,Core_bottom Thermal Zone,2809.174,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterBottom1 PFPB Fan,BasePFPBox Fan-2,ConstantVolume,BaseAirSys6,Perimeter_bot_ZN_1 Thermal Zone,850.219,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterBottom2 PFPB Fan,BasePFPBox Fan-3,ConstantVolume,BaseAirSys6,Perimeter_bot_ZN_2 Thermal Zone,706.412,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterBottom3 PFPB Fan,BasePFPBox Fan-4,ConstantVolume,BaseAirSys6,Perimeter_bot_ZN_3 Thermal Zone,771.764,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterBottom4 PFPB Fan,BasePFPBox Fan-5,ConstantVolume,BaseAirSys6,Perimeter_bot_ZN_4 Thermal Zone,786.013,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+CoreMid PFPB Fan,BasePFPBox Fan-6,ConstantVolume,BaseAirSys6-2,Core_mid Thermal Zone,2870.947,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterMid1 PFPB Fan,BasePFPBox Fan-7,ConstantVolume,BaseAirSys6-2,Perimeter_mid_ZN_1 Thermal Zone,936.001,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterMid2 PFPB Fan,BasePFPBox Fan-8,ConstantVolume,BaseAirSys6-2,Perimeter_mid_ZN_2 Thermal Zone,793.646,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterMid3 PFPB Fan,BasePFPBox Fan-9,ConstantVolume,BaseAirSys6-2,Perimeter_mid_ZN_3 Thermal Zone,833.265,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterMid4 PFPB Fan,BasePFPBox Fan-10,ConstantVolume,BaseAirSys6-2,Perimeter_mid_ZN_4 Thermal Zone,894.527,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+CoreTop PFPB Fan,BasePFPBox Fan-11,ConstantVolume,BaseAirSys6-3,Core_top Thermal Zone,2923.88,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterTop1 PFPB Fan,BasePFPBox Fan-12,ConstantVolume,BaseAirSys6-3,Perimeter_top_ZN_1 Thermal Zone,960.795,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterTop2 PFPB Fan,BasePFPBox Fan-13,ConstantVolume,BaseAirSys6-3,Perimeter_top_ZN_2 Thermal Zone,795.759,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterTop3 PFPB Fan,BasePFPBox Fan-14,ConstantVolume,BaseAirSys6-3,Perimeter_top_ZN_3 Thermal Zone,869.389,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+PerimeterTop4 PFPB Fan,BasePFPBox Fan-15,ConstantVolume,BaseAirSys6-3,Perimeter_top_ZN_4 Thermal Zone,922.857,-99996,0.5,BrakeHorsePower,1.273,0.855,InAirStream,0.855
+ENDTABLE,,,,,,,,,,,,
+TABLE OffMedS901GElectric030032OACtrl,,,,,,,,,,,,
+PropName,BaseName,EconoCtrlMthd,System,EconoIntegration,,,,,,,,
+;,,,,,,,,,,,,
+BottomVAV Economizer,BaseSys6 OACtrl,DifferentialDryBulb,BaseAirSys6,Integrated,,,,,,,,
+MidVAV OACtrl,BaseSys6 OACtrl-2,DifferentialDryBulb,BaseAirSys6-2,Integrated,,,,,,,,
+Top VAV OACtrl,BaseSys6 OACtrl-3,DifferentialDryBulb,BaseAirSys6-3,Integrated,,,,,,,,
+ENDTABLE,,,,,,,,,,,,

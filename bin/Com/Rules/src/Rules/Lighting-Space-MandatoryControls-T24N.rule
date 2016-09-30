@@ -1,0 +1,1081 @@
+// Interior Lighting - Mandatory Lighting Controls
+//
+// -------------------------------------------------------------------------
+//  Copyright (c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses Building Descriptors for Mandatory Lighting
+//  controls used primarily identified in Standards Section 130.1 and
+//  is used primarily for reporting purposes.
+
+RULE Spc:MandatoryLtgCtrlDescRpt[1]
+  DESCRIPTION
+    "A description of the mandatory lighting control in a space,
+     subject to the requirements of Standards, Section 130.1"  
+  HELP
+    "Up to 5 mandatory controls can be input for each space."  
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+  SIZING
+    u:MandatoryLtgCtrlDescRpt[1]
+  ANNUAL
+    z:MandatoryLtgCtrlDescRpt[1]
+ENDRULE
+RULE Spc:MandatoryLtgCtrlDescRpt[2]
+  DESCRIPTION
+    "A description of the mandatory lighting control in a space,
+     subject to the requirements of Standards, Section 130.1"   
+  HELP
+    "Up to 5 mandatory controls can be input for each space." 
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+  SIZING
+    u:MandatoryLtgCtrlDescRpt[2]
+  ANNUAL
+    z:MandatoryLtgCtrlDescRpt[2]
+ENDRULE
+RULE Spc:MandatoryLtgCtrlDescRpt[3]
+  DESCRIPTION
+    "A description of the mandatory lighting control in a space,
+     subject to the requirements of Standards, Section 130.1"   
+  HELP
+    "Up to 5 mandatory controls can be input for each space." 
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+  SIZING
+    u:MandatoryLtgCtrlDescRpt[3]
+  ANNUAL
+    z:MandatoryLtgCtrlDescRpt[3]
+ENDRULE
+RULE Spc:MandatoryLtgCtrlDescRpt[4]
+  DESCRIPTION
+    "A description of the mandatory lighting control in a space,
+     subject to the requirements of Standards, Section 130.1"   
+  HELP
+    "Up to 5 mandatory controls can be input for each space." 
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+  SIZING
+    u:MandatoryLtgCtrlDescRpt[4]
+  ANNUAL
+    z:MandatoryLtgCtrlDescRpt[4]
+ENDRULE
+RULE Spc:MandatoryLtgCtrlDescRpt[5]
+  DESCRIPTION
+    "A description of the mandatory lighting control in a space,
+     subject to the requirements of Standards, Section 130.1"   
+  HELP
+    "Up to 5 mandatory controls can be input for each space." 
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+  SIZING
+    u:MandatoryLtgCtrlDescRpt[5]
+  ANNUAL
+    z:MandatoryLtgCtrlDescRpt[5]
+ENDRULE
+
+;RULE NEW Spc:ShowMandatoryCtrlRow2
+;  DATATYPE 
+;    Integer
+;  LONGFORM
+;    ShowMandatoryControlRow
+;  DESCRIPTION
+;    "For UI Support, controls whether a Mandatory Control Row is shown"  
+;  INPUTCLASS
+;    NotInput
+;  DEFAULT
+;    if( IfValidAnd( MandatoryLtgCtrlDescRpt[1] <> "- none specified -" ) )
+;    then 1
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    UNDEFINED
+;  ENDRULE
+;RULE NEW Spc:ShowMandatoryCtrlRow3
+;  DATATYPE 
+;    Integer
+;  LONGFORM
+;    ShowMandatoryControlRow
+;  DESCRIPTION
+;    "For UI Support, controls whether a Mandatory Control Row is shown"  
+;  INPUTCLASS
+;    NotInput
+;  DEFAULT
+;    if( IfValidAnd( MandatoryLtgCtrlDescRpt[2] <> "- none specified -" ) )
+;    then 1
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    UNDEFINED
+;  ENDRULE
+;RULE NEW Spc:ShowMandatoryCtrlRow4
+;  DATATYPE 
+;    Integer
+;  LONGFORM
+;    ShowMandatoryControlRow
+;  DESCRIPTION
+;    "For UI Support, controls whether a Mandatory Control Row is shown"  
+;  INPUTCLASS
+;    NotInput
+;  DEFAULT
+;    if( IfValidAnd( MandatoryLtgCtrlDescRpt[3] <> "- none specified -" ) )
+;    then 1
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    UNDEFINED
+;  ENDRULE
+;RULE NEW Spc:ShowMandatoryCtrlRow5
+;  DATATYPE 
+;    Integer
+;  LONGFORM
+;    ShowMandatoryControlRow
+;  DESCRIPTION
+;    "For UI Support, controls whether a Mandatory Control Row is shown"  
+;  INPUTCLASS
+;    NotInput
+;  DEFAULT
+;    if( IfValidAnd( MandatoryLtgCtrlDescRpt[4] <> "- none specified -" ) )
+;    then 1
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    UNDEFINED
+;  ENDRULE
+
+RULE Spc:MandatoryLtgCtrlCntRpt[1]
+  DESCRIPTION
+    "The quantity of each mandatory lighting control type present
+     in a space, subject to the requirements of Standards,
+     Section 130.1"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlCntRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlCntRpt[2]
+  DESCRIPTION
+    "The quantity of each mandatory lighting control type present
+     in a space, subject to the requirements of Standards,
+     Section 130.1"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlCntRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlCntRpt[3]
+  DESCRIPTION
+    "The quantity of each mandatory lighting control type present
+     in a space, subject to the requirements of Standards,
+     Section 130.1"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlCntRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlCntRpt[4]
+  DESCRIPTION
+    "The quantity of each mandatory lighting control type present
+     in a space, subject to the requirements of Standards,
+     Section 130.1"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlCntRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlCntRpt[5]
+  DESCRIPTION
+    "The quantity of each mandatory lighting control type present
+     in a space, subject to the requirements of Standards,
+     Section 130.1"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlCntRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsManAreaCtrlRpt[1]
+  DESCRIPTION
+    "Whether the control is a mandatory manual area control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsManAreaCtrlRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsManAreaCtrlRpt[2]
+  DESCRIPTION
+    "Whether the control is a mandatory manual area control"    
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsManAreaCtrlRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsManAreaCtrlRpt[3]
+  DESCRIPTION
+    "Whether the control is a mandatory manual area control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsManAreaCtrlRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsManAreaCtrlRpt[4]
+  DESCRIPTION
+    "Whether the control is a mandatory manual area control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsManAreaCtrlRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsManAreaCtrlRpt[5]
+  DESCRIPTION
+    "Whether the control is a mandatory manual area control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsManAreaCtrlRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt[1]
+  DESCRIPTION
+    "Whether the lighitng control is a multi-level control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsMultiLvlCtrlRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt[2]
+  DESCRIPTION
+    "Whether the lighitng control is a multi-level control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsMultiLvlCtrlRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt[3]
+  DESCRIPTION
+    "Whether the lighitng control is a multi-level control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsMultiLvlCtrlRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt[4]
+  DESCRIPTION
+    "Whether the lighitng control is a multi-level control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsMultiLvlCtrlRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt[5]
+  DESCRIPTION
+    "Whether the lighitng control is a multi-level control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsMultiLvlCtrlRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[1]
+  DESCRIPTION
+    "Whether the control is an auto shut-off control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[2]
+  DESCRIPTION
+    "Whether the control is an auto shut-off control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[3]
+  DESCRIPTION
+    "Whether the control is an auto shut-off control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[4]
+  DESCRIPTION
+    "Whether the control is an auto shut-off control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[5]
+  DESCRIPTION
+    "Whether the control is an auto shut-off control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsAutoShutOffCtrlRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsDayltgCtrlRpt[1]
+  DESCRIPTION
+    "Whether the control is a daylighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsDayltgCtrlRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDayltgCtrlRpt[2]
+  DESCRIPTION
+    "Whether the control is a daylighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsDayltgCtrlRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDayltgCtrlRpt[3]
+  DESCRIPTION
+    "Whether the control is a daylighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsDayltgCtrlRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDayltgCtrlRpt[4]
+  DESCRIPTION
+    "Whether the control is a daylighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsDayltgCtrlRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDayltgCtrlRpt[5]
+  DESCRIPTION
+    "Whether the control is a daylighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsDayltgCtrlRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt[1]
+  DESCRIPTION
+    "Whether the control is a demand responsive control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsDemandResponseCtrlRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt[2]
+  DESCRIPTION
+    "Whether the control is a demand responsive control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsDemandResponseCtrlRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt[3]
+  DESCRIPTION
+    "Whether the control is a demand responsive control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsDemandResponseCtrlRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt[4]
+  DESCRIPTION
+    "Whether the control is a demand responsive control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsDemandResponseCtrlRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt[5]
+  DESCRIPTION
+    "Whether the control is a demand responsive control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "NA"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsDemandResponseCtrlRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+RULE Spc:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[1]
+  DESCRIPTION
+    "Whether acceptance testing is required for the lighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  OPTION
+    No
+    Yes
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then "No"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[1] ) > 0 )
+    then u:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[1]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[2]
+  DESCRIPTION
+    "Whether acceptance testing is required for the lighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  OPTION
+    No
+    Yes
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then "No"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[2] ) > 0 )
+    then u:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[2]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[3]
+  DESCRIPTION
+    "Whether acceptance testing is required for the lighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  OPTION
+    No
+    Yes
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then "No"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[3] ) > 0 )
+    then u:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[3]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[4]
+  DESCRIPTION
+    "Whether acceptance testing is required for the lighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  OPTION
+    No
+    Yes
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then "No"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[4] ) > 0 )
+    then u:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[4]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+RULE Spc:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[5]
+  DESCRIPTION
+    "Whether acceptance testing is required for the lighting control"  
+  HELP
+    ""
+  REFERENCE 
+    Standards, Section 130.1
+  INPUTCLASS
+    Default
+  OPTION
+    No
+    Yes
+  DEFAULT
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then "No"
+    else UNDEFINED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL_PROPOSED
+    if( LocalStatus( MandatoryLtgCtrlDescRpt[5] ) > 0 )
+    then u:MandatoryLtgCtrlIsAcceptanceTestReqdRpt[5]
+    else UNDEFINED
+    endif
+  ANNUAL_BASELINE
+    UNDEFINED
+ENDRULE
+
+
+
+
+
+
+
+
+
+

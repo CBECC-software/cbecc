@@ -1,0 +1,1424 @@
+// Horizontal Fenestration - Geometry Considerations
+
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+// The main objects in the SDD are:
+//   Bldg:Space:Roof:Skylight:Polyloop
+
+// --------------  --------------------
+// Input restriction summary: 
+//  There are no restrictions, other than a match with the construction drawings or 
+//  as-built drawings. Specification of the fenestration position within its parent
+//  surface is required for the following conditions: 1) exterior shading is modeled
+//  from buildings, vegetation, other objects; or 2) if daylighting is modeled within
+//  the adjacent space.
+//
+// Baseline rule summary: 
+//  Maximum skylight area = 0.05 * conditioned roof area
+
+// ---------- ISSUES ----------
+// ISSUE: Current functionality only allows for reducing skylight size based on SRR > 5%.
+// ISSUE: Future functionality will be added to increase skylight size or add skylights based on Stds 140.3(c) reqs
+// ISSUE: Need to add proposed and baseline runs to new Skylight properties 
+
+
+// ---------- Section 5.5.7 - Fenestration ------------------------------------
+
+
+// ********** Scale Windows ***************************************************
+// This rule is loacted above other rules so that WWR will be reclaculated for
+// baseline runs AFTER any scaling is performed.  Scaling factors for the 
+// baseline runs are calculated in the default transform, so rule ordering is 
+// not problematic.
+
+// ---------- Scaling Status --------------------------------------------------
+// Identify whether skylights are to be scaled, based on Compliance Type
+RULE NEW Bldg:AddSkyltAreaFlag
+  DATATYPE 
+    Integer
+  LONGFORM
+    AdditionalSkylightAreaFlag
+  DESCRIPTION
+    "For Additions/Alterations.  Flag to identify whether skylight area is
+     increased as a result of additions"  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( sumchildren( Skylt:IsNew ) > 0 ) 
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ApplyStdSkyltScaling
+  DATATYPE 
+    Integer
+  LONGFORM
+    ApplyStandardSkylightScaling
+  DESCRIPTION
+    "Flag to identify whether skylights are to be scaled."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    0
+  SIZING_PROPOSED
+    0
+  SIZING_BASELINE
+    if( Proj:IsNewEnv = 1 ) then 
+      1 else
+    // apply user defined properties
+    if( Proj:IsNewMech = 1 ) then 
+      0 else
+    // alterations
+    if( Proj:IsAddOrAlt = 1 ) then
+      if( u:AddSkyltAreaFlag = 1 )
+      then 1 
+      else 0
+      endif
+    else 1
+    endif endif endif
+ENDRULE
+
+
+// ---------- Skylight Scaling Factor -----------------------------------------
+// TO DO: modify scale factor calcs to increase skylight size based on Stds 140.3(c) reqs
+RULE NEW Bldg:SkyltScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    SkylightScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  SIZING_PROPOSED
+    UNDEFINED
+  SIZING_BASELINE
+    switch( ApplyStdSkyltScaling )
+    case  0:
+      1
+    case 1:
+      if    (u:CondSRR <= 0)
+      then  1
+      else  u:BaseTargetCondSRR / u:CondSRR 
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NewRoofNewSkyltScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    NewRoofNewSkylightScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  SIZING_PROPOSED
+    UNCHANGED
+  SIZING_BASELINE
+    switch( ApplyStdSkyltScaling )
+    case  0:
+      1
+    case 1:
+      if    (u:NewRoofNewSkyltSRR <= 0)
+      then  1
+      else  u:NewRoofNewSkyltBaseTargetCondSRR / u:NewRoofNewSkyltSRR 
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ExsOrAltRoofNewSkyltScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredRoofNewSkylightScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  SIZING_PROPOSED
+    UNCHANGED
+  SIZING_BASELINE
+    switch( ApplyStdSkyltScaling )
+    case  0:
+      1
+    case 1:
+      if    (u:ExsOrAltRoofNewSkyltSRR <= 0)
+      then  1
+      else  (u:ExsOrAltRoofNewSkyltBaseTargetCondSRR - u:ExsOrAltRoofExsOrAltSkyltSRR) / (u:ExsOrAltRoofNewSkyltSRR)
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Delete Proposed Skylight if Existing SRR > 5% -------------------
+RULE Skylt:Action
+  DESCRIPTION
+    "Delete new Skylight if Existing SRR > 5%"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional       
+  SIZING_PROPOSED   
+    UNCHANGED
+  SIZING_BASELINE
+    switch( Bldg:ApplyStdSkyltScaling )
+    case  0:
+      UNCHANGED
+    case 1:
+      if    (u:Skylt:IsNew .AND. u:Roof:IsNew)
+      then if (zb:Bldg:NewRoofNewSkyltScaleFactor < 0)
+        then DeleteComp()
+        else UNCHANGED
+        endif
+      else if (u:Skylt:IsNew .AND. u:Roof:IsExisting)
+        then if (zb:Bldg:ExsOrAltRoofNewSkyltScaleFactor < 0)
+          then DeleteComp()
+          else UNCHANGED
+          endif
+      else UNCHANGED
+      endif
+      endif
+    default:
+      UNCHANGED
+    endswitch
+  ANNUAL
+      UNCHANGED
+  ANNUAL
+      UNCHANGED
+ENDRULE
+
+// ---------- Call Polyloop Scaling Function and Repopulate Skylight Areas ----
+RULE Skylt:Area
+  DESCRIPTION
+    "Adjust the Skylight Sizes based on Skylight Scaling Factor"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional       
+  SIZING_PROPOSED   
+    UNCHANGED
+  SIZING_BASELINE
+    switch( Bldg:ApplyStdSkyltScaling )
+    case  0:
+      UNCHANGED
+    case 1:
+      if    (u:Skylt:IsNew .AND. u:Roof:IsNew)
+      then if (zb:Bldg:NewRoofNewSkyltScaleFactor < 1)
+        then ScalePolyLoop(1, zb:Bldg:NewRoofNewSkyltScaleFactor)
+        else UNCHANGED
+        endif
+      else if (u:Skylt:IsNew .AND. u:Roof:IsExisting)
+        then if (zb:Bldg:ExsOrAltRoofNewSkyltScaleFactor < 1)
+          then ScalePolyLoop(1, zb:Bldg:ExsOrAltRoofNewSkyltScaleFactor)
+          else UNCHANGED
+          endif
+      else UNCHANGED
+      endif
+      endif
+    default:
+      UNCHANGED
+    endswitch
+  ANNUAL
+      UNCHANGED
+ENDRULE
+
+
+// ********** SRR Calculations ************************************************
+// ********** Roof ************************************************************
+RULE NEW Roof:SkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    SkylightArea
+  DESCRIPTION
+    "Area of all Skylights on the Exterior Roof"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Skylt:Area )
+  SIZING_PROPOSED
+    u:SkyltArea
+  SIZING_BASELINE
+    SumChildren( Skylt:Area )
+  ANNUAL
+    z:SkyltArea
+ENDRULE
+RULE NEW Roof:NewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    NewSkylightArea
+  DESCRIPTION
+    "Area of all new Skylights added on the Exterior Roof"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf( Skylt:Area,Skylt:IsNew )
+ENDRULE
+RULE NEW Roof:ExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "Area of all existing or altered Skylights on the Exterior Roof"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf( Skylt:Area,Skylt:IsExisting ) + SumChildrenIf( Skylt:Area,Skylt:IsAltered ) 
+ENDRULE
+
+
+// ---------- T-24 Skylight Calc, Relevant Roof Areas --------------------------
+RULE NEW Roof:CondExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorRoofArea
+  DESCRIPTION
+    "Area of exterior roof that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT
+    IF   ( IsCondExtEnv = 1 .AND. IfValidAnd ( Area > 0 ) )
+    THEN Area
+    ELSE 0
+    ENDIF
+  SIZING
+    u:CondExtRoofArea
+  ANNUAL
+    z:CondExtRoofArea
+ENDRULE
+RULE NEW Roof:CondNewExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorRoofArea
+  DESCRIPTION
+    "Area of any new exterior roof that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND.
+        IsNew .AND. IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+ENDRULE
+RULE NEW Roof:CondExsOrAltExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorRoofArea
+  DESCRIPTION
+    "Area of any existing or altered exterior wall that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND.
+       ( IsAltered .OR. IsExisting ) .AND. 
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Roof:CondExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorSkylightArea
+  DESCRIPTION
+    "Area of all skylights on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 )
+    then SumChildren( Skylt:Area ) 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExtSkyltArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1 )
+    then SumChildren( Skylt:Area ) 
+    else 0
+    endif
+  ANNUAL
+    z:CondExtSkyltArea
+ENDRULE
+RULE NEW Roof:CondNewExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorSkylightArea
+  DESCRIPTION
+    "Area of all New skylights on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1  .AND.
+       IfValidAnd ( NewSkyltArea > 0 ) )
+    then NewSkyltArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondNewExtSkyltArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1  .AND.
+       IfValidAnd ( NewSkyltArea > 0 ) )
+    then NewSkyltArea
+    else 0
+    endif
+  ANNUAL
+    z:CondNewExtSkyltArea
+ENDRULE
+RULE NEW Roof:CondExsOrAltExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorSkylightArea
+  DESCRIPTION
+    "Area of all Existing or Altered skylights on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND.
+        IfValidAnd ( ExsOrAltSkyltArea > 0 ) )
+    then ExsOrAltSkyltArea 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltExtSkyltArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1 .AND.
+        IfValidAnd ( ExsOrAltSkyltArea > 0 ) )
+    then ExsOrAltSkyltArea 
+    else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltExtSkyltArea
+ENDRULE
+
+RULE NEW Roof:CondNewRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewRoofNewSkylightArea
+  DESCRIPTION
+    "Area of all New Skylights on new exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsNew .AND. IfValidAnd( CondNewExtSkyltArea > 0 ) )
+      then CondNewExtSkyltArea
+      else 0
+    endif
+  SIZING_PROPOSED
+    u:CondNewRoofNewSkyltArea
+  SIZING_BASELINE
+    if( IsNew .AND. IfValidAnd( CondNewExtSkyltArea > 0 ) )
+      then CondNewExtSkyltArea
+      else 0
+    endif
+  ANNUAL
+    z:CondNewRoofNewSkyltArea
+ENDRULE
+RULE NEW Roof:CondExsOrAltRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofNewSkylightArea
+  DESCRIPTION
+    "Area of all New Skylights on exiting or altered exterior roofs 
+     that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( ( IsAltered .OR. IsExisting ) .AND. 
+        IfValidAnd( CondNewExtSkyltArea > 0 ) )
+      then CondNewExtSkyltArea
+      else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofNewSkyltArea
+  SIZING_BASELINE
+    if( ( IsAltered .OR. IsExisting ) .AND. 
+        IfValidAnd( CondNewExtSkyltArea > 0 ) )
+      then CondNewExtSkyltArea
+      else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltRoofNewSkyltArea
+ENDRULE
+RULE NEW Roof:CondExsOrAltRoofExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "Area of all Existing or Altered Skylights on exiting or altered roofs 
+     that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( ( IsAltered .OR. IsExisting ) .AND. 
+        IfValidAnd( CondExsOrAltExtSkyltArea > 0 ) )
+      then CondExsOrAltExtSkyltArea
+      else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofExsOrAltSkyltArea
+  SIZING_BASELINE
+    if( ( IsAltered .OR. IsExisting ) .AND. 
+        IfValidAnd( CondExsOrAltExtSkyltArea > 0 ) )
+      then CondExsOrAltExtSkyltArea
+      else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltRoofExsOrAltSkyltArea
+ENDRULE
+
+
+// ********** Space ***********************************************************
+RULE NEW Spc:CondExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorRoofArea
+  DESCRIPTION
+    "The Total Conditioned Exterior Roof Area (excluding DEMISING SURFACES)
+     of a space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput          
+  DEFAULT
+    IF   (CondgType = "DirectlyConditioned" .OR. 
+          CondgType = "IndirectlyConditioned")
+    THEN SumChildren( Roof:Area )
+    ELSE 0
+    ENDIF
+  SIZING
+    u:CondExtRoofArea
+  ANNUAL
+    z:CondExtRoofArea
+ENDRULE
+RULE NEW Spc:CondExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorSkylightArea
+  DESCRIPTION
+    "The Total Exterior Skylight Area of a space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput         
+  DEFAULT
+    IF   (CondgType = "DirectlyConditioned" .OR. 
+          CondgType = "IndirectlyConditioned")
+    THEN SumChildren( Roof:SkyltArea )
+    ELSE   0
+    ENDIF
+  SIZING_PROPOSED
+    u:CondExtSkyltArea
+  SIZING_BASELINE
+    IF   (CondgType = "DirectlyConditioned" .OR. 
+          CondgType = "IndirectlyConditioned")
+    THEN SumChildren( Roof:SkyltArea )
+    ELSE   0
+    ENDIF
+  ANNUAL
+    z:CondExtSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Roof Areas -----------------------------------
+RULE NEW Spc:CondNewExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorRoofArea
+  DESCRIPTION
+    "The total New Exterior roof area adjacent to conditioned space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Roof:CondNewExtRoofArea )
+ENDRULE
+RULE NEW Spc:CondNewRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewRoofNewSkylightArea
+  DESCRIPTION
+    "The total skylight area on new roof area adjacent to conditioned 
+     space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Roof:CondNewRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondNewRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Roof:CondNewRoofNewSkyltArea )
+  ANNUAL
+    z:CondNewRoofNewSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Roof Areas ------------------
+RULE NEW Spc:CondExsOrAltExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorRoofArea
+  DESCRIPTION
+    "The total existing or altered roof area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Roof:CondExsOrAltExtRoofArea )
+ENDRULE
+RULE NEW Spc:CondExsOrAltRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofNewSkylightArea
+  DESCRIPTION
+    "The total existing or altered skylight area on existing or altered roof."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Roof:CondExsOrAltRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Roof:CondExsOrAltRoofNewSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofNewSkyltArea
+ENDRULE
+RULE NEW Spc:CondExsOrAltRoofExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior skylight area on existing or altered 
+     roofs adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Roof:CondExsOrAltRoofExsOrAltSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofExsOrAltSkyltArea
+  SIZING_BASELINE
+    SumChildren( Roof:CondExsOrAltRoofExsOrAltSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofExsOrAltSkyltArea
+ENDRULE
+
+// ********** Space w/ Multipliers ********************************************
+RULE NEW Spc:MultCondExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExteriorRoofArea
+  DESCRIPTION
+    "The Total Conditioned Exterior Roof Area of a space including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput          
+  DEFAULT
+    CondExtRoofArea*Spc:Mult
+  SIZING
+    u:MultCondExtRoofArea
+  ANNUAL
+    z:MultCondExtRoofArea
+ENDRULE
+RULE NEW Spc:MultCondExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExteriorSkylightArea
+  DESCRIPTION
+    "The Total Exterior Skylight Area of a space including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput         
+  DEFAULT
+    CondExtSkyltArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExtSkyltArea
+  SIZING_BASELINE
+    CondExtSkyltArea*Spc:Mult    
+  ANNUAL
+    z:MultCondExtSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Roof Areas -----------------------------------
+RULE NEW Spc:MultCondNewExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedNewExteriorRoofArea
+  DESCRIPTION
+    "The total New Exterior roof area adjacent to conditioned space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondNewExtRoofArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultCondNewRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedNewRoofNewSkylightArea
+  DESCRIPTION
+    "The total skylight area on new roof area adjacent to conditioned 
+     space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondNewRoofNewSkyltArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondNewRoofNewSkyltArea
+  SIZING_BASELINE
+    CondNewRoofNewSkyltArea*Spc:Mult  
+  ANNUAL
+    z:MultCondNewRoofNewSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Roof Areas ------------------
+RULE NEW Spc:MultCondExsOrAltExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredExteriorRoofArea
+  DESCRIPTION
+    "The total existing or altered roof area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondExsOrAltExtRoofArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultCondExsOrAltRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredRoofNewSkylightArea
+  DESCRIPTION
+    "The total existing or altered skylight area on existing or altered roof."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondExsOrAltRoofNewSkyltArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExsOrAltRoofNewSkyltArea
+  SIZING_BASELINE
+    CondExsOrAltRoofNewSkyltArea*Spc:Mult
+  ANNUAL
+    z:MultCondExsOrAltRoofNewSkyltArea
+ENDRULE
+RULE NEW Spc:MultCondExsOrAltRoofExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredRoofExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior skylight area on existing or altered 
+     roofs adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondExsOrAltRoofExsOrAltSkyltArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExsOrAltRoofExsOrAltSkyltArea
+  SIZING_BASELINE
+    CondExsOrAltRoofExsOrAltSkyltArea*Spc:Mult
+  ANNUAL
+    z:MultCondExsOrAltRoofExsOrAltSkyltArea
+ENDRULE
+
+// ********** Story ***********************************************************
+RULE NEW Story:CondExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorRoofArea
+  DESCRIPTION
+    "Story Conditioned Exterior Roof Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Space:MultCondExtRoofArea)
+  SIZING
+    u:CondExtRoofArea
+  ANNUAL
+    z:CondExtRoofArea
+ENDRULE
+RULE NEW Story:CondExtSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorSkylightArea
+  DESCRIPTION
+    "Story Conditioned Exterior Skylight Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Space:MultCondExtSkyltArea)
+  SIZING_PROPOSED
+    u:CondExtSkyltArea
+  SIZING_BASELINE
+    SumChildren(Space:MultCondExtSkyltArea)
+  ANNUAL
+    z:CondExtSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Roof Areas -----------------------------------
+RULE NEW Story:CondNewExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorRoofArea
+  DESCRIPTION
+    "The total New Exterior roof area adjacent to conditioned space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultCondNewExtRoofArea )
+ENDRULE
+RULE NEW Story:CondNewRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewRoofNewSkylightArea
+  DESCRIPTION
+    "The total skylight area on new roof area adjacent to conditioned 
+     space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultCondNewRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondNewRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Spc:MultCondNewRoofNewSkyltArea )
+  ANNUAL
+    z:CondNewRoofNewSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Roof Areas ------------------
+RULE NEW Story:CondExsOrAltExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorRoofArea
+  DESCRIPTION
+    "The total existing or altered roof area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultCondExsOrAltExtRoofArea )
+ENDRULE
+RULE NEW Story:CondExsOrAltRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofNewSkylightArea
+  DESCRIPTION
+    "The total existing or altered skylight area on existing or altered roof."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultCondExsOrAltRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Spc:MultCondExsOrAltRoofNewSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofNewSkyltArea
+ENDRULE
+RULE NEW Story:CondExsOrAltRoofExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior skylight area on existing or altered 
+     roofs adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultCondExsOrAltRoofExsOrAltSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofExsOrAltSkyltArea
+  SIZING_BASELINE
+    SumChildren( Spc:MultCondExsOrAltRoofExsOrAltSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofExsOrAltSkyltArea
+ENDRULE
+
+// ********** Building ********************************************************
+RULE Bldg:CondExtRoofArea
+  DESCRIPTION
+    "Building Conditioned Exterior Roof Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:CondExtRoofArea)
+  SIZING
+    u:CondExtRoofArea
+  ANNUAL
+    z:CondExtRoofArea
+ENDRULE
+RULE Bldg:CondExtSkyltArea
+  DESCRIPTION
+    "Building Conditioned Exterior Skylight Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:CondExtSkyltArea)
+  SIZING_PROPOSED
+    u:CondExtSkyltArea
+  SIZING_BASELINE
+    SumChildren(Story:CondExtSkyltArea)
+  ANNUAL
+    z:CondExtSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Roof Areas -----------------------------------
+RULE NEW Bldg:CondNewExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorRoofArea
+  DESCRIPTION
+    "The total New Exterior roof area adjacent to conditioned space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Story:CondNewExtRoofArea )
+ENDRULE
+RULE NEW Bldg:CondNewRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewRoofNewSkylightArea
+  DESCRIPTION
+    "The total skylight area on new roof area adjacent to conditioned 
+     space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Story:CondNewRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondNewRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Story:CondNewRoofNewSkyltArea )
+  ANNUAL
+    z:CondNewRoofNewSkyltArea
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Roof Areas ------------------
+RULE NEW Bldg:CondExsOrAltExtRoofArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorRoofArea
+  DESCRIPTION
+    "The total existing or altered roof area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Story:CondExsOrAltExtRoofArea )
+ENDRULE
+RULE NEW Bldg:CondExsOrAltRoofNewSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofNewSkylightArea
+  DESCRIPTION
+    "The total existing or altered skylight area on existing or altered roof."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Story:CondExsOrAltRoofNewSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofNewSkyltArea
+  SIZING_BASELINE
+    SumChildren( Story:CondExsOrAltRoofNewSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofNewSkyltArea
+ENDRULE
+RULE NEW Bldg:CondExsOrAltRoofExsOrAltSkyltArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredRoofExistingOrAlteredSkylightArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior skylight area on existing or altered 
+     roofs adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Story:CondExsOrAltRoofExsOrAltSkyltArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltRoofExsOrAltSkyltArea
+  SIZING_BASELINE
+    SumChildren( Story:CondExsOrAltRoofExsOrAltSkyltArea )
+  ANNUAL
+    z:CondExsOrAltRoofExsOrAltSkyltArea
+ENDRULE
+
+// ********** Skylight to Roof Ratio (SRR) ************************************
+RULE Bldg:CondSRR
+
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondExtRoofArea > 0) .AND.
+        IfValidAnd( CondExtSkyltArea > 0 ) )
+    then  CondExtSkyltArea / CondExtRoofArea
+    else  0
+    endif
+  SIZING_PROPOSED
+    u:CondSRR
+  SIZING_BASELINE
+    if( IfValidAnd( CondExtRoofArea > 0) .AND.
+        IfValidAnd( CondExtSkyltArea > 0 ) )
+    then  CondExtSkyltArea / CondExtRoofArea
+    else  0
+    endif
+  ANNUAL  
+    z:CondSRR
+ENDRULE
+RULE NEW Bldg:NewRoofNewSkyltSRR
+  DATATYPE
+    Float
+  LONGFORM
+    NewRoofNewSkylightSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondNewExtRoofArea > 0) .AND.
+        IfValidAnd( CondNewRoofNewSkyltArea > 0 ) )
+    then  CondNewRoofNewSkyltArea / CondNewExtRoofArea
+    else  0
+    endif
+  SIZING_PROPOSED
+    u:NewRoofNewSkyltSRR
+  SIZING_BASELINE
+    if( IfValidAnd( CondNewExtRoofArea > 0) .AND.
+        IfValidAnd( CondNewRoofNewSkyltArea > 0 ) )
+    then  CondNewRoofNewSkyltArea / CondNewExtRoofArea
+    else  0
+    endif
+  ANNUAL  
+    z:NewRoofNewSkyltSRR
+ENDRULE
+RULE NEW Bldg:ExsOrAltRoofNewSkyltSRR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredRoofNewSkylightSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondExsOrAltExtRoofArea > 0) .AND.
+        IfValidAnd( CondExsOrAltRoofNewSkyltArea > 0 ) )
+    then  CondExsOrAltRoofNewSkyltArea / CondExsOrAltExtRoofArea
+    else  0
+    endif
+  SIZING_PROPOSED
+    u:ExsOrAltRoofNewSkyltSRR
+  SIZING_BASELINE
+    if( IfValidAnd( CondExsOrAltExtRoofArea > 0) .AND.
+        IfValidAnd( CondExsOrAltRoofNewSkyltArea > 0 ) )
+    then  CondExsOrAltRoofNewSkyltArea / CondExsOrAltExtRoofArea
+    else  0
+    endif
+  ANNUAL  
+    z:ExsOrAltRoofNewSkyltSRR
+ENDRULE
+RULE NEW Bldg:ExsOrAltRoofExsOrAltSkyltSRR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredRoofExistingOrAlteredSkylightSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondExsOrAltExtRoofArea > 0) .AND.
+        IfValidAnd( CondExsOrAltRoofExsOrAltSkyltArea > 0 ) )
+    then  CondExsOrAltRoofExsOrAltSkyltArea / CondExsOrAltExtRoofArea
+    else  0
+    endif
+  SIZING_PROPOSED
+    u:ExsOrAltRoofExsOrAltSkyltSRR
+  SIZING_BASELINE
+    if( IfValidAnd( CondExsOrAltExtRoofArea > 0) .AND.
+        IfValidAnd( CondExsOrAltRoofExsOrAltSkyltArea > 0 ) )
+    then  CondExsOrAltRoofExsOrAltSkyltArea / CondExsOrAltExtRoofArea
+    else  0
+    endif
+  ANNUAL  
+    z:ExsOrAltRoofExsOrAltSkyltSRR
+ENDRULE
+
+// ---------- Calculate Target WWR's ------------------------------------------
+RULE NEW Bldg:BaseTargetCondSRR
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineTargetConditionedSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondExtRoofArea > 0 ) .AND.
+        IfValidAnd( CondSRR >= 0 ) )
+    then if (HasAtriumGT55Ft = 1)
+      then Min( CondSRR, 0.10 )
+      else Min( CondSRR, 0.05 )
+    endif
+    else  0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Bldg:NewRoofNewSkyltBaseTargetCondSRR
+  DATATYPE
+    Float
+  LONGFORM
+    NewRoofNewSkylightBaselineTargetConditionedSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondNewExtRoofArea > 0 ) .AND.
+        IfValidAnd( CondSRR >= 0 ) )
+    then if (HasAtriumGT55Ft = 1)
+      then Min( NewRoofNewSkyltSRR, 0.10 )
+      else Min( NewRoofNewSkyltSRR, 0.05 )
+    endif
+    else  0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ExsOrAltRoofNewSkyltBaseTargetCondSRR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredRoofNewSkylightBaselineTargetConditionedSkylightRoofRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( IfValidAnd( CondExsOrAltExtRoofArea > 0 ) .AND.
+        IfValidAnd( CondSRR >= 0 ) )
+    then if (HasAtriumGT55Ft = 1)
+      then Min( (ExsOrAltRoofNewSkyltSRR + ExsOrAltRoofExsOrAltSkyltSRR ) , 0.10 )
+      else Min( (ExsOrAltRoofNewSkyltSRR + ExsOrAltRoofExsOrAltSkyltSRR ) , 0.05 )
+    endif
+    else  0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Project:Building:SRRCat
+  DATATYPE
+    String
+  LONGFORM
+    SkylightRoofRatioCategory
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    IF(LocalStatus(CondSRR) = 0)
+    THEN UNCHANGED
+    ELSE IF(CondSRR <= 0.20)
+      THEN "LTE 0.2"
+      ELSE IF(CondSRR > 0.20) 
+        THEN "GT 0.2"
+        ELSE UNCHANGED
+        ENDIF
+      ENDIF
+    ENDIF  
+  SIZING_PROPOSED
+    u:SRRCat  
+  SIZING_BASELINE
+    IF(LocalStatus(CondSRR) = 0)
+    THEN UNCHANGED
+    ELSE IF(CondSRR <= 0.20)
+      THEN "LTE 0.2"
+      ELSE IF(CondSRR > 0.20) 
+        THEN "GT 0.2"
+        ELSE UNCHANGED
+        ENDIF
+      ENDIF
+    ENDIF 
+  ANNUAL
+    z:SRRCat
+ENDRULE
+
+
+
+
+
+
+

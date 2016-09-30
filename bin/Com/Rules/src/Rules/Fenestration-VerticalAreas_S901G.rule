@@ -1,0 +1,991 @@
+// Vertical Fenestration - Geometry Considerations
+
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// ---------- Section 3.4.8 - Fenestration ------------------------------------
+
+
+// ********** Scale Windows ***************************************************
+// This rule is loacted above other rules so that WWR will be reclaculated for
+// baseline runs AFTER any scaling is performed.  Scaling factors for the 
+// baseline runs are calculated in the default transform, so rule ordering is 
+// not problematic.
+
+// ---------- Scaling Status --------------------------------------------------
+// Identify whether windows are to be scaled, based on Compliance Type
+
+RULE NEW Bldg:AddWinAreaFlag
+  DATATYPE 
+    Integer
+  LONGFORM
+    AdditionalWindowAreaFlag
+  DESCRIPTION
+    "For Additions/Alterations.  Flag to identify whether window area is
+     increased."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( sumchildren( Win:IsNew ) > 0 ) 
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ApplyStdWinScaling
+  DATATYPE 
+    Integer
+  LONGFORM
+    ApplyStandardWindowScaling
+  DESCRIPTION
+    "Flag to identify whether windows are to be scaled."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    0
+  SIZING_PROPOSED
+    0
+  SIZING_BASELINE
+    if( Proj:IsNewEnv = 1 ) then 
+      1 else
+    // apply user defined properties
+    if( Proj:IsNewMech = 1 ) then 
+      0 else
+    // alterations
+    if( Proj:IsAddOrAlt = 1 ) then
+      if( u:AddWinAreaFlag = 1 )
+      then 1 
+      else 0
+      endif
+    else 1
+    endif endif endif
+  ANNUAL
+    z:ApplyStdWinScaling
+ENDRULE
+
+// ---------- Baseline Window Scaling Factor ----------------------------------
+RULE NEW Bldg:ResWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWindowScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput 
+  SIZING
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if    (u:ResWWR <= 0) 
+      then  1
+      else  u:ResBaseTargetWWR / u:ResWWR 
+      endif
+    default: 
+      1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NonResWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    NonesidentialWindowScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput 
+  SIZING
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if    (u:NonResWWR <= 0) 
+      then  1
+      else  u:NonResBaseTargetWWR / u:NonResWWR 
+      endif
+    default: 
+      1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:SemiExtWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWindowScaleFactor
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput 
+  SIZING
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if    (u:SemiExtWWR <= 0) 
+      then  1
+      else  u:SemiExtBaseTargetWWR / u:SemiExtWWR 
+      endif
+    default: 
+      1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+
+// ---------- Call Polyloop Scaling Function and Repopulate Window Areas ------
+RULE Win:Area
+  DESCRIPTION
+    "Adjust the Window Sizes based on Residential, Non-Residential or
+     Semi-Exterior Scaling Factor"  
+  HELP
+    ""  
+  SIZING
+    switch( Bldg:ApplyStdWinScaling )
+    case  0:
+      UNCHANGED
+    case  1: 
+      if( IsResWin .AND.
+          Bldg:ResWinScaleFactor < 1 )
+      then ScalePolyLoop( 0, Bldg:ResWinScaleFactor )
+      else if( IsNonResWin .AND.
+               Bldg:NonResWinScaleFactor < 1 )
+      then ScalePolyLoop( 0, Bldg:NonResWinScaleFactor )
+      else if( IsSemiExterior .AND.
+               Bldg:SemiExtWinScaleFactor < 1 )
+      then ScalePolyLoop( 0, Bldg:SemiExtWinScaleFactor )
+      else UNCHANGED
+      endif endif endif
+    default:
+      UNCHANGED
+    endswitch
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+
+// ********** WWR Calculations ************************************************
+// ********** Exterior Wall Parameters for WWR Calcs **************************
+RULE NEW ExtWall:WinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WinArea
+  DESCRIPTION
+    "Area of all Windows on the Exterior Wall."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    SumChildren( Win:Area )    
+  CHECKSIM
+    if( IfValidAnd( u:WinArea >= u:Area ) )
+    then PostError( "Exterior Wall '%s' has window area greater than or equal
+                    to total wall area.  Window area must be reduced, or wall
+                    area increased.", u:Name )
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:WinArea
+  SIZING_BASELINE
+    SumChildren( Win:Area )
+  ANNUAL
+    z:WinArea
+ENDRULE
+// NOTE: Data model does not support windows on interior walls
+
+// ---------- 90.1 WWR Calc, Relevant Areas -----------------------------------
+RULE NEW ExtWall:ResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWallArea
+  DESCRIPTION
+    "Area of exterior wall that is adjacent to residential space.  "  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsResExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:ResExtWallArea
+  SIZING_BASELINE
+    if( IsResExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  ANNUAL
+    z:ResExtWallArea
+ENDRULE
+RULE NEW ExtWall:NonResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWallArea
+  DESCRIPTION
+    "Area of exterior wall that is adjacent to nonresidential space.  "  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsNonResExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:NonResExtWallArea
+  SIZING_BASELINE
+    if( IsNonResExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  ANNUAL
+    z:NonResExtWallArea
+ENDRULE
+RULE NEW ExtWall:SemiExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWallArea
+  DESCRIPTION
+    "Area of exterior wall that is classified as Semi-Exterior Envelope.  "  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsSemiExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:SemiExtWallArea
+  SIZING_BASELINE
+    if( IsSemiExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  ANNUAL
+    z:SemiExtWallArea
+ENDRULE
+
+RULE NEW ExtWall:ResExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWindowArea
+  DESCRIPTION
+    "Area of all Windows on the exterior wall that is adjacent to Residential
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsResExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:ResExtWinArea
+  SIZING_BASELINE
+    if( IsResExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  ANNUAL
+    z:ResExtWinArea
+ENDRULE
+RULE NEW ExtWall:NonResExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWindowArea
+  DESCRIPTION
+    "Area of all Windows on the exterior wall that is adjacent to non-residential
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsNonResExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:NonResExtWinArea
+  SIZING_BASELINE
+    if( IsNonResExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  ANNUAL
+    z:NonResExtWinArea
+ENDRULE
+RULE NEW ExtWall:SemiExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWindowArea
+  DESCRIPTION
+    "Area of all Windows on the exterior wall that is adjacent to semi-exterior
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsSemiExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:SemiExtWinArea
+  SIZING_BASELINE
+    if( IsSemiExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  ANNUAL
+    z:SemiExtWinArea
+ENDRULE
+
+
+// ---------- 90.1 WWR Calc, Relevant Areas -----------------------------------
+
+RULE NEW Spc:ResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWallArea
+  DESCRIPTION
+    "The Total Residential Exterior Wall Area 
+     (including DEMISING walls) of a space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:Area, ExtWall:IsResExtEnv == 1) +
+    SumChildrenIf(IntWall:Area, IntWall:IsResExtEnv == 1)
+  SIZING
+   SumChildrenIf(ExtWall:Area, ExtWall:IsResExtEnv == 1) +
+   SumChildrenIf(IntWall:Area, IntWall:IsResExtEnv == 1)
+  ANNUAL
+    z:ResExtWallArea
+ENDRULE
+RULE NEW Spc:NonResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWallArea
+  DESCRIPTION
+    "The Total Non-Residential Exterior Wall Area 
+     (including DEMISING walls) of a space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:Area, ExtWall:IsNonResExtEnv == 1) +
+    SumChildrenIf(IntWall:Area, IntWall:IsNonResExtEnv == 1)
+  SIZING
+    SumChildrenIf(ExtWall:Area, ExtWall:IsNonResExtEnv == 1) +
+    SumChildrenIf(IntWall:Area, IntWall:IsNonResExtEnv == 1)
+  ANNUAL
+    z:NonResExtWallArea
+ENDRULE
+RULE NEW Spc:SemiExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWallArea
+  DESCRIPTION
+    "The Total Semi-Exterior Wall Area 
+     (including DEMISING walls) of a space"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:Area, ExtWall:IsSemiExtEnv == 1) +
+    SumChildrenIf(IntWall:Area, IntWall:IsSemiExtEnv == 1)
+  SIZING
+    SumChildrenIf(ExtWall:Area, ExtWall:IsSemiExtEnv == 1) +
+    SumChildrenIf(IntWall:Area, IntWall:IsSemiExtEnv == 1)
+  ANNUAL
+    z:SemiExtWallArea
+ENDRULE
+
+RULE NEW Spc:ResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWindowArea
+  DESCRIPTION
+    "Space Residential Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf( Win:Area, Win:IsResWin == 1 )
+  SIZING
+    SumChildrenIf( Win:Area, Win:IsResWin == 1 )
+  ANNUAL
+    z:ResExtWinArea
+ENDRULE
+RULE NEW Spc:NonResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWindowArea
+  DESCRIPTION
+    "Space Non-Residential Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf( Win:Area, Win:IsNonResWin == 1 )
+  SIZING
+    SumChildrenIf( Win:Area, Win:IsNonResWin == 1 )
+  ANNUAL
+    z:NonResExtWinArea
+ENDRULE
+RULE NEW Spc:SemiExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWindowArea
+  DESCRIPTION
+    "Space SemiExterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf( Win:Area, Win:IsSemiExterior == 1 )
+  SIZING
+    SumChildrenIf( Win:Area, Win:IsSemiExterior == 1 )
+  ANNUAL
+    z:SemiExtWinArea
+ENDRULE
+
+
+// ---------- 90.1 WWR Calc, Relevant Areas -----------------------------------
+
+RULE NEW Spc:MultResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedResidentialExteriorWallArea
+  DESCRIPTION
+    "The Total Residential Exterior Wall Area 
+     (including DEMISING walls) of a space including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    ResExtWallArea*Spc:Mult
+  SIZING
+    ResExtWallArea*Spc:Mult
+  ANNUAL
+    z:MultResExtWallArea
+ENDRULE
+RULE NEW Spc:MultNonResExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNonResidentialExteriorWallArea
+  DESCRIPTION
+    "The Total Non-Residential Exterior Wall Area 
+     (including DEMISING walls) of a space including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    NonResExtWallArea*Spc:Mult 
+  SIZING
+    NonResExtWallArea*Spc:Mult
+  ANNUAL
+    z:MultNonResExtWallArea
+ENDRULE
+RULE NEW Spc:MultSemiExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSemiExteriorWallArea
+  DESCRIPTION
+    "The Total Semi-Exterior Wall Area 
+     (including DEMISING walls) of a space including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SemiExtWallArea*Spc:Mult 
+  SIZING
+    SemiExtWallArea*Spc:Mult
+  ANNUAL
+    z:MultSemiExtWallArea
+ENDRULE
+
+RULE NEW Spc:MultResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedResidentialExteriorWindowArea
+  DESCRIPTION
+    "Space Residential Exterior Window Area including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    ResExtWinArea*Spc:Mult
+  SIZING
+    ResExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultResExtWinArea
+ENDRULE
+RULE NEW Spc:MultNonResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNonResidentialExteriorWindowArea
+  DESCRIPTION
+    "Space Non-Residential Exterior Window Area including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    NonResExtWinArea*Spc:Mult
+  SIZING
+    NonResExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultNonResExtWinArea
+ENDRULE
+RULE NEW Spc:MultSemiExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSemiExteriorWindowArea
+  DESCRIPTION
+    "Space SemiExterior Window Area including space multipliers"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SemiExtWinArea*Spc:Mult
+  SIZING
+    SemiExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultSemiExtWinArea
+ENDRULE
+
+
+// ---------- 90.1 WWR Calc, Relevant Areas -----------------------------------
+
+RULE NEW Bldg:ResExtWallArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWallArea
+  DESCRIPTION
+    "Building Residential Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultResExtWallArea )
+  SIZING
+    SumChildren( Spc:MultResExtWallArea )
+  ANNUAL
+    z:ResExtWallArea
+ENDRULE
+RULE NEW Bldg:NonResExtWallArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWallArea
+  DESCRIPTION
+    "Building NonResidential Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultNonResExtWallArea )
+  SIZING
+    SumChildren( Spc:MultNonResExtWallArea )
+  ANNUAL
+    z:NonResExtWallArea
+ENDRULE
+RULE NEW Bldg:SemiExtWallArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWallArea
+  DESCRIPTION
+    "Building Semi-Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultSemiExtWallArea )
+  SIZING
+    SumChildren( Spc:MultSemiExtWallArea )
+  ANNUAL
+    z:SemiExtWallArea
+ENDRULE
+
+RULE NEW Bldg:ResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialExteriorWindowArea
+  DESCRIPTION
+    "Building Residential Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultResExtWinArea )
+  SIZING
+    SumChildren( Spc:MultResExtWinArea )
+  ANNUAL
+    z:ResExtWinArea
+ENDRULE
+RULE NEW Bldg:NonResExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialExteriorWindowArea
+  DESCRIPTION
+    "Building Non-Residential Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultNonResExtWinArea )
+  SIZING
+    SumChildren( Spc:MultNonResExtWinArea )
+  ANNUAL
+    z:NonResExtWinArea
+ENDRULE
+RULE NEW Bldg:SemiExtWinArea
+  RULESETS 
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWindowArea
+  DESCRIPTION
+    "Building SemiExterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( Spc:MultSemiExtWinArea )
+  SIZING
+    SumChildren( Spc:MultSemiExtWinArea )
+  ANNUAL
+    z:SemiExtWinArea
+ENDRULE
+
+// ********** 90.1 Exterior Window to Wall Ratios (WWR) ***********************
+//  includes demising surfaces and/or windows in demising surfaces as per
+//  90.1 Rules for calculating WWR
+
+RULE NEW Bldg:ResWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWindowWallRatio
+  DESCRIPTION
+    "Window Wall Ratio calculated for windows and walls associated with 
+     residential spaces" 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if ( IfValidAnd( ResExtWallArea > 0 ) .AND.
+         IfValidAnd( ResExtWinArea > 0 ) )
+    then ResExtWinArea/ResExtWallArea
+    else 0
+    endif
+  SIZING  //  Recalculate in case window size is adjusted in either prop or base transform
+    if ( IfValidAnd( ResExtWallArea > 0 ) .AND.
+         IfValidAnd( ResExtWinArea > 0 ) )
+    then ResExtWinArea/ResExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:ResWWR
+ENDRULE
+RULE NEW Bldg:NonResWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialWindowWallRatio
+  DESCRIPTION
+    "Window Wall Ratio calculated for windows and walls associated with 
+     non residential spaces.  Does not include semi-exterior surfaces."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if ( IfValidAnd( NonResExtWallArea > 0 ) .AND.
+         IfValidAnd( NonResExtWinArea > 0 ) )
+    then NonResExtWinArea/NonResExtWallArea
+    else 0
+    endif
+  SIZING  //  Recalculate in case window size is adjusted in either prop or base transform
+    if ( IfValidAnd( NonResExtWallArea > 0 ) .AND.
+         IfValidAnd( NonResExtWinArea > 0 ) )
+    then NonResExtWinArea/NonResExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NonResWWR
+ENDRULE
+RULE NEW Bldg:SemiExtWWR
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorWindowWallRatio
+  DESCRIPTION
+    "Window Wall Ratio calculated for semi-exterior windows and walls."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if ( IfValidAnd( SemiExtWallArea > 0 ) .AND.
+         IfValidAnd( SemiExtWinArea > 0 ) )
+    then SemiExtWinArea/SemiExtWallArea
+    else 0
+    endif
+  SIZING  //  Recalculate in case window size is adjusted in either prop or base transform
+    if ( IfValidAnd( SemiExtWallArea > 0 ) .AND.
+         IfValidAnd( SemiExtWinArea > 0 ) )
+    then SemiExtWinArea/SemiExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:SemiExtWWR
+ENDRULE
+
+RULE NEW Bldg:ResBaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialBaselineTargetWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( ResExtWallArea > 0 ) ) 
+    then  Min(ResWWR, 0.40 )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NonResBaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaselineTargetWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( NonResExtWallArea > 0 ) ) 
+    then  Min(NonResWWR, 0.40 )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:SemiExtBaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    SemiExteriorBaselineTargetWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( SemiExtWallArea > 0 ) ) 
+    then  Min(SemiExtWWR, 0.40 )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+
+

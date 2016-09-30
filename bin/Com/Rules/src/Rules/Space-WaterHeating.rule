@@ -1,0 +1,1568 @@
+// Space Data for Water Heating
+// For all Space Types with Hot Water Heating Rates
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//
+
+// 
+// --------- The Area of a Space (Including Multipliers) if it is HighRiseRes or Hotel/Motel ------------
+//
+RULE NEW Spc:ResArea
+  LONGFORM
+    ResidentialArea
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the area of a space if it is High-Rise Res or Hotel/Motel (including multipliers)."
+  UNITS
+    ft2
+  DEFAULT
+    if( SpcFunc = "High-Rise Residential Living Spaces" ) then
+      DwellingUnitSpcTotAreaWithMult
+    else if( SpcFunc = "Hotel/Motel Guest Room" ) then
+      FlrAreaWithMult
+    else 0
+    endif endif
+ENDRULE
+
+// -------------- Space Is Res and Uses Combo System ---------------------------
+// 
+RULE NEW Spc:IsResAndCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialAndComboDHWHeating
+  DESCRIPTION
+    "A flag to identify spaces which are residential but use combo system 
+     space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(SHWFluidSegRef) > 0 .AND. IsRes )
+    then 1
+    else 0
+    endif
+  CHECKCODE
+    if( IsResAndCombo = 0 .OR. 
+        IfValidAnd( SHWFluidSegRef:ParentFluidSysRef:CoilHtgTotCap > 0 ) )
+//    if( IsResAndCombo = 0 .OR. 
+//        IfValidAnd( SHWFluidSegRef:ParentFluidSysRef:CoilHtgTotCap > 0 ) .OR.
+//        Proj:ExcludeWtrHtg = 1 ) 
+    then
+      UNCHANGED
+    else
+      PostError("High-Rise Residential Living Spaces and Hotel/Motel Guest 
+                 Rooms may be assigned to SHW fluid systems only if they are 
+                 heated by a combination SHW/heating system.  Space '%s' 
+                 should have a Res DHW system assigned.",Name)
+    endif
+ENDRULE
+
+// -------------- Space Is Res and NonCombo --------------------
+// 
+RULE NEW Spc:IsResAndNonCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialAndNonComboDHWHeating
+  DESCRIPTION
+    "A flag to identify spaces which are residential and do not use 
+     combo system space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(ResDHWSysRef) > 0 .AND.
+       (SpcFunc = "High-Rise Residential Living Spaces" .OR. 
+        SpcFunc = "Hotel/Motel Guest Room") )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Nonres space that is assigned to a combo system --------------
+// 
+RULE NEW Spc:IsNonResAndCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialAndComboDHWHeating
+  DESCRIPTION
+    "A flag to identify spaces which are non-residential but use 
+     combo system space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( SHWFluidSegRef:ParentFluidSysRef:CoilHtgTotCap > 0 ) .AND. 
+        IsNonRes )
+    then 1
+    else 0
+    endif
+//  CHECKCODE
+//    if( IfValidAnd( SHWFluidSegRef:ParentFluidSysRef:CoilHtgTotCap > 0 ) .AND. 
+//        IsNonRes )
+//    then
+//      PostError("Space '%s' is nonresidential and has a combination 
+//                 heating/service hot water system assigned to it.  This is not 
+//                 allowed.  Assign an SHW system that does not include any 
+//                 heating coils.",Name)
+//    else UNCHANGED
+//    endif
+ENDRULE
+
+// -------------- Project has ExcptCondWtrHtr = Yes ----------------------------
+// 
+RULE NEW Proj:ExcludeWtrHtg
+  DATATYPE
+    Integer
+  LONGFORM
+    ExcludeWaterHeating
+  DESCRIPTION
+    "A flag to identify projects that have the exceptional condition Is 
+     Service/Domestic water heating excluded from this building? set to Yes."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ExcptCondWtrHtr = "Yes" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Project has ExcptCondWtrHtr = No -----------------------------
+// 
+RULE NEW Proj:IncludeWtrHtg
+  DATATYPE
+    Integer
+  LONGFORM
+    IncludeWaterHeating
+  DESCRIPTION
+    "A flag to identify projects that have the exceptional condition Is 
+     Service/Domestic water heating excluded from this building? set to No."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ExcptCondWtrHtr = "No" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Project has ExcptCondWtrHtrSizing = No -----------------------
+// 
+RULE NEW Proj:NACMWtrHtgSizing
+  DATATYPE
+    Integer
+  LONGFORM
+    NACMWaterHeatingSizing
+  DESCRIPTION
+    "A flag to identify projects that have the exceptional condition Are there 
+     any Service/Domestic water heaters sized less than the ACM requirements? 
+     set to No."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ExcptCondWtrHtrSizing = "No" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Project has ExcptCondWtrHtrSizing = Yes ----------------------
+// 
+RULE NEW Proj:PropWtrHtgSizing
+  DATATYPE
+    Integer
+  LONGFORM
+    ProposedWaterHeatingSizing
+  DESCRIPTION
+    "A flag to identify projects that have the exceptional condition Is 
+     Service/Domestic water heating excluded from this building? set to Yes."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ExcptCondWtrHtrSizing = "Yes" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Project has res spaces that use combo system -----------------
+// 
+RULE NEW Proj:IsResAndCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialAndComboDHWHeating
+  DESCRIPTION
+    "A flag to identify projects that have spaces which are residential but use 
+     combo system space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll(Spc:IsResAndCombo) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -------------- Project has nonres spaces that use combo system -----------------
+// 
+RULE NEW Proj:IsNonResAndCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialAndComboDHWHeating
+  DESCRIPTION
+    "A flag to identify projects that have spaces which are nonresidential but use 
+     combo system space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll(Spc:IsNonResAndCombo) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:IsResAndNonCombo
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialAndNonComboDHWHeating
+  DESCRIPTION
+    "A flag to identify projects with residential spaces which do not use 
+     combo system space heating."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll(Spc:IsResAndNonCombo) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:SHWUserAndBaseline
+  DATATYPE
+    Integer
+  LONGFORM
+    ServiceHotWaterUsesUserAndBaselineModels
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline SHW systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ((Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0) .OR.
+         (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1)) .AND.
+          IncludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:SHWBothBaseline
+  DATATYPE
+    Integer
+  LONGFORM
+    ServiceHotWaterUsesBaselineModels
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline SHW systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ((Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1)) .AND.
+          ExcludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:SHWNone
+  DATATYPE
+    Integer
+  LONGFORM
+    ServiceHotWaterNotModeled
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline SHW systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 .AND. ExcludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:SHWPropOnly
+  DATATYPE
+    Integer
+  LONGFORM
+    ServiceHotWaterUsesProposedOnly
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline SHW systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 .AND. IncludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:ResDHWUserAndBaseline
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialDomesticHotWaterUsesUserAndBaselineModels
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline ResDHW 
+     systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ((Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0) .OR.
+         (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 1)) .AND.
+           IncludeWtrHtg )
+//          IncludeWtrHtg .AND. NACMWtrHtgSizing )
+
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:ResDHWBothBaseline
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialDomesticHotWaterUsesBaselineModels
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline ResDHW 
+     systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ((Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 0) .OR.
+         (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 1)) .AND.
+          ExcludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:ResDHWNone
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialDomesticHotWaterNotModeled
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline ResDHW 
+     systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( SumAll(Spc:IsResAndNonCombo) > 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+RULE NEW Proj:ResDHWPropOnly
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialDomesticHotWaterUsesProposedOnly
+  DESCRIPTION
+    "A flag to identify the modeling of the proposed and baseline ResDHW 
+     systems."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+//    if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 .AND. IncludeWtrHtg )
+    if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 0 .AND. IncludeWtrHtg )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// 
+// Proj:SHWUserAndBaseline
+// Proj:SHWUserAndBaselineWithPropSize
+// Proj:SHWBothBaseline
+// Proj:SHWNone
+// Proj:SHWPropOnly
+// Proj:ResDHWUserAndBaseline
+// Proj:ResDHWBothBaseline
+// Proj:ResDHWNone
+// Proj:ResDHWPropOnly
+
+// -----------------------------------------------------------------------------
+//             Determine Non-Residential SHW System
+RULE NEW Proj:NonResSHWSysRef
+  DATATYPE
+    FluidSys
+  LONGFORM
+    NonResidentialSHWSystemReference
+  DESCRIPTION
+    "This is the non-residential SHW system."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:IncludeWtrHtg )
+      then UNDEFINED                             // User model
+      else                                       // create proposed using baseline rules
+        if( SumChildren( Bldg:NonResFlrArea ) > 0 )
+        then RuleLibrary(FluidSystem,"NonResBaseSHWSystem")
+        else UNDEFINED
+        endif
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then UNDEFINED                             // User model or not simulated 
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:IncludeWtrHtg )
+          then UNDEFINED                         // User model
+          else                                   // create proposed using baseline rules
+            if( SumChildren( Bldg:NonResFlrArea ) > 0 )
+            then RuleLibrary(FluidSystem,"NonResBaseSHWSystem")
+            else UNDEFINED
+            endif
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( SumChildren( Bldg:NonResFlrArea ) > 0 )
+      then RuleLibrary(FluidSystem,"NonResBaseSHWSystem")
+      else UNDEFINED
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:IncludeWtrHtg )
+        then
+          if( SumChildren( Bldg:NonResFlrArea ) > 0 )
+          then RuleLibrary(FluidSystem,"NonResBaseSHWSystem")
+          else UNDEFINED
+          endif
+        else UNDEFINED   //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:IncludeWtrHtg )
+          then zp:NonResSHWSysRef  //PROPOSED
+          else   //BASELINE
+            if( SumChildren( Bldg:NonResFlrArea ) > 0 )
+            then RuleLibrary(FluidSystem,"NonResBaseSHWSystem")
+            else UNDEFINED
+            endif
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL_PROPOSED
+    zp:NonResSHWSysRef
+  ANNUAL_BASELINE 
+    zb:NonResSHWSysRef
+ENDRULE
+
+
+//
+// ---------- Determine Residential SHW System (Combo heat only) -------------------------------
+RULE NEW Proj:ResSHWSysRef
+  DATATYPE
+    FluidSys
+  LONGFORM
+    ResidentialSHWSystemReference
+  DESCRIPTION
+    "This is the non-res water heater system for res spaces with combo systems."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsResAndCombo = 1 ) then
+      if( Proj:SHWUserAndBaseline .OR. 
+          Proj:SHWPropOnly )
+      then 
+        UNDEFINED                                       // User model
+      else if( Proj:SHWBothBaseline )
+      then 
+        RuleLibrary(FluidSystem,"ResBaseSHWSystem")     // create a system using baseline rules for each space
+      else if( Proj:SHWNone )
+      then 
+        UNDEFINED                                       // no DHW modeled
+      else 
+        UNDEFINED
+      endif endif endif
+    else UNDEFINED
+    endif
+//
+//
+//
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//        then
+//          if( Proj:IncludeWtrHtg )
+//          then UNDEFINED          //user model
+//          else                    //create proposed using baseline rules
+//            if( SumChildren( Bldg:ResFlrArea ) > 0 )
+//            then RuleLibrary(FluidSystem,"ResBaseSHWSystem")
+//            else UNDEFINED
+//            endif
+//          endif
+//      else if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//        then UNDEFINED             //user model or not simulated
+//      else if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//        then
+//          if( Proj:IncludeWtrHtg )
+//          then UNDEFINED      //user model
+//          else                //create proposed using baseline rules
+//            if( SumChildren( Bldg:ResFlrArea ) > 0 )
+//            then RuleLibrary(FluidSystem,"ResBaseSHWSystem")
+//            else UNDEFINED
+//            endif
+//          endif
+//      else UNDEFINED
+//      endif endif endif
+//    else UNDEFINED
+//    endif
+  SIZING_BASELINE
+    if( IsResAndCombo = 1 ) then
+      if( Proj:SHWUserAndBaseline .OR. 
+          Proj:SHWBothBaseline )
+      then 
+        RuleLibrary(FluidSystem,"ResBaseSHWSystem")     // create a system using baseline rules for each space
+      else if( Proj:SHWPropOnly )
+      then 
+        UNDEFINED                                       // User model
+      else if( Proj:SHWNone )
+      then 
+        UNDEFINED                                       // no DHW modeled
+      else 
+        UNDEFINED
+      endif endif endif
+    else UNDEFINED
+    endif
+//
+//
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//      then UNDEFINED
+//      else if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//      then UNDEFINED 
+//      else if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//      then
+//        if( Proj:IncludeWtrHtg )
+//        then zp:ResSHWSysRef  //User model for baseline
+//        else UNDEFINED
+//        endif
+//      else UNDEFINED
+//      endif endif endif
+//    else UNDEFINED
+//    endif
+  ANNUAL_PROPOSED
+    zp:ResSHWSysRef
+  ANNUAL_BASELINE 
+    zb:ResSHWSysRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+//               Determine ResDHW system
+//RULE NEW Proj:ResDHWSysRef
+//  DATATYPE
+//    ResDHWSys
+//  LONGFORM
+//    ResidentialDHWSystemReference
+//  DESCRIPTION
+//    "This is the ResDHW system."
+//  REFERENCE 
+//    RES ACM - Water Heating
+//  INPUTCLASS
+//    NotInput
+//  SIZING_PROPOSED
+//    UNDEFINED
+//  SIZING_BASELINE
+//    if( u:Proj:IsResAndNonCombo = 1 .AND. Proj:IncludeWtrHtg ) then
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 1) .OR.
+//          (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 ) ) then
+//        RuleLibrary(ResDHWSys,"BaseResDHWSystem")
+//      else
+//        UNDEFINED   // Use the PROPOSED
+//      endif
+//    else UNDEFINED  // No res DHW Sys
+//    endif
+//  ANNUAL_PROPOSED
+//    zp:ResDHWSysRef
+//  ANNUAL_BASELINE 
+//    zb:ResDHWSysRef
+//ENDRULE
+//
+//
+// -------------- Space Res DHW Fluid System Reference --------------------
+//
+RULE Spc:ResDHWSysRef
+  DESCRIPTION
+    "This is the ResDHW System that is assigned to a space."
+  REFERENCE 
+    RES ACM - Water Heating
+  INPUTCLASS
+    CondRequired
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) ) 
+    then SpcFuncDefaultsRef:ResDHWSysRef
+    else UNCHANGED
+    endif
+  CHECKCODE
+    IF( IsRes = 0 .AND. HasResDHWSysRef ) then
+      PostError("Residential DHW systems may not be assigned to space, '%s',
+                 which is neither High-Rise Res. Living Space nor a Hotel/Motel 
+                 Guest Rooms.", Name)
+    else if( LocalCompAssigned(u:SHWFluidSegRef) 
+             .AND. HasResDHWSysRef ) then
+      PostError("Only one type of Hot Water System can be applied to space, 
+                 '%s', using either SHW FluidSeg or Res DHW Sys 
+                 inputs.", Name)
+    else if( IsResAndNonCombo .AND. 
+             HasResDHWSysRef != 1 .AND.
+             Proj:IncludeWtrHtg ) then
+      PostError("Residential space, '%s', must be assigned to a residential DHW 
+                 system or a combo SHW/heating system.", Name)
+    else UNCHANGED
+    endif endif endif
+  SIZING_PROPOSED
+    if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWPropOnly )
+    then 
+      UNCHANGED  // u:ResDHWSysRef                             // User model
+    else if( Proj:ResDHWBothBaseline )
+    then 
+      RuleLibrary(ResDHWSys,"BaseResDHWSystem")  // create a system using baseline rules for each space
+    else if( Proj:ResDHWNone )
+    then 
+      UNDEFINED                                  // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( IsResAndCombo .OR. IsNonRes )
+    then
+      UNDEFINED
+    else    
+      if( Proj:ResDHWUserAndBaseline )
+      then
+        if( IfValidAnd( zp:ResDHWSysRef:CentralSys = 1 ) )
+        then UNCHANGED                            // User model
+        else RuleLibrary(ResDHWSys,"BaseResDHWSystem") // create a system using baseline rules for each space
+        endif
+      else if( Proj:ResDHWPropOnly )
+      then 
+        u:ResDHWSysRef                                 // User model
+      else if( Proj:ResDHWBothBaseline )
+      then 
+        if( Proj:ResDHWUserAndBaseline = 0 .AND. Proj:ResDHWPropOnly = 0 )
+        then UNCHANGED                                 // don't reload if already loaded for Proposed model
+        else RuleLibrary(ResDHWSys,"BaseResDHWSystem") // create a system using baseline rules for each space
+        endif
+      else if( Proj:ResDHWNone )
+      then 
+        UNDEFINED                                      // no DHW modeled
+      else 
+        UNDEFINED
+      endif endif endif endif
+    endif
+  ANNUAL
+    z:ResDHWSysRef
+ENDRULE
+
+//
+// -------------- Space Res DHW Fluid System Reference --------------------
+//
+RULE NEW Spc:HasResDHWSysRef
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Changes a reference to a 1."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ResDHWSysRef ) )
+    then
+      if( ResDHWSysRef != "-none-" ) 
+      then 1
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+//       Space is served by a ResDHW which is a central system
+//
+RULE NEW Spc:ResDHWCentralSys
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag to indicate that the space is served by a central ResDHW system
+     as opposed to an individual unit system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HasResDHWSysRef )
+    then
+      if( SumRevRef(Spc:ResDHWSysRef, ResDHWSys:CentralSys) = 1 )
+      then 1
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+
+// Moved from WaterHeater.rule
+// -------------- Hot Water Supply Temperature --------------------
+// 
+RULE Spc:HotWtrSupTemp
+  DESCRIPTION
+    "The temperature at which service hot water is supplied to the fixture(s) 
+     in the Space."
+  HELP
+    "If the supply water temperature is less than the setpoint temperature of
+     the SHW loop, it is assumed cold water is mixed in to acheive the specified
+     temperature for the fixture flow rate."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    50
+  COMMONMINIMUM
+    120
+  COMMONMAXIMUM
+    135
+  MAXIMUM
+    212
+  UNITS
+    °F
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:ExcludeWtrHtg )
+    then 
+      135
+    else
+      ValidOr( SHWFluidSegRef:ParentFluidSysRef:HotWtrSupTemp, 135 )
+    endif
+  SIZING_PROPOSED
+    if( Proj:SHWUserAndBaseline .OR. 
+        Proj:SHWPropOnly )
+    then 
+      u:HotWtrSupTemp                                 // User model
+    else if( Proj:SHWBothBaseline )
+    then 
+      135                                             // create a system using baseline rules for each space
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                       // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:SHWUserAndBaseline .OR. 
+        Proj:SHWBothBaseline )
+    then 
+      135                                         // create a system using baseline rules for each space
+    else if( Proj:SHWPropOnly )
+    then 
+      zp:HotWtrSupTemp                            // User model
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                   // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:HotWtrSupTemp
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Total gallons/day for studio apartments ----
+RULE NEW Spc:DwellingUnit1GalPerDay
+  LONGFORM
+    DwellingUnit1GallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for studio apartments in one modeled space 
+     which uses a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IfValidAnd( IsHighRiseRes > 0 ) .AND. 
+        IfValidAnd( DwellingUnitTypeArea[1] > 0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[1], 2500 )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+//---------Total gallons/day for 1 bedroom apartments ----
+// DwellingUnit2 is used for Hotel/Motel Guestroom
+RULE NEW Spc:DwellingUnit2GalPerDay
+  LONGFORM
+    DwellingUnitGallons2PerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for 1 bedroom apartments in one modeled space 
+     which use a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IsRes .AND. 
+        IfValidAnd( DwellingUnitTypeArea[2]>0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[2], 2500 )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Total gallons/day for 2 bedroom apartments----
+RULE NEW Spc:DwellingUnit3GalPerDay
+  LONGFORM
+    DwellingUnit3GallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for 2 bedroom apartments in one modeled space 
+     which uses a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IfValidAnd( IsHighRiseRes > 0 ) .AND. 
+        IfValidAnd( DwellingUnitTypeArea[3]>0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[3], 2500 )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Total gallons/day for 3 bedroom apartments----
+RULE NEW Spc:DwellingUnit4GalPerDay
+  LONGFORM
+    DwellingUnit4GallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for 3 bedroom apartments in one modeled space 
+     which uses a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IfValidAnd( IsHighRiseRes > 0 ) .AND. 
+        IfValidAnd( DwellingUnitTypeArea[4]>0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[4], 2500 )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Total gallons/day for 4 bedroom apartments----
+RULE NEW Spc:DwellingUnit5GalPerDay
+  LONGFORM
+    DwellingUnit5GallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for 4 bedroom apartments in one modeled space 
+     which uses a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IfValidAnd( IsHighRiseRes > 0 ) .AND. 
+        IfValidAnd( DwellingUnitTypeArea[5]>0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[5], 2500 )
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Total gallons/day for 5 bedroom apartments----
+RULE NEW Spc:DwellingUnit6GalPerDay
+  LONGFORM
+    DwellingUnit6GallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for 5 bedroom apartments in one modeled space 
+     which uses a combo system."
+  UNITS
+    gal/day/dwelling unit
+  DEFAULT
+    if( IfValidAnd( IsHighRiseRes > 0 ) .AND. 
+        IfValidAnd( DwellingUnitTypeArea[6]>0 ) )
+    then 
+      21.4 + 0.00679 * MIN( DwellingUnitTypeArea[6], 2500 )
+    else 0
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+//---------Added 052116 NK------------------------------------------------------
+//---------Total gallons/day for all dwelling units in one modeled space----
+RULE NEW Spc:ResSpcHtWtrTotGalPerDay
+  LONGFORM
+    ResidentialSpaceHotWaterTotalGallonsPerDay
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for all dwelling units in one modeled space."
+  UNITS
+    gal/day/space
+  DEFAULT
+    if( IsRes )
+    then 
+      ( ValidOr(DwellingUnit1GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[1],0) + 
+	      ValidOr(DwellingUnit2GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[2],0) +
+	      ValidOr(DwellingUnit3GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[3],0) +
+	      ValidOr(DwellingUnit4GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[4],0) +
+	      ValidOr(DwellingUnit5GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[5],0) +
+	      ValidOr(DwellingUnit6GalPerDay,0) * ValidOr(DwellingUnitTypeCnt[6],0) )
+    else 0
+    endif 
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+//---------Added SAC 8/18/16 ---------------------------------------------------
+//---------Total gallons/day for all dwelling units in one modeled space * space mult ----
+RULE NEW Spc:ResSpcHtWtrTotGalPerDayXMult
+  LONGFORM
+    ResidentialSpaceHotWaterTotalGallonsPerDayXMultiplier
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the gallons/day for all dwelling units in one modeled space 
+     (including multiplier)."
+  UNITS
+    gal/day/mult space
+  DEFAULT
+    ResSpcHtWtrTotGalPerDay * Mult
+ENDRULE
+
+// -----------------------------------------------------------------------------
+///---------Added 052116 NK------------------------------------------------------
+//--Total gallons/hour/person for all dwelling units modeled in a space-
+RULE NEW Spc:ResSpcHtWtrTotGalPerHr
+  LONGFORM
+    ResidentialSpaceHotWaterTotalGallonsPerHour
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is converting Gal/Day/Space to Gal/Hr/Person."
+  UNITS
+    gal/h/person
+  DEFAULT
+    if( IsRes .AND. IfValidAnd(OccNumSim > 0) )
+    then
+      (ResSpcHtWtrTotGalPerDay * 0.107) / OccNumSim
+    else 0
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ------------ Water Heater Hot Water Heating Rate ----------------
+//
+RULE Spc:HotWtrHtgRt
+  DESCRIPTION
+    "This is the ACM Hot Water Heating Rate in units of gal/h/person."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "HotWtrHtgRt removed prior to release of 2013-3e and 2016.2"
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    5
+  MAXIMUM
+    50000 
+  UNITS
+    gal/h/person
+  REPORTPRECISION
+    3
+  DEFAULT
+    if( HasNoInternalLds )
+    then UNDEFINED
+     else if( IsHighRiseRes ) 
+      then ResSpcHtWtrTotGalPerHr
+     else if ( IsHotelMotelGuestRm .AND. IfValidAnd(HotWtrSupTemp <= 0) ) 
+      then SpaceFunctionData:HotWtrHtgRt("FuncType",u:SpcFunc)
+    else
+      if( IfValidAnd(HotWtrSupTemp > 0) )
+//      then( (SpaceFunctionData:HotWtrHtgRt("FuncType",u:SpcFunc) * 135) / HotWtrSupTemp )
+      then SpaceFunctionData:HotWtrHtgRt("FuncType",u:SpcFunc)      
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ------------ Default Water Heater Hot Water Heating Rate ----------------
+//
+// This is identical to Spc:HotWtrHtgRt above, so I am replacing it throughout. RHe 160602
+//RULE NEW Spc:HotWtrHtgRtDef
+//  LONGFORM
+//    HotWaterHeatingRateDefault
+//  DATATYPE
+//    Float
+//  INPUTCLASS
+//    NotInput
+//  DESCRIPTION
+//    "This is the Default ACM Hot Water Heating Rate in units of gal/h/person."
+//  UNITS
+//    gal/h/person
+//  DEFAULT
+//    if( HasNoInternalLds )
+//    then UNDEFINED
+//    else if( IsRes )
+//    then ResSpcHtWtrTotGalPerHr
+//    else
+//      if( IfValidAnd(HotWtrSupTemp > 0) )
+//      then( (SpaceFunctionData:HotWtrHtgRt("FuncType",u:SpcFunc) * 135) / HotWtrSupTemp )
+//      else 0 //UNDEFINED
+//      endif
+//    endif endif
+//ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// ------------ Default Water Heater Hot Water Heating Rate ----------------
+//
+//RULE NEW Spc:BaseSHWFluidSegRef
+//  LONGFORM
+//    BaseSHWFluidSegmentReference
+//  DATATYPE
+//    String
+//  INPUTCLASS
+//    NotInput
+//  DESCRIPTION
+//    "Setting the baseline SHW Fluid Segment Reference at the space."
+//  DEFAULT
+//    if( Spc:HasNoInternalLds = 1 .OR. (HasResDHWSysRef = 1 .AND. Proj:IncludeWtrHtg) )
+//    then UNDEFINED
+//    else
+//      if( IsRes )
+//      then "ResBaseSHWPriSupSeg"
+//      else "NonResBaseSHWPriSupSeg"
+//      endif
+//    endif
+//ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Space SHW Fluid Segment Reference --------------------
+//
+RULE Spc:SHWFluidSegRef
+  DESCRIPTION
+    "This is the water heating system assigned to a space."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) ) 
+    then SpcFuncDefaultsRef:SHWFluidSegRef
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( Proj:SHWUserAndBaseline .OR. 
+        Proj:SHWPropOnly )
+    then 
+      u:SHWFluidSegRef                                // User model
+    else if( Proj:SHWBothBaseline )
+    then                                              // create a system using baseline rules for each space
+      if( IsResAndCombo )
+      then "ResBaseSHWPriSupSeg" 
+      else if( IsRes )
+      then UNDEFINED
+      else "NonResBaseSHWPriSupSeg"
+      endif endif
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                       // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:SHWUserAndBaseline .OR. 
+        Proj:SHWBothBaseline )
+    then                                              // create a system using baseline rules for each space
+      if( IsResAndCombo )
+      then "ResBaseSHWPriSupSeg" 
+      else if( IsRes )
+      then UNDEFINED
+      else "NonResBaseSHWPriSupSeg"
+      endif endif
+    else if( Proj:SHWPropOnly )
+    then 
+      u:SHWFluidSegRef                                // User model
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                       // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL_PROPOSED
+    zp:SHWFluidSegRef
+  ANNUAL_BASELINE
+    zb:SHWFluidSegRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ---------- Parent Fluid System Reference for Water Heater Solar Fraction --------------
+RULE NEW Spc:AnnualSolFrac
+  DATATYPE
+    Float
+  LONGFORM
+    AnnualSolarFraction
+  DESCRIPTION
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    ValidOr( SHWFluidSegRef:ParentFluidSysRef:AnnualSolFrac, 0 )
+  SIZING_PROPOSED
+    if( ResDHWCentralSys )
+    then
+      if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWPropOnly )
+      then  
+        SumRevRef(Spc:ResDHWSysRef, ResDHWSys:AnnualSolFrac)  // User model
+      else if( Proj:ResDHWBothBaseline )
+      then 
+        if( Proj:CliZnNum < 10 )                              // create a system using baseline rules for each space
+        then 0.20
+        else 0.35
+        endif 
+      else if( Proj:ResDHWNone )
+      then 
+        UNDEFINED                                             // no DHW modeled
+      else 
+        UNDEFINED
+      endif endif endif
+    else if( ResDHWCentralSys = 0 )
+    then
+      0
+    else                                                      // nonres SWH system
+      u:AnnualSolFrac                                         // User model
+    endif endif
+  SIZING_BASELINE
+    if( ResDHWCentralSys )
+    then
+      if( Proj:ResDHWPropOnly )
+      then  
+        zp:AnnualSolFrac                                      // User model
+      else if( Proj:ResDHWUserAndBaseline .OR. Proj:ResDHWBothBaseline )
+      then 
+        if( Proj:CliZnNum < 10 )                              // create a system using baseline rules for each space
+        then 0.20
+        else 0.35
+        endif 
+      else if( Proj:ResDHWNone )
+      then 
+        UNDEFINED                                             // no DHW modeled
+      else 
+        UNDEFINED
+      endif endif endif
+    else
+      0                                                       // nonres SHW or individual unit ResDHW
+    endif
+  ANNUAL
+    z:AnnualSolFrac
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ------------ Default Residential Water Heater Hot Water Heating Rate ----------------
+//
+RULE NEW Spc:HotWtrHtgRtSimNoSolFrac
+  LONGFORM
+    HotWaterHeatingRateSimulatedNoSolarFraction
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This is the ACM Hot Water Heating Rate in units of gal/h
+     with no solar fraction applied.  SolFrac is applied in Spc:HotWtrHtgRtSizing."
+  UNITS
+    gal/h
+  DEFAULT
+    if( HasNoInternalLds > 0 .OR. (LocalCompAssigned(ResDHWSysRef) .AND. Proj:IncludeWtrHtg)  )
+    then 0
+    else
+      if( IsResAndCombo )
+      then( ResSpcHtWtrTotGalPerDay * Mult )
+      else
+        if( IfValidAnd(HotWtrHtgRt >= 0) .AND. #IVA(FlrArea >= 0) )
+        then HotWtrHtgRt * OccNumSim * Mult
+        else UNCHANGED
+        endif
+      endif
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// This was RULE Spc:HotWtrHtgRtSim
+// Spc:HotWtrHtgRtSim was being used for all sizing values and should be
+// replaced with the new term (Spc:HotWtrHtgRtSizing) throughout the model.
+// The sizing transforms were deleted and can be retrieved from the
+// Spc:HotWtrHtgRt rule below if needed
+//
+// --------- Water Heater Hot Water Heating Rate for Simulation --------------
+//
+RULE NEW Spc:HotWtrHtgRtSizing
+  LONGFORM
+    HotWaterHeatingRateSizing
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "This value is used for sizing the Baseline water heater and for verifying
+     Proposed water heater sizing. There is no Solar Fraction applied for sizing."
+  UNITS
+    gal/h
+  DEFAULT
+    if( HasNoInternalLds > 0 )
+    then UNDEFINED
+    else
+      if( LocalCompAssigned(ResDHWSysRef) .AND. Proj:IncludeWtrHtg )
+      then 0
+      else
+        if( SpcFunc = "High-Rise Residential Living Spaces" )
+        then( (ResSpcHtWtrTotGalPerDay * 0.107) * Mult )        
+        else
+          if( IfValidAnd(HotWtrHtgRt >= 0) .AND. #IVA(FlrArea >= 0) .AND. 
+              IfValidAnd(HotWtrSupTemp > 0) ) 
+          then 
+            HotWtrHtgRt * OccDensSim * FlrArea/1000 * Mult
+          else UNDEFINED
+          endif
+        endif
+      endif
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Moved to Space-WaterHeating.rule
+// --------- Water Heater Hot Water Heating Rate for Simulation --------------
+//
+RULE Spc:HotWtrHtgRtSim
+  DESCRIPTION
+    "This converts the ACM Hot Water Heating Rate from input units of 
+     gal/h/person to output units of gal/h using the space function, occupant
+     density, floor area and solar fraction of the space."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    5
+  MAXIMUM
+    50000 
+  UNITS
+    gal/h
+  REPORTPRECISION
+    3
+  DEFAULT
+    if( HasNoInternalLds > 0 )
+    then UNDEFINED
+    else if( HasResDHWSysRef )
+    then 
+      0
+    else if( SpcFunc = "High-Rise Residential Living Spaces" )
+    then
+//      ResSpcHtWtrTotGalPerDay * Mult * (1 - AnnualSolFrac)                // updated NK 08-21-2016
+      HotWtrHtgRtSizing * (1 - AnnualSolFrac) * 80 / (HotWtrSupTemp - 55)   // 135 - 55 = 80  // removed multiplier as HotWtrHtgRtSizing already has mult
+    else if( IfValidAnd(HotWtrHtgRt >= 0) .AND. #IVA(FlrArea >= 0) .AND. 
+             IfValidAnd(HotWtrSupTemp > 0) ) 
+    then
+      HotWtrHtgRtSizing * (1 - AnnualSolFrac) * 80 / (HotWtrSupTemp - 55)   // 135 - 55 = 80
+    else UNDEFINED
+    endif endif endif endif
+  SIZING_PROPOSED
+    if( Proj:SHWUserAndBaseline .OR. 
+        Proj:SHWPropOnly )
+    then 
+      HotWtrHtgRtSim                                  // User model
+    else if( Proj:SHWBothBaseline )
+    then 
+      HotWtrHtgRtSizing                               // create a system using baseline rules for each space
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                       // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  SIZING_BASELINE
+    if( Proj:SHWPropOnly )
+    then 
+      HotWtrHtgRtSim                                  // User model
+    else if( Proj:SHWUserAndBaseline .OR. 
+             Proj:SHWBothBaseline )
+    then 
+      HotWtrHtgRtSizing                               // create a system using baseline rules for each space
+    else if( Proj:SHWNone )
+    then 
+      UNDEFINED                                       // no DHW modeled
+    else 
+      UNDEFINED
+    endif endif endif
+  ANNUAL
+    z:HotWtrHtgRtSim
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// SIZING VALUE - Moved from WaterHeating.rule
+// -------------- Conversion Water Heater Capacity Rated --------------------
+//
+RULE NEW Spc:HotWtrHtgCapRtd
+  DATATYPE
+    Float
+  LONGFORM
+    WaterHeaterCapacityRated
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10 needed to meet the load imposed by
+     a space."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    btu/h
+  DEFAULT
+    if( HotWtrHtgRt = 0 )
+    then 0
+    else
+      if( IfValidAnd(HotWtrHtgRtSizing > 0) .AND. IfValidAnd(HotWtrSupTemp > 55) )
+// Divide by thermal eff (0.80) to covert from output to input.  
+// HotWtrHtgRtSizing * 0.60 to size 60% of the water heater in rated capacity 
+// and 40% in storage capacity
+      then HotWtrHtgRtSizing * 0.60 * 8.25 * (HotWtrSupTemp - 55) / 0.80     
+      else  0
+      endif 
+    endif
+  SIZING : T24N_2016
+    if( HotWtrHtgRt = 0 )
+    then 
+      0
+    else if( ResDHWCentralSys = 0 .AND. HasResDHWSysRef .AND.
+             IfValidAnd(HotWtrHtgRtSizing > 0) .AND. 
+             IfValidAnd(HotWtrSupTemp > 55) )
+    then 
+      HotWtrHtgRtSizing * 8.25 * (HotWtrSupTemp - 55) / 0.82      // 0.60 is not used, assuming instantaneous
+    else if( IfValidAnd(HotWtrHtgRtSizing > 0) .AND. 
+             IfValidAnd(HotWtrSupTemp > 55) )
+    then 
+      HotWtrHtgRtSizing * 0.60 * 8.25 * (HotWtrSupTemp - 55) / 0.80
+    else  0
+    endif endif endif
+  SIZING
+    if( HotWtrHtgRt = 0 )
+    then 0
+    else if( IfValidAnd(HotWtrHtgRtSizing > 0) .AND. 
+             IfValidAnd(HotWtrSupTemp > 55) )
+    then
+      HotWtrHtgRtSizing * 0.60 * 8.25 * (HotWtrSupTemp - 55) / 0.80
+    else  0
+    endif endif
+  ANNUAL
+    z:HotWtrHtgCapRtd
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// -------------- Water Heater Hot Water Heating Schedule Reference -----------
+//
+RULE Spc:HotWtrHtgSchRef
+  DESCRIPTION
+    "A fractional schedule reflecting the time pattern of water heating use.
+     This input modifies the hot water heating rate."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Prescribed
+  UNITS
+  DEFAULT
+    if( u:HasNoInternalLds > 0 .OR. 
+        LocalStatus(HotWtrHtgRt) < 1 )
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+      then SpcFuncDefaultsRef:HotWtrHtgSchRef
+      else  UNDEFINED
+      endif
+    endif
+  SIZING
+    if( u:HasNoInternalLds > 0 .OR. 
+        LocalStatus(u:HotWtrHtgRt) < 1 )
+    then UNDEFINED
+    else
+    RuleLibrary(Schedule,(SpaceFunctionGroups:HotWtrHtgSchRef("FuncGroup",z:FuncSchGrp)))
+    endif
+  ANNUAL
+    z:HotWtrHtgSchRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+//  ** Temporary rules to test for SHW or DHW in a model where required **
+//  ** Add this to either ResDHWSysRef or SHWFluidSegRef **
+//
+// -------------- Space Res DHW Fluid System Reference --------------------
+//
+RULE NEW Spc:WtrHtrChk
+  DATATYPE
+    String
+  LONGFORM
+    WaterHeaterCheck
+  DESCRIPTION
+    "This is the test for spaces requiring a SHW System or DHW System."
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  CHECKCODE
+    if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )  
+    then UNCHANGED // Partial envelope compliance
+    else
+      if( SpcFunc = "Unoccupied-Include in Gross Floor Area" .OR.
+          SpcFunc = "Unoccupied-Exclude from Gross Floor Area" .OR.
+          SpcFunc = "Commercial and Industrial Storage Areas (refrigerated)" .OR.
+          SpcFunc = "Corridors, Restrooms, Stairs, and Support Areas" .OR.
+//          SpcFunc = "Electrical, Mechanical, Telephone Rooms" .OR.
+          SpcFunc = "Parking Garage Building, Parking Area" .OR.
+          SpcFunc = "Parking Garage Area Dedicated Ramps" .OR.
+          SpcFunc = "Parking Garage Area Daylight Adaptation Zones" .OR.
+//          SpcFunc = "Computer Room" .OR.
+          SpcFunc = "- specify -" )
+      then UNCHANGED // These spaces have no water heating loads
+      else
+        if( LocalCompAssigned(u:ResDHWSysRef) = 0 .AND.
+            LocalCompAssigned(u:SHWFluidSegRef) = 0 .AND.
+            Proj:IncludeWtrHtg )
+        then
+          PostError("The space, '%s', requires either a SHW System 
+                     or a Res DHW System.",Name)
+        else UNCHANGED
+        endif
+      endif
+    endif
+ENDRULE

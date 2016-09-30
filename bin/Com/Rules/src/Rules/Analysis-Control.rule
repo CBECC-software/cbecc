@@ -1,0 +1,543 @@
+// Analysis - Control
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+// No direct correlation of ACM topics - just miscellaneous rules pertaining to
+// compliance analysis
+// 
+
+//    NewComplete
+//    NewEnvelope
+//    NewEnvelopeAndLighting
+//    NewEnvelopeAndPartialLighting
+//    NewEnvelopeAndMechanical
+//    NewMechanical
+//    NewMechanicalAndLighting
+//    NewMechanicalAndPartialLighting
+//    ExistingAlteration
+//    ExistingAdditionAndAlteration
+//    AdditionComplete
+//    AdditionEnvelope
+//    AdditionEnvelopeAndLighting
+//    AdditionEnvelopeAndPartialLighting
+//    AdditionEnvelopeAndMechanical
+//    AdditionMechanical
+//    AdditionMechanicalAndLighting
+//    AdditionMechanicalAndPartialLighting
+
+
+// -------------- Simulation Flag ----------------------------------------------
+RULE Proj:SimFlag
+  DESCRIPTION
+     "Whether or not to perform simulation (transform-specific)."  
+  DEFAULT
+    1
+  SIZING_PROPOSED
+    if( CreateHVAC )
+    then 1
+    else 0
+    endif
+  SIZING_BASELINE
+    if( BaseHVACSameAsPropHVAC )
+    then 0
+    else 1
+    endif
+  ANNUAL_PROPOSED 
+    1
+  ANNUAL_BASELINE
+    1
+ENDRULE
+
+
+// -------------- Transform Object EXCLUDE control -----------------------------
+// Set flag to determine when USER/SIZING_PROPOSED model objects are excluded, 
+// i.e. not copied to the SIZING_BASELINE transform.
+// Value for Proj:BaseHVACMapForAlt is determined in separate SIZING_PROPOSED 
+// rule based on sum capacity of components that are altered.
+
+// AirSystems
+RULE AirSys:ExcludeFromSizing
+  DESCRIPTION
+    "A flag that indicates if proposed AirSys objects (and thier children) are
+     excluded from copy to a subsequent transform."
+  HELP
+    "If value is 1, the object is excluded when copying to the subsequent transform.
+     Proposed HVAC is excluded from copy when the baseline HVAC system is specified
+     by the NACM system map."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) )
+    then 1 // Exclude all user-defined HVAC systems for partial compliance types 
+           // that do not include permitting of mechanical systems or existing
+           // systems if modeling additions.
+    else 0
+    endif
+  SIZING_PROPOSED : T24N
+    if( ( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) )
+        .AND. IsExhSys = 0 )
+    then // This is a Partial Envelope analysis, and the baseline = proposed 
+         // (if not an existing system) so do not exclude in copy from zp to zb
+      0
+    else
+    if( Proj:BaseHVACSameAsPropHVAC .AND. IsExhSys = 0 ) 
+    then // This is an Addition and/or Alteration analysis with no new 
+         // non-ChW/HW/Steam coil capacity so do not exclude components
+         // in copy from zp to zb
+      0
+    else 
+    if( Proj:IsAddOrAlt .AND. IsExisting .AND. IsExhSys = 0)
+    then // This is an Addition and/or Alteration analysis, and baseline = proposed 
+         // if IsExisting so do not exclude in copy from zp to zb
+      0
+    else
+    if( IsCondgSys = 0 .AND. IsExhSys = 0 )
+    then // Systems serving Unconditioned spaces are the same in proposed and baseline
+      0
+    else // Exclude in copy from zp to zb
+      1
+    endif endif endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( Proj:IsNoMech .AND. IsExhSys = 0 )
+    then // This is a Partial Envelope analysis, and the baseline = proposed 
+         // so do not exclude in copy from zp to zb
+      0
+    else
+    if( Proj:BaseHVACSameAsPropHVAC .AND. IsExhSys = 0 ) 
+    then // This is an Addition and/or Alteration analysis with no new 
+         // non-ChW/HW/Steam coil capacity so do not exclude components
+         // in copy from zp to zb
+      0
+    else 
+    if( Proj:IsAddOrAlt .AND. IsExisting .AND. IsExhSys = 0 )
+    then // This is an Addition and/or Alteration analysis, and baseline = proposed 
+         // if IsExisting so do not exclude in copy from zp to zb
+      0
+    else
+    if( ( NotEnclosedSys = 1 .OR. IsCondgSys = 0 ) .AND. IsExhSys = 0 )
+    then // Systems serving NotEnclosed or Unconditioned spaces are the same in proposed and baseline
+      0
+    else // Exclude in copy from zp to zb
+      1
+    endif endif endif endif
+  SIZING_BASELINE
+    0
+  ANNUAL
+    0
+ENDRULE
+
+
+// ZoneSystems
+RULE ZnSys:ExcludeFromSizing
+  DESCRIPTION
+    "A flag that indicates if proposed ZnSys objects (and thier children) are
+     excluded from copy to a subsequent transform."
+  HELP
+    "If value is 1, the object is excluded when copying to the subsequent transform.
+     Proposed HVAC is excluded from copy when the baseline HVAC system is specified
+     by the NACM system map."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) )
+    then 1 // Exclude all user-defined HVAC systems for partial compliance types 
+           // that do not include permitting of mechanical systems or existing
+           // systems if modeling additions.
+    else 0
+    endif
+  SIZING_PROPOSED : T24N
+    if( ( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) )
+        .AND. IsExhSys = 0 )
+    then // This is a Partial Envelope analysis, and the baseline = proposed
+         // (if not an existing system) so do not exclude in copy from zp to zb
+      0
+    else
+    if( Proj:BaseHVACSameAsPropHVAC ) 
+    then // This is an Addition and/or Alteration analysis with no new 
+         // non-ChW/HW/Steam coil capacity so do not exclude components
+         // in copy from zp to zb
+      0
+    else 
+    if( Proj:IsAddOrAlt .AND. IsExisting .AND. IsExhSys = 0 )
+    then // This is an Addition and/or Alteration analysis, and baseline = proposed 
+         // if IsExisting so do not exclude in copy from zp to zb
+      0
+    else
+    if( IsCondgSys = 0 .AND. IsExhSys = 0 )
+    then // Systems serving Unconditioned spaces are the same in proposed and baseline
+      0
+    else // Exclude in copy from zp to zb
+      1
+    endif endif endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( Proj:IsNoMech .AND. IsExhSys = 0 )
+    then // This is a Partial Envelope analysis, and the baseline = proposed 
+         // so do not exclude in copy from zp to zb
+      0
+    else
+    if( Proj:BaseHVACSameAsPropHVAC .AND. IsExhSys = 0 ) 
+    then // This is an Addition and/or Alteration analysis with no new 
+         // non-ChW/HW/Steam coil capacity so do not exclude components
+         // in copy from zp to zb
+      0
+    else 
+    if( Proj:IsAddOrAlt .AND. IsExisting .AND. IsExhSys = 0 )
+    then // This is an Addition and/or Alteration analysis, and baseline = proposed 
+         // if IsExisting so do not exclude in copy from zp to zb
+      0
+    else
+    if( ( NotEnclosedSys = 1 .OR. IsCondgSys = 0 ) .AND. IsExhSys = 0 )
+    then // Systems serving NotEnclosed or Unconditioned spaces are the same in proposed and baseline
+      0
+    else // Exclude in copy from zp to zb
+      1
+    endif endif endif endif
+  SIZING_BASELINE
+    0
+  ANNUAL
+    0
+ENDRULE
+
+
+// Coils (for determining Exclude for FluidSys)
+RULE NEW CoilHtg:ExcludeFromSizing
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that indicates if proposed system is excluded from copy to a 
+     subsequent transform."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( ParentComp = "AirSys" ) .OR. IfValidAnd( ParentComp = "TrmlUnit" ) )
+    then AirSys:ExcludeFromSizing
+    else if( IfValidAnd( ParentComp = "ZnSys" ) )
+    then ZnSys:ExcludeFromSizing
+    else 1
+    endif endif
+  SIZING
+    if( IfValidAnd( ParentComp = "AirSys" ) .OR. IfValidAnd( ParentComp = "TrmlUnit" ) )
+    then AirSys:ExcludeFromSizing
+    else if( IfValidAnd( ParentComp = "ZnSys" ) )
+    then ZnSys:ExcludeFromSizing
+    else 1
+    endif endif
+  ANNUAL
+    0
+ENDRULE
+RULE NEW CoilClg:ExcludeFromSizing
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that indicates if proposed system is excluded from copy to a 
+     subsequent transform."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( ParentComp = "AirSys" ) .OR. IfValidAnd( ParentComp = "TrmlUnit" ) )
+    then AirSys:ExcludeFromSizing
+    else if( IfValidAnd( ParentComp = "ZnSys" ) )
+    then ZnSys:ExcludeFromSizing
+    else 1
+    endif endif
+  SIZING
+    if( IfValidAnd( ParentComp = "AirSys" ) .OR. IfValidAnd( ParentComp = "TrmlUnit" ) )
+    then AirSys:ExcludeFromSizing
+    else if( IfValidAnd( ParentComp = "ZnSys" ) )
+    then ZnSys:ExcludeFromSizing
+    else 1
+    endif endif
+  ANNUAL
+    0
+ENDRULE
+RULE NEW FluidSeg:CoilsNotExcluded
+  DATATYPE
+    Integer
+  LONGFORM
+    CoilsNotExcluded
+  DESCRIPTION
+    "A flag indicating if any of the coils referencing the FluidSeg are not
+     excluded from sizing, i.e. ExcludeFromSizing = 0, and therefore the FluidSys
+     should not be excluded."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( ValidOr( MinRevRef( CoilHtg:FluidSegInRef, CoilHtg:ExcludeFromSizing ), 999 ) = 0 .OR.
+        ValidOr( MinRevRef( CoilClg:FluidSegInRef, CoilClg:ExcludeFromSizing ), 999 ) = 0 ) 
+    then 1
+    else 0
+    endif
+  SIZING
+    if( ValidOr( MinRevRef( CoilHtg:FluidSegInRef, CoilHtg:ExcludeFromSizing ), 999 ) = 0 .OR.
+        ValidOr( MinRevRef( CoilClg:FluidSegInRef, CoilClg:ExcludeFromSizing ), 999 ) = 0 ) 
+    then 1
+    else 0
+    endif
+  ANNUAL
+    0
+ENDRULE
+
+
+RULE FluidSys:ExcludeFromSizing
+  DESCRIPTION
+    "A flag that indicates if proposed FluidSys objects (and thier children) are
+     excluded from copy to a subsequent transform."
+  HELP
+    "Proposed HVAC is excluded from copy when the baseline HVAC system is specified
+     by the NACM system map."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then UNCHANGED // See rule below
+    else
+    if( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) )
+    then 1 // Exclude all user-defined HVAC systems for partial compliance types 
+           // that do not include permitting of mechanical systems or existing
+           // systems if modeling additions.
+    else 0
+    endif endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then UNCHANGED // See rule below
+    else if( Type != "ServiceHotWater" .AND. Proj:BaseHVACSameAsPropHVAC ) 
+    then // This is an Addition and/or Alteration analysis with no new 
+         // non-ChW/HW/Steam coil capacity so do not exclude components
+         // in copy from zp to zb
+      0
+    else
+    if ( Proj:IsNoMech .OR. ( Proj:IsNoAddMech .AND. IsNew ) .OR.
+         SumChildren( FluidSeg:CoilsNotExcluded ) > 0 )
+    then // This is a Partial Envelope analysis, and the baseline = proposed 
+         // (if not an existing system) so do not exclude in copy from zp to zb - OR-
+         // the FluidSys serves coils that are not excluded in copy, and therefore
+         // the FluidSys should not be excluded.
+      0
+    else if( Proj:IsAddOrAlt )
+    then // Proj:CompType is and Addition* or AdditionAlteration 
+      if( Type = "ServiceHotWater" .AND. Proj:IsNewSHWFluidSys = 1 )
+      then UNCHANGED // See rule below
+      else if( Type != "ServiceHotWater" .AND. Proj:BaseHVACSameAsPropHVAC ) 
+      then // This is an Addition and/or Alteration analysis with no new 
+           // non-ChW/HW/Steam coil capacity so do not exclude components
+           // in copy from zp to zb
+        0
+      else if( ( IsAltered .OR. IsExisting ) .AND. SumChildren( FluidSeg:NumNewObj ) = 0 ) 
+      then 0 // FluidSys does not serve any new coils or have any new boilers or chillers.
+      else if( ( IsAltered .OR. IsExisting ) .AND. SumChildren( FluidSeg:NumNewObj ) > 0 )
+      then // FluidSys does serve new coils, boilers or chillers. Therefore check
+           // to see if Add/Alt system map criteria for baseline = proposed is met
+        if( ( Bldg:TotClgCap > 0 .AND. Bldg:DeltaClgCapAltAddRat = 0 ) .OR.
+            ( Bldg:TotClgCap = 0 .AND. Bldg:DeltaHtgCapAltAddRat = 0 ) )
+        then 0 // This is an Addition and/or Alteration analysis, and baseline = proposed 
+               // if IsAltered and change in building cooling capacity is 0 or is a
+               // heating only building with no new heating capacity.     
+        else 1
+        endif
+      else 1 // Exclude in copy from zp to zb
+      endif endif endif endif
+    else 1
+    endif endif endif endif
+  SIZING_BASELINE
+    0
+  ANNUAL
+    0
+ENDRULE
+
+//--------------------------------------------------------------------------------       
+//                  Rule for ServiceHotWater systems
+RULE FluidSys:ExcludeFromSizing
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( Proj:ExcptCondWtrHtr = "Yes" )
+      then 1
+      else 0
+      endif
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then
+      if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 .AND. Proj:ExcptCondWtrHtr = "No" )
+      then 0
+      else 1
+      endif
+    else if( Proj:IsAddOrAlt )
+    then // Proj:CompType is Addition* or AdditionAlteration 
+      if( Type = "ServiceHotWater" .AND. Proj:IsNewSHWFluidSys = 1 )
+      then 1
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif
+ENDRULE
+
+
+RULE ResDHWSys:SimStdEngyUse
+  DESCRIPTION
+    "A flag that indicates if standard design DHW energy use should rely on the
+     CEC DHW engine's internal std design mechanism (0) or if the DHW system data
+     should be simulated as if it were a proposed system (1)"
+  HELP
+    "A flag that indicates if standard design DHW energy use should rely on the
+     CEC DHW engine's internal std design mechanism (0) or if the DHW system data
+     should be simulated as if it were a proposed system (1)"
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2016
+    1
+  DEFAULT
+    // Simulate Std design same as proposed if ComplianceType -> IsNewEnvelope
+    // (and there is no new mechanical)
+//  if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+    if( Proj:ExcptCondWtrHtr = "No" )
+    then 1
+    else 0
+    endif
+  SIZING_PROPOSED : T24N_2016
+    1
+  SIZING_PROPOSED
+    if (IfValidAnd( IsBaseSys > 0 ))
+    then  0
+    else  u:SimStdEngyUse
+    endif
+  SIZING_BASELINE : T24N_2016
+    1
+  SIZING_BASELINE
+//  Removed because Base = Prop for only the next condition
+//  if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//  then // This is a Partial Envelope analysis, and the baseline = proposed 
+//    1
+//  else 
+//  if( Proj:IsAddOrAlt .AND. IsExistingDHW .AND. Proj:IsNewDHWFluidSys = 0)
+    if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewDHWFluidSys = 0 .AND. Proj:ExcptCondWtrHtr = "No" )
+    then // This is an Addition and/or Alteration analysis, and baseline = proposed 
+         // if IsExisting so simulate standard as we do proposed
+      1
+    else // Use DHW engine to compute std design energy use based on proposed inputs
+      0
+    endif
+//    endif
+  ANNUAL
+    z:SimStdEngyUse
+ENDRULE
+
+
+//RULE ResDHWSys:ExcludeFromSizing
+//  DESCRIPTION
+//    "A flag that indicates if proposed ResDHWSystem objects (and their children) are
+//     excluded from copy to a subsequent transform."
+//  HELP
+//    ""
+//  INPUTCLASS
+//    NotInput
+//  DEFAULT
+//    // For non-central residential DHW systems, do not copy to baseline.  
+//    // For central residential DHW systems, copy to baseline
+//    if( CentralSys = 0 )
+//    then 1
+//    else 0
+//    endif
+//  SIZING_PROPOSED : T24N_2013
+//    u:ExcludeFromSizing
+////    1        // this is correct, but need to ensure rules will create correct configuration of baseline.
+//  SIZING_PROPOSED
+//    u:ExcludeFromSizing
+//  SIZING_BASELINE
+//    0
+//  ANNUAL
+//    0
+//ENDRULE
+//
+
+RULE ResDHWSys:ExcludeFromSizing
+  DESCRIPTION
+    "A flag that indicates if proposed ResDHWSystem objects (and their children) are
+     excluded from copy to a subsequent transform."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtr = "Yes" ) // When water heating is excluded remove the proposed system
+    then 1   
+    else 0   
+    endif
+  SIZING_PROPOSED
+    0 
+  SIZING_BASELINE
+    0
+  ANNUAL
+    0
+ENDRULE
+
+                           
+
+// ----------------------------------------------------------------
+RULE NEW Proj:StdsYr
+  DATATYPE
+    Integer
+  LONGFORM
+    StandardsYear
+  INPUTCLASS
+    Notinput
+  DESCRIPTION
+    "Year of the Title 24 Standard"  
+  DEFAULT : T24N_2013
+    2013
+  DEFAULT : T24N_2016
+    2016  
+ENDRULE
+
+
+// ----------------------------------------------------------------
+// Set ZnSys:Type for SDD -> OS translation/simulation
+RULE ZnSys:Type
+  SIZING
+    switch Type
+      case "SZAC"  : "PTAC"
+      case "SZHP"  : "PTHP"
+      case "SPVAC" : "PTAC"
+      case "SPVHP" : "PTHP"
+      default      : UNCHANGED
+    endswitch
+  ANNUAL
+    switch Type
+      case "SZAC"  : "PTAC"
+      case "SZHP"  : "PTHP"
+      case "SPVAC" : "PTAC"
+      case "SPVHP" : "PTHP"
+      default      : UNCHANGED
+    endswitch
+ENDRULE

@@ -1,0 +1,57 @@
+TABLE AverageStateEnergyCosts,,,,,
+,State,ElecCost,NatGasCost,PropaneCost,FuelOilCost
+//,,¢/kWh,$/therm,$/therm,$/therm
+,Alabama,10.63,1.2244,0,0
+,Alaska,14.93,0.7893,0,0
+,Arizona,9.53,0.9122,0,0
+,Arkansas,7.71,0.7795,0,0
+,California,13.41,0.6878,0,0
+,Colorado,9.39,0.7395,0,0
+,Connecticut,14.65,0.8195,0,0
+,Delaware,10.13,1.2985,0,0
+,District of Columbia,12.02,1.0917,0,0
+,Florida,9.66,1.0156,0,0
+,Georgia,9.58,0.9502,0,0
+,Hawaii,34.88,4.5883,0,0
+,Idaho,6.86,0.7171,0,0
+,Illinois,7.99,0.758,0,0
+,Indiana,9.14,0.7493,0,0
+,Iowa,8.01,0.6956,0,0
+,Kansas,9.24,0.8605,0,0
+,Kentucky,8.73,0.8078,0,0
+,Louisiana,7.75,0.8234,0,0
+,Maine,11.53,1.1922,0,0
+,Maryland,10.43,0.9756,0,0
+,Massachusetts,13.84,1.042,0,0
+,Michigan,10.93,0.8146,0,0
+,Minnesota,8.84,0.6224,0,0
+,Mississippi,9.33,0.72,0,0
+,Missouri,8.20,0.9307,0,0
+,Montana,9.13,0.7785,0,0
+,Nebraska,8.38,0.6039,0,0
+,Nevada,8.83,0.7249,0,0
+,New Hampshire,13.36,1.1659,0,0
+,New Jersey,12.78,0.8293,0,0
+,New Mexico,9.32,0.6156,0,0
+,New York,15.06,0.7649,0,0
+,North Carolina,8.66,0.841,0,0
+,North Dakota,8.02,0.5893,0,0
+,Ohio,9.47,0.6937,0,0
+,Oklahoma,7.32,0.8732,0,0
+,Oregon,8.31,0.8693,0,0
+,Pennsylvania,9.44,0.999,0,0
+,Rhode Island,11.87,1.201,0,0
+,South Carolina,9.63,0.8459,0,0
+,South Dakota,8.10,0.6293,0,0
+,Tennessee,10.31,0.8156,0,0
+,Texas,8.16,0.6468,0,0
+,Utah,8.06,0.6829,0,0
+,Vermont,14.32,1.1795,0,0
+,Virginia,8.08,0.8556,0,0
+,Washington,7.68,0.958,0,0
+,West Virginia,8.42,0.9161,0,0
+,Wisconsin,10.51,0.7161,0,0
+,Wyoming,8.24,0.6556,0,0
+,U.S.,10.09,0.7902,0,0
+,*,0,0,0,0
+ENDTABLE,,,,,

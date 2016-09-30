@@ -1,0 +1,19 @@
+// Framing Factors Table,,
+// Save this TAB as FramingFactors.csv,,
+"// Table data based on JA4 Table 4.1.6  (April 30, 2013 version)",,
+TABLE FramingFactors,,
+FrmMat,FrmConfig,FrmFactor
+// Framing Material,Framing Configuration,Framing Fractions
+Wood,Wall16inOC,0.25
+Wood,Wall24inOC,0.22
+Wood,WallAWS48inOC,0.04
+Wood,WallAWS24inOC,0.17
+Metal,Wall16inOC,0.15
+Metal,Wall24inOC,0.12
+*,Floor16inOC,0.10
+*,Floor24inOC,0.07
+*,Roof16inOC,0.10
+*,Roof24inOC,0.07
+*,Roof48inOC,0.04
+ENDTABLE,,
+//,,

@@ -1,0 +1,972 @@
+// HVAC Secondary Systems - Fans - Supply
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+
+//      Fan System Modeling Method
+//      Supply Fan Design Air Rated Capacity
+//      Fan Control Method
+//      Supply Fan Static Pressure
+//      Supply Fan Efficiency
+//      Supply Fan Brake Horspower 
+//      Supply Fan Motor Efficiency
+//      Supply Fan Motor Position
+//      Fan Part-Flow Power Curve
+//      Supply Fan Power Index
+//      Process and Filtration Pressure Drop
+
+
+
+// ********** Fan System Modeling Method ***************************************
+RULE Fan:ModelingMthd
+  DESCRIPTION
+    "The method used to describe the design power consumption of a fan"  
+  HELP
+    "Software commonly models fans in three ways. The simple method is for the 
+     user to enter the electric power per unit of flow (W/cfm). This method is 
+     commonly used for unitary equipment and other small fan systems. A more 
+     detailed method is to model the fan as a system whereby the static pressure, 
+     fan efficiency, part-load curve, and motor efficiency are specified at 
+     design conditions. A third method is to specify brake horsepower at design 
+     conditions instead of fan efficiency and static pressure. This is a variation 
+     of the second method whereby brake horsepower is specified in lieu of static 
+     pressure and fan efficiency. The latter two methods are commonly used for 
+     VAV and other larger fan systems.
+
+     The simplified 'PowerPerFlow' method is not currently supported for compliance
+     analysis."     
+  INPUTCLASS
+    Default
+//OPTION - Defined in BEMEnums, shown here for reference
+//  StaticPressure
+//  BrakeHorsePower
+//  PowerPerUnitFlow
+//DEFAULT
+//  "BrakeHorsePower"
+  CHECKCODE
+     if( Proj:AnalysisType != "Research" .AND. ModelingMthd = "PowerPerUnitFlow" )
+     then 
+       PostError("ModelingMethod for fan '%s' is 'PowerPerUnitFlow', which is 
+                  is not allowed for compliance analysis.  Revise to 'StaticPressure'
+                  or 'BrakeHorsePower and provide the necessary inputs'", Name)
+     else UNCHANGED
+     endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then "StaticPressure"
+    else u:ModelingMthd  
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( ParentComponentType() = "ZnSys" ) 
+      then "PowerPerUnitFlow" // Baseline systems 1 & 2
+      else if( AirSys:BaseSysNum = 9 .OR. AirSys:BaseSysNum = 10 )
+      then "PowerPerUnitFlow" // Baseline systems 9 & 10
+      else "BrakeHorsePower" // All other systems
+      endif endif
+    else z:ModelingMthd  
+    endif
+ENDRULE
+
+
+
+// ********** Supply Fan Power Index *******************************************
+; Not used as input for AirSystem, only BASELINE ZnSys:Type = FPFC and fan-powered boxes
+RULE Fan:PwrIdx
+  DESCRIPTION
+    "The supply fan power, in Watts, per unit of flow, in CFM"
+  HELP
+    "This is a required input if ModelingMethod = 'PowerPerFlow'." 
+  HELP : T24N
+    "ModelingMethod = 'PowerPerFlow' is not used for compliance analysis.
+     This value is calculated from other inputs and shown for reference only."
+  INPUTCLASS
+    Prescribed
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0.25
+  COMMONMAXIMUM
+    1.5 
+  UNITS 
+    W/cfm 
+  REPORTPRECISION
+    3          
+  DEFAULT
+    if( Proj:AutoEffInput = 1 )
+    then // For PROPOSED AutoEfficiency input only
+      if( ParentComponentType() = "ZnSys" )
+      then
+        if( ZnSys:IsResExhSys )
+        then UNCHANGED // See HVACSecondary-Fan-Exhaust.rule
+        else 0.3 // Baseline system 1 or 2
+        endif
+      else if( AirSys:IsResExhSys )
+      then UNCHANGED // See HVACSecondary-Fan-Exhaust.rule
+      else if( AirSys:Type = "HV" )
+      then 0.3  // Baseline system 9 or 10
+      else UNDEFINED
+      endif endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:PwrIdx
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 .AND. ModelingMthd = "PowerPerUnitFlow" )
+    then
+      if( ParentComponentType() = "ZnSys" ) 
+      then 0.3 // Baseline system 1 or 2
+      else if( AirSys:BaseSysNum = 9 .OR. AirSys:BaseSysNum = 10 )
+      then 0.3 // Baseline system 9 or 10
+      else UNDEFINED
+      endif endif
+    else z:PwrIdx
+    endif
+ENDRULE
+
+
+// ********** Supply Fan Efficiency ********************************************
+// =========================== AirSystem =======================================
+RULE AirSys:AirSeg:Fan:FlowEff
+  DESCRIPTION
+    "The efficiency of the fan at design conditions."  
+  HELP
+    "This efficiency term includes belt/drive losses, but does not include 
+     motor losses.
+     This is a required input if ModelingMethod = 'StaticPressure'." 
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0.35
+  COMMONMINIMUM
+    0.4
+  COMMONMAXIMUM
+    0.7
+  MAXIMUM
+    1.0
+  REPORTPRECISION
+    3  
+  DEFAULT
+    if( AirSeg:Type = "Supply" )
+    then
+      if( IfValidAnd( FlowCap < 2000 ) )
+       then 0.5
+      else if( IfValidAnd( FlowCap < 10000 ) )
+       then 0.6
+      else 0.62
+      endif  endif
+    else if( AirSeg:Type = "Relief" )
+    then 
+      if( IfValidAnd( FlowCap < 10000 ) )
+       then 0.4
+      else 0.5
+      endif 
+    else 0.6
+    endif endif
+  CHECKCODE
+    if( ModelingMthd = "StaticPressure" .AND. LocalStatus( FlowEff ) = 0 )
+    then 
+      PostError("FlowEfficiency must be defined for fan '%s' if the StaticPressure 
+                 fan power method is used", Name)
+    else UNCHANGED
+    endif  
+  SIZING
+    if( BaseSysNum > 0 )
+    then 1.0 // Fan efficiency set to 1.0 for sizing
+    else if( ModelingMthd = "StaticPressure" )
+    then u:FlowEff 
+    else if( AirSeg:Type = "Supply" )
+// Value needed for simulation, so use baseline rules to set set value for 
+// BrakeHorsePower and PowerPerUnitFlow methods
+    then
+      if( FlowCap < 2000 )
+       then 0.5
+      else if( FlowCap < 10000 )
+       then 0.6
+      else 0.62
+      endif  endif
+    else if( AirSeg:Type = "Relief" )
+    then 
+      if( FlowCap < 10000 )
+       then 0.4
+      else 0.5
+      endif 
+    else 0.6 // Default assumption for all other fans
+    endif endif endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( AirSeg:Type = "Supply" )
+      then 0.65
+      else 
+      if( AirSeg:Type = "Relief" .OR. 
+          AirSeg:Type = "Return" )
+      then 0.65
+      else 0.65
+      endif endif   
+    else z:FlowEff 
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:Fan:FlowEff
+  DEFAULT
+    0.65    
+  CHECKSIM
+    if( LocalStatus( FlowEff ) = 0 )
+    then 
+      PostError("FlowEff for fan '%s' must be defined for simulation", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( BaseSysNum > 0 )
+    then 1.0 // Fan efficiency set to 1.0 for sizing
+    else u:FlowEff
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then 0.65 
+    else z:FlowEff 
+    endif
+ENDRULE
+
+
+// ********** Supply Fan Static Pressure **************************************
+
+// =========================== AirSystem =======================================
+RULE AirSys:AirSeg:Fan:TotStaticPress
+  DESCRIPTION
+    "The total static pressure drop across the fan at design conditions."  
+  HELP
+    "The total static pressure (TSP) drop includes the pressure drop across 
+     components both internal and external to an air handler. 
+     This is a required input if ModelingMethod = 'StaticPressure'." 
+  INPUTCLASS
+    CondRequired
+  MINIMUM
+    0.00001
+  COMMONMINIMUM
+    0.1
+  COMMONMAXIMUM
+    6.0  
+  UNITS 
+    inH2O 
+  REPORTPRECISION
+    3  
+  DEFAULT
+    if( ModelingMthd = "BrakeHorsePower" .OR. 
+        ModelingMthd = "PowerPerFlow" .OR.
+        LocalStatus( PwrIdx ) > 0 )
+    then UNDEFINED
+    else if( AirSys:IsExhSys )
+    then UNCHANGED // See HVACSecondary-Fan-Exhaust.rule
+    else if( Proj:AutoEffInput = 1 ) 
+    then // For PROPOSED AutoEfficiency input only
+      if( AirSeg:Type = "Supply" )
+      then
+        if( AirSys:IsMultiZnSys = 0 )
+          then // Is single-zone system
+          if( IfValidAnd( FlowCap < 2000 ) )
+          then 2.5
+          else if( IfValidAnd( FlowCap < 10000 ) ) 
+          then 3.0
+          else 3.5
+          endif endif
+        // Is a multi-zone system
+        else if( Parent3(TotStoryCnt) <= 6 )   
+        then
+          if( IfValidAnd( FlowCap < 2000 ) )
+          then 3.0
+          else if( IfValidAnd( FlowCap < 10000 ) ) 
+          then 3.5
+          else 4.0
+          endif endif
+        else if( IfValidAnd( FlowCap < 2000 ) )
+        then 3.5
+        else if( IfValidAnd( FlowCap < 10000 ) ) 
+        then 4.0
+        else 4.5
+        endif endif endif endif
+      else if( AirSeg:Type = "Relief" )
+      then
+        if( IfValidAnd( FlowCap < 10000 ) )
+        then 0.75
+        else 1.0
+        endif
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif endif endif
+  CHECKSIM
+    if( ModelingMthd = "StaticPressure" .AND. LocalStatus( TotStaticPress ) = 0 )
+    then 
+      PostError("TotalStaticPressure must be defined for fan '%s' if the StaticPressure 
+                 fan power method is used", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then // Fan power is set to near 0 for sizing.
+      0.00001 // Using 0 can caus E+ sim failures. See GC 618 for background
+    else if( ModelingMthd = "StaticPressure" )
+    then u:TotStaticPress 
+    else UNDEFINED 
+    endif endif
+  ANNUAL
+// See rule below to calculate TotStatPress for simulation of other ModelingMthds
+    if( BaseSysNum > 0 )
+    then UNCHANGED
+    else z:TotStaticPress
+    endif
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:Fan:TotStaticPress
+  DEFAULT
+    if( ModelingMthd = "BrakeHorsePower" .OR. 
+        ModelingMthd = "PowerPerFlow" .OR.
+        LocalStatus( PwrIdx ) > 0 )
+    then UNDEFINED
+    else if( ZnSys:IsExhSys )
+    then UNCHANGED // See HVACSecondary-Fan-Exhaust.rule
+    else 0.5 // Default
+    endif endif
+// TotStaticPress for other ZnSys fans calculated by separate rule below
+ENDRULE
+
+
+
+// ********** Supply Fan Motor Horsepower *************************************
+// For AutoEffInput rules
+RULE NEW Fan:AutoEffInputMtrBHP
+  DATATYPE
+    Float
+  LONGFORM
+    AutomaticEfficiencyInputMotorBHP
+  DESCRIPTION
+    "Intermediate value used if AutoEffInput = 1"
+  UNITS 
+    hp
+  INPUTCLASS 
+    NotInput     
+  DEFAULT
+    // For PROPOSED AutoEfficiency input only
+    // Option #1) Calculate from TotStaticPress
+    if( IfValidAnd( FlowCap > 0 ) .AND. 
+        IfValidAnd( TotStaticPress > 0 ) .AND. 
+        IfValidAnd( FlowEff > 0 ) )
+    then FlowCap * TotStaticPress * ( 0.1175 /  745.6 ) / FlowEff
+    else // Option #2) Calculated from PwrIdx
+    if( LocalStatus( PwrIdx ) > 0 .AND. 
+        LocalStatus( FlowCap ) > 0 .AND.
+        LocalStatus( MtrEff ) > 0 )  
+    then PwrIdx * FlowCap * MtrEff / 745.6
+    else // Option #3) Calculated using BHP allowance
+    if( ParentComponentType() = "AirSeg" .AND.
+        IfValidAnd( FlowCap > 0 ) )
+    then // Calculate based on 90.1 baseline allowance
+      if( AirSys:Type = "PVAV" .OR. AirSys:Type = "VAV" )
+      then 0.0013 * FlowCap
+      else 0.00094 * FlowCap
+      endif
+    else UNDEFINED
+    endif endif endif
+ENDRULE
+
+RULE Fan:MtrHP
+  DESCRIPTION
+    "The motor nameplate horsepower of the fan."  
+  INPUTCLASS
+    Required
+  UNITS 
+    hp
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0.08333
+  COMMONMAXIMUM
+    200 
+  REPORTPRECISION
+    3   
+  DEFAULT
+    if( Proj:AutoEffInput = 1 )
+    then // For PROPOSED AutoEfficiency input only
+      // Find next largest motor size in Std motor table based on
+      // user-input,auto-calculated MtrBHP, or PwrIdx
+      if( LocalStatus( MtrBHP ) > 0 )
+      then StdElecMtrSize:MotorHPValue("InputMotorHP", MtrBHP)
+      else if( LocalStatus( AutoEffInputMtrBHP ) > 0 )
+      then StdElecMtrSize:MotorHPValue("InputMotorHP", AutoEffInputMtrBHP)
+      else 
+      if( IfValidAnd( PwrIdx > 0 ) .AND. 
+          IfValidAnd( FlowCap > 0 ) )
+      then StdElecMtrSize:MotorHPValue("InputMotorHP", PwrIdx * FlowCap / 745.6)
+      else UNDEFINED
+      endif endif endif
+    else UNDEFINED
+    endif  
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:MtrHP
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then 
+      if( IfValidAnd( PwrIdx > 0 ) .AND. 
+          IfValidAnd( FlowCap > 0 ) )
+      then // For fans specified by PowerPerUnitFlow method, otherwise, see rule below
+        StdElecMtrSize:MotorHPValue("InputMotorHP", PwrIdx * FlowCap / 745.6)
+      else UNDEFINED
+      endif
+    else z:MtrHP
+    endif
+ENDRULE
+
+
+
+
+// ********** System Fan Power Allowance ***************************************
+// Base allowance, not including credits
+RULE NEW AirSys:BaseFanBHPAllowance
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineFanBrakeHorsepowerAllowance
+  DESCRIPTION
+    "The baseline fan power allowance, including supply, return/relief,
+     and exhaust fans, but not included additional fan pressure drop credits."
+  UNITS
+    BHP
+  ANNUAL_BASELINE
+    if( BaseSysNum = 3 .OR. BaseSysNum = 4 )
+    then 0.00094 * SupFanCap
+    else if( BaseSysNum >= 5 .AND. BaseSysNum <= 8 )
+    then 0.0013 * SupFanCap
+    else 0
+    endif endif
+ENDRULE
+RULE NEW ZnSys:BaseFanBHPAllowance
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineFanBrakeHorsepowerAllowance
+  DESCRIPTION
+    "The baseline fan power allowance, including supply, return/relief,
+     and exhaust fans, but not included additional fan pressure drop credits."
+  UNITS
+    BHP
+  ANNUAL_BASELINE
+    if( BaseSysNum <= 2 .OR. BaseSysNum >= 9 )
+    then 0.3 * SupFanCap / 746 * 0.8
+    else 0
+    endif
+ENDRULE
+// Include credits
+RULE NEW AirSys:BaseFanBHPWithPressDropCredit
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineFanBrakeHorsepowerWithPressureDropCredit
+  DESCRIPTION
+    "The baseline fan  power allowance plus additional fan pressure drop credits."
+  UNITS
+    BHP
+  ANNUAL_BASELINE
+    BaseFanBHPAllowance + TotSysFanPwrAdj
+ENDRULE
+RULE NEW ZnSys:BaseFanBHPWithPressDropCredit
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineFanBrakeHorsepowerWithPressureDropCredit
+  DESCRIPTION
+    "The baseline fan power allowance plus additional fan pressure drop credits."
+  UNITS
+    BHP
+  ANNUAL_BASELINE
+    BaseFanBHPAllowance + TotSysFanPwrAdj
+ENDRULE
+
+
+// ********** Supply Fan Power *************************************************
+// For Supply fan only, return/relief & exhaust fan in separate rules
+RULE AirSys:AirSeg:Fan:MtrBHP
+  DESCRIPTION
+    "The design motor shaft brake horsepower of the fan."  
+  HELP
+    "The motor brake horse power is the power at the motor shaft, including fan
+     and drive efficiencies.
+     This is a required input if ModelingMethod = 'BrakeHorsePower'." 
+  INPUTCLASS
+    CondRequired
+  UNITS 
+    hp
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0.05
+  COMMONMAXIMUM
+    200
+  REPORTPRECISION
+    3  
+  DEFAULT
+    if( Proj:AutoEffInput = 1 .OR. IfValidAnd( ModelingMthd = "StaticPressure" ) )
+    then // For PROPOSED AutoEfficiency input only
+         // Determine MtrBHP based on user-input or auto-calculated MtrBHP 
+      if( LocalStatus( AutoEffInputMtrBHP ) > 0 )
+      then AutoEffInputMtrBHP
+      else // 
+      if( IfValidAnd( FlowCap > 0 ) .AND. 
+          IfValidAnd( TotStaticPress > 0 ) .AND. 
+          IfValidAnd( FlowEff > 0 ) )
+      then FlowCap * TotStaticPress * ( 0.1175 / 745.6 ) / FlowEff    
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif  
+  CHECKCODE
+    if( IfValidAnd( MtrBHP > 0 ) = 0 .AND. ModelingMthd = "BrakeHorsePower" )
+    then // MtrBHP is UNDEFINED or is 0
+      PostError("MotorBHP is a required input for fan '%s' if ModelingMethod = 
+                 'BrakeHorsePower'", Name)   
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then 0 // Fan power for sizing is set to 0
+    else u:MtrBHP// Use user-defined MtrBHP      
+    endif
+// Phase 1 equivalent rule
+; ANNUAL
+;   if( BaseSysNum > 0 )
+;   then 
+;     if( ParentComponentType() = "AirSeg" )
+;     then AirSys:BaseFanBHPAllowance
+;     else UNDEFINED
+;     endif
+;   else z:MtrBHP
+;   endif
+  ANNUAL
+    // For Supply fan only, return/relief & exhaust fan in separate rules
+    if( BaseSysNum > 0 )
+    then AirSys:BaseFanBHPWithPressDropCredit * AirSys:SupFanPwrRat
+    else z:MtrBHP
+    endif
+ENDRULE
+RULE ZnSys:Fan:MtrBHP
+  DEFAULT
+    if( Proj:AutoEffInput = 1 .OR. IfValidAnd( ModelingMthd = "StaticPressure" ) )
+    then // For PROPOSED AutoEfficiency input only
+         // Determine MtrBHP based on user-input or auto-calculated MtrBHP 
+      if( LocalStatus( AutoEffInputMtrBHP ) > 0 )
+      then AutoEffInputMtrBHP
+      else // 
+      if( IfValidAnd( FlowCap > 0 ) .AND. 
+          IfValidAnd( TotStaticPress > 0 ) .AND. 
+          IfValidAnd( FlowEff > 0 ) )
+      then FlowCap * TotStaticPress * ( 0.1175 / 745.6 ) / FlowEff    
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif  
+  CHECKCODE
+    if( IfValidAnd( MtrBHP > 0 ) = 0 .AND. ModelingMthd = "BrakeHorsePower" )
+    then // MtrBHP is UNDEFINED or is 0
+      PostError("MotorBHP is a required input for fan '%s' if ModelingMethod = 
+                 'BrakeHorsePower'", Name)   
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then 0 // Fan power for sizing is set to 0
+    else u:MtrBHP// Use user-defined MtrBHP      
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then ZnSys:BaseFanBHPWithPressDropCredit * ( 1 - ZnSys:ExhFanPwrRat )
+    else z:MtrBHP
+    endif
+ENDRULE
+
+
+// ********** Motor Efficiency *************************************************
+// Determine baseline MtrHP and MtrEff for baseline systems that do not use PwrPerFlow
+RULE Fan:MtrHP
+  ANNUAL
+    if( BaseSysNum > 0 .AND. 
+        LocalStatus( MtrBHP ) > 0 .AND.
+        LocalStatus( PwrIdx ) = 0 )
+    then StdElecMtrSize:MotorHPValue("InputMotorHP", MtrBHP)
+    else UNCHANGED
+    endif
+ENDRULE
+
+// Determine index in table of Std motor sizes based on MtrHP
+RULE NEW Fan:MtrPerfIdx
+  DATATYPE
+    Integer
+  LONGFORM
+    MotorPerformanceIndex
+  DESCRIPTION
+    "The index of motor size according to a list of standard sizes."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( MtrHP > 0 ) )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", MtrHP)
+    else
+    if( IfValidAnd( PwrIdx > 0 ) .AND.
+        IfValidAnd( FlowCap >= 0 ) )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", PwrIdx * FlowCap / 745.6)
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( IfValidAnd( MtrHP > 0 ) )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", MtrHP)
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( IfValidAnd( MtrHP > 0 ) )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", MtrHP)
+    else
+    if( IfValidAnd( PwrIdx > 0 ) .AND.
+        IfValidAnd( FlowCap >= 0 ) )
+    then StdElecMtrSize:MotorHPIndex("InputMotorHP", PwrIdx * FlowCap / 745.6)
+    else UNDEFINED
+    endif endif
+ENDRULE
+
+// Look up MtrEff based on index in table of Std motor sizes
+RULE Fan:MtrEff
+  DESCRIPTION
+    "Indicates how well the motor converts electrical power into mechanical power
+     and is defined as output power divided by input power expressed as a ratio."
+  INPUTCLASS
+    Required
+  MINIMUM
+    0.4
+  COMMONMINIMUM
+    0.6
+  COMMONMAXIMUM
+    0.98
+  REPORTPRECISION
+    3  
+  DEFAULT
+    if( Proj:AutoEffInput = 1 .AND. IfValidAnd( MtrPerfIdx > 0 ) )
+    then // For PROPOSED AutoEfficiency input only
+      if( ParentComponentType() = "ZnSys")
+      then 0.8
+      else if( AirSys:BaseSysNum = 9 .OR. AirSys:BaseSysNum = 10 )
+      then 0.8
+      else if( IfValidAnd( MtrPerfIdx > 0 ) )
+      then // Look-up MtrEff
+        StdElecMtrPerf:MotorEfficiency("MotorHPIndex", MtrPerfIdx)   
+      else 0
+      endif endif endif 
+    else UNDEFINED
+    endif   
+  SIZING
+    if( BaseSysNum > 0 )
+    then 1.0 // Fan power for sizing is set to 0
+    else u:MtrEff
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( ParentComponentType() = "ZnSys")
+      then 0.8
+      else if( AirSys:BaseSysNum = 9 .OR. AirSys:BaseSysNum = 10 )
+      then 0.8
+      else if( IfValidAnd( MtrPerfIdx > 0 ) )
+      then // Look-up MtrEff
+        StdElecMtrPerf:MotorEfficiency("MotorHPIndex", MtrPerfIdx)   
+      else 0
+      endif endif endif
+    else z:MtrEff
+    endif
+ENDRULE
+
+// Calculate MtrBHP for PowerPerUnitFlow method 
+// Pfan_motor (W) = 0.1175 * FlowCap * TotStatPress / ( FlowEff * MtrEff )
+RULE Fan:MtrBHP
+  REPORTPRECISION
+    3
+  DEFAULT
+    if( LocalStatus( AutoEffInputMtrBHP ) = 0 .AND.
+        LocalStatus( PwrIdx ) > 0 .AND. 
+        LocalStatus( FlowCap ) > 0 .AND.
+        LocalStatus( MtrEff ) > 0 ) 
+    then PwrIdx * FlowCap * MtrEff / 745.6
+    else UNCHANGED
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 .AND. 
+        LocalStatus( PwrIdx ) > 0 .AND. 
+        LocalStatus( FlowCap ) > 0 .AND.
+        LocalStatus( MtrEff ) > 0 ) 
+    then PwrIdx * FlowCap * MtrEff / 745.6
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+
+// ********** Motor Position *****************************************************
+RULE Fan:MtrPos
+  DESCRIPTION
+    "The position of the supply fan motor relative to the cooling air stream."  
+  INPUTCLASS
+    Default
+  OPTION
+    InAirStream
+    NotInAirStream   
+  DEFAULT
+    "InAirStream"
+  SIZING
+    if( BaseSysNum > 0 )
+    then "InAirStream"
+    else u:MtrPos
+    endif
+  ANNUAL
+    z:MtrPos
+ENDRULE
+
+
+// Fan heat at design conditions
+// =========================== AirSystem ======================================
+RULE NEW Fan:SupFanHtDsgn
+  DATATYPE
+   Float
+  LONGFORM
+    SupplyFanHeatDsgn
+  DESCRIPTION
+    "The amount of heat generated by the supply fan at design conditions."
+  HELP
+    "Used for reporting or to adjust baseline system coil capacities."
+  INPUTCLASS
+    NotInput  
+  SIZING
+    if( BaseSysNum > 0 )
+    then 0
+    else 
+    if( IfValidAnd( MtrBHP > 0 ) .AND.
+        IfValidAnd( MtrEff > 0 ) )
+    then 
+      if( MtrPos = "InAirStream" )
+      then MtrBHP * 2544.4 / MtrEff
+      else MtrBHP * 2544.4
+      endif
+    else 0
+    endif endif 
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd( MtrBHP > 0 ) .AND.
+          IfValidAnd( MtrEff > 0 ) )
+      then 
+        if( MtrPos = "InAirStream" )
+        then MtrBHP * 2544.4 / MtrEff
+        else MtrBHP * 2544.4
+        endif
+      else 0
+      endif
+    else z:SupFanHtDsgn
+    endif
+ENDRULE
+
+
+// ********** Supply Fan Part-Flow Power Curve *********************************
+// =========================== AirSystem ======================================
+RULE AirSys:AirSeg:Fan:Pwr_fPLRCrvRef
+  DESCRIPTION
+    "A part-load power curve which represents the percentage full-load power 
+     draw of the supply fan as a function of the percentage full-load air flow."
+  INPUTCLASS
+    Prescribed
+  SIZING
+    if( CtrlMthd = "ConstantVolume" )    
+    then UNDEFINED
+    else if( BaseSysNum > 0 )
+    then // For Baseline systems
+      if( CtrlMthd = "VariableSpeedDrive" ) 
+      then
+        if( AirSys:Type = "SZVAVAC" .OR. AirSys:Type = "SZVAVHP" )
+        then Rulelibrary(CrvCubic, "FanVSDPerfSpResetPwrRatio_fCFMRatio")
+        else Rulelibrary(CrvCubic, "FanVSDGoodSpResetPwrRatio_fCFMRatio")
+        endif
+      else UNDEFINED
+      endif
+    // For Proposed systems
+    else if( CtrlMthd = "VariableSpeedDrive" )
+    then
+      if( Parent ( Type ) = "Relief" )
+      then Rulelibrary(CrvCubic, "FanVSDPwrRatio_fCFMRatio")
+      else if( AirSys:Type = "SZVAVAC" .OR. AirSys:Type = "SZVAVHP" )
+      then Rulelibrary(CrvCubic, "FanVSDPerfSpResetPwrRatio_fCFMRatio")
+      else if( AirSys:IsMultiZnSys = 1 )
+        then 
+        if( AirSys:CtrlSysType = "DDCToZone" .AND. AirSys:StaticPressRstCtrl = 1 )
+        then Rulelibrary(CrvCubic, "FanVSDGoodSpResetPwrRatio_fCFMRatio")
+        else Rulelibrary(CrvCubic, "FanVSD901PwrRatio_fCFMRatio")
+        endif
+      else Rulelibrary(CrvCubic, "FanVSD901PwrRatio_fCFMRatio")
+      endif endif endif
+    else if( Class = "Centrifugal" )
+    then 
+      if( CentType = "ForwardCurved" )
+      then
+        if( CtrlMthd = "InletVanes" .OR. CtrlMthd = "Dampers" )
+        then Rulelibrary(CrvCubic, "FanFCVanesPwrRatio_fCFMRatio")
+        else Rulelibrary(CrvCubic, "FanFCPwrRatio_fCFMRatio")
+        endif
+      else // Fan is AF or BI
+        if( CtrlMthd = "InletVanes" .OR. CtrlMthd = "Dampers" )
+        then Rulelibrary(CrvCubic, "FanAForBIVanesPwrRatio_fCFMRatio")
+        else Rulelibrary(CrvCubic, "FanAForBIPwrRatio_fCFMRatio")
+        endif
+      endif
+    else if( Class = "Axial" )
+      then 
+        if( CtrlMthd = "VariablePitchBlades" )
+        then Rulelibrary(CrvCubic, "FanVaneAxVpPwrRatio_fCFMRatio")
+        else Rulelibrary(CrvCubic, "FanLinearPwrRatio_fCFMRatio")
+        endif
+    else Rulelibrary(CrvCubic, "FanLinearPwrRatio_fCFMRatio") // Default 
+    endif endif endif endif endif
+  ANNUAL
+    z:Pwr_fPLRCrvRef
+ENDRULE
+// =========================== ZoneSystem ======================================
+RULE ZnSys:Fan:Pwr_fPLRCrvRef
+  SIZING
+    if( CtrlMthd = "ConstantVolume" )    
+    then UNDEFINED
+    else if( CtrlMthd = "VariableSpeedDrive" .OR. CtrlMthd = "TwoSpeed" )
+    then Rulelibrary(CrvCubic, "FanVSDPwrRatio_fCFMRatio")  
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:Pwr_fPLRCrvRef
+ENDRULE
+
+
+RULE Fan:TotEff
+  DESCRIPTION
+    "The total efficiency of the fan. It is the product of the flow (fan) and 
+     motor efficiency, for simulation."
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    3  
+  DEFAULT
+    if( IfValidAnd( FlowEff >= 0 ) .AND. IfValidAnd( MtrEff > 0 ) )
+    then FlowEff * MtrEff
+    else UNDEFINED 
+    endif 
+  SIZING
+    if( IfValidAnd( FlowEff >= 0 ) .AND. IfValidAnd( MtrEff > 0 ) )
+    then FlowEff * MtrEff
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( IfValidAnd( FlowEff >= 0 ) .AND. IfValidAnd( MtrEff > 0 ) )
+    then FlowEff * MtrEff
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// TotStaticPress is needed for simulation, so it is calculated for other methods
+// For reference:
+// ---- MtrBHP ----
+// Pfan_mtr (W) = 0.1175 * Qfan(CFM) * dP(inH2O) / ( Eff_fan * Eff_drive * Eff_motor )
+// Pfan_mtr (W) = 0.1175 * FlowCap * TotStatPress / ( FlowEff * MtrEff )
+// Pfan_shaft (W) = 0.1175 * FlowCap * TotStatPress / FlowEff
+// Pfan_shaft (bhp) = MtrBHP = ( 0.1175 / 745.6 ) * FlowCap * TotStatPress / FlowEff
+// TotStatPress = MtrBHP * FlowEff / FlowCap / ( 0.1175 / 745.6 ) 
+// ---- PwrIdx ----
+// PwrIdx = (Pfan_mtr / FlowCap ) = 0.1175 * TotStatPress / ( FlowEff * MtrEff )
+// TotStatPress = PwrIdx * ( FlowEff * MtrEff ) / 0.1175
+RULE Fan:TotStaticPress
+  DEFAULT 
+    if( ModelingMthd = "BrakeHorsePower" .AND.
+        IfValidAnd( MtrBHP >= 0 ) .AND.
+        IfValidAnd( FlowEff >= 0 ) .AND.
+        IfValidAnd( FlowCap > 0 ) )
+    then // BrakehorsePower method
+      MtrBHP * FlowEff / FlowCap / ( 0.1175 / 745.6 )
+    else // PowerPerFlow method
+    if( LocalStatus( PwrIdx ) > 0 .AND. 
+        IfValidAnd( TotEff >= 0 ) )
+    then PwrIdx * TotEff / 0.1175 
+    else UNCHANGED 
+    endif endif
+  SIZING
+    if( BaseSysNum > 0 ) 
+    then // Fan power is set to near 0 for sizing.
+      0.00001 // Using 0 can caus E+ sim failures. See GC 618 for background
+    else    
+    if( ModelingMthd = "BrakeHorsePower" .AND.
+        IfValidAnd( MtrBHP >= 0 ) .AND.
+        IfValidAnd( FlowEff >= 0 ) .AND.
+        IfValidAnd( FlowCap > 0 ) )
+    then // BrakehorsePower method
+      MtrBHP * FlowEff / FlowCap / ( 0.1175 / 745.6 )
+    else // PowerPerFlow method
+    if( LocalStatus( PwrIdx ) > 0 .AND. 
+        IfValidAnd( TotEff >= 0 ) )
+    then PwrIdx * TotEff / 0.1175 
+    else UNCHANGED 
+    endif endif endif
+  ANNUAL
+    if( BaseSysNum > 0 ) 
+    then 
+      if( ModelingMthd = "BrakeHorsePower" .AND.
+          IfValidAnd( MtrBHP >= 0 ) .AND.
+          IfValidAnd( FlowEff >= 0 ) .AND.
+          IfValidAnd( FlowCap > 0 ) )
+      then // BrakehorsePower method
+        MtrBHP * FlowEff / FlowCap / ( 0.1175 / 745.6 )
+      else // PowerPerFlow method
+      if( LocalStatus( PwrIdx ) > 0 .AND. 
+          IfValidAnd( TotEff >= 0 ) )
+      then PwrIdx * TotEff / 0.1175 
+      else UNCHANGED 
+      endif endif
+    else z:TotStaticPress
+    endif
+ENDRULE

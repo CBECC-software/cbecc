@@ -1,0 +1,724 @@
+// HVAC Secondary Systems - Fans - Supply
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2013-2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+
+
+
+// =========================== Thermal Zones ==================================
+// --------------------------- Flow Ratios ------------------------------------
+// Transfer supply flow from system to zone for both Pri & VentSys
+RULE NEW ThrmlZn:PriAirCondgSysDsgnFlow
+  DATATYPE
+    Float
+  LONGFORM
+    PrimaryAirConditioningSystemDesignFlow
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond )
+    then
+      if ( LocalCompAssigned( PriAirCondgSysRef ) = ComponentType( "AirSys" ) )
+      then ; Referenced System is an AirSys
+        PriAirFlowMax
+      else if ( LocalCompAssigned( PriAirCondgSysRef ) = ComponentType( "ZnSys" ) )
+      then ; Referenced System is a ZnSys
+        PriAirCondgSysRef:SupFanCap
+      else 0
+      endif endif
+    else 0
+    endif
+  ANNUAL
+    if( IsCond )
+    then
+      if ( LocalCompAssigned( PriAirCondgSysRef ) = ComponentType( "AirSys" ) )
+      then ; Referenced System is an AirSys
+        PriAirFlowMax
+      else if ( LocalCompAssigned( PriAirCondgSysRef ) = ComponentType( "ZnSys" ) )
+      then ; Referenced System is a ZnSys
+        PriAirCondgSysRef:SupFanCap
+      else 0
+      endif endif
+    else 0
+    endif
+; ANNUAL_BASELINE
+;   if( IfValidAnd( z:ClgDsgnFlowSim >= 0 ) .AND.
+;       IfValidAnd( z:HtgDsgnFlowSim >= 0 ) .AND.
+;       IfValidAnd( PriAirCondgSysRef:Cnt > 0 ) )
+;   then
+;     // Cooling sizing ratio applied to TerminalUnit flow to ensure total system 
+;     // air flow is consistent with oversized cooling capacity  
+;   Max( Max( z:ClgDsgnFlowSim, z:HtgDsgnFlowSim ) * Proj:ClgSizingRat,
+;             z:VentFlowWithMult ) / PriAirCondgSysRef:Cnt
+;   else 0
+;   endif
+ENDRULE
+RULE NEW ThrmlZn:VentSysDsgnFlow
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationSystemDesignAirFlow
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond )
+    then
+      if ( LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+      then ; Referenced System is an AirSys
+        PriAirFlowMax
+      else if ( LocalCompAssigned( VentSysRef ) = ComponentType( "ZnSys" ) )
+      then ; Referenced System is a ZnSys
+        VentSysRef:SupFanCap
+      else 0
+      endif endif
+    else 0
+    endif
+  ANNUAL
+    if( IsCond )
+    then
+      if ( LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+      then ; Referenced System is an AirSys
+        PriAirFlowMax
+      else if ( LocalCompAssigned( VentSysRef ) = ComponentType( "ZnSys" ) )
+      then ; Referenced System is a ZnSys
+        VentSysRef:SupFanCap
+      else 0
+      endif endif
+    else 0
+    endif
+ENDRULE
+// Determine max of Pri/Vent flow to zone
+RULE NEW ThrmlZn:MaxDsgnFlow
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumDesignAirFlow
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    Max( ValidOr( PriAirCondgSysDsgnFlow, 0 ), 
+         ValidOr( VentSysDsgnFlow, 0 ) )
+ENDRULE
+// Calculate ratio of air flow baseline:proposed 
+RULE NEW ThrmlZn:BaseToPropDsgnFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineToProposedDesignFlowRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_BASELINE
+    if( IfValidAnd( ap:MaxDsgnFlow > 0 ) )
+    then PriAirCondgSysDsgnFlow / ap:MaxDsgnFlow
+    else 0 
+    endif
+ENDRULE
+
+// Calculate ratio zone:sys flow for each zone, for Pri/Vent/Exh
+RULE NEW ThrmlZn:PriZnToSysFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    PrimaryZoneToSystemFlowRatio
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then 
+      if( IfValidAnd( PriAirCondgSysRef:SupFanCap > 0 ) )
+      then PriAirCondgSysDsgnFlow / PriAirCondgSysRef:SupFanCap
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentZnToSysFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationZoneToSystemFlowRatio
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. UniqueVentSysAssigned )
+    then
+      if( IfValidAnd( VentSysRef:SupFanCap > 0 ) )
+      then VentSysDsgnFlow / VentSysRef:SupFanCap
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+RULE NEW ThrmlZn:ExhZnToSysFlowRat
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustZoneToSystemFlowRatio
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( ExhSysRef ) )
+    then
+      if( IfValidAnd( ExhSysRef:SupFanCap > 0 ) .OR.
+          IfValidAnd( ExhSysRef:ExhFanCap > 0 ) )
+      then
+        ExhFlow / ( ExhSysRef:SupFanCap + ExhSysRef:ExhFanCap )
+      else 0
+      endif
+    else 0
+    endif   
+ENDRULE
+
+
+// --------------------------- Fan Powers -------------------------------------
+// Allocate the prop fan power (in kW) to the ThrmlZn by multiplying the system 
+// fan power by the ZnToSysFlowratio, for Pri/Vent/Total, 
+// and by fan type (supply, return, and relief)
+RULE NEW ThrmlZn:PriSysPropSupFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    PrimarySystemProposedSupplyFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then ValidOr( u:PriAirCondgSysRef:SupFanPwr, 0 ) * PriZnToSysFlowRat
+    else 0 
+    endif    
+  SIZING_BASELINE
+    zp:PriSysPropSupFanPwr
+ENDRULE
+RULE NEW ThrmlZn:VentSysPropSupFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationSystemProposedSupplyFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( VentSysRef ) )
+    then ValidOr( u:VentSysRef:SupFanPwr, 0 ) * VentZnToSysFlowRat
+    else 0 
+    endif    
+  SIZING_BASELINE
+    zp:VentSysPropSupFanPwr
+ENDRULE
+RULE NEW ThrmlZn:TotPropSupFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalProposedSupplyFanPower
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    PriSysPropSupFanPwr +
+    VentSysPropSupFanPwr
+  ANNUAL_BASELINE  
+    ap:TotPropSupFanPwr
+ENDRULE
+
+RULE NEW ThrmlZn:PriSysPropRetFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    PrimarySystemProposedReturnFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( PriAirCondgSysRef ) = ComponentType( "AirSys" ) )
+    then ValidOr( u:PriAirCondgSysRef:RetFanPwr, 0 ) * PriZnToSysFlowRat
+    else 0 
+    endif 
+  SIZING_BASELINE  
+    zp:PriSysPropRetFanPwr   
+ENDRULE
+RULE NEW ThrmlZn:VentSysPropRetFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationSystemProposedReturnFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+    then ValidOr( u:VentSysRef:RetFanPwr, 0 ) * VentZnToSysFlowRat
+    else 0 
+    endif    
+  SIZING_BASELINE  
+    zp:VentSysPropRetFanPwr
+ENDRULE
+RULE NEW ThrmlZn:TotPropRetFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalProposedReturnFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    PriSysPropRetFanPwr +
+    VentSysPropRetFanPwr
+  SIZING_BASELINE  
+    zp:TotPropRetFanPwr  
+ENDRULE
+
+RULE NEW ThrmlZn:PriSysPropReliefFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    PrimarySystemProposedReliefFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+    then ValidOr( u:PriAirCondgSysRef:ReliefFanPwr, 0 ) * PriZnToSysFlowRat
+    else 0 
+    endif    
+  SIZING_BASELINE  
+    zp:PriSysPropReliefFanPwr 
+ENDRULE
+RULE NEW ThrmlZn:VentSysPropReliefFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    VentilationSystemProposedReliefFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( IsCond .AND. LocalCompAssigned( VentSysRef ) = ComponentType( "AirSys" ) )
+    then ValidOr( u:VentSysRef:ReliefFanPwr, 0 ) * VentZnToSysFlowRat
+    else 0 
+    endif    
+  SIZING_BASELINE  
+    zp:VentSysPropReliefFanPwr  
+ENDRULE
+RULE NEW ThrmlZn:TotPropReliefFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalProposedReliefFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    PriSysPropReliefFanPwr +
+    VentSysPropReliefFanPwr
+  SIZING_BASELINE  
+    zp:TotPropReliefFanPwr 
+ENDRULE
+
+RULE NEW ThrmlZn:TotPriSysPropFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalPrimarySystemProposedFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    PriSysPropSupFanPwr +
+    PriSysPropRetFanPwr +
+    PriSysPropReliefFanPwr
+  SIZING_BASELINE  
+    zp:TotPriSysPropFanPwr
+ENDRULE
+RULE NEW ThrmlZn:TotVentSysPropFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalVentilationSystemProposedFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    VentSysPropSupFanPwr +
+    VentSysPropRetFanPwr +
+    VentSysPropReliefFanPwr 
+  SIZING_BASELINE  
+    zp:TotVentSysPropFanPwr
+ENDRULE
+
+// One one reference that an ExhSys can be set to
+RULE NEW ThrmlZn:PropExhFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    ProposedExhaustFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ValidOr( u:ExhSysRef:ExhFanPwr, 0 ) * ExhZnToSysFlowRat
+    else 0 
+    endif   
+  SIZING_BASELINE  
+    zp:PropExhFanPwr 
+ENDRULE
+
+// Sum up total fan power for ThrmlZn
+RULE NEW ThrmlZn:TotPropFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalProposedFanPower
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    TotPriSysPropFanPwr + 
+    TotVentSysPropFanPwr +
+    PropExhFanPwr
+  SIZING_BASELINE  
+    zp:TotPropFanPwr
+ENDRULE
+
+// =========================== AirSystem ======================================
+// Sum zone fan power to System
+RULE NEW AirSys:TotPropSysFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalSystemFanPower
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  ANNUAL_PROPOSED
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotPriSysPropFanPwr ) + 
+    SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:TotVentSysPropFanPwr ) +
+    SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr )     
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotPriSysPropFanPwr ) + 
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotVentSysPropFanPwr ) +
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr )    
+ENDRULE
+RULE NEW AirSys:PropExhFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    ProposedExhaustFanPower
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr ) 
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr ) 
+ENDRULE
+
+RULE NEW AirSys:SupFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropSupFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropSupFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropSupFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropSupFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+RULE NEW AirSys:RetFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ReturnFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropRetFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropRetFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropRetFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropRetFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+RULE NEW AirSys:ReliefFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ReliefFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropReliefFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropReliefFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropReliefFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropReliefFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+RULE NEW AirSys:ExhFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+// QC Check
+RULE NEW AirSys:TotFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    SupFanPwrRat + 
+    RetFanPwrRat +
+    ReliefFanPwrRat +
+    ExhFanPwrRat
+  ANNUAL_BASELINE
+    SupFanPwrRat + 
+    RetFanPwrRat +
+    ReliefFanPwrRat +
+    ExhFanPwrRat
+ENDRULE
+
+
+// =========================== ZoneSystem =====================================
+
+RULE NEW ZnSys:TotPropSysFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    TotalSystemFanPower
+  INPUTCLASS
+    NotInput
+  UNITS
+    cfm
+  ANNUAL_PROPOSED
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotPriSysPropFanPwr ) + 
+    SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:TotVentSysPropFanPwr ) +
+    SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr )     
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotPriSysPropFanPwr ) + 
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:TotVentSysPropFanPwr ) +
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr )   
+ENDRULE
+RULE NEW ZnSys:PropExhFanPwr
+  DATATYPE
+    Float
+  LONGFORM
+    ProposedExhaustFanPower
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr ) 
+  ANNUAL_BASELINE
+    SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr ) 
+ENDRULE
+
+RULE NEW ZnSys:SupFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropSupFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropSupFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropSupFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropSupFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+// Return/Releif ratios included for consistency with AirSys rules, but ZnSys
+// currently can't have return/relief fans.
+RULE NEW ZnSys:RetFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ReturnFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropRetFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropRetFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropRetFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropRetFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+RULE NEW ZnSys:ReliefFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ReliefFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropReliefFanPwr ) + 
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:VentSysPropReliefFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      ( SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PriSysPropReliefFanPwr ) + 
+        SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:VentSysPropReliefFanPwr ) ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+RULE NEW ZnSys:ExhFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ExhaustFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:PropExhFanPwr ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+  ANNUAL_BASELINE
+    if( TotPropSysFanPwr > 0 ) 
+    then
+      SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:PropExhFanPwr ) /
+      TotPropSysFanPwr
+    else 0
+    endif
+ENDRULE
+// QC Check
+RULE NEW ZnSys:TotFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    SupFanPwrRat + 
+    RetFanPwrRat +
+    ReliefFanPwrRat +
+    ExhFanPwrRat
+  ANNUAL_BASELINE
+    SupFanPwrRat + 
+    RetFanPwrRat +
+    ReliefFanPwrRat +
+    ExhFanPwrRat
+ENDRULE
+
+
+// =========================== ZnToSysExhaustFanPowerratio =====================
+RULE NEW ThrmlZn:ZnToSysPropExhFanPwrRat
+  DATATYPE
+    Float
+  LONGFORM
+    ZoneToSystemProposedExhaustFanPowerRatio
+  INPUTCLASS
+    NotInput
+  ANNUAL_PROPOSED
+    UNDEFINED
+  ANNUAL_BASELINE  
+    if( LocalCompAssigned( PriAirCondgSysRef) .AND.
+        IfValidAnd( PriAirCondgSysRef:PropExhFanPwr > 0 ) )
+    then PropExhFanPwr / PriAirCondgSysRef:PropExhFanPwr
+    else 0
+    endif
+ENDRULE
+
+
+
+
+
+
+
+

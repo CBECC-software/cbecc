@@ -1,0 +1,403 @@
+// PolyLoop
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+// No direct correlation of ACM topics - just miscellaneous rules pertaining to
+// PolyLoop objects
+// 
+// The main objects in the SDD are:
+//     PolyLoop
+//     CartesianPt
+
+
+// -------------- PolyLoop Area --------------------
+//
+RULE PolyLp:Area
+  DESCRIPTION
+     "Area of PolyLoop."  
+  CHECKSIM
+    if( ChildCount( CartesianPt ) < 3 )
+    then  PostError( "PolyLp '%s' must have at least three points (of type CartesianPt).", Name )
+	 else if( LocalStatus( Area ) < 1 )
+    then  PostError( "PolyLp '%s' failed initialization.  Check to confirm points are valid and planar.", Name )
+	 else if( Area < 0 )
+    then  PostError( "PolyLp '%s' failed initialization.  Check to confirm points are valid and planar.", Name )
+	 else  UNCHANGED  endif endif endif
+  DEFAULT
+    if( LocalStatus(Area) < 1 )
+    then  InitializePolyLoop()
+	 else  UNCHANGED
+    endif
+ENDRULE
+
+
+// ** debugging rule evaluation duration **
+RULE NEW Proj:RuleEvalDuration
+  DEFAULT 
+    LogDuration( "            time to evaluate PolyLoop Areas DEFAULT rules:  %.3f seconds" )
+  SIZING_PROPOSED 
+    LogDuration( "            time to evaluate PolyLoop Areas SIZING_PROPOSED rules:  %.3f seconds" )
+  SIZING_BASELINE
+    LogDuration( "            time to evaluate PolyLoop Areas SIZING_BASELINE rules:  %.3f seconds" )
+  ANNUAL_PROPOSED 
+    LogDuration( "            time to evaluate PolyLoop Areas ANNUAL_PROPOSED rules:  %.3f seconds" )
+  ANNUAL_BASELINE
+    LogDuration( "            time to evaluate PolyLoop Areas ANNUAL_BASELINE rules:  %.3f seconds" )
+ENDRULE
+// ** debugging rule evaluation duration **
+
+
+// -------------- Other PolyLoop Rules (simply to assign input classification) --------------------
+//
+RULE PolyLp:XYLen
+  DESCRIPTION
+    "Width of polygon based on min/max X,Y vertices"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:ZBottom
+  DESCRIPTION
+    "Lowest Z coordinate of PolyLp"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:ZTop
+  DESCRIPTION
+    "Highest Z coordinate of PolyLp"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:ZHgt
+  DESCRIPTION
+    "Range of Z coordinates in PolyLp"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:ZRngMessage
+  DESCRIPTION
+    "Text describing range of PolyLp's Z coordinates"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:VectorOi
+  DESCRIPTION
+    "X component of Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:VectorOj
+  DESCRIPTION
+    "Y component of Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:VectorOk
+  DESCRIPTION
+    "Z component of Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:VectorOLen
+  DESCRIPTION
+    "Length of outward normal vector"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:UnitVectorOi
+  DESCRIPTION
+    "X component of Unit Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:UnitVectorOj
+  DESCRIPTION
+    "Y component of Unit Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:UnitVectorOk
+  DESCRIPTION
+    "Z component of Unit Vector Defined by crossproduct of vectors A and B"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:VectorPLen
+  DESCRIPTION
+    "Length of projected normal vector"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:UnitVectorPi
+  DESCRIPTION
+    "X component of cardinal direction unit vector"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:UnitVectorPj
+  DESCRIPTION
+    "Y component of cardinal direction unit vector"  
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+; added to facilitate window shades
+RULE PolyLp:XCenter
+  DESCRIPTION
+    "X coordinate of PolyLp centroid"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+RULE PolyLp:YCenter
+  DESCRIPTION
+    "Y coordinate of PolyLp centroid"
+  INPUTCLASS
+    NotInput
+ENDRULE
+
+
+// -------------- X Coordinate ---------------------------------
+RULE CartesianPt:Coord[1]  // x
+  DESCRIPTION
+    "The x-coordinate of a PolyLoop vertex."
+  REFERENCE
+    ACM-5.5.4
+  INPUTCLASS
+    Required
+  UNITS
+    ft
+  COMMONMINIMUM
+    -100000
+  COMMONMAXIMUM
+    100000
+  // No transformations are needed since already copied initially.
+ENDRULE
+
+// -------------- Y Coordinate ---------------------------------
+RULE CartesianPt:Coord[2]  // y
+  DESCRIPTION
+    "The y-coordinate of a PolyLoop vertex."
+  REFERENCE
+    ACM-5.5.4
+  INPUTCLASS
+    Required
+  UNITS
+    ft
+  COMMONMINIMUM
+    -100000
+  COMMONMAXIMUM
+    100000
+  // No transformations are needed since already copied initially.
+ENDRULE
+
+// -------------- Z Coordinate ---------------------------------
+RULE CartesianPt:Coord[3]  // z
+  DESCRIPTION
+    "The z-coordinate of a PolyLoop vertex."
+  REFERENCE
+    ACM-5.5.4
+  INPUTCLASS
+    Required
+  UNITS
+    ft
+  COMMONMINIMUM
+    -1200
+  COMMONMAXIMUM
+    1200   // 12 ft x 100 stories
+  // No transformations are needed since already copied initially.
+ENDRULE
+
+
+// -------------- Min/Max Z-Coord of ExtWall ---------------------------------
+RULE NEW ExtWall:MaxZ 
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumZ
+  DESCRIPTION
+    "The maximum z-coordinate of the wall surface."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  DEFAULT
+    MaxChild( PolyLp:ZTop, 1 )
+ENDRULE
+; RULE NEW ExtWall:MinZ 
+;   DATATYPE
+;     Float
+;   LONGFORM
+;     MinimumZ
+;   DESCRIPTION
+;     "The minimum z-coordinate of the wall surface."
+;   INPUTCLASS
+;     NotInput
+;   UNITS
+;     ft
+;   DEFAULT
+;     MinChild( PolyLp:ZBottom, 1 )
+; ENDRULE
+
+// -------------- Min/Max Z-Coord of IntWall ---------------------------------
+RULE NEW IntWall:MaxZ 
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumZ
+  DESCRIPTION
+    "The maximum z-coordinate of the wall surface."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  DEFAULT
+    MaxChild( PolyLp:ZTop, 1 )
+ENDRULE
+; RULE NEW IntWall:MinZ 
+;   DATATYPE
+;     Float
+;   LONGFORM
+;     MinimumZ
+;   DESCRIPTION
+;     "The minimum z-coordinate of the wall surface."
+;   INPUTCLASS
+;     NotInput
+;   UNITS
+;     ft
+;   DEFAULT
+;     MinChild( PolyLp:ZBottom, 1 )
+; ENDRULE
+
+// -------------- Min/Max Z-Coord of UndgrWall ---------------------------------
+RULE NEW UndgrWall:MaxZ 
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumZ
+  DESCRIPTION
+    "The maximum z-coordinate of the wall surface."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  DEFAULT
+    MaxChild( PolyLp:ZTop, 1 )
+ENDRULE
+; RULE NEW UndgrWall:MinZ 
+;   DATATYPE
+;     Float
+;   LONGFORM
+;     MinimumZ
+;   DESCRIPTION
+;     "The minimum z-coordinate of the wall surface."
+;   INPUTCLASS
+;     NotInput
+;   UNITS
+;     ft
+;   DEFAULT
+;     MinChild( PolyLp:ZBottom, 1 )
+; ENDRULE
+
+// -------------- Min/Max Z-Coord of Roof ---------------------------------
+RULE NEW Roof:MaxZ 
+  DATATYPE
+    Float
+  LONGFORM
+    MaximumZ
+  DESCRIPTION
+    "The maximum z-coordinate of the roof surface."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  DEFAULT
+    MaxChild( PolyLp:ZTop, 1 )
+ENDRULE
+RULE NEW Roof:MinZ 
+  DATATYPE
+    Float
+  LONGFORM
+    MinimumZ
+  DESCRIPTION
+    "The minimum z-coordinate of the roof surface."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  DEFAULT
+    MinChild( PolyLp:ZBottom, 1 )
+ENDRULE
+
+; // -------------- Min/Max Z-Coord of Ceiling ---------------------------------
+; RULE NEW Ceiling:MaxZ 
+;   DATATYPE
+;     Float
+;   LONGFORM
+;     MaximumZ
+;   DESCRIPTION
+;     "The maximum z-coordinate of the ceiling surface."
+;   INPUTCLASS
+;     NotInput
+;   UNITS
+;     ft
+;   DEFAULT
+;     MaxChild( PolyLp:ZTop, 1 )
+; ENDRULE
+; RULE NEW Ceiling:MinZ 
+;   DATATYPE
+;     Float
+;   LONGFORM
+;     MinimumZ
+;   DESCRIPTION
+;     "The minimum z-coordinate of the ceiling surface."
+;   INPUTCLASS
+;     NotInput
+;   UNITS
+;     ft
+;   DEFAULT
+;     MinChild( PolyLp:ZBottom, 1 )
+; ENDRULE

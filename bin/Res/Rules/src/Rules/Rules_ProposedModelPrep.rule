@@ -1,0 +1,767 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Modification of Proposed Model to meet Compliance Analysis Requirements
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2014, California Energy Commission
+; Copyright (c) 2012-2014, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+RULELIST "ProposedModelCodeAdditions" 1 0 0 1
+;
+;   Rules which are executed on the input building description to ensure
+;   that all conditioned zones have both heating and cooling systems defined.
+;   If not defined, then heat, cool or entire HVAC systems will be created
+;   to ensure that each conditioned zone has both heating & cooling equipment.
+;
+;*************************************************************************
+
+	"Blast Proj:CompResultsMsg"	Proj:CompResultsMsg	= {	UNDEFINED  }	; SAC 4/16/15
+
+	; SAC 11/19/14 - mods to create & assign duplicate Cons objects for Attic Roof cons that serve both all uncond & cond in CZs where radiant barrier requirements exist
+	"Delete any existing Cons:AtcRfOverUncondCons"		Cons:AtcRfOverUncondCons	= {	if (LocalCompAssigned( AtcRfOverUncondCons ) < 0.5) then  UNCHANGED
+																													else  DeleteComp()  endif  }
+	; mjb 1/12/15 - using new CAClimateZoneCodeBase lookup table
+	; SAC 9/18/15 - modified rule to take CondAdditionSize into account when determining whether or not an attic roof cons needs to be copied based on radiant barrier differences
+	"Create Cons:AtcRfOverUncondCons if this Cons is a 'Attic Roofs', is referenced by attic over uncond & cond spaces and in a CZ with radiant barrier requirement"
+;		Cons:AtcRfOverUncondCons	= {	if (CanAssignTo != 1 .OR. ClimateZoneTable( Global( Proj:ClimateZone ), 8 ) < 0.5) then  UNCHANGED
+		Cons:AtcRfOverUncondCons	= {	if (CanAssignTo != 1 .OR. 
+															(IfValidAnd( Proj:CondAdditionSize < 0.1 ) .AND. CAClimateZoneCodeBase:RadiantBarrier( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) < 0.5) .OR.
+															(IfValidAnd( Proj:CondAdditionSize > 0.1 ) .AND. PrescripAdditions_RadiantBarrier:RadiantBarrier( "CodeBase", Proj:StdDesignBase, "ClimateZone", Proj:ClimateZone, "AdditionSize", Proj:CondAdditionSize )))
+													then  UNCHANGED
+													else if (SumRevRef( Attic:Construction, Attic:OnlyOverUncond    ) < 0.5 .OR.
+																SumRevRef( Attic:Construction, Attic:FloorAreaOverCond ) < 0.5) then  UNCHANGED
+													else  CreateComp( Cons, Name + "-OvrUncnd", "none", 1, Name )    endif endif  }
+
+	"Assign newly-created AtticRfOverUncond constructions designed to isolate Cons objects that must vary in RadiantBarrier settings for budget design"
+		Attic:Construction	= {	if (IfValidAnd( FloorAreaOverCond > 0.5 ) .OR. LocalCompAssigned( Construction:AtcRfOverUncondCons ) < 0.5) then  UNCHANGED
+											else  Construction:AtcRfOverUncondCons  endif  }
+
+
+; SAC 2/23/15 - series of rules similar to above that ensure Attic roof constructions are unique between New, Altered & Existing attics (since budget conversion can result in inconsistent RadiantBarrier settings if these Cons references are shared)
+	"Delete any existing Cons:AtcRfNewToAltCons"		Cons:AtcRfNewToAltCons	= {	if (LocalCompAssigned( AtcRfNewToAltCons ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+	"Delete any existing Cons:AtcRfNewToExCons"		Cons:AtcRfNewToExCons	= {	if (LocalCompAssigned( AtcRfNewToExCons  ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+	"Delete any existing Cons:AtcRfAltToExCons"		Cons:AtcRfAltToExCons	= {	if (LocalCompAssigned( AtcRfAltToExCons  ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+
+	"Create Cons:AtcRfNewToAltCons if this Cons is a 'Attic Roofs' and is referenced by both New and Altered attics"
+		Cons:AtcRfNewToAltCons	= {	if (CanAssignTo != 1) then  UNCHANGED
+												else if (SumRevRef( Attic:Construction, Attic:IsNew      ) < 0.5 .OR.
+															SumRevRef( Attic:Construction, Attic:IsAltered  ) < 0.5) then  UNCHANGED
+												else  CreateComp( Cons, Name + "-New2Alt", "none", 1, Name )    endif endif  }
+	"Create Cons:AtcRfNewToAltCons if this Cons is a 'Attic Roofs' and is referenced by both New and Existing attics"
+		Cons:AtcRfNewToExCons	= {	if (CanAssignTo != 1) then  UNCHANGED
+												else if (SumRevRef( Attic:Construction, Attic:IsNew      ) < 0.5 .OR.
+															SumRevRef( Attic:Construction, Attic:IsExisting ) < 0.5) then  UNCHANGED
+												else  CreateComp( Cons, Name + "-New2Ex", "none", 1, Name )    endif endif  }
+	"Create Cons:AtcRfNewToAltCons if this Cons is a 'Attic Roofs' and is referenced by both Altered and Existing attics"
+		Cons:AtcRfAltToExCons	= {	if (CanAssignTo != 1) then  UNCHANGED
+												else if (SumRevRef( Attic:Construction, Attic:IsAltered  ) < 0.5 .OR.
+															SumRevRef( Attic:Construction, Attic:IsExisting ) < 0.5) then  UNCHANGED
+												else  CreateComp( Cons, Name + "-Alt2Ex", "none", 1, Name )    endif endif  }
+
+	"Assign newly-created AtticRfNewToAltCons constructions designed to isolate Cons objects that might need to vary in RadiantBarrier settings for budget design based on referencing Attics being New/Altered/Existing"
+		Attic:Construction	= {	if (IsAltered  < 0.5 .OR. LocalCompAssigned( Construction:AtcRfNewToAltCons ) < 0.5) then  UNCHANGED
+											else  Construction:AtcRfNewToAltCons  endif  }
+	"Assign newly-created AtticRfNewToExCons constructions designed to isolate Cons objects that might need to vary in RadiantBarrier settings for budget design based on referencing Attics being New/Altered/Existing"
+		Attic:Construction	= {	if (IsExisting < 0.5 .OR. LocalCompAssigned( Construction:AtcRfNewToExCons  ) < 0.5) then  UNCHANGED
+											else  Construction:AtcRfNewToExCons  endif  }
+	"Assign newly-created AtticRfAltToExCons constructions designed to isolate Cons objects that might need to vary in RadiantBarrier settings for budget design based on referencing Attics being New/Altered/Existing"
+		Attic:Construction	= {	if (IsExisting < 0.5 .OR. LocalCompAssigned( Construction:AtcRfAltToExCons  ) < 0.5) then  UNCHANGED
+											else  Construction:AtcRfAltToExCons  endif  }
+
+	; SAC 9/23/15 - rules similar to above but designed to isolate constructions above steep vs. flat attics or cathedral ceilings
+	"Delete any existing Cons:SteepRoofCons"		Cons:SteepRoofCons	= {	if (LocalCompAssigned( SteepRoofCons ) < 0.5) then  UNCHANGED  else  DeleteComp()  endif  }
+	"Create Cons:SteepRoofCons iff this Cons describes an Attic Roof or Cathedral Ceiling -AND- is referenced by both steep and flat attics/cathedral ceilings (and for analysis of code >= 2016)"
+;		Cons:SteepRoofCons	= {	if ((CanAssignTo != 1 .AND. CanAssignTo != 2) .OR. Proj:StdDesignBase < 2016)
+		Cons:SteepRoofCons	= {	if (CanAssignTo != 1 .OR. Proj:StdDesignBase < 2016)
+											then  UNCHANGED
+											else if (CanAssignTo == 1)
+											then	if (SumRevRef( Attic:Construction, Attic:SteepRoofArea ) < 0.5 .OR.
+														 SumRevRef( Attic:Construction, Attic:FlatRoofArea  ) < 0.5) then  UNCHANGED
+													else  CreateComp( Cons, Name + "-Steep", "none", 1, Name )    endif
+											else	UNCHANGED  endif endif  }
+;											else if (CanAssignTo == 2)
+;											then	if (SumRevRef( CathedralCeiling:Construction, CathedralCeiling:SteepRoofArea ) < 0.5 .OR.
+;														 SumRevRef( CathedralCeiling:Construction, CathedralCeiling:FlatRoofArea  ) < 0.5) then  UNCHANGED
+;													else  CreateComp( Cons, Name + "-Steep", "none", 1, Name )    endif
+;											else	UNCHANGED  endif endif endif  }
+	"Assign newly-created SteepRoofCons constructions to Attics w/ steep roofs (to isolate Cons objects whose RoofingLayer must vary in the budget design)"
+		Attic:Construction				= {	if (IfValidAnd( SteepRoofArea > 0.5 )==0 .OR. LocalCompAssigned( Construction:SteepRoofCons ) < 0.5) then  UNCHANGED
+														else  Construction:SteepRoofCons  endif  }
+; no need to support CathedralCeilings since they are converted to Attics w/ std design constructions during budget conversion
+;	"Assign newly-created SteepRoofCons constructions to CathedralCeilings w/ steep roofs (to isolate Cons objects whose RoofingLayer must vary in the budget design)"
+;		CathedralCeiling:Construction	= {	if (IfValidAnd( SteepRoofArea > 0.5 )==0 .OR. LocalCompAssigned( Construction:SteepRoofCons ) < 0.5) then  UNCHANGED
+;														else  Construction:SteepRoofCons  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Prescribe ALL Exterior Wall Absorptivity
+   ;--------------------------------------------------------------------
+	"Set ExtWall:Absorptivity"		ExtWall:Absorptivity	= {	0.5  }	; SAC 4/7/13 - ensure absorptivity of ALL exterior walls is set to 0.5
+
+   ;--------------------------------------------------------------------
+   ; Delete Garage and all children if agrage not being modeled
+   ;--------------------------------------------------------------------
+	; FIRST check to see if IntAll/Floor:Outside references to the Garage exist
+	"Check for valid IntWall:Outside assignment"
+		IntWall:Action	= {	if (ParentComponentType() == "Zone" .AND. LocalCompAssigned( Outside ) == ComponentType( "Garage" ) .AND. Proj:HasGarage < 0.1)
+									then	PostError( "Interior wall '%s' assigns garage '%s' as being on the outside, but garage modeling is disabled in the Project dialog",
+																Name, Outside:Name )
+									else  UNCHANGED  endif  }
+	"Check for valid InteriorFloor:Outside assignment"
+		InteriorFloor:Action	= {	if (ParentComponentType() == "Zone" .AND. LocalCompAssigned( Outside ) == ComponentType( "Garage" ) .AND. Proj:HasGarage < 0.1)
+											then	PostError( "Interior floor '%s' assigns garage '%s' as being on the outside, but garage modeling is disabled in the Project dialog",
+																		Name, Outside:Name )
+											else  UNCHANGED  endif  }
+	"Delete Garage if modeling turned off"		Garage:Action	= {	if (Proj:HasGarage < 0.5) then  DeleteComp()
+																						else  UNCHANGED  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Prescribe Garage Exterior Wall & Door performance characteristics
+   ;--------------------------------------------------------------------
+	"Set ExtWall:ParentType"			ExtWall:ParentType	= {	if (ParentComponentType() == "Zone")
+																					then	if (Parent( Type ) < 10) then  1  else  0  endif
+																					else if (ParentComponentType() == "Garage") then  2
+																					else  0  endif endif  }
+	"Set Garage ExtWall:Construction"		ExtWall:Construction		= {	if (ParentType != 2) then  UNCHANGED  else  RuleLibrary( Cons, "Garage Ext Wall" )  endif  }
+	"Set Garage ExtWall:Tilt"					ExtWall:Tilt				= {	if (ParentType != 2) then  UNCHANGED  else  90   endif  }
+;	"Set Garage ExtWall:Absorptivity"		ExtWall:Absorptivity		= {	if (ParentType != 2) then  UNCHANGED  else  0.5  endif  }
+
+; DEBUGGING
+;	"Post messagebox"				Door:Action = {	MessageBox( Format( "Door '%s':  ParentComponentType = %s // ExtWall:ParentType = %g",
+;																							Name, ParentComponentType(), Parent( ExtWall:ParentType ) ) )  }
+; DEBUGGING
+	"Set Garage Door:Ufactor"			Door:Ufactor	= {	if (ParentComponentType() == "ExtWall")
+																			then	if (Parent( ExtWall:ParentType ) == 2) then  1.0
+																					else  UNCHANGED  endif
+																			else  UNCHANGED  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Delete Window children of Garage Exterior Walls
+   ;--------------------------------------------------------------------
+	"Delete garage windows (ExtWall:Action)"		ExtWall:Action	= {	if (ParentComponentType() != "Garage") then  UNCHANGED
+																							else  DeleteChildren( Window )  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Set HVACSys:StdHeatingType  (prior to system mods that will effect std design system selection)
+   ;--------------------------------------------------------------------
+; SAC 1/14/14 - moved UP HERE from below - so that addition of proposed model cooling doesn't effect StdHeatingType (GC issue #265)
+	"Set HVACSys:StdHeatingType"		HVACSys:StdHeatingType	= {
+		if (HaveHeating < 0.5)
+	  then  0	; What if no system exists yet??
+    else if (Type == 2)
+		then ; Is a HeatPump system
+			if (HtPumpSystem[1]:Type < 1)
+		  then  0	; No Heating case ???
+			else if (HtOrClDucted < 0.5)
+			then	CA13HeatingEquipment:DuctlessStdSys( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev )
+			else  CA13HeatingEquipment:DuctedStdSys(   "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev )
+			endif endif
+		else if (HeatSystem[1]:Type < 1)
+	  then  0 ; No Heating case ???
+		else if (HtOrClDucted < 0.5)
+		then CA13HeatingEquipment:DuctlessStdSys( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev )
+		else CA13HeatingEquipment:DuctedStdSys(   "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev )
+    endif endif endif endif  }
+;	"store BEMProc details"		HVACSys:Action = {  StoreBEMProc( "ProposedModelCodeAdditions - StdHeatingType just set", 0 )  }
+;	"DBG msg" HVACSys:Action = { MessageBox( "ProposedModelCodeAdditions -- HVACSys '%s' StdHeatingType = '%s'", Name, EnumString( StdHeatingType ) ) }
+;	"debug HVACSys:StdHeatingType"	HVACSys:Action	=	{ PostWarning( "ProposedModelCodeAdditions -- HVACSys:StdHeatingType -> Type = %g  HtOrClDucted = %g  HtPumpSysTypeAbbrev = '%s'  StdHeatingType = %g ", Type, HtOrClDucted, HtPumpSysTypeAbbrev, StdHeatingType )  }
+
+   ;--------------------------------------------------------------------
+   ; Add Split A/C to any HVACSys that has heating but no cooling
+   ;--------------------------------------------------------------------
+  ; SAC 5/6/14 - BEFORE messing w/ cool eqp creation and duct flags, reset HVACDist:Type to default if currently assigned, set to No Ducts and there are ducts required (probably 
+  ; SAC 8/3/14 - added logic to ensure fan & ducts added when EITHER no cool system is assigned OR the cool system assigned is "NoCooling"
+  	"Create Fan for HVACSys if in the following rule we will be toggling ON ducts"
+			HVACSys:Fan	= {	if (LocalCompAssigned( Fan ) > 0.5 .OR. LocalCompAssigned( DistribSystem ) == 0 .OR. FloorAreaServed[1] < 0.1) then  UNCHANGED
+									else if (Type != 2 .AND. IfValidAnd( DistribSystem:Type == 8 ) .AND. IfValidAnd( HeatSystem[1]:Type > 0 ) .AND. IfValidAnd( HeatDucted < 0.5 ))
+									then	if (LocalCompAssigned( CoolSystem[1] ) == 0)
+											then	 CreateComp( HVACFan, Local( Name ) + "-fan", "Setup_HVACDistFan" )
+											else if (IfValidAnd( CoolSystem[1]:Type < 2 ))
+											then	 CreateComp( HVACFan, Local( Name ) + "-fan", "Setup_HVACDistFan" )
+											else	UNCHANGED  endif endif
+									else	UNCHANGED  endif endif  }
+
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "ProposedModelCodeAdditions - b4 Reset dist sys type", 0 )  }
+
+; SAC 4/15/15 - adjust for MFam duplex/townhomes options (based on Proj:IsMFamDupOrTownhm)
+  	"Revise HVACSys:DistribSystem:Type if necessary"
+			HVACSys:DistribSystem:Type	= {	if (Type == 2 .OR. LocalCompAssigned( DistribSystem ) == 0 .OR. IfValidAnd( DistribSystem:Type != 8 ) .OR. FloorAreaServed[1] < 0.1) then  UNCHANGED
+														else if (IfValidAnd( HeatSystem[1]:Type > 0 ) .AND. IfValidAnd( HeatDucted < 0.5 ))
+														then	if (LocalCompAssigned( CoolSystem[1] ) == 0)
+																then	     if (Proj:IsMultiFamily > 0 .AND.
+																					Proj:IsMFamDupOrTownhm < 0.5)	 		then  7		; "Ducts located entirely in conditioned space"
+																		else if (MaxAll( Attic:ClVentableArea ) > 1)	then  1		; "Ducts located in unconditioned attic"
+																		else if (MaxAll( CrawlSpace:Area ) > 1) 		then  2		; "Ducts located in a crawl space"
+													;					else if (MaxAll(    UndWall:Area ) > 1) 		then  5
+																															 		else  7		; "Ducts located entirely in conditioned space"
+																		endif endif endif 
+																else if (IfValidAnd( CoolSystem[1]:Type < 2 ))
+																then	     if (Proj:IsMultiFamily > 0 .AND.
+																					Proj:IsMFamDupOrTownhm < 0.5)			then  7		; "Ducts located entirely in conditioned space"
+																		else if (MaxAll( Attic:ClVentableArea ) > 1)	then  1		; "Ducts located in unconditioned attic"
+																		else if (MaxAll( CrawlSpace:Area ) > 1) 		then  2		; "Ducts located in a crawl space"
+													;					else if (MaxAll(    UndWall:Area ) > 1) 		then  5
+																															 		else  7		; "Ducts located entirely in conditioned space"
+																		endif endif endif 
+																else	UNCHANGED  endif endif
+														else	UNCHANGED  endif endif  }
+
+	"Setup proposed model cooling (for things like No Cooling)"
+			Proj:Action		= {	EvalRulelist( "SetupProposedHVAC" )  }
+
+	; DHW use #define values - SAC 3/15/16
+	"Override DHW use define if not BRLs Proj:ShwrFLOWF"				Proj:ShwrFLOWF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  1.0  endif  }
+	"Override DHW use define if not BRLs Proj:ShwrDRAINHREFF"		Proj:ShwrDRAINHREFF			= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  0    endif  }
+	"Override DHW use define if not BRLs Proj:CwshHOTF"				Proj:CwshHOTF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  0.22 endif  }
+	"Override DHW use define if not BRLs Proj:CwshUSEF"				Proj:CwshUSEF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  2.03 endif  }
+	"Override DHW use define if not BRLs Proj:FaucHOTF"				Proj:FaucHOTF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  0.5  endif  }
+	"Override DHW use define if not BRLs Proj:FaucFlowF"				Proj:FaucFlowF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  1    endif  }
+	"Override DHW use define if not BRLs Proj:BathFLOWF"				Proj:BathFLOWF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  1    endif  }
+	"Override DHW use define if not BRLs Proj:BathDRAINHREFF"		Proj:BathDRAINHREFF			= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  0    endif  }
+	"Override DHW use define if not BRLs Proj:DwshFLOWF"				Proj:DwshFLOWF					= {	if (BypassRuleLimits > 0) then  UNCHANGED  else  1    endif  }
+	"Override DHW use define if not BRLs Proj:CSE_DHWUseIncFile"	Proj:CSE_DHWUseIncFile		= {	if (BypassRuleLimits > 0 .OR. CSEDHWUseMethod == 1) then  UNCHANGED
+																																	else if (IsMultiFamily < 0.5) then  "DHWDUSF.txt"  else  "DHWDUMF.txt"  endif endif  }
+	"Override DHW use define if not BRLs Proj:CSE_DHWUseIncFileHashID"	Proj:CSE_DHWUseIncFileHashID	= {	if (BypassRuleLimits > 0 .OR. CSEDHWUseMethod == 1) then  UNCHANGED
+																																				else if (IsMultiFamily < 0.5) then  17  else  18  endif endif  }
+END
+;*************************************************************************
+
+;*************************************************************************
+RULELIST "SetupBudgetHVAC" 1 0 0 1
+;*************************************************************************
+	"Reset HVACSys:PreventCoolingSim"		HVACSys:PreventCoolingSim	= {	0  }
+	"Reset HVACSys:NoPropCoolingSim"			HVACSys:NoPropCoolingSim	= {	0  }
+
+	"Setup budget model cooling (in cases where cooling not simulated in proposed model for No Cooling systems)"
+			Proj:Action		= {	EvalRulelist( "SetupProposedHVAC" )  }
+END
+
+; SAC 7/30/15 - split out proposed HVAC creation rules to enable their being called during BudgetConversion in cases where No Cooling systems NOT simulated w/ cooling in the proposed design
+;*************************************************************************
+RULELIST "SetupProposedHVAC" 1 0 0 1
+;*************************************************************************
+
+; SAC 5/6/14 - BEFORE creating CoolSystem[1] (when none present), manually reset autosize & duct flags to ensure proper simulation (WITH ducts) - GC #314
+; SAC 7/29/15 - changes to prevent creation of cooling equipment for proposed model (based on NoPropCoolingSim)
+	"Reset HVACSys:AutoSizeCoolInp if cooling equip needs to be added"
+			HVACSys:AutoSizeCoolInp	= {	if ((Type == 1 .OR. Type == 3) .AND. FloorAreaServed[1] > 0.1 .AND. IfValidAnd( NoPropCoolingSim > 0 )==0)
+													then	if (LocalCompAssigned( CoolSystem[1] ) == 0)
+															then	UNDEFINED		; will be re-defaulted later
+															else if (CoolSystem[1]:Type < 2 .AND. LocalCompAssigned( HeatSystem[1] ) > 0)
+															then	if (HeatSystem[1]:Type > 0)
+																	then	UNDEFINED		; will be re-defaulted later
+																	else	UNCHANGED  endif		else	UNCHANGED  endif endif		else  UNCHANGED  endif  }
+	"Reset HVACSys:CoolDucted if cooling equip needs to be added"
+			HVACSys:CoolDucted		= {	if ((Type == 1 .OR. Type == 3) .AND. FloorAreaServed[1] > 0.1 .AND. IfValidAnd( NoPropCoolingSim > 0 )==0)
+													then	if (LocalCompAssigned( CoolSystem[1] ) == 0)
+															then	UNDEFINED		; will be re-defaulted later
+															else if (CoolSystem[1]:Type < 2 .AND. LocalCompAssigned( HeatSystem[1] ) > 0)
+															then	if (HeatSystem[1]:Type > 0)
+																	then	UNDEFINED		; will be re-defaulted later
+																	else	UNCHANGED  endif		else	UNCHANGED  endif endif		else  UNCHANGED  endif  }
+
+; LDH 8/3/2016 - flag to maintain user HVACDist for newly created cooling systems (tic 689)
+  "Set Flag to keep user HVACDist assingment for newly created cooling systems"  HVACSys:MaintainHVACDist = {
+    if ( LocalCompAssigned( HeatSystem[1] ) > 0 )
+    then if ( IfValidAnd(HeatSystem[1]:Type > 0 ) .AND.
+              IfValidAnd( HtOrClDucted > 0 ) )
+      then 1
+      else 0
+      endif
+    else 0
+    endif }
+
+; SAC 5/14/13 - moved here from below to always create split AC in this situation (GC issue #95)
+; SAC 5/27/14 - revised process of creating cool equipment when no cooling equipment is specified to facilitate proper reporting of no-cooling models in CF1R
+; SAC 7/29/15 - changes to prevent creation of cooling equipment for proposed model (based on NoPropCoolingSim)
+  "Set HVACSys:CoolSysPropCr8 - flag indicating when cooling equipment is created for proposed simulation"
+    HVACSys:CoolSysPropCr8	= {	
+    if( ( Type == 1 .OR. Type == 3 ) .AND. FloorAreaServed[1] > 0.1 .AND. IfValidAnd( NoPropCoolingSim > 0 ) == 0 )
+    then if (LocalCompAssigned( CoolSystem[1] ) == 0)
+      then 1
+      else if (CoolSystem[1]:Type < 2 .AND. LocalCompAssigned( HeatSystem[1] ) > 0)
+	    then
+	      if (HeatSystem[1]:Type > 0)
+        then 2
+        else 0  
+        endif
+      else 0  
+      endif endif
+    else 0  
+    endif  }
+    
+	"Add CoolSystem to any systems requiring it"
+	HVACSys:CoolSystem[1]	= {	
+		if (CoolSysPropCr8 < 0.1) 
+		then  UNCHANGED
+		else CreateComp( HVACCool, Local( Name ) + "-cool", "Setup_HVACCool_SplitAirCond"  )
+		endif  }
+
+; SAC 9/3/13 - integrated into above rule - now creates new Cool object rather than editing existing, since cool objects can be assigned to multiple 
+;	"Add DistribSystem to any systems requiring it"
+;			HVACSys:CoolSystem:Cr8ProposedCool		= {	if (CoolSystem:Type == 1 .AND. LocalCompAssigned( HeatSystem ) > 0)
+;																		then	if (HeatSystem:Type > 0) then  2   ; SplitAirCond
+;																				else  0  endif
+;																		else  0  endif  }
+;	"toggle on certain cooling systems flagged by above rule"
+;		HVACCool:Action = {	if (Cr8ProposedCool > 0) then  EvalRulelist( "SetupProposed_HVACCool", 1 )  else  UNCHANGED  endif  }
+
+; SAC 9/3/13 - RE-Default HVACHeat/Cool assignment & summarization properties
+	"RE-Default HVACSys Heat/Cool properties - round 1"	HVACSys:Action		= {	if ((Type == 1 .OR. Type == 3) .AND. LocalCompAssigned( CoolSystem[1] ))
+																											then  EvalRulelist( "SetupHVACSys_Round1_HeatCool", 1 )
+																											else	UNCHANGED  endif  }
+  ; More HVACSys heating equipment summarization
+	"RE-Default HVACSys Heat/Cool properties - round 2"	HVACSys:Action		= {	if ((Type == 1 .OR. Type == 3) .AND. LocalCompAssigned( CoolSystem[1] ))
+																											then  EvalRulelist( "SetupHVACSys_Round2_HeatCool", 1 )
+																											else	UNCHANGED  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Check for gas heating errors and set project-level gas heating flag
+   ;--------------------------------------------------------------------
+
+	"Set HVACSys:GasHeatAreaServed"		HVACSys:GasHeatAreaServed	= {	if (Type == 2 .OR. HaveHeating < 0.5) then  0
+																								else if (CA13HeatingEquipment:UseGas( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5)
+																								then	FloorAreaServed[1]
+																								else  0  endif endif  }
+	"Set HVACSys:ElecHeatAreaServed"		HVACSys:ElecHeatAreaServed	= {	if (HaveHeating < 0.5) then  0
+																								else if (Type == 2)
+																								then	if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) > 0.5)
+																										then	FloorAreaServed[1]  else  0  endif
+																								else  if (CA13HeatingEquipment:UseElec( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) > 0.5)
+																										then	FloorAreaServed[1]  else  0  endif
+																								endif endif  }
+
+	; SAC 1/9/13 - revised logic to allow for std design gas heat even if NatGasAvailable = 0
+;	"Set Proj:StdDesignGasHeat"		Proj:StdDesignGasHeat	= {	if (NatGasAvailable > 0.5 && (SumAll( HVACSys:GasHeatAreaServed  ) > 1 .OR. SumAll( HVACSys:ElecHeatAreaServed ) < 1)) then  1
+	"Set Proj:StdDesignGasHeat"		Proj:StdDesignGasHeat	= {	if (SumAll( HVACSys:GasHeatAreaServed  ) > 1 .OR. SumAll( HVACSys:ElecHeatAreaServed ) < 1) then  1
+																						else  0  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; Add DistribSystem to 'Central Heating and Cooling System's that require ducts but have no dist system
+   ;--------------------------------------------------------------------
+; DEBUGGING
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "ProposedModelCodeAdditions - b4 DuctsReqd chk", 0 )  }
+;	"MsgBox"		HVACSys:Action	= {	PostWarning( "ProposedModelCodeAdditions -- HVACSys %s - HaveHeating=%g, HaveCooling=%g, Type=%g, HeatSysTypeAbbrev=%s, CoolSysTypeAbbrev=%s", Name, HaveHeating, HaveCooling, Type, HeatSysTypeAbbrev, CoolSysTypeAbbrev )  }
+
+	"Set HVACSys:DuctsRequired - 1 (heating)"		HVACSys:DuctsRequired	= {	if (HaveHeating < 0.5) then  0
+																										else if (Type == 2)
+																										then	if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) == 1)
+																												then	1  else  0  endif
+																										else  if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) == 1)
+																												then	1  else  0  endif
+																										endif endif  }
+	"Set HVACSys:DuctsRequired - 2 (cooling)"		HVACSys:DuctsRequired	= {	if (HaveCooling < 0.5) then  UNCHANGED
+																										else if (Type == 2)
+																										then	if (CA13CoolingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) == 1)
+																												then	1  else  UNCHANGED  endif
+																										else  if (CA13CoolingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", CoolSysTypeAbbrev ) == 1)
+																												then	1  else  UNCHANGED  endif
+																										endif endif  }
+
+; DEBUGGING
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "ProposedModelCodeAdditions - before DistSys cr8", 0 )  }
+;	"MsgBox"		HVACSys:Action	= {	MessageBox( "ProposedModelCodeAdditions -- HVACSys %s - Type=%g, DuctsRequired=%g, DistribSystem:Type=%g", Name, Type, DuctsRequired, DistribSystem:Type )  }
+
+
+; SAC 2/21/15 - revised following 2 rules to cause creation of new HVACDist & HVACFan if/when creating a new HVACCool for the proposed simulation (GC issue 473)
+; LDH 8/04/16 - revised the following two rules to maintain user HVACDist and HVACFan when creating a new HVACCool but user defined heating system is ducted.
+	"Add DistribSystem to any systems requiring it" HVACSys:DistribSystem	= {	
+    if(	Type == 1 .AND. 
+      ( LocalCompAssigned( DistribSystem ) == 0 .OR. CoolSysPropCr8 > 0.1 ) .AND.		; Type = "Central Heating and Cooling System"
+        FloorAreaServed[1] > 0.1 .AND. 
+        IfValidAnd( DuctsRequired > 0.5) .AND.
+        MaintainHVACDist = 0 )   ; LDH - Added to maintain ducts from heating system, if present (tic 689)
+    then	CreateComp( HVACDist, Local( Name ) + "-dist", "Default_HVACDist_ForceTypeDefault" )
+    else  UNCHANGED  endif  }
+
+
+; SAC 9/3/12 - GC issue 159 - Add Fan to systems that have had distribution systems added (due to addition of cooling system...)
+	"Add Fan for ducted HVAC systems when needed"  HVACSys:Fan		= {	
+    if( FloorAreaServed[1] < 0.1 .OR. LocalCompAssigned( DistribSystem ) == 0) then  UNCHANGED
+    else if( IfValidAnd(DistribSystem:DuctsPresent < 0.5 ) ) then  UNCHANGED
+    else if( ( LocalCompAssigned( Fan ) == 0 .OR. CoolSysPropCr8 > 0.1 ) .AND.
+               MaintainHVACDist = 0 )   ; LDH - Added to maintain ducts from heating system, if present (tic 689)
+    then	CreateComp( HVACFan, Local( Name ) + "-fan", "Setup_HVACDistFan" )
+    else	UNCHANGED  endif endif endif  }
+
+; DEBUGGING
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "ProposedModelCodeAdditions - aft DuctsReqd chk", 0 )  }
+;	"MsgBox"		HVACSys:Action	= {	MessageBox( "ProposedModelCodeAdditions -- HVACSys %s - HaveHeating=%g, HaveCooling=%g, Type=%g, HeatSysTypeAbbrev=%s, CoolSysTypeAbbrev=%s", Name, HaveHeating, HaveCooling, Type, HeatSysTypeAbbrev, CoolSysTypeAbbrev )  }
+
+
+   ;--------------------------------------------------------------------
+   ; Add Heating to 'Central Heating and Cooling System's that have none
+   ;--------------------------------------------------------------------
+
+	"Add HeatSystem to any systems requiring it"
+	HVACSys:HeatSystem	= {	
+		if ( Type == 1 .AND. LocalCompAssigned( HeatSystem ) == 0 .AND. FloorAreaServed[1] > 0.1 )
+		then ; Type = "Central Heating and Cooling System"
+			switch (StdHeatingType)
+				case  1 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_CntrlFurnace"  )	; "CntrlFurnace"
+				case  2 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_WallFurnaceFan" )	; "WallFurnaceFan"
+				case  3 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_Boiler"        )	; "Boiler"
+				case 14 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_WallFurnaceGravity" )	; "WallFurnaceGravity"		; SAC 11/25/14 - value 4->14
+				case 15 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_FloorFurnace" )	; "FloorFurnace"						; SAC 11/25/14 - value 5->15
+				case 16 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_RoomHeater"  )	; "RoomHeater"								; SAC 11/25/14 - value 6->16
+				case  8 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_Electric"      )	; "Electric"
+				case  9 :	CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_CombHydro"     )	; "CombHydro"
+				default :	PostError( "Unexpected standard design heating system type (%g) encountered", StdHeatingType )
+			endswitch
+		else UNCHANGED
+	  endif  }
+	"Set HVACSys:HeatSystem:StdType"		HVACSys:HeatSystem:StdType	= {	StdHeatingType }
+
+	"Add HtPumpSystem to any systems requiring it"
+	HVACSys:HtPumpSystem	= {	
+		if ( Type == 1 .AND. LocalCompAssigned( HtPumpSystem ) == 0 .AND. FloorAreaServed[1] > 0.1 )
+		then; Type = "Central Heating and Cooling System"
+			switch (StdHeatingType)
+				case  1 :	UNDEFINED  ; CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_CntrlFurnace"  )	; "CntrlFurnace"
+				case  2 :	UNDEFINED  ; CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_Heater"        )	; "Heater"
+				case  3 :	UNDEFINED  ; CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_Boiler"        )	; "Boiler"
+			  case  4 :	CreateComp( HVACHtPump, Local( Name ) + "-htpmp", "Setup_HVACHtPump_SplitHeatPump" )		   ; "SplitHeatPump"
+				case 19 :	CreateComp( HVACHtPump, Local( Name ) + "-htpmp", "Setup_HVACHtPump_SDHVSplitHeatPump" )		; "SDHVSplitHeatPump"
+				case 10 :	CreateComp( HVACHtPump, Local( Name ) + "-htpmp", "Setup_HVACHtPump_DuctlessMiniSplitHeatPump" )	   ; "DuctlessHeatPump"
+				case  7 :	CreateComp( HVACHtPump, Local( Name ) + "-htpmp", "Setup_HVACHtPump_RoomHeatPump"  )		   ; "RoomHeatPump"
+				case  8 :	UNDEFINED  ; CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_Electric"      )	; "Electric"
+				case  9 :	UNDEFINED  ; CreateComp( HVACHeat, Local( Name ) + "-heat", "Setup_HVACHeat_CombHydro"     )	; "CombHydro"
+				default :	PostError( "Unexpected standard design heating system type (%g) encountered", StdHeatingType )
+			endswitch
+		else UNCHANGED
+	  endif  }
+	"Set HVACSys:HtPumpSystem[1]:StdType"		HVACSys:HtPumpSystem[1]:StdType	= {	StdHeatingType }
+
+
+   ;--------------------------------------------------------------------
+   ; Add Cooling to 'Central Heating and Cooling System's that have none
+   ;--------------------------------------------------------------------
+  ; SAC 5/21/13 - revised logic to map to SplitHP if StdHtgSys is a HP (GC issue #110)
+	"Set HVACSys:StdCoolingType"
+	HVACSys:StdCoolingType	= {
+		if (HaveCooling < 0.5) then  0					; What if no system exists or No Cooling case ???
+		else if (Type == 1 .OR. Type == 3)
+		then	CA13CoolingEquipment:StdSystem( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", CoolSysTypeAbbrev )
+		else	CA13CoolingEquipment:StdSystem( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev )
+		endif endif  }
+	"Set HVACSys:CoolSystem:StdType"		HVACSys:CoolSystem:StdType	= {	StdCoolingType  }
+
+   ;--------------------------------------------------------------------
+	"Set HVACSys:HtClFlrAreaServed"	HVACSys:HtClFlrAreaServed	= {	if (HaveHeating .OR. HaveCooling) then  FloorAreaServed[1]  else  0  endif  }
+
+
+
+END
+;*************************************************************************
+
+
+
+;*************************************************************************
+;*************************************************************************
+;
+RULELIST "ProposedCompliance" 1 0 1 0
+;
+;   Rules which are executed on the input building description following
+;   the completion of user input but prior to any simulation(s).
+;   These mainly include rules which define conditionally prescribed
+;   values and rules which prepare for the Proposed model simulation.
+;
+;*************************************************************************
+;*************************************************************************
+
+   ;--------------------------------------------------------------------
+   ; ProposedCompliance: Analysis and Site Rules
+   ;--------------------------------------------------------------------
+
+;	"Set Proj:RunNumber"					Proj:RunNumber				= {	RunNumber + 1  }		- SAC 4/21/15 - now set in source code
+	"Set Proj:RunID"						Proj:RunID					= {	if (AnalysisType == 0) then				"User"
+																						else if (AllOrientations < 0.5) then	"Proposed"
+																						else	switch (RunNumber)
+																									case  1 :	"Proposed"      ; SAC 7/9/13 - removed trailing '-N' to fix report generation issue
+																									case  2 :	"Proposed-E"
+																									case  3 :	"Proposed-S"
+																									case  4 :	"Proposed-W"
+																									default :	"Proposed-x"
+																								endswitch  endif endif  }
+	"Set Proj:RunIDProcFile"			Proj:RunIDProcFile		= {	if (AnalysisType == 0) then				" - User"
+																						else if (AllOrientations < 0.5) then	" - Prop"
+																						else	switch (RunNumber)
+																									case  1 :	" - Prop-N"
+																									case  2 :	" - Prop-E"
+																									case  3 :	" - Prop-S"
+																									case  4 :	" - Prop-W"
+																									default :	" - Prop-x"
+																								endswitch  endif endif  }
+	"Set Proj:RunAbbrev"					Proj:RunAbbrev				= {	if (AnalysisType == 0) then				"u"
+																						else if (AllOrientations < 0.5) then	"p"
+																						else	switch (RunNumber)
+																									case  1 :	"p-N"
+																									case  2 :	"p-E"
+																									case  3 :	"p-S"
+																									case  4 :	"p-W"
+																									default :	"p-x"
+																								endswitch  endif endif  }
+
+	"Set Proj:FrontOrientation"		Proj:FrontOrientation	= {	if (AnalysisType == 0 .OR. AllOrientations < 0.5) then	UNCHANGED
+																						else	switch (RunNumber)
+																									case  1 :	  0
+																									case  2 :	 90
+																									case  3 :	180
+																									case  4 :	270
+																									default :	UNCHANGED
+																								endswitch  endif  }
+	"Set Proj:OrientAbbrev"				Proj:OrientAbbrev			= {	if (AnalysisType == 0 .OR. AllOrientations < 0.5) then	UNDEFINED
+																						else	switch (RunNumber)
+																									case  1 :	"N"
+																									case  2 :	"E"
+																									case  3 :	"S"
+																									case  4 :	"W"
+																									default :	UNDEFINED
+																								endswitch  endif  }
+	"Set Proj:OrientName"				Proj:OrientName			= {	if (AnalysisType == 0 .OR. AllOrientations < 0.5) then	UNDEFINED
+																						else	switch (RunNumber)
+																									case  1 :	"North"
+																									case  2 :	"East"
+																									case  3 :	"South"
+																									case  4 :	"West"
+																									default :	UNDEFINED
+																								endswitch  endif  }
+
+	; separate out appliance data reset rules and call iff BypassRuleLimits NOT activated - SAC 7/27/15
+	"Re-default any/all appliance data"		Proj:Action	= {	if (IfValidAnd( BypassRuleLimits > 0 ))
+																				then  EvalRulelist( "EnsureValidCookingFuel" )		; SAC 1/18/16 - new rules
+																				else  EvalRulelist( "OverrideApplianceData" )  endif  }
+	; SAC 5/20/16 - split above rule into 2 - calling 'EnsureValidCookingFuel' for all runs and 'OverrideApplianceData' only for no BypassRuleLimits (tic #669)
+	"Ensure valid cooking fuel"				Proj:Action	= {	EvalRulelist( "EnsureValidCookingFuel" )  }
+	"Re-default any/all appliance data"		Proj:Action	= {	if (IfValidAnd( BypassRuleLimits > 0 )) then  UNCHANGED
+																				else  EvalRulelist( "OverrideApplianceData" )  endif  }
+
+  ; SAC 10/17/13 - added rule to delete ALL Mat objects (in order to prevent any user-defined Mats) - GC issue #213
+	"Delete ALL Mat objects (no user-defined Mats allowed"	Proj:Action	= {	DeleteAllComps( Mat )  }
+
+	"Evaluate rules to re-default orientation properties"		Proj:Action	= {	if (AnalysisType == 0 .OR. AllOrientations < 0.5) then	UNCHANGED
+																										else	EvalRulelist( "ProposedInput" )  endif  }
+
+;	"Evaluate rules to summarize building model for reporting purposes"		Proj:Action	= {	EvalRulelist( "Reporting_SummarizeModel" )  }
+
+; SAC 9/15/15 - testing of HE Score writing functionality
+;	"Set Proj:HEScoreFileIndex"		Proj:HEScoreFileIndex	= {	OpenExportFile( ModelPath + ModelFile + " - HEScore.csv", "wt" )  }
+;	"Write HE Score File #1"			Proj:Action					= {	if (IfValidAnd( HEScoreFileIndex >= 0 )==0) then  UNCHANGED
+;																						else	WriteToExportFile( HEScoreFileIndex, "%c%s%c,%c%s%c,%c%s%c,CA,%g,", 34, RunTitle, 34, 34, Address, 34, 34, City, 34, ZipCode )  endif  }
+;	"Write HE Score File #2"			Proj:Action					= {	if (IfValidAnd( HEScoreFileIndex >= 0 )==0) then  UNCHANGED
+;																						else	WriteToExportFile( HEScoreFileIndex, "%c%s%c,Test,Test,", 34, RunDateFmt, 34 )  endif  }
+;	"Close HE Score File"				Proj:Action					= {	if (IfValidAnd( HEScoreFileIndex >= 0 )==0) then  UNCHANGED
+;																						else	CloseExportFile( HEScoreFileIndex )  endif  }
+END
+;*************************************************************************
+
+; SAC 1/18/16 - add rule to ensure Nat Gas not selected for cooking fuel when Nat Gas not available on site - in which case we switch to Elec, which is the T24 compliance method.
+;*************************************************************************
+RULELIST "EnsureValidCookingFuel"  1 0 1 0
+	"Reset invalid Proj:ApplCookFuel[1]"		Proj:ApplCookFuel[1]		= {	if (Fuel_HaveNatGas == 0 .AND. ApplCookFuel[1] == 2) then  1
+																									else  UNCHANGED  endif  }
+   "Reset invalid DwellUnitType:CookFuel"		DwellUnitType:CookFuel	= {	if (Proj:IsMultiFamily < 0.5 .OR. Proj:Fuel_HaveNatGas > 0.5) then  UNCHANGED
+																									else if (CookFuel == 2) then  1
+																									else  UNCHANGED  endif endif  }
+END
+
+; these rules are evaluated during proposed model prep AND toward the beginning of each BudgetConversion process
+;*************************************************************************
+RULELIST "OverrideApplianceData"  1 0 1 0
+;*************************************************************************
+; modified to match RESNET - mjb 11/09/15
+	; SAC 11/14/13 - added resetting of lighting properties here to ensure standard-defined values are in place for compliance analysis
+	"Set Proj:Ltg_FracPort"				Proj:Ltg_FracPort				= {	if (Proj:DRtgRefRunID == 2014) then  1.0    ; RESNET
+																							else	0.22  endif   }
+	"Set Proj:Ltg_PwrAdjMult"			Proj:Ltg_PwrAdjMult			= {	0.625  }
+	"Set Proj:ExtLtg_PwrAdjMult"		Proj:ExtLtg_PwrAdjMult		= {	if (Proj:DRtgRefRunID == 2014) then  1.0    ; RESNET
+																							else	0.49  endif   }
+
+	"Set Proj:Appl_HaveRefrig[1]"			Proj:Appl_HaveRefrig[1]			= {	1  }
+	"Set Proj:Appl_HaveDish[1]"			Proj:Appl_HaveDish[1]			= {	1  }
+;	"Set Proj:Appl_HaveWasher[1]"			Proj:Appl_HaveWasher[1]			= { 1 }   - allow toggle off of washer & dryer
+;	"Set Proj:Appl_HaveDryer[1]"			Proj:Appl_HaveDryer[1]			= { 1 }
+	"Set Proj:Appl_HaveCook[1]"			Proj:Appl_HaveCook[1]			= {	1  }
+	"Set Proj:ApplRefrigEffMethod[1]"	Proj:ApplRefrigEffMethod[1]	= {	1  }
+	; SAC 4/14/16 - added T24-2016 default
+	"Set Proj:Appl_RefrigUsage[1]"		Proj:Appl_RefrigUsage[1]		= {	if (Proj:DRtgRefRunID == 2014) then  637 + 18 * SimNumBedrooms    ; RESNET
+																									else if (Proj:IntGainsMethod <= 2013) then  669
+																									else	454 + (37 * SimNumBedrooms)  endif endif  }		;	if (Local(ApplRefrigEffMethod[1]) == 1) then  669.  else UNCHANGED endif }
+
+	"Set Proj:ApplDishUsageMethod[1]"	Proj:ApplDishUsageMethod[1]	= {	"from # bedrooms/unit"  }
+;	"Set Proj:ApplDryerFuel[1]"			Proj:ApplDryerFuel[1]			= { if (Local(NatGasAvailable) == 0) then 1 else 2 endif }
+	; SAC 5/20/16 - disable override of ApplCookFuel for 2016 models (tic #669)
+	"Set Proj:ApplCookFuel[1]"				Proj:ApplCookFuel[1]				= {	if (Proj:StandardsVersion >= 2016) then  UNCHANGED
+																									else if (Local(Fuel_HaveNatGas) == 0) then  1  else  2  endif endif  }
+
+	"BLAST any prescribed Dwelling Unit appliance data prior to re-defaulting"		Proj:Action	= {	if (IsMultiFamily < 0.5) then  UNCHANGED
+																																	else	EvalRulelist( "Remove_PrescribedDwellingUnitApplianceData" )  endif  }
+	"Default Dwelling Unit Data"			Proj:Action	= {	if (IsMultiFamily < 0.5)
+																			then  EvalRulelist( "Default_DwellingUnitData_SFam" )
+																			else	EvalRulelist( "Default_DwellingUnitData" )  endif  }
+
+; RESNET = 78 + 31*NumBedrooms
+;  case 0: 78		case 1: 109		case 2: 140		case 3: 171		case 4: 202
+;	case 5: 233		case 6: 264		case 7: 295		case 8: 326		case 9: 357
+	"Set Proj:Appl_DishUsage[1]"			Proj:Appl_DishUsage[1]			= {	if (IsMultiFamily > 0.5 .OR. Appl_HaveDish[1] < 0.5) then  0
+																									else if (ApplDishUsageMethod[1] == 1 .AND. NumDwellingUnits[1] > 0)
+																									then	if (Proj:DRtgRefRunID == 2014)    ; RESNET
+																											then	switch (SimNumBedrooms / NumDwellingUnits[1])
+			                                                                                 case 0: 78		case 1: 109		case 2: 140		case 3: 171		case 4: 202
+         			                                                                     	case 5: 233		case 6: 264		case 7: 295		case 8: 326		case 9: 357
+																														default: 109	endswitch
+																											else if (Proj:IntGainsMethod <= 2013)
+																											then	switch (SimNumBedrooms / NumDwellingUnits[1])
+																														case 0: 90		case 1: 90		case 2: 126		case 3: 126		case 4: 126
+																														case 5: 145		case 6: 145		case 7: 174		case 8: 174		case 9: 174
+																														default: 203	endswitch
+																											else	0.14507		; kWh/gal (for T24-2016 gains)
+																											endif endif
+																									else  UNCHANGED  endif endif  }
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "Remove_PrescribedDwellingUnitApplianceData"  1 0 0 0
+;*************************************************************************
+; SAC 6/24/14 - revisions to enable new DwellUnit objects
+   "Blst DwellUnitType:HaveRefrig"       DwellUnitType:HaveRefrig			= { UNDEFINED }
+   "Blst DwellUnitType:RefrigEffMethod"  DwellUnitType:RefrigEffMethod	= { UNDEFINED }
+   "Blst DwellUnitType:RefrigElecUsage"  DwellUnitType:RefrigElecUsage	= { UNDEFINED }
+                                                                         
+   "Blst DwellUnitType:HaveDish"         DwellUnitType:HaveDish			= { UNDEFINED }
+   "Blst DwellUnitType:DishUsageMethod"  DwellUnitType:DishUsageMethod	= { UNDEFINED }
+   "Blst DwellUnitType:DishElecUsage"    DwellUnitType:DishElecUsage		= { UNDEFINED }
+                                                                         
+   "Blst DwellUnitType:HaveCook"         DwellUnitType:HaveCook			= { UNDEFINED }
+   "Blst DwellUnitType:CookFuel"         DwellUnitType:CookFuel			= { if (Proj:StandardsVersion >= 2016) then  UNCHANGED	; SAC 5/20/16 - prevent reset of CookFuel for >= 2016 analysis (tic #669)
+																									else  UNDEFINED  endif  }
+
+;			"Blst Proj:ApplCookFuel[1]" 		Proj:ApplCookFuel[1] 	= { UNDEFINED }		"Blst Proj:ApplCookFuel[2]" 		Proj:ApplCookFuel[2] 	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[3]" 		Proj:ApplCookFuel[3] 	= { UNDEFINED }		"Blst Proj:ApplCookFuel[4]" 		Proj:ApplCookFuel[4] 	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[5]" 		Proj:ApplCookFuel[5] 	= { UNDEFINED }		"Blst Proj:ApplCookFuel[6]" 		Proj:ApplCookFuel[6] 	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[7]" 		Proj:ApplCookFuel[7] 	= { UNDEFINED }		"Blst Proj:ApplCookFuel[8]" 		Proj:ApplCookFuel[8] 	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[9]" 		Proj:ApplCookFuel[9] 	= { UNDEFINED }		"Blst Proj:ApplCookFuel[10]"		Proj:ApplCookFuel[10]	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[11]"		Proj:ApplCookFuel[11]	= { UNDEFINED }		"Blst Proj:ApplCookFuel[12]"		Proj:ApplCookFuel[12]	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[13]"		Proj:ApplCookFuel[13]	= { UNDEFINED }		"Blst Proj:ApplCookFuel[14]"		Proj:ApplCookFuel[14]	= { UNDEFINED }
+;			"Blst Proj:ApplCookFuel[15]"		Proj:ApplCookFuel[15]	= { UNDEFINED }		"Blst Proj:ApplCookFuel[16]"		Proj:ApplCookFuel[16]	= { UNDEFINED }
+;		
+;			"Blst Proj:Appl_HaveRefrig[1]" 	Proj:Appl_HaveRefrig[1]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[2]" 	Proj:Appl_HaveRefrig[2]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[3]" 	Proj:Appl_HaveRefrig[3]  ={ UNDEFINED }
+;			"Blst Proj:Appl_HaveRefrig[4]" 	Proj:Appl_HaveRefrig[4]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[5]" 	Proj:Appl_HaveRefrig[5]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[6]" 	Proj:Appl_HaveRefrig[6]  ={ UNDEFINED }
+;			"Blst Proj:Appl_HaveRefrig[7]" 	Proj:Appl_HaveRefrig[7]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[8]" 	Proj:Appl_HaveRefrig[8]  ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[9]" 	Proj:Appl_HaveRefrig[9]  ={ UNDEFINED }
+;			"Blst Proj:Appl_HaveRefrig[10]"	Proj:Appl_HaveRefrig[10] ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[11]"	Proj:Appl_HaveRefrig[11] ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[12]"	Proj:Appl_HaveRefrig[12] ={ UNDEFINED }
+;			"Blst Proj:Appl_HaveRefrig[13]"	Proj:Appl_HaveRefrig[13] ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[14]"	Proj:Appl_HaveRefrig[14] ={ UNDEFINED }		"Blst Proj:Appl_HaveRefrig[15]"	Proj:Appl_HaveRefrig[15] ={ UNDEFINED }
+;			"Blst Proj:Appl_HaveRefrig[16]"	Proj:Appl_HaveRefrig[16] ={ UNDEFINED }
+;		
+;			"Blst Proj:Appl_HaveDish[1]" 		Proj:Appl_HaveDish[1] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[2]" 		Proj:Appl_HaveDish[2] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[3]" 		Proj:Appl_HaveDish[3] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveDish[4]" 		Proj:Appl_HaveDish[4] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[5]" 		Proj:Appl_HaveDish[5] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[6]" 		Proj:Appl_HaveDish[6] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveDish[7]" 		Proj:Appl_HaveDish[7] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[8]" 		Proj:Appl_HaveDish[8] 	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[9]" 		Proj:Appl_HaveDish[9] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveDish[10]"		Proj:Appl_HaveDish[10]	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[11]"		Proj:Appl_HaveDish[11]	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[12]"		Proj:Appl_HaveDish[12]	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveDish[13]"		Proj:Appl_HaveDish[13]	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[14]"		Proj:Appl_HaveDish[14]	= { UNDEFINED }		"Blst Proj:Appl_HaveDish[15]"		Proj:Appl_HaveDish[15]	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveDish[16]"		Proj:Appl_HaveDish[16]	= { UNDEFINED }
+;		
+;			"Blst Proj:Appl_HaveCook[1]" 		Proj:Appl_HaveCook[1] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[2]" 		Proj:Appl_HaveCook[2] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[3]" 		Proj:Appl_HaveCook[3] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveCook[4]" 		Proj:Appl_HaveCook[4] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[5]" 		Proj:Appl_HaveCook[5] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[6]" 		Proj:Appl_HaveCook[6] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveCook[7]" 		Proj:Appl_HaveCook[7] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[8]" 		Proj:Appl_HaveCook[8] 	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[9]" 		Proj:Appl_HaveCook[9] 	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveCook[10]"		Proj:Appl_HaveCook[10]	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[11]"		Proj:Appl_HaveCook[11]	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[12]"		Proj:Appl_HaveCook[12]	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveCook[13]"		Proj:Appl_HaveCook[13]	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[14]"		Proj:Appl_HaveCook[14]	= { UNDEFINED }		"Blst Proj:Appl_HaveCook[15]"		Proj:Appl_HaveCook[15]	= { UNDEFINED }
+;			"Blst Proj:Appl_HaveCook[16]"		Proj:Appl_HaveCook[16]	= { UNDEFINED }
+;		
+;			"Blst Proj:Appl_RefrigUsage[1]" 	Proj:Appl_RefrigUsage[1] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[2]" 	Proj:Appl_RefrigUsage[2] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[3]" 	Proj:Appl_RefrigUsage[3] 	= { UNDEFINED }
+;			"Blst Proj:Appl_RefrigUsage[4]" 	Proj:Appl_RefrigUsage[4] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[5]" 	Proj:Appl_RefrigUsage[5] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[6]" 	Proj:Appl_RefrigUsage[6] 	= { UNDEFINED }
+;			"Blst Proj:Appl_RefrigUsage[7]" 	Proj:Appl_RefrigUsage[7] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[8]" 	Proj:Appl_RefrigUsage[8] 	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[9]" 	Proj:Appl_RefrigUsage[9] 	= { UNDEFINED }
+;			"Blst Proj:Appl_RefrigUsage[10]"	Proj:Appl_RefrigUsage[10]	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[11]"	Proj:Appl_RefrigUsage[11]	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[12]"	Proj:Appl_RefrigUsage[12]	= { UNDEFINED }
+;			"Blst Proj:Appl_RefrigUsage[13]"	Proj:Appl_RefrigUsage[13]	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[14]"	Proj:Appl_RefrigUsage[14]	= { UNDEFINED }	"Blst Proj:Appl_RefrigUsage[15]"	Proj:Appl_RefrigUsage[15]	= { UNDEFINED }
+;			"Blst Proj:Appl_RefrigUsage[16]"	Proj:Appl_RefrigUsage[16]	= { UNDEFINED }
+;		
+;			"Blst Proj:UnitDishElecGain[1]" 	Proj:UnitDishElecGain[1] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[2]" 	Proj:UnitDishElecGain[2] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[3]" 	Proj:UnitDishElecGain[3] 	= { UNDEFINED }
+;			"Blst Proj:UnitDishElecGain[4]" 	Proj:UnitDishElecGain[4] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[5]" 	Proj:UnitDishElecGain[5] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[6]" 	Proj:UnitDishElecGain[6] 	= { UNDEFINED }
+;			"Blst Proj:UnitDishElecGain[7]" 	Proj:UnitDishElecGain[7] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[8]" 	Proj:UnitDishElecGain[8] 	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[9]" 	Proj:UnitDishElecGain[9] 	= { UNDEFINED }
+;			"Blst Proj:UnitDishElecGain[10]"	Proj:UnitDishElecGain[10]	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[11]"	Proj:UnitDishElecGain[11]	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[12]"	Proj:UnitDishElecGain[12]	= { UNDEFINED }
+;			"Blst Proj:UnitDishElecGain[13]"	Proj:UnitDishElecGain[13]	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[14]"	Proj:UnitDishElecGain[14]	= { UNDEFINED }	"Blst Proj:UnitDishElecGain[15]"	Proj:UnitDishElecGain[15]	= { UNDEFINED }
+;			"Blst Proj:UnitDishElecGain[16]"	Proj:UnitDishElecGain[16]	= { UNDEFINED }
+END
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+;33333
+RULELIST  "ProposedHVACSizing" 1 0 0 1
+;
+;   Rules applied to the proposed building following a design day run.
+;   These rules can utilize design day run results to perform any of these
+;   tasks:
+;      1) Resize HVAC systems and cause re-execution of design day run.
+;      2) Resize HVAC systems for final run.
+;      3) Set any other building parameters based on design day run results.
+;
+;*************************************************************************
+;*************************************************************************
+
+   ;--------------------------------------------------------------------
+   ; ... Rules
+   ;--------------------------------------------------------------------
+
+END
+;*************************************************************************
+		    
+
+;*************************************************************************
+;*************************************************************************
+;44444
+RULELIST  "ProposedFinal" 1 0 0 1
+;
+;   Rules applied to the proposed building design just prior to executing
+;   the final annual simulation.  These rules may define final HVAC system
+;   sizes and/or other simulation data such as energy rate assignments, etc.
+;
+;*************************************************************************
+;*************************************************************************
+
+   ;--------------------------------------------------------------------
+   ; ... Rules
+   ;--------------------------------------------------------------------
+
+END
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

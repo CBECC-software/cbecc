@@ -1,0 +1,2211 @@
+// General Data for Water Heating
+// For all Space Types with Hot Water Heating Rates
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// -------------- Total Water Heater Capacity Rated --------------------
+// 
+RULE NEW Bldg:NonResBaseWtrHtrCapRtd
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaseWaterHeaterCapacityRated
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    100000000
+  UNITS
+    btu per h
+  SIZING_PROPOSED
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then UNDEFINED  //PROPOSED
+      else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then UNDEFINED  //PROPOSED
+        else UNDEFINED  //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE : T24N_2016
+    if( IfValidAnd(u:Proj:ResWtrHtrNonCentralSys = 1) )
+//    if( Bldg:BldgType = "High-Rise Residential" )
+    then
+//
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else ( (SumAll(u:FluidSys:TotFirstHrCap) - 1) * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:HotWtrHtgRt > 0))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            else ( (SumAll(u:FluidSys:TotFirstHrCap) - 1) * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+//
+    else
+//
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+//
+    endif
+  SIZING_BASELINE
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then
+        if( Proj:ExcptCondWtrHtrSizing = "No" )
+        then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        else( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+        endif
+      else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED   //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsNonRes = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL_PROPOSED
+    zp:NonResBaseWtrHtrCapRtd
+  ANNUAL_BASELINE
+    zb:NonResBaseWtrHtrCapRtd
+ENDRULE
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// -------------- Total Water Heater Capacity Rated --------------------
+// 
+RULE NEW Bldg:ResComboWtrHtrCapRtd
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaseWaterHeaterCapacityRated
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  MAXIMUM
+    100000000
+  UNITS
+    btu per h
+  SIZING_PROPOSED
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then UNDEFINED  //PROPOSED
+      else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then UNDEFINED  //PROPOSED
+        else UNDEFINED  //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE : T24N_2016
+    if( IfValidAnd(u:Proj:ResWtrHtrNonCentralSys = 1) )
+//    if( Bldg:BldgType = "High-Rise Residential" )
+    then
+//
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else ( (SumAll(u:FluidSys:TotFirstHrCap) - 1) * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:HotWtrHtgRt > 0))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            else ( (SumAll(u:FluidSys:TotFirstHrCap) - 1) * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+//
+    else
+//
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+//
+    endif
+  SIZING_BASELINE
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then
+        if( Proj:ExcptCondWtrHtrSizing = "No" )
+        then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+        else( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+        endif
+      else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          else( SumAll(u:FluidSys:TotFirstHrCap) * 0.60 * (8.25 * (135 - 55)) )   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED   //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int(SumChildrenIf(Spc:HotWtrHtgCapRtd, Spc:IsResAndCombo = 1))  //BASELINE  //Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL_PROPOSED
+    zp:ResComboWtrHtrCapRtd
+  ANNUAL_BASELINE
+    zb:ResComboWtrHtrCapRtd
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- Fluid Segment Water Heater Capacity Rated --------------------
+// 
+RULE NEW FluidSeg:TotFluidSegCapRtd
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFluidSegmentCapacityRated
+  DESCRIPTION
+    "The heating capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Prescribed
+  MINIMUM
+    0
+//  MINIMUM  - duplicate 
+//    0
+  MAXIMUM
+    100000000
+  UNITS
+    btu per h
+  DEFAULT
+    if( Parent(Type) = "ServiceHotWater" )
+    then SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgCapRtd)
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgCapRtd)  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgCapRtd)  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgCapRtd)  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgCapRtd)  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    zp:TotFluidSegCapRtd
+  ANNUAL_BASELINE
+    zb:TotFluidSegCapRtd
+ENDRULE
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- SHW Baseline Capacity Rated --------------
+//
+RULE NEW FluidSys:TotCapRtdBase
+  DATATYPE
+    Float
+  LONGFORM
+    TotalCapacityRatedBaseline
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    btu per h
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then Int(SumChildren(FluidSeg:TotFluidSegCapRtd))
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then Int(SumChildren(FluidSeg:TotFluidSegCapRtd))  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then Int(SumChildren(FluidSeg:TotFluidSegCapRtd))  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(FluidSeg:TotFluidSegCapRtd))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(FluidSeg:TotFluidSegCapRtd))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    zp:TotCapRtdBase
+  ANNUAL_BASELINE
+    zb:TotCapRtdBase
+ENDRULE
+
+
+
+
+// SIZING VALUE? - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- Water Heater Capacity Rated With Count --------------
+//
+RULE NEW WtrHtr:CapRtdWithCnt
+  DESCRIPTION
+    "The Rated Capacity including water heater count."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    btu per h
+  DEFAULT
+    if( Proj:AutoHardSize = 1 )
+    then 
+      if( FluidSys:Type = "ServiceHotWater" .AND. IfValidAnd( FluidSys:TotCapRtdBase > 0 ) .AND. IfValidAnd(CapRtd > 0) .AND. IfValidAnd(FluidSysCnt > 0) )
+      then Int( CapRtd * FluidSysCnt )  // This was the original condition that looks to be wrong in some cases Int(FluidSys:TotCapRtdBase)
+      else UNDEFINED
+      endif
+    else
+      if( FluidSys:Type = "ServiceHotWater" .AND. IfValidAnd( FluidSys:TotCapRtdBase > 0 ) .AND. IfValidAnd(CapRtd > 0) .AND. IfValidAnd(FluidSysCnt > 0) )
+      then( CapRtd * FluidSysCnt )
+      else UNDEFINED
+      endif
+    endif
+//  CHECKCODE
+//    if( (LocalStatus(CapRtd) < 1 .OR. CapRtd = 0) .AND. FluidSys:Type = "ServiceHotWater" )
+//    then
+//      PostError("All Water Heaters require a rated capacity.")
+//    else UNCHANGED
+//    endif
+  SIZING_PROPOSED
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then (u:CapRtd * u:FluidSysCnt)  //PROPOSED
+        else   //BASELINE
+          if( Name = "ResBaseWaterHeater" )
+          then Bldg:ResComboWtrHtrCapRtd
+          else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+          endif
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then (u:CapRtd * u:FluidSysCnt)  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then (u:CapRtd * u:FluidSysCnt)  //PROPOSED
+            else   //BASELINE
+              if( Name = "ResBaseWaterHeater" )
+              then Bldg:ResComboWtrHtrCapRtd
+              else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+              endif
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then   //BASELINE
+            if( Name = "ResBaseWaterHeater" )
+            then Bldg:ResComboWtrHtrCapRtd
+            else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+            endif
+          else   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            if( Name = "ResBaseWaterHeater" )
+            then Bldg:ResComboWtrHtrCapRtd
+            else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+            endif
+          endif
+        else     //BASELINE
+          if( Name = "ResBaseWaterHeater" )
+          then Bldg:ResComboWtrHtrCapRtd
+          else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+          endif
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then   //BASELINE
+              if( Name = "ResBaseWaterHeater" )
+              then Bldg:ResComboWtrHtrCapRtd
+              else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+              endif
+            else   //PROPOSED TANK BURNER -> BASELINE SYSTEM
+              if( Name = "ResBaseWaterHeater" )
+              then Bldg:ResComboWtrHtrCapRtd
+              else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+              endif
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then (u:CapRtd * u:FluidSysCnt)     //PROPOSED
+            else   //BASELINE
+              if( Name = "ResBaseWaterHeater" )
+              then Bldg:ResComboWtrHtrCapRtd
+              else Bldg:NonResBaseWtrHtrCapRtd //if( Name = "NonResBaseWaterHeater" )
+              endif
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    zp:CapRtdWithCnt
+  ANNUAL_BASELINE
+    zb:CapRtdWithCnt
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- SHW Proposed System Capacity Rated --------------
+//
+RULE NEW FluidSys:TotCapRtdProp
+  DATATYPE
+    Float
+  LONGFORM
+    TotalCapacityRatedProposed
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    btu per h
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then Int(SumChildren(WtrHtr:CapRtdWithCnt))
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then Int(SumChildren(WtrHtr:CapRtdWithCnt))  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then Int(SumChildren(WtrHtr:CapRtdWithCnt))  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(WtrHtr:CapRtdWithCnt))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(WtrHtr:CapRtdWithCnt))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL_PROPOSED
+    zp:TotCapRtdProp
+  ANNUAL_BASELINE
+    zb:TotCapRtdProp
+ENDRULE
+
+
+// SIZING VALUE - Moved to Building-General.rule
+// -------------- Baseline Water Heater Storage Capacity --------------------
+// 
+//RULE NEW Proj:Bldg:BaseStorCap
+//  DATATYPE
+//    Float
+//  LONGFORM
+//    BaseStorageCapacity
+//  DESCRIPTION
+//    "The tank volumen of the baseline water heater."
+//  HELP
+//    ""
+//  REFERENCE 
+//    ACM-5.9.1 Water Heating
+//  INPUTCLASS
+//    Prescribed
+//  MINIMUM
+//    0
+//  MAXIMUM
+//    1000000000
+//  UNITS
+//    gal
+//  SIZING_PROPOSED
+//    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//    then
+//      if( Proj:ExcptCondWtrHtr = "No" )
+//      then UNDEFINED  //PROPOSED
+//      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//      endif
+//    else
+//      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//      then
+//        if( Proj:ExcptCondWtrHtr = "No" )
+//        then UNDEFINED  //PROPOSED
+//        else UNDEFINED  //NOT SIMULATED
+//        endif
+//      else
+//        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//        then
+//          if( Proj:ExcptCondWtrHtr = "No" )
+//          then UNDEFINED  //PROPOSED
+//          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//          endif
+//        else UNDEFINED
+//        endif
+//      endif
+//    endif
+//  SIZING_BASELINE : T24N_2016
+//    if( IfValidAnd(u:Proj:ResWtrHtrNonCentralSys = 1) )
+////    if( Bldg:BldgType = "High-Rise Residential" )
+//    then
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//      then
+//        if( Proj:ExcptCondWtrHtr = "No" )
+//        then
+//          if( Proj:ExcptCondWtrHtrSizing = "No" )
+//          then 1  //BASELINE
+//          else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//          endif
+//        else 1  //BASELINE
+//        endif
+//      else
+//        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//        then
+//          if( Proj:ExcptCondWtrHtr = "No" )
+//          then
+//            if( Proj:ExcptCondWtrHtrSizing = "No" )
+//            then 1  //BASELINE
+//            else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//            endif
+//          else UNDEFINED   //NOT SIMULATED
+//          endif
+//        else
+//          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//          then
+//            if( Proj:ExcptCondWtrHtr = "No" )
+//            then UNDEFINED  //PROPOSED
+//            else 1  //BASELINE
+//            endif
+//          else UNDEFINED
+//          endif
+//        endif
+//      endif
+//    else
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//      then
+//        if( Proj:ExcptCondWtrHtr = "No" )
+//        then
+//          if( Proj:ExcptCondWtrHtrSizing = "No" )
+//          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//          endif
+//        else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//        endif
+//      else
+//        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//        then
+//          if( Proj:ExcptCondWtrHtr = "No" )
+//          then
+//            if( Proj:ExcptCondWtrHtrSizing = "No" )
+//            then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//            else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//            endif
+//          else UNDEFINED   //NOT SIMULATED
+//          endif
+//        else
+//          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//          then
+//            if( Proj:ExcptCondWtrHtr = "No" )
+//            then UNDEFINED  //PROPOSED
+//            else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//            endif
+//          else UNDEFINED
+//          endif
+//        endif
+//      endif
+//    endif
+//  SIZING_BASELINE
+//    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//    then
+//      if( Proj:ExcptCondWtrHtr = "No" )
+//      then
+//        if( Proj:ExcptCondWtrHtrSizing = "No" )
+//        then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//        else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//        endif
+//      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//      endif
+//    else
+//      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//      then
+//        if( Proj:ExcptCondWtrHtr = "No" )
+//        then
+//          if( Proj:ExcptCondWtrHtrSizing = "No" )
+//          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//          endif
+//        else UNDEFINED   //NOT SIMULATED
+//        endif
+//      else
+//        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//        then
+//          if( Proj:ExcptCondWtrHtr = "No" )
+//          then UNDEFINED  //PROPOSED
+//          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:HotWtrHtgRt > 0) * 0.40) * 1.30)  //BASELINE
+//          endif
+//        else UNDEFINED
+//        endif
+//      endif
+//    endif
+//  ANNUAL_PROPOSED
+//    zp:BaseStorCap
+//  ANNUAL_BASELINE
+//    zb:BaseStorCap
+//ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- Fluid Segment Water Heater Storage Capacity --------------------
+// 
+RULE NEW FluidSeg:TotFluidSegStorCap
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFluidSegmentStorageCapacity
+  DESCRIPTION
+    "The storage capacity of a water heater at the rated conditions specified
+     in DOE 10 CFR Part 430 or ANSI Z21.10."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Prescribed
+  MINIMUM
+    0
+//  MINIMUM  - duplicate 
+//    0
+  MAXIMUM
+    100000000
+  UNITS
+    gal
+  DEFAULT
+    if( FluidSys:Type = "ServiceHotWater" )
+    then( (SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgRtSizing) * 0.40) * 1.30 )  // The * 0.40 is splitting the required sizing between rated capacity and tank capacity. 30% of a tank volume is not used so oversized by 30% to reach Storage Capacity
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then ( (SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgRtSizing) * 0.40) * 1.30 )  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then ( (SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgRtSizing) * 0.40) * 1.30 )  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then ( (SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgRtSizing) * 0.40) * 1.30 )  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Parent(Type) = "ServiceHotWater" )  //( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then //PROPOSED
+              if( FluidSeg:WtrHtrInstantChk > 0 )
+              then 1
+              else( (SumRevRef(Spc:SHWFluidSegRef, Spc:HotWtrHtgRtSizing) * 0.40) * 1.30 )  // The * 0.40 is splitting the required sizing between rated capacity and tank capacity. 30% of a tank volume is not used so oversized by 30% to reach Storage Capacity
+              endif
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:TotFluidSegStorCap
+ENDRULE
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- SHW Baseline Storage Capacity --------------
+//
+RULE NEW FluidSys:TotStorCapBase
+  DATATYPE
+    Float
+  LONGFORM
+    TotalStorageCapacityBaseline
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    gal
+  DEFAULT
+    if( Type = "ServiceHotWater")
+    then SumChildren(FluidSeg:TotFluidSegStorCap)  // remove Int
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then Int(SumChildren(FluidSeg:TotFluidSegStorCap))  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then Int(SumChildren(FluidSeg:TotFluidSegStorCap))  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(FluidSeg:TotFluidSegStorCap))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(FluidSeg:TotFluidSegStorCap))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:TotStorCapBase
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------------- SHW Proposed System Storage Capacity --------------
+//
+RULE NEW FluidSys:TotStorCapProp
+  DATATYPE
+    Float
+  LONGFORM
+    TotalStorageCapacityProposed
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  UNITS
+    gal
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then Int(SumChildren(WtrHtr:StorCapWithCnt))
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then Int(SumChildren(WtrHtr:StorCapWithCnt))  //PROPOSED
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then Int(SumChildren(WtrHtr:StorCapWithCnt))  //PROPOSED
+          else UNDEFINED  //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(WtrHtr:StorCapWithCnt))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( Type = "ServiceHotWater" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then UNDEFINED  //BASELINE
+          else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then UNDEFINED  //BASELINE
+            else UNDEFINED  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then Int(SumChildren(WtrHtr:StorCapWithCnt))  //PROPOSED
+            else UNDEFINED  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:TotStorCapProp
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------- Baseline Water Heater Storage and Rated Capacity Check -----------
+//
+RULE NEW FluidSys:TotCapRtdStorCapBase
+  DATATYPE
+    Float
+  LONGFORM
+    TotalCapacityRatedStorageCapacityBaseline
+  DESCRIPTION
+    "This sums the total storage capacity (max gal/h) and the total rated
+     capacity (converted from Btu/h to max gal/h) at the basline fluid
+     system."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  DEFAULT
+    if( FluidSys:Type = "ServiceHotWater" )
+    then( u:TotStorCapBase + (u:TotCapRtdBase / (8.25 * (135 - 55))) )
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------- Proposed Water Heater Storage and Rated Capacity Check -----------
+//
+RULE NEW FluidSys:TotFirstHrCap
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFirstHourCapacity
+  DESCRIPTION
+    "This sums the total storage capacity (max gal/h) and the total rated
+     capacity (converted from Btu/h to max gal/h) at the proposed fluid
+     system."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  UNITS
+    btu per h
+  DEFAULT
+    if( FluidSys:Type = "ServiceHotWater" .AND. IfValidAnd(HotWtrSupTemp > 0) )
+    then 
+      u:TotStorCapProp * 8.25 * (HotWtrSupTemp - 55) + u:TotCapRtdProp  
+    else 
+      UNDEFINED
+    endif
+  CHECKSIM
+    if( FluidSys:Type = "ServiceHotWater" )
+    then
+      if( ChildCount(WtrHtr) > 1 .AND. ChildCount(FluidSeg) > 2 )
+      then
+      PostError("The service hot water fluid system '%s' has more than 2 fluid segments,
+                 and 1 may be serving a heating coil. Only 1 water heater object is allowed
+                 in this case, however, multipliers are allowed for the single water heater.",Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// Rule Order Conflict - NO
+// -------- Proposed Water Heater Storage and Rated Capacity Check -----------
+//
+RULE NEW FluidSys:TotFirstHrCapCheck
+  DATATYPE
+    Float
+  LONGFORM
+    TotalCapacityRatedStorageCapacityProposedCheck
+  DESCRIPTION
+    "This sums the total storage capacity (max gal/h) and the total rated
+     capacity (converted from Btu/h to max gal/h) at each proposed fluid
+     system and compares it to the minimum total storage capacity (max gal/h)
+     of the baseline."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  UNITS
+    gal per h
+  CHECKCODE
+    if( FluidSys:Type = "ServiceHotWater" )
+    then
+      if( ExcptCondWtrHtrSizing = "No" .AND. Status != "Existing" .AND. 
+         (u:TotFirstHrCap < u:TotCapRtdStorCapBase) )
+      then
+        PostError("The total storage and rated capacity of all water heaters on
+        fluid system '%s' does not meet the minimum requirements. Standard Design = %g gal
+        and %g Btu/h storage water heater.",Name, TotStorCapBase, TotCapRtdBase)
+      else UNCHANGED
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// -------------- Baseline Water Heater Storage Capacity --------------------
+// 
+RULE NEW Bldg:NonResBaseStorCap
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaseStorageCapacity
+  DESCRIPTION
+    "The tank volumen of the baseline water heater."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Prescribed
+  MINIMUM
+    0
+//  MINIMUM  - duplicate 
+//    0
+  MAXIMUM
+    1000000000
+  UNITS
+    gal
+  SIZING_PROPOSED
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then UNDEFINED  //PROPOSED
+      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then UNDEFINED  //PROPOSED
+        else UNDEFINED  //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE : T24N_2016
+//    if( IfValidAnd(u:Proj:ResWtrHtrNonCentralSys = 1) )
+////    if( Bldg:BldgType = "High-Rise Residential" )
+//    then
+//      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+//          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+//      then
+//        if( Proj:ExcptCondWtrHtr = "No" )
+//        then
+//          if( Proj:ExcptCondWtrHtrSizing = "No" )
+//          then 1  //BASELINE
+//          else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//          endif
+//        else 1  //BASELINE
+//        endif
+//      else
+//        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+//        then
+//          if( Proj:ExcptCondWtrHtr = "No" )
+//          then
+//            if( Proj:ExcptCondWtrHtrSizing = "No" )
+//            then 1  //BASELINE
+//            else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+//            endif
+//          else UNDEFINED   //NOT SIMULATED
+//          endif
+//        else
+//          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+//          then
+//            if( Proj:ExcptCondWtrHtr = "No" )
+//            then UNDEFINED  //PROPOSED
+//            else 1  //BASELINE
+//            endif
+//          else UNDEFINED
+//          endif
+//        endif
+//      endif
+//    else
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+            else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+//    endif
+  SIZING_BASELINE
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then
+        if( Proj:ExcptCondWtrHtrSizing = "No" )
+        then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+        else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+        endif
+      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED   //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL
+    z:NonResBaseStorCap
+ENDRULE
+
+// SIZING VALUE - Moved from WaterHeating.rule
+// -------------- Baseline Water Heater Storage Capacity --------------------
+// 
+RULE NEW Proj:Bldg:ResBaseStorCap
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaseStorageCapacity
+  DESCRIPTION
+    "The tank volumen of the baseline water heater."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    Prescribed
+  MINIMUM
+    0
+//  MINIMUM  - duplicate 
+//    0
+  MAXIMUM
+    1000000000
+  UNITS
+    gal
+  SIZING_PROPOSED
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then UNDEFINED  //PROPOSED
+      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then UNDEFINED  //PROPOSED
+        else UNDEFINED  //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  SIZING_BASELINE : T24N_2016
+    if( IfValidAnd(u:Proj:ResWtrHtrNonCentralSys = 1) )
+//    if( Bldg:BldgType = "High-Rise Residential" )
+    then
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then 1  //BASELINE
+          else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else 1  //BASELINE
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then 1  //BASELINE
+            else 1  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else 1  //BASELINE
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    else
+      if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+          (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+        endif
+      else
+        if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then
+            if( Proj:ExcptCondWtrHtrSizing = "No" )
+            then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+            else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+            endif
+          else UNDEFINED   //NOT SIMULATED
+          endif
+        else
+          if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+          then
+            if( Proj:ExcptCondWtrHtr = "No" )
+            then UNDEFINED  //PROPOSED
+            else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+            endif
+          else UNDEFINED
+          endif
+        endif
+      endif
+    endif
+  SIZING_BASELINE
+    if( (Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsNewEnv = 0 .AND. Proj:IsNewMech = 1) .OR.
+        (Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 1) )
+    then
+      if( Proj:ExcptCondWtrHtr = "No" )
+      then
+        if( Proj:ExcptCondWtrHtrSizing = "No" )
+        then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+        else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+        endif
+      else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+      endif
+    else
+      if( Proj:IsNewEnv = 1 .AND. Proj:IsNewMech = 0 )
+      then
+        if( Proj:ExcptCondWtrHtr = "No" )
+        then
+          if( Proj:ExcptCondWtrHtrSizing = "No" )
+          then Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          else ( SumAll(u:FluidSys:TotFirstHrCap) * 0.40 / 8.25 / 80 )  //PROPOSED TANK BURNER -> BASELINE SYSTEM
+          endif
+        else UNDEFINED   //NOT SIMULATED
+        endif
+      else
+        if( Proj:IsAddOrAlt = 1 .AND. Proj:IsNewSHWFluidSys = 0 )
+        then
+          if( Proj:ExcptCondWtrHtr = "No" )
+          then UNDEFINED  //PROPOSED
+          else Int( (SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) * 0.40) * 1.30)  //BASELINE  // Spc:HotWtrHtgRt > 0
+          endif
+        else UNDEFINED
+        endif
+      endif
+    endif
+  ANNUAL_PROPOSED
+    zp:ResBaseStorCap
+  ANNUAL_BASELINE
+    zb:ResBaseStorCap
+ENDRULE
+
+//
+// -------------- High Rise Res ResDHW Check --------------------
+//
+RULE NEW Proj:Bldg:HighRiseResDHWCheck
+  RULESETS
+    T24N
+  DATATYPE
+    Float
+  LONGFORM
+    HighRiseResidentialDomesticHotWaterCheck
+  DESCRIPTION
+    "Checking the total building height for High Rise Residential 
+     Residential Hot Water Heaters."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  CHECKCODE
+    if(  (SumAll(Spc:HasResDHWSysRef) > 0) 
+          .AND. (Bldg:AboveGrdStoryCnt < 4) 
+          .AND. (HighRiseResFlrArea >= (TotCondFlrArea * 0.20)) )
+    then
+      PostError("Residential DHW systems are only permitted in buildings 
+                 with 4 or more stories above grade, hotels and motels of any 
+                 height, or buildings with 3 or fewer stories when the 
+                 residential floor area is less than 20% of the total floor 
+                 area.")
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// -------------- New Water Heaters in Building Count --------------------
+//
+RULE Proj:WtrHtrCnt
+  DESCRIPTION
+    "The total number of residential and nonresidential water heaters in
+     the entire building, including multipliers."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.9.1 Water Heating
+  INPUTCLASS
+    NotInput
+  MINIMUM
+    0
+  COMMONMINIMUM
+    0
+  COMMONMAXIMUM
+    100
+  MAXIMUM
+    10000
+  REPORTPRECISION
+    0
+  DEFAULT
+    ( (SumAll(WtrHtr:NewComDHWHtr)) + (SumAll(ResWtrHtr:NewResDHWHtr)) )
+  SIZING
+    ( (SumAll(WtrHtr:NewComDHWHtr)) + (SumAll(ResWtrHtr:NewResDHWHtr)) )
+  ANNUAL
+    ( (SumAll(WtrHtr:NewComDHWHtr)) + (SumAll(ResWtrHtr:NewResDHWHtr)) )
+ENDRULE
+
+
+// -------------- NonRes Baseline Story WtrHtr Load --------------------
+//
+RULE NEW Story:NonResBaseWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaselineWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtr = "No" ) //Proj:ExcptCondWtrHtrSizing = "Yes" .AND. 
+    then
+      SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsNonRes = 1) //removed Int
+    else 
+      UNDEFINED
+    endif
+ENDRULE
+
+// -------------- NonRes Baseline Building WtrHtr Load --------------------
+//
+RULE NEW Bldg:NonResBaseWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaselineWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" ) //Proj:ExcptCondWtrHtrSizing = "Yes" .AND. 
+    then
+      SumChildren(Story:NonResBaseWtrHtr) // removed Int
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -------------- Res Baseline Building WtrHtr Load --------------------
+//
+RULE NEW Story:ResBaseWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialBaselineWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" ) //Proj:ExcptCondWtrHtrSizing = "Yes" .AND. 
+    then
+      SumChildrenIf(Spc:HotWtrHtgRtSizing, Spc:IsResAndCombo = 1) //removed Int
+    else 
+      UNDEFINED
+    endif
+ENDRULE
+
+// -------------- Res Baseline Building WtrHtr Load --------------------
+//
+RULE NEW Bldg:ResBaseWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialBaselineWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtr = "No" ) //Proj:ExcptCondWtrHtrSizing = "Yes" .AND. 
+    then
+      SumChildren(Story:ResBaseWtrHtr)
+    else 
+      UNDEFINED
+    endif
+ENDRULE
+
+// -------------- Proposed Fluid System WtrHtr Load --------------------
+//
+RULE NEW FluidSys:PropWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    ProposedWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Type = "ServiceHotWater" .AND. Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+//    then( (SumChildren(WtrHtr:CapRtdWithCnt) / (8.25 * (HotWtrSupTemp - 55))) + SumChildren(WtrHtr:StorCapWithCnt) )
+      then( SumChildren(WtrHtr:CapRtdWithCnt) + SumChildren(WtrHtr:StorCapWithCnt) * 8.25 * (HotWtrSupTemp - 55) )
+    else UNDEFINED
+    endif
+//  SIZING
+//    if( Type = "ServiceHotWater" .AND. Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+//    then( (SumChildren(u:WtrHtr:CapRtd) / (8.25 * (u:HotWtrSupTemp - 55))) + SumChildren(u:WtrHtr:StorCap) )
+//    else UNDEFINED
+//    endif
+//  ANNUAL
+//    if( Type = "ServiceHotWater" .AND. Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+//    then( (SumChildren(u:WtrHtr:CapRtd) / (8.25 * (u:HotWtrSupTemp - 55))) + SumChildren(u:WtrHtr:StorCap) )
+//    else UNDEFINED
+//    endif
+ENDRULE
+
+// -------------- Proposed Building WtrHtr Load --------------------
+//
+RULE NEW Proj:PropWtrHtr
+  DATATYPE
+    Float
+  LONGFORM
+    ProposedWaterHeater
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then( SumChildren(FluidSys:PropWtrHtr) )
+    else UNDEFINED
+    endif
+  SIZING
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then( SumChildren(u:FluidSys:PropWtrHtr) )
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then( SumChildren(u:FluidSys:PropWtrHtr) )
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// -------------- Res Baseline WtrHtr Load --------------------
+//
+RULE NEW WtrHtr:ResBaseCapRtdStorCap
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialBaselineCapacityRatedStorageCapacity
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:ResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)  
+    else UNDEFINED
+    endif
+  SIZING
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:ResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:ResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// -------------- NonRes Baseline WtrHtr Load --------------------
+//
+RULE NEW WtrHtr:NonResBaseCapRtdStorCap
+  DATATYPE
+    Float
+  LONGFORM
+    NonResidentialBaselineCapacityRatedStorageCapacity
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:NonResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)
+    else UNDEFINED
+    endif
+  SIZING
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:NonResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( Proj:ExcptCondWtrHtrSizing = "Yes" .AND. Proj:ExcptCondWtrHtr = "No" )
+    then Proj:PropWtrHtr * Bldg:NonResBaseWtrHtr / (Bldg:ResBaseWtrHtr + Bldg:NonResBaseWtrHtr)
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// 
+// --------- Residential Area Served by a Single Fluid Segment --------------
+// 
+RULE NEW FluidSeg:ResWtrHtrArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterArea
+  DESCRIPTION
+    "Sum of the residential floor area served by a single fluid segment."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Parent(Type) = "ServiceHotWater" )
+    then SumRevRef(Spc:SHWFluidSegRef, Spc:ResArea)
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// 
+// --------- Central System Water Heating --------------
+// 
+RULE FluidSys:CentralSys
+  DESCRIPTION
+    "A checkbox to determine if the water heater sytem is a Central System
+     or Individual Unit System."
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then 0
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// 
+// ------ Residential Floor Area Served by Central System Fluid System ---------
+// 
+RULE NEW FluidSys:ResWtrHtrCentralSysArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterCentralSystemArea
+  DESCRIPTION
+    "Sum of the central system residential floor area served by a single fluid system."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( CentralSys = 1 )
+      then SumChildren(FluidSeg:ResWtrHtrArea)
+      else 0
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+// 
+// ------ Residential Floor Area Served by NonCentral System Fluid System ---------
+// 
+RULE NEW FluidSys:ResWtrHtrNonCentralSysArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterNonCentralSystemArea
+  DESCRIPTION
+    "Sum of the non-central system residential floor area served by a single fluid system."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( CentralSys = 0 )
+      then SumChildren(FluidSeg:ResWtrHtrArea)
+      else 0
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+// 
+// ------ Residential Floor Area Served by Central System in Building ---------
+// 
+RULE NEW Proj:ResWtrHtrCentralSysArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterCentralSystemArea
+  DESCRIPTION
+    "Sum of the central system residential floor area in building."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Proj:ExcptCondWtrHtr = "No" )
+    then SumChildren(FluidSys:ResWtrHtrCentralSysArea)
+    else UNDEFINED
+    endif
+ENDRULE
+
+// 
+// ------ Residential Floor Area Served by NonCentral System in Building ---------
+// 
+RULE NEW Proj:ResWtrHtrNonCentralSysArea
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterNonCentralSystemArea
+  DESCRIPTION
+    "Sum of the non-central system residential floor area in building."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Proj:ExcptCondWtrHtr = "No" )
+    then SumChildren(FluidSys:ResWtrHtrNonCentralSysArea)
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// 
+// ------ SHW FluidSystem serves residential area and is a central system
+// 
+RULE NEW FluidSys:ResWtrHtrCentralSys
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterCentralSystem
+  DESCRIPTION
+    "A flag to indicate that an SHW fluid system is a central residential 
+     system."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( ResWtrHtrCentralSysArea > 0 )
+      then 1
+      else 0
+      endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( ResWtrHtrCentralSys .AND. Type = "ServiceHotWater" )
+    then
+      PostError("The service hot water fluid system '%s' serves residential 
+                 areas and is marked as a central system serving multiple 
+                 dwelling units.  This is not allowed for fluid systems.  
+                 Use the Residential DHW system instead.",Name)
+    else UNCHANGED
+    endif
+ENDRULE
+
+
+// 
+// ------ SHW FluidSystem serves individual residential dwelling units - used for combo systems
+// 
+RULE NEW FluidSys:ResWtrHtrNonCentralSys
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterNonCentralSystem
+  DESCRIPTION
+    "A flag to indicate that an SHW fluid system is a non-central residential 
+     system."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( Type = "ServiceHotWater" )
+    then
+      if( ResWtrHtrNonCentralSysArea > 0 )
+      then 1
+      else 0
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// 
+// ------ SHW FluidSystem serves individual residential dwelling units - used for combo systems
+// 
+RULE NEW Proj:ResWtrHtrNonCentralSys
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialWaterHeaterNonCentralSystem
+  DESCRIPTION
+    "A flag to indicate that an SHW fluid system is a non-central residential 
+     system."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft2
+  DEFAULT
+    if( IfValidAnd(ResWtrHtrNonCentralSysArea > 0) )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+

@@ -1,0 +1,559 @@
+// HVAC Primary - Reporting
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+// Supply Side
+RULE NEW FluidSys:SupNumComps
+  DATATYPE
+    Integer
+  LONGFORM
+    SupplyNumberComponents
+  DESCRIPTION
+    "The number of supply side (primary) components"
+  INPUTCLASS
+    NotInput
+  REPORT  
+    if( Type = "ChilledWater" )
+    then ChildCount( Chlr )
+    else if( Type = "HotWater" )
+    then ChildCount( Blr )
+    else if( Type = "CondenserWater" )
+    then ChildCount( HtRej )
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW FluidSys:SupCompCap
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyComponentCapacity
+  DESCRIPTION
+    "The total capacity of supply side (primary) components"
+  INPUTCLASS
+    NotInput
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildren( Chlr:CapRtd )
+    else if( Type = "HotWater" )
+    then SumChildren( Blr:CapRtd )
+    else if( Type = "CondenserWater" )
+    then SumChildren( HtRej:CapRtd )
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW FluidSys:SupplyCompFlowRt
+  DATATYPE
+    Float
+  LONGFORM
+    SupplyComponentFlowRate
+  DESCRIPTION
+    "The total flow rate of demand side (primary or secondary) components"  
+  INPUTCLASS
+    NotInput 
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildren( Chlr:WtrFlowCap )
+    else if( Type = "HotWater" )
+    then SumChildren( Blr:WtrFlowCap )
+    else if( Type = "CondenserWater" )
+// TO DO: Add water cooled condensers when available
+    then SumChildren( HtRej:WtrFlowCap )
+    else 0
+    endif endif endif
+ENDRULE
+// Demand Side
+RULE NEW FluidSys:DemandNumComps
+  DATATYPE
+    Integer
+  LONGFORM
+    DemandNumberComponents
+  DESCRIPTION
+    "The number of demand side (secondary) components"
+  INPUTCLASS
+    NotInput
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildren( FluidSeg:NumCoilClgComp )
+    else if( Type = "HotWater" )
+    then SumChildren( FluidSeg:NumCoilHtgComp )
+    else if( Type = "CondenserWater" )
+    then SumChildren( FluidSeg:NumChlrComp ) + SumChildren( FluidSeg:NumCoilClgComp )
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW FluidSys:DemandCompTotCap
+  DATATYPE
+    Float
+  LONGFORM
+    DemandComponentTotalCapacity
+  DESCRIPTION
+    "The total capacity of demand side (secondary) components"  
+  INPUTCLASS
+    NotInput
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildrenIf( FluidSeg:CoilClgTotCap, FluidSeg:Type = "PrimarySupply" )
+    else if( Type = "HotWater" )
+    then SumChildrenIf( FluidSeg:CoilHtgTotCap, FluidSeg:Type = "PrimarySupply" )
+    else if( Type = "CondenserWater" )
+// TO DO: Add water cooled condensers when available
+    then SumChildren( FluidSeg:TotHtRejFromChlr ) 
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW FluidSys:DemandCompSensCap
+  DATATYPE
+    Float
+  LONGFORM
+    DemandComponentSensibleCapacity
+  DESCRIPTION
+    "The sesnible capacity of demand side (secondary) components"  
+  INPUTCLASS
+    NotInput
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildrenIf( FluidSeg:CoilClgSensCap, FluidSeg:Type = "PrimarySupply" )
+    else 0
+    endif
+ENDRULE
+RULE NEW FluidSys:DemandCompFlowRt
+  DATATYPE
+    Float
+  LONGFORM
+    DemandComponentFlowRate
+  DESCRIPTION
+    "The total flow rate of demand side (primary or secondary) components"  
+  INPUTCLASS
+    NotInput 
+  REPORT  
+    if( Type = "ChilledWater" )
+    then SumChildrenIf( FluidSeg:CoilClgTotFlowRt, FluidSeg:Type = "PrimarySupply" )
+    else if( Type = "HotWater" )
+    then SumChildrenIf( FluidSeg:CoilHtgTotFlowRt, FluidSeg:Type = "PrimarySupply" )
+    else if( Type = "CondenserWater" )
+// TO DO: Add water cooled condensers when available
+    then SumChildren( FluidSeg:TotHtRejFromChlr ) / DsgnSupWtrDelT / 500.19
+    else 0
+    endif endif endif
+ENDRULE
+
+//******************************************************************************
+
+// ------- Notes --------
+// %s      -> String
+// %g      -> Float written with least amount of decimal precision
+// %.2f    -> Float written with two decimal places
+// %d, %u  -> Don't use to report integers; use %f or %g instead
+// %c      -> Character values. Common values include 
+//              32 = <space>
+//              34 = "
+//              44 = ,
+
+
+// First, write header to file
+RULE NEW FluidSys:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    FluidSystemReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("FluidSystems\n,,,,,Controls,,,,,,Supply Side Components,,,Demand Side Components,,,\nName,Type,Status,Design SupplyT,Design DelT,TempCtrl,FixedT,Supply HiT,At Outdoor,Supply LowT,At OutdoorT,Num Comps,Total Capacity,Flow Rate,Num Comps,Total Capacity,Sensible Capacity,Flow Rate,\n,,,(degF),(degF),,(degF),(degF),(degF),(degF),(degF),,(Btu/hr),(gpm),,(Btu/hr),(Btu/hr),( gpm),\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+// Name block
+RULE NEW FluidSys:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Type,34,34,Status,34 )
+    else UNCHANGED
+    endif
+ENDRULE 
+// Next, populate properties that represent a combination of properties/fields for reference later
+; Controls
+RULE NEW FluidSys:HVACPriRpt_Part1
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%g,%g,%c%s%c,%g,%g,%g,%g,%g",DsgnSupWtrTemp,DsgnSupWtrDelT,34,TempCtrl,34,FixedSupTemp,RstSupHi,RstOutdrHi,RstSupLow,RstOutdrLow )
+    else UNCHANGED
+    endif
+ENDRULE 
+; Supply/Demand side components
+RULE NEW FluidSys:HVACPriRpt_Part2
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%g,%g,%g,%g,%g,%g,%g",SupNumComps,SupCompCap,SupplyCompFlowRt,DemandNumComps,DemandCompTotCap,DemandCompSensCap,DemandCompFlowRt )
+    else UNCHANGED
+    endif
+ENDRULE 
+// Finally, write complete row of reprot file
+RULE NEW FluidSys:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Part1,HVACPriRpt_Part2  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Boiler Reporting****************************
+
+RULE NEW Blr:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    BoilerReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nBoiler\nName,Fluid System Name,Status,Type,Fuel,Draft Type,Rated Capacity,AFUE,Thermal Efficiency,Forced Draft Power,Minimum Unload Ratio\n,,,,,,(Btu/h),,,hp\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Blr:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Parent(Name),34,34,Status,34,34,Type,34,34,FuelSrc,34 )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Blr:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%g,%g,%g,%g,%g",34,DraftType,34,CapRtd,AFUE,ThrmlEff,DraftFanHp,UnldRatMin )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Blr:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Chiller Reporting****************************
+
+RULE NEW Chlr:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    ChillerReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nChiller\nName,Fluid System Name,Status,Type,Fuel,Condenser Type,Rated Capacity,EER,COP,KW/ton,IPLV,Unloading Ratio,Min. Part-Load Ratio\n,,,,,,(Btu/h),,,,,,\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Chlr:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c",34,Name,34,34,Parent(Name),34,34,Status,34,34,Type,34,34,FuelSrc,34 )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Chlr:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%g,%g,%g,%g,%g,%g,%g",34,CndsrType,34,CapRtd,EER,COP,KwPerTon,IPLVkWPerTon,UnldRatMin,PLRMin )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Chlr:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Cooling Tower Reporting****************************
+
+RULE NEW HtRej:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    CoolingTowerReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nCooling Tower\nName,Fluid System Name,Status,Type,Rated Capacity,Number of Cells,Tower Air flow,Fan Type,Total Fan HP,Condenser Water Flow Rate,Capacity Control,Low Speed Air Flow Ratio, Minimum Speed Ratio\n,,,,,(Btu/h),cfm,,hp,gpm,,,,\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW HtRej:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%g,%g",34,Name,34,34,Parent(Name),34,34,Status,34,34,Type,34,CapRtd,CellCnt )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW HtRej:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%g,%c%s%c,%g,%g,%c%s%c,%g,%g",AirFlowCap,34,FanType,34,TotFanHP,WtrFlowCap,34,ModCtrl,34,LowSpdAirFlowRat,MinSpdRat )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW HtRej:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Pump Reporting****************************
+
+RULE NEW Pump:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    PumpReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nPump\nName,Serving Equipment,Status,Count,Operation,Speed Type,Design Flow Rate,Nameplate HP,Power,Power Per Flow,Break Horse Power,Head,Motor Efficiency,Impeller Efficiency,Minimum Flow Rate\n,,,,,,(gpm),(hp),(kW),(W/gpm),(bhp),(ft. H20),,,(gpm)\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Pump:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c,%c%s%c",34,Name,34,34,Parent(Name),34,34,Status,34,Cnt,34,OperCtrl,34,34,SpdCtrl,34 )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Pump:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format( "%g,%g,%g,%g,%g,%g,%g,%g",FlowCap,MtrHP,Pwr,PwrPerFlow,MtrBHP,TotHd,MtrEff,ImpellerEff,FlowMin )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW Pump:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Water Heater Reporting****************************
+
+RULE NEW WtrHtr:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    WaterHeaterReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nWater Heater\n,System,,,Water Heater\nName,System Name,System Type,System Count,Status,Type,Fuel,Count,Thermal Efficiency,StandbyLoss Fraction,Storage Capcity,Rated Capacity,Energy Factor\n,,,,,,,,,,(gal),(Btu/h),\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW WtrHtr:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%c%s%c,%c%s%c,%c%s%c,%g",34,Name,34,34,Parent(Name),34,34,Parent(Type),34,Parent(ShWSysCnt) )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW WtrHtr:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%c%s%c,%c%s%c,%c%s%c,%g,%g,%.3f,%g,%g,%.3f",34,Status,34,34,Type,34,34,FuelSrc,34,Cnt,ThrmlEff,StdbyLossFrac,StorCap,CapRtd,EF )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW WtrHtr:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+//****************Residential Water Heater Reporting****************************
+
+RULE NEW ResWtrHtr:HVACPriRpt
+  DATATYPE
+    String
+  LONGFORM
+    WaterHeaterReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+      then WriteToFile("\n\nResidential Water Heater\n,System,,,,Water Heater\nName,System Name,System Type,System Count,Distribution Type,Status,Type,Fuel,Count,Thermal Efficiency,StandbyLoss Fraction,Storage Capcity,Rated Capacity,Energy Factor,Tank Exterior Insulation Rval,Tank Interior Insulation Rval\n,,,,,,,,,,,(gal),(Btu/h),,(°F-ft2-h/Btu),(°F-ft2-h/Btu)\n" )
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW ResWtrHtr:HVACPriRpt_Name
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%c%s%c,%c%s%c,%c%s%c,%g,%c%s%c",34,Name,34,34,Parent(Name),34,34,Parent(Type),34,Parent(CentralSys),34,Parent(DistType),34 )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW ResWtrHtr:HVACPriRpt_Det
+  DATATYPE
+    String
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then Format(  "%c%s%c,%c%s%c,%c%s%c,%g,%g,%.3f,%g,%g,%.3f,%g,%g",34,Status,34,34,TankCat,34,34,ElementType,34,Parent(WtrHtrCnt),ThrmlEff,StdbyLossFrac,TankVol,InpRating,EngyFac,TankExtInsR,TankIntInsR )
+    else UNCHANGED
+    endif
+ENDRULE 
+
+RULE NEW ResWtrHtr:HVACPriRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACPrimary" )
+    then WriteToFile(  "%s,%s\n",HVACPriRpt_Name,HVACPriRpt_Det  )
+    else UNCHANGED
+    endif
+ENDRULE 

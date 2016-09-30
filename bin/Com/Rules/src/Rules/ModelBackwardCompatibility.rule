@@ -1,0 +1,158 @@
+// ModelBackwardCompatibility
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012-2015, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+RULE NEW Proj:BldgOwnerName
+  LONGFORM     BuildingOwnerName
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerCompany
+  LONGFORM     BuildingOwnerCompany
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerAddress
+  LONGFORM     BuildingOwnerAddress
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerCity
+  LONGFORM     BuildingOwnerCity
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerState
+  LONGFORM     BuildingOwnerState
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerZipCode
+  LONGFORM     BuildingOwnerZipCode
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:BldgOwnerPhone
+  LONGFORM     BuildingOwnerPhone
+  DATATYPE     String
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c - no longer reported on NRCC-PRF-01"
+ENDRULE
+
+RULE NEW Proj:SiteFuelType
+  LONGFORM     SiteFuelType
+  DATATYPE     Enumeration
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3c to 3d - not ever used previously"
+  OPTION
+    - select -
+    Electricity
+    NaturalGas
+    Propane
+ENDRULE
+
+RULE NEW Proj:ExcptCondCompleteBldg
+  LONGFORM     ExceptionalConditionCompleteBuilding
+  DATATYPE     Enumeration
+  INPUTCLASS   NotInput  IgnoreUserInput  "ExcptCondCompleteBldg removed in transition from 2013 3d to 3e and 2016.1 to 2016.2"
+  OPTION
+    Yes
+    No
+ENDRULE
+
+RULE Proj:EscalSpdCtrlMandComp
+  PREVIOUSNAMES  EscSpdCtrlMandComp
+ENDRULE
+
+
+// -------------------------------------------------------------------------
+
+RULE NEW Spc:Status
+  LONGFORM     Status
+  DATATYPE     Enumeration
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3d to 3e and 2016.1 to .2"
+  OPTION
+    New
+    Existing
+    Altered
+    ExistingUnchanged
+    ExistingAlteration
+    Removed
+ENDRULE
+
+RULE NEW Spc:MandatoryLtgCtrlRpt
+  LONGFORM     MandatoryLightingControlReport
+  DATATYPE     Integer
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3b to 3c"
+ENDRULE
+
+RULE NEW Spc:IntLPDPrescrip
+  LONGFORM     InteriorLightingPowerDensityPrescriptive
+  DATATYPE     Float
+  INPUTCLASS   NotInput  IgnoreUserInput  "Removed in transition from 2013 version 3c to 2016.1.0 / 2013 v3d"
+ENDRULE
+
+
+// -------------------------------------------------------------------------
+
+RULE NEW AirSys:DsgnAirFlowMin
+  LONGFORM     DesignAirFlowMinimum
+  DATATYPE     Float
+  INPUTCLASS   NotInput  IgnoreUserInput  "AirSys:DsgnAirFlowMin replaced by AirSys:DsgnAirFlowMinRat in transition from 2013 version 3b to 3c"
+ENDRULE
+
+// -------------------------------------------------------------------------
+
+RULE NEW ResDHWSys:UseDefaultLps
+  LONGFORM     UseDefaultLoops
+  DATATYPE     Integer
+  INPUTCLASS   NotInput  IgnoreUserInput  "ResDHWSys:UseDefaultLps removed in transition from 2013 3d to 3e and 2016.1 to 2016.2"
+ENDRULE
+
+// -------------------------------------------------------------------------
+
+// ---------------- Added 2016-08-29 - NK ----------------------------------
+
+RULE WtrHtr:TankOnCycleLossCoef
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "WtrHtr:TankOnCycleLossCoef removed in transition from 2013 version 3c to 3e and 2016.2.0 to 2016.2.1"
+ENDRULE    
+
+RULE WtrHtr:StdbyLoss
+  INPUTCLASS
+    NotInput  IgnoreUserInput  "WtrHtr:StdbyLoss removed in transition from 2013 version 3c to 3e and 2016.2.0 to 2016.2.1"
+ENDRULE    

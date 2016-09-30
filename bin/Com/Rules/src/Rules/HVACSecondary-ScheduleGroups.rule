@@ -1,0 +1,971 @@
+// HVAC Secondary Systems - Schedule Groups
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 20122014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+//  This rule file addresses the following building descriptors:
+
+// Process areas served by system
+// Computer room
+RULE NEW AirSys:CompRmArea
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CompRmArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CompRmArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CompRmArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CompRmArea ))
+ENDRULE
+RULE NEW ZnSys:CompRmArea
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CompRmArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CompRmArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CompRmArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CompRmArea ))
+ENDRULE
+// Lab
+RULE NEW AirSys:LabArea
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:LabArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:LabArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:LabArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:LabArea ))
+ENDRULE
+RULE NEW ZnSys:LabArea
+  DATATYPE
+    Float
+  LONGFORM
+    LaboratoryArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:LabArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:LabArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:LabArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:LabArea ))
+ENDRULE
+// Commerical kitchen
+RULE NEW AirSys:CommKitArea
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CommKitArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CommKitArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CommKitArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CommKitArea ))
+ENDRULE
+RULE NEW ZnSys:CommKitArea
+  DATATYPE
+    Float
+  LONGFORM
+    CommercialKitchenArea
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CommKitArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CommKitArea ))
+  SIZING
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:CommKitArea ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:CommKitArea ))
+ENDRULE
+
+
+// -----------  Function Groups Served by HVAC System --------------------------
+// =========================== AirSystem =======================================
+// Proposed AirSys can be defined to PriAirCondgSysRef or VentSysRef, 
+// so FuncGrpArea in SIZING_PROPOSED transform is determined using the Max of the two 
+// possibilities.
+// Baseline PriAirCondgSysRef and VentSysRef are the same, so FuncGrpArea in
+// BASELINESZING/BASELINED transform is determined using only the PriAirCondgSysRef.
+RULE NEW AirSys:FuncGrpAreaAssembly
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaAssembly
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaAssembly )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaAssembly ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaAssembly ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaAssembly
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaData
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaData
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaData )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaData ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaData ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaData
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaHealth
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaHealth
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaHealth )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaHealth ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaHealth ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaHealth
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaLab
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaLab
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaLab )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaLab ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaLab ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaLab
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaManufacturing
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaManufacturing
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaManufacturing )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaManufacturing ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaManufacturing ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaManufacturing
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaOffice
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaOffice
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaOffice )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaOffice ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaOffice ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaOffice
+ENDRULE  
+RULE NEW AirSys:FuncGrpAreaParking
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaParking
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaParking )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaParking ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaParking ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaParking
+ENDRULE  
+RULE NEW AirSys:FuncGrpAreaResidentialCommon
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialCommon
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaResidentialCommon )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialCommon ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaResidentialCommon ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaResidentialCommon
+ENDRULE  
+RULE NEW AirSys:FuncGrpAreaResidentialLiving
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialLiving
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaResidentialLiving )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialLiving ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaResidentialLiving ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaResidentialLiving
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaRestaurant
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRestaurant
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaRestaurant )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaRestaurant ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaRestaurant ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaRestaurant
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaRetail
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRetail
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaRetail )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaRetail ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaRetail ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaRetail
+ENDRULE 
+RULE NEW AirSys:FuncGrpAreaSchool
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaSchool
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaSchool )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaSchool ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaSchool ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaSchool
+ENDRULE
+RULE NEW AirSys:FuncGrpAreaWarehouse
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaWarehouse
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaWarehouse )
+    else
+    Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaWarehouse ),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaWarehouse ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaWarehouse
+ENDRULE 
+
+// =========================== ZoneSystem ======================================
+// Proposed ZnSys can be defined to PriAirCondgSysRef, SecAirCondgSysRef, or 
+// VentSysRef, so FuncGrpArea in SIZING_PROPOSED transform is determined using the Max 
+// of all three possibilities.
+// Baseline PriAirCondgSysRef and VentSysRef are the same, so FuncGrpArea in
+// BASELINESZING/BASELINED transform is determined using only the PriAirCondgSysRef.
+RULE NEW ZnSys:FuncGrpAreaAssembly
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaAssembly
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaAssembly )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaAssembly ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaAssembly )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaAssembly ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaAssembly
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaData
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaData
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaData )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaData ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaData )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaData ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaData
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaHealth
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaHealth
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaHealth )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaHealth ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaHealth )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaHealth ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaHealth
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaLab
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaLab
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaLab )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaLab ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaLab )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaLab ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaLab
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaManufacturing
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaManufacturing
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaManufacturing )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaManufacturing ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaManufacturing )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaManufacturing ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaManufacturing
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaOffice
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaOffice
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaOffice )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaOffice ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaOffice )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaOffice ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaOffice
+ENDRULE  
+RULE NEW ZnSys:FuncGrpAreaParking
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaParking
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaParking )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaParking ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaParking )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaParking ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaParking
+ENDRULE  
+RULE NEW ZnSys:FuncGrpAreaResidentialCommon
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialCommon
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaResidentialCommon )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialCommon ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialCommon )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaResidentialCommon ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaResidentialCommon
+ENDRULE  
+RULE NEW ZnSys:FuncGrpAreaResidentialLiving
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaResidentialLiving
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaResidentialLiving )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialLiving ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaResidentialLiving )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaResidentialLiving ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaResidentialLiving
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaRestaurant
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRestaurant
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaRestaurant )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaRestaurant ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaRestaurant )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaRestaurant ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaRestaurant
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaRetail
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaRetail
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaRetail )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaRetail ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaRetail )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaRetail ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaRetail
+ENDRULE 
+RULE NEW ZnSys:FuncGrpAreaSchool
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaSchool
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaSchool )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaSchool ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaSchool )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaSchool ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaSchool
+ENDRULE
+RULE NEW ZnSys:FuncGrpAreaWarehouse
+  DATATYPE
+    Float
+  LONGFORM
+    FunctionGroupAreaWarehouse
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( IsExhSys )
+    then SumRevRef( ThrmlZn:ExhSysRef, ThrmlZn:FuncGrpAreaWarehouse )
+    else
+    Max(Max(SumRevRef( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FuncGrpAreaWarehouse ),
+            SumRevRef( ThrmlZn:SecAirCondgSysRef, ThrmlZn:FuncGrpAreaWarehouse )),
+        SumRevRef( ThrmlZn:VentSysRef, ThrmlZn:FuncGrpAreaWarehouse ))
+    endif
+  ANNUAL
+    z:FuncGrpAreaWarehouse
+ENDRULE 
+
+
+
+// ********** Predominant Function Group for System ****************************
+// =========================== AirSystem ======================================
+RULE NEW AirSys:MaxFuncGrpArea
+  DATATYPE
+    Float
+  LONGFORM
+    MaxFunctionGroupArea
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( FuncGrpAreaResidentialLiving > 0 )
+    then FuncGrpAreaResidentialLiving
+    else
+    Max(Max(Max(Max(FuncGrpAreaAssembly,
+                    FuncGrpAreaData),
+                Max(FuncGrpAreaHealth,
+                    FuncGrpAreaLab)),
+            Max(Max(FuncGrpAreaManufacturing,
+                    FuncGrpAreaOffice),
+                Max(FuncGrpAreaParking,
+                    FuncGrpAreaResidentialCommon))),
+            Max(Max(FuncGrpAreaRestaurant,
+                    FuncGrpAreaRetail),            
+                Max(FuncGrpAreaSchool,
+                    FuncGrpAreaWarehouse)))
+    endif
+  ANNUAL
+    z:MaxFuncGrpArea
+ENDRULE 
+
+// -----------------------------------------------------------------------------
+RULE NEW AirSys:PredominantFuncGrp
+  DATATYPE
+    String
+  LONGFORM
+    PredominantFunctionGroup
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( FuncGrpAreaResidentialLiving > 0 )
+   then "ResidentialLiving"
+    else if( MaxFuncGrpArea = FuncGrpAreaAssembly )
+    then "Assembly"
+    else if( MaxFuncGrpArea = FuncGrpAreaData )
+    then "Data"
+    else if( MaxFuncGrpArea = FuncGrpAreaHealth )
+    then "Health"
+    else if( MaxFuncGrpArea = FuncGrpAreaLab )
+    then "Laboratory"
+    else if( MaxFuncGrpArea = FuncGrpAreaManufacturing )
+    then "Manufacturing"
+    else if( MaxFuncGrpArea = FuncGrpAreaOffice )
+    then "Office"
+    else if( MaxFuncGrpArea = FuncGrpAreaParking )
+    then "Parking"
+    else if( MaxFuncGrpArea = FuncGrpAreaResidentialCommon )
+    then "ResidentialCommon"
+    else if( MaxFuncGrpArea = FuncGrpAreaRestaurant )
+    then "Restaurant"
+    else if( MaxFuncGrpArea = FuncGrpAreaRetail )
+    then "Retail"
+    else if( MaxFuncGrpArea = FuncGrpAreaSchool )
+    then "School"
+    else if( MaxFuncGrpArea = FuncGrpAreaWarehouse )
+    then "Warehouse"
+    else UNDEFINED
+    endif endif endif endif endif
+    endif endif endif endif endif
+    endif endif endif
+  ANNUAL  
+    z:PredominantFuncGrp
+ENDRULE 
+
+// =========================== ZoneSystem ======================================
+RULE NEW ZnSys:MaxFuncGrpArea
+  DATATYPE
+    Float
+  LONGFORM
+    MaxFunctionGroupArea
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( FuncGrpAreaResidentialLiving > 0 )
+    then FuncGrpAreaResidentialLiving
+    else
+    Max(Max(Max(Max(FuncGrpAreaAssembly,
+                    FuncGrpAreaData),
+                Max(FuncGrpAreaHealth,
+                    FuncGrpAreaLab)),
+            Max(Max(FuncGrpAreaManufacturing,
+                    FuncGrpAreaOffice),
+                Max(FuncGrpAreaParking,
+                    FuncGrpAreaResidentialCommon))),
+            Max(Max(FuncGrpAreaRestaurant,
+                    FuncGrpAreaRetail),            
+                Max(FuncGrpAreaSchool,
+                    FuncGrpAreaWarehouse)))
+    endif
+  ANNUAL
+    z:MaxFuncGrpArea
+ENDRULE 
+
+// -----------------------------------------------------------------------------
+RULE NEW ZnSys:PredominantFuncGrp
+  DATATYPE
+    String
+  LONGFORM
+    PredominantFunctionGroup
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( FuncGrpAreaResidentialLiving > 0 )
+   then "ResidentialLiving"
+    else if( MaxFuncGrpArea = FuncGrpAreaAssembly )
+    then "Assembly"
+    else if( MaxFuncGrpArea = FuncGrpAreaData )
+    then "Data"
+    else if( MaxFuncGrpArea = FuncGrpAreaHealth )
+    then "Health"
+    else if( MaxFuncGrpArea = FuncGrpAreaLab )
+    then "Laboratory"
+    else if( MaxFuncGrpArea = FuncGrpAreaManufacturing )
+    then "Manufacturing"
+    else if( MaxFuncGrpArea = FuncGrpAreaOffice )
+    then "Office"
+    else if( MaxFuncGrpArea = FuncGrpAreaParking )
+    then "Parking"
+    else if( MaxFuncGrpArea = FuncGrpAreaResidentialCommon )
+    then "ResidentialCommon"
+    else if( MaxFuncGrpArea = FuncGrpAreaRestaurant )
+    then "Restaurant"
+    else if( MaxFuncGrpArea = FuncGrpAreaRetail )
+    then "Retail"
+    else if( MaxFuncGrpArea = FuncGrpAreaSchool )
+    then "School"
+    else if( MaxFuncGrpArea = FuncGrpAreaWarehouse )
+    then "Warehouse"
+    else UNDEFINED
+    endif endif endif endif endif
+    endif endif endif endif endif
+    endif endif endif
+  ANNUAL 
+    z:PredominantFuncGrp
+ENDRULE 
+
+
+// Determine the name of the largest thermal zone that references the current system
+RULE NEW AirSys:MaxAreaThrmlZnRef
+  DATATYPE
+    ThrmlZn
+  LONGFORM
+    MaximumAreaThermalZoneRef
+  INPUTCLASS
+    NotInput
+  SIZING
+    MaxRevRefComp( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FlrArea )
+ENDRULE
+RULE NEW ZnSys:MaxAreaThrmlZnRef
+  DATATYPE
+    ThrmlZn
+  LONGFORM
+    MaximumAreaThermalZoneRef
+  INPUTCLASS
+    NotInput
+  SIZING
+    MaxRevRefComp( ThrmlZn:PriAirCondgSysRef, ThrmlZn:FlrArea )
+ENDRULE
+ 
+// ---------- Section 5.7.2.2 - Schedules --------------------------------------
+// ********** Air Handler Schedule *********************************************
+// =========================== AirSystem ======================================
+RULE AirSys:AvailSchRef
+  DESCRIPTION
+    "A schedule that indicates what hours the system is scheduled to operate."
+  HELP : T24N
+    "The schedules specified in Appendix 5.4A and detailed in Appendix 5.4B shall 
+     be used as a default."
+  HELP : S901G ECBC
+    "A default schedule based on the the predominant FunctionScheduleGroup (by
+     floor area) of the zones served by the system."
+  REFERENCE 
+    NACM Section 5.7.2.2
+  INPUTCLASS : T24N
+    Prescribed
+  INPUTCLASS : S901G ECBC
+    Default
+  SIZING : T24N
+    if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( LocalCompAssigned( u:AvailSchRef ) )
+    then u:AvailSchRef
+    else if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( LocalCompAssigned( MaxAreaThrmlZnRef ) )
+    then MaxAreaThrmlZnRef:PropPriAvailSchRef
+    else if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif endif
+  ANNUAL 
+    z:AvailSchRef
+ENDRULE
+
+// =========================== ZoneSystem ======================================
+RULE ZnSys:AvailSchRef
+  DESCRIPTION
+    "A schedule that indicates what hours the system is scheduled to operate."
+  HELP : T24N
+    "The schedules specified in Appendix 5.4A and detailed in Appendix 5.4B shall 
+     be used as a default."
+  HELP : S901G ECBC
+    "A default schedule based on the the predominant FunctionScheduleGroup (by
+     floor area) of the zones served by the system."
+  INPUTCLASS : T24N
+    Prescribed
+  INPUTCLASS : S901G ECBC
+    Default
+  SIZING : T24N
+    if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( LocalCompAssigned( u:AvailSchRef ) )
+    then u:AvailSchRef
+    else if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( LocalCompAssigned( MaxAreaThrmlZnRef ) )
+    then MaxAreaThrmlZnRef:PropPriAvailSchRef
+    else if( LocalStatus( PredominantFuncGrp ) = 0 ) 
+    then
+      PostError("A predominant function schedule group for system '%s' could not
+                 be determined. Confirm SpaceFunction assignments for all spaces
+                 and if problem persists, contact support.", Name)   
+    else
+      RuleLibrary(Schedule, 
+        (SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp)))
+    endif endif
+  ANNUAL 
+    z:AvailSchRef
+ENDRULE
+
+// =========================== TerminalUnit ====================================
+RULE TrmlUnit:AvailSchRef
+  DESCRIPTION
+    "A schedule that indicates what hours the system is scheduled to operate."
+  HELP : T24N
+    "This schedule overrides E+ AvailabilityManager:NightCycle control.
+     Therefore, it is not used for compliance analysis."
+  HELP : S901G ECBC
+    "This schedule overrides E+ AvailabilityManager:NightCycle control.
+     Therefore, it should not be used unless this is the desired behavior."
+  INPUTCLASS
+    Prescribed
+  SIZING
+    UNDEFINED
+  ANNUAL 
+    z:AvailSchRef
+ENDRULE
+
+// =========================== Fan ====================================
+RULE Fan:AvailSchRef
+  DESCRIPTION
+    "A schedule that indicates what the fan is enabled to operate."
+  HELP
+    "This schedule is overridden by E+ AvailabilityManager:NightCycle control.
+     This property is translated by OS reverse translator. However, OS
+     also has the rules listed below built-in. It is provided in the SDD only to
+     provide control over this E+ fan object schedules, if needed."
+  INPUTCLASS
+    NotInput
+// This property is translated by OS reverse translator. However, the OS
+// also has this following behavior built-in:
+;   if( ParentComponentType() = "AirSeg" )
+;   then // AirSystem
+;     AirSys:AvailSchRef
+;   else if( ParentComponentType() = "ZnSys" )
+;   then // ZoneSystem
+;     ZnSys:AvailSchRef
+;   else if( ParentComponentType() = "TrmlUnit" )
+;   then // TerminalUnit, fan powered box
+;     AirSys:AvailSchRef
+;   else UNDEFINED
+;   endif endif endif
+ENDRULE
+
+// =========================== Exhaust Systems Unit ============================
+RULE ThrmlZn:ExhAvailSchRef
+  DESCRIPTION
+    "Echo of the availability schedule defined at exhaust system referenced by the
+     ThermalZone"
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if( LocalCompAssigned( ExhSysRef ) )
+    then ExhSysRef:AvailSchRef
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( ExhFlow > 0 )
+    then
+      if( VentSysIsExh > 0 .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+      then PriAirCondgSysRef:AvailSchRef
+      else if( LocalCompAssigned( ExhAvailSchRef ) = 0 )
+      then RuleLibrary( Schedule, SpaceFunctionGroups:AvailSchRef("FuncGroup", PredominantFuncGrp) )
+      else UNCHANGED
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    if( ExhFlow > 0 )
+    then
+      if( VentSysIsExh > 0 .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+      then PriAirCondgSysRef:AvailSchRef
+      else UNCHANGED
+      endif
+    else UNDEFINED
+    endif  
+  ANNUAL
+    z:ExhAvailSchRef
+ENDRULE
+
+// Transfer proposed availability schedule to zone
+RULE NEW ThrmlZn:PropPriAvailSchRef
+  DATATYPE
+    Schedule
+  LONGFORM
+    ProposedPrimaryAvailabilityScheduleRef
+  DESCRIPTION
+    "The availability of the proposed (primary) HVAC system that serves the 
+     ThermalZone."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( LocalCompAssigned ( PriAirCondgSysRef ) )
+    then PriAirCondgSysRef:AvailSchRef
+    else UNDEFINED
+    endif
+ENDRULE

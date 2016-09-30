@@ -1,0 +1,1247 @@
+// Opaque Envelope - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// Placeholder rules to assign ExtWall Length and Int Wall Length for calculation
+// of Space Perimeter
+RULE NEW  ExtWall:Len
+  DATATYPE
+    Float
+  LONGFORM
+    Length
+  DESCRIPTION
+    "The width of an exterior wall, as determined from the maximum extents of
+     the wall's Polyloop X and Y coordinates."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( PolyLp:XYLen, 1 )
+  ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW  IntWall:Len
+  DATATYPE
+    Float
+  LONGFORM
+    Length
+  DESCRIPTION
+    "The width of an interior wall, as determined from the maximum extents of
+     the wall's Polyloop X and Y coordinates."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( PolyLp:XYLen, 1 )
+  ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntWall:NonresNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Nonresidential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Nonresidential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntWall:ResNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Residential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Residential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Residential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntWall:SemiheatedNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    SemiheatedNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Semiheated space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Spc:Semiheated = 1 .OR.
+            Spc:IsSemiheatedPlenum = 1 .OR.
+	    Spc:CondgType = "Unconditioned") .AND.
+           (AdjacentSpcRef:NotEnclosed = 1)) 
+	   .OR. 
+	  ((AdjacentSpcRef:Semiheated = 1 .OR.
+	    AdjacentSpcRef:IsSemiheatedPlenum = 1 .OR.
+	    AdjacentSpcRef:CondgType = "Unconditioned") .AND.
+           (Spc:NotEnclosed = 1)) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntWall:NotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the building envelope,
+     i.e. they separate an enclosed space from not enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:NotEnclosed = 1 .AND.
+           AdjacentSpcRef:NotEnclosed = 0)
+	  .OR.
+          (AdjacentSpcRef:NotEnclosed = 1 .AND.
+	   Spc:NotEnclosed = 0) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE IntWall:DemSurf
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the building envelope,
+     i.e. they separate conditioned from unconditioned space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType ) = 0 ) then 0
+    else
+      if( ( ( Space:CondgType = "Unconditioned" .OR.
+              Space:Semiheated = 1 .OR.
+	            Space:IsSemiheatedPlenum = 1)
+	          .AND.
+            ( AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+              AdjacentSpcRef:CondgType = "IndirectlyConditioned" ) )
+	        .OR.
+          ( ( AdjacentSpcRef:CondgType = "Unconditioned" .OR.
+	            AdjacentSpcRef:Semiheated = 1 .OR.
+	            AdjacentSpcRef:IsSemiheatedPlenum = 1)
+	         .AND.
+           ( Space:CondgType = "DirectlyConditioned" .OR.
+             Space:CondgType = "IndirectlyConditioned" ) ) )
+    then 1
+    else 0
+    endif endif endif endif
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ( ( Space:CondgType = "Unconditioned") .AND.
+            ( AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+              AdjacentSpcRef:CondgType = "IndirectlyConditioned" .OR.
+              AdjacentSpcRef:CondgType = "Plenum") ) 
+          .OR.
+          ( ( Space:CondgType = "DirectlyConditioned" .OR.
+              Space:CondgType = "IndirectlyConditioned" .OR.
+              Space:CondgType = "Plenum") .AND.
+              AdjacentSpcRef:CondgType = "Unconditioned") )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:NonresNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Nonresidential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Nonresidential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:ResNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Residential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Residential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Residential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:SemiheatedNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    SemiheatedNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Semiheated space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Spc:Semiheated = 1 .OR.
+            Spc:IsSemiheatedPlenum = 1 .OR.
+	    Spc:CondgType = "Unconditioned") .AND.
+           (AdjacentSpcRef:NotEnclosed = 1)) 
+	   .OR. 
+	  ((AdjacentSpcRef:Semiheated = 1 .OR.
+	    AdjacentSpcRef:IsSemiheatedPlenum = 1 .OR.
+	    AdjacentSpcRef:CondgType = "Unconditioned") .AND.
+           (Spc:NotEnclosed = 1)) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW IntFlr:NotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Floors which serve as part of the building envelope,
+     i.e. they separate an enclosed space from not enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:NotEnclosed = 1 .AND.
+           AdjacentSpcRef:NotEnclosed = 0)
+	  .OR.
+          (AdjacentSpcRef:NotEnclosed = 1 .AND.
+	   Spc:NotEnclosed = 0) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE IntFlr:DemSurf
+  DESCRIPTION
+    "Flag to identify Interior Floors which serve as part of the building envelope,
+     i.e. they separate conditioned from unconditioned space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Space:CondgType = "Unconditioned" .OR.
+            Space:Semiheated = 1 .OR.
+	    Space:IsSemiheatedPlenum = 1)
+	    .AND.
+           (AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "IndirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "Plenum"))
+	    .OR.
+          ((AdjacentSpcRef:CondgType = "Unconditioned" .OR.
+	    AdjacentSpcRef:Semiheated = 1 .OR.
+	    AdjacentSpcRef:IsSemiheatedPlenum = 1)
+	    .AND.
+           (Space:CondgType = "DirectlyConditioned" .OR.
+            Space:CondgType = "IndirectlyConditioned" .OR.
+            Space:CondgType = "Plenum")) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Space:CondgType = "Unconditioned") .AND.
+           (AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "IndirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "Plenum")) .OR.
+          ((Space:CondgType = "DirectlyConditioned" .OR.
+            Space:CondgType = "IndirectlyConditioned" .OR.
+            Space:CondgType = "Plenum") .AND.
+            AdjacentSpcRef:CondgType = "Unconditioned") )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:NonresNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NonresidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Nonresidential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Nonresidential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:ResNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    ResidentialNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Residential space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:OccClass = "Residential" .AND.
+           AdjacentSpcRef:NotEnclosed = 1) 
+	   .OR. 
+	  (AdjacentSpcRef:OccClass = "Residential" .AND.
+           Spc:NotEnclosed = 1) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:SemiheatedNotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    SemiheatedNotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Walls that are shared between a Semiheated space and a
+     Not Enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Spc:Semiheated = 1 .OR.
+            Spc:IsSemiheatedPlenum = 1 .OR.
+	    Spc:CondgType = "Unconditioned") .AND.
+           (AdjacentSpcRef:NotEnclosed = 1)) 
+	   .OR. 
+	  ((AdjacentSpcRef:Semiheated = 1 .OR.
+	    AdjacentSpcRef:IsSemiheatedPlenum = 1 .OR.
+	    AdjacentSpcRef:CondgType = "Unconditioned") .AND.
+           (Spc:NotEnclosed = 1)) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Ceiling:NotEnclosedDemSurf
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    NotEnclosedDemisingSurface
+  DESCRIPTION
+    "Flag to identify Interior Floors which serve as part of the building envelope,
+     i.e. they separate an enclosed space from not enclosed space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( (Spc:NotEnclosed = 1 .AND.
+           AdjacentSpcRef:NotEnclosed = 0)
+	  .OR.
+          (AdjacentSpcRef:NotEnclosed = 1 .AND.
+	   Spc:NotEnclosed = 0) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Ceiling:DemSurf
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the building envelope,
+     i.e. they separate conditioned from unconditioned space."
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT : S901G ECBC
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Space:CondgType = "Unconditioned" .OR.
+            Space:Semiheated = 1 .OR.
+	    Space:IsSemiheatedPlenum = 1)
+	    .AND.
+           (AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "IndirectlyConditioned"))
+	    .OR.
+          ((AdjacentSpcRef:CondgType = "Unconditioned" .OR.
+	    AdjacentSpcRef:Semiheated = 1 .OR.
+	    AdjacentSpcRef:IsSemiheatedPlenum = 1)
+	    .AND.
+           (Space:CondgType = "DirectlyConditioned" .OR.
+            Space:CondgType = "IndirectlyConditioned")) )
+      then 1
+      else 0
+      endif
+    endif endif endif
+  DEFAULT
+    if( LocalStatus(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) then 0
+    else if( LocalCompAssigned(AdjacentSpcRef) = 0 ) then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) then 0
+    else
+      if( ((Space:CondgType = "Unconditioned") .AND.
+           (AdjacentSpcRef:CondgType = "DirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "IndirectlyConditioned" .OR.
+            AdjacentSpcRef:CondgType = "Plenum")) .OR.
+          ((Space:CondgType = "DirectlyConditioned" .OR.
+            Space:CondgType = "IndirectlyConditioned" .OR.
+            Space:CondgType = "Plenum") .AND.
+            AdjacentSpcRef:CondgType = "Unconditioned") )
+      then 1
+      else 0
+      endif
+    endif endif endif
+ENDRULE
+
+
+
+
+// ----------------------------------------------------------------------------
+// Rules to identify envelope categories - 360 LDH
+// For T-24 NonRes:
+//   ConditionedExteriorEnvelope
+// For 90.1 PRM:
+//   ResidentialExteriorEnvelope
+//   NonResidentialExteriorEnvelope
+//   SemiExteriorEnvelope
+//   NonExteriorEnvelope
+// Only calculated for surfaces that are included in WWR calcs, but
+// easily expandable to other surfaces if found useful
+
+
+//---------- Exterior Walls ---------------------------------------------------
+RULE NEW ExtWall:IsCondExtEnv
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    IsConditionedExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Exterior Walls which serve as part of the conditioned 
+     exterior envelope for WWR Calculation Purposes.  Wall area included in
+     T-24 WWR calculation includes Gross Exterior Wall Area that is above grade
+     and which is adjacent to conditioned space (direclty conditioned,
+     indirectly conditioned, or plenum.)"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned")
+    then 0
+    else 1
+    endif
+ENDRULE
+
+RULE NEW ExtWall:IsResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Exterior Walls which serve as part of the residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned" .OR.
+        Space:Semiheated = 1 .OR.
+	      Space:IsSemiheatedPlenum = 1 )
+    then 0
+    else if( Spc:OccClass = "Residential" )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW ExtWall:IsNonResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Exterior Walls which serve as part of the non-residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned" .OR.
+        Space:Semiheated = 1 .OR.
+	      Space:IsSemiheatedPlenum = 1 )
+    then 0
+    else if( Spc:OccClass = "Nonresidential" )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW ExtWall:IsSemiExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Exterior Walls which serve as part of the semi-exterior 
+     envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( Space:Semiheated = 1 .OR.
+	           Space:IsSemiheatedPlenum = 1 )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW ExtWall:IsNonExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Exterior Walls which do not serve as part of the
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsResExtEnv = 0 .AND.
+        IsNonResExtEnv = 0 .AND.
+        IsSemiExtEnv = 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+//---------- Interior Walls ---------------------------------------------------
+RULE NEW IntWall:IsResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Residential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Residential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntWall:IsNonResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the non-residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Nonresidential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntWall:IsSemiExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Interior Walls which serve as part of the semi-exterior 
+     envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( ( Spc:Semiheated = 1 .OR.
+	               Spc:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( AdjacentSpcRef:Semiheated != 1 .AND.
+                 AdjacentSpcRef:IsSemiheatedPlenum != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:Semiheated = 1 .OR.
+	               AdjacentSpcRef:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( Spc:Semiheated != 1 .AND.
+                 Spc:IsSemiheatedPlenum != 1 ) ) 
+             .OR.
+             ( ( Spc:CondgType <> "Unconditioned" .AND.
+                 Spc:Semiheated != 1) 
+               .AND.
+               ( AdjacentSpcRef:CondgType = "Unconditioned" .AND.
+                 AdjacentSpcRef:NotEnclosed != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:CondgType <> "Unconditioned" .AND.
+                 AdjacentSpcRef:Semiheated != 1) 
+               .AND.
+               ( Spc:CondgType = "Unconditioned" .AND.
+                 Spc:NotEnclosed != 1 ) ) )
+	  then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntWall:IsNonExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Interior Walls which do not serve as part of the
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsResExtEnv = 0 .AND.
+        IsNonResExtEnv = 0 .AND.
+        IsSemiExtEnv = 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+//---------- Roofs ------------------------------------------------------------
+RULE NEW Roof:IsCondExtEnv
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    IsConditionedExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Roofs which serve as part of the conditioned 
+     exterior envelope for SRR Calculation Purposes.  Roof area included in
+     T-24 SRR calculation includes Gross Exterior Roof Area that is above grade
+     and which is adjacent to conditioned space (direclty conditioned,
+     indirectly conditioned, or plenum.)"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned")
+    then 0
+    else 1
+    endif
+ENDRULE
+
+RULE NEW Roof:IsResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Roofs which serve as part of the residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned" .OR.
+        Space:Semiheated = 1 .OR.
+	      Space:IsSemiheatedPlenum = 1 )
+    then 0
+    else if( Spc:OccClass = "Residential" )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW Roof:IsNonResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Roofs which serve as part of the non-residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 .OR. 
+        Space:CondgType = "Unconditioned" .OR.
+        Space:Semiheated = 1 .OR.
+	      Space:IsSemiheatedPlenum = 1 )
+    then 0
+    else if( Spc:OccClass = "Nonresidential" )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW Roof:IsSemiExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Roofs which serve as part of the semi-exterior 
+     envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( Space:Semiheated = 1 .OR.
+	           Space:IsSemiheatedPlenum = 1 )
+	  then 1
+    else 0
+    endif endif
+ENDRULE
+RULE NEW Roof:IsNonExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Roofs which do not serve as part of the
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsResExtEnv = 0 .AND.
+        IsNonResExtEnv = 0 .AND.
+        IsSemiExtEnv = 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+//---------- Ceiling ---------------------------------------------------
+RULE NEW Ceiling:IsResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Residential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Residential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW Ceiling:IsNonResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the non-residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Nonresidential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW Ceiling:IsSemiExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the semi-exterior 
+     envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( ( Spc:Semiheated = 1 .OR.
+	               Spc:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( AdjacentSpcRef:Semiheated != 1 .AND.
+                 AdjacentSpcRef:IsSemiheatedPlenum != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:Semiheated = 1 .OR.
+	               AdjacentSpcRef:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( Spc:Semiheated != 1 .AND.
+                 Spc:IsSemiheatedPlenum != 1 ) ) 
+             .OR.
+             ( ( Spc:CondgType <> "Unconditioned" .AND.
+                 Spc:Semiheated != 1) 
+               .AND.
+               ( AdjacentSpcRef:CondgType = "Unconditioned" .AND.
+                 AdjacentSpcRef:NotEnclosed != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:CondgType <> "Unconditioned" .AND.
+                 AdjacentSpcRef:Semiheated != 1) 
+               .AND.
+               ( Spc:CondgType = "Unconditioned" .AND.
+                 Spc:NotEnclosed != 1 ) ) )
+	  then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW Ceiling:IsNonExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which do not serve as part of the
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsResExtEnv = 0 .AND.
+        IsNonResExtEnv = 0 .AND.
+        IsSemiExtEnv = 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+//---------- Interior Floor ---------------------------------------------------
+RULE NEW IntFlr:IsResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Residential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Residential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntFlr:IsNonResExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonResidentialExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the non-residential 
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0  .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( Spc:OccClass = "Nonresidential" .AND.
+               Spc:Semiheated != 1 .AND. 
+               Spc:CondgType != "Unconditioned" .AND.
+               AdjacentSpcRef:NotEnclosed = 1 ) 
+	           .OR. 
+	           ( AdjacentSpcRef:OccClass = "Nonresidential" .AND.
+               AdjacentSpcRef:Semiheated != 1 .AND. 
+               AdjacentSpcRef:CondgType != "Unconditioned" .AND.
+               Spc:NotEnclosed = 1 ) )
+    then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntFlr:IsSemiExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsSemiExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which serve as part of the semi-exterior 
+     envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned(AdjacentSpcRef) = 0 .OR.
+        ParentStatus(CondgType) = 0 ) 
+    then 0
+    else if( LocalStatus(AdjacentSpcRef:CondgType) = 0 ) 
+    then 0
+    else if( ( ( Spc:Semiheated = 1 .OR.
+	               Spc:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( AdjacentSpcRef:Semiheated != 1 .AND.
+                 AdjacentSpcRef:IsSemiheatedPlenum != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:Semiheated = 1 .OR.
+	               AdjacentSpcRef:IsSemiheatedPlenum = 1 )
+               .AND.
+               ( Spc:Semiheated != 1 .AND.
+                 Spc:IsSemiheatedPlenum != 1 ) ) 
+             .OR.
+             ( ( Spc:CondgType <> "Unconditioned" .AND.
+                 Spc:Semiheated != 1) 
+               .AND.
+               ( AdjacentSpcRef:CondgType = "Unconditioned" .AND.
+                 AdjacentSpcRef:NotEnclosed != 1 ) )
+             .OR.
+             ( ( AdjacentSpcRef:CondgType <> "Unconditioned" .AND.
+                 AdjacentSpcRef:Semiheated != 1) 
+               .AND.
+               ( Spc:CondgType = "Unconditioned" .AND.
+                 Spc:NotEnclosed != 1 ) ) )
+	  then 1
+    else 0
+    endif endif endif
+ENDRULE
+RULE NEW IntFlr:IsNonExtEnv
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNonExteriorEnvelope
+  DESCRIPTION
+    "Flag to identify Ceilings which do not serve as part of the
+     exterior envelope."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsResExtEnv = 0 .AND.
+        IsNonResExtEnv = 0 .AND.
+        IsSemiExtEnv = 0 )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+

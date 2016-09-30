@@ -1,0 +1,2038 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Conversion of Proposed Building Model into Budget/Standard Design
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2014, California Energy Commission
+; Copyright (c) 2012-2014, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+;*************************************************************************
+;55555
+RULELIST  "BudgetConversion" 1 0 1 0
+;
+;   Rules that govern the conversion of the proposed building design to the
+;   budget building design.  Any building database parameters that are not
+;   defined in these rules will be copied from the proposed building design.
+;
+;*************************************************************************
+;*************************************************************************
+
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "begin BudgetConv", 0 )  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Project Rules
+   ;--------------------------------------------------------------------
+
+  ; SAC 12/14/12 - added rules to setup certain run ID-related properties
+  ; SAC 3/27/15 - revisions to support DesignRating simulation (RunNum = StdDesign RunNum + 1)
+  ; "Set Proj:RunNumber"			Proj:RunNumber			= {	if (AllOrientations < 0.5) then  2  else  5  endif  }
+;	"Set Proj:RunNumber"			Proj:RunNumber			= {	RunNumber + 1  }		- SAC 4/21/15 - now set in source code
+	"Set Proj:RunAbbrev"			Proj:RunAbbrev			= {	if ( AnalysisType == 13 .AND.
+																				  ( (AllOrientations < 0.5 .AND. RunNumber == 2) .OR.
+																					 (AllOrientations > 0.5 .AND. RunNumber == 5) ) ) then  "s"  else  "dr"  endif  }
+	"Set Proj:RunID"				Proj:RunID				= {	if (RunAbbrev == "s") then  "Standard"  else  "DesignRating"  endif  }
+	"Set Proj:RunIDProcFile"	Proj:RunIDProcFile	= {	if (RunAbbrev == "s") then	" - Std"     else  " - DRtg"       endif  }
+	"Set Proj:DRtgRefRunID"		Proj:DRtgRefRunID		= {	if (AllowDesignRating > 0.5 .AND. RunAbbrev == "dr") then  DesignRatingBase  else  0  endif  }		; SAC 3/11/16 - added to facilitate RESNET2014 rules
+	; SAC 4/18/16 - bug fix - ensure EDR reference runs ALWAYS based on 2013 internal gains mechanism
+	"Set Proj:IntGainsMethod"	Proj:IntGainsMethod	= {	if (DRtgRefRunID == 2014) then  2013  else  UNCHANGED  endif  }
+;"debugging" Proj:Action = { if (RunAbbrev == "s") then  MessageBox( "Model stored for %s:%s run", RunID, EnumString( StandardsVersion ) )  else  MessageBox( "Model stored for %s:%s run", RunID, EnumString( DesignRatingBase ) )  endif }
+	"Set Proj:FuelTDVLabel"					Proj:FuelTDVLabel			= {	if (StandardsVersion > 2016)		; SAC 11/9/15
+																							then	if (NatGasAvailable > 0.5) then  "Natural Gas"  else  "Other"  endif
+																							else  UNCHANGED  endif  }
+	; SAC 11/9/15 - moved setting of Proj:Fuel_Have* flags from CSE_Sim rulelsit to here and elsewhere (to support 2016 analysis)
+	"Set flag - Proj:Fuel_HaveElec"		Proj:Fuel_HaveElec		= {	1 }
+	"Set flag - Proj:Fuel_HaveNatGas"	Proj:Fuel_HaveNatGas		= {	if (NatGasAvailable > 0.5) then  1  else  0  endif  }
+	"Set flag - Proj:Fuel_HaveOther"		Proj:Fuel_HaveOther		= {	if (Fuel_HaveNatGas > 0.5) then  0  else  1  endif  }
+
+	; reset appliance data that may NOT have been for Proposed model if BypassRuleLimits is activated - SAC 7/27/15
+	"Re-default any/all appliance data"		Proj:Action	= {	EvalRulelist( "OverrideApplianceData" )  }
+	; SAC 1/6/16 - added one additional appliance adjustment not done in OverrideApplianceData
+	"Reset Proj:ApplDryerFuel[1]"				Proj:ApplDryerFuel[1]	= {	if (Appl_HaveDryer[1] < 0.5) then  UNCHANGED
+																								else	if (Fuel_HaveNatGas == 0) then 1 else 2 endif endif }
+
+	; ensure no user-specified Zone:TstatIncludeFile data preserved in baseline design
+	"Blast any Zone:TstatIncludeFile specification"		Zone:TstatIncludeFile	= {	UNDEFINED  }
+
+	; ensure no user-specified disabling of IAQ vent preserved in baseline design
+	"Reset Proj:DisableIAQ flag"					Proj:DisableIAQ				= {	0  }
+	"Reset DwellUnitType:DisableIAQ flag"		DwellUnitType:DisableIAQ	= {	0  }
+
+  ; SAC 12/31/15 - reset possible user specification of reduced attic relief free vent area (tic 596)
+	"Reset Proj:UnitClVentLowArea"		Proj:UnitClVentLowArea	= {	0  }		; Whether or not there is reduced attic relief vent free area
+
+	; setup budget model cooling (in cases where cooling not simulated in proposed model for No Cooling systems) - SAC 7/30/15
+	"Setup budget cooling, etc."		Proj:Action		= {	if (SumAll( HVACSys:NoPropCoolingSim ) < 1) then  UNCHANGED
+																			else	EvalRulelist( "SetupBudgetHVAC" )  endif  }
+
+
+; SAC 11/3/14 - moved this Attic stuff UP from below - prior to CathedralCeiling obejcts being converted to CeilingBelowAttics for std design model
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Ensure Conditioned/Sealed attic reverted to Ventilated for standard run  - SAC 4/27/14
+   ;--------------------------------------------------------------------
+	"Reset Attic:Type to 'Ventilated' (value = 0)"		Attic:Type	= {	if (FloorArea > 0.1 .AND. Type == 1) then  0  else  UNCHANGED  endif  }
+
+	; SAC 11/3/14 - call subordinate rulelist to evaluate certain other attic area rules used to determine when attics are cool-ventable and can be assigned to CathedralCeilings converted to CeilingBelowAttics for std design model
+	"Perform more Attic area defaulting"	Attic:Action	= {	EvalRulelist( "Default_AtticAreas", 1 )  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Convert CathedralCeiling objects to CeilingBelowAttic - and evaluate ProposedInput rules to generate Attic object if necessary   - SAC 10/3/13
+   ; mjb-10/15/13  mods for E+A+A
+   ;                 - don't create Attics for EXISTING Cathedral Ceilings
+   ;                 - apply Status of Cathedral Ceilings (IsNew, IsAltered, IsVerified) to newly created Ceiling Below Attics
+   ;                 - apply Existing Construction of Cathedral Ceilings to newly created Ceiling Below Attics
+   ;--------------------------------------------------------------------
+	"Set Proj:NumPropClgBlwAtticObjs"		Proj:NumPropClgBlwAtticObjs	= {	ComponentCount( CeilingBelowAttic )  }
+; unnecessary - duct location reset to Attic w/out this addition
+;	; SAC 10/8/13 - added to ensure proper adjustment of duct locations before/after conversion of proposed CathedralCeilings to CeilingBelowAttic
+;	"Set Zone:NumPropCathClgObjs"				Zone:NumPropCathClgObjs			= {	ChildCount( CathedralCeiling )  }
+
+	"Create CathedralCeiling:StdDesignCeiling (if necessary)"	CathedralCeiling:StdDesignCeiling	= {	if (ParentComponentType() != "Zone") then  UNDEFINED
+                                                                      else if (IsNew .OR. IsAltered) then 
+                                                                              CreateComp( CeilingBelowAttic, Local( Name ) + "-ClgBlwAtc" )
+                                                                            else UNCHANGED endif
+                                                                      endif }
+
+	"Assign (or create) Attic above ceiling"	CathedralCeiling:StdDesignCeiling:AtticZone	= {	if (MaxAll( Attic:StdCathClgAtticArea ) > 1) then  MaxAllComp( Attic:StdCathClgAtticArea )
+																																else  CreateComp( Attic, "Std Design CathClg Attic", "Setup_StdCathClgAttic" )  endif  }
+	; SAC 4/14/15 - revised following rule to evalute different Attic defaulting rules that will setup Construction and Rise/Pitch/misc properties PRIOR to evaluation of other Attic:Cons BudgetConversion rules
+	"Refresh all Attic defaults"			Attic:Action	= {	EvalRulelist( "Default_Attic", 1 )  }
+
+	"Set CathedralCeiling:StdDesignCeiling:Parent"			CathedralCeiling:StdDesignCeiling:Parent			= {	Parent( Name )  }
+  "Set CathedralCeiling:StdDesignCeiling:Status"      CathedralCeiling:StdDesignCeiling:Status     = { Status  }  ; need to assign this now, since Proposed Input rules called below for new CeilingBelowAttics will otherwise incorrectly set the IsNew... flags
+  "Set CathedralCeiling:StdDesignCeiling:IsNew"         CathedralCeiling:StdDesignCeiling:IsNew   = { IsNew  }   ; redundant with what will be set from Status in PI rules - but may need to be set for subsequent rules below
+  "Set CathedralCeiling:StdDesignCeiling:IsAltered"  CathedralCeiling:StdDesignCeiling:IsAltered  = { IsAltered  }  ; redundant with what will be set from Status in PI rules - but may need to be set for subsequent rules below
+  "Set CathedralCeiling:StdDesignCeiling:IsVerified"  CathedralCeiling:StdDesignCeiling:IsVerified = { IsVerified  }
+  "Set CathedralCeiling:StdDesignCeiling:exConstruction"  CathedralCeiling:StdDesignCeiling:exConstruction = { exConstruction  } ; this is not going to work - changing from cathedral ceiling to ceiling below attic Cons...
+  ; assign minimal (R0) construction first, which may get switched to something minimally compliant later in this rulelist
+	"Set CathedralCeiling:StdDesignCeiling:Construction"	CathedralCeiling:StdDesignCeiling:Construction	= {	RuleLibrary( Cons, "R0 ClgBlwAttic Cons" )  }
+	"Set CathedralCeiling:StdDesignCeiling:CathCeilUValue"	CathedralCeiling:StdDesignCeiling:CathCeilUValue	= {	Construction:WinterDesUValue  }
+  ; set area of CeilingBelowAttic to the horizontal projection of the pitched CathedralCeiling area
+	"Set CathedralCeiling:StdDesignCeiling:Area"				CathedralCeiling:StdDesignCeiling:Area				= {	Area * cos( (RoofTilt * 3.14159265 / 180) )  }
+  "Set CathedralCeiling:StdDesignCeiling:WasCathCeil"  CathedralCeiling:StdDesignCeiling:WasCathCeil = { 1  }		;	mjb	2/20/14	needed later for CBA budget conversion rules
+
+;	"debug CeilingBelowAttic"					CathedralCeiling:Action = { if (IsAltered) then PostWarning( "CathedralCeiling: '%s' Cons: '%s' WinterDesUValue: %g ", Name, Construction:Name, Construction:WinterDesUValue	 ) else UNCHANGED endif }
+
+; mjb	E+A+A	12/1/13	2/20/14	moved rules here
+	"Assign Altered CathedralCeiling RoofSolReflect"					CathedralCeiling:AltSolReflect = {	RoofSolReflect }
+; mjb 1/13/14	removed cool roof requirements for Alterations
+;	mjb	8/21/14 - added them back in, consistent with 2013 RACM - don't remember why we removed them???
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table
+; SAC 9/18/15 - added logic to DISABLE requirement for 2013 & 2016 additions <= 300 SF
+; SAC 9/21/15 - fixed bug where EAA <= 300 SF addition logic being applied to both New & EAA projects (revised to apply only to EAA projects)
+; SAC 10/2/15 - revised if statement to include New Cons Addition Alone in check for additionCFA <= 300SF
+	"Set CathedralCeiling:RoofSolReflect"	CathedralCeiling:RoofSolReflect	= {	if ( IsNew .OR. IsAltered)
+																											then	if (Construction:RoofingLayer == 100205)		; "25 PSF (Very Heavy Ballast or Pavers)"
+																													then	UNCHANGED
+																											;		else if (Proj:RunScope == 2 .AND. IfValidAnd( Proj:CondAdditionSize <= 300 ))		- SAC 10/2/15 - replaced w/ following
+																													else if ((Proj:RunScope == 2 .OR. (Proj:RunScope == 1 .AND. IfValidAnd( Proj:IsAddAlone > 0.5 ))) .AND.
+																																IfValidAnd( Proj:AdditionCFA <= 300 ))
+																													then	UNCHANGED
+																													else if ( SteepSlope > 0.5 )
+																													then	CAClimateZoneCodeBase:SteepRoofReflect( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																													else	CAClimateZoneCodeBase:FlatRoofReflect(  "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																													endif endif endif
+																											else UNCHANGED endif }
+;	mjb 1/12/15 - removed these lines from above rule:												else if (SteepSlope > 0.5 .AND.  Proj:ClimateZone >= 10 .AND. Proj:ClimateZone <= 15 ) then  0.2
+;																													else if (SteepSlope < 0.5 .AND. (Proj:ClimateZone == 13 .OR.  Proj:ClimateZone == 15)) then  0.63
+;																													else  0.1  endif endif endif
+
+;	"Change to Exist RoofSolReflect if better than Code"	
+;										CathedralCeiling:RoofSolReflect = { if ( IsAltered ) then
+;																							if ( IsVerified ) then
+;																								if ( AltSolReflect >= RoofSolReflect ) then exSolReflect else UNCHANGED endif
+;																								else UNCHANGED endif 											   
+;																						else UNCHANGED endif }
+
+; TC 1/29/15 - changed existing and verified solar reflectance to existing value
+	"Change to Exist RoofSolReflect"	
+										CathedralCeiling:RoofSolReflect = { if ( IsAltered .AND. IsVerified ) then exSolReflect	else UNCHANGED endif}
+
+; TC 1/29/15 - need to change existing and verified solar emittance to existing value
+	"Change to Exist exSolEmiss"	
+														Attic:RoofEmiss = { if ( IsAltered .AND. IsVerified) then 	exSolEmiss else UNCHANGED endif}
+
+
+;	mjb	2/20/14	make assignments to CeilingBelowAttic's Attic from CathedralCeiling
+  "Set CathedralCeiling:StdDesignCeiling - Attic roof reflectance"
+  			CathedralCeiling:StdDesignCeiling:AtticZone:RoofSolReflect	 = { RoofSolReflect  }
+
+	"Delete CathedralCeiling objects that are being replaced by a CeilingBelowAttic"
+			CathedralCeiling:Action	= {	if (LocalCompAssigned( StdDesignCeiling )) then  DeleteComp()  else  UNCHANGED  endif  }
+
+	"Eval ProposedInput rules to setup other Attic & Roof-related objects if new CeilingBelowAttic objects were just created"
+			Proj:Action	= {	if (ComponentCount( CeilingBelowAttic ) < (NumPropClgBlwAtticObjs + 0.5)) then  UNCHANGED
+									else	EvalRulelist( "ProposedInput" )  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: AirNet (building-wide ACH50) - Res ACM section 2.2.2.1
+	; mjb E+A+A	12/3/13
+   ;--------------------------------------------------------------------
+;   "Set Proj:ACH50 for standard design"		Proj:ACH50	= {	5.0  }
+; SAC 9/4/13 - added logic to fix ACH50 defaulting bug (GC issue 169)
+	"Assign altered ACH50"							Proj:AltACH50 = { ACH50 }
+; mjb 1/30/15 - mod to lookup std. ACH50 from CAClimateZoneCodeBase
+; SAC 4/15/15 - adjust for MFam duplex/townhomes options (based on Proj:IsMFamDupOrTownhm)
+   "Set Proj:ACH50 for standard design"		Proj:ACH50	= {	if (IsNew .OR. IsAltered) then
+;   																					if (Proj:IsMultiFamily > 0.5) then	7.0  else  5.0  endif
+   																					if (Proj:IsMultiFamily > 0.5 .AND. Proj:IsMFamDupOrTownhm < 0.5)
+   																					then	CAClimateZoneCodeBase:mfACH50( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+   																					else  CAClimateZoneCodeBase:sfACH50( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  endif
+   																					else UNCHANGED endif  }
+  "Change Altered ACH50 to Exist ACH50 if better than Code"  
+      													Proj:ACH50    = { 	if (IsAltered .AND. IsVerified) then
+																							if ( AltACH50 <= ACH50) then exACH50
+																							else UNCHANGED endif
+																						else UNCHANGED endif	}
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Insulation Quality - Res ACM section 2.2.3
+   ;--------------------------------------------------------------------
+;    "Set Proj:InsulConsQuality for standard design"		Proj:InsulConsQuality	= {	"Standard"  }
+; temp setting for QII in RESNET Reference Spec - mjb 10/26/15
+   "Set Proj:InsulConsQuality for standard design or design rating"		Proj:InsulConsQuality	= {	if (Proj:DRtgRefRunID == 2014) then "Improved" else "Standard" endif  }
+
+; change setpoint schedules for design rating   mjb  RESNET 02/12/16
+	"Reset Zone:CoolTDaySched for Design Rating model"
+			Zone:CoolTDaySched	= {	if (Proj:DRtgRefRunID == 2014) then RuleLibrary( SchDay, "RESNET SZ Cool Hrly" )
+															else  UNCHANGED   endif  }
+	"Reset Zone:HeatTDaySched for Design Rating model"
+			Zone:HeatTDaySched	= {	if (Proj:DRtgRefRunID == 2014) then  RuleLibrary( SchDay, "RESNET SZ Heat Hrly" )
+															else  UNCHANGED   endif  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: general construction defaulting/setup
+   ; mjb-10/28/13	moved up from bottom of BudgetConversion rulelist to ensure that Cons objects have calculated Uvalues before E+A+A rules are evaluated 
+   ;--------------------------------------------------------------------
+; SAC 5/1/14 - RE-IMPORT std lib objects used in Cons object defaulting
+	"Import SoftWood Mat from library (if needed)"		Proj:LibMat_SoftWood		= {	if (LocalCompAssigned( LibMat_SoftWood )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "SoftWood" )  endif  }
+	"Import Steel Mat from library (if needed)"			Proj:LibMat_Steel			= {	if (LocalCompAssigned( LibMat_Steel )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "Steel" )  endif  }
+	"Import SIPSskin Mat from library (if needed)"		Proj:LibMat_SIPSskin		= {	if (LocalCompAssigned( LibMat_SIPSskin )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "SIPSskin" )  endif  }
+	"Import Ceiling Ins Mat from library (if needed)"	Proj:LibMat_CeilingIns	= {	if (LocalCompAssigned( LibMat_CeilingIns )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "Ceiling Insul" )  endif  }
+	"Import Other Ins Mat from library (if needed)"		Proj:LibMat_OtherIns		= {	if (LocalCompAssigned( LibMat_OtherIns )) then  UNCHANGED
+																												else  RuleLibrary( Mat, "Other Insul" )  endif  }
+
+	"Default Mat ConductivityQII"	Proj:Action	= {	EvalRulelist( "DefaultMatCondQII" )  }		; SAC 3/18/14
+  ; SAC 5/7/12 - added rulelist eval to ensure that Cons properties are properly defaulted (and Mat components have been re-created)
+	"Default Cons properties"		Cons:Action = {	EvalRulelist( "DefaultConsObject", 1 )  }
+	; SAC 3/12/14 - consolidate rules to setup final cavity materials, LayerParams objects and call to ConsUFactoRes() call
+	"Perform final Ufactor prep and call ConsUFactoRes()"		Proj:Action	= {	EvalRulelist( "SetupCons_UValue_All" )  }
+;	"debug ExtWall Cons"				ExtWAll:Action = { if (ParentType == 1 .AND. IsAltered) then PostWarning( "ExtWall Cons after ConsUFactorRes call from BUDG CONV: '%s' WinterDesUValue = %g", Construction:Name, Construction:WinterDesUValue ) else UNCHANGED endif }
+;	"debug CeilingBelowAttic"		CeilingBelowAttic:Action = { if (IsAltered) then PostWarning( "after ConsUFactorRes call from BUDG CONV - CeilingBelowAttic: '%s' Cons: '%s' WinterDesUValue: %g", Name, Construction:Name, Construction:WinterDesUValue ) else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Demising IntWall construction - Res ACM section ?????
+	; mjb	E+A+A	12/2/13
+   ;--------------------------------------------------------------------
+	"Assign Altered IntWall Cons UValue"					IntWall:AltConsUValue = {	if (ParentComponentType() == "Zone" .AND. IsDemising)
+                                                                              		then if (Parent( Type ) < 10 .AND. IsAltered)
+                                                                                			then Construction:WinterDesUValue 
+																													else UNCHANGED endif 
+																												else UNCHANGED endif }
+	"Set IntWall:Construction (for demising walls)"		IntWall:Construction	= {	if (IsDemising < 0.5) then  UNCHANGED 
+	                                                                                 else if (IsNew) then
+																												   ;KN 03/20/2015 Updated for CAClimateZoneCodeBase lookup table
+																												   ;RuleLibrary( Cons, "T24-2013 R15 IntWall Cons" )
+																												   RuleLibrary(Cons, CAClimateZoneCodeBase:StdFrameIntWallCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																												else	if (IsAltered) then
+																												   ;KN 03/20/2015 Updated for CAClimateZoneCodeBase lookup table. Not vetted for E+A+A
+																													;RuleLibrary( Cons, "T24-2013 R13 IntWall Cons" ) 
+																													RuleLibrary(Cons, CAClimateZoneCodeBase:StdFrameIntWallCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																												else UNCHANGED endif endif endif	}	
+
+  "Change Altered IntWall to Exist Cons if better than Code"  
+      IntWall:Construction    = { 	if (ParentComponentType() == "Zone" .AND. IsDemising)
+															then if (Parent( Type ) < 10 .AND. IsAltered) 
+																then if ( IsVerified )
+																	then if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction
+																	else UNCHANGED endif
+																else UNCHANGED endif
+										     	  			else UNCHANGED endif 
+										    			else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Demising InteriorFloor construction - Res ACM section ?????
+	; mjb	E+A+A	12/2/13
+   ;--------------------------------------------------------------------
+	"Assign Altered InteriorFloor Cons UValue"					InteriorFloor:AltConsUValue = {	if (ParentComponentType() == "Zone" .AND. IsDemising)
+                                                                              						then if (Parent( Type ) < 10 .AND. IsAltered)
+                                                                                							then Construction:WinterDesUValue 
+																																	else UNCHANGED endif 
+																																else UNCHANGED endif }
+	"Set InteriorFloor:Construction (for demising flrs)"		InteriorFloor:Construction	= {	if (IsNew .OR. IsAltered) then
+																																	if (IsDemising < 0.5) then  UNCHANGED
+																												   				else RuleLibrary(Cons, CAClimateZoneCodeBase:StdFrameIntFloorCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )	endif
+																																else UNCHANGED endif	}	
+;KN 04/11/2015 removed this from above to implement call to codebase
+;																																	else	RuleLibrary( Cons, "T24-2013 R19 IntFloor Cons" )  endif
+
+
+  "Change Altered InteriorFloor to Exist Cons if better than Code"  
+      InteriorFloor:Construction    = { 	if (ParentComponentType() == "Zone" .AND. IsDemising)
+															then if (Parent( Type ) < 10 .AND. IsAltered) 
+																then if ( IsVerified )
+																	then if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction
+																	else UNCHANGED endif
+																else UNCHANGED endif
+										     	  			else UNCHANGED endif 
+										    			else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Demising Door Ufactor - Res ACM section ?????
+	; mjb	E+A+A	12/2/13
+   ;--------------------------------------------------------------------
+	"Assign Altered Door Ufactor"					Door:AltUfactor = {	Ufactor }
+	"Set Door:Ufactor (for demising doors)"	Door:Ufactor	= {	if (IsNew .OR. IsAltered) then
+																							if (ParentComponentType() == "IntWall")
+																								then  if (Parent( IntWall:IsDemising ) > 0.5) then  0.5
+																										else  UNCHANGED  endif
+																								else  UNCHANGED  endif
+																							else UNCHANGED endif	}	
+  "Change Altered Door to Exist Cons if better than Code"  
+      Door:Ufactor    = { 	if (ParentComponentType() == "IntWall")
+											then if (Parent( IntWall:IsDemising ) > 0.5 .AND. IsAltered) 
+												then if ( IsVerified )
+													then if ( AltUfactor <= Ufactor .AND. LocalStatus( exUfactor ) > 0) then exUfactor
+													else UNCHANGED endif
+												else UNCHANGED endif
+										    else UNCHANGED endif 
+									else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Ceiling below Attic construction - Res ACM section 2.3.5.1 & 2.4.1
+   ;--------------------------------------------------------------------
+  "Assign Altered ClgBlwAttic Cons UValue"     CeilingBelowAttic:AltConsUValue   = {   if (ParentComponentType() == "Zone")
+                                                                                       then if (Parent( Type ) < 10 .AND. IsAltered)
+                                                                                          then if (WasCathCeil) then CathCeilUValue
+                                                                                          	else Construction:WinterDesUValue endif
+                                                                                          else UNCHANGED endif 
+                                                                                       else UNCHANGED endif }
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table	
+	; SAC 9/18/15 - mods to referenec new PrescripAdditions_CeilingBelowAtticCons for ceiling below attic cons assignments
+	"Set CeilingBelowAttic:Construction for ceilings of conditioned zones"
+				CeilingBelowAttic:Construction	= {	if (ParentComponentType() == "Zone")
+																	then	if (Parent( Type ) < 10)
+                                                   		then	if (IfValidAnd( Proj:CondAdditionSize > 0.1 ) .AND. IsNew)
+                                                   				then	RuleLibrary(Cons, PrescripAdditions_CeilingBelowAtticCons:CeilingBelowAtticCons( "CodeBase", Proj:StdDesignBase, "ClimateZone", Proj:ClimateZone, "AdditionSize", Proj:CondAdditionSize ) )
+                                                   				else if (IsNew) 
+																					then	RuleLibrary(Cons, CAClimateZoneCodeBase:StdCeilCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+                                                   				else if (IsAltered)
+                                                   				then	if ( WasCathCeil )
+                                                      					then RuleLibrary( Cons, "T24-2013 Altered CC ClgBlwAttic" )
+                                                      					else RuleLibrary( Cons, "T24-2013 Altered ClgBlwAttic" )
+                                                      					endif
+																					else  UNCHANGED  endif endif endif
+                                                			else UNCHANGED endif
+																	else  UNCHANGED  endif  }
+;																						default : PostError( "Unexpected ceiling below attic cavity R-value (%g) in budget conversion.", ClimateZoneTable( Global( Proj:ClimateZone ), 7 ) )
+
+;	mjb 1/12/15																		then  switch( ClimateZoneTable( Global( Proj:ClimateZone ), 7 ) )
+;	removed these lines in above rule													case 30 : RuleLibrary( Cons, "T24-2013 R30 ClgBlwAttic Cons" )
+;	would not compile with lines commented out										case 38 : RuleLibrary( Cons, "T24-2013 R38 ClgBlwAttic Cons" )
+;																									default : PostError( "Unexpected ceiling below attic cavity R-value in budget conversion." )
+;																								endswitch
+
+  ; SAC 10/15/14 - added in the course of moving attic edge properties from Cons to CeilingBelowAttic (for multiple attics)
+	"Set CeilingBelowAttic:AtcEdg_ClgCons"		CeilingBelowAttic:AtcEdg_ClgCons	= {	if (LocalCompAssigned( Construction ) > 0.5) then  Construction  else  UNDEFINED  endif  }
+
+
+ "Change Altered ClgBlwAttic CavityLayer to Exist Cons CavityLayer if better than Code"   
+      CeilingBelowAttic:Construction:CavityLayer = {  if (ParentComponentType() == "Zone")
+                                             then if (Parent( Type ) < 10 .AND. IsAltered) 
+                                                then if ( IsVerified )
+                                                   then if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction:CavityLayer
+                                                   else UNCHANGED endif
+                                                else UNCHANGED endif
+                                             else UNCHANGED endif
+                                          else UNCHANGED endif }
+;	"debug CeilingBelowAttic"					CeilingBelowAttic:Action = { if (IsAltered) then PostWarning( "CeilingBelowAttic: '%s' Cons: '%s' OverallCodeUValue: %g  AltConsUValue: %g  T24AltConsUValue: %g", Name, Construction:Name, Construction:OverallCodeUValue, AltConsUValue, Construction:T24AltConsUValue ) else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Window Overhang & Sidefins - Res ACM section 2.3.5.5.1
+   ; mjb-10/15/13  mods for E+A+A
+   ;--------------------------------------------------------------------
+
+; mjb-10/18/13	if Altered Window is Verified, use overhangs and fins from existing window
+	"Modify window overhang depending on window status"		Window:OverhangDepth	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exOverhangDepth else 0 endif
+													endif endif }
+	"Modify window left fin depending on window status"		Window:LeftFinDepth	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exLeftFinDepth else 0 endif
+													endif endif  }
+	"Modify window right fin depending on window status"		Window:RightFinDepth	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exRightFinDepth else 0 endif
+													endif endif  }
+; mjb-10/18/13	add other overhang/fin parameters in case Verified
+
+	"Modify OverhangDistUp depending on window status"		Window:OverhangDistUp	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exOverhangDistUp else 0 endif
+													endif endif }
+	"Modify OverhangExL depending on window status"			Window:OverhangExL	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exOverhangExL else 0 endif
+													endif endif }
+	"Modify OverhangExR depending on window status"			Window:OverhangExR	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exOverhangExR else 0 endif
+													endif endif }
+	"Modify OverhangFlap depending on window status"		Window:OverhangFlap	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exOverhangFlap else 0 endif
+													endif endif }
+	"Modify LeftFinTopUp depending on window status"		Window:LeftFinTopUp	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exLeftFinTopUp else 0 endif
+													endif endif }
+	"Modify LeftFinDistL depending on window status"		Window:LeftFinDistL	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exLeftFinDistL else 0 endif
+													endif endif }
+	"Modify LeftFinBotUp depending on window status"		Window:LeftFinBotUp	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exLeftFinBotUp else 0 endif
+													endif endif }
+	"Modify RightFinTopUp depending on window status"		Window:RightFinTopUp	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exRightFinTopUp else 0 endif
+													endif endif }
+	"Modify RightFinDistR depending on window status"		Window:RightFinDistR	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exRightFinDistR else 0 endif
+													endif endif }
+	"Modify RightFinBotUp depending on window status"		Window:RightFinBotUp	= { if ( IsExisting ) then UNCHANGED else
+													if ( IsNew ) then 0 else			
+														if ( IsVerified ) then exRightFinBotUp else 0 endif
+													endif endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Raised Floor construction - Res ACM section 2.3.5.8
+   ; 
+   ; mjb-10/30/13	E+A+A mods
+   ;--------------------------------------------------------------------
+	"Assign Altered ExtFlr Cons UValue"			ExteriorFloor:AltConsUValue = {  if (ParentComponentType() == "Zone")
+                                                                              then if (Parent( Type ) < 10 .AND. IsAltered)
+                                                                                then Construction:WinterDesUValue 
+																											else UNCHANGED endif 
+																										else UNCHANGED endif }
+; mjb 7/9/14 - avoid raised concrete floor from being compared to wood framed (EPro issue)
+;StdFrameExtFloorCons
+
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table
+	; SAC 9/17/15 - added unique references for std design Concrete floors
+	"Set Cons for exterior floors of conditioned zones"
+				ExteriorFloor:Construction	= {	if (ParentComponentType() == "Zone")
+															then	if (Parent( Type ) < 10 .AND. IsNew)
+																	then	if (IfValidAnd( Construction:Type = 25 ))		; "Concrete / ICF / Brick"	
+																			then	RuleLibrary(Cons, CAClimateZoneCodeBase:StdConcExtFloorCons(  "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																			else	RuleLibrary(Cons, CAClimateZoneCodeBase:StdFrameExtFloorCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																			endif
+																	else if (Parent( Type ) < 10 .AND. IsAltered .AND. Construction:Type == 20) 
+																	then RuleLibrary( Cons, "T24-2013 Altered Ext Floor" )
+																	else UNCHANGED
+																	endif endif
+																else  UNCHANGED  endif  }
+;	mjb 1/12/15 - replaced this line with RuleLibrary call above:					then  RuleLibrary( Cons, "T24-2013 R19 ExtFloor Cons" )
+  "Change Altered ExtFlr to Exist Cons if better than Code"   
+         ExteriorFloor:Construction  = {  if (ParentComponentType() == "Zone")
+														then	if (Parent( Type ) < 10 .AND. IsAltered) 
+																then	if ( IsVerified )
+																		then	if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction 
+																				else UNCHANGED endif
+										     	  						else UNCHANGED endif
+																else UNCHANGED endif
+										    			else UNCHANGED endif }
+
+
+	"Assign Altered FlrOvrCrawl Cons UValue"			FloorOverCrawl:AltConsUValue = {  if (ParentComponentType() == "Zone")
+                                                                              			then if (Parent( Type ) < 10 .AND. IsAltered)
+                                                                                					then Construction:WinterDesUValue 
+																															else UNCHANGED endif 
+																													else UNCHANGED endif }
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table
+	; SAC 9/17/15 - added unique references for std design Concrete floors
+	"Set Cons for FlrOvrCrawl of conditioned zones"
+				FloorOverCrawl:Construction	= {	if (ParentComponentType() == "Zone")
+																then	if (Parent( Type ) < 10 .AND. IsNew)
+																		then	if (IfValidAnd( Construction:Type = 25 ))		; "Concrete / ICF / Brick"	
+																				then	RuleLibrary(Cons, CAClimateZoneCodeBase:StdConcFlrOvrCrawlCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																				else	RuleLibrary(Cons, CAClimateZoneCodeBase:StdFlrOvrCrawlCons(     "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																				endif
+                                            				else if (Parent( Type ) < 10 .AND. IsAltered) 
+																		then RuleLibrary( Cons, "T24-2013 Altered Floor Over Crawlspace" )
+																		else UNCHANGED
+																		endif endif
+																else  UNCHANGED  endif  }
+;	replaced this line with RuleLibrary call above:									then  RuleLibrary( Cons, "T24-2013 R19 FlrOvrCrawl Cons" )
+
+  "Change Altered FlrOvrCrawl to Exist Cons if better than Code"  
+      FloorOverCrawl:Construction    = { 	if (ParentComponentType() == "Zone")
+														then	if (Parent( Type ) < 10 .AND. IsAltered) 
+																then	if ( IsVerified )
+																		then	if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction
+																				else UNCHANGED endif
+																		else UNCHANGED endif
+										     	  				else UNCHANGED endif 
+										    			else UNCHANGED endif }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Attic Roof construction - Res ACM section 2.4.5.5 - The Standard Design shall be 2x4 trusses at 24 in. o. c. 
+   ; 
+   ; mjb-10/30/13	E+A+A mods
+   ;mjb 1/13/14 E+A+A fixes - need to keep Existing Attic layers if Verified
+   ;--------------------------------------------------------------------
+	"Set Attic:Construction:CavityLayer"			Attic:Construction:CavityLayer			= {	if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then "- no insulation -"
+																																else if (IsVerified) then exConstruction:CavityLayer
+																																else UNCHANGED endif endif }
+	"Set Attic:Construction:FrameLayer"				Attic:Construction:FrameLayer				= {	if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then "2x4 Top Cord of Roof Truss @ 24 in. O.C."
+																																else if (IsVerified) then exConstruction:FrameLayer
+																																else UNCHANGED endif endif }
+  ; not spelled out in RACM - mentioned in GC issue #28
+	"Set Attic:Construction:InsideFinishLayer"	Attic:Construction:InsideFinishLayer	= {	if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then "- select inside finish -"
+																																else if (IsVerified) then exConstruction:InsideFinishLayer
+																																else UNCHANGED endif endif }
+;	"debug Attic"					Attic:Action = { PostWarning( "Attic: '%s' IsVerified: %g  exConstruction:CavityLayer: '%s' Construction:CavityLayer: '%s'", Name, IsVerified, exConstruction:CavityLayer, Construction:CavityLayer ) }
+
+  ; SAC 10/15/14 - added in the course of moving attic edge properties from Cons to CeilingBelowAttic (for multiple attics)
+	"Set CeilingBelowAttic:AtcEdg_AtcCons"		CeilingBelowAttic:AtcEdg_AtcCons	= {	if (LocalCompAssigned( AtticZone ) > 0.5)
+																												then  if (LocalCompAssigned( AtticZone:Construction ) > 0.5) then  AtticZone:Construction  else  UNDEFINED  endif
+																												else  UNDEFINED  endif  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Attic Roof construction - Res ACM section 2.4.5.3 - no additional above deck insulation
+   ;--------------------------------------------------------------------
+; mjb 1/31/15 - mod to lookup above deck insulation from CAClimateZoneCodeBase
+;	"Set Attic:Construction:AbvDeckInsulLayer"	Attic:Construction:AbvDeckInsulLayer	= {	if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then "- no insulation -"
+;																																else if (IsVerified) then exConstruction:AbvDeckInsulLayer
+;																																else UNCHANGED endif endif }
+; KN 03/20/2015 replaced with rules futher below
+;	"Set Attic:Construction:AbvDeckInsulLayer"	Attic:Construction:AbvDeckInsulLayer	= {	if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then CAClimateZoneCodeBase:RoofAboveDeckIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+;																																else if (IsVerified) then exConstruction:AbvDeckInsulLayer
+;																																else UNCHANGED endif endif }
+
+; KN 03/23/2015 Perhaps this and roofing section should be switched to looking up whole assembly in codebase but concerned about side effects. Temporary implementation using above and below deck insulation
+; Right now, stdRoofCons in codebase not used!
+;	"Set Attic:Construction for roofs of conditioned zones"	Attic:Construction	= {	RuleLibrary(Cons, CAClimateZoneCodeBase:StdRoofCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase)	}
+				
+;KN 03/20/2015 A test statement to avoid doing these assignments if attic is above conditioned space. Not vetted for E+A+A
+	"Set Attic:Construction:AbvDeckInsulLayer"	Attic:Construction:AbvDeckInsulLayer	= {	if (FloorAreaOverCond > 0.5) then
+																																if (IsNew .OR. (IsAltered .AND. IsVerified < 1)) then CAClimateZoneCodeBase:RoofAboveDeckIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																																else if (IsVerified) then exConstruction:AbvDeckInsulLayer
+																																else UNCHANGED endif endif 
+																																else UNCHANGED endif } 
+
+; KN 03/20/2015 - change for 2016 to set below deck needed for 2016 not vetted for E+A+A
+	"Set Attic:Construction:CavityLayer"	Attic:Construction:CavityLayer	= {	if (FloorAreaOverCond > 0.5)
+																											then	if (IfValidAnd( Proj:CondAdditionSize > 0.1 ) .AND. (IsNew .OR. (IsAltered .AND. IsVerified < 1)))
+																													then	PrescripAdditions_RoofDeckInsul:RoofBelowDeckIns( "CodeBase", Proj:StdDesignBase, "ClimateZone", Proj:ClimateZone, "AdditionSize", Proj:CondAdditionSize )
+																													else if (IsNew .OR. (IsAltered .AND. IsVerified < 1))
+																													then	CAClimateZoneCodeBase:RoofBelowDeckIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																													else if (IsVerified) then exConstruction:CavityLayer
+																													else UNCHANGED endif endif endif 
+																											else UNCHANGED endif }
+
+; SAC 9/23/15 - modified rule logic changing RoofingType for new cons attic roofs in 2016 runs - per new approach proposed by BAW and approved by CEC
+	"Set Attic:Construction:RoofingType"	Attic:Construction:RoofingType	= {	if (Proj:StdDesignBase == 2016 .AND. (IsNew .OR. IsAltered) .AND. IfValidAnd( SteepRoofArea > 0.5 )) 
+																											then 100206 ; "Steep Slope Roof tile, metal tile, or wood shakes"
+																											else UNCHANGED endif }
+; SAC 5/11/15 - added logic to ensure proper RoofingLayer for New/Altered standard design roof surfaces
+;	"Set Attic:Construction:RoofingLayer"	Attic:Construction:RoofingLayer	= {	if (Proj:StdDesignBase == 2016 .AND. IsNew .AND. Construction:RoofingLayer == 100201) 
+;																											then 100203 ; "10 PSF (RoofTile)"
+; SAC 9/23/15 - revised 2016 logic for setting RoofingLayer for new cons attic roofs in 2016 runs - per new approach proposed by BAW and approved by CEC
+	"Set Attic:Construction:RoofingLayer"	Attic:Construction:RoofingLayer	= {	if (Proj:StdDesignBase == 2016 .AND. (IsNew .OR. IsAltered))
+																											then	if (IfValidAnd( SteepRoofArea > 0.5 ))
+																													then	100203											; steep slope (pitch > 2 in 12)  =>  "10 PSF (RoofTile)"
+																													else	100201  endif									; low slope (pitch <= 2 in 12)   =>  "Light Roof (Asphalt Shingle)"
+																											else if (Proj:StdDesignBase < 2016 .AND. (IsNew .OR. IsAltered))
+																											then	if (Construction:RoofingType == 100206)		; "Steep Slope Roof tile, metal tile, or wood shakes"
+																													then	100203													; "10 PSF (RoofTile)"
+																													else if (Construction:RoofingType == 0)		; "all others"
+																													then	100201													; "Light Roof (Asphalt Shingle)"
+																													else	UNCHANGED  endif endif
+																											else	UNCHANGED  endif endif	 }
+
+	"Assign Altered Attic RoofSolReflect"		Attic:AltSolReflect = {	RoofSolReflect }
+
+	;"Set Attic:RoofSolReflect"					Attic:RoofSolReflect					= {	if (LocalCompAssigned( Construction ))
+	;																										then	if (Construction:RoofingLayer == 100201)	; "Light Roof (Asphalt Shingle)"
+	;																												then  0.08
+	;																												else  0.10  endif
+	;																										else  0.10  endif  }
+; mjb 1/13/14	removed cool roof requirements for Alterations
+;	mjb	8/21/14 - added them back in, consistent with 2013 RACM - don't remember why we removed them???
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table
+; SAC 9/18/15 - added logic to DISABLE requirement for 2013 & 2016 additions <= 300 SF
+; SAC 9/21/15 - fixed bug where EAA <= 300 SF addition logic being applied to both New & EAA projects (revised to apply only to EAA projects)
+; SAC 9/23/15 - switched from CondAdditionSize to AdditionCFA (former is always 0 for NewCons-AdditionAlone) and revised logic again to ensure that 300 AdditionCFA also applies to New Cons when IsAddAlone checked
+	"Set Attic:RoofSolReflect"						Attic:RoofSolReflect				= {	if ( IsNew .OR. IsAltered)
+																											then	if (Construction:RoofingLayer == 100205)		; "25 PSF (Very Heavy Ballast or Pavers)"
+																													then	UNCHANGED
+																													else if ((Proj:RunScope == 2 .OR. (Proj:RunScope == 1 .AND. IfValidAnd( Proj:IsAddAlone > 0.5 ))) .AND.
+																																IfValidAnd( Proj:AdditionCFA <= 300 ))
+																													then	UNCHANGED
+																													else if ( SteepSlope > 0.5 )
+																													then	CAClimateZoneCodeBase:SteepRoofReflect( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																													else	CAClimateZoneCodeBase:FlatRoofReflect(  "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																													endif endif endif
+																											else UNCHANGED endif }
+
+;	mjb 1/12/15 - removed these lines from above rule:												else if (SteepSlope > 0.5 .AND.  Proj:ClimateZone >= 10 .AND. Proj:ClimateZone <= 15 ) then  0.2
+;																													else if (SteepSlope < 0.5 .AND. (Proj:ClimateZone == 13 .OR.  Proj:ClimateZone == 15)) then  0.63
+;																													else  0.1  endif endif endif  
+
+;	"Change to Exist RoofSolReflect if better than Code"	
+;														Attic:RoofSolReflect = { if ( IsAltered ) then
+;																							if ( IsVerified ) then
+;																								if ( AltSolReflect >= RoofSolReflect ) then exSolReflect else UNCHANGED endif
+;																								else UNCHANGED endif 											   
+;																							else UNCHANGED endif }
+
+; TC 1/29/15 - changed existing and verified solar reflectance to existing value
+	"Change to Exist RoofSolReflect"	
+														Attic:RoofSolReflect = { if ( IsAltered .AND. IsVerified) then 	exSolReflect else UNCHANGED endif}
+
+	;"Set Attic:RoofEmiss"						Attic:RoofEmiss						= {	0.75  }
+	"Set Attic:RoofEmiss"						Attic:RoofEmiss						= {	if ( IsNew .OR. IsAltered) then 0.85 else UNCHANGED endif  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Attic Radiant Barrier - Res Standard table 150.1-A  (& Std sec 110.8-j)
+   ;--------------------------------------------------------------------
+; mjb-12/2/13	E+A+A make mods to radiant barrier - should be a compliance credit if Altered - done mjb	8/21/14
+; SAC 11/19/14 - modified in two ways - only set RadiantBarrier to CZ table value if the attic is over conditioned space -and- removed RadiantBarrier over attic over only unconditioned space
+; mjb 1/12/15 - using new CAClimateZoneCodeBase for code level lookups
+	; SAC 9/18/15 - modified rule to take CondAdditionSize into account when setting RadiantBarrier
+	"Toggle attic roof Cons:RadiantBarrier based on climate zone requirement"
+				Attic:Construction:RadiantBarrier	= {   if (Attic:IsNew .AND. IfValidAnd( FloorAreaOverCond > 0.5 ))
+																		then	if (Construction:CanAssignTo == 1 .AND. Construction:AtcEdg_ConsType == 0)	; "Attic Roofs" & "n/a"
+													                     then	if (IfValidAnd( Proj:CondAdditionSize > 0.1 ))
+													                     		then	PrescripAdditions_RadiantBarrier:RadiantBarrier( "CodeBase", Proj:StdDesignBase, "ClimateZone", Proj:ClimateZone, "AdditionSize", Proj:CondAdditionSize )
+													                     		else	CAClimateZoneCodeBase:RadiantBarrier( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+													                     		endif
+													                     else	UNCHANGED  endif 
+													               else if (Attic:IsAltered .OR. IfValidAnd( OnlyOverUncond > 0.5 )) then 0 else UNCHANGED endif endif }
+
+;	mjb 1/12/15 - replaced this line in above rule:	         then  ClimateZoneTable( Global( Proj:ClimateZone ), 8 )
+
+
+; SAC 11/3/14 - moved this and a related defaulting rule up above where CathedralCeiling obejcts are converted to CeilingBelowAttics for std design model
+;   ;--------------------------------------------------------------------
+;   ; BudgetConversion: Ensure Conditioned/Sealed attic reverted to Ventilated for standard run  - SAC 4/27/14
+;   ;--------------------------------------------------------------------
+;	"Reset Attic:Type to 'Ventilated' (value = 0)"		Attic:Type	= {	if (FloorArea > 0.1 .AND. Type == 1) then  0  else  UNCHANGED  endif  }
+
+
+;  mjb   7/10/14  - remove floor area limitation for new construction
+;	mjb	8/1/14	- add back limitation for new Additions < 1000sf
+;	mjb	8/3/14	- added back orignal condition for new construction > 1000 sf
+	"(re-)Set Proj:EnableClVent (to reflect latest Attic:Type)"		Proj:EnableClVent		= {
+							if (IsMultiFamily < 0.5 .AND. ComponentCount( Zone ) > 0.5 .AND. SumAll( Zone:CondClgBlwAtticArea ) > 0.1 .AND. ComponentCount( Attic ) > 0)
+							then  if (MinAll( Attic:Type ) < 1 .AND. ( (RunScope == 1 .AND. IsAddAlone .AND. CondFloorArea > 1000) .OR. (RunScope == 2 .AND. AdditionCFA > 1000) .OR.
+											(RunScope == 1 .AND. IsAddAlone < 0.5))) then  1  else  0  endif
+							else  0  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Building-wide window area multiplier rules - related to Res ACM section 2.3.5.5
+   ;
+   ;mjb-10/21/13	
+   ;	E+A+A - need to treat New Windows differently than Existing or Altered Windows
+   ;          - all parameters used for summing and allocating window area on 4 cardinal-oriented walls below are for New Windows only:
+   ;		ExtWall:TotWinArea
+   ;		Zone:TotCondZoneWinArea
+   ;		Proj:TotCondZoneWinArea
+   ;    TotAltWinArea - new ExtWall parameter for total altered window area
+   ;    TotCondZoneAltWinArea - new Zone and Proj parameters for sum of TotAltWinArea + ChildAreaSum 
+   ;	Proj:CondWinAreaCFARat - based on sum of New and Altered Window Areas + New and Altered SkyLt Areas   
+   ;    Proj:CondWinAreaMult - based on sum of New and Altered Window Areas + New and Altered SkyLt Areas
+	;					Status:
+	;              1,    "Existing"
+	;              2,    "Altered"
+	;              3,    "New"
+   ;--------------------------------------------------------------------
+; mjb 12/17/13 - cannot lump new and altered window areas together - only NEW windows get added to cardinal-oriented walls
+; SAC 2/20/15 - modified to REMOVE E+A+A Additions window/skylight area from New (item 2) and added separate Additions array element
+	"Re-calculate Win:TotAreaInclMult[1] - total"								Win:TotAreaInclMult[1]		= {	Area * Multiplier  }
+	"Re-calculate Win:TotAreaInclMult[3] - existing"							Win:TotAreaInclMult[3]		= {	if (Proj:RunScope == 2 .AND. Status == 1) then  TotAreaInclMult[1]  else  0  endif  }
+;	"Re-calculate Win:TotAreaInclMult[2] - new/altered"						Win:TotAreaInclMult[2]		= {	TotAreaInclMult[1] - TotAreaInclMult[3]  }
+	"Re-calculate Win:TotAreaInclMult[2] - new (not add)"						Win:TotAreaInclMult[2]		= {	if (Status == 3 .AND. IsEAAAddZoneGChild == 0) then  TotAreaInclMult[1]  else  0  endif  }
+	"Re-calculate Win:TotAreaInclMult[4] - additions"							Win:TotAreaInclMult[4]		= {	if (IsEAAAddZoneGChild) then  TotAreaInclMult[1]  else  0  endif  }
+; mjb	2/19/14	add SkyLt areas to totals for glazing % calcs
+	"Calculate SkyLt:TotAreaInclMult[1] - total"									SkyLt:TotAreaInclMult[1]		= {	Area * Multiplier  }
+	"Calculate SkyLt:TotAreaInclMult[3] - existing"								SkyLt:TotAreaInclMult[3]		= {	if (Proj:RunScope == 2 .AND. Status == 1) then  TotAreaInclMult[1]  else  0  endif  }
+	"Calculate SkyLt:TotAreaInclMult[2] - new (not add)"						SkyLt:TotAreaInclMult[2]		= {	if (Status == 3 .AND. IsEAAAddZoneGChild == 0) then  TotAreaInclMult[1]  else  0  endif  }
+	"Calculate SkyLt:TotAreaInclMult[4] - additions"							SkyLt:TotAreaInclMult[4]		= {	if (IsEAAAddZoneGChild) then  TotAreaInclMult[1]  else  0  endif  }
+	"Sum window area into parent ExtWall objects[1] - total"    	  		ExtWall:TotWinArea[1]		= {	SumChildren( Win:TotAreaInclMult[1] )  }
+	"Sum window area into parent ExtWall objects[3] - existing"   			ExtWall:TotWinArea[3]		= {	SumChildren( Win:TotAreaInclMult[3] )  }
+;	"Sum window area into parent ExtWall objects[2] - new/altered"			ExtWall:TotWinArea[2]		= {	SumChildren( Win:TotAreaInclMult[2] )  }
+	"Sum window area into parent ExtWall objects[2] - new (not add)"		ExtWall:TotWinArea[2]		= {	SumChildren( Win:TotAreaInclMult[2] )  }
+	"Sum window area into parent ExtWall objects[4] - additions"			ExtWall:TotWinArea[4]		= {	SumChildren( Win:TotAreaInclMult[4] )  }
+	"Sum skylight area into parent CCeiling objects[1] - total"				CathedralCeiling:ChildAreaSum[1]		= {	SumChildren( Skylt:TotAreaInclMult[1] )  }
+	"Sum skylight area into parent CCeiling objects[3] - existing"			CathedralCeiling:ChildAreaSum[3]		= {	SumChildren( Skylt:TotAreaInclMult[3] )  }
+	"Sum skylight area into parent CCeiling objects[2] - new (not add)"	CathedralCeiling:ChildAreaSum[2]		= {	SumChildren( Skylt:TotAreaInclMult[2] )  }
+	"Sum skylight area into parent CCeiling objects[4] - additions"		CathedralCeiling:ChildAreaSum[4]		= {	SumChildren( Skylt:TotAreaInclMult[4] )  }
+	"Sum window area into parent Zone objects[1] - total"						Zone:TotCondZoneWinArea[1]	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea[1] ) + SumChildren( CathedralCeiling:ChildAreaSum[1] ) else  0  endif  }
+	"Sum window area into parent Zone objects[3] - existing"					Zone:TotCondZoneWinArea[3]	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea[3] ) + SumChildren( CathedralCeiling:ChildAreaSum[3] ) else  0  endif  }
+;	"Sum window area into parent Zone objects[2] - new/altered"				Zone:TotCondZoneWinArea[2]	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea[2] ) else  0  endif  }
+	"Sum window area into parent Zone objects[2] - new (not add)"			Zone:TotCondZoneWinArea[2]	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[2] ) else  0  endif  }
+	"Sum window area into parent Zone objects[4] - additions"				Zone:TotCondZoneWinArea[4]	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea[4] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] ) else  0  endif  }
+	"Sum cond zone window across entire model[1] - total"						Proj:TotCondZoneWinArea[1]	= {	SumAll( Zone:TotCondZoneWinArea[1] )  }
+	"Sum cond zone window across entire model[3] - existing"					Proj:TotCondZoneWinArea[3]	= {	SumAll( Zone:TotCondZoneWinArea[3] )  }
+;	"Sum cond zone window across entire model[2] - new/altered"				Proj:TotCondZoneWinArea[2]	= {	SumAll( Zone:TotCondZoneWinArea[2] )  }
+	"Sum cond zone window across entire model[2] - new (not add)"			Proj:TotCondZoneWinArea[2]	= {	SumAll( Zone:TotCondZoneWinArea[2] )  }
+	"Sum cond zone window across entire model[4] - additions"				Proj:TotCondZoneWinArea[4]	= {	SumAll( Zone:TotCondZoneWinArea[4] )  }
+; SAC 12/3/13 - replaced below w/ above to sum and facilitate scaling of existing windows separate from new/altered
+;	"Re-calculate TotAreaInclMult for all Windows"		Win:TotAreaInclMult	= {	if ( IsNew ) then Area * Multiplier else 0 endif	}
+;	"Sum window area into parent ExtWall objects"		ExtWall:TotWinArea	= {	SumChildren( Win:TotAreaInclMult )  }
+;	"Sum window area into parent Zone objects"		Zone:TotCondZoneWinArea	= {	if (Type < 10) then  SumChildren( ExtWall:TotWinArea ) else  0  endif  }
+;
+;	"Calc TotAreaInclMult for Altered and Exist Windows"	Win:TotAreaInclMult	= {	if ( IsAltered .OR. IsExisting ) then Area * Multiplier else UNCHANGED endif	}
+;	"Sum Alt window area into parent ExtWall objects"	ExtWall:TotAltWinArea	= {	if ( IsAltered ) then SumChildren( Win:TotAreaInclMult ) else 0 endif }
+;	"Sum Alt window area into parent Zone objects"		Zone:TotCondZoneAltWinArea	= {	if (Type < 10) then  SumChildren( ExtWall:TotAltWinArea ) else  0  endif  }
+;
+;	"Sum cond zone New window across entire model"		Proj:TotCondZoneWinArea	= {	SumAll( Zone:TotCondZoneWinArea )  }
+;	"Sum cond zone Altered window across entire model"	Proj:TotCondZoneAltWinArea	= {	SumAll( Zone:TotCondZoneAltWinArea )  }
+
+;	MJB	4/14/14	Window/Floor Area Ratio determined only from New Windows
+	"Set model's TOTAL win area / cond floor area ratio"		Proj:CondWinAreaCFARat	= {	if (CondFloorArea > 0) then  TotCondZoneWinArea[2] / CondFloorArea else  0  endif  }
+
+	; SAC 2/20/15 - new rules to set addition window area ratios based on prescriptive additions table
+	"Set Proj:CondAddWinAreaCFARat"		Proj:CondAddWinAreaCFARat	= {	if (CondAdditionSize < 0.1) then  0  else  TotCondZoneWinArea[4] / CondAdditionSize  endif  }
+	"Set Proj:MaxAddWinAreaCFARat"		Proj:MaxAddWinAreaCFARat	= {	if (CondAdditionSize < 0.1) then  0
+																								else  max(	PrescripAdditions_MaxGlazingArea:MaxWinArea(     "AdditionSize", AdditionSize ) / CondAdditionSize,
+																												PrescripAdditions_MaxGlazingArea:MaxFracWinArea( "AdditionSize", AdditionSize ) )		endif  }
+
+;	MJB	4/14/14	keep all existing windows in Std. Design
+;	"Set model's cond zone Existing win area multiplier"		Proj:CondExWinAreaMult	= {	if (CondWinAreaCFARat <= 0.2 .OR. CondFloorArea <= 0 .OR. TotCondZoneWinArea[3] <= 0) then  1.0
+;																														else if (TotCondZoneWinArea[3] / CondFloorArea <= 0.2) then  1.0
+;																														else  0.2 / (TotCondZoneWinArea[3] / CondFloorArea)  endif endif  }
+	"Set model's cond zone Existing win area multiplier"		Proj:CondExWinAreaMult	= {	1.0	}
+;	"Set model's cond zone New/Altered win area multiplier"	Proj:CondNewWinAreaMult	= {	if (CondWinAreaCFARat <= 0.2 .OR. CondFloorArea <= 0 .OR. TotCondZoneWinArea[2] <= 0) then  1.0
+;																														else if (TotCondZoneWinArea[3] > 0 .AND. CondExWinAreaMult < 1.0) then  0.0
+;																														else  ((0.2 * CondFloorArea) - (TotCondZoneWinArea[3] * CondExWinAreaMult)) / TotCondZoneWinArea[2]  endif endif  }
+; SAC 2/20/15 - revised logic to use floor and window areas that exclude AdditionSize
+; KN 04/22/2015 to support different glazing percentages such as the 18% needed in IECC
+;	"Set model's cond zone New/Altered win area multiplier"	Proj:CondNewWinAreaMult	= {	if (AdditionSize < 0.1)
+;																														then  if (CondWinAreaCFARat <= 0.2 .OR. (CondFloorArea - CondAdditionSize) <= 0 .OR. TotCondZoneWinArea[2] <= 0) then  1.0
+;																																else  (0.2 * (CondFloorArea - CondAdditionSize)) / TotCondZoneWinArea[2]  endif
+;																														else	if (CondAddWinAreaCFARat <= MaxAddWinAreaCFARat .OR. CondAdditionSize <= 0 .OR. TotCondZoneWinArea[4] <= 0) then  1.0
+;																																else  (MaxAddWinAreaCFARat * CondAdditionSize) / TotCondZoneWinArea[4]  endif
+;																														endif	}
+	"Set model's cond zone New/Altered win area multiplier"	Proj:CondNewWinAreaMult	= {	if (AdditionSize < 0.1)
+																														then  if (CondWinAreaCFARat <= CAClimateZoneCodeBase:WindowFrac( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) .OR. (CondFloorArea - CondAdditionSize) <= 0 .OR. TotCondZoneWinArea[2] <= 0) then  1.0
+																																else  (CAClimateZoneCodeBase:WindowFrac( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) * (CondFloorArea - CondAdditionSize)) / TotCondZoneWinArea[2]  endif
+																														else	if (CondAddWinAreaCFARat <= MaxAddWinAreaCFARat .OR. CondAdditionSize <= 0 .OR. TotCondZoneWinArea[4] <= 0) then  1.0
+																																else  (MaxAddWinAreaCFARat * CondAdditionSize) / TotCondZoneWinArea[4]  endif
+																														endif	}
+; SAC 12/31/13 - fixed bug where CondNewWinAreaMult invalid when New win area exceeds limit of 0.2 Win/CFA
+;																														else  ((0.2 * CondFloorArea) - (TotCondZoneWinArea[3] / (TotCondZoneWinArea[1] - TotCondZoneWinArea[3]))) endif endif  }
+
+	"Set Win:WinAreaMult"	Win:WinAreaMult	= {	if (IsNew .OR. IsAltered) then  Proj:CondNewWinAreaMult  else  Proj:CondExWinAreaMult  endif  }
+; 	"Debug log message - ExtWall Window Area"			ExtWall:Action		= {	PostMessageToLog( "ExtWall '%s' TotWinArea = %g", Name, TotWinArea[1] )  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Remove all user-defined Skylights - related to Res ACM section 2.3.5.5
+	; mjb	E+A+A	12/1/13
+	; mjb	2/19/14	moved entire SkyLt BC rules below Building-wide window area rules, so that Proposed SkyLt areas get counted in % glazing calcs
+   ;--------------------------------------------------------------------
+	"Delete each New Skylt"		Skylt:Action	= {	if ( IsNew ) then DeleteComp() else UNCHANGED endif  }
+	
+;  mjb   7/11/14  correct Skylight E+A+A rules - do not use Library.txt WinType look up, get Alteration values from CA13CZ table
+;	"Assign Code-level WinType for Altered Skylight"	
+;										Skylt:WinType = { if (IsAltered) then RuleLibrary( WindowType, "T24-2013 Altered Skylight" ) else UNCHANGED endif }	
+; mjb 1/12/15 - new lookup table for code values
+;	"Assign Code-level Ufactor for Altered Window"	Skylt:AltUfactor = {	CA13ClimateZoneDesignDay:AltSkyUFactor( "ClimateZone", Proj:ClimateZone )  }	
+;	"Assign Code-level SHGC for Altered Window"		Skylt:AltSHGC = {		CA13ClimateZoneDesignDay:AltSkySHGC( "ClimateZone", Proj:ClimateZone )  }	
+	"Assign Code-level Ufactor for Altered Window"	Skylt:AltUfactor = {	CAClimateZoneCodeBase:AltSkyUFactor( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  }	
+	"Assign Code-level SHGC for Altered Window"		Skylt:AltSHGC = {		CAClimateZoneCodeBase:AltSkySHGC( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  }	
+
+	"Change to Exist Ufactor if better than Code"	
+										Skylt:NFRCUfactor = { if ( IsAltered ) then
+																		if ( IsVerified ) then
+																			if ( NFRCUfactor <= AltUfactor ) then exNFRCUfactor else AltUfactor endif
+																		else AltUfactor endif 
+																		else UNCHANGED endif }
+
+	"Change to Exist SHGC if better than Code"	
+										Skylt:NFRCSHGC = { if ( IsAltered ) then
+																	if ( IsVerified ) then
+																		if ( NFRCSHGC <= AltSHGC ) then exNFRCSHGC else AltSHGC endif
+																		else AltSHGC endif 											   
+																	else UNCHANGED endif }
+																	
+
+;  LDH 8/21/16 - remove rule - no credit/penalty should be given for removed/added slylight area (tic 509)
+;	"Keep Skylt Area if Verified"		Skylt:Area = { if ( IsVerified ) then exArea else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Conditioned Zone ExtWall, Win & Door Rules - related to Res ACM section 2.3.5.3
+   ;
+   ; E+A+A: rules below for New Walls only - keep Altered and Existing Walls out of summations
+   ; mjb-10/21/13
+   ;--------------------------------------------------------------------
+; before resetting FrontOrientation, compute azimuths needed for Existing and Altered Walls
+
+	"Set ExtWall:Azimuth"			ExtWall:Azimuth	= {	ExtWall:OrientationValue + Proj:FrontOrientation  }
+	"Correct Azimuth for radial deg"	ExtWall:Azimuth	= {	if ( ExtWall:Azimuth >= 360 ) then ExtWall:Azimuth - 360
+															else UNCHANGED endif  }
+;do same for UndWall and CathedralCeilings
+;	"Set UndWall:Azimuth"		UndWall:Azimuth	= {	UndWall:OrientationValue + Proj:FrontOrientation  }
+;	"Correct Azimuth for radial deg"	UndWall:Azimuth	= {	if ( Azimuth >= 360 ) then Azimuth - 360
+;										else UNCHANGED endif  }
+	"Set CathedralCeiling:Azimuth"		CathedralCeiling:Azimuth	= {	CathedralCeiling:OrientationValue + Proj:FrontOrientation  }
+	"Correct Azimuth for radial deg"	CathedralCeiling:Azimuth	= {	if ( Azimuth >= 360 ) then Azimuth - 360
+												else UNCHANGED endif  }
+
+
+	"Set Proj:FrontOrientation to ensure that it is consistently facing North (for locating Doors on North facing walls only)"
+																	Proj:FrontOrientation		= {	0  }
+
+	"Set ExtWall:ParentType"				ExtWall:ParentType	= {	if (ParentComponentType() == "Zone")
+																					then	if (Parent( Type ) < 10) then  1  else  0  endif
+																					else if (ParentComponentType() == "Garage") then  2
+																					else  0  endif endif  }
+
+	"Setup Wall/Window/Door Area Totals"		Proj:Action	= {	EvalRulelist( "SetupWallWindowDoorAreaTotals" )  }
+; SAC 2/27/14 - moved following rules into above rulelist so that reporting rules can use the exact same logic
+;	; mjb-10/24/13	E+A+A only assign AreaByWallType for New Walls, then rest of wall transformations should flow correctly
+;	; SAC 2/26/14 - updated logic to include new Cons:Type options
+;		"Set ExtWall:AreaByWallType[1] - wood framed"		ExtWall:AreaByWallType[1]		= {	if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+;																															else	switch( Construction:Type )
+;																																		case  0 :	Area		; "Wood Framed Wall"  
+;																																		default :	0	endswitch  endif  }
+;		"Set ExtWall:AreaByWallType[2] - steel framed"		ExtWall:AreaByWallType[2]		= {	if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+;																															else	switch( Construction:Type )
+;																																		case  1 :	Area		; "Steel Framed Wall" 
+;																																		default :	0	endswitch  endif  }
+;		"Set ExtWall:AreaByWallType[3] - concrete/CMU"		ExtWall:AreaByWallType[3]		= {	if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+;																															else	switch( Construction:Type )
+;																																		case  2 :	Area		; "Concrete / ICF / Brick"	
+;																																		case  3 :	Area		; "Hollow Unit Masonry"	
+;																																		case  4 :	Area		; "Adobe / Strawbale / Log"
+;																																		case  5 :	Area		; "SIPS Wall"
+;																																		case  9 :	Area		; "No Frame (concrete/CMU)"
+;																																		default :	0	endswitch  endif  }
+;	
+;	; mjb-10/29/13	E+A+A add window area when there are no new walls
+;	;	"Set ExtWall:WinAreaByWallType[1] - wood framed"	ExtWall:WinAreaByWallType[1]	= {	if (AreaByWallType[1] > 0) then  TotWinArea  else  0  endif  }
+;	;	"Set ExtWall:WinAreaByWallType[2] - steel framed"	ExtWall:WinAreaByWallType[2]	= {	if (AreaByWallType[2] > 0) then  TotWinArea  else  0  endif  }
+;	;	"Set ExtWall:WinAreaByWallType[3] - concrete/CMU"	ExtWall:WinAreaByWallType[3]	= {	if (AreaByWallType[3] > 0) then  TotWinArea  else  0  endif  }
+;	  ; SAC 12/6/13 - fix to prevent Existing windows from getting included in WinAreaByWallType values - resulting in window copies...
+;		"Set ExtWall:WinAreaByWallType[1] - wood framed"	ExtWall:WinAreaByWallType[1]	= { TotWinArea[2] }
+;		"Set ExtWall:WinAreaByWallType[2] - steel framed"	ExtWall:WinAreaByWallType[2]	= { TotWinArea[2] }
+;		"Set ExtWall:WinAreaByWallType[3] - concrete/CMU"	ExtWall:WinAreaByWallType[3]	= { TotWinArea[2] }
+;	
+;	  ; SAC 12/6/13 - fix for GC issue #239 - only include New/Altered door area in ExtWall:TotDoorArea
+;	;	"Set ExtWall:TotDoorArea"									ExtWall:TotDoorArea				= {	SumChildren( Door:Area )  }
+;		"Set ExtWall:TotDoorArea"									ExtWall:TotDoorArea				= {	SumChildrenIf( Door:Area, Door:Status > 1 )  }
+;		"Set ExtWall:DoorAreaByWallType[1] - wood framed"	ExtWall:DoorAreaByWallType[1]	= {	TotDoorArea  }  ; if (AreaByWallType[1] > 0) then  TotDoorArea  else  0  endif  }
+;		"Set ExtWall:DoorAreaByWallType[2] - steel framed"	ExtWall:DoorAreaByWallType[2]	= {	TotDoorArea  }  ; if (AreaByWallType[2] > 0) then  TotDoorArea  else  0  endif  }
+;		"Set ExtWall:DoorAreaByWallType[3] - concrete/CMU"	ExtWall:DoorAreaByWallType[3]	= {	TotDoorArea  }  ; if (AreaByWallType[3] > 0) then  TotDoorArea  else  0  endif  }
+;	
+;	  ; SAC 2/26/14 - added 4th array element rules for all Zone & Garage ExtWall*AreaByWallType[] properties to track TOTALS across all wall types
+;		"Set Zone:ExtWallAreaByWallType[1] - wood framed"			Zone:ExtWallAreaByWallType[1]			= {	SumChildren( ExtWall:AreaByWallType[1]    )  }
+;		"Set Zone:ExtWallAreaByWallType[2] - steel framed"			Zone:ExtWallAreaByWallType[2]			= {   SumChildren( ExtWall:AreaByWallType[2]    )  }
+;		"Set Zone:ExtWallAreaByWallType[3] - concrete/CMU"			Zone:ExtWallAreaByWallType[3]			= {   SumChildren( ExtWall:AreaByWallType[3]    )  }
+;		"Set Zone:ExtWallAreaByWallType[4] - total"					Zone:ExtWallAreaByWallType[4]			= {   ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2] + ExtWallAreaByWallType[3]  }
+;		"Set Zone:ExtWallWinAreaByWallType[1] - wood framed"		Zone:ExtWallWinAreaByWallType[1]		= {   SumChildren( ExtWall:WinAreaByWallType[1] )  }
+;		"Set Zone:ExtWallWinAreaByWallType[2] - steel framed"		Zone:ExtWallWinAreaByWallType[2]		= {   SumChildren( ExtWall:WinAreaByWallType[2] )  }
+;		"Set Zone:ExtWallWinAreaByWallType[3] - concrete/CMU"		Zone:ExtWallWinAreaByWallType[3]		= {   SumChildren( ExtWall:WinAreaByWallType[3] )  }
+;		"Set Zone:ExtWallWinAreaByWallType[4] - total"				Zone:ExtWallWinAreaByWallType[4] 	= {   ExtWallWinAreaByWallType[1] + ExtWallWinAreaByWallType[2] + ExtWallWinAreaByWallType[3]  }
+;		"Set Zone:ExtWallDoorArea"											Zone:ExtWallDoorArea						= {   SumChildren( ExtWall:TotDoorArea )  }
+;		"Set Zone:ExtWallDoorAreaByWallType[1] - wood framed"		Zone:ExtWallDoorAreaByWallType[1]	= {   SumChildren( ExtWall:DoorAreaByWallType[1] )  }
+;		"Set Zone:ExtWallDoorAreaByWallType[2] - steel framed"	Zone:ExtWallDoorAreaByWallType[2]	= {   SumChildren( ExtWall:DoorAreaByWallType[2] )  }
+;		"Set Zone:ExtWallDoorAreaByWallType[3] - concrete/CMU"	Zone:ExtWallDoorAreaByWallType[3]	= {   SumChildren( ExtWall:DoorAreaByWallType[3] )  }
+;		"Set Zone:ExtWallDoorAreaByWallType[4] - total"				Zone:ExtWallDoorAreaByWallType[4] 	= {   ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2] + ExtWallDoorAreaByWallType[3]  }
+;	
+;		"Set Garage:ExtWallAreaByWallType[1] - wood framed"		Garage:ExtWallAreaByWallType[1]     = {   SumChildren( ExtWall:AreaByWallType[1]    )  }
+;		"Set Garage:ExtWallAreaByWallType[2] - steel framed"		Garage:ExtWallAreaByWallType[2]     = {   SumChildren( ExtWall:AreaByWallType[2]    )  }
+;		"Set Garage:ExtWallAreaByWallType[3] - concrete/CMU"		Garage:ExtWallAreaByWallType[3]     = {   SumChildren( ExtWall:AreaByWallType[3]    )  }
+;		"Set Garage:ExtWallAreaByWallType[4] - total"				Garage:ExtWallAreaByWallType[4]     = {   ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2] + ExtWallAreaByWallType[3]  }
+;	;	"Set Garage:ExtWallWinAreaByWallType[1] - wood framed"	Garage:ExtWallWinAreaByWallType[1]  = {   SumChildren( ExtWall:WinAreaByWallType[1] )  }
+;	;	"Set Garage:ExtWallWinAreaByWallType[2] - steel framed"	Garage:ExtWallWinAreaByWallType[2]  = {   SumChildren( ExtWall:WinAreaByWallType[2] )  }
+;	;	"Set Garage:ExtWallWinAreaByWallType[3] - concrete/CMU"	Garage:ExtWallWinAreaByWallType[3]  = {   SumChildren( ExtWall:WinAreaByWallType[3] )  }
+;		"Set Garage:ExtWallDoorAreaByWallType[1] - wood framed"	Garage:ExtWallDoorAreaByWallType[1] = {   SumChildren( ExtWall:DoorAreaByWallType[1] )  }
+;		"Set Garage:ExtWallDoorAreaByWallType[2] - steel framed"	Garage:ExtWallDoorAreaByWallType[2] = {   SumChildren( ExtWall:DoorAreaByWallType[2] )  }
+;		"Set Garage:ExtWallDoorAreaByWallType[3] - concrete/CMU"	Garage:ExtWallDoorAreaByWallType[3] = {   SumChildren( ExtWall:DoorAreaByWallType[3] )  }
+;		"Set Garage:ExtWallDoorAreaByWallType[4] - total"			Garage:ExtWallDoorAreaByWallType[4] = {   ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2] + ExtWallDoorAreaByWallType[3]  }
+
+;mjb-10/29/13	E+A+A	if wall area = 0 but win area is > 0, add wall area for new windows
+;			- this will happen whenever all Walls are Existing or Altered, and New Windows are added
+;			- calculated new wall area = window area * Project level window area multiplier + 0.4
+	"Add Zone:ExtWallAreaByWallType[1] - wood framed"	Zone:ExtWallAreaByWallType[1]			= {	if (ExtWallAreaByWallType[1] < 0.1 .AND. (ExtWallWinAreaByWallType[1] > 0.1 .OR. ExtWallDoorAreaByWallType[1] > 0.1)) then (ExtWallWinAreaByWallType[1] * Proj:CondNewWinAreaMult + ExtWallDoorAreaByWallType[1] + 0.4) else UNCHANGED endif  }
+	"Add Zone:ExtWallAreaByWallType[2] - steel framed"	Zone:ExtWallAreaByWallType[2]			= {	if (ExtWallAreaByWallType[2] < 0.1 .AND. (ExtWallWinAreaByWallType[2] > 0.1 .OR. ExtWallDoorAreaByWallType[2] > 0.1)) then (ExtWallWinAreaByWallType[2] * Proj:CondNewWinAreaMult + ExtWallDoorAreaByWallType[2] + 0.4) else UNCHANGED endif  }
+	"Add Zone:ExtWallAreaByWallType[3] - concrete/CMU"	Zone:ExtWallAreaByWallType[3]			= {	if (ExtWallAreaByWallType[3] < 0.1 .AND. (ExtWallWinAreaByWallType[3] > 0.1 .OR. ExtWallDoorAreaByWallType[3] > 0.1)) then (ExtWallWinAreaByWallType[3] * Proj:CondNewWinAreaMult + ExtWallDoorAreaByWallType[3] + 0.4) else UNCHANGED endif  }
+	"Add Zone:ExtWallAreaByWallType[4] - total"			Zone:ExtWallAreaByWallType[4]			= {	if (ExtWallAreaByWallType[4] < 0.1 .AND. (ExtWallWinAreaByWallType[4] > 0.1 .OR. ExtWallDoorAreaByWallType[4] > 0.1)) then (ExtWallWinAreaByWallType[4] * Proj:CondNewWinAreaMult + ExtWallDoorAreaByWallType[4] + 0.4) else UNCHANGED endif  }
+; safe rules with larger than needed wall area:
+;	"Add Zone:ExtWallAreaByWallType[1] - wood framed"	Zone:ExtWallAreaByWallType[1]			= {	if (ExtWallAreaByWallType[1] < 0.1 .AND. ExtWallWinAreaByWallType[1] > 0.1) then (ExtWallWinAreaByWallType[1]  + .4) else UNCHANGED endif }
+;	"Add Zone:ExtWallAreaByWallType[2] - steel framed"	Zone:ExtWallAreaByWallType[2]			= {	if (ExtWallAreaByWallType[2] < 0.1 .AND. ExtWallWinAreaByWallType[2] > 0.1) then (ExtWallWinAreaByWallType[2]  + .4) else UNCHANGED endif  }
+;	"Add Zone:ExtWallAreaByWallType[3] - concrete/CMU"	Zone:ExtWallAreaByWallType[3]			= {	if (ExtWallAreaByWallType[3] < 0.1 .AND. ExtWallWinAreaByWallType[3] > 0.1) then (ExtWallWinAreaByWallType[3]  + .4) else UNCHANGED endif  }
+
+
+  ; ZONES - "Generate std design wall - wood framed - (each orientation)"
+  ; DD 2/11/14 - Handling the addition of steel framed walls. Assuming budget design is all wood framed walls based upon 2013 Res ACM Ref 2.5.4.3
+  ; Previously, area from non-wood framed walls was not being added into the budget design
+  ; SAC 2/26/14 - switched rule logic to reference SUM of (new) ExtWallAreaByWallType (array element 4 vs. 1)
+  ; SAC 11/22/14 - switched rule logic again to replace only wood & steel framed w/ wood framed in std design - and added std design concrete walls for proposed mass walls
+  ; mjb 1/12/15 - switched Construction lookup to use new CAClimateZoneCodeBase table
+	"Create Zone:StdExtWallsFront[1] - wood"				Zone:StdExtWallsFront[1]	= {	if ((ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2]) < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Front" )  endif  }
+	"Set Zone:StdExtWallsFront[1]:Parent"					Zone:StdExtWallsFront[1]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsFront[1]:Orientation"			Zone:StdExtWallsFront[1]:Orientation			= {	"Front"  }
+;	"Set Zone:StdExtWallsFront[1]:Construction"			Zone:StdExtWallsFront[1]:Construction			= {	RuleLibrary( Cons, "T24-2013 ExtWall Wd2x4 Cons" )  }
+	; SAC 9/17/15 - switched AdditionSize to CondAdditionSize since team believes that unconditioned addition zone area should not be used to determine which wall construction to apply here - no effect on analysis, since uncond zones are not currently supported in compliance analysis
+	"Set Zone:StdExtWallsFront[1]:Construction"			Zone:StdExtWallsFront[1]:Construction			= {	if ( proj:CondAdditionSize > 0 ) 
+																											then RuleLibrary( Cons, PrescripAdditions_WoodExtWallCons:StdFrameExtWallCons( "CodeBase", Proj:StdDesignBase, "ClimateZone", Proj:ClimateZone, "AdditionSize", Proj:CondAdditionSize, "FrameLayer", 416 ) )
+																											else RuleLibrary( Cons, CAClimateZoneCodeBase:StdFrameExtWallCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) ) endif  }
+
+	"Set Zone:StdExtWallsFront[1]:Area"						Zone:StdExtWallsFront[1]:Area						= {	(ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2]) / 4  }
+	"Set Zone:StdExtWallsFront[1]:Tilt"						Zone:StdExtWallsFront[1]:Tilt						= {	90  }
+	"Set Zone:StdExtWallsFront[1]:Absorptivity"			Zone:StdExtWallsFront[1]:Absorptivity			= {	0.5  }
+	"Set Zone:StdExtWallsFront[1]:IsStdCondZoneWall"	Zone:StdExtWallsFront[1]:IsStdCondZoneWall	= {	1  }
+
+	"Create Zone:StdExtWallsLeft[1] - wood"				Zone:StdExtWallsLeft[1]		= {	if ((ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2]) < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Left" )  endif  }
+	"Set Zone:StdExtWallsLeft[1]:Parent"					Zone:StdExtWallsLeft[1]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsLeft[1]:Orientation"				Zone:StdExtWallsLeft[1]:Orientation				= {	"Left"  }
+	"Set Zone:StdExtWallsLeft[1]:Construction"			Zone:StdExtWallsLeft[1]:Construction			= {	StdExtWallsFront[1]:Construction  }
+	"Set Zone:StdExtWallsLeft[1]:Area"						Zone:StdExtWallsLeft[1]:Area						= {	StdExtWallsFront[1]:Area          }
+	"Set Zone:StdExtWallsLeft[1]:Tilt"						Zone:StdExtWallsLeft[1]:Tilt						= {	StdExtWallsFront[1]:Tilt          }
+	"Set Zone:StdExtWallsLeft[1]:Absorptivity"			Zone:StdExtWallsLeft[1]:Absorptivity			= {	StdExtWallsFront[1]:Absorptivity  }
+	"Set Zone:StdExtWallsLeft[1]:IsStdCondZoneWall"		Zone:StdExtWallsLeft[1]:IsStdCondZoneWall		= {	1  }
+	
+	"Create Zone:StdExtWallsRight[1] - wood"				Zone:StdExtWallsRight[1]	= {	if ((ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2]) < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Right" )  endif  }
+	"Set Zone:StdExtWallsRight[1]:Parent"					Zone:StdExtWallsRight[1]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsRight[1]:Orientation"			Zone:StdExtWallsRight[1]:Orientation			= {	"Right"  }
+	"Set Zone:StdExtWallsRight[1]:Construction"			Zone:StdExtWallsRight[1]:Construction			= {	StdExtWallsFront[1]:Construction  }
+	"Set Zone:StdExtWallsRight[1]:Area"						Zone:StdExtWallsRight[1]:Area						= {	StdExtWallsFront[1]:Area          }
+	"Set Zone:StdExtWallsRight[1]:Tilt"						Zone:StdExtWallsRight[1]:Tilt						= {	StdExtWallsFront[1]:Tilt          }
+	"Set Zone:StdExtWallsRight[1]:Absorptivity"			Zone:StdExtWallsRight[1]:Absorptivity			= {	StdExtWallsFront[1]:Absorptivity  }
+	"Set Zone:StdExtWallsRight[1]:IsStdCondZoneWall"	Zone:StdExtWallsRight[1]:IsStdCondZoneWall	= {	1  }
+
+	"Create Zone:StdExtWallsBack[1] - wood"				Zone:StdExtWallsBack[1]		= {	if ((ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2]) < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Back" )  endif  }
+	"Set Zone:StdExtWallsBack[1]:Parent"					Zone:StdExtWallsBack[1]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsBack[1]:Orientation"				Zone:StdExtWallsBack[1]:Orientation				= {	"Back"  }
+	"Set Zone:StdExtWallsBack[1]:Construction"			Zone:StdExtWallsBack[1]:Construction			= {	StdExtWallsFront[1]:Construction  }
+	"Set Zone:StdExtWallsBack[1]:Area"						Zone:StdExtWallsBack[1]:Area						= {	StdExtWallsFront[1]:Area          }
+	"Set Zone:StdExtWallsBack[1]:Tilt"						Zone:StdExtWallsBack[1]:Tilt						= {	StdExtWallsFront[1]:Tilt          }
+	"Set Zone:StdExtWallsBack[1]:Absorptivity"			Zone:StdExtWallsBack[1]:Absorptivity			= {	StdExtWallsFront[1]:Absorptivity  }
+	"Set Zone:StdExtWallsBack[1]:IsStdCondZoneWall"		Zone:StdExtWallsBack[1]:IsStdCondZoneWall		= {	1  }
+	
+  ; SAC 11/22/14 - added std desing MASS walls	
+	"Create Zone:StdExtWallsFront[3] - concrete"			Zone:StdExtWallsFront[3]	= {	if (ExtWallAreaByWallType[3] < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Ms-Front" )  endif  }
+	"Set Zone:StdExtWallsFront[3]:Parent"					Zone:StdExtWallsFront[3]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsFront[3]:Orientation"			Zone:StdExtWallsFront[3]:Orientation			= {	"Front"  }
+;	"Set Zone:StdExtWallsFront[3]:Construction"			Zone:StdExtWallsFront[3]:Construction			= {	RuleLibrary( Cons, CA13ClimateZoneDesignDay:StdMassExtWallCons( "ClimateZone", Proj:ClimateZone ) )  }
+	; SAC 9/17/15 - 2016 EAA note: prescriptive EAA requirements same as new cons, so no edits needed here - mods needed only if/when requirements for EAA deviate from new cons
+	"Set Zone:StdExtWallsFront[3]:Construction"			Zone:StdExtWallsFront[3]:Construction			= {	RuleLibrary( Cons, CAClimateZoneCodeBase:StdMassExtWallCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )  }
+
+	"Set Zone:StdExtWallsFront[3]:Area"						Zone:StdExtWallsFront[3]:Area						= {	ExtWallAreaByWallType[3] / 4  }
+	"Set Zone:StdExtWallsFront[3]:Tilt"						Zone:StdExtWallsFront[3]:Tilt						= {	90  }
+	"Set Zone:StdExtWallsFront[3]:Absorptivity"			Zone:StdExtWallsFront[3]:Absorptivity			= {	0.5  }
+	"Set Zone:StdExtWallsFront[3]:IsStdCondZoneWall"	Zone:StdExtWallsFront[3]:IsStdCondZoneWall	= {	3  }
+
+	"Create Zone:StdExtWallsLeft[3] - concrete"			Zone:StdExtWallsLeft[3]		= {	if (ExtWallAreaByWallType[3] < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Ms-Left" )  endif  }
+	"Set Zone:StdExtWallsLeft[3]:Parent"					Zone:StdExtWallsLeft[3]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsLeft[3]:Orientation"				Zone:StdExtWallsLeft[3]:Orientation				= {	"Left"  }
+	"Set Zone:StdExtWallsLeft[3]:Construction"			Zone:StdExtWallsLeft[3]:Construction			= {	StdExtWallsFront[3]:Construction  }
+	"Set Zone:StdExtWallsLeft[3]:Area"						Zone:StdExtWallsLeft[3]:Area						= {	StdExtWallsFront[3]:Area          }
+	"Set Zone:StdExtWallsLeft[3]:Tilt"						Zone:StdExtWallsLeft[3]:Tilt						= {	StdExtWallsFront[3]:Tilt          }
+	"Set Zone:StdExtWallsLeft[3]:Absorptivity"			Zone:StdExtWallsLeft[3]:Absorptivity			= {	StdExtWallsFront[3]:Absorptivity  }
+	"Set Zone:StdExtWallsLeft[3]:IsStdCondZoneWall"		Zone:StdExtWallsLeft[3]:IsStdCondZoneWall		= {	3  }
+	
+	"Create Zone:StdExtWallsRight[3] - concrete"			Zone:StdExtWallsRight[3]	= {	if (ExtWallAreaByWallType[3] < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Ms-Right" )  endif  }
+	"Set Zone:StdExtWallsRight[3]:Parent"					Zone:StdExtWallsRight[3]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsRight[3]:Orientation"			Zone:StdExtWallsRight[3]:Orientation			= {	"Right"  }
+	"Set Zone:StdExtWallsRight[3]:Construction"			Zone:StdExtWallsRight[3]:Construction			= {	StdExtWallsFront[3]:Construction  }
+	"Set Zone:StdExtWallsRight[3]:Area"						Zone:StdExtWallsRight[3]:Area						= {	StdExtWallsFront[3]:Area          }
+	"Set Zone:StdExtWallsRight[3]:Tilt"						Zone:StdExtWallsRight[3]:Tilt						= {	StdExtWallsFront[3]:Tilt          }
+	"Set Zone:StdExtWallsRight[3]:Absorptivity"			Zone:StdExtWallsRight[3]:Absorptivity			= {	StdExtWallsFront[3]:Absorptivity  }
+	"Set Zone:StdExtWallsRight[3]:IsStdCondZoneWall"	Zone:StdExtWallsRight[3]:IsStdCondZoneWall	= {	3  }
+
+	"Create Zone:StdExtWallsBack[3] - concrete"			Zone:StdExtWallsBack[3]		= {	if (ExtWallAreaByWallType[3] < 0.1 .OR. Type >= 10) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Ms-Back" )  endif  }
+	"Set Zone:StdExtWallsBack[3]:Parent"					Zone:StdExtWallsBack[3]:Parent					= {	Local( Name )  }
+	"Set Zone:StdExtWallsBack[3]:Orientation"				Zone:StdExtWallsBack[3]:Orientation				= {	"Back"  }
+	"Set Zone:StdExtWallsBack[3]:Construction"			Zone:StdExtWallsBack[3]:Construction			= {	StdExtWallsFront[3]:Construction  }
+	"Set Zone:StdExtWallsBack[3]:Area"						Zone:StdExtWallsBack[3]:Area						= {	StdExtWallsFront[3]:Area          }
+	"Set Zone:StdExtWallsBack[3]:Tilt"						Zone:StdExtWallsBack[3]:Tilt						= {	StdExtWallsFront[3]:Tilt          }
+	"Set Zone:StdExtWallsBack[3]:Absorptivity"			Zone:StdExtWallsBack[3]:Absorptivity			= {	StdExtWallsFront[3]:Absorptivity  }
+	"Set Zone:StdExtWallsBack[3]:IsStdCondZoneWall"		Zone:StdExtWallsBack[3]:IsStdCondZoneWall		= {	3  }
+	
+	
+  ; BEFORE creating NEW windows, Scale Existing Window Areas (SAC 12/3/13)
+	"Scale Existing Window Height"		Win:Height	= {	if (IsNew .OR. IsAltered .OR. WinAreaMult == 1.0 .OR. LocalStatus( Height ) < 1) then  UNCHANGED
+																			else if (WinAreaMult == 0) then  0.0
+																			else	Height * sqrt( WinAreaMult )  endif endif  }
+	"Scale Existing Window Width"			Win:Width	= {	if (IsNew .OR. IsAltered .OR. WinAreaMult == 1.0 .OR. LocalStatus( Width ) < 1) then  UNCHANGED
+																			else if (WinAreaMult == 0) then  0.0
+																			else	Width * sqrt( WinAreaMult )  endif endif  }
+	"Scale Existing Window Area"			Win:Area		= {	if (IsNew .OR. IsAltered .OR. WinAreaMult == 1.0 .OR. LocalStatus( Area ) < 1) then  UNCHANGED
+																			else if (WinAreaMult == 0) then  0.0
+																			else	Area * WinAreaMult  endif endif  }
+
+  ; ZONE WINDOWS - Create & setup Windows on all NEW conditioned zone ExtWalls
+	"Create ExtWall:StdWindow"					ExtWall:StdWindow						= {	;	if (Parent( TotCondZoneWinArea[2] ) > 0 .AND. Proj:CondNewWinAreaMult > 0 .AND. IsStdCondZoneWall == 1)
+																											;	then  CreateComp( Win, Local( Name ) + "-Win" )  else  UNCHANGED  endif  }
+																											if (LocalStatus( IsStdCondZoneWall ) < 1 .OR. Proj:CondNewWinAreaMult < 0.00001) then  UNCHANGED
+																											else	switch (IsStdCondZoneWall)
+																														case  1 :	if (ValidOr( ExtWallWinAreaByWallType[1], 0 ) < 0.001 .AND. ValidOr( ExtWallWinAreaByWallType[2], 0 ) < 0.001) then  UNCHANGED
+																																		else	CreateComp( Win, Local( Name ) + "-Win" )  endif
+																														case  3 :	if (ValidOr( ExtWallWinAreaByWallType[3], 0 ) < 0.001) then  UNCHANGED
+																																		else	CreateComp( Win, Local( Name ) + "-Win" )  endif
+																														default :	UNCHANGED
+																													endswitch  endif  }
+	"Set ExtWall:StdWindow:Parent"			ExtWall:StdWindow:Parent			= {	Local( Name )  }
+	"Set ExtWall:StdWindow:Area"        	ExtWall:StdWindow:Area				= {	;	Parent( TotCondZoneWinArea[2] ) * Proj:CondNewWinAreaMult / 4  }
+																											switch (IsStdCondZoneWall)
+																												case  1 :	(ValidOr( ExtWallWinAreaByWallType[1], 0 ) + ValidOr( ExtWallWinAreaByWallType[2], 0 )) * Proj:CondNewWinAreaMult / 4
+																												case  3 :	 ValidOr( ExtWallWinAreaByWallType[3], 0 ) * Proj:CondNewWinAreaMult / 4 
+																												default :	UNCHANGED
+																											endswitch  }
+	"Set ExtWall:StdWindow:Height"      	ExtWall:StdWindow:Height			= {	sqrt( StdWindow:Area )  }
+	"Set ExtWall:StdWindow:Width"       	ExtWall:StdWindow:Width				= {	StdWindow:Height  }
+	"Set ExtWall:StdWindow:Multiplier"  	ExtWall:StdWindow:Multiplier		= {	1     }
+; mjb 1/12/15 - using new CAClimateZoneCodeBase for code level lookups
+;	"Set ExtWall:StdWindow:NFRCUfactor" 	ExtWall:StdWindow:NFRCUfactor		= {	ClimateZoneTable( Global( Proj:ClimateZone ), 1 )  }
+;	"Set ExtWall:StdWindow:NFRCSHGC"    	ExtWall:StdWindow:NFRCSHGC			= {	ClimateZoneTable( Global( Proj:ClimateZone ), 2 )  }
+	"Set ExtWall:StdWindow:NFRCUfactor" 	ExtWall:StdWindow:NFRCUfactor		= {	CAClimateZoneCodeBase:WindowUfactor( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  }
+	"Set ExtWall:StdWindow:NFRCSHGC"    	ExtWall:StdWindow:NFRCSHGC			= {	CAClimateZoneCodeBase:WindowSHGC( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  }
+	; ExteriorShade = "Insect Screen (default)" - ACM section 2.3.5.5.3
+	"Set ExtWall:StdWindow:ExteriorShade" 	ExtWall:StdWindow:ExteriorShade	= {	"Insect Screen (default)"  }
+	"Set ExtWall:StdWindow:IsStdCondZoneWin" 	ExtWall:StdWindow:IsStdCondZoneWin	= {	1  }		; SAC 2/11/14
+
+  ; ZONE DOOR - Create & setup Door on Front facet of each conditioned zone std wall - related to Res ACM section 2.3.5.4
+  ;  - Total of 40' door spread across North facet of EACH conditioned zone, area weighted by zone cond floor area
+  ;  - PLUS door area weighted by different wall TYPEs by wall type area
+	"Set Zone:SglDirStdWallArea - 1 (wood framed)"		Zone:SglDirStdWallArea	= {	if (LocalCompAssigned(    StdExtWallsFront[1] ) == 0) then  0
+																												else							  StdExtWallsFront[1]:Area  endif  }
+	"Set Zone:SglDirStdWallArea - 2 (steel framed)"		Zone:SglDirStdWallArea	= {	if (LocalCompAssigned(    StdExtWallsFront[2] ) == 0) then  UNCHANGED
+																												else	SglDirStdWallArea + StdExtWallsFront[2]:Area  endif  }
+	"Set Zone:SglDirStdWallArea - 3 (concrete/CMU)"		Zone:SglDirStdWallArea	= {	if (LocalCompAssigned(    StdExtWallsFront[3] ) == 0) then  UNCHANGED
+																												else	SglDirStdWallArea + StdExtWallsFront[3]:Area  endif  }
+
+  ; SAC 11/22/14 - revised rule logic to take into account split of door area by wall type - for wood walls apply sum of wood & steel wall door areas
+	"Create Zone:StdExtWallsFront[1]:StdDoor"			Zone:StdExtWallsFront[1]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. (ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsFront[1]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsFront[1]:StdDoor:Parent"	Zone:StdExtWallsFront[1]:StdDoor:Parent	= {	StdExtWallsFront[1]:Name  }
+;	"Set Zone:StdExtWallsFront[1]:StdDoor:Area"		Zone:StdExtWallsFront[1]:StdDoor:Area		= {	( 40 * FloorArea / Proj:CondFloorArea ) * StdExtWallsFront[1]:Area / SglDirStdWallArea  }
+	"Set Zone:StdExtWallsFront[1]:StdDoor:Area"		Zone:StdExtWallsFront[1]:StdDoor:Area		= {	(ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) / 4  }
+	"Set Zone:StdExtWallsFront[1]:StdDoor:Ufactor"	Zone:StdExtWallsFront[1]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsFront[1]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsFront[1]:StdDoor:IsStdCondZoneDoor	= {	1  }		; SAC 2/11/14
+
+; SAC 6/13/13 - revised above Door from 100% to 25% of ExtWallDoorArea and split remaining 75% door area across remaining orientations (below)
+	"Create Zone:StdExtWallsLeft[1]:StdDoor"			Zone:StdExtWallsLeft[1]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. (ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsLeft[1]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsLeft[1]:StdDoor:Parent"		Zone:StdExtWallsLeft[1]:StdDoor:Parent		= {	StdExtWallsLeft[1]:Name  }
+	"Set Zone:StdExtWallsLeft[1]:StdDoor:Area"		Zone:StdExtWallsLeft[1]:StdDoor:Area		= {	(ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) / 4  }
+	"Set Zone:StdExtWallsLeft[1]:StdDoor:Ufactor"	Zone:StdExtWallsLeft[1]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsLeft[1]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsLeft[1]:StdDoor:IsStdCondZoneDoor	= {	1  }		; SAC 2/11/14
+
+	"Create Zone:StdExtWallsRight[1]:StdDoor"			Zone:StdExtWallsRight[1]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. (ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsRight[1]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsRight[1]:StdDoor:Parent"	Zone:StdExtWallsRight[1]:StdDoor:Parent	= {	StdExtWallsRight[1]:Name  }
+	"Set Zone:StdExtWallsRight[1]:StdDoor:Area"		Zone:StdExtWallsRight[1]:StdDoor:Area		= {	(ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) / 4  }
+	"Set Zone:StdExtWallsRight[1]:StdDoor:Ufactor"	Zone:StdExtWallsRight[1]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsRight[1]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsRight[1]:StdDoor:IsStdCondZoneDoor	= {	1  }		; SAC 2/11/14
+
+	"Create Zone:StdExtWallsBack[1]:StdDoor"			Zone:StdExtWallsBack[1]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. (ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsBack[1]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsBack[1]:StdDoor:Parent"		Zone:StdExtWallsBack[1]:StdDoor:Parent		= {	StdExtWallsBack[1]:Name  }
+	"Set Zone:StdExtWallsBack[1]:StdDoor:Area"		Zone:StdExtWallsBack[1]:StdDoor:Area		= {	(ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2]) / 4  }
+	"Set Zone:StdExtWallsBack[1]:StdDoor:Ufactor"	Zone:StdExtWallsBack[1]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsBack[1]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsBack[1]:StdDoor:IsStdCondZoneDoor	= {	1  }		; SAC 2/11/14
+
+  ; SAC 11/22/14 - added doors for mass walls
+	"Create Zone:StdExtWallsFront[3]:StdDoor"			Zone:StdExtWallsFront[3]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. ExtWallDoorAreaByWallType[3] < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsFront[3]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsFront[3]:StdDoor:Parent"	Zone:StdExtWallsFront[3]:StdDoor:Parent	= {	StdExtWallsFront[3]:Name  }
+;	"Set Zone:StdExtWallsFront[3]:StdDoor:Area"		Zone:StdExtWallsFront[3]:StdDoor:Area		= {	( 40 * FloorArea / Proj:CondFloorArea ) * StdExtWallsFront[3]:Area / SglDirStdWallArea  }
+	"Set Zone:StdExtWallsFront[3]:StdDoor:Area"		Zone:StdExtWallsFront[3]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[3] / 4  }
+	"Set Zone:StdExtWallsFront[3]:StdDoor:Ufactor"	Zone:StdExtWallsFront[3]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsFront[3]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsFront[3]:StdDoor:IsStdCondZoneDoor	= {	1  }
+
+; SAC 6/13/13 - revised above Door from 100% to 25% of ExtWallDoorArea and split remaining 75% door area across remaining orientations (below)
+	"Create Zone:StdExtWallsLeft[3]:StdDoor"			Zone:StdExtWallsLeft[3]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. ExtWallDoorAreaByWallType[3] < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsLeft[3]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsLeft[3]:StdDoor:Parent"		Zone:StdExtWallsLeft[3]:StdDoor:Parent		= {	StdExtWallsLeft[3]:Name  }
+	"Set Zone:StdExtWallsLeft[3]:StdDoor:Area"		Zone:StdExtWallsLeft[3]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[3] / 4  }
+	"Set Zone:StdExtWallsLeft[3]:StdDoor:Ufactor"	Zone:StdExtWallsLeft[3]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsLeft[3]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsLeft[3]:StdDoor:IsStdCondZoneDoor	= {	1  }
+
+	"Create Zone:StdExtWallsRight[3]:StdDoor"			Zone:StdExtWallsRight[3]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. ExtWallDoorAreaByWallType[3] < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsRight[3]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsRight[3]:StdDoor:Parent"	Zone:StdExtWallsRight[3]:StdDoor:Parent	= {	StdExtWallsRight[3]:Name  }
+	"Set Zone:StdExtWallsRight[3]:StdDoor:Area"		Zone:StdExtWallsRight[3]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[3] / 4  }
+	"Set Zone:StdExtWallsRight[3]:StdDoor:Ufactor"	Zone:StdExtWallsRight[3]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsRight[3]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsRight[3]:StdDoor:IsStdCondZoneDoor	= {	1  }
+
+	"Create Zone:StdExtWallsBack[3]:StdDoor"			Zone:StdExtWallsBack[3]:StdDoor				= {	if (Proj:CondFloorArea < 0.01 .OR. SglDirStdWallArea < 0.01 .OR. ExtWallDoorAreaByWallType[3] < 0.1) then  UNDEFINED
+																																	else  CreateComp( Door, LocalRef( StdExtWallsBack[3]:Name ) + "-Door" )  endif  }
+	"Set Zone:StdExtWallsBack[3]:StdDoor:Parent"		Zone:StdExtWallsBack[3]:StdDoor:Parent		= {	StdExtWallsBack[3]:Name  }
+	"Set Zone:StdExtWallsBack[3]:StdDoor:Area"		Zone:StdExtWallsBack[3]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[3] / 4  }
+	"Set Zone:StdExtWallsBack[3]:StdDoor:Ufactor"	Zone:StdExtWallsBack[3]:StdDoor:Ufactor	= {	0.50  }
+	"Set Zone:StdExtWallsBack[3]:StdDoor:IsStdCondZoneDoor"	Zone:StdExtWallsBack[3]:StdDoor:IsStdCondZoneDoor	= {	1  }
+
+
+  ; Delete original conditioned zone walls (and all child windows/doors)
+;	E+A+A - can no longer blast all Proposed Design ExtWalls - need to keep Existing and Altered Walls
+; mjb-12/2/13  need to blast New Windows in Existing Walls
+
+	"Delete ExtWalls of conditioned zones"			ExtWall:Action	= {	if (ParentType == 1 .AND. IsNew) then  DeleteComp()  else  UNCHANGED  endif  }
+
+	"Delete New Windows in Altered and Existing Walls"			Win:Action	= {	if (IsStdCondZoneWin) then  UNCHANGED
+																										else if (IsNew) then  
+																											if (Parent( IsAltered ) .OR. Parent( IsExisting ) ) then
+																												DeleteComp()  
+																												else  UNCHANGED  endif
+																											else UNCHANGED endif endif  }
+
+; SAC 12/21/14 - fix to StdWall area to prevent windows/doors from exceeding parent wall area
+	"Check/adjust standard design ExtWall:Area"		ExtWall:Area	= {	if (LocalStatus( Area ) < 1 .OR. IfValidAnd( IsStdCondZoneWall > 0.5 )==0) then  UNCHANGED
+																								else if (Area < (SumChildren( Win:Area ) + SumChildren( Door:Area ) + 0.0001))
+																								then	SumChildren( Win:Area ) + SumChildren( Door:Area ) + 0.0001
+																								else	UNCHANGED  endif endif  }
+
+	"Call subordinate rulelist to deal with Garage standard design conversion"
+			Proj:Action	= {	if (HasGarage < 0.5 .OR. ComponentCount( Garage ) < 0.1) then  UNCHANGED
+									else	EvalRulelist( "BudgetConversion_Garage" )  endif  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Slab Floor Rules - related to Res ACM section 2.3.5.7
+   ;--------------------------------------------------------------------
+  ; mjb 12/2/13 - assign AltEdgeRValue before resetting EdgeInsulation & EdgeInsulOption
+	"Altered SlabFloor:EdgeInsulDepth"		SlabFloor:AltEdgeDepth	= {	if (IsAltered .AND. IsVerified) then 
+																										if (EdgeInsulation < 0.5) then  0
+																											else if (EdgeInsulOption > 0) then  mod( Local( EdgeInsulOption ), 1000 )
+																											else  0   ; ???
+																											endif endif
+																										else UNCHANGED endif }
+	"Altered SlabFloor:EdgeInsulRValue"		SlabFloor:AltEdgeRValue		= {	if (IsAltered .AND. IsVerified) then 
+																										if (EdgeInsulation < 0.5 .OR. EdgeInsulDepth < 0.1) then  0
+																											else if (EdgeInsulOption > 0) then  (EdgeInsulOption - EdgeInsulDepth) / 1000
+																											else  0   ; ???
+																											endif endif  
+																										else UNCHANGED endif }
+
+  ; SAC 6/6/13 - added HeatedSlab property - set to 0 for standard design (?)
+  ; mjb 5/6/14 - but not for E+A+A
+	"Set SlabFloor:HeatedSlab"			SlabFloor:HeatedSlab			= {	if ( Proj:RunScope == 2 .AND. IsAltered ) then 0 else UNCHANGED endif }  ; Standard design retains same heated slab state as proposed design - per GC issue #98 - unless Altered mjb 5/6/14
+	"Set SlabFloor:Surface"				SlabFloor:Surface				= {	if ( IsNew .OR. IsAltered ) then 
+																								if (ParentComponentType() == "Garage") then  2   ; Exposed
+																									else  0  endif			; "Default (80% carpeted/covered, 20% exposed)"
+																								else UNCHANGED endif  }
+; mjb	E+A+A	12/1/13
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table	
+	"Set SlabFloor:EdgeInsulation"	SlabFloor:EdgeInsulation	= {	if ( IsNew .OR. IsAltered ) then 
+																								if (HeatedSlab > 0.5) then  1		; SAC 6/7/13 - added HeatedSlab setting - per GC issue #98
+																									else if (ParentComponentType() == "Garage") then  0   ; SAC 6/13/13 - prevent insulation in garage slabs - per GC issue #69
+																									else	if ( CAClimateZoneCodeBase:SlabEdgeIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) > 0.5 ) then 1 else 0 endif
+																									endif endif
+																								else UNCHANGED endif  }
+
+;	mjb 1/12/15 - removed these lines in above rule:								else	switch (Global( Proj:ClimateZone ))
+;																												case 16:	1
+;																												default:	0
+;																											endswitch  endif endif
+
+;	mjb 1/12/15 - use new CAClimateZoneCodeBase lookup table	
+	"Set SlabFloor:EdgeInsulOption"	SlabFloor:EdgeInsulOption	= {	if ( IsNew .OR. IsAltered ) then 
+																								if (HeatedSlab > 0.5)		; SAC 6/7/13 - added HeatedSlab setting - per GC issue #98
+																									then CAClimateZoneCodeBase:HtSlabEdgeIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )
+																								else CAClimateZoneCodeBase:SlabEdgeIns( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) endif
+																							else UNCHANGED endif  }
+
+;	mjb 1/12/15 - removed these lines in above rule:							then  switch (Global( Proj:ClimateZone ))
+;																											case 16:	 10016   ; "R-10, 16 inches"
+;																											default:	  5016   ; "R-5, 16 inches"
+;																										endswitch
+;																								else	switch (Global( Proj:ClimateZone ))
+;																											case 16:	  7016   ; "R-7, 16 inches"
+;																											default:	0
+;; replaced w/ above by mjb 8/22/13	- changed 12/2/13 to 0 from 5016							default:	DEFAULT
+;																										endswitch  endif
+
+  ; SAC 6/7/13 - default EdgeInsulRValue & EdgeInsulDepth based on EdgeInsulation & EdgeInsulOption selections to facilitate HeatedSlab checks
+	"Default SlabFloor:EdgeInsulDepth"		SlabFloor:EdgeInsulDepth	= {	if (EdgeInsulation < 0.5 .OR. EdgeInsulOption < 1) then  0
+																									else if (EdgeInsulOption > 0) then  mod( Local( EdgeInsulOption ), 1000 )
+																									else  0   ; ???
+																									endif endif  }
+	"Default SlabFloor:EdgeInsulRValue"		SlabFloor:EdgeInsulRValue	= {	if (EdgeInsulation < 0.5 .OR. EdgeInsulDepth < 0.1) then  0
+																									else if (EdgeInsulOption > 0) then  (EdgeInsulOption - EdgeInsulDepth) / 1000
+																									else  0   ; ???
+																									endif endif  }
+
+; mjb	E+A+A 	If Verified - reassign EdgeInsulRValue, EdgeInsulDepth and Surface based on proposed Altered slab versus prescriptive requirements	12/2/13
+	"Default SlabFloor:exEdgeInsulDepth"		SlabFloor:exEdgeInsulDepth		= {	if (IfValidAnd( exEdgeInsulation < 0.5 ) .OR. IfValidAnd( exEdgeInsulOption < 1 )) then  0
+																												else if (IfValidAnd( exEdgeInsulOption > 0 )) then  mod( Local( exEdgeInsulOption ), 1000 )
+																												else  0   ; ???
+																												endif endif  }
+	"Default SlabFloor:exEdgeInsulRValue"		SlabFloor:exEdgeInsulRValue	= {	if (IfValidAnd( exEdgeInsulation < 0.5 ) .OR. IfValidAnd( exEdgeInsulDepth < 0.1 )) then  0
+																												else if (IfValidAnd( exEdgeInsulOption > 0 )) then  (exEdgeInsulOption - exEdgeInsulDepth) / 1000
+																												else  0   ; ???
+																												endif endif  }
+	"Re-assign EdgeInsulDepth if Verified"		SlabFloor:EdgeInsulDepth	= {	if (IsAltered .AND. IsVerified) then
+																											if (AltEdgeDepth >= EdgeInsulDepth) then exEdgeInsulDepth else UNCHANGED endif
+																										else UNCHANGED endif }
+	"Re-assign EdgeInsulRValue if Verified"	SlabFloor:EdgeInsulRValue	= {	if (IsAltered .AND. IsVerified) then
+																											if (AltEdgeRValue >= EdgeInsulRValue) then exEdgeInsulRValue else UNCHANGED endif
+																										else UNCHANGED endif }
+	"Re-assign Surface if Verified"				SlabFloor:Surface		= {	if (IsAltered .AND. IsVerified) then exSurface else UNCHANGED endif }
+
+;	"debug SlabFloor"					SlabFloor:Action = { if (IsAltered) then PostWarning( "SlabFloor: '%s'  AltEdgeDepth: %g   EdgeInsulDepth: %g   AltEdgeRValue:  %g  AltEdgeRValue:  %g", Name, AltEdgeDepth, EdgeInsulDepth, AltEdgeRValue, EdgeInsulRValue ) else UNCHANGED endif }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: ExtWall and Window E+A+A rules
+   ; mjb-10/28/13	
+   ;--------------------------------------------------------------------
+
+;	"debug ExtWall"					ExtWAll:Action = { if (ParentType == 1 .AND. IsAltered) then PostWarning( "ExtWall: '%s' Cons: '%s'", Name, Construction:Name ) else UNCHANGED endif }
+	"Assign Altered Wall Cons UValue"		ExtWall:AltConsUValue = {  if (ParentType == 1 .AND. IsAltered) then Construction:WinterDesUValue else UNCHANGED endif }
+	"Assign Code-level Altered Cons from Library"	ExtWall:Construction = { if (ParentType == 1 .AND. IsAltered) then 
+                                                                            if (Construction:FrameLayer > 600) then RuleLibrary( Cons, "T24-2013 2x6 Altered Wall" ) 
+											   else RuleLibrary( Cons, "T24-2013 2x4 Altered Wall" ) endif
+										    else UNCHANGED endif }
+;	"debug ExtWall Cons"				ExtWAll:Action = { if (ParentType == 1 .AND. IsAltered) then PostWarning( "ExtWall Cons: '%s' OverallCodeUValue = %g  AltConsUValue = %g T24AltConsUValue = %g", Construction:Name, Construction:OverallCodeUValue, AltConsUValue, Construction:T24AltConsUValue ) else UNCHANGED endif }
+	"Change to Exist Cons if better than Code"	ExtWall:Construction = { if (ParentType == 1 .AND. IsAltered) then 
+																									if ( IsVerified ) then
+																										if ( AltConsUValue <= Construction:T24AltConsUValue ) then exConstruction else UNCHANGED endif
+										     	  													else UNCHANGED endif 
+										    													else UNCHANGED endif }
+;	"debug ExtWall Cons 2"				ExtWall:Action = { if (ParentType == 1 .AND. IsAltered .AND. IsVerified) then PostWarning( "Altered ExtWall Cons: '%s' ", Construction:Name ) else UNCHANGED endif }
+
+   ; SAC 3/17/14 - before re-defaulting Cons stuff - blast all objects generated during previous COns defaulting
+	"Blast all LayerParams objects"			Proj:Action	= {	DeleteAllComps( LayerParams )  }
+	"Blast Mats marked for deletion"			Mat:Action	= {	if (IfValidAnd( MarkForDeletion == 1 )) then  DeleteComp()  else  UNCHANGED  endif  }
+;	"Blast Mats not referenced by Cons:*"	Mat:Action	= {	if (CountRefs( Cons:CavityPathMats ) < 1 .AND. CountRefs( Cons:FramePathMats ) < 1) then  DeleteComp()  else  UNCHANGED  endif  }		; SAC 3/21/14
+
+; mjb-10/30/13 E+A+A - need to recalc details for ALL Constructions in case changed
+	"Default Mat ConductivityQII"				Proj:Action	= {	EvalRulelist( "DefaultMatCondQII" )  }		; SAC 3/18/14
+	"Calc Cons properties final time"		Cons:Action = {	EvalRulelist( "DefaultConsObject", 1 )  }
+	; SAC 3/12/14 - consolidate rules to setup final cavity materials, LayerParams objects and call to ConsUFactoRes() call
+	"Perform final Ufactor prep and call ConsUFactoRes()"		Proj:Action	= {	EvalRulelist( "SetupCons_UValue_All" )  }
+
+
+; mjb-10/21/13	E+A+A need to keep Altered and Existing Walls on actual azimuth
+	"Assign azimuth to ExtWall Orientation"				ExtWall:OrientationValue				= {	if (IsStdCondZoneWall) then  UNCHANGED
+																																else if (IsAltered .OR. IsExisting) then Local(Azimuth) else UNCHANGED endif endif }
+;do same for UndWall and CathedralCeilings
+;	"Assign azimuth to UndWall Orientation"				UndWall:OrientationValue				= { if (IsAltered .OR. IsExisting) then Local(Azimuth) else UNCHANGED endif }
+	"Assign azimuth to CathedralCeiling Orientation"	CathedralCeiling:OrientationValue	= { if (IsAltered .OR. IsExisting) then Local(Azimuth) else UNCHANGED endif }
+
+; mjb-10/28/13	E+A+A now apply Alteration rules to Windows
+; mjb 1/12/15 change to new look up table for code levels
+	"Assign Code-level Ufactor for Altered Window"	Win:AltUfactor = {	if (IsStdCondZoneWin) then  UNCHANGED
+;																								else  CA13ClimateZoneDesignDay:AltUFactor( "ClimateZone", Proj:ClimateZone )  endif }	
+																								else  CAClimateZoneCodeBase:AltUFactor( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  endif }	
+	"Assign Code-level SHGC for Altered Window"		Win:AltSHGC = {		if (IsStdCondZoneWin) then  UNCHANGED
+;																								else  CA13ClimateZoneDesignDay:AltSHGC( "ClimateZone", Proj:ClimateZone )  endif }	
+																								else  CAClimateZoneCodeBase:AltSHGC( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  endif }	
+;	"debug Window"				Win:Action = { if (IsAltered) then PostWarning( "Altered Window: '%s' Ufactor: %g  SHGC: %g  AltUfactor: %g  AltSHGC: %g", Name, NFRCUfactor, NFRCSHGC, AltUfactor, AltSHGC  ) else UNCHANGED endif }
+
+	"Change to Exist Ufactor if better than Code"	Win:NFRCUfactor = {	if (IsStdCondZoneWin) then  UNCHANGED
+																								else if ( IsAltered ) then
+																									if ( IsVerified ) then
+																										if ( NFRCUfactor <= AltUfactor ) then exNFRCUfactor else AltUfactor endif
+																										else AltUfactor endif 
+																									else UNCHANGED endif endif }
+
+	"Change to Exist SHGC if better than Code"	Win:NFRCSHGC = {	if (IsStdCondZoneWin) then  UNCHANGED
+																						else if ( IsAltered ) then
+																							if ( IsVerified ) then
+																								if ( NFRCSHGC <= AltSHGC ) then exNFRCSHGC else AltSHGC endif
+																								else AltSHGC endif 											   
+																							else UNCHANGED endif endif }
+;; mjb-10/29/13	E+A+A only adjust Win Area for New and Altered Windows
+;	"Adjust Area based on total CFA Ratio"		Win:Area = { if (IsNew .OR. IsAltered) then Area * Proj:CondWinAreaMult else UNCHANGED endif }
+;	"Recalc VentArea based on Area adjustment"	Win:VentArea = { if (IsNew .OR. IsAltered) then TotAreaInclMult * 0.1 * Proj:CondWinAreaMult else UNCHANGED endif  }   
+; SAC 12/3/13 - revise rules to handle scaling of all window area
+	"Recalc VentArea based on adjusted Area"		Win:VentArea	= {  Area * Multiplier * 0.1  }   
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Underground Walls
+	; mjb 1/12/15 - using new CAClimateZoneCodeBase for std Constructions
+   ;--------------------------------------------------------------------
+	; revise UndWalls to reference T-24 construction
+	"Set UndWall:Construction (for cond zones)"		UndWall:Construction	= {	if (ParentComponentType() != "Zone") then  UNCHANGED
+																										else if (Parent( Type ) > 9) then  UNCHANGED
+																										else if (IsNew .OR. IsAltered)
+;																										then	RuleLibrary( Cons, CA13ClimateZoneDesignDay:StdMassUndWallCons( "ClimateZone", Proj:ClimateZone ) )
+																										then	RuleLibrary(Cons, CAClimateZoneCodeBase:StdMassUndWallCons( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )
+																										else  UNCHANGED  endif endif endif  }
+
+
+; mjb-10/22/13	E+A+A Existing Walls and Windows should be OK without additional mods
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Thermostats
+   ;--------------------------------------------------------------------
+	"Specify single zone heating thermostat setpoint profile (Zone:HeatTDaySched)"
+				Zone:HeatTDaySched	= {	switch (Local( Type ))
+											case 1:	;	conditioned/single zone
+													if (GlobalStatus( Proj:SZHeat_DefaultTDaySch ) > 0) then  Global( Proj:SZHeat_DefaultTDaySch )	else  UNCHANGED  endif
+											case 2:	;	living
+													if (GlobalStatus( Proj:SZHeat_DefaultTDaySch ) > 0) then  Global( Proj:SZHeat_DefaultTDaySch )	else  UNCHANGED  endif
+											case 3:	;	sleeping
+													if (GlobalStatus( Proj:SZHeat_DefaultTDaySch ) > 0) then  Global( Proj:SZHeat_DefaultTDaySch )	else  UNCHANGED  endif
+											default: ; unconditioned
+													UNCHANGED
+										endswitch  }
+	"Specify single zone cooling thermostat setpoint profile (Zone:CoolTDaySched)"
+				Zone:CoolTDaySched	= {	switch (Local( Type ))
+											case 1:	;	conditioned/single zone
+													if (GlobalStatus( Proj:SZCool_DefaultTDaySch ) > 0) then  Global( Proj:SZCool_DefaultTDaySch )	else  UNCHANGED  endif
+											case 2:	;	living
+													if (GlobalStatus( Proj:SZCool_DefaultTDaySch ) > 0) then  Global( Proj:SZCool_DefaultTDaySch )	else  UNCHANGED  endif
+											case 3:	;	sleeping
+													if (GlobalStatus( Proj:SZCool_DefaultTDaySch ) > 0) then  Global( Proj:SZCool_DefaultTDaySch )	else  UNCHANGED  endif
+											default: ; unconditioned
+													UNCHANGED
+										endswitch  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: HVAC
+   ;--------------------------------------------------------------------
+
+; TO DO ?? - revised HVACSys:FloorAreaServed to ensure that cond zone area is not assigned to systems referenced by zone as Existing for altered & verified zones
+
+  ; SAC 12/5/13 - setup certain E+A+A-related properties that may be referenced during Standard model HVAC setup
+; will only work for Central Furnaces (StdHeatingType == 1)...  SAC 12/26/14 - revised to handle ALL system types
+	"Set Zone:VerifExistingAFUE"		Zone:VerifExistingAFUE	= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																						then	if (IfValidAnd( exHVACSystem:HtSysAFUE > 0 ))
+																								then  exHVACSystem:HtSysAFUE  else  0  endif
+																						else	0  endif  }
+	"Set Zone:VerifExistingHSPF"		Zone:VerifExistingHSPF	= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																						then	if (IfValidAnd( exHVACSystem:HPSysHSPF > 0 ))
+																								then  exHVACSystem:HPSysHSPF  else  0  endif
+																						else	0  endif  }
+
+; will only work for Split or Pkg AC (StdCoolingType == 2 or 3)...  SAC 12/26/14 - revised to handle ALL system types
+	"Set Zone:VerifExistingSEER"			Zone:VerifExistingSEER			= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																									then	if (IfValidAnd( exHVACSystem:ClSysSEER > 0 ))
+																											then  exHVACSystem:ClSysSEER  else  0  endif
+																									else	0  endif  }
+	"Set Zone:VerifExistingEER"			Zone:VerifExistingEER			= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																									then	if (IfValidAnd( exHVACSystem:ClSysEER > 0 ))
+																											then  exHVACSystem:ClSysEER  else  0  endif
+																									else	0  endif  }
+	"Set Zone:VerifExistingCFMperTon"	Zone:VerifExistingCFMperTon	= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																									then	if (IfValidAnd( exHVACSystem:ClSysCFMperTon > 0 ))
+																											then  exHVACSystem:ClSysCFMperTon  else  0  endif
+																									else	0  endif  }
+	"Set Zone:VerifExistingFChg"			Zone:VerifExistingFChg			= {	if (Type < 10 .AND. Proj:RunScope == 2 .AND. HVACSysStatus == 2 .AND. HVACSysVerified .AND. LocalCompAssigned( exHVACSystem ))
+																									then	if (IfValidAnd( exHVACSystem:ClSysRefrigChgAdjFctr > 0 ))
+																											then  exHVACSystem:ClSysRefrigChgAdjFctr  else  0  endif
+																									else	0  endif  }
+;	"debug Verif flags"			Zone:Action = { PostWarning( "Zone:VerifyExisting... - Zone '%s'  VerifExistingAFUE: %g  VerifExistingSEER: %g VerifExistingCFMperTon: %g", Name, VerifExistingAFUE, VerifExistingSEER, VerifExistingCFMperTon )  }
+
+; "DBG msg" HVACSys:Action = { MessageBox( "in BudgetConversion -> HVACSys:FloorAreaServed = %g  /  HVACSys:StdHeatingType = '%s' (%g)", FloorAreaServed, EnumString( StdHeatingType ), StdHeatingType ) }
+
+; SAC 4/29/14 - Added rules to ensure standard design ducts when applicable (GC #296)
+; mjb	10/24/14	- mods to keep existing HVAC in Std Design for Additions Alone
+; mjb 10/27/14 - mods to keep existing HVAC in Std Design for E+A+A
+	; SAC 8/31/15 - replaced references to Zone:HVACSystem with Zone:ActiveHVACSystem, since Zone:HVACSystem assigned only for New systems
+  "Turn on heating ducts if proposed model had them toggled off: HVACSys:HeatDucted"
+  HVACSys:HeatDucted	= {	
+	  if (Type == 2)		
+    then ; heat pump system
+      if (HtPumpSysType < 1 .OR. LocalCompAssigned( HtPumpSystem[1] ) == 0 .OR. 
+          (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR. 
+          (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2))
+      then  UNCHANGED
+			else if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) != 0)
+			then  1
+			else  UNCHANGED
+			endif endif
+    else
+    if (HeatSysType < 1 .OR. LocalCompAssigned( HeatSystem[1] ) == 0 .OR. 
+        (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR. 
+        (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2)) 
+    then  UNCHANGED
+    else if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HeatSysTypeAbbrev ) != 0) ; TO DO: DR - Revise to be = 1?
+    then  1
+    else  UNCHANGED
+    endif endif endif  }
+  "Turn on cooling ducts if proposed model had them toggled off: HVACSys:CoolDucted"
+  HVACSys:CoolDucted	= {
+    if (Type == 2)		; heat pump system
+    then
+      if (HtPumpSysType < 1 .OR. LocalCompAssigned( HtPumpSystem[1] ) == 0 .OR. 
+          (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR. 
+          (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2))
+      then  UNCHANGED
+			else if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", HtPumpSysTypeAbbrev ) != 0) 
+			then  1
+			else  UNCHANGED
+			endif endif
+    else 
+    if (CoolSysType < 1 .OR. LocalCompAssigned( CoolSystem[1] ) == 0 .OR. 
+        (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR. 
+        (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2)) 
+    then  UNCHANGED
+		else if (CA13CoolingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", CoolSysTypeAbbrev ) != 0) then 1
+		else  UNCHANGED
+		endif endif endif }
+
+	"Setup Standard non-heat pump heating system properties"
+			HVACSys:Action		= {	if ((Status != 2 .OR. IsVerified < 0.5) .AND.		; SAC 12/26/14 - added logic to ensure that Altered/Verified systems get processed via Setup_HVACSys_Heat_*
+												 (FloorAreaServed < 0.1 .OR. (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR.
+												 									  (Proj:RunScope  == 2   .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2))) then  UNCHANGED
+											else	switch (StdHeatingType)
+														case  1 :	EvalRulelist( "Setup_HVACSys_Heat_CntrlFurnace" , 1 )
+														case  2 :	EvalRulelist( "Setup_HVACSys_Heat_WallFurnaceFan"       , 1 )
+														case  3 :	EvalRulelist( "Setup_HVACSys_Heat_Boiler"       , 1 )
+														case  4 :	UNCHANGED	; SplitHeatPump
+														case 14 :	EvalRulelist( "Setup_HVACSys_Heat_WallFurnaceGravity" , 1 )		; SAC 11/25/14 - value 4->14
+														case 15 : EvalRulelist( "Setup_HVACSys_Heat_FloorFurnace"       , 1 )		; SAC 11/25/14 - value 5->15
+														case 16 : EvalRulelist( "Setup_HVACSys_Heat_RoomHeater"  , 1 )				; SAC 11/25/14 - value 6->16
+														case 19 :	UNCHANGED  ; SDHVSplitHeatPump
+														case 10 :	UNCHANGED  ; DuctlessHeatPump
+														case  7 :	UNCHANGED  ; RoomHeatPump
+														case  8 :	EvalRulelist( "Setup_HVACSys_Heat_Electric"     , 1 )
+														case  9 :	EvalRulelist( "Setup_HVACSys_Heat_CombHydro"    , 1 )
+														default :	PostError( "Unexpected standard design heating system type (%g) encountered", StdHeatingType )
+													endswitch  endif  }
+													
+	"Setup Standard heat pump system properties"
+			HVACSys:Action		= {	if ((Status != 2 .OR. IsVerified < 0.5) .AND.		; SAC 12/26/14 - added logic to ensure that Altered/Verified systems get processed via Setup_HVACSys_HtPump_*
+												 (FloorAreaServed < 0.1 .OR. (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR.
+												 									  (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2))) then  UNCHANGED
+											else	switch (StdHeatingType)
+														case  1 :	UNCHANGED  ; CntrlFurnace
+														case  2 :	UNCHANGED  ; Heater
+														case  3 :	UNCHANGED  ; Boiler
+														case  4 :	EvalRulelist( "Setup_HVACSys_HtPump_SplitHeatPump", 1 )
+														case 19 :	EvalRulelist( "Setup_HVACSys_HtPump_SDHVSplitHeatPump", 1 )
+														case 10 :	EvalRulelist( "Setup_HVACSys_HtPump_DuctlessMiniSplitHeatPump", 1 )
+														case  7 :	EvalRulelist( "Setup_HVACSys_HtPump_RoomHeatPump" , 1 )
+														case  8 :	UNCHANGED  ; Electric
+														case  9 :	UNCHANGED  ; CombHydro
+														default :	PostError( "Unexpected standard design heat pump system type (%g) encountered", StdHeatingType )
+													endswitch  endif  }
+; DEBUGGING
+;	"store BEMProc details"		Proj:Action = {  StoreBEMProc( "following budg HtPump setup", 0 )  }
+
+;	"debug HVAC"			HVACSys:Action = { PostWarning( "BudgetConversion-HVACSys  StdCoolingType: %g",  StdCoolingType )  }
+	"Setup Standard cooling system properties"
+			HVACSys:Action		= {	if ((Status != 2 .OR. IsVerified < 0.5) .AND.		; SAC 12/26/14 - added logic to ensure that Altered/Verified systems get processed via Setup_HVACSys_Cool_*
+												 (FloorAreaServed < 0.1 .OR. (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR.
+												 									  (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2))) then  UNCHANGED
+											else	switch (StdCoolingType)
+														case  2 :	Evalrulelist( "Setup_HVACSys_Cool_SplitAirCond" , 1 )
+														case  5 :	Evalrulelist( "Setup_HVACSys_Cool_RoomAirCond"  , 1 )
+														case  6 :	Evalrulelist( "Setup_HVACSys_Cool_SplitHeatPump", 1 )
+														case 10 :	Evalrulelist( "Setup_HVACSys_Cool_RoomHeatPump" , 1 )
+														default :	PostError( "Unexpected standard design cooling system type (%g) encountered", StdCoolingType )
+													endswitch  endif  }
+
+; "store BEMProc details"		HVACSys:Action = {  StoreBEMProc( "b4 Budget DistSys creation", 0 )  }
+  ; SAC 5/4/14 - added rules similar to those in ProposedModelCodeAdditions rulelist to create HVACDist & HVACFan for HVACSys if one is required but not present
+; SAC 11/25/14 - added logic to prevent toggling ducts on/off for EXISTING HVAC systems
+	"Set HVACSys:DuctsRequired - 1 (heating)"		HVACSys:DuctsRequired	= {	if (HaveHeating < 0.5) then  0
+																										else if (FloorAreaServed < 0.1 .OR. (Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR.
+																																						(Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2)) then  UNCHANGED
+																										else if (CA13HeatingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", EnumString( StdHeatingType ) ) == 1)
+																										then	1  else  0  endif endif endif  }
+	"Set HVACSys:DuctsRequired - 2 (cooling)"		HVACSys:DuctsRequired	= {	if (HaveCooling < 0.5 .OR. FloorAreaServed < 0.1 .OR.
+																												(Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR.
+																												(Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2)) then  UNCHANGED
+																										else if (CA13CoolingEquipment:DuctFlag( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", EnumString( StdCoolingType ) ) == 1)
+																										then	1  else  UNCHANGED  endif endif  }
+
+;	"store BEMProc details"		HVACSys:Action = {  StoreBEMProc( "b4 Budget Distrib Creation", 0 )  }
+
+	"Add DistribSystem to any systems requiring it"
+			HVACSys:DistribSystem	= {	if (	LocalCompAssigned( DistribSystem ) == 0 .AND. FloorAreaServed[1] > 0.1 .AND. DuctsRequired > 0.5 )
+													then	CreateComp( HVACDist, Local( Name ) + "-dist", "Default_HVACDist_ForceTypeDefault" )
+													else  UNCHANGED  endif  }
+
+; SAC 7/12/14 - new rule added to ensure that HVACDist created specifically for analysis is properly re-defaulted when addition of attic should cause re-location of ducts to attic
+; SAC 4/15/15 - adjust for MFam duplex/townhomes options (based on Proj:IsMFamDupOrTownhm)
+	"Force re-default of HVACDist in certain cases"
+			HVACDist:Action 	= {	if (	IfValidAnd( DuctsCreatedForAnalysis > 0.5 ) .AND. IfValidAnd( Type == 7 ) .AND.
+										; SAC 11/24/14 - revised logic to ignore whether this dist serves a zone under attic...
+										;			Proj:IsMultiFamily == 0 .AND. MaxRevRef( HVACSys:DistribSystem, HVACSys:UncondAtticArea ) > 1 .AND. 
+													(Proj:IsMultiFamily == 0 .OR. Proj:IsMFamDupOrTownhm > 0.5) .AND. MaxAll( Attic:FloorArea ) > 1 .AND.
+													SumAll( Attic:FloorAreaOverCond ) > 0 .AND. IfValidAnd( Proj:CondFloorArea > 1 ))
+											then  if ((SumAll( Attic:FloorAreaOverCond ) / Proj:CondFloorArea) >= 0.1)
+													then	EvalRulelist( "Default_HVACDist_ForceTypeDefault", 1 )
+													else  UNCHANGED  endif
+											else  UNCHANGED  endif  }
+
+;	"store BEMProc details"		HVACSys:Action = {  StoreBEMProc( "b4 Budget Fan Creation", 0 )  }
+;	"debugging"		HVACSys:Action		= {	MessageBox( "BudgetConversion logic to create fan for HVACSys '%s' when system ducted", HVACSys:Name )  }
+
+	"Add Fan for ducted HVAC systems when needed"
+			HVACSys:Fan		= {	if (FloorAreaServed[1] < 0.1 .OR. LocalCompAssigned( DistribSystem ) == 0) then  UNCHANGED
+										else if (DistribSystem:DuctsPresent < 0.5) then  UNCHANGED
+										else if (LocalCompAssigned( Fan ) == 0)
+										then	CreateComp( HVACFan, Local( Name ) + "-fan", "Setup_HVACDistFan" )
+										else	UNCHANGED  endif endif endif  }
+
+	"Reset HVACSys:HtPumpDucted (if needed)"		HVACSys:HtPumpDucted		= {	if (DuctsRequired .AND. LocalCompAssigned( DistribSystem ) .AND. HtPumpDucted < 0.5 .AND.
+																												CA13HeatingEquipment:IsHP( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", EnumString( StdHeatingType ) ) == 1)
+																										then	1  else  UNCHANGED  endif  }
+	"Reset HVACSys:HeatDucted (if needed)"			HVACSys:HeatDucted		= {	if (DuctsRequired .AND. LocalCompAssigned( DistribSystem ) .AND. HeatDucted < 0.5 .AND.
+																												CA13HeatingEquipment:IsHP( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", EnumString( StdHeatingType ) ) < 0.5)
+																										then	1  else  UNCHANGED  endif  }
+	"Reset HVACSys:CoolDucted (if needed)"			HVACSys:CoolDucted		= {	if (DuctsRequired .AND. LocalCompAssigned( DistribSystem ) .AND. CoolDucted < 0.5 .AND.
+																												CA13HeatingEquipment:IsHP( "CodeBase", Proj:StdDesignBase, "StdVer", Proj:StandardsVersion, "SysType", EnumString( StdHeatingType ) ) < 0.5)
+																										then	1  else  UNCHANGED  endif  }
+
+	"Set HVACSys:HtOrClDucted - heat"	HVACSys:HtOrClDucted		= {	
+	  if (Type == 2)
+		then
+		  if (HtPumpDucted > 0.5) 
+		  then  1
+		  else  0
+		  endif
+		else if (HaveHeating)
+		  then
+		  if (HeatDucted > 0.5)
+		  then  1
+		  else  0
+		  endif
+		else  0
+		endif endif  }
+	"Set HVACSys:HtOrClDucted - cool"	HVACSys:HtOrClDucted		= {	
+	  if (Type == 2)
+	  then if (HtPumpDucted > 0.5)
+	    then  HtOrClDucted + 2
+	    else  UNCHANGED
+	    endif
+    else if (HaveCooling)
+		then
+		  if (CoolDucted > 0.5)
+  		then  HtOrClDucted + 2
+  		else  UNCHANGED
+  		endif
+		else  UNCHANGED
+		endif endif  }
+
+; mjb	10/24/14	- mods to keep existing HVAC in Std Design for Additions Alone
+;	mjb	10/27/14 - mods to keep existing HVAC in Std Design for E+A+A
+"Initialize other generic properties (common to Ht/Cl/HP)"		HVACSys:Action	= {	if ((Proj:IsAddAlone > 0.5 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2) .OR. (Proj:RunScope == 2 .AND. MinRevRef( Zone:ActiveHVACSystem, Zone:HVACSysStatus ) < 2)) then UNCHANGED else EvalRulelist( "SetupHVACSys_Round2_common", 1 ) endif  }
+; "store BEMProc details"		HVACSys:Action = {  StoreBEMProc( "aftr Budget DistSys creation", 0 )  }
+
+;	mjb	7/29/14	added std design setting for EvapCond params
+	"Reset HVACSys:HaveEvapCond"			HVACSys:HaveEvapCond		= {	0  }		
+;	"Reset HVACSys:SysEvapCondEff"		HVACSys:SysEvapCondEff	= {	UNDEFINED  }		
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Distribution System
+   ; mjb 12/10/13 E+A+A
+   ;--------------------------------------------------------------------
+
+; "debug"		HVACDist:Action	= {	MessageBox( "BUDG CONV -- HVACDist '%s':  Proj:RunScope = %g,  Status = %g,  IsVerified = %g,  DuctInsRvalue = %g", Name, Proj:RunScope, Status, IsVerified,	DuctInsRvalue )  }
+
+	"Assign Altered and Verified HVACDist exDuctInsRvalOpt from Existing system level specs if Verified specified at System level"
+			Zone:AltHVACSystem:DistribSystem:exDuctInsRvalOpt	= { if ( AltHVACSystem:DistribSystem:Status == 2 .AND. AltHVACSystem:DistribSystem:IsVerified ) then UNCHANGED		; already set via this property on the HVACDist dialog
+																						else if (HVACSysVerified) then exHVACSystem:DistribSystem:DuctInsRvalOpt
+																					 				else UNCHANGED endif
+																					 	endif }
+
+; SAC 12/26/14 - additional rules to handle altered/verified duct leakage
+	"Assign Altered and Verified HVACDist exDuctLeakageValUse from Existing system level specs if Verified specified at System level"
+			Zone:AltHVACSystem:DistribSystem:exDuctLeakageValUse	= {	if (HVACSysStatus == 2 .AND. HVACSysVerified .AND. AltHVACSystem:DuctsVsStandard >= 0)
+																							then exHVACSystem:DistribSystem:DuctLeakageValUse
+																							else UNCHANGED endif }
+
+	"Assign HVACDist EAA Status from altered system level specs"
+			Zone:AltHVACSystem:DistribSystem:Status	= { if (AltHVACSystem:DistribSystem:Status == 2 .AND. AltHVACSystem:DistribSystem:IsVerified) then UNCHANGED
+																				else if (HVACSysVerified) then
+																					2
+																				else UNCHANGED endif	endif }
+
+	"Assign HVACDist EAA IsVerified from altered system level specs"
+			Zone:AltHVACSystem:DistribSystem:IsVerified	= { if (AltHVACSystem:DistribSystem:Status == 2 .AND. AltHVACSystem:DistribSystem:IsVerified) then UNCHANGED
+																				else if (HVACSysVerified) then
+																					1
+																				else UNCHANGED endif	endif }
+
+;	mjb	1/13/14	corrected Status check from 3 to 1, the correct assignment for EXISTING Status
+;	mjb	4/17/14	rearranged rule to not overwrite DuctInsRvalOpt for new HVACDist Status = 4  (Existing + New)
+	"Assign HVACDist exDuctInsRvalOpt from existing system level specs"
+			Zone:exHVACSystem:DistribSystem:exDuctInsRvalOpt	= { if (exHVACSystem:DistribSystem:Status == 1) then exHVACSystem:DistribSystem:DuctInsRvalOpt
+																						else UNCHANGED endif }
+																							
+;	"debug"		HVACDist:Action	= {	MessageBox( "BUDG CONV -- HVACDist '%s':  Proj:RunScope = %g,  Status = %g,  IsVerified = %g,  exDuctInsRvalOpt = %g", Name, Proj:RunScope, Status, IsVerified, exDuctInsRvalOpt )  }
+;	mjb	4/17/14	added check for new HVACDist Status flag = 4 (Existing + New)
+	"Set HVACDist:exDuctInsRvalue"		HVACDist:exDuctInsRvalue		= {	if ( (Proj:RunScope == 2 .AND. Status == 2 .AND. IsVerified .AND. DuctInsRvalue >= 6.0)
+																											.OR. ( (Proj:RunScope == 2 .OR. Proj:IsAddAlone > 0.5) .AND. (Status == 1 .OR. Status == 4)) )
+																									then	exDuctInsRvalOpt / 100
+																									else  UNDEFINED  endif	 }
+;	"debug"		HVACDist:Action	= {	MessageBox( "BUDG CONV -- HVACDist '%s':  exDuctInsRvalue = %g", Name, exDuctInsRvalue )  }
+	"Set HVACDist:exRetDuctInsRvalue"	HVACDist:exRetDuctInsRvalue	= {	if ( (Proj:RunScope == 2 .AND. Status == 2 .AND. IsVerified .AND. RetDuctInsRvalue >= 6.0)
+																											.OR. ( (Proj:RunScope == 2 .OR. Proj:IsAddAlone > 0.5) .AND. (Status == 1 .OR. Status == 4)) )
+																									then	exDuctInsRvalOpt / 100
+																									else  UNDEFINED  endif	 }
+
+	; SAC 4/1/15 - moved rules setting HVACDist:Type & HVACDist:DefaultSystem into separate rulelist w/ Resets turned OFF to resolve issue where resets are blasting data needed later in HVACDist setup
+	"Set HVACDist:Type & HVACDist:DefaultSystem via subordinate rulelist"	HVACDist:Action	= {	EvalRulelist( "BudgetConversion_HVACDist_TypeAndDefaultSystem_NoResets", 1 )  }
+
+;	mjb	4/24/14	added std design for buried ducts
+	"Reset HVACDist:AreBuried"				HVACDist:AreBuried			= {	0  }		
+	"Reset HVACDist:AreDeeplyBuried"		HVACDist:AreDeeplyBuried	= {	0  }		
+;	mjb	7/29/14	added std design setting for E+A+A duct length
+	"Reset HVACDist:IsLessThanFortyFt"	HVACDist:IsLessThanFortyFt	= {	0  }		
+
+; mjb	5/6/14 added std design for leakage
+; mjb 1/29/15 - mods to lookup Std Duct Leakage from CAClimateZoneCodeBase table
+;	"Reset HVACDist:DuctLeakageValUse"	HVACDist:DuctLeakageValUse	= {	if (Proj:RunScope == 2 .AND. Status == 1) then 15 else 6 endif }		
+	"Reset HVACDist:DuctLeakageValUse"	HVACDist:DuctLeakageValUse	= {	if (Proj:RunScope == 2 .AND. Status == 1) then CAClimateZoneCodeBase:exDuctLkg( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) else CAClimateZoneCodeBase:DuctLkg( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) endif }		
+	"Reset HVACDist:LowLkgAH"				HVACDist:LowLkgAH 			= {	0  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Whole House Fan
+   ;--------------------------------------------------------------------
+; SAC 5/20/13 - replaced old ClVent stuff w/ following
+; mjb 2/17/13 - do not add WHF to E+A+A Std Design (unless WHFs are in Prop Design)
+; mjb 4/24/14 - need to add WHF in Additions > 1000 sf
+; SAC 5/21/14 - revised logic to ensure that ClVent added to New Construction projects (regardless of addition settings) (GC #317 related)
+; mjb 7/29/14 - revised logic to ensure that ClVent NOT added to Additions < 1000sf (GC #337 related)
+; mjb 8/1/14  - revised logic to ensure that ClVent added to Additions > 1000sf (GC #337 related)
+; mjb 1/12/15 - modified to use new look up table for code levels
+	"Set Zone:NeedStdClVent"		Zone:NeedStdClVent		= {	if (( Proj:RunScope == 2 .AND. Status == 3 .AND. AdditionCFA > 1000) .OR. (Proj:RunScope == 1 .AND. Proj:IsAddAlone > 0.5 .AND. CondFloorArea > 1000) .OR. (Proj:RunScope ==1 .AND. Proj:IsAddAlone < 0.5) ) then
+;																							if (CA13ClimateZoneDesignDay:WHFan( "ClimateZone", ClimateZone ) > 0.5) then 1 else 0 endif  
+																							if (CAClimateZoneCodeBase:WHFan( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) > 0.5) then 1 else 0 endif  
+																						else  0  endif   }
+
+	"Check NeedStdClVent"			Proj:EnableClVent		= {	if (MaxChild(Zone:NeedStdClVent) > 0.5) then 1 else UNCHANGED endif	}
+
+	"Set main Cool Vent option based on CZ"
+;			Proj:UnitClVentOption	= {	if (EnableClVent < 0.5 .OR. IsMultiFamily > 0.5 .OR. CA13ClimateZoneDesignDay:WHFan( "ClimateZone", ClimateZone ) < 0.5)
+			Proj:UnitClVentOption	= {	if (EnableClVent < 0.5 .OR. IsMultiFamily > 0.5 .OR. CAClimateZoneCodeBase:WHFan( "ClimateZone", ClimateZone, "CodeBase", StdDesignBase ) < 0.5)
+														then	0					; none
+														else	1  endif 	}		; "Default Prescriptive Whole House Fan"
+
+   "Default Proj:UnitClVentZone[1]" 	Proj:UnitClVentZone[1] 	= {	if (UnitClVentOption > 0.5 .AND. ComponentCount( Zone ) > 0.5) then  MaxAllComp( Zone:CondClgBlwAtticArea )  else  UNDEFINED  endif  }
+
+;	"debug"		Proj:Action	= {	PostWarning( "BUDG CONV -- WHF:  EnableClVent = %g  UnitClVentOption = %g  UnitClVentZone[1] = '%s'", EnableClVent, UnitClVentOption, UnitClVentZone[1] )  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: IAQ Ventilation
+   ;--------------------------------------------------------------------
+	"Keep Proposed Design IAQ Fans but limit Watts per CFM"
+		IAQFan:WperCFMIAQ = {	switch ( IAQFanType )
+											case  1 :	Min( WperCFMIAQ, 1.2 )		; "Exhaust"                                      
+											case  2 :	Min( WperCFMIAQ, 1.2 )		; "Supply"                                       
+											case  3 :	Min( WperCFMIAQ, 1.2 )		; "Balanced"                                     
+										;	case  4 :	Min( WperCFMIAQ, 0.58 )		; "Central"  - not yet implemented - MJB 4/22/13 
+											default :	UNDEFINED
+										endswitch  }
+
+  ; SAC 1/11/16 - ensure IAQRecovEffect is zero (tic 599)
+   "Reset IAQFan:IAQRecovEffect"	IAQFan:IAQRecovEffect = {  0  }    ; No Heat Recovery
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Generic HVAC (furnace) Fans
+	; mjb	12/13/13	E+A+A
+   ;--------------------------------------------------------------------
+	"Assign AltWperCFMCool"		HVACFan:AltWperCFMCool	=	{ if (Proj:RunScope == 2 .AND. Status == 2) then WperCFMCool  else UNDEFINED endif  }
+	"Assign exWperCFMCool when HVACSys Status is existing"		
+		HVACFan:exWperCFMCool	=	{ if (Proj:RunScope == 2 .AND. Status == 1) then WperCFMCool else UNCHANGED endif }
+
+;  mjb   10/28/14 - mods to keep existing Fan info when used in Additions Alone
+	"Set fan Watts per CFM to 0.58 for central air handlers"  ; GC issue #82
+		HVACFan:WperCFMCool	= {	if (Type != 1 .OR. (Proj:IsAddAlone > 0.5 .AND. MinRevRef( HVACSys:Fan, HVACSys:Status ) < 2)) then  UNCHANGED		; unchanged if HVACFan:Type != "Single Speed PSC Furnace Fan"
+                                 ; KN 03/21/2015 Updated to use codebase lookup. Not vetted for E+A+A. 
+											;else  0.58
+											else  CAClimateZoneCodeBase:WperCFM( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase )  
+											endif	}
+
+; mjb 1/30/15 - found bug in logic for E+A+A - should be <= std. for fan watts NOT >= std.
+	"Reset HVACFan:WperCFMCool based on Alteration Status"
+;		HVACFan:WperCFMCool	= {	if ( (Proj:RunScope == 2 .AND. Status == 2 .AND. IsVerified .AND. IfValidAnd( AltWperCFMCool >= 0.58 )) .OR. (Proj:RunScope == 2 .AND. Status == 1) )
+;												then	exWperCFMCool
+;												else	UNCHANGED  endif  }
+; mjb 1/30/15 - modified to use CAClimateZoneCodeBase table for fan watt draw std.
+;		HVACFan:WperCFMCool	= {	if ( (Proj:RunScope == 2 .AND. Status == 2 .AND. IsVerified .AND. IfValidAnd( AltWperCFMCool <= 0.58 )) .OR. (Proj:RunScope == 2 .AND. Status == 1) )
+;												then	exWperCFMCool
+;												else	UNCHANGED  endif  }
+		HVACFan:WperCFMCool	= {	if ( (Proj:RunScope == 2 .AND. Status == 2 .AND. IsVerified .AND. IfValidAnd( AltWperCFMCool <= CAClimateZoneCodeBase:WperCFM( "ClimateZone", Proj:ClimateZone, "CodeBase", Proj:StdDesignBase ) )) .OR. (Proj:RunScope == 2 .AND. Status == 1) )
+												then	exWperCFMCool
+												else	UNCHANGED  endif  }
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: DHW System(s)
+   ;--------------------------------------------------------------------
+	; SAC 6/8/15 - separate out DHWSys & DHWHeater rules into separate rule modules for mods/additions needed to produce standard design system/heater descriptions in rules (rather than relying on the DHW engine DLL)
+	"Call subordinate rulelist to setup DHWSys and DHWHeater data"
+		Proj:Action		= {	EvalRulelist( "BudgetConversion_DHW" )  }
+
+
+   ;--------------------------------------------------------------------
+   ; BudgetConversion: Final Calcs
+   ;--------------------------------------------------------------------
+
+	"Set Attic:RoofFramingFactor => fraction of gross wall area that includes frame" 
+		Attic:RoofFramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set InteriorCeiling:FramingFactor => fraction of gross ceiling area that includes frame" 
+		InteriorCeiling:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set ExtWall:FramingFactor => fraction of gross wall area that includes frame" 
+		ExtWall:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set UndWall:FramingFactor => fraction of gross wall area that includes frame" 
+		UndWall:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set IntWall:FramingFactor => fraction of gross wall area that includes frame" 
+		IntWall:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set ExteriorFloor:FramingFactor => fraction of gross wall area that includes frame" 
+		ExteriorFloor:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set FloorOverCrawl:FramingFactor => fraction of gross wall area that includes frame" 
+		FloorOverCrawl:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set InteriorFloor:FramingFactor => fraction of gross wall area that includes frame" 
+		InteriorFloor:FramingFactor	= {	LocalRef( Construction:FramingFactor )  }
+
+	"Set UndFloor:FramingFactor => fraction of gross wall area that includes frame" 
+		UndFloor:FramingFactor	= {	0 }  ; LocalRef( Construction:FramingFactor )  }
+
+;	"Evaluate rules to summarize building model for reporting purposes"		Proj:Action	= {	EvalRulelist( "Reporting_SummarizeModel" )  }
+
+   ; SAC 3/17/14 - blast all objects generated during previous COns defaulting
+	"Blast all LayerParams objects"			Proj:Action	= {	DeleteAllComps( LayerParams )  }
+	"Blast Mats marked for deletion"			Mat:Action	= {	if (IfValidAnd( MarkForDeletion == 1 )) then  DeleteComp()  else  UNCHANGED  endif  }
+;	"Blast Mats not referenced by Cons:*"	Mat:Action	= {	if (CountRefs( Cons:CavityPathMats ) < 1 .AND. CountRefs( Cons:FramePathMats ) < 1) then  DeleteComp()  else  UNCHANGED  endif  }		; SAC 3/21/14
+;	mjb	6/13/14	Set HVACFan and HVACDist TypeRpt so that these objects are written to Std Dsn Bldg Sum Rpt
+; mjb	7/17/14 removed the following because they seem to be changing the TypeRpt to 1 in the Proposed Design for HVACSys with Ducts???
+;	"Set TypeRpt for HVACFan"		HVACFan:TypeRpt	=	{ 1 }
+;	"Set TypeRpt for HVACDist"		HVACDist:TypeRpt	=	{ 1 }
+
+; "store BEMProc details"		Proj:Action = {  StoreBEMProc( "at end of BudgetConversion", 0 )  }
+
+END
+;*************************************************************************
+
+
+; SAC 11/3/14 - rulelist to setup new 'Std Design CathClg Attic' to ensure that we don't generate separate Attic obejcts for each CathedralCeiling converted to CeilingBelowAttic
+;*************************************************************************
+RULELIST "Setup_StdCathClgAttic"  0 0 0 0
+	"Set temporary value for Attic:StdCathClgAtticArea"	Attic:StdCathClgAtticArea	= {	10  }
+END
+;*************************************************************************
+
+
+;*************************************************************************
+RULELIST "SetupWallWindowDoorAreaTotals"  1 0 0 0
+;*************************************************************************
+  ; SAC 12/6/13 - fix for GC issue #239 - only include New/Altered door area in ExtWall:TotDoorArea
+  ; SAC 7/16/14 - moved up from below to set before ExtWall:AreaByWallType[*]
+;	"Set ExtWall:TotDoorArea"									ExtWall:TotDoorArea				= {	SumChildren( Door:Area )  }
+	"Set ExtWall:TotDoorArea"									ExtWall:TotDoorArea				= {	SumChildrenIf( Door:Area, Door:Status > 1 )  }
+
+; mjb-10/24/13	E+A+A only assign AreaByWallType for New Walls, then rest of wall transformations should flow correctly
+; SAC 2/26/14 - updated logic to include new Cons:Type options
+; SAC 7/14/14 - revised logic to add NEW WINDOW area (times win area mult) for Altered or Existing walls w/ NEW windows
+; SAC 7/16/14 - altered logic again to also add in new door area ... for Altered or Existing walls w/ NEW doors
+	;"debug message"		ExtWall:Action		= {	if (LocalCompAssigned( Construction ) == 0 ) then  PostMessageToLog( "ExtWall '%s':  No Construction assigned", Name )
+	;															else	switch( Construction:Type )
+	;																		case  0 :	if (IsNew > 0.5) then  PostMessageToLog( "ExtWall '%s':  Wood framed area %g", Name, Area )		; "Wood Framed Wall"  
+	;																						else  PostMessageToLog( "ExtWall '%s':  Wood framed area based on New window area %g * WinAreaMult %g = %g", Name, TotWinArea[2], ValidOr( Proj:CondNewWinAreaMult, 0 ),
+	;																												(TotWinArea[2] * ValidOr( Proj:CondNewWinAreaMult, 0 )) )  endif
+	;																		default :	UNCHANGED	endswitch  endif  }
+	"Set ExtWall:AreaByWallType[1] - wood framed"		ExtWall:AreaByWallType[1]		= {	if( LocalCompAssigned( Construction ) == 0 ) then  0
+																														else	switch( Construction:Type )
+																																	case  0 :	if (IsNew > 0.5) then  Area		; "Wood Framed Wall"  
+																																					else  (TotWinArea[2] * ValidOr( Proj:CondNewWinAreaMult, 0 )) + TotDoorArea  endif
+																																	case  5 :	if (IsNew > 0.5) then  Area		; "SIPS Wall"  
+																																					else  (TotWinArea[2] * ValidOr( Proj:CondNewWinAreaMult, 0 )) + TotDoorArea  endif
+																																	default :	0	endswitch  endif  }
+																											;			if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+																											;			else	switch( Construction:Type )
+																											;						case  0 :	Area		; "Wood Framed Wall"  
+																											;						default :	0	endswitch  endif  }
+	"Set ExtWall:AreaByWallType[2] - steel framed"		ExtWall:AreaByWallType[2]		= {	if( LocalCompAssigned( Construction ) == 0 ) then  0
+																														else	switch( Construction:Type )
+																																	case  1 :	if (IsNew > 0.5) then  Area		; "Steel Framed Wall" 
+																																					else  (TotWinArea[2] * ValidOr( Proj:CondNewWinAreaMult, 0 )) + TotDoorArea  endif
+																																	default :	0	endswitch  endif  }
+																											;			if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+																											;			else	switch( Construction:Type )
+																											;						case  1 :	Area		; "Steel Framed Wall" 
+																											;						default :	0	endswitch  endif  }
+	"Set ExtWall:AreaByWallType[3] - concrete/CMU"		ExtWall:AreaByWallType[3]		= {	if( LocalCompAssigned( Construction ) == 0 ) then  0
+																														else if ( Construction:Type == 2 .OR. Construction:Type == 3 .OR. Construction:Type == 4 .OR.   ; "Concrete / ICF / Brick" or "Hollow Unit Masonry" or "Adobe / Strawbale / Log"
+																																	 Construction:Type == 9 )				; "No Frame (concrete/CMU)"
+																														then	if (IsNew > 0.5) then  Area	
+																																else  (TotWinArea[2] * ValidOr( Proj:CondNewWinAreaMult, 0 )) + TotDoorArea  endif
+																														else	0  endif endif  }
+																											;			if( LocalCompAssigned( Construction ) == 0 .OR. IsNew == 0 ) then  0
+																											;			else	switch( Construction:Type )
+																											;						case  2 :	Area		; "Concrete / ICF / Brick"	
+																											;						case  3 :	Area		; "Hollow Unit Masonry"	
+																											;						case  4 :	Area		; "Adobe / Strawbale / Log"
+																											;						case  5 :	Area		; "SIPS Wall"
+																											;						case  9 :	Area		; "No Frame (concrete/CMU)"
+																											;						default :	0	endswitch  endif  }
+
+; mjb-10/29/13	E+A+A add window area when there are no new walls
+	"Set ExtWall:TotWinAreaByWallType[1] - wood framed"	ExtWall:TotWinAreaByWallType[1]	= {	if (AreaByWallType[1] > 0) then  TotWinArea[1]  else  0  endif  }
+	"Set ExtWall:TotWinAreaByWallType[2] - steel framed"	ExtWall:TotWinAreaByWallType[2]	= {	if (AreaByWallType[2] > 0) then  TotWinArea[1]  else  0  endif  }
+	"Set ExtWall:TotWinAreaByWallType[3] - concrete/CMU"	ExtWall:TotWinAreaByWallType[3]	= {	if (AreaByWallType[3] > 0) then  TotWinArea[1]  else  0  endif  }
+	"Set ExtWall:NewWinAreaByWallType[1] - wood framed"	ExtWall:NewWinAreaByWallType[1]	= {	if (AreaByWallType[1] > 0) then  TotWinArea[2] + TotWinArea[4]  else  0  endif  }
+	"Set ExtWall:NewWinAreaByWallType[2] - steel framed"	ExtWall:NewWinAreaByWallType[2]	= {	if (AreaByWallType[2] > 0) then  TotWinArea[2] + TotWinArea[4]  else  0  endif  }
+	"Set ExtWall:NewWinAreaByWallType[3] - concrete/CMU"	ExtWall:NewWinAreaByWallType[3]	= {	if (AreaByWallType[3] > 0) then  TotWinArea[2] + TotWinArea[4]  else  0  endif  }
+; SAC 2/27/14 - RESTORED ABOVE LOGIC which should now be valid since we only operate on the sum of the wall/window/door areas
+;  ; SAC 12/6/13 - fix to prevent Existing windows from getting included in WinAreaByWallType values - resulting in window copies...
+;	"Set ExtWall:WinAreaByWallType[1] - wood framed"	ExtWall:WinAreaByWallType[1]	= { TotWinArea[2] }
+;	"Set ExtWall:WinAreaByWallType[2] - steel framed"	ExtWall:WinAreaByWallType[2]	= { TotWinArea[2] }
+;	"Set ExtWall:WinAreaByWallType[3] - concrete/CMU"	ExtWall:WinAreaByWallType[3]	= { TotWinArea[2] }
+
+; SAC 2/27/14 - RESTORED ORIGINAL LOGIC which should now be valid since we only operate on the sum of the wall/window/door areas
+	"Set ExtWall:DoorAreaByWallType[1] - wood framed"	ExtWall:DoorAreaByWallType[1]	= {	if (AreaByWallType[1] > 0) then  TotDoorArea  else  0  endif  }	;  TotDoorArea  }
+	"Set ExtWall:DoorAreaByWallType[2] - steel framed"	ExtWall:DoorAreaByWallType[2]	= {	if (AreaByWallType[2] > 0) then  TotDoorArea  else  0  endif  }	;  TotDoorArea  }
+	"Set ExtWall:DoorAreaByWallType[3] - concrete/CMU"	ExtWall:DoorAreaByWallType[3]	= {	if (AreaByWallType[3] > 0) then  TotDoorArea  else  0  endif  }	;  TotDoorArea  }
+
+  ; SAC 2/26/14 - added 4th array element rules for all Zone & Garage ExtWall*AreaByWallType[] properties to track TOTALS across all wall types
+	"Set Zone:ExtWallAreaByWallType[1] - wood framed"			Zone:ExtWallAreaByWallType[1]			= {	SumChildren( ExtWall:AreaByWallType[1]    )  }
+	"Set Zone:ExtWallAreaByWallType[2] - steel framed"			Zone:ExtWallAreaByWallType[2]			= {   SumChildren( ExtWall:AreaByWallType[2]    )  }
+	"Set Zone:ExtWallAreaByWallType[3] - concrete/CMU"			Zone:ExtWallAreaByWallType[3]			= {   SumChildren( ExtWall:AreaByWallType[3]    )  }
+  ; SAC 7/23/14 - added rules to sum into ExtWallArea.. the area of NEW Skylts (which will get modeled as windows in the std design) (GC #329)
+	"Set Zone:ExtWallAreaByWallType[1] - wood framed - add new Skylt area"	Zone:ExtWallAreaByWallType[1]	= {	if (ExtWallAreaByWallType[1] >= ExtWallAreaByWallType[2] .AND. ExtWallAreaByWallType[1] >= ExtWallAreaByWallType[3])
+																																					then  ExtWallAreaByWallType[1] + SumChildren( CathedralCeiling:ChildAreaSum[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] )   else  UNCHANGED  endif  }
+	"Set Zone:ExtWallAreaByWallType[2] - steel framed - add new Skylt area"	Zone:ExtWallAreaByWallType[2]	= {	if (ExtWallAreaByWallType[2] > ExtWallAreaByWallType[1] .AND. ExtWallAreaByWallType[2] >= ExtWallAreaByWallType[3])
+																																					then  ExtWallAreaByWallType[2] + SumChildren( CathedralCeiling:ChildAreaSum[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] )   else  UNCHANGED  endif  }
+	"Set Zone:ExtWallAreaByWallType[3] - concrete/CMU - add new Skylt area"	Zone:ExtWallAreaByWallType[3]	= {	if (ExtWallAreaByWallType[3] > ExtWallAreaByWallType[1] .AND. ExtWallAreaByWallType[3] > ExtWallAreaByWallType[2])
+																																					then  ExtWallAreaByWallType[3] + SumChildren( CathedralCeiling:ChildAreaSum[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] )   else  UNCHANGED  endif  }
+	"Set Zone:ExtWallAreaByWallType[4] - total"					Zone:ExtWallAreaByWallType[4]			= {   ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2] + ExtWallAreaByWallType[3]  }
+
+	"Set Zone:ExtWallWinAreaByWallType[1] - wood framed"		Zone:ExtWallWinAreaByWallType[1]		= {   SumChildren( ExtWall:NewWinAreaByWallType[1] )  }
+	"Set Zone:ExtWallWinAreaByWallType[2] - steel framed"		Zone:ExtWallWinAreaByWallType[2]		= {   SumChildren( ExtWall:NewWinAreaByWallType[2] )  }
+	"Set Zone:ExtWallWinAreaByWallType[3] - concrete/CMU"		Zone:ExtWallWinAreaByWallType[3]		= {   SumChildren( ExtWall:NewWinAreaByWallType[3] )  }
+	"Set Zone:ExtWallWinAreaByWallType[4] - total"				Zone:ExtWallWinAreaByWallType[4] 	= {   ExtWallWinAreaByWallType[1] + ExtWallWinAreaByWallType[2] + ExtWallWinAreaByWallType[3]  }
+	"Set Zone:ExtWallDoorArea"											Zone:ExtWallDoorArea						= {   SumChildren( ExtWall:TotDoorArea )  }
+	"Set Zone:ExtWallDoorAreaByWallType[1] - wood framed"		Zone:ExtWallDoorAreaByWallType[1]	= {   SumChildren( ExtWall:DoorAreaByWallType[1] )  }
+	"Set Zone:ExtWallDoorAreaByWallType[2] - steel framed"	Zone:ExtWallDoorAreaByWallType[2]	= {   SumChildren( ExtWall:DoorAreaByWallType[2] )  }
+	"Set Zone:ExtWallDoorAreaByWallType[3] - concrete/CMU"	Zone:ExtWallDoorAreaByWallType[3]	= {   SumChildren( ExtWall:DoorAreaByWallType[3] )  }
+	"Set Zone:ExtWallDoorAreaByWallType[4] - total"				Zone:ExtWallDoorAreaByWallType[4] 	= {   ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2] + ExtWallDoorAreaByWallType[3]  }
+  ; SAC 7/23/14 - adjust std wall area up to ensure adequate size to handle all New windows/doors (GC #329)
+	"Set Zone:ExtWallAreaByWallType[4] - rev if necessary"	Zone:ExtWallAreaByWallType[4]			= {   if (ExtWallAreaByWallType[4] >= (ExtWallWinAreaByWallType[4] + ExtWallDoorAreaByWallType[4] + SumChildren( CathedralCeiling:ChildAreaSum[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] ) + 0.001))
+																																		then  UNCHANGED  else			  (ExtWallWinAreaByWallType[4] + ExtWallDoorAreaByWallType[4] + SumChildren( CathedralCeiling:ChildAreaSum[2] ) + SumChildren( CathedralCeiling:ChildAreaSum[4] ) + 0.001)   endif  }
+
+	"Set Garage:ExtWallAreaByWallType[1] - wood framed"		Garage:ExtWallAreaByWallType[1]     = {   SumChildren( ExtWall:AreaByWallType[1]    )  }
+	"Set Garage:ExtWallAreaByWallType[2] - steel framed"		Garage:ExtWallAreaByWallType[2]     = {   SumChildren( ExtWall:AreaByWallType[2]    )  }
+	"Set Garage:ExtWallAreaByWallType[3] - concrete/CMU"		Garage:ExtWallAreaByWallType[3]     = {   SumChildren( ExtWall:AreaByWallType[3]    )  }
+	"Set Garage:ExtWallAreaByWallType[4] - total"				Garage:ExtWallAreaByWallType[4]     = {   ExtWallAreaByWallType[1] + ExtWallAreaByWallType[2] + ExtWallAreaByWallType[3]  }
+;	"Set Garage:ExtWallWinAreaByWallType[1] - wood framed"	Garage:ExtWallWinAreaByWallType[1]  = {   SumChildren( ExtWall:WinAreaByWallType[1] )  }
+;	"Set Garage:ExtWallWinAreaByWallType[2] - steel framed"	Garage:ExtWallWinAreaByWallType[2]  = {   SumChildren( ExtWall:WinAreaByWallType[2] )  }
+;	"Set Garage:ExtWallWinAreaByWallType[3] - concrete/CMU"	Garage:ExtWallWinAreaByWallType[3]  = {   SumChildren( ExtWall:WinAreaByWallType[3] )  }
+	"Set Garage:ExtWallDoorAreaByWallType[1] - wood framed"	Garage:ExtWallDoorAreaByWallType[1] = {   SumChildren( ExtWall:DoorAreaByWallType[1] )  }
+	"Set Garage:ExtWallDoorAreaByWallType[2] - steel framed"	Garage:ExtWallDoorAreaByWallType[2] = {   SumChildren( ExtWall:DoorAreaByWallType[2] )  }
+	"Set Garage:ExtWallDoorAreaByWallType[3] - concrete/CMU"	Garage:ExtWallDoorAreaByWallType[3] = {   SumChildren( ExtWall:DoorAreaByWallType[3] )  }
+	"Set Garage:ExtWallDoorAreaByWallType[4] - total"			Garage:ExtWallDoorAreaByWallType[4] = {   ExtWallDoorAreaByWallType[1] + ExtWallDoorAreaByWallType[2] + ExtWallDoorAreaByWallType[3]  }
+END
+;*************************************************************************
+
+
+
+;*************************************************************************
+RULELIST  "BudgetConversion_Garage" 1 0 1 0
+;*************************************************************************
+  ; GARAGES - "Generate std design wall - wood framed - (each orientation)"
+  ; SAC 2/26/14 - switched rule logic to reference SUM of (new) ExtWallAreaByWallType (array element 4 vs. 1)
+	"Create Garage:StdExtWallsFront[1] - wood"			Garage:StdExtWallsFront[1]	= {	if (ExtWallAreaByWallType[4] < 0.1) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Front" )  endif  }
+	"Set Garage:StdExtWallsFront[1]:Parent"				Garage:StdExtWallsFront[1]:Parent				= {	Local( Name )  }
+	"Set Garage:StdExtWallsFront[1]:Orientation"			Garage:StdExtWallsFront[1]:Orientation			= {	"Front"  }
+	"Set Garage:StdExtWallsFront[1]:Construction"		Garage:StdExtWallsFront[1]:Construction		= {	RuleLibrary( Cons, "Garage Ext Wall" )  }
+	"Set Garage:StdExtWallsFront[1]:Area"					Garage:StdExtWallsFront[1]:Area					= {	ExtWallAreaByWallType[4] / 4  }
+	"Set Garage:StdExtWallsFront[1]:Tilt"					Garage:StdExtWallsFront[1]:Tilt					= {	90  }
+	"Set Garage:StdExtWallsFront[1]:Absorptivity"		Garage:StdExtWallsFront[1]:Absorptivity		= {	0.5  }
+
+	"Create Garage:StdExtWallsLeft[1] - wood"				Garage:StdExtWallsLeft[1]		= {	if (ExtWallAreaByWallType[4] < 0.1) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Left" )  endif  }
+	"Set Garage:StdExtWallsLeft[1]:Parent"					Garage:StdExtWallsLeft[1]:Parent					= {	Local( Name )  }
+	"Set Garage:StdExtWallsLeft[1]:Orientation"			Garage:StdExtWallsLeft[1]:Orientation			= {	"Left"  }
+	"Set Garage:StdExtWallsLeft[1]:Construction"			Garage:StdExtWallsLeft[1]:Construction			= {	StdExtWallsFront[1]:Construction  }
+	"Set Garage:StdExtWallsLeft[1]:Area"					Garage:StdExtWallsLeft[1]:Area					= {	StdExtWallsFront[1]:Area          }
+	"Set Garage:StdExtWallsLeft[1]:Tilt"					Garage:StdExtWallsLeft[1]:Tilt					= {	StdExtWallsFront[1]:Tilt          }
+	"Set Garage:StdExtWallsLeft[1]:Absorptivity"			Garage:StdExtWallsLeft[1]:Absorptivity			= {	StdExtWallsFront[1]:Absorptivity  }
+
+	"Create Garage:StdExtWallsRight[1] - wood"			Garage:StdExtWallsRight[1]	= {	if (ExtWallAreaByWallType[4] < 0.1) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Right" )  endif  }
+	"Set Garage:StdExtWallsRight[1]:Parent"				Garage:StdExtWallsRight[1]:Parent				= {	Local( Name )  }
+	"Set Garage:StdExtWallsRight[1]:Orientation"			Garage:StdExtWallsRight[1]:Orientation			= {	"Right"  }
+	"Set Garage:StdExtWallsRight[1]:Construction"		Garage:StdExtWallsRight[1]:Construction		= {	StdExtWallsFront[1]:Construction  }
+	"Set Garage:StdExtWallsRight[1]:Area"					Garage:StdExtWallsRight[1]:Area					= {	StdExtWallsFront[1]:Area          }
+	"Set Garage:StdExtWallsRight[1]:Tilt"					Garage:StdExtWallsRight[1]:Tilt					= {	StdExtWallsFront[1]:Tilt          }
+	"Set Garage:StdExtWallsRight[1]:Absorptivity"		Garage:StdExtWallsRight[1]:Absorptivity		= {	StdExtWallsFront[1]:Absorptivity  }
+
+	"Create Garage:StdExtWallsBack[1] - wood"				Garage:StdExtWallsBack[1]		= {	if (ExtWallAreaByWallType[4] < 0.1) then  UNCHANGED
+																													else  CreateComp( ExtWall, Local( Name ) + "-StdExtWall-Wd-Back" )  endif  }
+	"Set Garage:StdExtWallsBack[1]:Parent"					Garage:StdExtWallsBack[1]:Parent					= {	Local( Name )  }
+	"Set Garage:StdExtWallsBack[1]:Orientation"			Garage:StdExtWallsBack[1]:Orientation			= {	"Back"  }
+	"Set Garage:StdExtWallsBack[1]:Construction"			Garage:StdExtWallsBack[1]:Construction			= {	StdExtWallsFront[1]:Construction  }
+	"Set Garage:StdExtWallsBack[1]:Area"					Garage:StdExtWallsBack[1]:Area					= {	StdExtWallsFront[1]:Area          }
+	"Set Garage:StdExtWallsBack[1]:Tilt"					Garage:StdExtWallsBack[1]:Tilt					= {	StdExtWallsFront[1]:Tilt          }
+	"Set Garage:StdExtWallsBack[1]:Absorptivity"			Garage:StdExtWallsBack[1]:Absorptivity			= {	StdExtWallsFront[1]:Absorptivity  }
+
+  ; GARAGE DOORS - same door area as user input design - spread across each orientation
+	"Create Garage:StdExtWallsFront[1]:StdDoor"			Garage:StdExtWallsFront[1]:StdDoor				= {	if (ExtWallDoorAreaByWallType[4] < 0.01) then  UNDEFINED
+																																			else  CreateComp( Door, LocalRef( StdExtWallsFront[1]:Name ) + "-Door" )  endif  }
+	"Set Garage:StdExtWallsFront[1]:StdDoor:Parent"		Garage:StdExtWallsFront[1]:StdDoor:Parent		= {	StdExtWallsFront[1]:Name  }
+	"Set Garage:StdExtWallsFront[1]:StdDoor:Area"		Garage:StdExtWallsFront[1]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[4] / 4  }
+	"Set Garage:StdExtWallsFront[1]:StdDoor:Ufactor"	Garage:StdExtWallsFront[1]:StdDoor:Ufactor	= {	1.0  }
+
+	"Create Garage:StdExtWallsLeft[1]:StdDoor"			Garage:StdExtWallsLeft[1]:StdDoor				= {	if (ExtWallDoorAreaByWallType[4] < 0.01) then  UNDEFINED
+																																			else  CreateComp( Door, LocalRef( StdExtWallsLeft[1]:Name ) + "-Door" )  endif  }
+	"Set Garage:StdExtWallsLeft[1]:StdDoor:Parent"		Garage:StdExtWallsLeft[1]:StdDoor:Parent		= {	StdExtWallsLeft[1]:Name  }
+	"Set Garage:StdExtWallsLeft[1]:StdDoor:Area"			Garage:StdExtWallsLeft[1]:StdDoor:Area			= {	ExtWallDoorAreaByWallType[4] / 4  }
+	"Set Garage:StdExtWallsLeft[1]:StdDoor:Ufactor"		Garage:StdExtWallsLeft[1]:StdDoor:Ufactor		= {	1.0  }
+
+	"Create Garage:StdExtWallsRight[1]:StdDoor"			Garage:StdExtWallsRight[1]:StdDoor				= {	if (ExtWallDoorAreaByWallType[4] < 0.01) then  UNDEFINED
+																																			else  CreateComp( Door, LocalRef( StdExtWallsRight[1]:Name ) + "-Door" )  endif  }
+	"Set Garage:StdExtWallsRight[1]:StdDoor:Parent"		Garage:StdExtWallsRight[1]:StdDoor:Parent		= {	StdExtWallsRight[1]:Name  }
+	"Set Garage:StdExtWallsRight[1]:StdDoor:Area"		Garage:StdExtWallsRight[1]:StdDoor:Area		= {	ExtWallDoorAreaByWallType[4] / 4  }
+	"Set Garage:StdExtWallsRight[1]:StdDoor:Ufactor"	Garage:StdExtWallsRight[1]:StdDoor:Ufactor	= {	1.0  }
+
+	"Create Garage:StdExtWallsBack[1]:StdDoor"			Garage:StdExtWallsBack[1]:StdDoor				= {	if (ExtWallDoorAreaByWallType[4] < 0.01) then  UNDEFINED
+																																			else  CreateComp( Door, LocalRef( StdExtWallsBack[1]:Name ) + "-Door" )  endif  }
+	"Set Garage:StdExtWallsBack[1]:StdDoor:Parent"		Garage:StdExtWallsBack[1]:StdDoor:Parent		= {	StdExtWallsBack[1]:Name  }
+	"Set Garage:StdExtWallsBack[1]:StdDoor:Area"			Garage:StdExtWallsBack[1]:StdDoor:Area			= {	ExtWallDoorAreaByWallType[4] / 4  }
+	"Set Garage:StdExtWallsBack[1]:StdDoor:Ufactor"		Garage:StdExtWallsBack[1]:StdDoor:Ufactor		= {	1.0  }
+
+  ; Delete original garage walls (and all child doors)
+;	"Delete user input ExtWalls of garages"		ExtWall:Action	= {	if (ParentType == 2) then  DeleteComp()  else  UNCHANGED  endif  }
+;	E+A+A - can no longer blast all Proposed Design garage walls - need to keep Existing and Altered Walls
+; mjb-12/2/13
+	"Delete NEW garage walls"			ExtWall:Action	= {	if (ParentType == 2 .AND. IsNew) then  DeleteComp()  else  UNCHANGED  endif  }
+
+END
+;*************************************************************************
+
+
+;*************************************************************************
+; SAC 4/1/15 - moved rules setting HVACDist:Type & HVACDist:DefaultSystem into separate rulelist w/ Resets turned OFF to resolve issue where resets are blasting data needed later in HVACDist setup
+RULELIST "BudgetConversion_HVACDist_TypeAndDefaultSystem_NoResets" 1 0 1 1
+
+	; SAC 4/7/13 - revisions to handle DuctsInAll (Type=7) in fixing GC Issue #50 - also added logic to more accurately represent Res ACM section 2.2.13
+	; SAC 9/4/13 - added logic to ensure duct's w/ Verified low Leakage... get reset to std design ducts (GC issue 163)
+	; SAC 12/12/13 - moved this rule down here BELOW above rules that need DuctInsRvalue & RetDuctInsRvalue to still be valid before setting Type (which ends up blasting these values)
+	; mjb 12/16/13 - make sure Existing ducts do not get reset
+	; SAC 8/3/14 - revised logic to prevent assignment of ducts in attic if attic area < 33% of assigned floor area (GC #338)
+	; SAC 4/15/15 - adjust for MFam duplex/townhomes options
+	"Reset HVACDist:Type in certain cases"		HVACDist:Type	= {
+				if (Status == 1 .OR. Status == 4) then UNCHANGED else
+					if (DuctsPresent < 0.5 .AND. Type != 7 .AND. Type != 12) then  UNCHANGED
+					else if (Proj:IsMultiFamily > 0 .AND. Proj:IsMFamDupOrTownhm < 0.5)			 then	 7		; "Ducts located entirely in conditioned space"
+					else if (MaxAll( Attic:FloorArea ) > 1) 	; then  1		; "Ducts located in unconditioned attic"
+					then	if (MaxAll( Attic:FloorArea ) >= (MaxRevRef( HVACSys:DistribSystem, HVACSys:FloorAreaServed[1] ) * 0.333))
+			; SAC 10/16/14 - revised to accommodate multiple attics
+			; SAC 11/24/14 - reverted to original logic (above) to ignore conditioned state of connected attics -AND- to allow assignment of attic not above served zones
+			;		else if (MaxRevRef( HVACSys:DistribSystem, HVACSys:UncondAtticArea ) > 1)
+			;		then	if (MaxRevRef( HVACSys:DistribSystem, HVACSys:UncondAtticArea ) >= (MaxRevRef( HVACSys:DistribSystem, HVACSys:FloorAreaServed[1] ) * 0.333))
+							then		1		; "Ducts located in unconditioned attic"
+							else		9		; "DuctsOutdoor - Ducts located in exposed outdoor locations"
+							endif
+					else if (MaxAll( CrawlSpace:Area ) > 1) then  2		; "Ducts located in a crawl space"
+		;		else if (MaxAll(    UndWall:Area ) > 1) then  5
+																	 else  7		; "Ducts located entirely in conditioned space"
+				endif endif endif endif endif  }
+
+; mjb 12/2/15 - need no duct losses in Design Rating model for RESNET harmonization
+	"Reset HVACDist:Type"		HVACDist:Type	 	= {	if (Proj:DRtgRefRunID == 2014) then  12
+	                                                   else UNCHANGED endif }
+
+;  mjb   10/28/14 - do not reset Ducts if they are existing
+	"Set HVACDist:DefaultSystem"		HVACDist:DefaultSystem	= {	if (Status == 1) then  0  else  1  endif  }
+
+END
+
+;*************************************************************************
+;*************************************************************************
+;66666
+RULELIST  "BudgetHVACSizing" 1 0 0 1
+;
+;   Rules applied to the budget building following a design day run.  These
+;   rules can utilize design day run results to perform any of these tasks:
+;      1) Resize HVAC systems and cause re-execution of design day run.
+;      2) Resize HVAC systems for final run.
+;      3) Set any other building parameters based on design day run results.
+;
+;*************************************************************************
+;*************************************************************************
+
+   ;--------------------------------------------------------------------
+   ; ... Rules
+   ;--------------------------------------------------------------------
+
+END
+
+
+;*************************************************************************
+;*************************************************************************
+;77777
+RULELIST  "BudgetFinal" 1 0 0 1
+;
+;   Rules applied to the budget building design just prior to executing the
+;   final annual simulation.  These rules may define final HVAC system sizes
+;   and/or other simulation data such as energy rate assignments, etc.
+;
+;*************************************************************************
+;*************************************************************************
+
+   ;--------------------------------------------------------------------
+   ; ... Rules
+   ;--------------------------------------------------------------------
+
+END
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

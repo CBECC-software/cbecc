@@ -1,0 +1,1402 @@
+// Project - QuickAnalysis
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALifORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// -----------------------------------------------------------------------------
+// ** debugging rule evaluation duration **
+RULE NEW Proj:RuleEvalDuration
+  DATATYPE
+    Float
+  DEFAULT 
+    LogDuration( "            time to initiate DEFAULT rule evaluation:  %.3f seconds" )
+  SIZING_PROPOSED
+    LogDuration( "            time to initiate SIZING_PROPOSED rule evaluation:  %.3f seconds" )
+  SIZING_BASELINE
+    LogDuration( "            time to initiate SIZING_BASELINE rule evaluation:  %.3f seconds" )
+  ANNUAL_PROPOSED 
+    LogDuration( "            time to initiate ANNUAL_PROPOSED rule evaluation:  %.3f seconds" )
+  ANNUAL_BASELINE
+    LogDuration( "            time to initiate ANNUAL_BASELINE rule evaluation:  %.3f seconds" )
+ENDRULE
+
+
+// ********** Quick Sim Inputs *************************************************
+RULE Proj:QuickAnalysis
+  DESCRIPTION
+    "QuickAnalysis processes much faster, but may vary from the results of a
+     full annual analysis and therefore cannot be used to generate final
+     compliance documentation."
+  INPUTCLASS 
+    Optional
+  DEFAULT
+    0
+ENDRULE
+
+//------------------------------------------------------------------------------
+RULE Proj:NumOfQuickAnalysisPeriods
+  DESCRIPTION
+    "The number of QuickAnalysis run periods to execute in building simulations."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    2
+  MAXIMUM
+    12
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  4
+    else  UNDEFINED
+    endif
+ENDRULE
+
+//------------------------------------------------------------------------------
+RULE Proj:NumOfDaysPerQuickAnalysisPeriod
+  DESCRIPTION
+    "The number days in each QuickAnalysis building simulation run period."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    5
+  MAXIMUM
+    35
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  7
+    else  UNDEFINED
+    endif
+ENDRULE
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisResultsMult",               BEMP_Flt,  1,  0,  0,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationResultsMultiplier",    "" 
+RULE Proj:QuickAnalysisResultsMult
+  DESCRIPTION
+    "The multiplier to scale up QuickAnalysis results to represent entire year."
+  INPUTCLASS 
+    Prescribed
+  MINIMUM
+    1
+  MAXIMUM
+    365
+  DEFAULT
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods > 0 ) .AND.
+        IfValidAnd( NumOfDaysPerQuickAnalysisPeriod > 0 ))
+    then  365 / (NumOfQuickAnalysisPeriods * NumOfDaysPerQuickAnalysisPeriod)
+    else  1
+    endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisFirstWeekSerialDate",       BEMP_Int,  1,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationFirstWeekSerialDate",    "" 
+RULE Proj:QuickAnalysisFirstWeekSerialDate
+  DESCRIPTION : T24N
+    "Serial date value corresponding to the first day of the run period year
+     (always 1/1/yr for Title-24)."
+  DESCRIPTION : S901G ECBC
+    "Serial date value corresponding to the first Wednesday of the run period year."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT : T24N
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( RunPeriodYear > 1900 ) .AND.
+        IfValidAnd( NumOfDaysPerQuickAnalysisPeriod > 0.5 ))
+    then  YrMoDaToSerial( RunPeriodYear, 1, 1 )
+    else  UNDEFINED
+    endif
+  DEFAULT : S901G ECBC
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( RunPeriodYear > 1900 ) .AND.
+        IfValidAnd( NumOfDaysPerQuickAnalysisPeriod > 0.5 ))
+    then  switch( YrMoDaToDayOfWeek( RunPeriodYear, 1, 1 ))
+            case  1 :  YrMoDaToSerial( RunPeriodYear, 1,  4 )  // 1/1/yr is Sunday, so Wed of week #1 = 1/1/4
+            case  2 :  YrMoDaToSerial( RunPeriodYear, 1, 10 )  // 1/1/yr is Monday, so Wed of week #1 = 1/1/10
+            case  3 :  YrMoDaToSerial( RunPeriodYear, 1,  9 )
+            case  4 :  YrMoDaToSerial( RunPeriodYear, 1,  8 )
+            case  5 :  YrMoDaToSerial( RunPeriodYear, 1,  7 )
+            case  6 :  YrMoDaToSerial( RunPeriodYear, 1,  6 )
+            case  7 :  YrMoDaToSerial( RunPeriodYear, 1,  5 )
+            default :  0
+          endswitch
+    else  UNDEFINED
+    endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+//  QuickAnalysis week number defaults setup for 4 or 6 run periods
+RULE Proj:QuickAnalysisWeekNumbers[1]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #1."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    if (QuickAnalysis > 0.5)
+    then  13
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  4
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekNumbers[2]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #2."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods >= 2 ))
+    then  26
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  if (IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+          then  12
+          else  17
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekNumbers[3]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #3."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods >= 3 ))
+    then  39
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  if (IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+          then  21
+          else  30
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekNumbers[4]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #4."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods >= 3 ))
+    then  52
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (QuickAnalysis > 0.5)
+    then  if (IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+          then  30
+          else  43
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekNumbers[5]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #5."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    UNDEFINED
+  DEFAULT
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+    then  39
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekNumbers[6]
+  DESCRIPTION
+    "Week number for QuickAnalysis run period #6."
+  INPUTCLASS 
+    Optional
+  MINIMUM
+    1
+  MAXIMUM
+    52
+  DEFAULT : T24N
+    UNDEFINED
+  DEFAULT
+    if (QuickAnalysis > 0.5 .AND. IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+    then  47
+    else  UNDEFINED
+    endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisWeekSerialDates",           BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationWeekSerialDates",    "" 
+RULE Proj:QuickAnalysisWeekSerialDates[1]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[1] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[1] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #1 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[1] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[1] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #1 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[1] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[1] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 1 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[1] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[1] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 1 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[1] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[2]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[2] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[2] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #2 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[2] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[2] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #2 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[2] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[2] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 2 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[2] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[2] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 2 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[2] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[3]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[3] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[3] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #3 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[3] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[3] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #3 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[3] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[3] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 3 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[3] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[3] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 3 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[3] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[4]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[4] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[4] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #4 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[4] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[4] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #4 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[4] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[4] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 4 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[4] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[4] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 4 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[4] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[5]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[5] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[5] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #5 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[5] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[5] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #5 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[5] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[5] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 5 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[5] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[5] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 5 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[5] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[6]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[6] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[6] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #6 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[6] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[6] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #6 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[6] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[6] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[6] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[6] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 6 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[6] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[7]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[7] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[7] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #7 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[7] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[7] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #7 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[7] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[7] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 7 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[7] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[7] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 7 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[7] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[8]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[8] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[8] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #8 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[8] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[8] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #8 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[8] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[8] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 8 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[8] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[8] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 8 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[8] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[9]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[9] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[9] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #9 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[9] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[9] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #9 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[9] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[9] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 9 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[9] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[9] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 9 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[9] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[10]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[10] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[10] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #10 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[10] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[10] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #10 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[10] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[10] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 10 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[10] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[10] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 10 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[10] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[11]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[11] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[11] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #11 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[11] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[11] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #11 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[11] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[11] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 11 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[11] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[11] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 11 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[11] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisWeekSerialDates[12]
+  DESCRIPTION
+    "Serial date value corresponding to the first day of QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  CHECKSIM
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekSerialDates[12] > 0 ))
+    then  if (SerialDateToYear( QuickAnalysisWeekSerialDates[12] ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #12 begins in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[12] ), RunPeriodYear )
+          else if (SerialDateToYear( QuickAnalysisWeekSerialDates[12] + NumOfDaysPerQuickAnalysisPeriod - 1 ) != RunPeriodYear)
+          then  POSTERROR( "QuickAnalysis week #12 ends in year (%.0f) not equal to main project run year (%.0f).",
+                            Name, SerialDateToYear( QuickAnalysisWeekSerialDates[12] + NumOfDaysPerQuickAnalysisPeriod - 1 ), RunPeriodYear )
+          else  UNCHANGED
+          endif endif
+    else  UNCHANGED
+    endif
+  DEFAULT : T24N
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[12] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 12 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[12] - 1) * 7)
+    else  UNDEFINED
+    endif
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisFirstWeekSerialDate > 1 ) .AND. IfValidAnd( QuickAnalysisWeekNumbers[12] > 0 ) .AND.
+        IfValidAnd( NumOfQuickAnalysisPeriods >= 12 ))
+    then  QuickAnalysisFirstWeekSerialDate + ((QuickAnalysisWeekNumbers[12] - 1) * 7) -
+              int( NumOfDaysPerQuickAnalysisPeriod / 2 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisBeginMonth",                BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationBeginMonth",    "" 
+RULE Proj:QuickAnalysisBeginMonth[1]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[1] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[1] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[2]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[2] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[2] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[3]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[3] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[3] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[4]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[4] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[4] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[5]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[5] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[5] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[6]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[6] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[6] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[7]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[7] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[7] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[8]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[8] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[8] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[9]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[9] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[9] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[10]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[10] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[10] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[11]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[11] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[11] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginMonth[12]
+  DESCRIPTION
+    "Month of the first day of QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[12] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[12] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisBeginDay",                  BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationBeginDay",    "" 
+RULE Proj:QuickAnalysisBeginDay[1]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[1] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[1] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[2]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[2] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[2] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[3]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[3] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[3] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[4]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[4] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[4] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[5]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[5] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[5] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[6]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[6] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[6] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[7]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[7] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[7] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[8]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[8] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[8] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[9]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[9] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[9] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[10]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[10] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[10] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[11]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[11] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[11] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDay[12]
+  DESCRIPTION
+    "The first day of QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[12] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[12] )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisEndMonth",                  BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationEndMonth",    "" 
+RULE Proj:QuickAnalysisEndMonth[1]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[1] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[1] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[2]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[2] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[2] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[3]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[3] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[3] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[4]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[4] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[4] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[5]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[5] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[5] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[6]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[6] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[6] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[7]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[7] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[7] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[8]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[8] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[8] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[9]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[9] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[9] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[10]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[10] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[10] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[11]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[11] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[11] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndMonth[12]
+  DESCRIPTION
+    "Month of the last day of QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[12] > 1 ))
+    then  SerialDateToMonth( QuickAnalysisWeekSerialDates[12] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisBeginDayOfWeek",            BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationBeginDayOfWeek",    "" 
+RULE Proj:QuickAnalysisBeginDayOfWeek[1]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[1] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[1], QuickAnalysisBeginDay[1] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[2]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[2] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[2], QuickAnalysisBeginDay[2] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[3]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[3] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[3], QuickAnalysisBeginDay[3] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[4]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[4] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[4], QuickAnalysisBeginDay[4] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[5]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[5] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[5], QuickAnalysisBeginDay[5] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[6]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[6] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[6], QuickAnalysisBeginDay[6] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[7]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[7] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[7], QuickAnalysisBeginDay[7] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[8]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[8] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[8], QuickAnalysisBeginDay[8] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[9]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[9] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[9], QuickAnalysisBeginDay[9] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[10]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[10] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[10], QuickAnalysisBeginDay[10] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[11]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[11] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[11], QuickAnalysisBeginDay[11] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisBeginDayOfWeek[12]
+  DESCRIPTION
+    "Day of week that begins QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[12] > 1 ))
+    then  YrMoDaToDayOfWeek( RunPeriodYear, QuickAnalysisBeginMonth[12], QuickAnalysisBeginDay[12] )		; 1-Sun, 2-Mon, 3-Tue
+    else  UNDEFINED
+    endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+//           "QuickAnalysisEndDay",                    BEMP_Int, 12,  0,  1,  Pres,  "",                 0,  0,                           1001, "QuickAnalysisulationEndDay",    "" 
+RULE Proj:QuickAnalysisEndDay[1]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #1."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[1] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[1] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[2]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #2."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[2] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[2] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[3]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #3."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[3] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[3] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[4]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #4."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[4] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[4] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[5]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #5."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[5] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[5] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[6]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #6."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[6] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[6] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[7]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #7."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[7] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[7] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[8]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #8."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[8] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[8] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[9]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #9."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[9] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[9] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[10]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #10."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[10] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[10] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[11]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #11."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[11] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[11] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+
+RULE Proj:QuickAnalysisEndDay[12]
+  DESCRIPTION
+    "Last day of QuickAnalysis run period #12."
+  INPUTCLASS 
+    Prescribed
+  DEFAULT
+    if (IfValidAnd( QuickAnalysisWeekSerialDates[12] > 1 ))
+    then  SerialDateToDayOfMonth( QuickAnalysisWeekSerialDates[12] + NumOfDaysPerQuickAnalysisPeriod - 1 )
+    else  UNDEFINED
+    endif
+ENDRULE
+

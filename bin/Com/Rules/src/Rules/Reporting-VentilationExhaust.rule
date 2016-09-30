@@ -1,0 +1,236 @@
+// Reporting - Ventilation and Exhaust
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2015, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+
+ // ********** BuildingStory Reporting **********
+RULE NEW Story:VentExhRpt
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+      then WriteToFile( "BuildingStory\n,,Floor Area (including multipliers),,,,,Ventilation (Design),,,Ventilation (For Balance),,,,,,General,,Comm. Kitchen,,Parking Garage,,Laboratory\nName,Multiplier,Total,Cond. NRes,Cond. Res,Total Cond.,Number,Total,Code Min.,Exhaust,Total,Code Min.,Tot:Min Ratio,Exhaust,Vent:Exh Ratio,Vent Mult.,Vent,Exhaust,Vent,Exhaust,Vent,Exhaust,Vent,Exhaust\n,,(ft2),(ft2),(ft2),(ft2),(people),(cfm),(cfm),(cfm),(cfm),(cfm),,(cfm),,,(cfm),(cfm),(cfm),(cfm),(cfm),(cfm),(cfm),(cfm)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW Story:VentExhRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Name
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%c%s%c,%g,%.1f,%.1f,%.1f,%.1f,%.1f", 34, Name, 34, Mult, TotFlrAreaWithMult, NonResCondFlrAreaWithMult, ResCondFlrAreaWithMult, TotCondFlrAreaWithMult, OccNumSimWithMult )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Story:VentExhRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%.0f,%.0f,%.0f,%.0f,%.0f,%.3f,%.0f,%.3f,%.3f", VentFlow, CodeVentFlow, ExhFlow, VentFlowForBal, CodeVentFlowForBal, CodeVentMult, ExhFlowForBal, VentExhBalRat, ExhVentMult )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Story:VentExhRpt_Part2
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part2
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f", GenVentFlow, GenExhFlow, CommKitVentFlow, CommKitExhFlow, PrkgGarVentFlow, PrkgGarExhFlow, LabVentFlow, LabExhFlow )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Story:VentExhRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then WriteToFile( "%s,%s,%s\n", VentExhRpt_Name, VentExhRpt_Part1, VentExhRpt_Part2 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** Space Reporting **********
+RULE NEW Spc:VentExhRpt
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+      then WriteToFile( "\nSpace\n,,,,,,,Occupancy,,,Ventilation,,Design Input (By Component),,,,,Minimum Req. (By Component),,,,Simulated,,Exhaust,,,ForBalance\nName,Story Name,Condg Type,Space Function,Thermal Zone,Floor Area,Multiplier,Design,Minimum,Number,Spec. Method,Control,Per Occupant,Per Area,Per Volume,Per Space,Calculated Flow,Per Occupant,Per Area,Per Volume,Calculated Flow,,,Calculated Flow,Lab Exh Type,Max Kitchen,Ventilation,Exhaust\n,,,,,(ft2),,(ppl/1000ft2),(ppl/1000ft2),(people),,,(cfm/person),(cfm/ft2),(ACH),(cfm),(cfm),(cfm/person),(cfm/ft2),(ACH),(cfm),(cfm/person),(cfm/ft2),(cfm),,(cfm),(cfm),(cfm)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW Spc:VentExhRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Name
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.1f,%g,%.1f,%.1f,%.1f", 34, Name, 34, 34, Story:Name, 34, 34, CondgType, 34, 34, SpcFunc, 34, 34, ThrmlZnRef:Name, 34, FlrArea, Mult, ValidOr( OccDens, 0 ), MinOccDens, OccNumSim )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Spc:VentExhRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%c%s%c,%c%s%c,%g,%g,%g,%.0f,%.0f,%g,%g,%g,%.0f,%g,%g", 34, VentSpecMthd, 34, 34, VentCtrlMthd, 34, VentPerPerson, VentPerArea, VentACH, VentPerSpc, VentFlow, CodeVentPerPerson, CodeVentPerArea, CodeVentACH, CodeVentFlow, ValidOr( ThrmlZnRef:VentPerPersonSim, 0 ), ValidOr( ThrmlZnRef:VentPerAreaSim, 0 ) )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Spc:VentExhRpt_Part2
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part2
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%.0f,%c%s%c,%.0f,%.0f,%.0f", ValidOr( ExhFlow, 0 ) , 34, LabExhRtType, 34, MaxTotKitExhHoodFlow, VentFlowForBal, ExhFlowForBal )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW Spc:VentExhRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then WriteToFile( "%s,%s,%s\n", VentExhRpt_Name, VentExhRpt_Part1, VentExhRpt_Part2 )
+    else UNCHANGED  
+    endif
+ENDRULE 
+
+// ********** ThermalZone Reporting **********
+RULE NEW ThrmlZn:VentExhRpt
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+      then WriteToFile( "\nThermalZone\n,,,,,,,Occupancy,,,,Ventilation,,Design Value (Total),,,,,Minimum Req. (Total),,,,Simulated,,,Exhaust\nName,Story Name,Type,Ventilation Source,Pri. HVAC System,Ventilation System,Floor Area,Multiplier,Design,Minimum,Number,Spec. Method,Control,Per Occupant,Per Area,Per Volume,Calculated Flow,,Per Occupant,Per Area,Per Volume,Calculated Flow,Per Occupant,Per Area,Calculated Flow,Calculated Flow,ExhSysRef,ExhOperMode,ExhCtrlMthd,ExhBalancedSchRef\n,,,,,(ft2),,(ppl/1000ft2),(ppl/1000ft2),(people),,,,(cfm/person),(cfm/ft2),(ACH),(cfm),,(cfm/person),(cfm/ft2),(ACH),(cfm),(cfm/person),(cfm/ft2),(cfm),(cfm)\n" )
+      else UNCHANGED  
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW ThrmlZn:VentExhRpt_Name
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Name
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.1f,%g,%.1f,%.1f,%.1f", 34, Name, 34, 34, ThrmlZn:StoryNameRef, 34, 34, Type, 34, 34, VentSrc, 34, 34, PriAirCondgSysRef, 34, 34, VentSysRef, 34, FlrArea, Mult, OccDens, MinOccDens, OccNumSim )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentExhRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then Format( "%c%s%c,%c%s%c,%g,%g,%g,%.0f,,%g,%g,%g,%.0f,%g,%g,%.0f", 34, VentSpecMthd, 34, 34, VentCtrlMthd, 34, DsgnVentPerPerson, DsgnVentPerArea, DsgnVentACH, VentFlow, CodeDsgnVentPerPerson, CodeDsgnVentPerArea, CodeDsgnVentACH, CodeVentFlow, ValidOr( VentPerPersonSim, 0 ), ValidOr( VentPerAreaSim, 0 ),Max(VentFlow, CodeVentFlow) )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentExhRpt_Part2
+  DATATYPE
+    String
+  LONGFORM
+    VentilationExhaustReport_Part2
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" .AND. ExhFlow > 0 )
+    then Format( "%.0f,%c%s%c,%c%s%c,%c%s%c,%c%s%c", ExhFlow, 34, ExhSysRef, 34, 34, ExhOperMode, 34, 34, ExhCtrlMthd, 34, 34, ExhBalancedSchRef, 34 )
+    else UNCHANGED  
+    endif
+ENDRULE
+RULE NEW ThrmlZn:VentExhRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_VentilationExhaust" )
+    then
+      if( LocalStatus( VentExhRpt_Part2 ) = 0 )
+      then WriteToFile( "%s,%s\n", VentExhRpt_Name, VentExhRpt_Part1 )
+      else WriteToFile( "%s,%s,%s\n", VentExhRpt_Name, VentExhRpt_Part1, VentExhRpt_Part2 )
+      endif
+    else UNCHANGED  
+    endif
+ENDRULE 
+

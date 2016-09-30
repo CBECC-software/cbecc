@@ -1,0 +1,326 @@
+; -------------------------------------------------------------------------
+; Rules pertaining to:   Prep For and Clean-up After each CSE Energy Simulation
+; CEC Title-24 Residential Energy Code
+; -------------------------------------------------------------------------
+; Copyright (c) 2012-2014, California Energy Commission
+; Copyright (c) 2012-2014, Wrightsoft Corporation
+; All rights reserved.
+; Redistribution and use in source and binary forms, with or without modification,
+; are permitted provided that the following conditions are met:
+; - Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+; - Redistributions in binary form must reproduce the above copyright notice, this
+;   list of conditions, the following disclaimer in the documentation and/or other
+;   materials provided with the distribution.
+; - Neither the name of the California Energy Commission nor the names of its
+;   contributors may be used to endorse or promote products derived from this
+;   software without specific prior written permission.
+; DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+; "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+; NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+; WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+; THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+; LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+; OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+; LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+; OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+; ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+; SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+; THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+; STRICT LIABILITY OR OTHERWISE.
+; -------------------------------------------------------------------------
+
+
+;*************************************************************************
+RULELIST "CSE_SimulationPrep" 1 0 0 1
+;   Rules which are executed immediately prior to performing a CSE simulation
+;*************************************************************************
+
+	"Perform CSE simulation engine defaulting"		Proj:Action = {	EvalRulelist( "CSE_Defaulting_Project" )  }
+
+; removed rules not related to DHW
+;	"Blast all cseIZXFER components"						Proj:Action	= {	DeleteAllComps( cseIZXFER )  }
+;
+;	"Setup CSE Construction/Layers/Materials data"	Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_Cons" )  }		; SAC 5/16/16
+
+
+	; Create meters for tracking electric and fuel use
+	"Create site-wide Elec meter"			Proj:CSE_ElecMETER		= {	; if (Local( Fuel_HaveElec   ) < 0.5) then  UNDEFINED
+																							CreateComp( cseMETER, "MtrElec" )    }
+	"Create site-wide NatGas meter"		Proj:CSE_NatGasMETER		= {	if (GasType != "NaturalGas") then  UNDEFINED
+																							else  CreateComp( cseMETER, "MtrNatGas" )  endif  }
+	"Create site-wide <other> meter"		Proj:CSE_OtherFuelMETER	= {	if (GasType  = "NaturalGas") then  UNDEFINED
+																							else  CreateComp( cseMETER, "MtrOther" )  endif  }
+
+
+; removed rules not related to DHW
+;	"Setup CSE Zones and Internal Gains data"		Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_Zones_IntGains" )  }		; SAC 5/16/16
+
+
+; SAC 4/14/16 - MOVED UP HERE from below so that DHWSYS objects in place to be referenced by gain objects during their setup
+	"Init Proj:CSE_DHWPreRunReqd"	Proj:CSE_DHWPreRunReqd	= {	0  }		; SAC 3/22/16
+	; Create and setup CSE DHW objects - SAC 7/6/15
+	"Setup CSE DHW objects"			Proj:Action		= {	if (IfValidAnd( DHWCalcMthd = "CSE" )==0) then  UNCHANGED
+																		else	EvalRulelist( "CSE_SimulationPrep_DHW" )  endif  }
+
+
+; removed rules not related to DHW
+;	"Setup CSE Zones and Internal Gains data - part2"		Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_Zones_IntGains_part2" )  }		; SAC 5/16/16
+;
+;	"Setup CSE Surface data"										Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_Surfaces" )  }		; SAC 5/16/16
+;
+;	"Setup CSE Internal Mass data"								Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_IntMass" )  }			; SAC 5/16/16
+;
+;	"Setup CSE HVAC & AirNet data"								Proj:Action	= {	EvalRulelist( "CSE_SimulationPrep_HVAC" )  }				; SAC 5/16/16
+;
+;
+;	; Create and setup CSE PVARRAY objects - SAC 1/27/16
+;	"Delete all csePVARRAY objects"		Proj:Action = {	DeleteAllComps( csePVARRAY )  }
+;	"Setup CSE csePVARRAY objects"		Proj:Action	= {	if (IfValidAnd( AllowDesignRating > 0.5 )==0 .OR. IfValidAnd( DesignRatingCalcs > 0.5 )==0 .OR.
+;																				 IfValidAnd( PVWDCSysTotal > 0 )==0) then  UNCHANGED
+;																			else if (Proj:RunAbbrev == "s"  .OR. Proj:RunAbbrev == "S" .OR.
+;																						Proj:RunAbbrev == "dr" .OR. Proj:RunAbbrev == "DR") then  UNCHANGED		; prevent PVARRAY in std and design rtg runs
+;																			else	EvalRulelist( "CSE_SimulationPrep_PV" )  endif endif  }
+
+
+  ; Create and default EXPORT definitions to output hourly energy use results
+	"Create site-wide Elec export"			Proj:CSE_ElecEXPORT			= {	if (LocalCompAssigned( CSE_ElecMETER ) < 0.5) then  UNDEFINED
+																									else  CreateComp( cseEXPORT, "ExportElec" )  endif  }
+	"Create site-wide NatGas export"			Proj:CSE_NatGasEXPORT		= {	if (LocalCompAssigned( CSE_NatGasMETER ) < 0.5) then  UNDEFINED
+																									else  CreateComp( cseEXPORT, "ExportNatGas" )  endif  }
+	"Create site-wide <other> export"		Proj:CSE_OtherFuelEXPORT	= {	if (LocalCompAssigned( CSE_OtherFuelMETER ) < 0.5) then  UNDEFINED
+																									else  CreateComp( cseEXPORT, "ExportOther" )  endif  }
+
+	"Set Proj:CSE_ElecEXPORT:exType"				Proj:CSE_ElecEXPORT:exType				= {	"MTR"     }
+	"Set Proj:CSE_ElecEXPORT:exFreq"				Proj:CSE_ElecEXPORT:exFreq				= {	"HOUR"    }
+	"Set Proj:CSE_ElecEXPORT:exMeter"			Proj:CSE_ElecEXPORT:exMeter			= {	Local( CSE_ElecMETER )  }
+	"Set Proj:CSE_ElecEXPORT:exBtuSf"			Proj:CSE_ElecEXPORT:exBtuSf			= {	1000      }
+	"Set Proj:CSE_ElecEXPORT:exDayBeg_x"		Proj:CSE_ElecEXPORT:exDayBeg_x		= {	"Jan 1"   }
+	"Set Proj:CSE_ElecEXPORT:exDayEnd_x"		Proj:CSE_ElecEXPORT:exDayEnd_x		= {	"Dec 31"  }
+
+	"Set Proj:CSE_NatGasEXPORT:exType"			Proj:CSE_NatGasEXPORT:exType			= {	"MTR"     }
+	"Set Proj:CSE_NatGasEXPORT:exFreq"			Proj:CSE_NatGasEXPORT:exFreq			= {	"HOUR"    }
+	"Set Proj:CSE_NatGasEXPORT:exMeter"			Proj:CSE_NatGasEXPORT:exMeter			= {	Local( CSE_NatGasMETER )  }
+	"Set Proj:CSE_NatGasEXPORT:exBtuSf"			Proj:CSE_NatGasEXPORT:exBtuSf			= {	1000      }
+	"Set Proj:CSE_NatGasEXPORT:exDayBeg_x"		Proj:CSE_NatGasEXPORT:exDayBeg_x		= {	"Jan 1"   }
+	"Set Proj:CSE_NatGasEXPORT:exDayEnd_x"		Proj:CSE_NatGasEXPORT:exDayEnd_x		= {	"Dec 31"  }
+
+	"Set Proj:CSE_OtherFuelEXPORT:exType"		Proj:CSE_OtherFuelEXPORT:exType		= {	"MTR"     }
+	"Set Proj:CSE_OtherFuelEXPORT:exFreq"		Proj:CSE_OtherFuelEXPORT:exFreq		= {	"HOUR"    }
+	"Set Proj:CSE_OtherFuelEXPORT:exMeter"		Proj:CSE_OtherFuelEXPORT:exMeter		= {	Local( CSE_OtherFuelMETER )  }
+	"Set Proj:CSE_OtherFuelEXPORT:exBtuSf"		Proj:CSE_OtherFuelEXPORT:exBtuSf		= {	1000      }
+	"Set Proj:CSE_OtherFuelEXPORT:exDayBeg_x"	Proj:CSE_OtherFuelEXPORT:exDayBeg_x	= {	"Jan 1"   }
+	"Set Proj:CSE_OtherFuelEXPORT:exDayEnd_x"	Proj:CSE_OtherFuelEXPORT:exDayEnd_x	= {	"Dec 31"  }
+
+;   0, cseEXPORT:exType,  -1
+;   2,              1,    "ZEB"
+;   2,              2,    "ZST"
+;   2,              3,    "MTR"
+;   2,              4,    "AH"
+;   2,              5,    "UDT"
+;   2,              6,    "SUM"
+;   
+;   0, cseEXPORT:exFreq,  -1
+;   2,              1,    "YEAR"
+;   2,              2,    "MONTH"
+;   2,              3,    "DAY"
+;   2,              4,    "HOUR"
+;   2,              5,    "HOURANDSUB"
+;   2,              6,    "SUBHOUR"
+
+END
+
+
+;*************************************************************************
+RULELIST "CSE_Defaulting_Project" 1 0 0 1
+;*************************************************************************
+	"Create cseTOP component (if none exists)"	Proj:Action = {	if (ComponentCount( cseTOP ) > 0) then  UNCHANGED
+																						else  CreateComp( cseTOP, "CSE run" )  endif  }
+
+	"Default cseTOP:repHdrL"		cseTOP:repHdrL	= {	if (strlen( Global( Proj:RunTitle ) ) > 0) then  Global( Proj:RunTitle )
+																	;	else if (strlen( Global( Proj:SimReportHeader ) ) > 0) then  Proj:SimReportHeader
+																		else  "CA Com Simulation"  endif  }
+	"Default cseTOP:wfName"			cseTOP:wfName	= {	Proj:AnnualWeatherFile  }
+
+;	"Default cseTOP:begDay=Jan 1                     //
+;	"Default cseTOP:endDay=Dec 31                    //
+	"Default cseTOP:ebTolHour"		cseTOP:ebTolHour	= {	0.001  }
+	"Default cseTOP:ebTolDay"     cseTOP:ebTolDay	= {	0.001  }
+	"Default cseTOP:ebTolMon"     cseTOP:ebTolMon	= {	0.001  }
+	"Default cseTOP:ebTolSubHr"   cseTOP:ebTolSubHr	= {	0.001  }
+
+;	"Default cseTOP:jan1DOW"		cseTOP:jan1DOW		= {	"TUE"  }
+	"Default cseTOP:jan1DOW"      cseTOP:jan1DOW		= {	;if (IfValidAnd( Proj:DHWCalcMethod = 2 ))		; SAC 7/14/15 - special processing to match CSE DHW results to old CEC engine
+																			;then	"FRI"
+																			"THU"  }
+
+
+	; SAC 1/15/15 - call subordinate rulelists to setup simulation speed inputs based on Proj:SimSpeedOption
+	"Setup simulation speed settings"	Proj:Action	= {	EvalRulelist( "CSE_SimSpeedOption_Compliance" )  }
+;	"Setup simulation speed settings"	Proj:Action	= {	switch (SimSpeedOption)
+;																				case  0 :  EvalRulelist( "CSE_SimSpeedOption_Compliance" )
+;																				case  1 :  EvalRulelist( "CSE_SimSpeedOption_Quick"      )
+;																				case  2 :  EvalRulelist( "CSE_SimSpeedOption_Custom"     )
+;																				default :  UNCHANGED
+;																			endswitch  }
+
+;	"Default cseTOP:skyModel"     cseTOP:skyModel	= {	"anisotropic"  }
+;	"Default cseTOP:dflExH"			cseTOP:dflExH		= {	5.158  }					; Exterior combined surface coefficient for regular walls  (5.160 for FL vs. 5.158 for BESTEST ???)
+;	"Default cseTOP:windF"			cseTOP:windF		= {	0.25   }					; site located exactly at weather station with wind at 0.2m below top of building
+  ; SAC 1/13/13 - write out Proj:FrontOrientation as cseTOP:bldgAzm
+;	"Default cseTOP:bldgAzm"		cseTOP:bldgAzm		= {   Proj:FrontOrientation  }
+
+	"Default cseTOP:dt"           cseTOP:dt			= {	;if (IfValidAnd( Proj:DHWCalcMethod = 2 ))		; SAC 7/14/15 - special processing to match CSE DHW results to old CEC engine
+																			;then	"NO"
+																			"YES"  }
+; file I/O must be altered to output these items w/OUT bounding double quotes
+;	"Default cseTOP:dtBegDay"     cseTOP:dtBegDay	= {	"Mar 08"  }		; 2009 calendar "In 2009, daylight saving time began at 2:00 a.m. (02:00) on Sunday, March 8, and it ended at 2:00 a.m. (02:00) on Sunday, November 1."
+;	"Default cseTOP:dtEndDay"     cseTOP:dtEndDay	= {	"Nov 01"  }
+
+; 1/3/13 - added design day #defines
+;	"Set Proj:CSE_DefineName[1]"		Proj:CSE_DefineName[1]		= {	"DD1"  }
+;	"Set Proj:CSE_DefineType[1]"		Proj:CSE_DefineType[1]		= {	3  }		; #define type: 0-name only, 1-float, 2-string w/ quotes, 3-string no quotes
+;	"Set Proj:CSE_DefineString[1]"	Proj:CSE_DefineString[1]	= {	CA13ClimateZoneDesignDay:DD1( "ClimateZone", Proj:ClimateZone )  }  ; "Jun 30"  }
+;	"Set Proj:CSE_DefineName[2]"		Proj:CSE_DefineName[2]		= {	"CD1"  }
+;	"Set Proj:CSE_DefineType[2]"		Proj:CSE_DefineType[2]		= {	3  }		; #define type: 0-name only, 1-float, 2-string w/ quotes, 3-string no quotes
+;	"Set Proj:CSE_DefineString[2]"	Proj:CSE_DefineString[2]	= {	CA13ClimateZoneDesignDay:CD1( "ClimateZone", Proj:ClimateZone )  }  ; "Jul 10"  }
+;	"Set Proj:CSE_DefineName[3]"		Proj:CSE_DefineName[3]		= {	"HD1"  }
+;	"Set Proj:CSE_DefineType[3]"		Proj:CSE_DefineType[3]		= {	3  }		; #define type: 0-name only, 1-float, 2-string w/ quotes, 3-string no quotes
+;	"Set Proj:CSE_DefineString[3]"	Proj:CSE_DefineString[3]	= {	CA13ClimateZoneDesignDay:HD1( "ClimateZone", Proj:ClimateZone )  }  ; "Dec 03"  }
+;	
+;	"Set Proj:CSE_DefineName[4]"		Proj:CSE_DefineName[4]	= { "SEASONCHANGESETPT" }
+;	"Set Proj:CSE_DefineType[4]"		Proj:CSE_DefineType[4]	= {	1  }
+;	"Set Proj:CSE_DefineFloat[4]"		Proj:CSE_DefineFloat[4] = { Proj:SeasonChangeSetpt }
+;	
+;	"Set Proj:CSE_DefineName[5]"		Proj:CSE_DefineName[5]	= { "FANVENTLOCKOUTTEMP" }
+;	"Set Proj:CSE_DefineType[5]"		Proj:CSE_DefineType[5]	= {	1  }
+;	"Set Proj:CSE_DefineFloat[5]"		Proj:CSE_DefineFloat[5] = { Proj:FanVentLockoutTemp }
+
+	"Set Proj:CSE_DefineName[6]"		Proj:CSE_DefineName[6]	= { "ISSEASONCOOLING" }
+	"Set Proj:CSE_DefineType[6]"		Proj:CSE_DefineType[6]	= {	3 }
+	"Set Proj:CSE_DefineString[6]"	Proj:CSE_DefineString[6] ={ "(@weather.taDbAvg07 > SEASONCHANGESETPT)" }
+
+	"Set Proj:CSE_DefineName[7]"		Proj:CSE_DefineName[7]	= { "FANVENTAVAIL" }
+	"Set Proj:CSE_DefineType[7]"		Proj:CSE_DefineType[7]	= {	3 }
+	"Set Proj:CSE_DefineString[7]"	Proj:CSE_DefineString[7] ={ "(@weather.taDbAvg07 > FANVENTLOCKOUTTEMP)" }
+
+;	"Set Proj:CSE_DefineName[8]"		Proj:CSE_DefineName[8]	= { "WINDOWVENTAVAIL" }
+;	"Set Proj:CSE_DefineType[8]"		Proj:CSE_DefineType[8]	= {	3 }
+;	"Set Proj:CSE_DefineString[8]"	Proj:CSE_DefineString[8] ={ "($hour < 24 && ($hour > 12 || $radDiff > 1))" }
+
+	; SAC 7/6/15
+	"Set Proj:CSE_DefineName[9]"		Proj:CSE_DefineName[9]		= { "HWUSEF_WD" }
+	"Set Proj:CSE_DefineType[9]"		Proj:CSE_DefineType[9]		= {	3 }
+	"Set Proj:CSE_DefineString[9]"	Proj:CSE_DefineString[9]	= { "hourval( 0.014, 0.008, 0.009, 0.011, 0.020, 0.044, 0.089, 0.107, 0.089, 0.066, 0.052, 0.038, 0.036, 0.033, 0.032, 0.026, 0.042, 0.048, 0.052, 0.047, 0.042, 0.039, 0.036, 0.022 )" }
+
+	"Set Proj:CSE_DefineName[10]"		Proj:CSE_DefineName[10]		= { "HWUSEF_WE" }
+	"Set Proj:CSE_DefineType[10]"		Proj:CSE_DefineType[10]		= {	3 }
+	"Set Proj:CSE_DefineString[10]"	Proj:CSE_DefineString[10]	= { "hourval( 0.018, 0.010, 0.009, 0.008, 0.015, 0.023, 0.026, 0.047, 0.077, 0.083, 0.074, 0.061, 0.051, 0.043, 0.039, 0.039, 0.052, 0.058, 0.056, 0.052, 0.047, 0.044, 0.040, 0.028 )" }
+
+	; DHW use #define values 11-23 - left undefined if not using new DHW use profiles - SAC 3/15/16
+	"Set Proj:CSE_Define*[11-23] depending on DHW Use mechanism"		Proj:Action	= {
+									if (CSE_DHWUseMthd == "Old (via wsUse)")	then	EvalRulelist( "CSE_BlastDHWUseInclude" )
+																							else	EvalRulelist( "CSE_SetDHWUseInclude"   )  endif  }
+
+	; Internal Gains #define values 24-50 - left undefined for IntGainsMethod < 2016 - SAC 4/13/16
+;	"Set Proj:CSE_Define*[24-50] depending on IntGainsMethod"		Proj:Action	= {
+;														if (IntGainsMethod == 2016)	then	EvalRulelist( "CSE_Set2016InternalGains" )
+;																								else	EvalRulelist( "CSE_BlastInternalGains"   )  endif  }
+;
+;	"Set cseTOP:heatDsTDbO"       cseTOP:heatDsTDbO		= {	CA13ClimateZoneDesignDay:HtgDesign( "ClimateZone", Proj:ClimateZone )  }
+;	"Set cseTOP:coolDsDay_x"      cseTOP:coolDsDay_x	= {	"DD1"  }   ; trailing '_x' in property name causes output string to NOT be enclosed in double quotes
+;
+;	; SAC 5/1/14 - added logic to prevent output of ventAvail_x when CFIClVent not selected @ the project level (mainly to turn off for Std design run - GC #298)
+;   "Set cseTOP:ventAvail_x"      cseTOP:ventAvail_x	= {	if (SumAll( HVACSys:CFIClVentFlow ) > 1 .AND. Proj:UnitClVentOption == 3)
+;																				then  "FANVENTAVAIL ? RSYSOAV : WholeBuilding "		; turns off window ventilation during cooling mode, but leaves it on in case of overheating in heating mode.  Only the OAV system runs in cooling mode.
+;																				else  UNDEFINED  endif  }   ; SAC 8/26/13 - OAV
+END
+;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+RULELIST "CSE_SimulationCleanUp" 1 0 0 1
+;   Rules which are executed immediately following a CSE simulation
+;*************************************************************************
+;*************************************************************************
+
+	"Delete all cseTOP components"					Proj:Action = {	DeleteAllComps( cseTOP )  }
+	"Delete all cseMETER components"					Proj:Action = {	DeleteAllComps( cseMETER )  }
+
+; removed rules not related to DHW
+;	"Delete all CSE Cons-related components"		Proj:Action = {	EvalRulelist( "CSE_Cleanup_Cons" )  }
+;
+;	"Delete all cseZONE components"					Proj:Action = {	DeleteAllComps( cseZONE )  }
+;
+;	"Delete all CSE Cons-related components"		Proj:Action = {	EvalRulelist( "CSE_Cleanup_Surfaces" )  }
+;
+;	"Delete all cseRSYS components"					Proj:Action = {	DeleteAllComps( cseRSYS )  }
+;	"Blast all cseIZXFER components"					Proj:Action	= {	DeleteAllComps( cseIZXFER )  }
+
+	"Delete all CSE Cons-related components"		Proj:Action = {	EvalRulelist( "CSE_Cleanup_DHW" )  }
+
+  ; Blast meter & export components used to track electric and fuel use
+	"Blast site-wide Elec meter"			Proj:CSE_ElecMETER			= {	if (LocalCompAssigned( CSE_ElecMETER        )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Blast site-wide NatGas meter"		Proj:CSE_NatGasMETER			= {	if (LocalCompAssigned( CSE_NatGasMETER      )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Blast site-wide <other> meter"		Proj:CSE_OtherFuelMETER		= {	if (LocalCompAssigned( CSE_OtherFuelMETER   )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Blast site-wide Elec export"			Proj:CSE_ElecEXPORT			= {	if (LocalCompAssigned( CSE_ElecEXPORT       )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Blast site-wide NatGas export"		Proj:CSE_NatGasEXPORT		= {	if (LocalCompAssigned( CSE_NatGasEXPORT     )) then  DeleteComp()  else  UNCHANGED  endif  }
+	"Blast site-wide <other> export"		Proj:CSE_OtherFuelEXPORT	= {	if (LocalCompAssigned( CSE_OtherFuelEXPORT  )) then  DeleteComp()  else  UNCHANGED  endif  }
+END
+
+
+; SAC 1/15/15 - added rulelists to setup cseTOP properties that govern simulation speed/accuracy
+;*************************************************************************
+RULELIST "CSE_SimSpeedOption_Compliance" 1 0 0 1                                          ; SAC 4/29/15 - values replaced 4/29/15 from BAW
+   "Set (speed = Compliance) cseTOP:nSubSteps"     cseTOP:nSubSteps     = {    20        }		;    30        }
+   "Set (speed = Compliance) cseTOP:wuDays"        cseTOP:wuDays        = {    30        }		;    30        }
+   "Set (speed = Compliance) cseTOP:awTrigSlr"     cseTOP:awTrigSlr     = {     0.1      }		;     0.05     }
+   "Set (speed = Compliance) cseTOP:anTolAbs"      cseTOP:anTolAbs      = {     0.005    }		;     0.00125  }
+   "Set (speed = Compliance) cseTOP:anTolRel"      cseTOP:anTolRel      = {     0.0005   }		;     0.0001   }
+   "Set (speed = Compliance) cseTOP:auszTol"       cseTOP:auszTol       = {     0.01     }		;     0.005    }
+   "Set (speed = Compliance) cseTOP:awTrigT"       cseTOP:awTrigT       = {     3        }		;     1        }
+   "Set (speed = Compliance) cseTOP:awTrigH"       cseTOP:awTrigH       = {     0.3      }		;     0.1      }
+END
+; removed rules not related to DHW
+;;*************************************************************************  Quick modified by BW 2/4/15 to Rev 3g
+;RULELIST "CSE_SimSpeedOption_Quick" 1 0 0 1
+;   "Set (speed = Quick) cseTOP:nSubSteps"          cseTOP:nSubSteps     = {    6         }
+;   "Set (speed = Quick) cseTOP:wuDays"             cseTOP:wuDays        = {    15        }
+;   "Set (speed = Quick) cseTOP:awTrigSlr"          cseTOP:awTrigSlr     = {     0.3      }
+;   "Set (speed = Quick) cseTOP:anTolAbs"           cseTOP:anTolAbs      = {     0.03     }
+;   "Set (speed = Quick) cseTOP:anTolRel"           cseTOP:anTolRel      = {     0.003    }
+;   "Set (speed = Quick) cseTOP:auszTol"            cseTOP:auszTol       = {     0.05     }
+;   "Set (speed = Quick) cseTOP:awTrigT"            cseTOP:awTrigT       = {    15.       }
+;   "Set (speed = Quick) cseTOP:awTrigH"            cseTOP:awTrigH       = {     1.       }
+;END
+;;*************************************************************************  Custom modified by BW 2/4/15 to Rev C53
+;RULELIST "Default_SimSpeedOption" 0 0 0 0																																										; SAC 4/29/15 - replaced old Custom w/ previous Compliance settings
+;   "Default (speed = Custom) Proj:CSE_nSubSteps"   Proj:CSE_nSubSteps   = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else    30        endif  }		;      20        endif  }
+;   "Default (speed = Custom) Proj:CSE_wuDays"      Proj:CSE_wuDays      = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else    30        endif  }		;      30        endif  }
+;   "Default (speed = Custom) Proj:CSE_AWTrigSlr"   Proj:CSE_AWTrigSlr   = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     0.05     endif  }		;       0.1      endif  }
+;   "Default (speed = Custom) Proj:CSE_ANTolAbs"    Proj:CSE_ANTolAbs    = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     0.00125  endif  }		;       0.005    endif  }
+;   "Default (speed = Custom) Proj:CSE_ANTolRel"    Proj:CSE_ANTolRel    = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     0.0001   endif  }		;       0.0005   endif  }
+;   "Default (speed = Custom) Proj:CSE_auszTol"     Proj:CSE_auszTol     = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     0.005    endif  }		;       0.01     endif  }
+;   "Default (speed = Custom) Proj:CSE_AWTrigT"     Proj:CSE_AWTrigT     = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     1        endif  }		;       3        endif  }
+;   "Default (speed = Custom) Proj:CSE_AWTrigH"     Proj:CSE_AWTrigH     = {  if (IfValidAnd( SimSpeedOption = 2 )==0) then  UNDEFINED  else     0.1      endif  }		;       0.3      endif  }
+;END
+;RULELIST "CSE_SimSpeedOption_Custom" 1 0 0 1
+;   "Set (speed = Custom) cseTOP:nSubSteps"         cseTOP:nSubSteps     = {  Proj:CSE_nSubSteps  }
+;   "Set (speed = Custom) cseTOP:wuDays"            cseTOP:wuDays        = {  Proj:CSE_wuDays     }
+;   "Set (speed = Custom) cseTOP:awTrigSlr"         cseTOP:awTrigSlr     = {  Proj:CSE_AWTrigSlr  }
+;   "Set (speed = Custom) cseTOP:anTolAbs"          cseTOP:anTolAbs      = {  Proj:CSE_ANTolAbs   }
+;   "Set (speed = Custom) cseTOP:anTolRel"          cseTOP:anTolRel      = {  Proj:CSE_ANTolRel   }
+;   "Set (speed = Custom) cseTOP:auszTol"           cseTOP:auszTol       = {  Proj:CSE_auszTol    }
+;   "Set (speed = Custom) cseTOP:awTrigT"           cseTOP:awTrigT       = {  Proj:CSE_AWTrigT    }
+;   "Set (speed = Custom) cseTOP:awTrigH"           cseTOP:awTrigH       = {  Proj:CSE_AWTrigH    }
+;END
+;;*************************************************************************
+
+
+;*************************************************************************
+;*************************************************************************
+
+ENDFILE

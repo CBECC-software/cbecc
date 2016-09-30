@@ -1,0 +1,179 @@
+// ThermalZone - Zone Exhaust
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+
+RULE ThrmlZn:ExhSysRef
+  DESCRIPTION
+    "The name of the air or zone system that exhausts air from the ThermalZone."
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned( VentSysRef ) )
+    then
+      if( IfValidAnd( VentSysRef:IsExhSys = 1 ) )
+      then VentSysRef
+      else UNDEFINED
+      endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IsNewExh .AND. LocalCompAssigned( ExhSysRef ) = 0 .AND.
+        ( LabArea + PrkgGarArea + CommKitArea ) > 0 )
+    then // Only post error if IsNewMech or space has new HVAC system in existing building
+      PostError("ThermalZone '%s' has space functions that classify it as a
+                 Laboratory, ParkingGarage (enclosed), or CommericalKitchen zone,
+                 but no exhaust system has been specified.", Name)
+    else if( VentSrc = "Forced" .AND. LocalCompAssigned( VentSysRef ) .AND. 
+             LocalCompAssigned( ExhSysRef ) )
+    then
+      if( VentSysIsExh .AND. VentSysRef != ExhSysRef )
+      then 
+        PostError("ThermalZone '%s' has a ventilation system that is Type = 'Exhaust',
+                   but a separate exhaust system is specified. This is not supported.
+                   Either both the ventilation system and exhaust system must be
+                   the same system, or the ventilation system must not be
+                   Type = 'Exhaust'.", Name )
+      else if( IsRes .AND. VentSysIsExh = 0 )
+      then
+        PostWarning("ThermalZone '%s' is a residential space which has both a mechanical
+                   ventilation system as well as an exhaust system defined. Intermittent 
+                   exhaust systems in residential spaces should not be modeled for 
+                   compliance. If an exhaust system is modeled in addition to the ventilation
+                   system, the exhaust fans will only be simualted in the proposed design,
+                   resulting in excess fan power in the proposde design.", Name )      
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif endif
+ENDRULE
+
+// Minimum exhaust flow rates
+RULE NEW ThrmlZn:CodeExhFlow
+  DATATYPE
+    Float
+  LONGFORM
+    MinimumExhaustFlow
+  DESCRIPTION
+    "The minimum exhaust air flow, in CFM, for the ThermalZone." 
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:CodeExhFlow )    
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:CodeExhFlow )    
+  ANNUAL
+    z:CodeExhFlow 
+ENDRULE
+
+
+// Design exhaust flow rates
+RULE ThrmlZn:ExhFlow
+  DESCRIPTION
+    "The design exhaust air flow rate, in CFM, for the ThermalZone."
+  HELP
+    "This is calculated by summing the exhaust flow rates defined at the Space,
+     and shown here for reference."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:ExhFlow )
+  CHECKCODE 
+    if( VentFlow < ExhFlow * ( 1 - Proj:VentTolLim ) )
+    then 
+      PostWarning("ThermalZone '%s' ventilation air flow is less than the
+                  zone design exhaust air flow.", Name)
+    else UNCHANGED
+    endif
+  CHECKSIM
+    if( IsNewExh .AND. ExhFlow > 0 .AND. LocalCompAssigned( ExhSysRef ) = 0 )
+    then 
+      PostError("ThermalZone '%s' has exhaust flow, but no exhaust system
+                 specified.", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:ExhFlow )       
+  ANNUAL
+    z:ExhFlow 
+ENDRULE
+RULE NEW ThrmlZn:DsgnExhACH
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The design exhaust air flow rate, in ACH, for the ThermalZone."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    changes/hr
+  DEFAULT
+    if( Vol > 0 ) 
+    then ExhFlow * 60 / Vol
+    else 0
+    endif
+  SIZING
+    if( Vol > 0 ) 
+    then ExhFlow * 60 / Vol
+    else 0
+    endif
+  ANNUAL
+    z:DsgnExhACH
+ENDRULE
+RULE NEW ThrmlZn:DsgnExhPerArea
+  DATATYPE
+    Float
+  DESCRIPTION
+    "The design exhaust air flow rate, in cfm/ft2, for the ThermalZone."
+  INPUTCLASS 
+    NotInput
+  UNITS
+    cfm/ft2
+  DEFAULT
+    if( FlrArea > 0 ) 
+    then ExhFlow / FlrArea
+    else 0
+    endif
+  SIZING
+    if( FlrArea > 0 ) 
+    then ExhFlow / FlrArea
+    else 0
+    endif
+  ANNUAL
+    z:DsgnExhPerArea
+ENDRULE

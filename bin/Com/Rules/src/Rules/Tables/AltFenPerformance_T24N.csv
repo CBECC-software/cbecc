@@ -1,0 +1,40 @@
+;,CEC 2013 Nonresdiential ACM Ruleset,,,
+;,,,,
+;,TABLE NAME:,,,
+;,,AltFenPerformance,,
+;,,,,
+;,MODIFICATION HISTORY:,,,
+;,,Date,Name,Purpose
+;,,4/12/2014,L. Hovee,Alterations (without additional area) to fenestration
+;,,,,
+;,,,,
+;,Standards/ACM Reference:,,,
+;,,"Standards, TABLE 141.0-A",,
+;,,,,
+;,Notes:,,,
+;,,,,
+;,,,,
+;,Syntax Examples:,,,
+;,,AltFenPerformance.UFactor(ClimateZoneNumber=u:Project:CliZnNum),,
+;,,,,
+;,,,,
+; ####################################  Start of Table ####################################,,,,
+,TABLE AltFenPerformance,,,
+,,ClimateZoneNumber,UFactor,SHGC
+,,1,0.47,0.41
+,,2,0.47,0.31
+,,3,0.58,0.41
+,,4,0.47,0.31
+,,5,0.58,0.41
+,,6,0.47,0.31
+,,7,0.47,0.31
+,,8,0.47,0.31
+,,9,0.47,0.31
+,,10,0.47,0.31
+,,11,0.47,0.31
+,,12,0.47,0.31
+,,13,0.47,0.31
+,,14,0.47,0.31
+,,15,0.47,0.31
+,,16,0.47,0.31
+,ENDTABLE,,,

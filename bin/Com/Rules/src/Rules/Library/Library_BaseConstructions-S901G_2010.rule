@@ -1,0 +1,913 @@
+;-------------------------------------------------------------------------------
+; Building Component Library
+;-------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+//  Copyright (c) 2014, Pacific Northwest National Laboratory
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of
+//  its contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -----------------------------------------------------------------------------
+
+; Standards 90.1-2010 Appendix G
+; Compiled for PNNL by ...
+; Modification History:
+;
+;    Sept 9, 2014 - Noah Czech - Setup (walls, roofs, floors, below grade walls,
+;                                 slab on grade, opaque doors)
+;
+;-------------------------------------------------------------------------------
+
+
+// ------------------------------ WALL CONSTRUCTIONS ---------------------------
+
+ConsAssm   "WallSteelFramedU0.352"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Air 90.1 - Wall - 16 in. OC - 3 1/2 in.",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedInteriorSemiheatedU0.352"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Gypsum Board - 5/8 in.",
+              "Air 90.1 - Wall Interior Semiheated - 16 in. OC - 3 1/2 in.",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedU0.124"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R6.00",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedInteriorSemiheatedU0.124"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R5.60",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedU0.084"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R9.80",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedInteriorSemiheatedU0.084"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R9.40",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedU0.064"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R13.50",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedU0.042"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R21.60",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedU0.037"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Compliance Insulation R24.80",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedUnconditioned"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Stucco - 3/8 in.",
+              "Gypsum Board - 5/8 in.",
+              "Air 90.1 - Wall - 16 in. OC - 3 1/2 in.",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+ConsAssm   "WallSteelFramedInterior"
+   CompatibleSurfType = "ExteriorWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Gypsum Board - 5/8 in.",
+              "Air 90.1 - Wall - 16 in. OC - 3 1/2 in.",
+              "Gypsum Board - 5/8 in." )
+  ..
+
+
+// ------------------------------ ROOF CONSTRUCTIONS ---------------------------
+// 
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.218"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R3.80",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.218"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R3.80",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.173"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R5.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.173"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R5.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.119"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R7.60",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.119"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R7.60",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.093"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R10.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.093"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R10.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.063"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R15.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.063"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R15.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckU0.048"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R20.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckU0.048"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+              "Compliance Insulation R20.00",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofLowAbsorptanceInsulationEntirelyAboveDeckUnconditioned"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.45
+   ExtThrmlAbs = 0.75
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+ConsAssm   "RoofHighAbsorptanceInsulationEntirelyAboveDeckUnconditioned"
+   CompatibleSurfType = "Roof"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.70
+   ExtThrmlAbs = 0.90
+   ExtVisAbs = 0.75
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Standing Seam - 1/16 in.",
+	      "Metal Deck - 1/16 in." )
+  ..
+
+// ------------------------------ FLOOR CONSTRUCTIONS --------------------------
+
+ConsAssm   "FloorSteelJoistU0.35"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistInteriorSemiheatedU0.35"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet Interior Semiheated 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistU0.069"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R11.70",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistInteriorSemiheatedU0.069"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R11.70",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet Interior Semiheated 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistU0.052"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R16.34",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistInteriorSemiheatedU0.052"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R16.20",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet Interior Semiheated 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistU0.038"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R23.70",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+ConsAssm   "FloorSteelJoistU0.032"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Compliance Insulation R28.12",
+              "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+  ConsAssm   "FloorSteelJoistUnconditioned"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+  ConsAssm   "FloorSteelJoistInterior"
+   CompatibleSurfType = "ExteriorFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "Layers"
+   MatRef = ( "Metal Deck - 1/16 in.",
+              "Concrete 90.1 - 140 lb/ft3 - 4 in.",
+              "Carpet 90.1 - 1/2 in." )
+  ..
+
+
+  // ------------------- BELOW GRADE WALL CONSTRUCTIONS ------------------------
+
+ConsAssm   "WallBelowGradeC1.14"
+   CompatibleSurfType = "UndergroundWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "CFactor"
+   CFactor = 1.14
+   MatRef = ( "Concrete 90.1 - 80 lb/ft3 - 4 in.")
+  ..
+
+ConsAssm   "WallBelowGradeC0.119"
+   CompatibleSurfType = "UndergroundWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "CFactor"
+   CFactor = 0.119
+   MatRef = ( "Concrete 90.1 - 80 lb/ft3 - 4 in.",
+              "Compliance Insulation R7.50" )
+  ..
+
+ConsAssm   "WallBelowGradeC0.092"
+   CompatibleSurfType = "UndergroundWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "CFactor"
+   CFactor = 0.092
+   MatRef = ( "Concrete 90.1 - 80 lb/ft3 - 4 in.",
+              "Compliance Insulation R10.00" )
+  ..
+
+ConsAssm   "WallBelowGradeC0.075"
+   CompatibleSurfType = "UndergroundWall"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "CFactor"
+   CFactor = 0.075
+   MatRef = ( "Concrete 90.1 - 80 lb/ft3 - 4 in.",
+              "Compliance Insulation R10.00" )
+  ..
+
+
+  // ------------------- SLAB ON OR BELOW GRADE CONSTRUCTIONS ------------------
+
+ConsAssm   "SlabOnOrBelowGradeF0.73"
+   CompatibleSurfType = "UndergroundFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "FFactor"
+   FFactor = 0.73
+   MatRef = ( "Concrete - 140 lb/ft3 - 6 in.")
+  ..
+
+ConsAssm   "SlabOnOrBelowGradeF0.54"
+   CompatibleSurfType = "UndergroundFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "FFactor"
+   FFactor = 0.54
+   MatRef = ( "Concrete - 140 lb/ft3 - 6 in.")
+  ..
+
+
+ConsAssm   "SlabOnOrBelowGradeF0.52"
+   CompatibleSurfType = "UndergroundFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "FFactor"
+   FFactor = 0.52
+   MatRef = ( "Concrete - 140 lb/ft3 - 6 in.")
+  ..
+
+ConsAssm   "SlabOnOrBelowGradeF0.51"
+   CompatibleSurfType = "UndergroundFloor"
+   ExtRoughness = "MediumRough"
+   ExtSolAbs = 0.7
+   ExtThrmlAbs = 0.9
+   ExtVisAbs = 0.8
+   IntSolAbs = 0.7
+   IntThrmlAbs = 0.9
+   IntVisAbs = 0.8
+   SpecMthd = "FFactor"
+   FFactor = 0.51
+   MatRef = ( "Concrete - 140 lb/ft3 - 6 in.")
+  ..
+
+
+  // ------------------- Exterior Door CONSTRUCTIONS ---------------------------
+
+DrCons   "DoorExtOpaqueNonswingU1.50"
+   CertificationMthd = "NFRCRated"
+   Open = "NonSwinging"
+   UFactor = 1.50
+  ..
+
+DrCons   "DoorExtOpaqueNonswingU1.45"
+   CertificationMthd = "NFRCRated"
+   Open = "NonSwinging"
+   UFactor = 1.45
+  ..
+
+DrCons   "DoorExtOpaqueNonswingU0.50"
+   CertificationMthd = "NFRCRated"
+   Open = "NonSwinging"
+   UFactor = 0.50
+  ..
+
+DrCons   "DoorExtOpaqueSwingU0.70"
+   CertificationMthd = "NFRCRated"
+   Open = "Swinging"
+   UFactor = 0.70
+  ..
+
+DrCons   "DoorExtOpaqueSwingU0.50"
+   CertificationMthd = "NFRCRated"
+   Open = "Swinging"
+   UFactor = 0.50
+  ..
+
+
+  // ------------------- 90.1 Specific MATERIALS ---------------------------------------------
+
+Material "Carpet 90.1 - 1/2 in."
+  CodeCat = "Finish Materials"
+  CodeItem = "Carpet 90.1 - 1/2 in."
+  ..
+
+Material "Carpet Interior Semiheated 90.1 - 1/2 in."
+  CodeCat = "Finish Materials"
+  CodeItem = "Carpet Interior Semiheated 90.1 - 1/2 in."
+  ..
+
+Material "Air 90.1 - Wall - 16 in. OC - 3 1/2 in."
+   CodeCat = "Air"
+   CodeItem = "Air 90.1 - Wall - 16 in. OC - 3 1/2 in."
+   ..
+
+Material "Air 90.1 - Wall Interior Semiheated - 16 in. OC - 3 1/2 in."
+   CodeCat = "Air"
+   CodeItem = "Air 90.1 - Wall Interior Semiheated - 16 in. OC - 3 1/2 in."
+   ..
+
+Material "Concrete 90.1 - 140 lb/ft3 - 4 in."
+   CodeCat = "Concrete"
+   CodeItem = "Concrete 90.1 - 140 lb/ft3 - 4 in."
+   ..
+
+Material "Concrete 90.1 - 80 lb/ft3 - 4 in."
+   CodeCat = "Concrete"
+   CodeItem = "Concrete 90.1 - 80 lb/ft3 - 4 in."
+   ..
+
+
+  // ------------------- T24 and 90.1 Common MATERIALS ---------------------------------------------
+
+Material "Metal Deck - 1/16 in."
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Metal Deck - 1/16 in."
+   ..
+
+Material "Metal Standing Seam - 1/16 in."
+   CodeCat = "Roofing"
+   CodeItem = "Metal Standing Seam - 1/16 in."
+   ..
+
+Material "Gypsum Board - 1/2 in."
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 1/2 in."
+   ..
+
+Material "Gypsum Board - 5/8 in."
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
+   ..
+
+Material "Stucco - 3/8 in."
+   CodeCat = "Plastering Materials"
+   CodeItem = "Stucco - 3/8 in."
+   ..
+
+Material "Concrete - 140 lb/ft3 - 6 in."
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+
+  // ------------------- 90.1 Specific Compliance INSULATION ---------------------------------------------
+
+Material "Compliance Insulation R3.80"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R3.80"
+   ..
+
+Material "Compliance Insulation R5.00"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R5.00"
+   ..
+
+Material "Compliance Insulation R5.60"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R5.60"
+   ..
+
+Material "Compliance Insulation R6.00"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R6.00"
+   ..
+
+Material "Compliance Insulation R7.50"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R7.50"
+   ..
+
+Material "Compliance Insulation R7.60"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R7.60"
+   ..
+
+Material "Compliance Insulation R9.40"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R9.40"
+   ..
+
+Material "Compliance Insulation R9.80"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R9.80"
+   ..
+
+Material "Compliance Insulation R10.00"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R10.00"
+   ..
+
+Material "Compliance Insulation R11.70"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R11.70"
+   ..
+
+Material "Compliance Insulation R12.50"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R12.50"
+   ..
+
+Material "Compliance Insulation R13.50"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R13.50"
+   ..
+
+Material "Compliance Insulation R15.00"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R15.00"
+   ..
+   
+Material "Compliance Insulation R16.20"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R16.20"
+   ..
+
+Material "Compliance Insulation R16.34"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R16.34"
+   ..
+
+Material "Compliance Insulation R20.00"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R20.00"
+   ..
+
+Material "Compliance Insulation R21.60"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R21.60"
+   ..
+
+Material "Compliance Insulation R23.70"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R23.70"
+   ..
+
+Material "Compliance Insulation R24.80"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R24.80"
+   ..
+
+Material "Compliance Insulation R28.12"
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R28.12"
+   ..
+
+END_OF_INPUT

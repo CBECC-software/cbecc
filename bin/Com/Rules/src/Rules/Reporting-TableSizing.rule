@@ -1,0 +1,344 @@
+// HVAC Secondary - Reporting
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+
+
+// ********** TerminalUnit **********
+RULE NEW TrmlUnit:TableName
+  DATATYPE
+    String
+  LONGFORM
+   TableName
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( "TABLE %sTrmlUnit", Proj:ModelName )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW TrmlUnit:HVACSecSizingRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+      then WriteToFile( "%s\nPropName,BaseName,Type,System,Zone,PriAirFlowMax,PriAirFlowMin,HtgAirFlowMax,ReheatCtrlMthd\n;,,,,,(cfm),(cfm),( cfm)\n",TableName )
+      else UNCHANGED 
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW TrmlUnit:HVACSecSizingRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( ",%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f,%.3f,%c%s%c", 34,Name,34, 34,Type,34, 34,Parent(Name),34, 34,ZnServedRef,34, PriAirFlowMax, PriAirFlowMin, HtgAirFlowMax, 34,ReheatCtrlMthd,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW TrmlUnit:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then WriteToFile( "%s\n", HVACSecSizingRpt_Part1 )
+    else UNCHANGED 
+    endif
+ENDRULE
+RULE NEW TrmlUnit:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" .AND.
+        ComponentIndex() = ComponentCount( TrmlUnit ) )
+    then // Last object in model, close table with ENDTABLE
+      WriteToFile( "ENDTABLE\n" )
+    else UNCHANGED
+    endif 
+ENDRULE  
+
+// ********** CoilCooling **********
+RULE NEW CoilClg:TableName
+  DATATYPE
+    String
+  LONGFORM
+   TableName
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( "TABLE %sCoilClg", Proj:ModelName )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilClg:HVACSecSizingRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+      then WriteToFile( "%s\nPropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,DXSEER,DXEER,NumClgStages\n;,,,,,(Btu/hr),(Btu/hr),( gpm),\n",TableName )
+      else UNCHANGED 
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW CoilClg:HVACSecSizingRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( ",%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f,%.5f,%.3f,%.3f,%g", 34,Name,34, 34,Type,34, 34,SysServed,34, 34,ZnServed,34, CapTotNetRtd, CapTotGrossRtd, FluidFlowRtDsgn, DXSEER, DXEER, NumClgStages )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilClg:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then WriteToFile( "%s\n", HVACSecSizingRpt_Part1 )
+    else UNCHANGED 
+    endif
+ENDRULE 
+RULE NEW CoilClg:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" .AND.
+        ComponentIndex() = ComponentCount( CoilClg ) )
+    then // Last object in model, close table with ENDTABLE
+      WriteToFile( "ENDTABLE\n" )
+    else
+      UNCHANGED
+    endif 
+ENDRULE  
+
+// ********** CoilHeating **********
+RULE NEW CoilHtg:TableName
+  DATATYPE
+    String
+  LONGFORM
+   TableName
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( "TABLE %sCoilHtg", Proj:ModelName )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecSizingRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+      then WriteToFile( "%s\nPropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,FurnAFUE,FurnThrmlEff,\n;,,,,,(Btu/hr),(Btu/hr),( gpm),\n",TableName )
+      else UNCHANGED 
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW CoilHtg:HVACSecSizingRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( ",%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f,%.5f,%.3f,%.3f", 34,Name,34, 34,Type,34, 34,SysServed,34, 34,ZnServed,34, CapTotNetRtd, CapTotGrossRtd, FluidFlowRtDsgn, FurnAFUE, FurnThrmlEff )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW CoilHtg:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then WriteToFile( "%s\n", HVACSecSizingRpt_Part1 )
+    else UNCHANGED 
+    endif
+ENDRULE 
+RULE NEW CoilHtg:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" .AND.
+        ComponentIndex() = ComponentCount( CoilHtg ) )
+    then // Last object in model, close table with ENDTABLE
+      WriteToFile( "ENDTABLE\n" )
+    else
+      UNCHANGED
+    endif 
+ENDRULE  
+
+// ********** Fan **********
+RULE NEW Fan:TableName
+  DATATYPE
+    String
+  LONGFORM
+   TableName
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( "TABLE %sFan", Proj:ModelName )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Fan:HVACSecSizingRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+      then WriteToFile( "%s\nPropName,BaseName,CtrlMthd,System,Zone,FlowCap,FlowMin,FlowEff,ModelingMthd,TotStaticPress,MtrHP,MtrPos,MtrEff\n;,,,,,(cfm),(cfm),,,(inH2O),( hp),\n",TableName )
+      else UNCHANGED 
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW Fan:HVACSecSizingRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" ) 
+    then Format( ",%c%s%c,%c%s%c,%c%s%c,%c%s%c,%.3f,%.3f,%.3f,%c%s%c,%.3f,%.3f,%c%s%c,%.3f", 34,Name,34, 34,CtrlMthd,34, 34,SysServed,34, 34,ZnServed,34, FlowCap, FlowMin, FlowEff, 34,ModelingMthd,34, TotStaticPress, MtrHP, 34,MtrPos,34, MtrEff )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW Fan:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then WriteToFile(  "%s\n", HVACSecSizingRpt_Part1  )
+    else UNCHANGED 
+    endif
+ENDRULE 
+RULE NEW Fan:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" .AND.
+        ComponentIndex() = ComponentCount( Fan ))
+    then // Last object in model, close table with ENDTABLE
+      WriteToFile( "ENDTABLE\n" )
+    else
+      UNCHANGED
+    endif 
+ENDRULE 
+
+// ********** OutsideAirControl **********
+RULE NEW OACtrl:TableName
+  DATATYPE
+    String
+  LONGFORM
+   TableName
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( "TABLE %sOACtrl", Proj:ModelName )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW OACtrl:HVACSecSizingRpt
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( ComponentIndex() = 1 )
+    then
+      if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+      then WriteToFile( "%s\nPropName,BaseName,EconoCtrlMthd,System,EconoIntegration\n;\n",TableName )
+      else UNCHANGED 
+      endif
+    else UNCHANGED
+    endif
+ENDRULE 
+RULE NEW OACtrl:HVACSecSizingRpt_Part1
+  DATATYPE
+    String
+  LONGFORM
+    HVACSecondarySizingReport_Part1
+  INPUTCLASS 
+    NotInput
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then Format( ",%c%s%c,%c%s%c,%c%s%c,%c%s%c", 34,Name,34, 34,EconoCtrlMthd,34, 34,Parent( Name),34, 34,EconoIntegration,34 )
+    else UNCHANGED
+    endif
+ENDRULE
+RULE NEW OACtrl:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" )
+    then WriteToFile( "%s\n", HVACSecSizingRpt_Part1 )
+    else UNCHANGED 
+    endif
+ENDRULE 
+RULE NEW OACtrl:HVACSecSizingRpt
+  REPORT
+    if( Proj:RuleReportType = "ModelRpt_HVACSecondarySizing" .AND.
+        ComponentIndex() = ComponentCount( OACtrl ) )
+    then // Last object in model, close table with ENDTABLE
+      WriteToFile( "ENDTABLE\n" )
+    else
+      UNCHANGED
+    endif 
+ENDRULE  

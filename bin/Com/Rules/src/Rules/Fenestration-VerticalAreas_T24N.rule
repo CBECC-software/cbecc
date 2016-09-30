@@ -1,0 +1,5999 @@
+// Vertical Fenestration - Geometry Considerations
+
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// ---------- Section 5.5.7 - Fenestration ------------------------------------
+
+// ISSUE: Need to add proposed and baseline runs to new Window properties 
+
+// ********** Scale Windows ***************************************************
+// This rule is loacted above other rules so that WWR will be reclaculated for
+// baseline runs AFTER any scaling is performed.  Scaling factors for the 
+// baseline runs are calculated in the default transform, so rule ordering is 
+// not problematic.
+
+// ---------- Scaling Status --------------------------------------------------
+// Identify whether windows are to be scaled, based on Compliance Type
+RULE NEW Bldg:AddWinAreaFlag
+  DATATYPE 
+    Integer
+  LONGFORM
+    AdditionalWindowAreaFlag
+  DESCRIPTION
+    "For Additions/Alterations.  Flag to identify whether window area is
+     increased."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( sumchildren( Win:IsNewCondWin ) > 0 ) 
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ApplyStdWinScaling
+  DATATYPE 
+    Integer
+  LONGFORM
+    ApplyStandardWindowScaling
+  DESCRIPTION
+    "Flag to identify whether windows are to be scaled."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    0
+  SIZING_PROPOSED
+    0
+  SIZING_BASELINE
+    if( Proj:IsNewEnv = 1 ) then 
+      1 else
+    // apply user defined properties
+    if( Proj:IsNewMech = 1 ) then 
+      0 else
+    // alterations
+    if( Proj:IsAddOrAlt = 1 ) then
+      if( u:AddWinAreaFlag = 1 )
+      then 1 
+      else 0
+      endif
+    else 1
+    endif endif endif
+  ANNUAL
+    z:ApplyStdWinScaling
+ENDRULE
+
+// ---------- Baseline Window Scaling Factor ----------------------------------
+RULE NEW Bldg:PrelimNewWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    PreliminaryNewWallNewWindowScaleFactor
+  DESCRIPTION
+    "Preliminary Scaling factor for New windows on New Walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput 
+  SIZING_PROPOSED
+    UNCHANGED      
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if    ( u:NewWallNewWinWWR <= 0 ) 
+      then  1
+      else  (u:NewWallNewWinBaseTargetWWR) / (u:NewWallNewWinWWR)
+      endif
+    default: 
+      1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:PrelimExsOrAltWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    PreliminaryExistingOrAlteredWallNewWindowScaleFactor
+  DESCRIPTION
+    "Preliminary Scaling factor for New windows on existing/altered walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput 
+  SIZING_PROPOSED
+    UNCHANGED      
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if    ( u:ExsOrAltWallNewWinWWR <= 0 ) 
+      then  1
+      else  ( u:ExsOrAltWallNewWinBaseTargetWWR - u:ExsOrAltWallExsOrAltWinWWR ) / ( u:ExsOrAltWallNewWinWWR )
+      endif
+    default: 
+      1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:WestNewWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    WestNewWallNewWindowScaleFactor
+  DESCRIPTION
+    "Scaling factor for New west facing windows on New walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    1
+  SIZING_PROPOSED
+    UNCHANGED 
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if   ( u:WestNewWallNewWinWWR > 0.40 )
+      then  u:NewWallNewWinBaseTargetWestWWR / u:WestNewWallNewWinWWR 
+      else  zb:PrelimNewWallNewWinScaleFactor
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:WestExsOrAltWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    WestExistingOrAlteredWallNewWindowScaleFactor
+  DESCRIPTION
+    "Scaling factor for New west facing windows on existing/altered walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    1
+  SIZING_PROPOSED
+    UNCHANGED 
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+      if   ( ( u:WestExsOrAltWallNewWinWWR + u:WestExsOrAltWallExsOrAltWinWWR ) > 0.40 .AND.  u:WestExsOrAltWallNewWinWWR > 0 )
+      then  ( u:ExsOrAltWallNewWinBaseTargetWestWWR - u:WestExsOrAltWallExsOrAltWinWWR ) / ( u:WestExsOrAltWallNewWinWWR )
+      else  zb:PrelimExsOrAltWallNewWinScaleFactor 
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NonWestNewWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    NonWestNewWallNewWindowScaleFactor
+  DESCRIPTION
+    "Scaling factor for New non-west facing windows on New walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  SIZING_PROPOSED
+    UNCHANGED 
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+// TO DO:  Add Cond statements here...
+      if ( ( u:CondNewWallNewWinArea - u:WestCondNewWallNewWinArea ) <= 0 ) 
+      then  1
+      else  Min( 1, 
+                ( ( zb:PrelimNewWallNewWinScaleFactor * u:CondNewWallNewWinArea ) -
+                ( zb:WestNewWallNewWinScaleFactor * u:WestCondNewWallNewWinArea ) ) /     
+                ( u:CondNewWallNewWinArea - u:WestCondNewWallNewWinArea ) )
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NonWestExsOrAltWallNewWinScaleFactor
+  DATATYPE
+    Float
+  LONGFORM
+    NonWestExistingOrAlteredWallNewWindowScaleFactor
+  DESCRIPTION
+    "Scaling factor for New non-west facing windows on existing/altered walls"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  SIZING_PROPOSED
+    UNCHANGED 
+  SIZING_BASELINE
+    switch( ApplyStdWinScaling )
+    case  0:
+      1
+    case  1: 
+// TO DO:  Add Cond statements here...
+      if ( ( u:CondExsOrAltWallNewWinArea - u:WestCondExsOrAltWallNewWinArea ) <= 0 ) 
+      then  1
+      else  Min( 1, 
+                ( ( zb:PrelimExsOrAltWallNewWinScaleFactor * u:CondExsOrAltWallNewWinArea ) -
+                ( zb:WestExsOrAltWallNewWinScaleFactor * u:WestCondExsOrAltWallNewWinArea ) ) /     
+                ( u:CondExsOrAltWallNewWinArea - u:WestCondExsOrAltWallNewWinArea ) )
+      endif
+    default: 1
+    endswitch
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Delete Proposed Window if Existing WWR > 40% --------------------
+RULE Win:Action
+  DESCRIPTION
+    "Rule to remove new windows in baseline if existing WWR is already greater
+     than the base target WWR"
+  SIZING_PROPOSED
+    UNCHANGED
+  SIZING_BASELINE
+      if    (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsNew)
+      then if (zb:Bldg:WestNewWallNewWinScaleFactor < 0 .AND. u:Win:IsNew)
+        then DeleteComp()
+        else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsExisting)
+        then if (zb:Bldg:WestExsOrAltWallNewWinScaleFactor < 0 .AND. u:Win:IsNew)
+          then DeleteComp()
+          else UNCHANGED
+          endif
+      else if (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsAltered)
+        then if (zb:Bldg:WestExsOrAltWallNewWinScaleFactor < 0 .AND. u:Win:IsNew)
+          then DeleteComp()
+          else UNCHANGED
+          endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsNew)
+        then if (zb:Bldg:NonWestNewWallNewWinScaleFactor < 0 .AND. u:Win:IsNew)
+          then DeleteComp()
+          else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsExisting) 
+        then if (zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor < 0 .AND. Win:IsNew)
+          then DeleteComp()
+          else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsAltered) 
+        then if (zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor < 0 .AND. Win:IsNew)
+          then DeleteComp()
+          else UNCHANGED
+        endif
+      else UNCHANGED
+          endif
+          endif
+          endif
+        endif
+      endif
+      endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+// ---------- Call Polyloop Scaling Function and Repopulate Window Areas ------
+RULE Win:Area
+  DESCRIPTION
+    "Adjust the Window Sizes based on West or NonWest Scaling Factor"  
+  HELP
+    ""  
+  REPORTPRECISION
+    0
+  SIZING_PROPOSED
+    UNCHANGED 
+  SIZING_BASELINE
+    switch( Bldg:ApplyStdWinScaling )
+    case  0:
+      UNCHANGED
+    case  1: 
+      if    (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsNew)
+      then if (zb:Bldg:WestNewWallNewWinScaleFactor < 1 .AND. u:Win:IsNew)
+        then ScalePolyLoop(0, zb:Bldg:WestNewWallNewWinScaleFactor)
+        else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsExisting)
+        then if (zb:Bldg:WestExsOrAltWallNewWinScaleFactor < 1 .AND. u:Win:IsNew)
+          then ScalePolyLoop(0, zb:Bldg:WestExsOrAltWallNewWinScaleFactor)
+          else UNCHANGED
+          endif
+      else if (u:ExtWall:WestFacingFlag == 1 .AND. u:ExtWall:IsAltered)
+        then if (zb:Bldg:WestExsOrAltWallNewWinScaleFactor < 1 .AND. u:Win:IsNew)
+          then ScalePolyLoop(0, zb:Bldg:WestExsOrAltWallNewWinScaleFactor)
+          else UNCHANGED
+          endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsNew)
+        then if (zb:Bldg:NonWestNewWallNewWinScaleFactor < 1 .AND. u:Win:IsNew)
+          then ScalePolyLoop(0, zb:Bldg:NonWestNewWallNewWinScaleFactor)
+          else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsExisting) 
+        then if (zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor < 1 .AND. Win:IsNew)
+          then ScalePolyLoop(0, zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor)
+          else UNCHANGED
+        endif
+      else if (u:ExtWall:WestFacingFlag == 0 .AND. u:ExtWall:IsAltered) 
+        then if (zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor < 1 .AND. Win:IsNew)
+          then ScalePolyLoop(0, zb:Bldg:NonWestExsOrAltWallNewWinScaleFactor)
+          else UNCHANGED
+        endif
+      else UNCHANGED
+          endif
+          endif
+          endif
+        endif
+      endif
+      endif
+    default:
+      UNCHANGED
+    endswitch
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+
+// ********** WWR Calculations ************************************************
+
+// ********** Window Parameters for WWR Calcs **************************
+// NOTE: Data model does not support windows on interior walls
+RULE NEW ExtWall:WinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WinArea
+  DESCRIPTION
+    "Area of all Windows on the Exterior Wall."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    SumChildren( Win:Area )    
+  CHECKSIM
+    if( IfValidAnd( u:WinArea >= u:Area ) )
+    then PostError( "Exterior Wall '%s' has window area greater than or equal
+                    to total wall area.  Window area must be reduced, or wall
+                    area increased.", u:Name )
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    u:WinArea
+  SIZING_BASELINE
+    SumChildren( Win:Area )
+  ANNUAL
+    z:WinArea
+ENDRULE
+
+// Seperate New Win Area from Existing/Altered Window Area
+RULE NEW ExtWall:NewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NewWindowArea
+  DESCRIPTION
+    "Area of all New Windows on an Exterior Wall."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    SumChildrenIf( Win:Area, Win:IsNew )  
+  SIZING_PROPOSED
+    u:NewWinArea
+  SIZING_BASELINE
+    SumChildrenIf( Win:Area, Win:IsNew ) 
+  ANNUAL
+    z:NewWinArea
+ENDRULE
+RULE NEW ExtWall:ExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredWindowArea
+  DESCRIPTION
+    "Area of all Existing/Altered Windows on an Exterior Wall."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput   
+  DEFAULT    
+    SumChildrenIf( Win:Area, Win:IsExisting ) + SumChildrenIf( Win:Area, Win:IsAltered ) 
+  SIZING_PROPOSED
+    u:ExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildrenIf( Win:Area, Win:IsExisting ) + SumChildrenIf( Win:Area, Win:IsAltered ) 
+  ANNUAL
+    z:ExsOrAltWinArea
+ENDRULE
+
+
+// ---------- T-24 WWR Calc, Exterior Wall Categories -------------------------
+RULE NEW ExtWall:CondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWallArea
+  DESCRIPTION
+    "Area of exterior wall that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND.
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+  SIZING
+    u:CondExtWallArea
+  ANNUAL
+    z:CondExtWallArea
+ENDRULE
+RULE NEW ExtWall:CondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorWallArea
+  DESCRIPTION
+    "Area of any new exterior wall that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND. IsNew .AND. 
+        IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+ENDRULE
+RULE NEW ExtWall:CondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "Area of any existing or altered exterior wall that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 .AND. IsAltered .OR.
+        IsExisting .AND. IfValidAnd( Area > 0 ) )
+    then Area
+    else 0
+    endif
+ENDRULE
+
+RULE NEW ExtWall:CondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWindowArea
+  DESCRIPTION
+    "Area of all Windows on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExtWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1 )
+    then SumChildren( Win:Area ) 
+    else 0
+    endif
+  ANNUAL
+    z:CondExtWinArea
+ENDRULE
+RULE NEW ExtWall:CondNewExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorWindowArea
+  DESCRIPTION
+    "Area of all New Windows on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 )
+    then NewWinArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondNewExtWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1 )
+    then NewWinArea
+    else 0
+    endif
+  ANNUAL
+    z:CondNewExtWinArea
+ENDRULE
+RULE NEW ExtWall:CondExsOrAltExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorWindowArea
+  DESCRIPTION
+    "Area of all Existing or Altered Windows on the exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv = 1 )
+    then ExsOrAltWinArea  
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltExtWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv = 1 )
+    then ExsOrAltWinArea  
+    else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltExtWinArea
+ENDRULE
+
+RULE NEW ExtWall:CondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "Area of all New Windows on new exterior wall that is adjacent to conditioned
+     space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv .AND. IsNew ) 
+    then NewWinArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondNewWallNewWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv .AND. IsNew ) 
+    then NewWinArea
+    else 0
+    endif
+  ANNUAL
+    z:CondNewWallNewWinArea
+ENDRULE
+RULE NEW ExtWall:CondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "Area of all New Windows on exiting or altered exterior wall 
+     that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv .AND. 
+      ( IsExisting .OR. IsAltered ) )
+    then NewWinArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv .AND. 
+      ( IsExisting .OR. IsAltered ) )
+    then NewWinArea
+    else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW ExtWall:CondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "Area of all Existing or Altered Windows on exiting or altered exterior wall 
+     that is adjacent to conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+    if( IsCondExtEnv .AND. 
+      ( IsExisting .OR. IsAltered ) )
+    then ExsOrAltWinArea
+    else 0
+    endif
+  SIZING_PROPOSED
+    u:CondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    if( IsCondExtEnv .AND. 
+      ( IsExisting .OR. IsAltered ) )
+    then ExsOrAltWinArea
+    else 0
+    endif
+  ANNUAL
+    z:CondExsOrAltWallExsOrAltWinArea
+ENDRULE
+
+// ---------- Identify/Flag Primary Direction of each wall --------------------
+RULE NEW ExtWall:NorthFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    NorthFacingFlag
+  DESCRIPTION
+    "Set a flag if an exterior wall is north facing"  
+  HELP
+    "1 -> North Facing: 315 < Azimuth <= 45
+     0 - Not North Facing"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( RealAz > 315 ) .OR. IfValidAnd( RealAz <= 45 ))
+    then 1
+    else 0
+    endif 
+  SIZING
+    u:NorthFlag
+  ANNUAL
+    u:NorthFlag
+ENDRULE
+RULE NEW ExtWall:EastFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    EastFacingFlag
+  DESCRIPTION
+    "Set a flag if an exterior wall is east facing"  
+  HELP
+    "1 -> East Facing: 225 < Azimuth <= 315
+     0 - Not East Facing"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( RealAz > 45 ) .AND. IfValidAnd( RealAz <= 135))
+    then 1
+    else 0
+    endif 
+  SIZING
+    u:EastFlag
+  ANNUAL
+    u:EastFlag
+ENDRULE
+RULE NEW ExtWall:SouthFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    SouthFacingFlag
+  DESCRIPTION
+    "Set a flag if an exterior wall is south facing"  
+  HELP
+    "1 -> South Facing: 225 < Azimuth <= 315
+     0 - Not South Facing"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( RealAz > 135 ) .AND. IfValidAnd( RealAz <= 225 ))
+    then 1
+    else 0
+    endif 
+  SIZING
+    u:SouthFlag
+  ANNUAL
+    u:SouthFlag
+ENDRULE
+RULE NEW ExtWall:WestFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    WestFacingFlag
+  DESCRIPTION
+    "Set a flag if an exterior wall is west facing"  
+  HELP
+    "1 -> West Facing: 225 < Azimuth <= 315
+     0 - Not West Facing"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( RealAz > 225 ) .AND. IfValidAnd( RealAz <= 315 ))
+    then 1
+    else 0
+    endif 
+  SIZING
+    u:WestFlag
+  ANNUAL
+    u:WestFlag
+ENDRULE
+
+
+// ---------- Display Perimeter Calculations ----------------------------------
+RULE ExtWall:CondDisplayPerim
+  DESCRIPTION
+    "Conditioned Display perimeter is the length of an exterior wall adjacent
+     to conditioned space in a B-2 occupancy that immediately abuts a public 
+     sidewalk."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.5.7, Fenestration, Geometry
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IsCondExtEnv = 1 .AND.
+        IfValidAnd( DisplayPerim > 0 ) )
+    then u:DisplayPerim
+    else 0
+    endif
+  SIZING
+    u:CondDisplayPerim
+  ANNUAL
+    u:CondDisplayPerim
+ENDRULE
+RULE NEW ExtWall:CondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Conditioned Display perimeter is the length of an exterior wall adjacent
+     to conditioned space in a B-2 occupancy that immediately abuts a public 
+     sidewalk."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.5.7, Fenestration, Geometry
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ExtWall:IsNew .AND.
+        IsCondExtEnv = 1 .AND.
+        IfValidAnd( DisplayPerim > 0 ) )
+    then u:DisplayPerim
+    else 0
+    endif
+ENDRULE
+RULE NEW ExtWall:CondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "Conditioned Display perimeter is the length of an exterior wall adjacent
+     to conditioned space in a B-2 occupancy that immediately abuts a public 
+     sidewalk."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.5.7, Fenestration, Geometry
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ( ExtWall:IsAltered .OR. ExtWall:IsExisting ) .AND.
+        IsCondExtEnv = 1 .AND.
+        IfValidAnd( DisplayPerim > 0 ) )
+    then u:DisplayPerim
+    else 0
+    endif
+ENDRULE
+
+
+
+// ********** Space Parameters for WWR Calcs***********************************
+// ---------- T-24 WWR Calc, Relevant Areas -----------------------------------
+RULE NEW Spc:CondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWallArea
+  DESCRIPTION
+    "The total Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondExtWallArea )
+  SIZING
+    u:CondExtWallArea
+  ANNUAL
+    z:CondExtWallArea
+ENDRULE
+RULE NEW Spc:NorthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExteriorWallArea
+  DESCRIPTION
+    "The total north facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWallArea, ExtWall:NorthFlag == 1)
+  SIZING
+    u:NorthCondExtWallArea
+  ANNUAL
+    z:NorthCondExtWallArea
+ENDRULE
+RULE NEW Spc:EastCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExteriorWallArea
+  DESCRIPTION
+    "The total East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWallArea, ExtWall:EastFlag == 1)
+  SIZING
+    u:EastCondExtWallArea
+  ANNUAL
+    z:EastCondExtWallArea
+ENDRULE
+RULE NEW Spc:SouthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExteriorWallArea
+  DESCRIPTION
+    "The total South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWallArea, ExtWall:SouthFlag == 1)
+  SIZING
+    u:SouthCondExtWallArea
+  ANNUAL
+    z:SouthCondExtWallArea
+ENDRULE
+RULE NEW Spc:WestCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExteriorWallArea
+  DESCRIPTION
+    "The total West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWallArea, ExtWall:WestFlag == 1)
+  SIZING
+    u:WestCondExtWallArea
+  ANNUAL
+    z:WestCondExtWallArea
+ENDRULE
+
+RULE NEW Spc:CondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total Exterior Window area adjacent to conditioned space, excluding 
+     windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondExtWinArea )
+  SIZING_PROPOSED
+    u:CondExtWinArea
+  SIZING_BASELINE
+    SumChildren( ExtWall:CondExtWinArea )
+  ANNUAL
+    z:CondExtWinArea
+ENDRULE
+RULE NEW Spc:NorthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total north facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:NorthFlag == 1)
+  SIZING_PROPOSED
+    u:NorthCondExtWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:NorthFlag == 1)
+  ANNUAL
+    z:NorthCondExtWinArea
+ENDRULE
+RULE NEW Spc:EastCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total East facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:EastFlag == 1)
+  SIZING_PROPOSED
+    u:EastCondExtWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:EastFlag == 1)
+  ANNUAL
+    z:EastCondExtWinArea
+ENDRULE
+RULE NEW Spc:SouthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total South facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:SouthFlag == 1)
+  SIZING_PROPOSED
+    u:SouthCondExtWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:SouthFlag == 1)
+  ANNUAL
+    z:SouthCondExtWinArea
+ENDRULE
+RULE NEW Spc:WestCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total West facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:WestFlag == 1)
+  SIZING_PROPOSED
+    u:WestCondExtWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExtWinArea, ExtWall:WestFlag == 1)
+  ANNUAL
+    z:WestCondExtWinArea
+ENDRULE
+
+RULE NEW Spc:CondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedDisplayPerimeter
+  DESCRIPTION
+    "The Total Display Perimeter of walls adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren(ExtWall:CondDisplayPerim)
+  SIZING
+    u:CondDisplayPerim
+  ANNUAL
+    z:CondDisplayPerim
+ENDRULE
+RULE NEW Spc:NorthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedDisplayPerimeter
+  DESCRIPTION
+    "The total North Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondDisplayPerim, ExtWall:NorthFacingFlag == 1)
+  SIZING
+    u:NorthCondDisplayPerim
+  ANNUAL
+    z:NorthCondDisplayPerim
+ENDRULE
+RULE NEW Spc:EastCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedDisplayPerimeter
+  DESCRIPTION
+    "The total East Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondDisplayPerim, ExtWall:EastFacingFlag == 1)
+  SIZING
+    u:EastCondDisplayPerim
+  ANNUAL
+    z:EastCondDisplayPerim
+ENDRULE
+RULE NEW Spc:SouthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedDisplayPerimeter
+  DESCRIPTION
+    "The total South Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondDisplayPerim, ExtWall:SouthFacingFlag == 1)
+  SIZING
+    u:SouthCondDisplayPerim
+  ANNUAL
+    z:SouthCondDisplayPerim
+ENDRULE
+RULE NEW Spc:WestCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedDisplayPerimeter
+  DESCRIPTION
+    "The total West Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondDisplayPerim, ExtWall:WestFacingFlag == 1)
+  SIZING
+    u:WestCondDisplayPerim
+  ANNUAL
+    z:WestCondDisplayPerim
+ENDRULE
+
+// TO DO: Need to add display perimeter by wall status
+
+// ---------- T-24 WWR Calc, New Wall Areas -----------------------------------
+RULE NEW Spc:CondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondNewExtWallArea )
+ENDRULE
+RULE NEW Spc:NorthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewExtWallArea, ExtWall:NorthFlag == 1)
+ENDRULE
+RULE NEW Spc:EastCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewExtWallArea, ExtWall:EastFlag == 1)
+ENDRULE
+RULE NEW Spc:SouthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewExtWallArea, ExtWall:SouthFlag == 1)
+ENDRULE
+RULE NEW Spc:WestCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewExtWallArea, ExtWall:WestFlag == 1)
+ENDRULE
+
+RULE NEW Spc:CondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on New exterior Wall adjacent to conditioned 
+     space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondNewWallNewWinArea )
+  SIZING_PROPOSED
+    u:CondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren( ExtWall:CondNewWallNewWinArea )
+  ANNUAL
+    z:CondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:NorthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window on new exterior wall area adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:NorthFlag == 1)
+  SIZING_PROPOSED
+    u:NorthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:NorthFlag == 1)
+  ANNUAL
+    z:NorthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:EastCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on new exterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:EastFlag == 1)
+  SIZING_PROPOSED
+    u:EastCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:EastFlag == 1)
+  ANNUAL
+    z:EastCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:SouthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on new exeterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:SouthFlag == 1)
+  SIZING_PROPOSED
+    u:SouthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:SouthFlag == 1)
+  ANNUAL
+    z:SouthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:WestCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on new exterior walls adjacent to 
+     conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:WestFlag == 1)
+  SIZING_PROPOSED
+    u:WestCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondNewWallNewWinArea, ExtWall:WestFlag == 1)
+  ANNUAL
+    z:WestCondNewWallNewWinArea
+ENDRULE
+
+RULE NEW Spc:CondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The Total Display Perimeter of new walls adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren(ExtWall:CondNewWallDisplayPerim)
+  SIZING
+    u:CondNewWallDisplayPerim
+  ANNUAL
+    z:CondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:NorthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total North Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallDisplayPerim, ExtWall:NorthFacingFlag == 1)
+  SIZING
+    u:NorthCondNewWallDisplayPerim
+  ANNUAL
+    z:NorthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:EastCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total East Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallDisplayPerim, ExtWall:EastFacingFlag == 1)
+  SIZING
+    u:EastCondNewWallDisplayPerim
+  ANNUAL
+    z:EastCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:SouthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total South Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallDisplayPerim, ExtWall:SouthFacingFlag == 1)
+  SIZING
+    u:SouthCondNewWallDisplayPerim
+  ANNUAL
+    z:SouthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:WestCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total West Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondNewWallDisplayPerim, ExtWall:WestFacingFlag == 1)
+  SIZING
+    u:WestCondNewWallDisplayPerim
+  ANNUAL
+    z:WestCondNewWallDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Wall Areas ------------------
+RULE NEW Spc:CondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondExsOrAltExtWallArea )
+ENDRULE
+RULE NEW Spc:NorthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltExtWallArea, ExtWall:NorthFlag == 1)
+ENDRULE
+RULE NEW Spc:EastCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltExtWallArea, ExtWall:EastFlag == 1)
+ENDRULE
+RULE NEW Spc:SouthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltExtWallArea, ExtWall:SouthFlag == 1)
+ENDRULE
+RULE NEW Spc:WestCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltExtWallArea, ExtWall:WestFlag == 1)
+ENDRULE
+
+RULE NEW Spc:CondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on existing or altered exterior wall 
+     adjacent to conditioned space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondExsOrAltWallNewWinArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren( ExtWall:CondExsOrAltWallNewWinArea )
+  ANNUAL
+    z:CondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:NorthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window area on existing or altered 
+     exterior wall adjacent to conditioned space excluding windows 
+     in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:NorthFlag == 1)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:NorthFlag == 1)
+  ANNUAL
+    z:NorthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:EastCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:EastFlag == 1)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:EastFlag == 1)
+  ANNUAL
+    z:EastCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:SouthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on existing or altered 
+     exeterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:SouthFlag == 1)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:SouthFlag == 1)
+  ANNUAL
+    z:SouthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:WestCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:WestFlag == 1)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallNewWinArea, ExtWall:WestFlag == 1)
+  ANNUAL
+    z:WestCondExsOrAltWallNewWinArea
+ENDRULE
+
+RULE NEW Spc:CondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space, excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren( ExtWall:CondExsOrAltWallExsOrAltWinArea )
+  SIZING_PROPOSED
+    u:CondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren( ExtWall:CondExsOrAltWallExsOrAltWinArea )
+  ANNUAL
+    z:CondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:NorthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  north facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:NorthFlag == 1)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:NorthFlag == 1)
+  ANNUAL
+    z:NorthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:EastCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  East facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:EastFlag == 1)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:EastFlag == 1)
+  ANNUAL
+    z:EastCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:SouthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  South facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:SouthFlag == 1)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:SouthFlag == 1)
+  ANNUAL
+    z:SouthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:WestCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered West facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:WestFlag == 1)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildrenIf(ExtWall:CondExsOrAltWallExsOrAltWinArea, ExtWall:WestFlag == 1)
+  ANNUAL
+    z:WestCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+
+RULE NEW Spc:CondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The Total Display Perimeter of new walls adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren(ExtWall:CondExsOrAltWallDisplayPerim)
+  SIZING
+    u:CondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:CondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:NorthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total North Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallDisplayPerim, ExtWall:NorthFacingFlag == 1)
+  SIZING
+    u:NorthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:NorthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:EastCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total East Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallDisplayPerim, ExtWall:EastFacingFlag == 1)
+  SIZING
+    u:EastCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:EastCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:SouthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total South Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallDisplayPerim, ExtWall:SouthFacingFlag == 1)
+  SIZING
+    u:SouthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:SouthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:WestCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "The total West Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SumChildrenIf(ExtWall:CondExsOrAltWallDisplayPerim, ExtWall:WestFacingFlag == 1)
+  SIZING
+    u:WestCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:WestCondExsOrAltWallDisplayPerim
+ENDRULE
+
+// ********** Spc w/ Multipliers*********************************************
+// ---------- T-24 WWR Calc, Relevant Areas -----------------------------------
+RULE NEW Spc:MultCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExteriorWallArea
+  DESCRIPTION
+    "The total Exterior Wall Area adjacent to conditioned space, excluding 
+     DEMISING walls, multiplied by any space multipliers."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondExtWallArea*Spc:Mult
+ SIZING
+    u:MultCondExtWallArea
+  ANNUAL
+    z:MultCondExtWallArea
+ENDRULE
+RULE NEW Spc:MultNorthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExteriorWallArea
+  DESCRIPTION
+    "The total north facingExterior Wall Area adjacent to conditioned space, 
+     excluding DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    NorthCondExtWallArea*Spc:Mult 
+ SIZING
+    u:MultNorthCondExtWallArea
+  ANNUAL
+    z:MultNorthCondExtWallArea
+ENDRULE
+RULE NEW Spc:MultEastCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExteriorWallArea
+  DESCRIPTION
+    "The total East facingExterior Wall Area adjacent to conditioned space, 
+     excluding DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    EastCondExtWallArea*Spc:Mult 
+ SIZING
+    u:MultEastCondExtWallArea
+  ANNUAL
+    z:MultEastCondExtWallArea
+ENDRULE
+RULE NEW Spc:MultSouthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExteriorWallArea
+  DESCRIPTION
+    "The total South facingExterior Wall Area adjacent to conditioned space, 
+     excluding DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SouthCondExtWallArea*Spc:Mult 
+ SIZING
+    u:MultSouthCondExtWallArea
+  ANNUAL
+    z:MultSouthCondExtWallArea
+ENDRULE
+RULE NEW Spc:MultWestCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExteriorWallArea
+  DESCRIPTION
+    "The total West facingExterior Wall Area adjacent to conditioned space, 
+     excluding DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    WestCondExtWallArea*Spc:Mult 
+ SIZING
+    u:MultWestCondExtWallArea
+  ANNUAL
+    z:MultWestCondExtWallArea
+ENDRULE
+
+RULE NEW Spc:MultCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total Exterior Window Area adjacent to conditioned space, excluding 
+     windows in DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    CondExtWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExtWinArea
+  SIZING_BASELINE
+    CondExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultCondExtWinArea
+ENDRULE
+RULE NEW Spc:MultNorthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total north facing Exterior Window Area adjacent to conditioned space, 
+     excluding windows in DEMISING walls, multiplied by any space multipliers."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    NorthCondExtWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultNorthCondExtWinArea
+  SIZING_BASELINE
+    NorthCondExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultNorthCondExtWinArea
+ENDRULE
+RULE NEW Spc:MultEastCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total East facing Exterior Window Area adjacent to conditioned space, 
+     excluding windows in DEMISING walls, multiplied by any space multipliers."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    EastCondExtWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultEastCondExtWinArea
+  SIZING_BASELINE
+    EastCondExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultEastCondExtWinArea
+ENDRULE
+RULE NEW Spc:MultSouthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total South facing Exterior Window Area adjacent to conditioned space, 
+     excluding windows in DEMISING walls, multiplied by any space multipliers."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SouthCondExtWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultSouthCondExtWinArea
+  SIZING_BASELINE
+    SouthCondExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultSouthCondExtWinArea
+ENDRULE
+RULE NEW Spc:MultWestCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total West facing Exterior Window Area adjacent to conditioned space, 
+     excluding windows in DEMISING walls, multiplied by any space multipliers."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    WestCondExtWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultWestCondExtWinArea
+  SIZING_BASELINE
+    WestCondExtWinArea*Spc:Mult
+  ANNUAL
+    z:MultWestCondExtWinArea
+ENDRULE
+
+RULE NEW Spc:MultCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedDisplayPerimeter
+  DESCRIPTION
+    "The total Display Perimeter of walls adjacent to conditioned space, 
+     multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    CondDisplayPerim*Spc:Mult
+  SIZING
+    u:MultCondDisplayPerim
+  ANNUAL
+    z:MultCondDisplayPerim
+ENDRULE
+RULE NEW Spc:MultNorthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedDisplayPerimeter
+  DESCRIPTION    
+    "The total Display Perimeter of north facing walls adjacent to conditioned
+     space, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    NorthCondDisplayPerim*Spc:Mult
+  SIZING
+    u:MultNorthCondDisplayPerim
+  ANNUAL
+    z:MultNorthCondDisplayPerim
+ENDRULE
+RULE NEW Spc:MultEastCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedDisplayPerimeter
+  DESCRIPTION    
+    "The total Display Perimeter of East facing walls adjacent to conditioned
+     space, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    EastCondDisplayPerim*Spc:Mult
+  SIZING
+    u:MultEastCondDisplayPerim
+  ANNUAL
+    z:MultEastCondDisplayPerim
+ENDRULE
+RULE NEW Spc:MultSouthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedDisplayPerimeter
+  DESCRIPTION    
+    "The total Display Perimeter of South facing walls adjacent to conditioned
+     space, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SouthCondDisplayPerim*Spc:Mult
+  SIZING
+    u:MultSouthCondDisplayPerim
+  ANNUAL
+    z:MultSouthCondDisplayPerim
+ENDRULE
+RULE NEW Spc:MultWestCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedDisplayPerimeter
+  DESCRIPTION    
+    "The total Display Perimeter of West facing walls adjacent to conditioned
+     space, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    WestCondDisplayPerim*Spc:Mult
+  SIZING
+    u:MultWestCondDisplayPerim
+  ANNUAL
+    z:MultWestCondDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Wall Areas -----------------------------------
+RULE NEW Spc:MultCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:CondNewExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultNorthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:NorthCondNewExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultEastCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:EastCondNewExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultSouthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:SouthCondNewExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultWestCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:WestCondNewExtWallArea*Spc:Mult
+ENDRULE
+
+RULE NEW Spc:MultCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on New exterior Wall adjacent to conditioned 
+     space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:CondNewWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondNewWallNewWinArea
+  SIZING_BASELINE
+    Spc:CondNewWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultNorthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window on new exterior wall area adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:NorthCondNewWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultNorthCondNewWallNewWinArea
+  SIZING_BASELINE
+    Spc:NorthCondNewWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultNorthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultEastCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on new exterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:EastCondNewWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultEastCondNewWallNewWinArea
+  SIZING_BASELINE
+    Spc:EastCondNewWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultEastCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultSouthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on new exeterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:SouthCondNewWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultSouthCondNewWallNewWinArea
+  SIZING_BASELINE
+    Spc:SouthCondNewWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultSouthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultWestCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on new exterior walls adjacent to 
+     conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:WestCondNewWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultSouthCondNewWallNewWinArea
+  SIZING_BASELINE
+    Spc:WestCondNewWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultSouthCondNewWallNewWinArea
+ENDRULE
+
+RULE NEW Spc:MultCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The Total Display Perimeter of new walls adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    CondNewWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultCondNewWallDisplayPerim
+  ANNUAL
+    z:MultCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultNorthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total North Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    NorthCondNewWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultNorthCondNewWallDisplayPerim
+  ANNUAL
+    z:MultNorthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultEastCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total East Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    EastCondNewWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultEastCondNewWallDisplayPerim
+  ANNUAL
+    z:MultEastCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultSouthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MutilpiedSouthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total South Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SouthCondNewWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultSouthCondNewWallDisplayPerim
+  ANNUAL
+    z:MultSouthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultWestCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "The total West Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    WestCondNewWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultWestCondNewWallDisplayPerim
+  ANNUAL
+    z:MultWestCondNewWallDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Wall Areas ------------------
+RULE NEW Spc:MultCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:CondExsOrAltExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultNorthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:NorthCondExsOrAltExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultEastCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:EastCondExsOrAltExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultSouthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:SouthCondExsOrAltExtWallArea*Spc:Mult
+ENDRULE
+RULE NEW Spc:MultWestCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:WestCondExsOrAltExtWallArea*Spc:Mult
+ENDRULE
+
+RULE NEW Spc:MultCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on existing or altered exterior wall 
+     adjacent to conditioned space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:CondExsOrAltWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    Spc:CondExsOrAltWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultNorthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window area on existing or altered 
+     exterior wall adjacent to conditioned space excluding windows 
+     in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:NorthCondExsOrAltWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultNorthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    Spc:NorthCondExsOrAltWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultNorthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultEastCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:EastCondExsOrAltWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultEastCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    Spc:EastCondExsOrAltWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultEastCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultSouthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on existing or altered 
+     exeterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:SouthCondExsOrAltWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultSouthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    Spc:SouthCondExsOrAltWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultSouthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Spc:MultWestCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:WestCondExsOrAltWallNewWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultWestCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    Spc:WestCondExsOrAltWallNewWinArea*Spc:Mult
+  ANNUAL
+    z:MultWestCondExsOrAltWallNewWinArea
+ENDRULE
+
+RULE NEW Spc:MultCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space, excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:CondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    Spc:CondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  ANNUAL
+    z:MultCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:MultNorthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  north facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:NorthCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultNorthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    Spc:NorthCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  ANNUAL
+    z:MultNorthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:MultEastCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  East facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:EastCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultEastCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    Spc:EastCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  ANNUAL
+    z:MultEastCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:MultSouthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  South facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:SouthCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultSouthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    Spc:SouthCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  ANNUAL
+    z:MultSouthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Spc:MultWestCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered West facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    Spc:WestCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  SIZING_PROPOSED
+    u:MultWestCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    Spc:WestCondExsOrAltWallExsOrAltWinArea*Spc:Mult
+  ANNUAL
+    z:MultWestCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+
+RULE NEW Spc:MultCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The Total Display Perimeter of new walls adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    CondExsOrAltWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:MultCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultNorthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedNorthConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total North Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    NorthCondExsOrAltWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultNorthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:MultNorthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultEastCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedEastConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total East Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    EastCondExsOrAltWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultEastCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:MultEastCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultSouthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedSouthConditionedExistingOrAlteredWallDisplayPerimeter
+  DESCRIPTION
+    "The total South Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    SouthCondExsOrAltWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultSouthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:MultSouthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Spc:MultWestCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    MultipliedWestConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "The total West Display Perimeter adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput    
+  DEFAULT
+    WestCondExsOrAltWallDisplayPerim*Spc:Mult
+  SIZING
+    u:MultWestCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:MultWestCondExsOrAltWallDisplayPerim
+ENDRULE
+
+// ********** Story including Spc Multipliers *******************************
+// ---------- T-24 WWR Calc, Relevant Areas -----------------------------------
+RULE NEW Story:CondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWallArea
+  DESCRIPTION
+    "Story Exterior Wall area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput         
+  DEFAULT
+    SumChildren(Spc:MultCondExtWallArea)
+ SIZING
+    u:CondExtWallArea
+  ANNUAL
+    z:CondExtWallArea
+ENDRULE
+RULE NEW Story:NorthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExteriorWallArea
+  DESCRIPTION
+    "Story north facing Exterior Wall area adjacent to conditioned space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExtWallArea)
+ SIZING
+    u:NorthCondExtWallArea
+  ANNUAL
+    z:NorthCondExtWallArea
+ENDRULE
+RULE NEW Story:EastCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExteriorWallArea
+  DESCRIPTION
+    "Story east facing Exterior Wall area adjacent to conditioned space." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondExtWallArea)
+ SIZING
+    u:EastCondExtWallArea
+  ANNUAL
+    z:EastCondExtWallArea
+ENDRULE
+RULE NEW Story:SouthCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExteriorWallArea
+  DESCRIPTION
+    "Story south facing Exterior Wall area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExtWallArea)
+ SIZING
+    u:SouthCondExtWallArea
+  ANNUAL
+    z:SouthCondExtWallArea
+ENDRULE
+RULE NEW Story:WestCondExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExteriorWallArea
+  DESCRIPTION
+    "Story west facing Exterior Wall area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondExtWallArea)
+ SIZING
+    u:WestCondExtWallArea
+  ANNUAL
+    z:WestCondExtWallArea
+ENDRULE
+
+RULE NEW Story:CondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total Exterior Window area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput           
+  DEFAULT
+    SumChildren(Spc:MultCondExtWinArea)
+  SIZING_PROPOSED
+    u:CondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultCondExtWinArea)
+  ANNUAL
+    z:CondExtWinArea
+ENDRULE
+RULE NEW Story:NorthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total north facing Exterior Window area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExtWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultNorthCondExtWinArea)
+  ANNUAL
+    z:NorthCondExtWinArea
+ENDRULE
+RULE NEW Story:EastCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total East facing Exterior Window area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    SumChildren(Spc:MultEastCondExtWinArea)
+  SIZING_PROPOSED
+    u:EastCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultEastCondExtWinArea)
+  ANNUAL
+    z:EastCondExtWinArea
+ENDRULE
+RULE NEW Story:SouthCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total South facing Exterior Window area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExtWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultSouthCondExtWinArea)
+  ANNUAL
+    z:SouthCondExtWinArea
+ENDRULE
+RULE NEW Story:WestCondExtWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExteriorWindowArea
+  DESCRIPTION
+    "The total West facing Exterior Window area adjacent to conditioned space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    SumChildren(Spc:MultWestCondExtWinArea)
+  SIZING_PROPOSED
+    u:WestCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultWestCondExtWinArea)
+  ANNUAL
+    z:WestCondExtWinArea
+ENDRULE
+
+RULE NEW Story:CondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedDisplayPerimimeter
+  DESCRIPTION
+    "Story Display Perimeter of walls adjacent to conditioned space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput          
+  DEFAULT
+    SumChildren(Spc:MultCondDisplayPerim)
+ SIZING
+    u:CondDisplayPerim
+  ANNUAL
+    z:CondDisplayPerim
+ENDRULE
+RULE NEW Story:NorthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedDisplayPerimimeter
+  DESCRIPTION
+    "Story north facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondDisplayPerim)
+ SIZING
+    u:NorthCondDisplayPerim
+  ANNUAL
+    z:NorthCondDisplayPerim
+ENDRULE
+RULE NEW Story:EastCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedDisplayPerimimeter
+  DESCRIPTION
+    "Story east facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondDisplayPerim)
+ SIZING
+    u:EastCondDisplayPerim
+  ANNUAL
+    z:EastCondDisplayPerim
+ENDRULE
+RULE NEW Story:SouthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedDisplayPerimimeter
+  DESCRIPTION
+    "Story south facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondDisplayPerim)
+ SIZING
+    u:SouthCondDisplayPerim
+  ANNUAL
+    z:SouthCondDisplayPerim
+ENDRULE
+RULE NEW Story:WestCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedDisplayPerimimeter
+  DESCRIPTION
+    "Story west facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondDisplayPerim)
+ SIZING
+    u:WestCondDisplayPerim
+  ANNUAL
+    z:WestCondDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Wall Areas -----------------------------------
+RULE NEW Story:CondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultCondNewExtWallArea)
+ENDRULE
+RULE NEW Story:NorthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondNewExtWallArea)
+ENDRULE
+RULE NEW Story:EastCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondNewExtWallArea)
+ENDRULE
+RULE NEW Story:SouthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondNewExtWallArea)
+ENDRULE
+RULE NEW Story:WestCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondNewExtWallArea)
+ENDRULE
+
+RULE NEW Story:CondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on New exterior Wall adjacent to conditioned 
+     space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:CondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultCondNewWallNewWinArea)
+  ANNUAL
+    z:CondNewWallNewWinArea
+ENDRULE
+RULE NEW Story:NorthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window on new exterior wall area adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:NorthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultNorthCondNewWallNewWinArea)
+  ANNUAL
+    z:NorthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Story:EastCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on new exterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:EastCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultEastCondNewWallNewWinArea)
+  ANNUAL
+    z:EastCondNewWallNewWinArea
+ENDRULE
+RULE NEW Story:SouthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on new exeterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:SouthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultSouthCondNewWallNewWinArea)
+  ANNUAL
+    z:SouthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Story:WestCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on new exterior walls adjacent to 
+     conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:WestCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultWestCondNewWallNewWinArea)
+  ANNUAL
+    z:WestCondNewWallNewWinArea
+ENDRULE
+
+RULE NEW Story:CondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallDisplayPerimimeter
+  DESCRIPTION
+    "Story Display Perimeter of walls adjacent to conditioned space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput          
+  DEFAULT
+    SumChildren(Spc:MultCondNewWallDisplayPerim)
+ SIZING
+    u:CondNewWallDisplayPerim
+  ANNUAL
+    z:CondNewWallDisplayPerim
+ENDRULE
+RULE NEW Story:NorthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallDisplayPerimimeter
+  DESCRIPTION
+    "Story north facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondNewWallDisplayPerim)
+ SIZING
+    u:NorthCondNewWallDisplayPerim
+  ANNUAL
+    z:NorthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Story:EastCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallDisplayPerimimeter
+  DESCRIPTION
+    "Story east facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondNewWallDisplayPerim)
+ SIZING
+    u:EastCondNewWallDisplayPerim
+  ANNUAL
+    z:EastCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Story:SouthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallDisplayPerimimeter
+  DESCRIPTION
+    "Story south facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondNewWallDisplayPerim)
+ SIZING
+    u:SouthCondNewWallDisplayPerim
+  ANNUAL
+    z:SouthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Story:WestCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallDisplayPerimimeter
+  DESCRIPTION
+    "Story west facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondNewWallDisplayPerim)
+ SIZING
+    u:WestCondNewWallDisplayPerim
+  ANNUAL
+    z:WestCondNewWallDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Wall Areas ------------------
+RULE NEW Story:CondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Story:NorthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Story:EastCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Story:SouthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Story:WestCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondExsOrAltExtWallArea)
+ENDRULE
+
+RULE NEW Story:CondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on existing or altered exterior wall 
+     adjacent to conditioned space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:CondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:CondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Story:NorthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window area on existing or altered 
+     exterior wall adjacent to conditioned space excluding windows 
+     in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultNorthCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:NorthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Story:EastCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultEastCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:EastCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Story:SouthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on existing or altered 
+     exeterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultSouthCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:SouthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Story:WestCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+     SumChildren(Spc:MultWestCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultWestCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:WestCondExsOrAltWallNewWinArea
+ENDRULE
+
+RULE NEW Story:CondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space, excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:CondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:CondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Story:NorthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  north facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultNorthCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:NorthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Story:EastCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  East facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultEastCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:EastCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Story:SouthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  South facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultSouthCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:SouthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Story:WestCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered West facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Spc:MultWestCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:WestCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+
+RULE NEW Story:CondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredDisplayPerimimeter
+  DESCRIPTION
+    "Story Display Perimeter of walls adjacent to conditioned space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput          
+  DEFAULT
+    SumChildren(Spc:MultCondExsOrAltWallDisplayPerim)
+ SIZING
+    u:CondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:CondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Story:NorthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredDisplayPerimimeter
+  DESCRIPTION
+    "Story north facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultNorthCondExsOrAltWallDisplayPerim)
+ SIZING
+    u:NorthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:NorthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Story:EastCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredDisplayPerimimeter
+  DESCRIPTION
+    "Story east facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultEastCondExsOrAltWallDisplayPerim)
+ SIZING
+    u:EastCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:EastCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Story:SouthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredDisplayPerimimeterWall
+  DESCRIPTION
+    "Story south facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultSouthCondExsOrAltWallDisplayPerim)
+ SIZING
+    u:SouthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:SouthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Story:WestCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredDisplayPerimimeter
+  DESCRIPTION
+    "Story west facing Display Perimeter of walls adjacent to conditioned 
+     space."   
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Spc:MultWestCondExsOrAltWallDisplayPerim)
+ SIZING
+    u:WestCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:WestCondExsOrAltWallDisplayPerim
+ENDRULE
+
+// ********** Building including Spc Multipliers ****************************
+// ---------- T-24 WWR Calc, Relevant Areas -----------------------------------
+RULE Bldg:CondExtWallArea
+  DESCRIPTION
+    "Building Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:CondExtWallArea)
+  SIZING
+    u:CondExtWallArea
+  ANNUAL
+    z:CondExtWallArea
+ENDRULE
+RULE Bldg:NorthCondExtWallArea
+  DESCRIPTION
+    "Building North Facing Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:NorthCondExtWallArea)
+  SIZING
+    u:NorthCondExtWallArea
+  ANNUAL
+    z:NorthCondExtWallArea
+ENDRULE
+RULE Bldg:EastCondExtWallArea
+  DESCRIPTION
+    "Building East Facing Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:EastCondExtWallArea)
+  SIZING
+    u:EastCondExtWallArea
+  ANNUAL
+    z:EastCondExtWallArea
+ENDRULE
+RULE Bldg:SouthCondExtWallArea
+  DESCRIPTION
+    "Building South Facing Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:SouthCondExtWallArea)
+  SIZING
+    u:SouthCondExtWallArea
+  ANNUAL
+    z:SouthCondExtWallArea
+ENDRULE
+RULE Bldg:WestCondExtWallArea
+  DESCRIPTION
+    "Building West Facing Exterior Wall Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:WestCondExtWallArea)
+  SIZING
+    u:WestCondExtWallArea
+  ANNUAL
+    z:WestCondExtWallArea
+ENDRULE
+
+RULE Bldg:CondExtWinArea
+  DESCRIPTION
+    "Building Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:CondExtWinArea)
+  SIZING_PROPOSED
+    u:CondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Story:CondExtWinArea)
+  ANNUAL
+    z:CondExtWinArea
+ENDRULE
+RULE Bldg:NorthCondExtWinArea
+  DESCRIPTION
+    "Building North Facing Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:NorthCondExtWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Story:NorthCondExtWinArea)
+  ANNUAL
+    z:NorthCondExtWinArea
+ENDRULE
+RULE Bldg:EastCondExtWinArea
+  DESCRIPTION
+    "Building East Facing Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:EastCondExtWinArea)
+  SIZING_PROPOSED
+    u:EastCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Story:EastCondExtWinArea)
+  ANNUAL
+    z:EastCondExtWinArea
+ENDRULE
+RULE Bldg:SouthCondExtWinArea
+  DESCRIPTION
+    "Building South Facing Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:SouthCondExtWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Story:SouthCondExtWinArea)
+  ANNUAL
+    z:SouthCondExtWinArea
+ENDRULE
+RULE Bldg:WestCondExtWinArea
+  DESCRIPTION
+    "Building West Facing Exterior Window Area"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren(Story:WestCondExtWinArea)
+  SIZING_PROPOSED
+    u:WestCondExtWinArea
+  SIZING_BASELINE
+    SumChildren(Story:WestCondExtWinArea)
+  ANNUAL
+    z:WestCondExtWinArea
+ENDRULE
+
+RULE NEW Bldg:CondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedDisplayPerimeter
+  DESCRIPTION
+    "Building Display Perimeter of walls adjacent to conditioned space."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondDisplayPerim)
+  SIZING
+    u:CondDisplayPerim
+  ANNUAL
+    z:CondDisplayPerim
+ENDRULE
+RULE NEW Bldg:NorthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedDisplayPerimeter
+  DESCRIPTION
+    "Building north facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondDisplayPerim)
+ SIZING
+    u:NorthCondDisplayPerim
+  ANNUAL
+    z:NorthCondDisplayPerim
+ENDRULE
+RULE NEW Bldg:EastCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedDisplayPerimeter
+  DESCRIPTION
+    "Building east facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondDisplayPerim)
+  SIZING
+    u:EastCondDisplayPerim
+  ANNUAL
+    z:EastCondDisplayPerim
+ENDRULE
+RULE NEW Bldg:SouthCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedDisplayPerimeter
+  DESCRIPTION
+    "Building south facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondDisplayPerim)
+  SIZING
+    u:SouthCondDisplayPerim
+  ANNUAL
+    z:SouthCondDisplayPerim
+ENDRULE
+RULE NEW Bldg:WestCondDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedDisplayPerimeter
+  DESCRIPTION
+    "Building west facing Display Perimeter of walls adjacent to conditioned 
+     space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondDisplayPerim)
+  SIZING
+    u:WestCondDisplayPerim
+  ANNUAL
+    z:WestCondDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, New Wall Areas -----------------------------------
+RULE NEW Bldg:CondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls, multiplied by any space multipliers." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondNewExtWallArea)
+ENDRULE
+RULE NEW Bldg:NorthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondNewExtWallArea)
+ENDRULE
+RULE NEW Bldg:EastCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondNewExtWallArea)
+ENDRULE
+RULE NEW Bldg:SouthCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondNewExtWallArea)
+ENDRULE
+RULE NEW Bldg:WestCondNewExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondNewExtWallArea)
+ENDRULE
+
+RULE NEW Bldg:CondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on New exterior Wall adjacent to conditioned 
+     space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:CondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:CondNewWallNewWinArea)
+  ANNUAL
+    z:CondNewWallNewWinArea
+ENDRULE
+RULE NEW Bldg:NorthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window on new exterior wall area adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:NorthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:NorthCondNewWallNewWinArea)
+  ANNUAL
+    z:NorthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Bldg:EastCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on new exterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:EastCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:EastCondNewWallNewWinArea)
+  ANNUAL
+    z:EastCondNewWallNewWinArea
+ENDRULE
+RULE NEW Bldg:SouthCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on new exeterior walls adjacent 
+     to conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:SouthCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:SouthCondNewWallNewWinArea)
+  ANNUAL
+    z:SouthCondNewWallNewWinArea
+ENDRULE
+RULE NEW Bldg:WestCondNewWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on new exterior walls adjacent to 
+     conditioned space excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondNewWallNewWinArea)
+  SIZING_PROPOSED
+    u:WestCondNewWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:WestCondNewWallNewWinArea)
+  ANNUAL
+    z:WestCondNewWallNewWinArea
+ENDRULE
+
+RULE NEW Bldg:CondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Building Display Perimeter of walls adjacent to conditioned space."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondNewWallDisplayPerim)
+  SIZING
+    u:CondNewWallDisplayPerim
+  ANNUAL
+    z:CondNewWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:NorthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Building north facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondNewWallDisplayPerim)
+  SIZING
+    u:NorthCondNewWallDisplayPerim
+  ANNUAL
+    z:NorthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:EastCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Building east facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondNewWallDisplayPerim)
+  SIZING
+    u:EastCondNewWallDisplayPerim
+  ANNUAL
+    z:EastCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:SouthCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Building south facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondNewWallDisplayPerim)
+  SIZING
+    u:SouthCondNewWallDisplayPerim
+  ANNUAL
+    z:SouthCondNewWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:WestCondNewWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedNewWallDisplayPerimeter
+  DESCRIPTION
+    "Building west facing Display Perimeter of walls adjacent to conditioned 
+     space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondNewWallDisplayPerim)
+  SIZING
+    u:WestCondNewWallDisplayPerim
+  ANNUAL
+    z:WestCondNewWallDisplayPerim
+ENDRULE
+
+// ---------- T-24 WWR Calc, Existing or Altered Wall Areas ------------------
+RULE NEW Bldg:CondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New Exterior Wall area adjacent to conditioned space and excluding 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Bldg:NorthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total north facing New Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Bldg:EastCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New East facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Bldg:SouthCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New South facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondExsOrAltExtWallArea)
+ENDRULE
+RULE NEW Bldg:WestCondExsOrAltExtWallArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredExteriorWallArea
+  DESCRIPTION
+    "The total New West facing Exterior Wall area adjacent to conditioned space 
+     and excluding DEMISING walls."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondExsOrAltExtWallArea)
+ENDRULE
+
+RULE NEW Bldg:CondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total Exterior Window area on existing or altered exterior wall 
+     adjacent to conditioned space, excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:CondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:CondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:CondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Bldg:NorthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New north facing Exterior Window area on existing or altered 
+     exterior wall adjacent to conditioned space excluding windows 
+     in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:NorthCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:NorthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Bldg:EastCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New East facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:EastCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:EastCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Bldg:SouthCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New South facing Exterior Window area on existing or altered 
+     exeterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:SouthCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:SouthCondExsOrAltWallNewWinArea
+ENDRULE
+RULE NEW Bldg:WestCondExsOrAltWallNewWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallNewWindowArea
+  DESCRIPTION
+    "The total New West facing Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondExsOrAltWallNewWinArea)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallNewWinArea
+  SIZING_BASELINE
+    SumChildren(Story:WestCondExsOrAltWallNewWinArea)
+  ANNUAL
+    z:WestCondExsOrAltWallNewWinArea
+ENDRULE
+
+RULE NEW Bldg:CondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  Exterior Window area on existing or altered 
+     exterior walls adjacent to conditioned space, excluding windows in 
+     DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:CondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Story:CondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:CondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Bldg:NorthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  north facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:NorthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Story:NorthCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:NorthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Bldg:EastCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  East facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:EastCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Story:EastCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:EastCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Bldg:SouthCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered  South facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:SouthCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Story:SouthCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:SouthCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+RULE NEW Bldg:WestCondExsOrAltWallExsOrAltWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredWallExistingOrAlteredWindowArea
+  DESCRIPTION
+    "The total Existing or Altered West facing Exterior Window area adjacent to conditioned space
+     excluding windows in DEMISING walls."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondExsOrAltWallExsOrAltWinArea)
+  SIZING_PROPOSED
+    u:WestCondExsOrAltWallExsOrAltWinArea
+  SIZING_BASELINE
+    SumChildren(Story:WestCondExsOrAltWallExsOrAltWinArea)
+  ANNUAL
+    z:WestCondExsOrAltWallExsOrAltWinArea
+ENDRULE
+
+RULE NEW Bldg:CondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    ConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "Building Display Perimeter of walls adjacent to conditioned space."    
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:CondExsOrAltWallDisplayPerim)
+  SIZING
+    u:CondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:CondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:NorthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    NorthConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "Building north facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:NorthCondExsOrAltWallDisplayPerim)
+  SIZING
+    u:NorthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:NorthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:EastCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    EastConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "Building east facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:EastCondExsOrAltWallDisplayPerim)
+  SIZING
+    u:EastCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:EastCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:SouthCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    SouthConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "Building south facing Display Perimeter of walls adjacent to conditioned 
+     space."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:SouthCondExsOrAltWallDisplayPerim)
+  SIZING
+    u:SouthCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:SouthCondExsOrAltWallDisplayPerim
+ENDRULE
+RULE NEW Bldg:WestCondExsOrAltWallDisplayPerim
+  DATATYPE
+    Float
+  LONGFORM
+    WestConditionedExistingOrAlteredDisplayPerimeter
+  DESCRIPTION
+    "Building west facing Display Perimeter of walls adjacent to conditioned 
+     space."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    SumChildren(Story:WestCondExsOrAltWallDisplayPerim)
+  SIZING
+    u:WestCondExsOrAltWallDisplayPerim
+  ANNUAL
+    z:WestCondExsOrAltWallDisplayPerim
+ENDRULE
+
+// ********** T-24 Exterior Window to Wall Ratios (WWR) ***********************
+//  Does not include demising surfaces or windows in demising surfaces as per
+//  T-24 rules for calculating WWR.
+
+RULE Bldg:WWR
+  DESCRIPTION
+    "Whole Building WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( CondExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExtWinArea > 0 ) )
+    then CondExtWinArea/CondExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( CondExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExtWinArea > 0 ) )
+    then CondExtWinArea/CondExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:WWR
+ENDRULE
+RULE Bldg:WestWWR
+  DESCRIPTION
+    "West Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( WestCondExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExtWinArea > 0 ) )
+    then WestCondExtWinArea/WestCondExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( WestCondExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExtWinArea > 0 ) )
+    then WestCondExtWinArea/WestCondExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:WestWWR
+ENDRULE
+RULE Bldg:NorthWWR
+  DESCRIPTION
+    "North Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( NorthCondExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExtWinArea > 0 ) )
+    then NorthCondExtWinArea/NorthCondExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( NorthCondExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExtWinArea > 0 ) )
+    then NorthCondExtWinArea/NorthCondExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NorthWWR
+ENDRULE
+RULE Bldg:EastWWR
+  DESCRIPTION
+    "East Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( EastCondExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExtWinArea > 0 ) )
+    then EastCondExtWinArea/EastCondExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( EastCondExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExtWinArea > 0 ) )
+    then EastCondExtWinArea/EastCondExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:EastWWR
+ENDRULE
+RULE Bldg:SouthWWR
+  DESCRIPTION
+    "South Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( SouthCondExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondExtWinArea > 0 ) )
+    then SouthCondExtWinArea/SouthCondExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( SouthCondExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondExtWinArea > 0 ) )
+    then SouthCondExtWinArea/SouthCondExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:SouthWWR
+ENDRULE
+
+RULE NEW Bldg:NewWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NewWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "WWR of new windows on new walls. Does not include demising surfaces or 
+     windows in demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( CondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( CondNewWallNewWinArea > 0 ) )
+    then CondNewWallNewWinArea / CondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( CondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( CondNewWallNewWinArea > 0 ) )
+    then CondNewWallNewWinArea / CondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NewWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:WestNewWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    WestNewWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "West Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( WestCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondNewWallNewWinArea > 0 ) )
+    then WestCondNewWallNewWinArea/WestCondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( WestCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondNewWallNewWinArea > 0 ) )
+    then WestCondNewWallNewWinArea/WestCondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:WestNewWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:NorthNewWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NorthNewWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "North Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( NorthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondNewWallNewWinArea > 0 ) )
+    then NorthCondNewWallNewWinArea/NorthCondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( NorthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondNewWallNewWinArea > 0 ) )
+    then NorthCondNewWallNewWinArea/NorthCondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NorthNewWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:EastNewWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    EastNewWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "East Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( EastCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondNewWallNewWinArea > 0 ) )
+    then EastCondNewWallNewWinArea/EastCondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( EastCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondNewWallNewWinArea > 0 ) )
+    then EastCondNewWallNewWinArea/EastCondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:EastNewWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:SouthNewWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    SouthNewWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "South Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( SouthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondNewWallNewWinArea > 0 ) )
+    then SouthCondNewWallNewWinArea/SouthCondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( SouthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondNewWallNewWinArea > 0 ) )
+    then SouthCondNewWallNewWinArea/SouthCondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:SouthNewWallNewWinWWR
+ENDRULE
+
+RULE NEW Bldg:ExsOrAltWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "WWR of new windows on existing or altered walls. Does not include demising 
+     surfaces or windows in demising surfaces as per T-24 rules for calculating 
+     WWR."  
+  HELP
+    ""
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( CondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExsOrAltWallNewWinArea > 0 ) )
+    then CondExsOrAltWallNewWinArea/CondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( CondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExsOrAltWallNewWinArea > 0 ) )
+    then CondExsOrAltWallNewWinArea/CondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:ExsOrAltWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:WestExsOrAltWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    WestExistingOrAlteredWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "West Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( WestCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExsOrAltWallNewWinArea > 0 ) )
+    then WestCondExsOrAltWallNewWinArea/WestCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( WestCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExsOrAltWallNewWinArea > 0 ) )
+    then WestCondExsOrAltWallNewWinArea/WestCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:WestExsOrAltWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:NorthExsOrAltWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NorthExistingOrAlteredWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "North Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( NorthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExsOrAltWallNewWinArea > 0 ) )
+    then NorthCondExsOrAltWallNewWinArea/NorthCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( NorthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExsOrAltWallNewWinArea > 0 ) )
+    then NorthCondExsOrAltWallNewWinArea/NorthCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NorthExsOrAltWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:EastExsOrAltWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    EastExistingOrAlteredWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "East Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( EastCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExsOrAltWallNewWinArea > 0 ) )
+    then EastCondExsOrAltWallNewWinArea/EastCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( EastCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExsOrAltWallNewWinArea > 0 ) )
+    then EastCondExsOrAltWallNewWinArea/EastCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:EastExsOrAltWallNewWinWWR
+ENDRULE
+RULE NEW Bldg:SouthExsOrAltWallNewWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    SouthExistingOrAlteredWallNewWindowWindowWallRatio
+  DESCRIPTION
+    "South Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( SouthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondNewWallNewWinArea > 0 ) )
+    then SouthCondNewWallNewWinArea/SouthCondNewExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( SouthCondNewExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondNewWallNewWinArea > 0 ) )
+    then SouthCondNewWallNewWinArea/SouthCondNewExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:SouthExsOrAltWallNewWinWWR
+ENDRULE
+
+RULE NEW Bldg:ExsOrAltWallExsOrAltWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredWallExistingOrAlteredWindowWindowWallRatio
+  DESCRIPTION
+    "WWR of existing/altered windows on existing/altered walls. Does not include 
+     demising surfaces or windows in demising surfaces as per T-24 rules for 
+     calculating WWR."  
+  HELP
+    ""
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( CondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then CondExsOrAltWallExsOrAltWinArea/CondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( CondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( CondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then CondExsOrAltWallExsOrAltWinArea/CondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:ExsOrAltWallExsOrAltWinWWR
+ENDRULE
+RULE NEW Bldg:WestExsOrAltWallExsOrAltWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    WestExistingOrAlteredWallExistingOrAlteredWindowWindowWallRatio
+  DESCRIPTION
+    "West Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( WestCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then WestCondExsOrAltWallExsOrAltWinArea/WestCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( WestCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( WestCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then WestCondExsOrAltWallExsOrAltWinArea/WestCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:WestExsOrAltWallExsOrAltWinWWR
+ENDRULE
+RULE NEW Bldg:NorthExsOrAltWallExsOrAltWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NorthExistingOrAlteredWallExistingOrAlteredWindowWindowWallRatio
+  DESCRIPTION
+    "North Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( NorthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then NorthCondExsOrAltWallExsOrAltWinArea/NorthCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( NorthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( NorthCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then NorthCondExsOrAltWallExsOrAltWinArea/NorthCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:NorthExsOrAltWallExsOrAltWinWWR
+ENDRULE
+RULE NEW Bldg:EastExsOrAltWallExsOrAltWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    EastExistingOrAlteredWallExistingOrAlteredWindowWindowWallRatio
+  DESCRIPTION
+    "East Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR."
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( EastCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then EastCondExsOrAltWallExsOrAltWinArea/EastCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( EastCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( EastCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then EastCondExsOrAltWallExsOrAltWinArea/EastCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:EastExsOrAltWallExsOrAltWinWWR
+ENDRULE
+RULE NEW Bldg:SouthExsOrAltWallExsOrAltWinWWR
+  DATATYPE
+    Float
+  LONGFORM
+    SouthExistingOrAlteredWallExistingOrAlteredWindowWindowWallRatio
+  DESCRIPTION
+    "South Facade WWR.  Does not include demising surfaces or windows in 
+     demising surfaces as per T-24 rules for calculating WWR." 
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  REPORTPRECISION
+    3
+  DEFAULT
+    if ( IfValidAnd( SouthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then SouthCondExsOrAltWallExsOrAltWinArea/SouthCondExsOrAltExtWallArea
+    else 0
+    endif
+  SIZING
+    if ( IfValidAnd( SouthCondExsOrAltExtWallArea > 0 ) .AND.
+         IfValidAnd( SouthCondExsOrAltWallExsOrAltWinArea > 0 ) )
+    then SouthCondExsOrAltWallExsOrAltWinArea/SouthCondExsOrAltExtWallArea
+    else 0
+    endif
+  ANNUAL
+    z:SouthExsOrAltWallExsOrAltWinWWR
+ENDRULE
+
+
+// ---------- Calculate Target WWR's ------------------------------------------
+RULE NEW Bldg:BaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineTargetConditionedWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( CondExtWallArea > 0 ) ) 
+    then  Min(WWR, 
+          Max( 6 * ValidOr( CondDisplayPerim, 0 ) / CondExtWallArea, 0.40 ) )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:BaseTargetWestWWR
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineTargetWestConditionedWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( WestCondExtWallArea > 0 ) )
+    then  Min( WestWWR,
+          Max( 6 * ValidOr( WestCondDisplayPerim, 0 ) / WestCondExtWallArea, 
+               0.40 ) )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Bldg:NewWallNewWinBaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NewWallNewWindowBaselineTargetWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( CondNewExtWallArea > 0 ) ) 
+    then  Min(NewWallNewWinWWR, 
+          Max( 6 * ValidOr( CondNewWallDisplayPerim, 0 )/CondNewExtWallArea, 0.40 ) )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:NewWallNewWinBaseTargetWestWWR
+  DATATYPE
+    Float
+  LONGFORM
+    NewWallNewWindowBaselineTargetWestWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( WestCondNewExtWallArea > 0 ) )
+    then  Min( WestNewWallNewWinWWR,
+          Max( 6 * ValidOr( WestCondNewWallDisplayPerim, 0 ) / WestCondNewExtWallArea, 
+               0.40))
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW Bldg:ExsOrAltWallNewWinBaseTargetWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredWallNewWindowBaselineTargetWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if(IfValidAnd( CondExsOrAltExtWallArea > 0 ) ) 
+    then  Min( ( ExsOrAltWallNewWinWWR + ExsOrAltWallExsOrAltWinWWR ), 
+          Max( 6 * ValidOr( CondExsOrAltWallDisplayPerim, 0 )/CondExsOrAltExtWallArea, 0.40 ) )
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Bldg:ExsOrAltWallNewWinBaseTargetWestWWR
+  DATATYPE
+    Float
+  LONGFORM
+    ExistingOrAlteredWallNewWindowBaselineTargetWestWindowWallRatio
+  DESCRIPTION
+    ""  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput       
+  DEFAULT
+    if (IfValidAnd( WestCondExsOrAltExtWallArea > 0 ) )
+    then  Min( ( WestExsOrAltWallNewWinWWR + WestExsOrAltWallExsOrAltWinWWR ),
+          Max( 6 * ValidOr( WestCondExsOrAltWallDisplayPerim, 0 ) / WestCondExsOrAltExtWallArea, 
+               0.40))
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Display Perimeter Flags *****************************************
+
+RULE NEW Bldg:DisplayPerimFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    DisplayPerimeterFlag
+  DESCRIPTION
+    "Identifies whether Display Perimeter is used to increase WWR allowance"  
+  INPUTCLASS
+    NotInput   
+  DEFAULT
+   if( IfValidAnd( CondExtWallArea > 0 ) )
+   then if( WWR > .40 .AND.
+          ( 6 * ValidOr( CondDisplayPerim, 0 )/CondExtWallArea ) > 0.40 )
+      then 1
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+RULE NEW Bldg:WestDisplayPerimFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    WestDisplayPerimeterFlag
+  DESCRIPTION
+    "Identifies whether Display Perimeter is used to increase WWR allowance"  
+  INPUTCLASS
+    NotInput   
+  DEFAULT
+    if( IfValidAnd( WestCondExtWallArea > 0 ) ) 
+    then if( WestWWR > .40 .AND.
+           ( 6 * ValidOr( WestCondDisplayPerim, 0 )/WestCondExtWallArea ) > 0.40 )
+      then 1
+      else 0
+      endif
+    else 0
+    endif
+ENDRULE
+
+
+// -------- Calculating Operable Window Area for Interlocks --------------
+RULE NEW Win:IsOperable
+  DATATYPE
+    Integer
+  LONGFORM
+    IsOperable
+  DESCRIPTION
+    "Whether or not the window is operable."  
+  INPUTCLASS
+    NotInput   
+  DEFAULT 
+    if( IfValidAnd( FenConsRef:FenProdType = "OperableWindow" ))
+    then 1 
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:OperableWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    OperableWindowArea
+  DESCRIPTION
+    "Area of all operable windows on the exterior wall."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT 
+    if( IsCondExtEnv = 1 )
+    then SumChildrenIf( Win:Area, Win:IsOperable ) 
+    else 0
+    endif
+ENDRULE
+
+// -------- Calculating Operable Window Area for Interlocks at Space  --------------
+RULE NEW Spc:ExtOperableWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ExteriorOperableWindowArea
+  DESCRIPTION
+    "Area of all operable windows on the exterior wall in a conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+     SumChildren( ExtWall:OperableWinArea )    
+ENDRULE
+
+// -------- Calculating Operable Window Area for Interlocks --------------
+RULE NEW Win:IsNewAndOperable
+  DATATYPE
+    Integer
+  LONGFORM
+    IsNewAndOperable
+  DESCRIPTION
+    "Whether or not the window is new and is operable."  
+  INPUTCLASS
+    NotInput   
+  DEFAULT 
+    if( IfValidAnd( FenConsRef:FenProdType = "OperableWindow" ) .AND.
+        Status = "New" )
+    then 1 
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:NewOperableWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    NewOperableWindowArea
+  DESCRIPTION
+    "Area of all new operable windows on the exterior wall."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT 
+    if( IsCondExtEnv = 1 )
+    then SumChildrenIf( Win:Area, Win:IsNewAndOperable ) 
+    else 0
+    endif
+ENDRULE
+
+// -------- Calculating Operable Window Area for Interlocks at Space  --------------
+RULE NEW Spc:ExtNewOperableWinArea
+  DATATYPE
+    Float
+  LONGFORM
+    ExteriorNewOperableWindowArea
+  DESCRIPTION
+    "Area of all new operable windows on the exterior wall in a conditioned space."  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput   
+  DEFAULT   
+     SumChildren( ExtWall:NewOperableWinArea )    
+ENDRULE
+

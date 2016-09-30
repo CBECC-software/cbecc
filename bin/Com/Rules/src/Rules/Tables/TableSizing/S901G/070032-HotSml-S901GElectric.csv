@@ -1,0 +1,264 @@
+TABLE HotSmlS901GElectric070032CoilClg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,DXSEER,DXEER,NumClgStages,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+Corridor Flr1_PTHP CoilClg,BaseSys2 CoilClg,DirectExpansion,BaseZnSys2,CorridorFlr1 Thermal Zone,19046.219,19871.121,-99996,-99996,9.5,-99996,,
+EmployeeLounge Flr1_PTHP CoilClg,BaseSys2 CoilClg-2,DirectExpansion,BaseZnSys2-2,EmployeeLoungeFlr1 Thermal Zone,3092.707,3226.654,-99996,-99996,11.9,-99996,,
+ExerciseCenter Flr1_PTHP CoilClg,BaseSys2 CoilClg-3,DirectExpansion,BaseZnSys2-3,ExerciseCenterFlr1 Thermal Zone,2997.42,3127.24,-99996,-99996,11.9,-99996,,
+FrontLounge Flr1_PTHP CoilClg,BaseSys2 CoilClg-4,DirectExpansion,BaseZnSys2-4,FrontLoungeFlr1 Thermal Zone,79736.75,83190.195,-99996,-99996,9.5,-99996,,
+FrontOffice Flr1_PTHP CoilClg,BaseSys2 CoilClg-5,DirectExpansion,BaseZnSys2-5,FrontOfficeFlr1 Thermal Zone,14077.307,14687.003,-99996,-99996,9.777,-99996,,
+LaundryRoom Flr1_PTHP CoilClg,BaseSys2 CoilClg-6,DirectExpansion,BaseZnSys2-6,LaundryRoomFlr1 Thermal Zone,20906.73,21812.213,-99996,-99996,9.5,-99996,,
+MechanicalRoom Flr1_PTHP CoilClg,BaseSys2 CoilClg-7,DirectExpansion,BaseZnSys2-7,MechanicalRoomFlr1 Thermal Zone,7883.71,8225.158,-99996,-99996,11.635,-99996,,
+MeetingRoom Flr1_PTHP CoilClg,BaseSys2 CoilClg-8,DirectExpansion,BaseZnSys2-8,MeetingRoomFlr1 Thermal Zone,11442.872,11938.47,-99996,-99996,10.567,-99996,,
+FrontStairs Flr1_PTHP CoilClg,BaseSys2 CoilClg-9,DirectExpansion,BaseZnSys2-9,FrontStairsFlr1 Thermal Zone,3239.506,3379.811,-99996,-99996,11.9,-99996,,
+FrontStorage Flr1_PTHP CoilClg,BaseSys2 CoilClg-10,DirectExpansion,BaseZnSys2-10,FrontStorageFlr1 Thermal Zone,1306.609,1363.199,-99996,-99996,11.9,-99996,,
+RearStairs Flr1_PTHP CoilClg,BaseSys2 CoilClg-11,DirectExpansion,BaseZnSys2-11,RearStairsFlr1 Thermal Zone,2881.206,3005.993,-99996,-99996,11.9,-99996,,
+RearStorage Flr1_PTHP CoilClg,BaseSys2 CoilClg-12,DirectExpansion,BaseZnSys2-12,RearStorageFlr1 Thermal Zone,3076.105,3209.333,-99996,-99996,11.9,-99996,,
+Restroom Flr1_PTHP CoilClg,BaseSys2 CoilClg-13,DirectExpansion,BaseZnSys2-13,RestroomFlr1 Thermal Zone,3676.152,3835.368,-99996,-99996,11.9,-99996,,
+Corridor Flr2_PTHP CoilClg,BaseSys2 CoilClg-14,DirectExpansion,BaseZnSys2-14,CorridorFlr2 Thermal Zone,13048.896,13614.052,-99996,-99996,10.085,-99996,,
+FrontStairs Flr2_PTHP CoilClg,BaseSys2 CoilClg-15,DirectExpansion,BaseZnSys2-15,FrontStairsFlr2 Thermal Zone,2671.452,2787.154,-99996,-99996,11.9,-99996,,
+FrontStorage Flr2_PTHP CoilClg,BaseSys2 CoilClg-16,DirectExpansion,BaseZnSys2-16,FrontStorageFlr2 Thermal Zone,1061.702,1107.685,-99996,-99996,11.9,-99996,,
+RearStairs Flr2_PTHP CoilClg,BaseSys2 CoilClg-17,DirectExpansion,BaseZnSys2-17,RearStairsFlr2 Thermal Zone,2464.563,2571.305,-99996,-99996,11.9,-99996,,
+RearStorage Flr2_PTHP CoilClg,BaseSys2 CoilClg-18,DirectExpansion,BaseZnSys2-18,RearStorageFlr2 Thermal Zone,2552.399,2662.945,-99996,-99996,11.9,-99996,,
+Corridor Flr3_PTHP CoilClg,BaseSys2 CoilClg-19,DirectExpansion,BaseZnSys2-19,CorridorFlr3 Thermal Zone,12961.875,13523.262,-99996,-99996,10.111,-99996,,
+FrontStairs Flr3_PTHP CoilClg,BaseSys2 CoilClg-20,DirectExpansion,BaseZnSys2-20,FrontStairsFlr3 Thermal Zone,2666.607,2782.099,-99996,-99996,11.9,-99996,,
+FrontStorage Flr3_PTHP CoilClg,BaseSys2 CoilClg-21,DirectExpansion,BaseZnSys2-21,FrontStorageFlr3 Thermal Zone,1070.805,1117.182,-99996,-99996,11.9,-99996,,
+RearStairs Flr3_PTHP CoilClg,BaseSys2 CoilClg-22,DirectExpansion,BaseZnSys2-22,RearStairsFlr3 Thermal Zone,2463.79,2570.499,-99996,-99996,11.9,-99996,,
+RearStorage Flr3_PTHP CoilClg,BaseSys2 CoilClg-23,DirectExpansion,BaseZnSys2-23,RearStorageFlr3 Thermal Zone,2544.742,2654.956,-99996,-99996,11.9,-99996,,
+Corridor Flr4_PTHP CoilClg,BaseSys2 CoilClg-24,DirectExpansion,BaseZnSys2-24,CorridorFlr4 Thermal Zone,18558.314,19362.086,-99996,-99996,9.5,-99996,,
+FrontStairs Flr4_PTHP CoilClg,BaseSys2 CoilClg-25,DirectExpansion,BaseZnSys2-25,FrontStairsFlr4 Thermal Zone,3438.047,3586.951,-99996,-99996,11.9,-99996,,
+FrontStorage Flr4_PTHP CoilClg,BaseSys2 CoilClg-26,DirectExpansion,BaseZnSys2-26,FrontStorageFlr4 Thermal Zone,1754.796,1830.797,-99996,-99996,11.9,-99996,,
+RearStairs Flr4_PTHP CoilClg,BaseSys2 CoilClg-27,DirectExpansion,BaseZnSys2-27,RearStairsFlr4 Thermal Zone,3199.931,3338.522,-99996,-99996,11.9,-99996,,
+RearStorage Flr4_PTHP CoilClg,BaseSys2 CoilClg-28,DirectExpansion,BaseZnSys2-28,RearStorageFlr4 Thermal Zone,3282.762,3424.94,-99996,-99996,11.9,-99996,,
+GuestRoom101_PTHP CoilClg,BaseSys2 CoilClg-29,DirectExpansion,BaseZnSys2-29,GuestRoom101 Thermal Zone,5070.371,5289.971,-99996,-99996,11.9,-99996,,
+GuestRoom102_PTHP CoilClg,BaseSys2 CoilClg-30,DirectExpansion,BaseZnSys2-30,GuestRoom102 Thermal Zone,5037.36,5255.531,-99996,-99996,11.9,-99996,,
+GuestRoom103_PTHP CoilClg,BaseSys2 CoilClg-31,DirectExpansion,BaseZnSys2-31,GuestRoom103 Thermal Zone,4980.419,5196.124,-99996,-99996,11.9,-99996,,
+GuestRoom104_PTHP CoilClg,BaseSys2 CoilClg-32,DirectExpansion,BaseZnSys2-32,GuestRoom104 Thermal Zone,4579.834,4778.189,-99996,-99996,11.9,-99996,,
+GuestRoom105_PTHP CoilClg,BaseSys2 CoilClg-33,DirectExpansion,BaseZnSys2-33,GuestRoom105 Thermal Zone,3996.077,4169.15,-99996,-99996,11.9,-99996,,
+GuestRoom201_PTHP CoilClg,BaseSys2 CoilClg-34,DirectExpansion,BaseZnSys2-34,GuestRoom201 Thermal Zone,5089.348,5309.771,-99996,-99996,11.9,-99996,,
+GuestRoom202_205_PTHP CoilClg,BaseSys2 CoilClg-35,DirectExpansion,BaseZnSys2-35,GuestRoom202_205 Thermal Zone,4518.201,4713.887,-99996,-99996,11.9,-99996,,
+GuestRoom206_208_PTHP CoilClg,BaseSys2 CoilClg-36,DirectExpansion,BaseZnSys2-36,GuestRoom206_208 Thermal Zone,4865.761,5076.5,-99996,-99996,11.9,-99996,,
+GuestRoom209_212_PTHP CoilClg,BaseSys2 CoilClg-37,DirectExpansion,BaseZnSys2-37,GuestRoom209_212 Thermal Zone,4464.835,4658.209,-99996,-99996,11.9,-99996,,
+GuestRoom213_PTHP CoilClg,BaseSys2 CoilClg-38,DirectExpansion,BaseZnSys2-38,GuestRoom213 Thermal Zone,4649.113,4850.469,-99996,-99996,11.9,-99996,,
+GuestRoom214_PTHP CoilClg,BaseSys2 CoilClg-39,DirectExpansion,BaseZnSys2-39,GuestRoom214 Thermal Zone,4387.4,4577.421,-99996,-99996,11.9,-99996,,
+GuestRoom215_218_PTHP CoilClg,BaseSys2 CoilClg-40,DirectExpansion,BaseZnSys2-40,GuestRoom215_218 Thermal Zone,4216.453,4399.07,-99996,-99996,11.9,-99996,,
+GuestRoom219_PTHP CoilClg,BaseSys2 CoilClg-41,DirectExpansion,BaseZnSys2-41,GuestRoom219 Thermal Zone,4450.144,4642.882,-99996,-99996,11.9,-99996,,
+GuestRoom220_223_PTHP CoilClg,BaseSys2 CoilClg-42,DirectExpansion,BaseZnSys2-42,GuestRoom220_223 Thermal Zone,4171.431,4352.098,-99996,-99996,11.9,-99996,,
+GuestRoom224_PTHP CoilClg,BaseSys2 CoilClg-43,DirectExpansion,BaseZnSys2-43,GuestRoom224 Thermal Zone,4343.675,4531.803,-99996,-99996,11.9,-99996,,
+GuestRoom301_PTHP CoilClg,BaseSys2 CoilClg-44,DirectExpansion,BaseZnSys2-44,GuestRoom301 Thermal Zone,5036.402,5254.532,-99996,-99996,11.9,-99996,,
+GuestRoom302_305_PTHP CoilClg,BaseSys2 CoilClg-45,DirectExpansion,BaseZnSys2-45,GuestRoom302_305 Thermal Zone,4560.04,4757.538,-99996,-99996,11.9,-99996,,
+GuestRoom306_308_PTHP CoilClg,BaseSys2 CoilClg-46,DirectExpansion,BaseZnSys2-46,GuestRoom306_308 Thermal Zone,4993.149,5209.405,-99996,-99996,11.9,-99996,,
+GuestRoom309_312_PTHP CoilClg,BaseSys2 CoilClg-47,DirectExpansion,BaseZnSys2-47,GuestRoom309_312 Thermal Zone,4549.92,4746.979,-99996,-99996,11.9,-99996,,
+GuestRoom313_PTHP CoilClg,BaseSys2 CoilClg-48,DirectExpansion,BaseZnSys2-48,GuestRoom313 Thermal Zone,4678.736,4881.375,-99996,-99996,11.9,-99996,,
+GuestRoom314_PTHP CoilClg,BaseSys2 CoilClg-49,DirectExpansion,BaseZnSys2-49,GuestRoom314 Thermal Zone,4370.738,4560.037,-99996,-99996,11.9,-99996,,
+GuestRoom315_318_PTHP CoilClg,BaseSys2 CoilClg-50,DirectExpansion,BaseZnSys2-50,GuestRoom315_318 Thermal Zone,4252.476,4436.653,-99996,-99996,11.9,-99996,,
+GuestRoom319_PTHP CoilClg,BaseSys2 CoilClg-51,DirectExpansion,BaseZnSys2-51,GuestRoom319 Thermal Zone,4346.432,4534.679,-99996,-99996,11.9,-99996,,
+GuestRoom320_323_PTHP CoilClg,BaseSys2 CoilClg-52,DirectExpansion,BaseZnSys2-52,GuestRoom320_323 Thermal Zone,4229.237,4412.408,-99996,-99996,11.9,-99996,,
+GuestRoom324_PTHP CoilClg,BaseSys2 CoilClg-53,DirectExpansion,BaseZnSys2-53,GuestRoom324 Thermal Zone,4308.214,4494.805,-99996,-99996,11.9,-99996,,
+GuestRoom401_PTHP CoilClg,BaseSys2 CoilClg-54,DirectExpansion,BaseZnSys2-54,GuestRoom401 Thermal Zone,6506.637,6788.443,-99996,-99996,11.9,-99996,,
+GuestRoom402_405_PTHP CoilClg,BaseSys2 CoilClg-55,DirectExpansion,BaseZnSys2-55,GuestRoom402_405 Thermal Zone,5597.946,5840.397,-99996,-99996,11.9,-99996,,
+GuestRoom406_408_PTHP CoilClg,BaseSys2 CoilClg-56,DirectExpansion,BaseZnSys2-56,GuestRoom406_408 Thermal Zone,6158.634,6425.368,-99996,-99996,11.9,-99996,,
+GuestRoom409_412_PTHP CoilClg,BaseSys2 CoilClg-57,DirectExpansion,BaseZnSys2-57,GuestRoom409_412 Thermal Zone,5590.629,5832.762,-99996,-99996,11.9,-99996,,
+GuestRoom413_PTHP CoilClg,BaseSys2 CoilClg-58,DirectExpansion,BaseZnSys2-58,GuestRoom413 Thermal Zone,5803.003,6054.334,-99996,-99996,11.9,-99996,,
+GuestRoom414_PTHP CoilClg,BaseSys2 CoilClg-59,DirectExpansion,BaseZnSys2-59,GuestRoom414 Thermal Zone,5535.861,5775.623,-99996,-99996,11.9,-99996,,
+GuestRoom415_418_PTHP CoilClg,BaseSys2 CoilClg-60,DirectExpansion,BaseZnSys2-60,GuestRoom415_418 Thermal Zone,5313.707,5543.847,-99996,-99996,11.9,-99996,,
+GuestRoom419_PTHP CoilClg,BaseSys2 CoilClg-61,DirectExpansion,BaseZnSys2-61,GuestRoom419 Thermal Zone,5484.061,5721.579,-99996,-99996,11.9,-99996,,
+GuestRoom420_423_PTHP CoilClg,BaseSys2 CoilClg-62,DirectExpansion,BaseZnSys2-62,GuestRoom420_423 Thermal Zone,5291.073,5520.232,-99996,-99996,11.9,-99996,,
+GuestRoom424_PTHP CoilClg,BaseSys2 CoilClg-63,DirectExpansion,BaseZnSys2-63,GuestRoom424 Thermal Zone,5444.927,5680.75,-99996,-99996,11.9,-99996,,
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlS901GElectric070032CoilHtg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,FurnAFUE,FurnThrmlEff,,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+Corridor Flr1_PTHP CoilHtg,BaseSys2 CoilHtg,HeatPump,BaseZnSys2,CorridorFlr1 Thermal Zone,21784.939,20960.037,0,-99996,-99996,,,
+Corridor Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg,Resistance,BaseZnSys2,CorridorFlr1 Thermal Zone,22397.463,22397.463,0,-99996,-99996,,,
+EmployeeLounge Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-2,HeatPump,BaseZnSys2-2,EmployeeLoungeFlr1 Thermal Zone,3525.635,3391.688,0,-99996,-99996,,,
+EmployeeLounge Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-2,Resistance,BaseZnSys2-2,EmployeeLoungeFlr1 Thermal Zone,4634.388,4634.388,0,-99996,-99996,,,
+ExerciseCenter Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-3,HeatPump,BaseZnSys2-3,ExerciseCenterFlr1 Thermal Zone,3418.107,3288.287,0,-99996,-99996,,,
+ExerciseCenter Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-3,Resistance,BaseZnSys2-3,ExerciseCenterFlr1 Thermal Zone,4461.137,4461.137,0,-99996,-99996,,,
+FrontLounge Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-4,HeatPump,BaseZnSys2-4,FrontLoungeFlr1 Thermal Zone,91620.539,88167.094,0,-99996,-99996,,,
+FrontLounge Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-4,Resistance,BaseZnSys2-4,FrontLoungeFlr1 Thermal Zone,136844.109,136844.109,0,-99996,-99996,,,
+FrontOffice Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-5,HeatPump,BaseZnSys2-5,FrontOfficeFlr1 Thermal Zone,16027.946,15418.25,0,-99996,-99996,,,
+FrontOffice Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-5,Resistance,BaseZnSys2-5,FrontOfficeFlr1 Thermal Zone,17081.463,17081.463,0,-99996,-99996,,,
+LaundryRoom Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-6,HeatPump,BaseZnSys2-6,LaundryRoomFlr1 Thermal Zone,23737.607,22832.125,0,-99996,-99996,,,
+LaundryRoom Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-6,Resistance,BaseZnSys2-6,LaundryRoomFlr1 Thermal Zone,12882.55,12882.55,0,-99996,-99996,,,
+MechanicalRoom Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-7,HeatPump,BaseZnSys2-7,MechanicalRoomFlr1 Thermal Zone,8974.823,8633.375,0,-99996,-99996,,,
+MechanicalRoom Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-7,Resistance,BaseZnSys2-7,MechanicalRoomFlr1 Thermal Zone,4401.438,4401.438,0,-99996,-99996,,,
+MeetingRoom Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-8,HeatPump,BaseZnSys2-8,MeetingRoomFlr1 Thermal Zone,13095.872,12600.274,0,-99996,-99996,,,
+MeetingRoom Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-8,Resistance,BaseZnSys2-8,MeetingRoomFlr1 Thermal Zone,10778.075,10778.075,0,-99996,-99996,,,
+FrontStairs Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-9,HeatPump,BaseZnSys2-9,FrontStairsFlr1 Thermal Zone,3682.83,3542.525,0,-99996,-99996,,,
+FrontStairs Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-9,Resistance,BaseZnSys2-9,FrontStairsFlr1 Thermal Zone,3670.413,3670.413,0,-99996,-99996,,,
+FrontStorage Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-10,HeatPump,BaseZnSys2-10,FrontStorageFlr1 Thermal Zone,1485.528,1428.938,0,-99996,-99996,,,
+FrontStorage Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-10,Resistance,BaseZnSys2-10,FrontStorageFlr1 Thermal Zone,1800.038,1800.038,0,-99996,-99996,,,
+RearStairs Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-11,HeatPump,BaseZnSys2-11,RearStairsFlr1 Thermal Zone,3283.574,3158.788,0,-99996,-99996,,,
+RearStairs Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-11,Resistance,BaseZnSys2-11,RearStairsFlr1 Thermal Zone,3901.775,3901.775,0,-99996,-99996,,,
+RearStorage Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-12,HeatPump,BaseZnSys2-12,RearStorageFlr1 Thermal Zone,3507.228,3374,0,-99996,-99996,,,
+RearStorage Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-12,Resistance,BaseZnSys2-12,RearStorageFlr1 Thermal Zone,3902.263,3902.263,0,-99996,-99996,,,
+Restroom Flr1_PTHP CoilHtg,BaseSys2 CoilHtg-13,HeatPump,BaseZnSys2-13,RestroomFlr1 Thermal Zone,4214.854,4055.637,0,-99996,-99996,,,
+Restroom Flr1_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-13,Resistance,BaseZnSys2-13,RestroomFlr1 Thermal Zone,4284.9,4284.9,0,-99996,-99996,,,
+Corridor Flr2_PTHP CoilHtg,BaseSys2 CoilHtg-14,HeatPump,BaseZnSys2-14,CorridorFlr2 Thermal Zone,14964.256,14399.101,0,-99996,-99996,,,
+Corridor Flr2_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-14,Resistance,BaseZnSys2-14,CorridorFlr2 Thermal Zone,17595.336,17595.336,0,-99996,-99996,,,
+FrontStairs Flr2_PTHP CoilHtg,BaseSys2 CoilHtg-15,HeatPump,BaseZnSys2-15,FrontStairsFlr2 Thermal Zone,3041.727,2926.025,0,-99996,-99996,,,
+FrontStairs Flr2_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-15,Resistance,BaseZnSys2-15,FrontStairsFlr2 Thermal Zone,3092.813,3092.813,0,-99996,-99996,,,
+FrontStorage Flr2_PTHP CoilHtg,BaseSys2 CoilHtg-16,HeatPump,BaseZnSys2-16,FrontStorageFlr2 Thermal Zone,1209.358,1163.375,0,-99996,-99996,,,
+FrontStorage Flr2_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-16,Resistance,BaseZnSys2-16,FrontStorageFlr2 Thermal Zone,1571,1571,0,-99996,-99996,,,
+RearStairs Flr2_PTHP CoilHtg,BaseSys2 CoilHtg-17,HeatPump,BaseZnSys2-17,RearStairsFlr2 Thermal Zone,2812.942,2706.2,0,-99996,-99996,,,
+RearStairs Flr2_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-17,Resistance,BaseZnSys2-17,RearStairsFlr2 Thermal Zone,3219.7,3219.7,0,-99996,-99996,,,
+RearStorage Flr2_PTHP CoilHtg,BaseSys2 CoilHtg-18,HeatPump,BaseZnSys2-18,RearStorageFlr2 Thermal Zone,2915.433,2804.887,0,-99996,-99996,,,
+RearStorage Flr2_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-18,Resistance,BaseZnSys2-18,RearStorageFlr2 Thermal Zone,3219.9,3219.9,0,-99996,-99996,,,
+Corridor Flr3_PTHP CoilHtg,BaseSys2 CoilHtg-19,HeatPump,BaseZnSys2-19,CorridorFlr3 Thermal Zone,14856.299,14294.912,0,-99996,-99996,,,
+Corridor Flr3_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-19,Resistance,BaseZnSys2-19,CorridorFlr3 Thermal Zone,17595.336,17595.336,0,-99996,-99996,,,
+FrontStairs Flr3_PTHP CoilHtg,BaseSys2 CoilHtg-20,HeatPump,BaseZnSys2-20,FrontStairsFlr3 Thermal Zone,3036.292,2920.8,0,-99996,-99996,,,
+FrontStairs Flr3_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-20,Resistance,BaseZnSys2-20,FrontStairsFlr3 Thermal Zone,3132.775,3132.775,0,-99996,-99996,,,
+FrontStorage Flr3_PTHP CoilHtg,BaseSys2 CoilHtg-21,HeatPump,BaseZnSys2-21,FrontStorageFlr3 Thermal Zone,1219.627,1173.25,0,-99996,-99996,,,
+FrontStorage Flr3_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-21,Resistance,BaseZnSys2-21,FrontStorageFlr3 Thermal Zone,1571,1571,0,-99996,-99996,,,
+RearStairs Flr3_PTHP CoilHtg,BaseSys2 CoilHtg-22,HeatPump,BaseZnSys2-22,RearStairsFlr3 Thermal Zone,2813.708,2707,0,-99996,-99996,,,
+RearStairs Flr3_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-22,Resistance,BaseZnSys2-22,RearStairsFlr3 Thermal Zone,3269.375,3269.375,0,-99996,-99996,,,
+RearStorage Flr3_PTHP CoilHtg,BaseSys2 CoilHtg-23,HeatPump,BaseZnSys2-23,RearStorageFlr3 Thermal Zone,2908.402,2798.188,0,-99996,-99996,,,
+RearStorage Flr3_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-23,Resistance,BaseZnSys2-23,RearStorageFlr3 Thermal Zone,3269.775,3269.775,0,-99996,-99996,,,
+Corridor Flr4_PTHP CoilHtg,BaseSys2 CoilHtg-24,HeatPump,BaseZnSys2-24,CorridorFlr4 Thermal Zone,21244.459,20440.688,0,-99996,-99996,,,
+Corridor Flr4_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-24,Resistance,BaseZnSys2-24,CorridorFlr4 Thermal Zone,21596.426,21596.426,0,-99996,-99996,,,
+FrontStairs Flr4_PTHP CoilHtg,BaseSys2 CoilHtg-25,HeatPump,BaseZnSys2-25,FrontStairsFlr4 Thermal Zone,3915.429,3766.525,0,-99996,-99996,,,
+FrontStairs Flr4_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-25,Resistance,BaseZnSys2-25,FrontStairsFlr4 Thermal Zone,3591.4,3591.4,0,-99996,-99996,,,
+FrontStorage Flr4_PTHP CoilHtg,BaseSys2 CoilHtg-26,HeatPump,BaseZnSys2-26,FrontStorageFlr4 Thermal Zone,2006.889,1930.887,0,-99996,-99996,,,
+FrontStorage Flr4_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-26,Resistance,BaseZnSys2-26,FrontStorageFlr4 Thermal Zone,1966.138,1966.138,0,-99996,-99996,,,
+RearStairs Flr4_PTHP CoilHtg,BaseSys2 CoilHtg-27,HeatPump,BaseZnSys2-27,RearStairsFlr4 Thermal Zone,3650.404,3511.813,0,-99996,-99996,,,
+RearStairs Flr4_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-27,Resistance,BaseZnSys2-27,RearStairsFlr4 Thermal Zone,3889.475,3889.475,0,-99996,-99996,,,
+RearStorage Flr4_PTHP CoilHtg,BaseSys2 CoilHtg-28,HeatPump,BaseZnSys2-28,RearStorageFlr4 Thermal Zone,3745.454,3603.275,0,-99996,-99996,,,
+RearStorage Flr4_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-28,Resistance,BaseZnSys2-28,RearStorageFlr4 Thermal Zone,3889.838,3889.838,0,-99996,-99996,,,
+GuestRoom101_PTHP CoilHtg,BaseSys2 CoilHtg-29,HeatPump,BaseZnSys2-29,GuestRoom101 Thermal Zone,5798.613,5579.013,0,-99996,-99996,,,
+GuestRoom 101_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-29,Resistance,BaseZnSys2-29,GuestRoom101 Thermal Zone,5657.037,5657.037,0,-99996,-99996,,,
+GuestRoom102_PTHP CoilHtg,BaseSys2 CoilHtg-30,HeatPump,BaseZnSys2-30,GuestRoom102 Thermal Zone,5761.246,5543.075,0,-99996,-99996,,,
+GuestRoom 102_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-30,Resistance,BaseZnSys2-30,GuestRoom102 Thermal Zone,5864.85,5864.85,0,-99996,-99996,,,
+GuestRoom103_PTHP CoilHtg,BaseSys2 CoilHtg-31,HeatPump,BaseZnSys2-31,GuestRoom103 Thermal Zone,5696.805,5481.1,0,-99996,-99996,,,
+GuestRoom 103_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-31,Resistance,BaseZnSys2-31,GuestRoom103 Thermal Zone,5737.862,5737.862,0,-99996,-99996,,,
+GuestRoom104_PTHP CoilHtg,BaseSys2 CoilHtg-32,HeatPump,BaseZnSys2-32,GuestRoom104 Thermal Zone,5234.956,5036.6,0,-99996,-99996,,,
+GuestRoom 104_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-32,Resistance,BaseZnSys2-32,GuestRoom104 Thermal Zone,5712.45,5712.45,0,-99996,-99996,,,
+GuestRoom105_PTHP CoilHtg,BaseSys2 CoilHtg-33,HeatPump,BaseZnSys2-33,GuestRoom105 Thermal Zone,4546.036,4372.963,0,-99996,-99996,,,
+GuestRoom 105_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-33,Resistance,BaseZnSys2-33,GuestRoom105 Thermal Zone,5660.7,5660.7,0,-99996,-99996,,,
+GuestRoom201_PTHP CoilHtg,BaseSys2 CoilHtg-34,HeatPump,BaseZnSys2-34,GuestRoom201 Thermal Zone,5801.723,5581.3,0,-99996,-99996,,,
+GuestRoom201_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-34,Resistance,BaseZnSys2-34,GuestRoom201 Thermal Zone,5843.475,5843.475,0,-99996,-99996,,,
+GuestRoom202_205_PTHP CoilHtg,BaseSys2 CoilHtg-35,HeatPump,BaseZnSys2-35,GuestRoom202_205 Thermal Zone,5173.583,4977.896,0,-99996,-99996,,,
+GuestRoom202_205_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-35,Resistance,BaseZnSys2-35,GuestRoom202_205 Thermal Zone,4518.212,4518.212,0,-99996,-99996,,,
+GuestRoom206_208_PTHP CoilHtg,BaseSys2 CoilHtg-36,HeatPump,BaseZnSys2-36,GuestRoom206_208 Thermal Zone,5571.56,5360.821,0,-99996,-99996,,,
+GuestRoom206_208_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-36,Resistance,BaseZnSys2-36,GuestRoom206_208 Thermal Zone,4832.046,4832.046,0,-99996,-99996,,,
+GuestRoom209_212_PTHP CoilHtg,BaseSys2 CoilHtg-37,HeatPump,BaseZnSys2-37,GuestRoom209_212 Thermal Zone,5113.159,4919.784,0,-99996,-99996,,,
+GuestRoom209_212_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-37,Resistance,BaseZnSys2-37,GuestRoom209_212 Thermal Zone,4409.068,4409.068,0,-99996,-99996,,,
+GuestRoom213_PTHP CoilHtg,BaseSys2 CoilHtg-38,HeatPump,BaseZnSys2-38,GuestRoom213 Thermal Zone,5321.793,5120.438,0,-99996,-99996,,,
+GuestRoom213_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-38,Resistance,BaseZnSys2-38,GuestRoom213 Thermal Zone,4669.675,4669.675,0,-99996,-99996,,,
+GuestRoom214_PTHP CoilHtg,BaseSys2 CoilHtg-39,HeatPump,BaseZnSys2-39,GuestRoom214 Thermal Zone,5022.434,4832.413,0,-99996,-99996,,,
+GuestRoom214_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-39,Resistance,BaseZnSys2-39,GuestRoom214 Thermal Zone,4659.3,4659.3,0,-99996,-99996,,,
+GuestRoom215_218_PTHP CoilHtg,BaseSys2 CoilHtg-40,HeatPump,BaseZnSys2-40,GuestRoom215_218 Thermal Zone,4827.408,4644.791,0,-99996,-99996,,,
+GuestRoom215_218_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-40,Resistance,BaseZnSys2-40,GuestRoom215_218 Thermal Zone,4371.225,4371.225,0,-99996,-99996,,,
+GuestRoom219_PTHP CoilHtg,BaseSys2 CoilHtg-41,HeatPump,BaseZnSys2-41,GuestRoom219 Thermal Zone,5091.901,4899.163,0,-99996,-99996,,,
+GuestRoom219_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-41,Resistance,BaseZnSys2-41,GuestRoom219 Thermal Zone,4428.163,4428.163,0,-99996,-99996,,,
+GuestRoom220_223_PTHP CoilHtg,BaseSys2 CoilHtg-42,HeatPump,BaseZnSys2-42,GuestRoom220_223 Thermal Zone,4776.445,4595.778,0,-99996,-99996,,,
+GuestRoom220_223_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-42,Resistance,BaseZnSys2-42,GuestRoom220_223 Thermal Zone,4310.156,4310.156,0,-99996,-99996,,,
+GuestRoom224_PTHP CoilHtg,BaseSys2 CoilHtg-43,HeatPump,BaseZnSys2-43,GuestRoom224 Thermal Zone,4971.415,4783.287,0,-99996,-99996,,,
+GuestRoom224_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-43,Resistance,BaseZnSys2-43,GuestRoom224 Thermal Zone,4416.425,4416.425,0,-99996,-99996,,,
+GuestRoom301_PTHP CoilHtg,BaseSys2 CoilHtg-44,HeatPump,BaseZnSys2-44,GuestRoom301 Thermal Zone,5739.055,5520.925,0,-99996,-99996,,,
+GuestRoom301_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-44,Resistance,BaseZnSys2-44,GuestRoom301 Thermal Zone,6254.725,6254.725,0,-99996,-99996,,,
+GuestRoom302_305_PTHP CoilHtg,BaseSys2 CoilHtg-45,HeatPump,BaseZnSys2-45,GuestRoom302_305 Thermal Zone,5220.96,5023.462,0,-99996,-99996,,,
+GuestRoom302_305_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-45,Resistance,BaseZnSys2-45,GuestRoom302_305 Thermal Zone,4799.794,4799.794,0,-99996,-99996,,,
+GuestRoom306_308_PTHP CoilHtg,BaseSys2 CoilHtg-46,HeatPump,BaseZnSys2-46,GuestRoom306_308 Thermal Zone,5715.793,5499.537,0,-99996,-99996,,,
+GuestRoom306_308_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-46,Resistance,BaseZnSys2-46,GuestRoom306_308 Thermal Zone,5272.85,5272.85,0,-99996,-99996,,,
+GuestRoom309_312_PTHP CoilHtg,BaseSys2 CoilHtg-47,HeatPump,BaseZnSys2-47,GuestRoom309_312 Thermal Zone,5209.503,5012.444,0,-99996,-99996,,,
+GuestRoom309_312_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-47,Resistance,BaseZnSys2-47,GuestRoom309_312 Thermal Zone,4731.906,4731.906,0,-99996,-99996,,,
+GuestRoom313_PTHP CoilHtg,BaseSys2 CoilHtg-48,HeatPump,BaseZnSys2-48,GuestRoom313 Thermal Zone,5355.339,5152.7,0,-99996,-99996,,,
+GuestRoom313_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-48,Resistance,BaseZnSys2-48,GuestRoom313 Thermal Zone,4854.362,4854.362,0,-99996,-99996,,,
+GuestRoom314_PTHP CoilHtg,BaseSys2 CoilHtg-49,HeatPump,BaseZnSys2-49,GuestRoom314 Thermal Zone,5000.5,4811.2,0,-99996,-99996,,,
+GuestRoom314_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-49,Resistance,BaseZnSys2-49,GuestRoom314 Thermal Zone,4845.138,4845.138,0,-99996,-99996,,,
+GuestRoom315_318_PTHP CoilHtg,BaseSys2 CoilHtg-50,HeatPump,BaseZnSys2-50,GuestRoom315_318 Thermal Zone,4866.674,4682.497,0,-99996,-99996,,,
+GuestRoom315_318_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-50,Resistance,BaseZnSys2-50,GuestRoom315_318 Thermal Zone,4699.418,4699.418,0,-99996,-99996,,,
+GuestRoom319_PTHP CoilHtg,BaseSys2 CoilHtg-51,HeatPump,BaseZnSys2-51,GuestRoom319 Thermal Zone,4972.997,4784.75,0,-99996,-99996,,,
+GuestRoom319_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-51,Resistance,BaseZnSys2-51,GuestRoom319 Thermal Zone,4695.125,4695.125,0,-99996,-99996,,,
+GuestRoom320_323_PTHP CoilHtg,BaseSys2 CoilHtg-52,HeatPump,BaseZnSys2-52,GuestRoom320_323 Thermal Zone,4840.377,4657.206,0,-99996,-99996,,,
+GuestRoom320_323_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-52,Resistance,BaseZnSys2-52,GuestRoom320_323 Thermal Zone,4637.662,4637.662,0,-99996,-99996,,,
+GuestRoom324_PTHP CoilHtg,BaseSys2 CoilHtg-53,HeatPump,BaseZnSys2-53,GuestRoom324 Thermal Zone,4929.754,4743.163,0,-99996,-99996,,,
+GuestRoom324_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-53,Resistance,BaseZnSys2-53,GuestRoom324 Thermal Zone,4668.7,4668.7,0,-99996,-99996,,,
+GuestRoom401_PTHP CoilHtg,BaseSys2 CoilHtg-54,HeatPump,BaseZnSys2-54,GuestRoom401 Thermal Zone,7417.506,7135.7,0,-99996,-99996,,,
+GuestRoom401_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-54,Resistance,BaseZnSys2-54,GuestRoom401 Thermal Zone,7852.425,7852.425,0,-99996,-99996,,,
+GuestRoom402_405_PTHP CoilHtg,BaseSys2 CoilHtg-55,HeatPump,BaseZnSys2-55,GuestRoom402_405 Thermal Zone,6395.595,6153.144,0,-99996,-99996,,,
+GuestRoom402_405_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-55,Resistance,BaseZnSys2-55,GuestRoom402_405 Thermal Zone,6213.547,6213.547,0,-99996,-99996,,,
+GuestRoom406_408_PTHP CoilHtg,BaseSys2 CoilHtg-56,HeatPump,BaseZnSys2-56,GuestRoom406_408 Thermal Zone,7034.726,6767.992,0,-99996,-99996,,,
+GuestRoom406_408_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-56,Resistance,BaseZnSys2-56,GuestRoom406_408 Thermal Zone,6823.638,6823.638,0,-99996,-99996,,,
+GuestRoom409_412_PTHP CoilHtg,BaseSys2 CoilHtg-57,HeatPump,BaseZnSys2-57,GuestRoom409_412 Thermal Zone,6387.318,6145.185,0,-99996,-99996,,,
+GuestRoom409_412_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-57,Resistance,BaseZnSys2-57,GuestRoom409_412 Thermal Zone,6167.438,6167.438,0,-99996,-99996,,,
+GuestRoom413_PTHP CoilHtg,BaseSys2 CoilHtg-58,HeatPump,BaseZnSys2-58,GuestRoom413 Thermal Zone,6627.582,6376.25,0,-99996,-99996,,,
+GuestRoom413_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-58,Resistance,BaseZnSys2-58,GuestRoom413 Thermal Zone,6656.725,6656.725,0,-99996,-99996,,,
+GuestRoom414_PTHP CoilHtg,BaseSys2 CoilHtg-59,HeatPump,BaseZnSys2-59,GuestRoom414 Thermal Zone,6325.35,6085.588,0,-99996,-99996,,,
+GuestRoom414_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-59,Resistance,BaseZnSys2-59,GuestRoom414 Thermal Zone,6649.2,6649.2,0,-99996,-99996,,,
+GuestRoom415_418_PTHP CoilHtg,BaseSys2 CoilHtg-60,HeatPump,BaseZnSys2-60,GuestRoom415_418 Thermal Zone,6073.987,5843.847,0,-99996,-99996,,,
+GuestRoom415_418_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-60,Resistance,BaseZnSys2-60,GuestRoom415_418 Thermal Zone,6131.019,6131.019,0,-99996,-99996,,,
+GuestRoom419_PTHP CoilHtg,BaseSys2 CoilHtg-61,HeatPump,BaseZnSys2-61,GuestRoom419 Thermal Zone,6266.743,6029.225,0,-99996,-99996,,,
+GuestRoom419_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-61,Resistance,BaseZnSys2-61,GuestRoom419 Thermal Zone,6515.025,6515.025,0,-99996,-99996,,,
+GuestRoom420_423_PTHP CoilHtg,BaseSys2 CoilHtg-62,HeatPump,BaseZnSys2-62,GuestRoom420_423 Thermal Zone,6048.375,5819.216,0,-99996,-99996,,,
+GuestRoom420_423_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-62,Resistance,BaseZnSys2-62,GuestRoom420_423 Thermal Zone,6063.975,6063.975,0,-99996,-99996,,,
+GuestRoom424_PTHP CoilHtg,BaseSys2 CoilHtg-63,HeatPump,BaseZnSys2-63,GuestRoom424 Thermal Zone,6222.461,5986.638,0,-99996,-99996,,,
+GuestRoom424_PTHP SuppCoilHtg,BaseSys2 SuppCoilHtg-63,Resistance,BaseZnSys2-63,GuestRoom424 Thermal Zone,6440.538,6440.538,0,-99996,-99996,,,
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlS901GElectric070032Fan,,,,,,,,,,,,
+PropName,BaseName,CtrlMthd,System,Zone,FlowCap,FlowMin,FlowEff,ModelingMthd,TotStaticPress,MtrHP,MtrPos,MtrEff
+;,,,,,(cfm),(cfm),,,(inH2O),( hp),,
+Corridor Flr1_PTHP Fan,BaseSys2 Fan,ConstantVolume,BaseZnSys2,CorridorFlr1 Thermal Zone,574.241,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+EmployeeLounge Flr1_PTHP Fan,BaseSys2 Fan-2,ConstantVolume,BaseZnSys2-2,EmployeeLoungeFlr1 Thermal Zone,103.833,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+ExerciseCenter Flr1_PTHP Fan,BaseSys2 Fan-3,ConstantVolume,BaseZnSys2-3,ExerciseCenterFlr1 Thermal Zone,99.647,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+FrontLounge Flr1_PTHP Fan,BaseSys2 Fan-4,ConstantVolume,BaseZnSys2-4,FrontLoungeFlr1 Thermal Zone,2028.266,-99996,0.65,PowerPerUnitFlow,1.328,1,InAirStream,0.8
+FrontOffice Flr1_PTHP Fan,BaseSys2 Fan-5,ConstantVolume,BaseZnSys2-5,FrontOfficeFlr1 Thermal Zone,490.556,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+LaundryRoom Flr1_PTHP Fan,BaseSys2 Fan-6,ConstantVolume,BaseZnSys2-6,LaundryRoomFlr1 Thermal Zone,787.934,-99996,0.65,PowerPerUnitFlow,1.328,0.5,InAirStream,0.8
+MechanicalRoom Flr1_PTHP Fan,BaseSys2 Fan-7,ConstantVolume,BaseZnSys2-7,MechanicalRoomFlr1 Thermal Zone,275.896,-99996,0.65,PowerPerUnitFlow,1.328,0.125,InAirStream,0.8
+MeetingRoom Flr1_PTHP Fan,BaseSys2 Fan-8,ConstantVolume,BaseZnSys2-8,MeetingRoomFlr1 Thermal Zone,338.181,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+FrontStairs Flr1_PTHP Fan,BaseSys2 Fan-9,ConstantVolume,BaseZnSys2-9,FrontStairsFlr1 Thermal Zone,117.886,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+FrontStorage Flr1_PTHP Fan,BaseSys2 Fan-10,ConstantVolume,BaseZnSys2-10,FrontStorageFlr1 Thermal Zone,47.449,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStairs Flr1_PTHP Fan,BaseSys2 Fan-11,ConstantVolume,BaseZnSys2-11,RearStairsFlr1 Thermal Zone,97.589,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStorage Flr1_PTHP Fan,BaseSys2 Fan-12,ConstantVolume,BaseZnSys2-12,RearStorageFlr1 Thermal Zone,102.81,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+Restroom Flr1_PTHP Fan,BaseSys2 Fan-13,ConstantVolume,BaseZnSys2-13,RestroomFlr1 Thermal Zone,101.763,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+Corridor Flr2_PTHP Fan,BaseSys2 Fan-14,ConstantVolume,BaseZnSys2-14,CorridorFlr2 Thermal Zone,358.363,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+FrontStairs Flr2_PTHP Fan,BaseSys2 Fan-15,ConstantVolume,BaseZnSys2-15,FrontStairsFlr2 Thermal Zone,93.001,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+FrontStorage Flr2_PTHP Fan,BaseSys2 Fan-16,ConstantVolume,BaseZnSys2-16,FrontStorageFlr2 Thermal Zone,36.513,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStairs Flr2_PTHP Fan,BaseSys2 Fan-17,ConstantVolume,BaseZnSys2-17,RearStairsFlr2 Thermal Zone,79.706,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStorage Flr2_PTHP Fan,BaseSys2 Fan-18,ConstantVolume,BaseZnSys2-18,RearStorageFlr2 Thermal Zone,80.535,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+Corridor Flr3_PTHP Fan,BaseSys2 Fan-19,ConstantVolume,BaseZnSys2-19,CorridorFlr3 Thermal Zone,363.308,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+FrontStairs Flr3_PTHP Fan,BaseSys2 Fan-20,ConstantVolume,BaseZnSys2-20,FrontStairsFlr3 Thermal Zone,92.759,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+FrontStorage Flr3_PTHP Fan,BaseSys2 Fan-21,ConstantVolume,BaseZnSys2-21,FrontStorageFlr3 Thermal Zone,36.915,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStairs Flr3_PTHP Fan,BaseSys2 Fan-22,ConstantVolume,BaseZnSys2-22,RearStairsFlr3 Thermal Zone,78.2,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStorage Flr3_PTHP Fan,BaseSys2 Fan-23,ConstantVolume,BaseZnSys2-23,RearStorageFlr3 Thermal Zone,78.752,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+Corridor Flr4_PTHP Fan,BaseSys2 Fan-24,ConstantVolume,BaseZnSys2-24,CorridorFlr4 Thermal Zone,543.732,-99996,0.65,PowerPerUnitFlow,1.328,0.25,InAirStream,0.8
+FrontStairs Flr4_PTHP Fan,BaseSys2 Fan-25,ConstantVolume,BaseZnSys2-25,FrontStairsFlr4 Thermal Zone,118.922,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+FrontStorage Flr4_PTHP Fan,BaseSys2 Fan-26,ConstantVolume,BaseZnSys2-26,FrontStorageFlr4 Thermal Zone,53.118,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStairs Flr4_PTHP Fan,BaseSys2 Fan-27,ConstantVolume,BaseZnSys2-27,RearStairsFlr4 Thermal Zone,105.156,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+RearStorage Flr4_PTHP Fan,BaseSys2 Fan-28,ConstantVolume,BaseZnSys2-28,RearStorageFlr4 Thermal Zone,107.376,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom101_PTHP Fan,BaseSys2 Fan-29,ConstantVolume,BaseZnSys2-29,GuestRoom101 Thermal Zone,153.628,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom102_PTHP Fan,BaseSys2 Fan-30,ConstantVolume,BaseZnSys2-30,GuestRoom102 Thermal Zone,152.283,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom103_PTHP Fan,BaseSys2 Fan-31,ConstantVolume,BaseZnSys2-31,GuestRoom103 Thermal Zone,149.949,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom104_PTHP Fan,BaseSys2 Fan-32,ConstantVolume,BaseZnSys2-32,GuestRoom104 Thermal Zone,141.162,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom105_PTHP Fan,BaseSys2 Fan-33,ConstantVolume,BaseZnSys2-33,GuestRoom105 Thermal Zone,142.634,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom201_PTHP Fan,BaseSys2 Fan-34,ConstantVolume,BaseZnSys2-34,GuestRoom201 Thermal Zone,170.913,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom202_205_PTHP Fan,BaseSys2 Fan-35,ConstantVolume,BaseZnSys2-35,GuestRoom202_205 Thermal Zone,131.106,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom206_208_PTHP Fan,BaseSys2 Fan-36,ConstantVolume,BaseZnSys2-36,GuestRoom206_208 Thermal Zone,141.189,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom209_212_PTHP Fan,BaseSys2 Fan-37,ConstantVolume,BaseZnSys2-37,GuestRoom209_212 Thermal Zone,128.944,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom213_PTHP Fan,BaseSys2 Fan-38,ConstantVolume,BaseZnSys2-38,GuestRoom213 Thermal Zone,136.424,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom214_PTHP Fan,BaseSys2 Fan-39,ConstantVolume,BaseZnSys2-39,GuestRoom214 Thermal Zone,128.547,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom215_218_PTHP Fan,BaseSys2 Fan-40,ConstantVolume,BaseZnSys2-40,GuestRoom215_218 Thermal Zone,122.941,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom219_PTHP Fan,BaseSys2 Fan-41,ConstantVolume,BaseZnSys2-41,GuestRoom219 Thermal Zone,132.503,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom220_223_PTHP Fan,BaseSys2 Fan-42,ConstantVolume,BaseZnSys2-42,GuestRoom220_223 Thermal Zone,121.104,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom224_PTHP Fan,BaseSys2 Fan-43,ConstantVolume,BaseZnSys2-43,GuestRoom224 Thermal Zone,128.133,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom301_PTHP Fan,BaseSys2 Fan-44,ConstantVolume,BaseZnSys2-44,GuestRoom301 Thermal Zone,171.212,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom302_305_PTHP Fan,BaseSys2 Fan-45,ConstantVolume,BaseZnSys2-45,GuestRoom302_305 Thermal Zone,132.796,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom306_308_PTHP Fan,BaseSys2 Fan-46,ConstantVolume,BaseZnSys2-46,GuestRoom306_308 Thermal Zone,146.353,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom309_312_PTHP Fan,BaseSys2 Fan-47,ConstantVolume,BaseZnSys2-47,GuestRoom309_312 Thermal Zone,132.385,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom313_PTHP Fan,BaseSys2 Fan-48,ConstantVolume,BaseZnSys2-48,GuestRoom313 Thermal Zone,137.62,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom314_PTHP Fan,BaseSys2 Fan-49,ConstantVolume,BaseZnSys2-49,GuestRoom314 Thermal Zone,130.628,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom315_318_PTHP Fan,BaseSys2 Fan-50,ConstantVolume,BaseZnSys2-50,GuestRoom315_318 Thermal Zone,125.767,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom319_PTHP Fan,BaseSys2 Fan-51,ConstantVolume,BaseZnSys2-51,GuestRoom319 Thermal Zone,129.628,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom320_323_PTHP Fan,BaseSys2 Fan-52,ConstantVolume,BaseZnSys2-52,GuestRoom320_323 Thermal Zone,124.812,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom324_PTHP Fan,BaseSys2 Fan-53,ConstantVolume,BaseZnSys2-53,GuestRoom324 Thermal Zone,128.052,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom401_PTHP Fan,BaseSys2 Fan-54,ConstantVolume,BaseZnSys2-54,GuestRoom401 Thermal Zone,218.408,-99996,0.65,PowerPerUnitFlow,1.328,0.125,InAirStream,0.8
+GuestRoom402_405_PTHP Fan,BaseSys2 Fan-55,ConstantVolume,BaseZnSys2-55,GuestRoom402_405 Thermal Zone,175.338,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom406_408_PTHP Fan,BaseSys2 Fan-56,ConstantVolume,BaseZnSys2-56,GuestRoom406_408 Thermal Zone,194.2,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom409_412_PTHP Fan,BaseSys2 Fan-57,ConstantVolume,BaseZnSys2-57,GuestRoom409_412 Thermal Zone,175.033,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom413_PTHP Fan,BaseSys2 Fan-58,ConstantVolume,BaseZnSys2-58,GuestRoom413 Thermal Zone,183.816,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom414_PTHP Fan,BaseSys2 Fan-59,ConstantVolume,BaseZnSys2-59,GuestRoom414 Thermal Zone,172.776,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom415_418_PTHP Fan,BaseSys2 Fan-60,ConstantVolume,BaseZnSys2-60,GuestRoom415_418 Thermal Zone,163.619,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom419_PTHP Fan,BaseSys2 Fan-61,ConstantVolume,BaseZnSys2-61,GuestRoom419 Thermal Zone,170.637,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom420_423_PTHP Fan,BaseSys2 Fan-62,ConstantVolume,BaseZnSys2-62,GuestRoom420_423 Thermal Zone,162.688,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+GuestRoom424_PTHP Fan,BaseSys2 Fan-63,ConstantVolume,BaseZnSys2-63,GuestRoom424 Thermal Zone,169.027,-99996,0.65,PowerPerUnitFlow,1.328,0.083,InAirStream,0.8
+ENDTABLE,,,,,,,,,,,,

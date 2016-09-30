@@ -1,0 +1,326 @@
+// Area Category and Tailored Lighting Power Allowances
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.4.4 - Interior Lighting
+//      General Lighting Exceptional Power
+//      General Lighting Exceptional Task Area
+//      Custom Lighting Power
+//      ..
+// ********** Additional Lighting Power Allowances - Space ********************
+
+// ---------- Retail Display Allowances - Space -------------------------------
+RULE NEW Spc:RetailType1Area
+  DATATYPE
+    Float
+  LONGFORM
+    RetailType1Area
+  DESCRIPTION
+    "The Total Area of a Space claiming a lighting allowance for 
+     Retail Area Type 1"
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power
+  INPUTCLASS 
+    NotInput         
+  UNITS
+    ft2
+  DEFAULT
+    SumChildrenIf( IntLtgSys:AllowArea,
+                   IntLtgSys:AllowType=="Retail Area Type 1 - General" )
+  SIZING
+    u:RetailType1Area
+  ANNUAL
+    z:RetailType1Area
+ENDRULE
+RULE NEW Spc:RetailType2Area
+  DATATYPE
+    Float
+  LONGFORM
+    RetailType2Area
+  DESCRIPTION
+    "The Total Area of a Space claiming a lighting allowance for 
+     Retail Area Type 1"
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power
+  INPUTCLASS 
+    NotInput         
+  UNITS
+    ft2
+  DEFAULT
+    SumChildrenIf( IntLtgSys:AllowArea,
+                   IntLtgSys:AllowType=="Retail Area Type 2 - Vehicles, Sporting Goods, and Small Electronics" )
+  SIZING
+    u:RetailType2Area
+  ANNUAL
+    z:RetailType2Area
+ENDRULE
+RULE NEW Spc:RetailType3Area
+  DATATYPE
+    Float
+  LONGFORM
+    RetailType3Area
+  DESCRIPTION
+    "The Total Area of a Space claiming a lighting allowance for 
+     Retail Area Type 1"
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power
+  INPUTCLASS 
+    NotInput         
+  UNITS
+    ft2
+  DEFAULT
+    SumChildrenIf( IntLtgSys:AllowArea,
+                   IntLtgSys:AllowType=="Retail Area Type 3 - Furniture, Clothing, Cosmetics, and Artwork" )
+  SIZING
+    u:RetailType3Area
+  ANNUAL
+    z:RetailType3Area
+ENDRULE
+RULE NEW Spc:RetailType4Area
+  DATATYPE
+    Float
+  LONGFORM
+    RetailType4Area
+  DESCRIPTION
+    "The Total Area of a Space claiming a lighting allowance for 
+     Retail Area Type 1"
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power
+  INPUTCLASS 
+    NotInput         
+  UNITS
+    ft2
+  DEFAULT
+    SumChildrenIf( IntLtgSys:AllowArea,
+                   IntLtgSys:AllowType=="Retail Area Type 4 - Jewelry, Crystal and China" )
+  SIZING
+    u:RetailType4Area
+  ANNUAL
+    z:RetailType4Area
+ENDRULE
+
+RULE NEW Spc:RetailAreaType1Allow
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Retail Sales Area Allowance for Type 1 Retail Areas.  Type 1 Retail Areas 
+     include all retail sales floor area that doesn’t qualify for Type 2, 3 or 
+     4. The additional allowance for this type is 0.6 W/sq-ft."
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power 
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/ft2
+  DEFAULT
+    MIN( SumChildren( IntLtgSys:RetailAreaType1Allow ),0.6*RetailType1Area )
+  SIZING
+    u:RetailAreaType1Allow
+  ANNUAL
+    z:RetailAreaType1Allow
+ENDRULE
+RULE NEW Spc:RetailAreaType2Allow
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Retail Sales Area Allowance for Type 2 Retail Areas.  Type 2 Retail Areas 
+     include the sales floor area for vehicles, sporting goods and small 
+     electronics. The allowance is 0.6 W/sq.ft."
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power 
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/ft2
+  DEFAULT
+    MIN( SumChildren( IntLtgSys:RetailAreaType2Allow ),0.6*RetailType2Area )
+  SIZING
+    u:RetailAreaType2Allow
+  ANNUAL
+    z:RetailAreaType2Allow
+ENDRULE
+RULE NEW Spc:RetailAreaType3Allow
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Retail Sales Area Allowance for Type 3 Retail Areas.  Type 3 Retail Areas 
+     include sales floor area for the sale of furniture, clothing, cosmetics 
+     and artwork. The allowance is 1.4 W/sq.ft."
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power 
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/ft2
+  DEFAULT
+    MIN( SumChildren( IntLtgSys:RetailAreaType3Allow ),1.4*RetailType3Area )
+  SIZING
+    u:RetailAreaType3Allow
+  ANNUAL
+    z:RetailAreaType3Allow
+ENDRULE
+RULE NEW Spc:RetailAreaType4Allow
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Retail Sales Area Allowance for Type 4 Retail Areas.  Type 4 Retail Areas 
+     include asales floor area for jewelry, crystal and china. The allowance is
+     2.5 W/sq.ft."
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power 
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/ft2
+  DEFAULT
+    MIN( SumChildren( IntLtgSys:RetailAreaType4Allow ),2.5*RetailType4Area )
+  SIZING
+    u:RetailAreaType4Allow
+  ANNUAL
+    z:RetailAreaType4Allow
+ENDRULE
+// ---------- Decorative Allowances - IntLtgSys--------------------------------
+RULE NEW Spc:DecorArea
+  DATATYPE
+    Float
+  LONGFORM
+    DecorativeArea
+  DESCRIPTION
+    "The Total Area of a Space claiming a lighting allowance for 
+     Retail Area Type 1"
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+       PRM-3.4.3, Additional Lighting Power: Retail Display Lighting Power
+  INPUTCLASS 
+    NotInput         
+  UNITS
+    ft2
+  DEFAULT
+    SumChildrenIf( IntLtgSys:AllowArea,
+                   IntLtgSys:AllowType=="Decorative Lighting" )
+  SIZING
+    u:DecorArea
+  ANNUAL
+    z:DecorArea
+ENDRULE
+RULE NEW Spc:DecorAllow
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Decorative lighting includes wall sconces, chandeliers and other 
+     decorative lighting that are provided for purposes other than illuminating
+     visual tasks. Decorative lighting installed under this exception are
+     required to have separate, automatic controls.The allowed lighting power 
+     is defined as the floor area applicable space times the 1 W/sq.ft 
+     allowance."
+  HELP
+    "" // String, ACM applicability and other detailed guidance. 
+  REFERENCE 
+    PRM-3.4.3, Decorative Lighting
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/ft2
+  DEFAULT
+    MIN( SumChildren( IntLtgSys:DecorAllow ),1.0*DecorArea )
+  SIZING
+    u:DecorArea
+  ANNUAL
+    z:DecorArea
+ENDRULE
+
+// ---------- Additional Lighting Power Allowances - Space --------------------
+RULE NEW Spc:RegAddlAllowPwr
+  DATATYPE
+    Float
+  LONGFORM
+    RegulatedAdditionalAllowancePower
+  DESCRIPTION
+    "A container for the Regulated Additional Allowance Lighting Power"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT  
+    ( RetailAreaType1Allow + 
+      RetailAreaType2Allow +
+      RetailAreaType3Allow + 
+      RetailAreaType4Allow + 
+      DecorAllow ) 
+  SIZING
+    u:RegAddlAllowPwr
+  ANNUAL
+    z:RegAddlAllowPwr
+ENDRULE
+RULE NEW Spc:RegAddlAllowFlag
+  DATATYPE
+    Integer
+  LONGFORM
+    RegulatedAdditionalAllowanceFlag
+  DESCRIPTION
+    "A flag that identifies the presence of Regulated Additional Allowance Power"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT  
+    if ( Spc:RegAddlAllowPwr > 0 )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE

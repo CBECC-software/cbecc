@@ -1,0 +1,1659 @@
+// Project - Additions, Alterations, and Partial Compliance
+//
+// ----------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALifORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// ----------------------------------------------------------------------
+
+
+
+// Proj:CompType options:
+//    NewComplete
+//    NewEnvelope
+//    NewEnvelopeAndLighting
+//    NewEnvelopeAndPartialLighting
+//    NewEnvelopeAndMechanical
+//    NewMechanical
+//    NewMechanicalAndLighting
+//    NewMechanicalAndPartialLighting
+//    ExistingAlteration
+//    ExistingAdditionAndAlteration
+//    AdditionComplete
+//    AdditionEnvelope
+//    AdditionEnvelopeAndLighting
+//    AdditionEnvelopeAndPartialLighting
+//    AdditionEnvelopeAndMechanical
+//    AdditionMechanical
+//    AdditionMechanicalAndLighting
+//    AdditionMechanicalAndPartialLighting
+
+
+RULE Bldg:WholeBldgModeled
+  DESCRIPTION
+    "A flag that indicates if the entire building and the HVAC systems that 
+     serve it are explicitly modeled."
+  HELP
+    "Defaults to true (1) for all Project:ComplianceType options except those 
+     identified as 'Existing'.  For these options, it is possible that only a 
+     portion of the building is modeled.  In this case, the user must define to
+     whether the entire building has modeled, and if not, enter the 'Total' building
+     attributes."
+  INPUTCLASS
+    Default
+  DEFAULT
+    1
+  SIZING
+    u:WholeBldgModeled
+  ANNUAL
+    z:WholeBldgModeled
+ENDRULE
+
+// Sum areas of Space child components by Status
+// TO DO: Review criteria with team and decide how to finalize this rule
+// Should include demising surface area?
+RULE NEW Spc:ChildAreaNew
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildrenIf( Roof:Area, Roof:IsNew = 1 ) +
+    SumChildrenIf( ExtWall:Area, ExtWall:IsNew = 1 ) +
+    SumChildrenIf( ExtFlr:Area, ExtFlr:IsNew = 1 ) +
+    SumChildrenIf( UndgrWall:Area, UndgrWall:IsNew = 1 ) +
+    SumChildrenIf( UndgrFlr:Area, UndgrFlr:IsNew = 1 ) +
+    SumChildrenIf( Win:Area, Win:IsNew = 1 ) +
+    SumChildrenIf( Skylt:Area, Skylt:IsNew = 1 ) +
+    SumChildrenIf( Dr:Area, Dr:IsNew = 1 )
+  SIZING
+    u:ChildAreaNew
+  ANNUAL
+    z:ChildAreaNew
+ENDRULE
+
+RULE NEW Spc:ChildAreaExisting
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildrenIf( Roof:Area, Roof:IsExisting = 1 ) +
+    SumChildrenIf( ExtWall:Area, ExtWall:IsExisting = 1 ) +
+    SumChildrenIf( ExtFlr:Area, ExtFlr:IsExisting = 1 ) +
+    SumChildrenIf( UndgrWall:Area, UndgrWall:IsExisting = 1 ) +
+    SumChildrenIf( UndgrFlr:Area, UndgrFlr:IsExisting = 1 ) +
+    SumChildrenIf( Win:Area, Win:IsExisting = 1 ) +
+    SumChildrenIf( Skylt:Area, Skylt:IsExisting = 1 ) +
+    SumChildrenIf( Dr:Area, Dr:IsExisting = 1 )
+  SIZING
+    u:ChildAreaExisting
+  ANNUAL
+    z:ChildAreaExisting
+ENDRULE
+
+RULE NEW Spc:ChildAreaAltered
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildrenIf( Roof:Area, Roof:IsAltered = 1 ) +
+    SumChildrenIf( ExtWall:Area, ExtWall:IsAltered = 1 ) +
+    SumChildrenIf( ExtFlr:Area, ExtFlr:IsAltered = 1 ) +
+    SumChildrenIf( UndgrWall:Area, UndgrWall:IsAltered = 1 ) +
+    SumChildrenIf( UndgrFlr:Area, UndgrFlr:IsAltered = 1 ) +
+    SumChildrenIf( Win:Area, Win:IsAltered = 1 ) +
+    SumChildrenIf( Skylt:Area, Skylt:IsAltered = 1 ) +
+    SumChildrenIf( Dr:Area, Dr:IsAltered = 1 )
+  SIZING
+    u:ChildAreaAltered
+  ANNUAL
+    z:ChildAreaAltered
+ENDRULE
+
+// Set Spc:HVACStatus based on the ChildComponentArea status and LtgStatus
+RULE Spc:HVACStatus
+  DESCRIPTION
+    "Specifies the Status of the space, as determined by the Status of specific
+     child objects that impact HVAC energy use.  For additions/alterations."
+  HELP
+    "Used to determine if how the space floor area is classified for determining
+     the baseline HVAC system for Additions/Alterations. The classification is
+     determined automatically based on the following criteria:
+
+
+     New:      The floor area and all child components (including lighting even 
+               if not specified with IntLtgSys) are New.  This is the default 
+               assumption if the status is neither Altered or Existing.
+
+
+     Existing: The floor area and all child components (including lighting even 
+               if not specified with IntLtgSys) are Existing.
+
+
+     Altered:  The conditioned floor area is existing, but the Spc has a mix of 
+               New/Existing or New/Altered local or child components."
+  INPUTCLASS 
+    NotInput
+  OPTION
+    New
+    Existing
+    Altered
+  DEFAULT
+    if( ChildAreaExisting > 0 .OR.
+        IsExistingLtg .OR.
+        IsExistingEnv .OR.
+        IsNewHVAC = 0 )
+      then // System includes some Existing components
+      if( ChildAreaNew > 0 .OR.
+          IsNewLtg .OR.
+          ChildAreaAltered > 0 .OR. 
+          IsAlteredLtg .OR.
+          IsNewHVAC = 1 ) 
+      then // There is a mix of New and Existing components
+        "Altered" 
+      else // There are no Altered or New components
+        "Existing"
+      endif
+    else "New"
+    endif
+; CHECKCODE : T24N
+;   if( ( HVACAreaExisting > 0 .OR. HVACAreaAltered > 0 ) .AND.  
+;       Proj:CompType = "NewComplete" )
+;   then
+;     PostError("The 'Existing' status of object '%s' is not consistent with the
+;                project's ComplianceType specification.", Name )
+;   else UNCHANGED
+;   endif
+  SIZING
+    u:HVACStatus
+  ANNUAL
+    z:HVACStatus
+ENDRULE
+
+// Set values for area that correpond to each HVACStatus option
+RULE NEW Spc:HVACAreaNew
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HVACStatus = "New" ) then CondFlrAreaWithMult else 0 endif
+  SIZING
+    if( Proj:IsBaseHVAC ) then CondFlrAreaWithMult else u:HVACAreaNew endif
+  ANNUAL
+    z:HVACAreaNew
+ENDRULE
+
+RULE NEW Spc:HVACAreaExisting
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HVACStatus = "Existing" ) then CondFlrAreaWithMult else 0 endif
+  SIZING
+    if( Proj:IsBaseHVAC ) then 0 else u:HVACAreaExisting endif
+  ANNUAL
+    z:HVACAreaExisting
+ENDRULE
+
+RULE NEW Spc:HVACAreaAltered
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( HVACStatus = "Altered" ) then CondFlrAreaWithMult else 0 endif
+  SIZING
+    if( Proj:IsBaseHVAC ) then 0 else u:HVACAreaAltered endif
+  ANNUAL
+    z:HVACAreaAltered
+ENDRULE
+
+// Set values for area that correpond to each HVACStatus option
+RULE NEW ThrmlZn:HVACAreaNew
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaNew )
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaNew )
+  ANNUAL
+    z:HVACAreaNew
+ENDRULE
+
+RULE NEW ThrmlZn:HVACAreaExisting
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaExisting )
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaExisting )
+  ANNUAL
+    z:HVACAreaExisting
+ENDRULE
+
+RULE NEW ThrmlZn:HVACAreaAltered
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaAltered )
+  SIZING
+    SumRevRef( Spc:ThrmlZnRef, Spc:HVACAreaAltered )
+  ANNUAL
+    z:HVACAreaAltered
+ENDRULE
+
+// Set flags that describe the status of the proposed HVAC system at the ThrmlZn.
+// Current criteria is if any of the systems serving the zone are New, the status
+// is New
+RULE NEW ThrmlZn:IsNewHVAC
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of any HVAC system(s) (not including
+     exhaust) that serve the ThermalZone is 'New'."
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( Proj:IsNoMech )
+    then -999 // Partial envelope, all systems will created by rules
+    else
+    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( LocalCompAssigned( SecAirCondgSysRef ) )
+      then // Secondary system is defined
+        if( LocalCompAssigned( VentSysRef ) )
+        then // Ventilation system is defined
+          if( PriAirCondgSysRef:IsNew = 1 .OR.
+              SecAirCondgSysRef:IsNew = 1 .OR.
+              VentSysRef:IsNew = 1 )
+          then 1
+          else 0
+          endif
+        else // No ventilation system
+          if( PriAirCondgSysRef:IsNew = 1 .OR.
+              SecAirCondgSysRef:IsNew = 1 )
+          then 1
+          else 0
+          endif
+        endif
+      else // No secondary system
+      if( LocalCompAssigned( VentSysRef ) )
+      then // Ventilation system is defined, 
+        if( PriAirCondgSysRef:IsNew = 1 .OR.
+            VentSysRef:IsNew = 1 )
+        then 1
+        else 0
+        endif
+      else // No ventilation system
+      if( PriAirCondgSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif endif endif
+    else -999
+    endif endif
+  DEFAULT : S901G ECBC
+    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+    then
+      if( LocalCompAssigned( SecAirCondgSysRef ) )
+      then // Secondary system is defined
+        if( LocalCompAssigned( VentSysRef ) )
+        then // Ventilation system is defined
+          if( PriAirCondgSysRef:IsNew = 1 .OR.
+              SecAirCondgSysRef:IsNew = 1 .OR.
+              VentSysRef:IsNew = 1 )
+          then 1
+          else 0
+          endif
+        else // No ventilation system
+          if( PriAirCondgSysRef:IsNew = 1 .OR.
+              SecAirCondgSysRef:IsNew = 1 )
+          then 1
+          else 0
+          endif
+        endif
+      else // No secondary system
+      if( LocalCompAssigned( VentSysRef ) )
+      then // Ventilation system is defined, 
+        if( PriAirCondgSysRef:IsNew = 1 .OR.
+            VentSysRef:IsNew = 1 )
+        then 1
+        else 0
+        endif
+      else // No ventilation system
+      if( PriAirCondgSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif endif endif
+    else -999
+    endif 
+ENDRULE
+
+RULE NEW ThrmlZn:IsExistingHVAC
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of all HVAC system(s) (not including
+     exhaust) that serve the ThermalZone is 'Existing'."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( IsNewHVAC = -999 )
+    then -999
+    else if( IsNewHVAC = 0 )
+    then 1
+    else 0
+    endif endif
+ENDRULE
+
+RULE NEW ThrmlZn:IsNewVent
+  DATATYPE
+    Integer
+  LONGFORM
+    VentilationIsNew
+  DESCRIPTION
+    "A flag that specifies if the Status of the Ventilation system that serves the 
+     ThermalZone is 'New'."
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( Proj:IsNoMech )
+    then -999 // Partial envelope, all systems will created by rules
+    else
+    if( LocalCompAssigned( VentSysRef ) )
+    then
+      if( VentSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif
+    else -999
+    endif endif
+  DEFAULT : S901G ECBC
+    if( LocalCompAssigned( VentSysRef ) )
+    then
+      if( VentSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif
+    else -999
+    endif
+ENDRULE
+
+RULE NEW ThrmlZn:IsNewExh
+  DATATYPE
+    Integer
+  LONGFORM
+    ExhaustIsNew
+  DESCRIPTION
+    "A flag that specifies if the Status of the Exhaust system that serves the 
+     ThermalZone is 'New'."
+  INPUTCLASS 
+    NotInput
+  DEFAULT : T24N
+    if( Proj:IsNoMech )
+    then -999 // Partial envelope, all systems will created by rules
+    else
+    if( LocalCompAssigned( ExhSysRef ) )
+    then
+      if( ExhSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif
+    else -999
+    endif endif
+  DEFAULT : S901G ECBC
+    if( LocalCompAssigned( ExhSysRef ) )
+    then
+      if( ExhSysRef:IsNew = 1 )
+      then 1
+      else 0
+      endif
+    else -999
+    endif
+ENDRULE
+
+RULE NEW Spc:IsNewHVAC
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of any HVAC system(s) (not including
+     exhaust) that serve the ThermalZone the Space is assigned to."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:IsNewHVAC
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Spc:IsExistingHVAC
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of any HVAC system(s) that serve the 
+     ThermalZone the Space is assigned to."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:IsExistingHVAC
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Spc:IsNewVent
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of the Ventilation system that serve the 
+     ThermalZone the Space is assigned to."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:IsNewVent
+    else 0
+    endif
+ENDRULE
+
+RULE NEW Spc:IsNewExh
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "A flag that specifies if the Status of the Exhaust system that serve the 
+     ThermalZone the Space is assigned to."
+  INPUTCLASS 
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ThrmlZnRef ) )
+    then ThrmlZnRef:IsNewExh
+    else 0
+    endif
+ENDRULE
+
+
+
+// --------------- Story Totals ------------------------------------------------
+// See Building-General.rule for Story totals independent of Add/Alt
+// NEW Totals -----------
+RULE NEW Story:TotFlrAreaNewWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaNewWithMultiplier
+  DESCRIPTION
+    "The total NEW floor area (conditioned and unconditioned) of the Story, 
+     including multipliers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    SumChildrenIf( Spc:FlrAreaWithMult, Spc:HVACStatus = "New" ) 
+ENDRULE 
+
+RULE NEW Story:NonResFlrAreaNewWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaNewWithMultiplier
+  DESCRIPTION
+    "The total NEW story nonresidential (conditioned) floor area, 
+     including multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( Spc:NonResCondFlrAreaWithMult, Spc:HVACStatus = "New" ) 
+ENDRULE  
+
+RULE NEW Story:ResFlrAreaNewWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaNewWithMultiplier
+  DESCRIPTION
+    "The total NEW story residential (conditioned) floor area, 
+     including multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( Spc:ResCondFlrAreaWithMult, Spc:HVACStatus = "New" ) 
+ENDRULE  
+
+// Space with new HVAC -----------
+RULE NEW Story:NonResFlrAreaNewHVACWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaNewHVACWithMultiplier
+  DESCRIPTION
+    "The total nonresidential conditioned floor area served by NEW HVAC equipment,
+     including multipliers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    SumChildrenIf( Spc:NonResCondFlrAreaWithMult, Spc:IsNewHVAC = 1 ) 
+ENDRULE 
+
+RULE NEW Story:ResFlrAreaNewHVACWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaNewWithHVACMultiplier
+  DESCRIPTION
+    "The total residential conditioned floor area served by NEW HVAC equipment, 
+     including multipliers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    SumChildrenIf( Spc:ResCondFlrAreaWithMult, Spc:IsNewHVAC = 1 ) 
+ENDRULE 
+
+// ALTERED Totals --------------------------------------------------------------
+RULE NEW Story:TotFlrAreaAlteredWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaNewWithMultiplier
+  DESCRIPTION
+    "The total ALTERED floor area (conditioned and unconditioned) of the Story, 
+     including multipliers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    SumChildrenIf( Spc:FlrAreaWithMult, Spc:HVACStatus = "Altered" ) 
+ENDRULE 
+
+RULE NEW Story:NonResFlrAreaAlteredWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaAlteredWithMultiplier
+  DESCRIPTION
+    "The total ALTERED story nonresidential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( Spc:NonResCondFlrAreaWithMult, Spc:HVACStatus = "Altered" )
+ENDRULE  
+
+RULE NEW Story:ResFlrAreaAlteredWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaAlteredWithMultiplier
+  DESCRIPTION
+    "The total ALTERED story residential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( Spc:ResCondFlrAreaWithMult, Spc:HVACStatus = "Altered" )
+ENDRULE  
+
+RULE NEW Story:TotCondFlrAreaAlteredWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaAlteredWithMultiplier
+  DESCRIPTION
+    "The total ALTERED story conditioned floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    NonResFlrAreaAlteredWithMult + ResFlrAreaAlteredWithMult
+ENDRULE 
+
+// EXISTING Totals ----------
+RULE NEW Story:TotFlrAreaExistingWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaExistingWithMultiplier
+  DESCRIPTION
+    "The total EXISTING floor area (conditioned and unconditioned) of the Story, 
+     including multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, TotFlrAreaWithMult - ( TotFlrAreaNewWithMult + TotFlrAreaAlteredWithMult ) )
+ENDRULE 
+
+RULE NEW Story:NonResFlrAreaExistingWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaExistingWithMultiplier
+  DESCRIPTION
+    "The total EXISTING story nonresidential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, TotCondFlrAreaWithMult - ( NonResFlrAreaNewWithMult + NonResFlrAreaAlteredWithMult ) )
+ENDRULE  
+
+RULE NEW Story:ResFlrAreaExistingWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaExistingWithMultiplier
+  DESCRIPTION
+    "The total EXISTING story residential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, TotCondFlrAreaWithMult - ( ResFlrAreaNewWithMult + ResFlrAreaAlteredWithMult ) )
+ENDRULE  
+
+RULE NEW Story:TotCondFlrAreaExistingWithMult
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaExistingWithMultiplier
+  DESCRIPTION
+    "The total EXISTING story conditioned floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Max( 0, NonResFlrAreaExistingWithMult + ResFlrAreaExistingWithMult )
+ENDRULE 
+
+// --------------- Bldg Totals -------------------------------------------------
+// See Building-General.rule for Bldg totals independent of Add/Alt
+// Bldg NEW Totals -----------
+RULE Bldg:TotStoryCntNew
+  DESCRIPTION
+    "The total number of NEW stories in a building."
+  INPUTCLASS
+    Optional 
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:IsAddOrAlt = 1 ) 
+    then 0
+    else TotStoryCnt
+    endif
+ENDRULE  
+
+RULE Bldg:AboveGrdStoryCntNew
+  DESCRIPTION
+    "The number of NEW above-grade building stories."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:IsAddOrAlt = 1 ) 
+    then 0
+    else AboveGrdStoryCnt
+    endif
+ENDRULE  
+
+RULE Bldg:LivingUnitCntNew
+  DESCRIPTION
+    "The number of NEW living units in the building."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:IsAddOrAlt = 1 ) 
+    then 0
+    else LivingUnitCntRpt
+    endif
+ENDRULE  
+
+RULE Bldg:TotFlrAreaNew
+  DESCRIPTION
+    "The total NEW floor area (conditioned and unconditioned) of the building, 
+     including multipliers."
+  INPUTCLASS
+    NotInput 
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:IsAddOrAlt )
+    then SumChildren( Story:TotFlrAreaNewWithMult )
+    else 0
+    endif
+ENDRULE 
+
+RULE NEW Bldg:NonResFlrAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaNew
+  DESCRIPTION
+    "The total NEW building nonresidential (conditioned) floor area."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( Story:NonResFlrAreaNewWithMult )
+ENDRULE  
+
+RULE NEW Bldg:ResFlrAreaNew
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaNew
+  DESCRIPTION
+    "The total NEW building residential (conditioned) floor area."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( Story:ResFlrAreaNewWithMult )
+ENDRULE  
+
+RULE Bldg:TotCondFlrAreaNew
+  DESCRIPTION
+    "The total NEW building conditioned floor area." 
+  INPUTCLASS
+    NotInput 
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Proj:IsAddOrAlt )
+    then NonResFlrAreaNew + ResFlrAreaNew
+    else 0
+    endif
+ENDRULE 
+
+RULE NEW Bldg:TotCondVolNew
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedVolumeNew
+  DESCRIPTION
+    "The total NEW building conditioned volume." 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildrenIf(Spc:CondVolWithMult, Spc:HVACStatus = "New")   
+ENDRULE 
+
+// Bldg ALTERED Totals ---------
+RULE Bldg:TotStoryCntAltered
+  DESCRIPTION
+    "The total number of ALTERED stories in a building."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    0 
+ENDRULE  
+
+RULE Bldg:AboveGrdStoryCntAltered
+  DESCRIPTION
+    "The number of ALTERED above-grade building stories."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    0
+ENDRULE  
+
+RULE Bldg:LivingUnitCntAltered
+  DESCRIPTION
+    "The number of ALTERED living units in the building."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    0
+ENDRULE  
+
+RULE NEW Bldg:TotFlrAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaAltered
+  DESCRIPTION
+    "The total ALTERED floor area (conditioned and unconditioned) of the building,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumChildren( Story:TotFlrAreaAlteredWithMult )
+ENDRULE 
+
+RULE NEW Bldg:NonResFlrAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaAltered
+  DESCRIPTION
+    "The total ALTERED building nonresidential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( Story:NonResFlrAreaAlteredWithMult )
+ENDRULE  
+
+RULE NEW Bldg:ResFlrAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaAltered
+  DESCRIPTION
+    "The total ALTERED building residential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( Story:ResFlrAreaAlteredWithMult )
+ENDRULE  
+
+RULE NEW Bldg:TotCondFlrAreaAltered
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaAltered
+  DESCRIPTION
+    "The total ALTERED building conditioned floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    NonResFlrAreaAltered + ResFlrAreaAltered
+ENDRULE 
+
+RULE NEW Bldg:TotCondVolAltered
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedVolumeAltered
+  DESCRIPTION
+    "The total ALTERED building conditioned volume,
+     including space multipliers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    SumChildrenIf( Spc:CondVolWithMult, Spc:HVACStatus = "Altered" ) 
+ENDRULE 
+
+// Bldg EXISTING Totals --------
+// Existing = Total - ( New + Altered )
+RULE Bldg:TotStoryCntExisting
+  DESCRIPTION
+    "The total number of EXISTING stories in a building."
+  INPUTCLASS
+    Optional 
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( LocalStatus( TotStoryCnt ) > 0 )
+    then 
+      Max(0 , TotStoryCnt - ( TotStoryCntNew + TotStoryCntAltered ) )
+    else 0
+    endif
+ENDRULE 
+ 
+RULE Bldg:AboveGrdStoryCntExisting
+  DESCRIPTION
+    "The number of EXISTING above-grade building stories."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( LocalStatus( AboveGrdStoryCnt ) > 0 )
+    then 
+      Max( 0, AboveGrdStoryCnt - ( AboveGrdStoryCntNew + AboveGrdStoryCntAltered ) )
+    else 0
+    endif
+ENDRULE  
+
+RULE Bldg:LivingUnitCntExisting
+  DESCRIPTION
+    "The number of EXISTING living units in the building."
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( LocalStatus( LivingUnitCntRpt ) > 0 )
+    then 
+      Max( 0, LivingUnitCntRpt - ( LivingUnitCntNew + LivingUnitCntAltered ) )
+    else 0
+    endif
+ENDRULE  
+
+RULE NEW Bldg:TotFlrAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    TotalFloorAreaExisting
+  DESCRIPTION
+    "The total EXISTING floor area (conditioned and unconditioned) of the building, 
+     including multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, TotFlrArea - ( TotFlrAreaNew + TotFlrAreaAltered ) )
+//CHECKCODE
+//  if( TotFlrAreaNew > 0 .AND. IsAltOnly )
+//  then // Is Alteration only, but has new floor area
+//    PostError("The project ComplianceType = %s, but the model includes
+//               new floor area.", Proj:CompType )
+//  else
+//  if( TotFlrAreaAltered > 0 .AND. IsAddOrAlt .AND. IsAlt = 0 )
+//  then // Is Addition* but has Altered area
+//    PostError("The project ComplianceType = %s, but the model includes
+//               altered floor area.", Proj:CompType )
+//  else UNCHANGED
+//  endif endif 
+ENDRULE 
+
+RULE NEW Bldg:NonResFlrAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    NonresidentialFloorAreaExisting
+  DESCRIPTION
+    "The total EXISTING building nonresidential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, NonResFlrArea - ( NonResFlrAreaNew + NonResFlrAreaAltered ) )
+ENDRULE  
+
+RULE NEW Bldg:ResFlrAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ResidentialFloorAreaExisting
+  DESCRIPTION
+    "The total EXISTING building residential (conditioned) floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, ResFlrArea - ( ResFlrAreaNew + ResFlrAreaAltered ) )
+ENDRULE  
+
+RULE NEW Bldg:TotCondFlrAreaExisting
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedFloorAreaExisting
+  DESCRIPTION
+    "The total EXISTING building conditioned floor area,
+     including space multipliers."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Max( 0, NonResFlrAreaExisting + ResFlrAreaExisting )
+ENDRULE 
+
+RULE NEW Bldg:TotCondVolExisting
+  DATATYPE
+    Float
+  LONGFORM
+    TotalConditionedVolumeExisting
+  DESCRIPTION
+    "The total EXISTING building conditioned volume,
+     including space multipliers."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Max( 0, TotCondVol - ( TotCondVolNew + TotCondVolAltered ) )
+ENDRULE 
+
+
+// HVAC ------------------------------------------------------------------------
+// --------------- Building Totals ---------------------------------------------
+// HVAC (New + Existing) ---------
+RULE Bldg:CoilClgCap
+  DESCRIPTION
+    "The total cooling capacity of systems in the Building, as 
+     classified for Add/Alt rules."
+  INPUTCLASS 
+    Default
+  MINIMUM
+    0
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:CapAddAlt > 0 )
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( CoilClgCap ) > 4 )
+    then
+      PostError("Building total coil cooling (DX) capacity should not 
+                 be user-defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+  ANNUAL
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:CapAddAlt > 0 )
+ENDRULE
+
+RULE Bldg:CoilHtgCap
+  DESCRIPTION
+    "The total heating capacity of systems in the Building, as 
+     classified for Add/Alt rules."
+  INPUTCLASS 
+    Default
+  MINIMUM
+    0
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:CapAddAlt > 0 )
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( CoilHtgCap ) > 4 )
+    then
+      PostError("Building total coil heating (HP + Furnace) capacity should not 
+                 be user-defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+  ANNUAL
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:CapAddAlt > 0 )
+ENDRULE
+
+RULE Bldg:PlantClgCap
+  DESCRIPTION
+    "Total building NEW plant cooling capacity.  Currently this only includes 
+     chillers."
+  INPUTCLASS
+    Default
+  MINIMUM
+    0 
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumAll( Chlr:CapRtd )
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( PlantClgCap ) > 4 )
+    then
+      PostError("Building total plant chiller capacity should not 
+                 be user-defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+  ANNUAL
+    SumAll( Chlr:CapRtd )
+ENDRULE
+
+RULE Bldg:PlantHtgCap
+  DESCRIPTION
+    "Total building NEW plant heating capacity.  Currently this only includes 
+     boilers."
+  INPUTCLASS
+    Default
+  MINIMUM
+    0
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumAll( Blr:CapRtd )
+  CHECKCODE
+    if( WholeBldgModeled = 1 .AND. LocalStatus( PlantHtgCap ) > 4 )
+    then
+      PostError("Building total plant boiler capacity should not 
+                 be user-defined if the whole building is modeled. Uncheck this
+                 option and restore the default to perform compliance.")
+    else UNCHANGED
+    endif
+  ANNUAL
+    SumAll( Blr:CapRtd )
+ENDRULE
+
+// NEW Totals ---------
+RULE NEW Bldg:PlantClgCapNew
+  DATATYPE
+    Float
+  LONGFORM
+    PlantCoolingCapacityNew
+  DESCRIPTION
+    "Total building NEW plant cooling capacity.  Currently this only includes 
+     chillers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumAll( Chlr:CapRtdNew )
+  ANNUAL
+    SumAll( Chlr:CapRtdNew )
+ENDRULE
+
+RULE NEW Bldg:PlantHtgCapNew
+  DATATYPE
+    Float
+  LONGFORM
+    PlantHeatingCapacityNew
+  DESCRIPTION
+    "Total building NEW plant heating capacity.  Currently this only includes 
+     boilers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumAll( Blr:CapRtdNew )
+  ANNUAL
+    SumAll( Blr:CapRtdNew )
+ENDRULE
+
+RULE NEW Bldg:CoilClgCapAddAltNew
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingCapacityAdditionAlterationNew
+  DESCRIPTION
+    "Total building net capacity of cooling coils, if Status = New. Does not include 
+     Type = ChilledWater as the capacity of these coils does not impact the
+     baseline system selection for additions/alterations."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:IsNew = 1 )
+  ANNUAL
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:IsNew = 1 )
+ENDRULE
+
+RULE NEW Bldg:CoilHtgCapAddAltNew
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingCapacityAdditionAlterationNew
+  DESCRIPTION
+    "Total building gross capacity of heating coils, if Status = New.  Does not include 
+     Type = HotWater or Steam, as the capacity of these coils does not impact the
+     baseline system selection for additions/alterations."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:IsNew = 1 )
+  ANNUAL
+    SumChildrenIf( CoilHtg:CapAddAlt, CoilHtg:IsNew = 1 )
+ENDRULE
+
+// Existing Totals ---------------
+// Existing = Total - New
+RULE NEW Bldg:PlantClgCapExisting
+  DATATYPE
+    Float
+  LONGFORM
+    PlantCoolingCapacityExisting
+  DESCRIPTION
+    "Total building EXISTING plant cooling capacity.  Currently this only includes 
+     chillers."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    Max( 0, PlantClgCap - PlantClgCapNew )
+  ANNUAL
+    SumAll( Chlr:CapRtdExisting)
+ENDRULE
+
+RULE NEW Bldg:PlantHtgCapExisting
+  DATATYPE
+    Float
+  LONGFORM
+    PlantHeatingCapacityExisting
+  DESCRIPTION
+    "Total building EXISTING plant heating capacity.  Currently this only includes 
+     boilers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, PlantHtgCap - PlantHtgCapNew )
+  ANNUAL
+    SumAll( Blr:CapRtdExisting)
+ENDRULE
+
+RULE NEW Bldg:CoilClgCapAddAltExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingCapacityAdditionAlterationExisting
+  DESCRIPTION
+    "Total building net capacity of cooling coils, if Status = Existing. If the
+     entire building is not modeled, it is assumed that
+     Existing = Total (input by user) - New. 
+     Does not include Type = ChilledWater as the capacity of these coils 
+     does not impact the baseline system selection for additions/alterations."
+  INPUTCLASS
+    NotInput 
+  DEFAULT
+    // Total - New = Existing
+    Max( 0, CoilClgCap - CoilClgCapAddAltNew )
+  ANNUAL
+    Max( 0, CoilClgCap - CoilClgCapAddAltNew )
+ENDRULE
+
+RULE NEW Bldg:CoilHtgCapAddAltExisting
+  DATATYPE
+    Float
+  LONGFORM
+    CoilHeatingCapacityAdditionAlterationExisting
+  DESCRIPTION
+    "Total building gross capacity of heating coils, if Status = Existing. If the
+     entire building is not modeled, it is assumed that the 
+     Existing = Total (input by user) - New. 
+     Does not include Type = HotWater or Steam, as the capacity of these coils 
+     does not impact the baseline system selection for additions/alterations."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    Max( 0, CoilHtgCap - CoilHtgCapAddAltNew )
+  ANNUAL
+    Max( 0, CoilHtgCap - CoilHtgCapAddAltNew )
+ENDRULE
+
+// Altered Totals -----------------
+// None for HVAC
+
+
+// DCapBldg% calculation
+// Cooling
+RULE NEW Bldg:TotClgCap
+  DATATYPE
+    Float
+  LONGFORM
+    TotalCoolingCapacity
+  INPUTCLASS
+    NotInput 
+  DESCRIPTION 
+    "The total building cooling capacity of systems in the Building, as 
+     classified for Add/Alt rules."
+  HELP
+    "Includes capacity of coils not served by a plany system, plus the
+     capacity of plant heating equipment."
+  DEFAULT
+    PlantClgCap + CoilClgCap
+  ANNUAL
+    PlantClgCap + CoilClgCap
+ENDRULE
+
+RULE NEW Bldg:TotHtgCap
+  DATATYPE
+    Float
+  LONGFORM
+    TotalHeatingCapacity
+  INPUTCLASS
+    NotInput  
+  DESCRIPTION 
+    "The total building heat capacity of systems in the Building, as 
+    classified for Add/Alt rules."
+  HELP
+    "Includes capacity of coils not served by a plany system, plus the
+     capacity of plant heating equipment."
+  DEFAULT
+    PlantHtgCap + CoilHtgCap
+  ANNUAL
+    PlantHtgCap + CoilHtgCap
+ENDRULE
+
+
+// DCapBldg% calculation
+// Cooling
+RULE NEW Bldg:DeltaClgCapBldgRat
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaCoolingCapacityBuildingRatio
+  DESCRIPTION
+    "The ratio of NEW cooling capacity (coil + plant) to total building cooling
+     capacity, as defined for Add/Alt rules."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( TotClgCap > 0 )
+    then
+      ( PlantClgCapNew + CoilClgCapAddAltNew ) / ; New /
+      TotClgCap                                  ; Total
+    else 0
+    endif
+  SIZING
+    u:DeltaClgCapBldgRat
+  ANNUAL
+    z:DeltaClgCapBldgRat
+ENDRULE
+// Heating
+RULE NEW Bldg:DeltaHtgCapBldgRat
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaHeatingCapacityBuildingRatio
+  DESCRIPTION
+    "The ratio of NEW heating capacity (coil + plant )to total building cooling
+     capacity, as defined for Add/Alt rules."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( TotHtgCap > 0 )
+    then
+      ( PlantHtgCapNew + CoilHtgCapAddAltNew ) / ; New /
+      TotHtgCap                                  ; Total
+    else 0
+    endif
+  SIZING
+    u:DeltaHtgCapBldgRat
+  ANNUAL
+    z:DeltaHtgCapBldgRat
+ENDRULE
+
+
+// DCapAlt% calculation
+// Cooling
+RULE NEW Bldg:DeltaClgCapAltAddRat
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaCoolingCapacityAlterationRatio
+  DESCRIPTION
+    "The ratio of NEW cooling coil capacity to total building cooling coil
+     capacity, as defined for Add/Alt rules."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( CoilClgCap > 0 )
+    then
+      CoilClgCapAddAltNew /  ; New /
+      CoilClgCap             ; Total
+    else 0
+    endif
+  SIZING
+    u:DeltaClgCapAltAddRat
+  ANNUAL
+    z:DeltaClgCapAltAddRat
+ENDRULE
+
+// Heating
+RULE NEW Bldg:DeltaHtgCapAltAddRat
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaHeatingCapacityAlterationRatio
+  DESCRIPTION
+    "The ratio of NEW heating coil capacity to total building heating coil
+     capacity, as defined for Add/Alt rules."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    if( CoilHtgCap > 0 )
+    then
+      CoilHtgCapAddAltNew /  ; New /
+      CoilHtgCap             ; Total
+    else 0
+    endif
+  SIZING
+    u:DeltaHtgCapAltAddRat
+  ANNUAL
+    z:DeltaHtgCapAltAddRat
+ENDRULE
+
+// Thresholds for DCapAltDCapBldg Add/Alt system map
+// Building
+RULE NEW Bldg:DeltaCapBldgRatThreshold
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaCapacityBuildingRatioThreshold
+  DESCRIPTION
+    ""
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    0.25  
+  SIZING
+    u:DeltaCapBldgRatThreshold
+  ANNUAL
+    z:DeltaCapBldgRatThreshold
+ENDRULE
+
+// Alteration
+RULE NEW Bldg:DeltaCapAltAddRatThreshold
+  DATATYPE
+    Float
+  LONGFORM
+    DeltaCapacityAlterationRatioThreshold
+  DESCRIPTION
+    ""
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    0.90  
+  SIZING
+    u:DeltaCapAltAddRatThreshold
+  ANNUAL
+    z:DeltaCapAltAddRatThreshold
+ENDRULE
+
+
+
+;// Calculate building total capacities
+;RULE NEW ThrmlZn:CoilClgCapAddAlt
+;  DATATYPE
+;    Float
+;  LONGFORM
+;    CoilCoolingCapacityAdditionAlteration
+;  DESCRIPTION
+;    "The total cooling capacity of systems that serve the ThermalZone, as 
+;     classified for Add/Alt rules."
+;  INPUTCLASS 
+;    NotInput
+;  DEFAULT
+;    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+;    then // Primary system is defined  
+;      if( LocalCompAssigned( SecAirCondgSysRef ) )
+;      then // Secondary system is defined
+;        if( LocalCompAssigned( VentSysRef ) )
+;        then // Ventilation system is defined
+;          if( PriAirCondgSysRef:Name = VentSysRef:Name .OR. 
+;              SecAirCondgSysRef:Name = VentSysRef:Name )
+;          then // Don't double count VentSys capacity
+;            PriAirCondgSysRef:CoilClgCapAddAlt + 
+;            SecAirCondgSysRef:CoilClgCapAddAlt
+;          else // VentSys is different from Pri/Sec systems
+;            PriAirCondgSysRef:CoilClgCapAddAlt + 
+;            SecAirCondgSysRef:CoilClgCapAddAlt +
+;            VentSysRef:CoilClgCapAddAlt
+;          endif
+;        else // No ventilation system
+;          PriAirCondgSysRef:CoilClgCapAddAlt + 
+;          SecAirCondgSysRef:CoilClgCapAddAlt
+;        endif
+;      else // No Secondary system
+;      if( LocalCompAssigned( VentSysRef ) )
+;      then // Ventilation system is defined
+;        if( PriAirCondgSysRef:Name = VentSysRef:Name )
+;        then // Don't double count VentSys capacity
+;          PriAirCondgSysRef:CoilClgCapAddAlt
+;        else // VentSys is different from Pri/Sec systems
+;          PriAirCondgSysRef:CoilClgCapAddAlt + 
+;          VentSysRef:CoilClgCapAddAlt
+;        endif
+;      else // No ventilation system
+;        PriAirCondgSysRef:CoilClgCapAddAlt
+;      endif endif
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+;    then // Primary system is defined  
+;      if( LocalCompAssigned( SecAirCondgSysRef ) )
+;      then // Secondary system is defined
+;        if( LocalCompAssigned( VentSysRef ) )
+;        then // Ventilation system is defined
+;          if( PriAirCondgSysRef:Name = VentSysRef:Name .OR. 
+;              SecAirCondgSysRef:Name = VentSysRef:Name )
+;          then // Don't double count VentSys capacity
+;            PriAirCondgSysRef:CoilClgCapAddAlt + 
+;            SecAirCondgSysRef:CoilClgCapAddAlt
+;          else // VentSys is different from Pri/Sec systems
+;            PriAirCondgSysRef:CoilClgCapAddAlt + 
+;            SecAirCondgSysRef:CoilClgCapAddAlt +
+;            VentSysRef:CoilClgCapAddAlt
+;          endif
+;        else // No ventilation system
+;          PriAirCondgSysRef:CoilClgCapAddAlt + 
+;          SecAirCondgSysRef:CoilClgCapAddAlt
+;        endif
+;      else // No Secondary system
+;      if( LocalCompAssigned( VentSysRef ) )
+;      then // Ventilation system is defined
+;        if( PriAirCondgSysRef:Name = VentSysRef:Name )
+;        then // Don't double count VentSys capacity
+;          PriAirCondgSysRef:CoilClgCapAddAlt
+;        else // VentSys is different from Pri/Sec systems
+;          PriAirCondgSysRef:CoilClgCapAddAlt + 
+;          VentSysRef:CoilClgCapAddAlt
+;        endif
+;      else // No ventilation system
+;        PriAirCondgSysRef:CoilClgCapAddAlt
+;      endif endif
+;    else 0
+;    endif
+;ENDRULE
+;
+;RULE NEW ThrmlZn:CoilHtgCapAddAlt
+;  DATATYPE
+;    Float
+;  LONGFORM
+;    CoilHeatingCapacityAdditionAlteration
+;  DESCRIPTION
+;    "The total heating capacity of systems that serve the ThermalZone, as 
+;     classified for Add/Alt rules."
+;  INPUTCLASS 
+;    NotInput
+;  DEFAULT
+;    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+;    then // Primary system is defined  
+;      if( LocalCompAssigned( SecAirCondgSysRef ) )
+;      then // Secondary system is defined
+;        if( LocalCompAssigned( VentSysRef ) )
+;        then 
+;          if( PriAirCondgSysRef:Name = VentSysRef:Name .OR. 
+;              SecAirCondgSysRef:Name = VentSysRef:Name )
+;          then // Don't double count VentSys capacity
+;            PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;            SecAirCondgSysRef:CoilHtgCapAddAlt
+;          else // VentSys is defferent from Pri/Sec systems
+;            PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;            SecAirCondgSysRef:CoilHtgCapAddAlt +
+;            VentSysRef:CoilHtgCapAddAlt
+;          endif
+;        else // No ventilation system
+;          PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;          SecAirCondgSysRef:CoilHtgCapAddAlt
+;        endif
+;      else // No Secondary system
+;      if( LocalCompAssigned( VentSysRef ) )
+;      then 
+;        if( PriAirCondgSysRef:Name = VentSysRef:Name )
+;        then // Don't double count VentSys capacity
+;          PriAirCondgSysRef:CoilHtgCapAddAlt
+;        else // VentSys is defferent from Pri/Sec systems
+;          PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;          VentSysRef:CoilHtgCapAddAlt
+;        endif
+;      else // No VentSys defined
+;        PriAirCondgSysRef:CoilHtgCapAddAlt
+;      endif endif
+;    else 0
+;    endif
+;  SIZING
+;    UNDEFINED
+;  ANNUAL
+;    if( Type = "Conditioned" .AND. LocalCompAssigned( PriAirCondgSysRef ) )
+;    then // Primary system is defined  
+;      if( LocalCompAssigned( SecAirCondgSysRef ) )
+;      then // Secondary system is defined
+;        if( LocalCompAssigned( VentSysRef ) )
+;        then 
+;          if( PriAirCondgSysRef:Name = VentSysRef:Name .OR. 
+;              SecAirCondgSysRef:Name = VentSysRef:Name )
+;          then // Don't double count VentSys capacity
+;            PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;            SecAirCondgSysRef:CoilHtgCapAddAlt
+;          else // VentSys is defferent from Pri/Sec systems
+;            PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;            SecAirCondgSysRef:CoilHtgCapAddAlt +
+;            VentSysRef:CoilHtgCapAddAlt
+;          endif
+;        else // No ventilation system
+;          PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;          SecAirCondgSysRef:CoilHtgCapAddAlt
+;        endif
+;      else // No Secondary system
+;      if( LocalCompAssigned( VentSysRef ) )
+;      then 
+;        if( PriAirCondgSysRef:Name = VentSysRef:Name )
+;        then // Don't double count VentSys capacity
+;          PriAirCondgSysRef:CoilHtgCapAddAlt
+;        else // VentSys is defferent from Pri/Sec systems
+;          PriAirCondgSysRef:CoilHtgCapAddAlt + 
+;          VentSysRef:CoilHtgCapAddAlt
+;        endif
+;      else // No VentSys defined
+;        PriAirCondgSysRef:CoilHtgCapAddAlt
+;      endif endif
+;    else 0
+;    endif
+;ENDRULE
+

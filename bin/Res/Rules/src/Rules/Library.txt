@@ -1,0 +1,1046 @@
+;-------------------------------------------------------------------------
+; Building Component Library
+;-------------------------------------------------------------------------
+; CEC Title-24 Residential 2013
+; Compiled for the CEC by ...
+; Modification History:
+;    Aug 19, 2011 - Scott Criswell - skeleton ruleset setup
+;    Oct 23, 2013 - MJB - added Constructions and WindowType for E+A+A
+;    Feb 6, 2014  - Bruce Wilcox.  Added ConductivityCT to more materials and added more materials to lines labelled 140206
+;	  Jan 12, 2015 - MJB - added Constructions for alternate baselines (Cons names should match CAClimateZoneCodeBaselines.xlsx)
+;    03/17/2015 - KN added Wall with R5 for 2016 standard baseline
+;-------------------------------------------------------------------------
+
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;    M A T E R I A L S
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+; Material list from Bruce Wilcox Feb-2012
+Mat  "Gypsum Board"     	Thickness = 0.5    Conductivity = 0.09167   ConductivityCT = 0.0001217  SpecHeat = 0.27   Density = 40      RValPerInch = 0.9091   	..   ; 2009 HOF 26.6    CT from BSC paper 140206
+Mat  "Wood layer"       	Thickness = 0.5    Conductivity = 0.06127   ConductivityCT = 0.0012     SpecHeat = 0.45   Density = 41      RValPerInch = 1.36     	..   ; 2009 HOF 26.6  k=thick/R    CT from BSC paper    140206
+Mat  "R4 Synth Stucco"  	Thickness = 1.0    Conductivity = 0.02083   ConductivityCT = 0.00175    SpecHeat = 0.35   Density = 1.5     RValPerInch = 4.0      	..   ; R4  from 2009 HOF 26.6, CT from BSC paper for XPS    140206
+Mat  "3 Coat Stucco"    	Thickness = 0.875  Conductivity = 0.4167                                SpecHeat = 0.2    Density = 116     RValPerInch = 0.2      	..   ; JA Table 4.6.1
+Mat  "Carpet"           	Thickness = 0.5    Conductivity = 0.02                                  SpecHeat = 0.34   Density = 12.3    RValPerInch = 4.1667   	..   ; HOF R=2.08, SpHt=0.34  1/2" for R=2.08  Density from Seta paper in BruceRug.doc  BAW 10/13
+Mat  "Light Roof"       	Thickness = 0.2    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 120     RValPerInch = 0.0833   	..
+Mat  "5 PSF Roof"       	Thickness = 0.5    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 120     RValPerInch = 0.0833   	..
+Mat  "10 PSF Roof"      	Thickness = 1.0    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 120     RValPerInch = 0.0833   	.. 
+Mat  "15 PSF Roof"      	Thickness = 1.5    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 120     RValPerInch = 0.0833   	..
+Mat  "25 PSF Roof"      	Thickness = 2.5    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 120     RValPerInch = 0.0833   	..
+Mat  "TileGap"          	Thickness = 0.75   Conductivity = 0.07353                               SpecHeat = 0.24   Density = 0.075   RValPerInch = 1.1333   	..   ; 2009 HOF 26.3  90 deg, down, E=.82
+
+Mat  "GHR"                 Thickness = 1.212  Conductivity = 0.0265    ConductivityCT = 0.00175    SpecHeat = 0.2    Density = 38      RValPerInch = 31.135   	..   ; based on specs from BAW 5/12/15
+Mat  "ENSOPRO"             Thickness = 0.66   Conductivity = 0.03      ConductivityCT = 0.00175    SpecHeat = 0.35   Density = 2       RValPerInch = 50.505   	..   ; based on specs from BAW 5/12/15
+Mat  "ENSOPRO PLUS"        Thickness = 1.38   Conductivity = 0.025     ConductivityCT = 0.00175    SpecHeat = 0.35   Density = 2       RValPerInch = 28.986  	..   ; based on specs from BAW 5/12/15
+
+Mat  "SlabOnGrade"      	Thickness = 3.5    Conductivity = 1.0                                   SpecHeat = 0.2    Density = 144     RValPerInch = 0.0833   	..
+Mat  "Earth"            	                   Conductivity = 1.0                                   SpecHeat = 0.2    Density = 115     RValPerInch = 0.0833   	..   ; Bazjanac and Huang slab model 
+Mat  "Crawl"            	Thickness = 12     Conductivity = 0.16667                               SpecHeat = 0.24   Density = 0.075   RValPerInch = 0.5      	..   ; JA Table 4.6.1  Vented crawspace   
+Mat  "SoftWood"         	                   Conductivity = 0.08167   ConductivityCT = 0.0012     SpecHeat = 0.39   Density = 35      RValPerInch = 1.0204   	..   ; 2009 HOF 26.6 Douglas fir/larch     CT from BSC paper 140206
+Mat  "Concrete"         	                   Conductivity = 1.0                                   SpecHeat = 0.2    Density = 144     RValPerInch = 0.0833   	..
+Mat  "R1 Sheathing"     	Thickness = 1      Conductivity = 0.08333   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 1.0      	..   ; based on: R4 from 2009 HOF 26.6, CT from BSC paper for XPS    140206
+Mat  "R2 Sheathing"     	Thickness = 1      Conductivity = 0.04167   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 2.0      	..   ;      Cond = 1/(12*RVal)  140206
+Mat  "R3 Sheathing"     	Thickness = 1      Conductivity = 0.02778   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 3.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R4 Sheathing"     	Thickness = 1      Conductivity = 0.02083   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 4.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R5 Sheathing"     	Thickness = 1      Conductivity = 0.01667   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 5.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R6 Sheathing"     	Thickness = 1      Conductivity = 0.01389   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 6.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R7 Sheathing"     	Thickness = 1      Conductivity = 0.01190   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 7.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R8 Sheathing"     	Thickness = 1      Conductivity = 0.01042   ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 8.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R9 Sheathing"     	Thickness = 1      Conductivity = 0.009259  ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 9.0      	..   ; CT from BSC paper for XPS    140206
+Mat  "R10 Sheathing"    	Thickness = 1      Conductivity = 0.008333  ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 10.0     	..   ; CT from BSC paper for XPS    140206
+Mat  "R11 Sheathing"    	Thickness = 1      Conductivity = 0.007576  ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 11.0     	..   ; CT from BSC paper for XPS    140206
+Mat  "R12 Sheathing"    	Thickness = 1      Conductivity = 0.006944  ConductivityCT =  0.00175   SpecHeat = 0.35   Density = 1.5     RValPerInch = 12.0     	..   ; CT from BSC paper for XPS    140206
+Mat  "VertWallCavity"   	Thickness = 3.5    Conductivity = 0.314     ConductivityCT = 0.00397    SpecHeat = 0.24   Density = 0.075   RValPerInch = 1.1333   	..   ; from BAW 1/27/13 to facilitate garage walls w/ no insulation   
+Mat  "16 in. StrawBale" 	Thickness = 16  	 Conductivity = 0.044     			          		      SpecHeat = 0.39   Density = 7       RValPerInch = 1.9       ..   ; from 2013 Joint Appendices & http://www.strawbale.com/   140206
+Mat  "SIPSskin"            Thickness = 0.4375 Conductivity = 0.06127   ConductivityCT = 0.0012     SpecHeat = 0.45   Density = 41      RValPerInch = 1.36      ..   ; Wood Layer 7/16" thickness  per PRS 610   140207
+
+Mat  "Hardwood"         	Thickness = 0.75   Conductivity = 0.0916                             	SpecHeat = 0.30   Density = 45      RValPerInch = 0.91     	..   ; DD 2/10/14 - TODO Review properties
+Mat  "FloorTile"           Thickness = 0.50   Conductivity = 0.9                          	    	SpecHeat = 0.20   Density = 68.8    RValPerInch = 0.0926    ..   ; DD 2/10/14 - TODO Review properties
+Mat  "FloorVinyl"          Thickness = 0.13   Conductivity = 0.2                                	SpecHeat = 0.20   Density = 24      RValPerInch = 0.417     ..   ; DD 2/10/14 - TODO Review properties
+Mat  "Steel"                                  Conductivity = 26.2                                  SpecHeat = 0.12   Density = 489     RValPerInch = 0.00318   ..   ; data from Chip 3/12/14
+Mat  "Logs"									          Conductivity = 0.0667	  					            	SpecHeat = 0.33   Density = 32.0    RValPerInch = 1.25      ..   ; DD 2/14/14 from 2013 Joint Appendices
+Mat  "Brick"								          Conductivity = 0.58		  					            	SpecHeat = 0.20	Density = 130		RValPerInch = 0.14	..   ; DD 2/14/14 Incomplete - SAC 2/26/14 - updated w/ data from Bruce
+Mat  "Clay Masonry"						          Conductivity = 0.58		  					            	SpecHeat = 0.20	Density = 130		RValPerInch = 0.14	..   ; SAC 2/26/14 - added w/ data from Bruce
+Mat  "Light Weight CMU"     																		SpecHeat = 0.20   Density = 105.0   RValPerInch = 0.35      ..   ; DD 2/14/14 - JA 4 - TODO Review properties
+Mat  "Medium Weight CMU"    																		SpecHeat = 0.20   Density = 115.0   RValPerInch = 0.35      ..   ; DD 2/14/14 - JA 4 - TODO Review properties
+Mat  "Normal Weight CMU"    																		SpecHeat = 0.20   Density = 125.0   RValPerInch = 0.35      ..   ; DD 2/14/14 - JA 4 - TODO Review properties
+Mat  "Adobe"   							          Conductivity = 0.2		  				SpecHeat = 0.20   	Density = 95		RValPerInch = 0.41	..   ; SAC 3/14/14 - based on data from Bruce 2/28/14
+Mat  "Ceiling Insul"                                                	ConductivityCT =  0.00418   SpecHeat = 0.2    Density = 1.5                            	..   ; 
+Mat  "Other Insul"                                                  	ConductivityCT =  0.0032537 SpecHeat = 0.2    Density = 1.5                            	..   ; 
+
+; Mat  "Sheath"           Thickness = 1.0    Conductivity = 1./(12*Rval)     SpecHeat = 0.35   Density = 1.5    RValPerInch =   ..   ; R4  from 2009 HOF 26.6
+; Mat  "BlownInsul"                          Conductivity = 0.032051282/RCQ  SpecHeat = 0.2    Density = 0.5    RValPerInch =   ..   ; Certainteed InsulSafe®SP Fiber Glass   R=2.6/in for R30-38
+
+;2013 Joint Appendices Appendix JA4-41   Table 4.3.5 – Properties of Hollow Unit Masonry Walls	BAW 140228 - update from BAW 3/7/14
+Mat  "12 in LW CMU Solid Grout"      Thickness = 11.625    Conductivity = 0.872    ConductivityCT = 0    SpecHeat = 0.2    Density = 111.4    RValPerInch = 0.099   ..
+Mat  "12 in MW CMU Solid Grout"      Thickness = 11.625    Conductivity = 0.969    ConductivityCT = 0    SpecHeat = 0.2    Density = 115.8    RValPerInch = 0.089   ..
+Mat  "12 in NW CMU Solid Grout"      Thickness = 11.625    Conductivity = 1.075    ConductivityCT = 0    SpecHeat = 0.2    Density = 120.1    RValPerInch = 0.080   ..
+Mat  "12 in LW CMU Empty"            Thickness = 11.625    Conductivity = 0.659    ConductivityCT = 0    SpecHeat = 0.2    Density =  71.7    RValPerInch = 0.131   ..
+Mat  "12 in MW CMU Empty"            Thickness = 11.625    Conductivity = 0.736    ConductivityCT = 0    SpecHeat = 0.2    Density =  75.6    RValPerInch = 0.117   ..
+Mat  "12 in NW CMU Empty"            Thickness = 11.625    Conductivity = 0.814    ConductivityCT = 0    SpecHeat = 0.2    Density =  79.9    RValPerInch = 0.106   ..
+Mat  "12 in LW CMU Insulated"        Thickness = 11.625    Conductivity = 0.388    ConductivityCT = 0    SpecHeat = 0.2    Density =  71.7    RValPerInch = 0.222   ..
+Mat  "12 in MW CMU Insulated"        Thickness = 11.625    Conductivity = 0.446    ConductivityCT = 0    SpecHeat = 0.2    Density =  75.6    RValPerInch = 0.193   ..
+Mat  "12 in NW CMU Insulated"        Thickness = 11.625    Conductivity = 0.504    ConductivityCT = 0    SpecHeat = 0.2    Density =  79.9    RValPerInch = 0.171   ..
+Mat  "10 in LW CMU Solid Grout"      Thickness =  9.625    Conductivity = 0.826    ConductivityCT = 0    SpecHeat = 0.2    Density =  75.8    RValPerInch = 0.126   ..
+Mat  "10 in MW CMU Solid Grout"      Thickness =  9.625    Conductivity = 0.946    ConductivityCT = 0    SpecHeat = 0.2    Density =  79.0    RValPerInch = 0.110   ..
+Mat  "10 in NW CMU Solid Grout"      Thickness =  9.625    Conductivity = 1.051    ConductivityCT = 0    SpecHeat = 0.2    Density =  82.2    RValPerInch = 0.099   ..
+Mat  "10 in LW CMU Empty"            Thickness =  9.625    Conductivity = 0.610    ConductivityCT = 0    SpecHeat = 0.2    Density =  50.5    RValPerInch = 0.170   ..
+Mat  "10 in MW CMU Empty"            Thickness =  9.625    Conductivity = 0.674    ConductivityCT = 0    SpecHeat = 0.2    Density =  53.7    RValPerInch = 0.154   ..
+Mat  "10 in NW CMU Empty"            Thickness =  9.625    Conductivity = 0.746    ConductivityCT = 0    SpecHeat = 0.2    Density =  56.9    RValPerInch = 0.139   ..
+Mat  "10 in LW CMU Insulated"        Thickness =  9.625    Conductivity = 0.385    ConductivityCT = 0    SpecHeat = 0.2    Density =  50.5    RValPerInch = 0.270   ..
+Mat  "10 in MW CMU Insulated"        Thickness =  9.625    Conductivity = 0.433    ConductivityCT = 0    SpecHeat = 0.2    Density =  53.7    RValPerInch = 0.240   ..
+Mat  "10 in NW CMU Insulated"        Thickness =  9.625    Conductivity = 0.505    ConductivityCT = 0    SpecHeat = 0.2    Density =  56.9    RValPerInch = 0.206   ..
+Mat  "8 in LW CMU Solid Grout"       Thickness =  7.625    Conductivity = 0.832    ConductivityCT = 0    SpecHeat = 0.2    Density =  48.0    RValPerInch = 0.158   ..
+Mat  "8 in MW CMU Solid Grout"       Thickness =  7.625    Conductivity = 0.921    ConductivityCT = 0    SpecHeat = 0.2    Density =  49.9    RValPerInch = 0.142   ..
+Mat  "8 in NW CMU Solid Grout"       Thickness =  7.625    Conductivity = 1.061    ConductivityCT = 0    SpecHeat = 0.2    Density =  51.8    RValPerInch = 0.124   ..
+Mat  "8 in Clay Unit Solid Grout"    Thickness =  7.625    Conductivity = 0.705    ConductivityCT = 0    SpecHeat = 0.2    Density =  48.0    RValPerInch = 0.186   ..
+Mat  "8 in LW CMU Empty"             Thickness =  7.625    Conductivity = 0.553    ConductivityCT = 0    SpecHeat = 0.2    Density =  31.5    RValPerInch = 0.237   ..
+Mat  "8 in MW CMU Empty"             Thickness =  7.625    Conductivity = 0.610    ConductivityCT = 0    SpecHeat = 0.2    Density =  33.4    RValPerInch = 0.215   ..
+Mat  "8 in NW CMU Empty"             Thickness =  7.625    Conductivity = 0.680    ConductivityCT = 0    SpecHeat = 0.2    Density =  35.3    RValPerInch = 0.193   ..
+Mat  "8 in Clay Unit Empty"          Thickness =  7.625    Conductivity = 0.496    ConductivityCT = 0    SpecHeat = 0.2    Density =  36.2    RValPerInch = 0.265   ..
+Mat  "8 in LW CMU Insulated"         Thickness =  7.625    Conductivity = 0.343    ConductivityCT = 0    SpecHeat = 0.2    Density =  31.5    RValPerInch = 0.382   ..
+Mat  "8 in MW CMU Insulated"         Thickness =  7.625    Conductivity = 0.400    ConductivityCT = 0    SpecHeat = 0.2    Density =  33.4    RValPerInch = 0.328   ..
+Mat  "8 in NW CMU Insulated"         Thickness =  7.625    Conductivity = 0.445    ConductivityCT = 0    SpecHeat = 0.2    Density =  35.3    RValPerInch = 0.295   ..
+Mat  "8 in Clay Unit Insulated"      Thickness =  7.625    Conductivity = 0.369    ConductivityCT = 0    SpecHeat = 0.2    Density =  36.2    RValPerInch = 0.356   ..
+Mat  "6 in LW CMU Solid Grout"       Thickness =  5.625    Conductivity = 0.755    ConductivityCT = 0    SpecHeat = 0.2    Density =  25.5    RValPerInch = 0.236   ..
+Mat  "6 in MW CMU Solid Grout"       Thickness =  5.625    Conductivity = 0.872    ConductivityCT = 0    SpecHeat = 0.2    Density =  26.7    RValPerInch = 0.204   ..
+Mat  "6 in NW CMU Solid Grout"       Thickness =  5.625    Conductivity = 1.008    ConductivityCT = 0    SpecHeat = 0.2    Density =  27.9    RValPerInch = 0.176   ..
+Mat  "6 in Clay Unit Solid Grout"    Thickness =  5.625    Conductivity = 0.680    ConductivityCT = 0    SpecHeat = 0.2    Density =  26.0    RValPerInch = 0.262   ..
+Mat  "6 in LW CMU Empty"             Thickness =  5.625    Conductivity = 0.469    ConductivityCT = 0    SpecHeat = 0.2    Density =  18.5    RValPerInch = 0.379   ..
+Mat  "6 in MW CMU Empty"             Thickness =  5.625    Conductivity = 0.534    ConductivityCT = 0    SpecHeat = 0.2    Density =  19.7    RValPerInch = 0.333   ..
+Mat  "6 in NW CMU Empty"             Thickness =  5.625    Conductivity = 0.595    ConductivityCT = 0    SpecHeat = 0.2    Density =  20.9    RValPerInch = 0.299   ..
+Mat  "6 in Clay Unit Empty"          Thickness =  5.625    Conductivity = 0.436    ConductivityCT = 0    SpecHeat = 0.2    Density =  20.2    RValPerInch = 0.408   ..
+Mat  "6 in LW CMU Insulated"         Thickness =  5.625    Conductivity = 0.328    ConductivityCT = 0    SpecHeat = 0.2    Density =  18.5    RValPerInch = 0.542   ..
+Mat  "6 in MW CMU Insulated"         Thickness =  5.625    Conductivity = 0.380    ConductivityCT = 0    SpecHeat = 0.2    Density =  19.7    RValPerInch = 0.468   ..
+Mat  "6 in NW CMU Insulated"         Thickness =  5.625    Conductivity = 0.436    ConductivityCT = 0    SpecHeat = 0.2    Density =  20.9    RValPerInch = 0.408   ..
+Mat  "6 in Clay Unit Insulated"      Thickness =  5.625    Conductivity = 0.342    ConductivityCT = 0    SpecHeat = 0.2    Density =  20.2    RValPerInch = 0.520   ..
+
+
+; cseMATERIALs added to facilitate automated internal mass definitions
+cseMATERIAL   "IntMassMat-SoftWood"      matCond = 0.08167    matCondCT = 0.0012       matSpHt = 0.39     matDens = 35       ..
+cseMATERIAL   "IntMassMat-Gypsum"        matCond = 0.09167    matCondCT = 0.0001217    matSpHt = 0.27     matDens = 40       ..
+cseMATERIAL   "IntMassMat-Carpet"        matCond = 0.02                                matSpHt = 0.34     matDens = 12.3     ..	
+cseMATERIAL   "IntMassMat-WoodLayer"     matCond = 0.08167    matCondCT = 0.0012       matSpHt = 0.39     matDens = 35       ..
+; additional cseMATERIAL objects for Bestest crawl spaces
+cseMATERIAL   "CrawlSpaceFiberShth"      matCond = 0.0316     matCondCT = 0.00418      matSpHt = 0.31     matDens = 18.0     matThk = 0.04167    ..
+cseMATERIAL   "CrawlSpaceHrdbrdSid"      matCond = 0.0544                              matSpHt = 0.28     matDens = 40.0     matThk = 0.03646    ..
+
+
+; SAC 2/7/14 - materials below replaced w/ above per instructions from Bruce
+;   cseMATERIAL   "IntMassMat-SoftWood"    matCond = 0.08167   matDens = 35      matSpHt = 0.39         ..
+;   cseMATERIAL   "IntMassMat-Gypsum"      matCond = 0.09167   matDens = 40      matSpHt = 0.27      ..
+;   cseMATERIAL   "IntMassMat-Carpet"      matCond = 0.02      matDens = 12.3    matSpHt = 0.34        ..	
+;   cseMATERIAL   "IntMassMat-WoodLayer"   matCond = 0.06127   matDens = 41      matSpHt = 0.45        ..
+
+
+; ; source:  2008 Joint Appendix 4 / Table 4.6.1 - Physical Properties of Materials
+; Mat  "Asphalt Shingle & Siding (AR02)"                 Resistance =  0.44                                              Density =  70.0  SpecHeat = 0.35  ..
+; Mat  "Building Paper, Permeable Felt (BP01)"           Resistance =  0.06                                                                                ..
+; Mat  "Plywood 1/2 in. (PW03)"                          Resistance =  0.63  Thickness =  0.5000  Conductivity = 0.0667  Density =  34.0  SpecHeat = 0.29  ..
+; Mat  "Gypsum Board 1/2 in. (GP01)"                     Resistance =  0.45  Thickness =  0.5000  Conductivity = 0.0926  Density =  50.0  SpecHeat = 0.26  ..
+; Mat  "Built-up Roofing 3/8 in. (BR01)"                 Resistance =  0.33  Thickness =  0.3756  Conductivity = 0.0939  Density =  70.0  SpecHeat = 0.35  ..
+; Mat  "Plywood 3/4 in. (PW05)"                          Resistance =  0.94  Thickness =  0.7500  Conductivity = 0.0667  Density =  34.0  SpecHeat = 0.29  ..
+; Mat  "Plywood 5/8 in. (PW04)"                          Resistance =  0.78  Thickness =  0.6252  Conductivity = 0.0667  Density =  34.0  SpecHeat = 0.29  ..
+; Mat  "Carpet with Fibrous Pad (CP01)"                  Resistance =  2.08                                                               SpecHeat = 0.34  ..
+; Mat  "Particle Board Low Density 3/4 in. (PB01)"       Resistance =  1.39  Thickness =  0.7500  Conductivity = 0.0450  Density =  75.0  SpecHeat = 0.31  ..
+; Mat  "Stucco 1 in. (SC01)"                             Resistance =  0.20  Thickness =  1.0000  Conductivity = 0.4167  Density = 116.0  SpecHeat = 0.20  ..
+; Mat  "Wood, Soft 4 in. (WD05)"                         Resistance =  5.00  Thickness =  4.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Wood, Hard 3/4 in. (WD11)"                       Resistance =  0.68  Thickness =  0.7500  Conductivity = 0.0916  Density =  45.0  SpecHeat = 0.30  ..
+; Mat  "Heavy Wt. Dried Aggregate 4 in. (CC03)"          Resistance =  0.44  Thickness =  4.0000  Conductivity = 0.7576  Density = 140.0  SpecHeat = 0.20  ..
+; Mat  "Heavy Wt. Undried Aggregate 4 in. (CC14)"        Resistance =  0.32  Thickness =  4.0000  Conductivity = 1.0417  Density = 140.0  SpecHeat = 0.20  ..
+; Mat  "1/2 in. Acoustic Tile (AC02)"                    Resistance =  1.26  Thickness =  0.5000  Conductivity = 0.0330  Density =  18.0  SpecHeat = 0.32  ..
+; Mat  "Air Layer 4 in. or more, Horizontal Roof (AL33)" Resistance =  0.92  Thickness = 12.0000  Conductivity = 0.4167  Density = 120.0  SpecHeat = 0.20  ..
+; Mat  "Carpet with Fibrous Pad (CP01)"                  Resistance =  2.08                                                               SpecHeat = 0.34  ..
+; Mat  "Concrete (custom)"                               Resistance =  0.11                                              Density = 144.0  SpecHeat = 0.20  ..
+; Mat  "Light weigt CMU (custom)"                        Resistance =  0.35                                              Density = 105.0  SpecHeat = 0.20  ..
+; Mat  "Medium Weigt CMU (custom)"                       Resistance =  0.35                                              Density = 115.0  SpecHeat = 0.20  ..
+; Mat  "Normal Weigt CMU (custom)"                       Resistance =  0.35                                              Density = 125.0  SpecHeat = 0.20  ..
+; Mat  "Earth (Soil) (custom)"                           Resistance =  3.00  Thickness = 18.0000  Conductivity = 0.5000  Density =  85.0  SpecHeat = 0.20  ..
+; Mat  "Logs 6 in. (custom)"                             Resistance =  7.50  Thickness =  6.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Logs 8 in. (custom)"                             Resistance = 10.00  Thickness =  8.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Logs 10 in. (custom)"                            Resistance = 12.49  Thickness = 10.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Logs 12 in. (custom)"                            Resistance = 14.99  Thickness = 12.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Logs 14 in. (custom)"                            Resistance = 17.49  Thickness = 14.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Logs 16 in. (custom)"                            Resistance = 19.99  Thickness = 16.0000  Conductivity = 0.0667  Density =  32.0  SpecHeat = 0.33  ..
+; Mat  "Earth 12 in. (custom)"                           Resistance =  2.00  Thickness = 12.0000  Conductivity = 0.5000  Density =  85.0  SpecHeat = 0.20  ..
+; Mat  "Vented crawspace (custom)"                       Resistance =  6.00                                                                                ..
+; Mat  "7/8 in. layer of stucco of R-0.18 (custom)"      Resistance =  0.18  Thickness =  0.8748  Conductivity = 0.4167  Density = 116.0  SpecHeat = 0.20  ..
+; Mat  "Straw bale (custom)"                             Resistance = 30.00                                                                                ..
+; Mat  "Acoustic tile + Metal (custom)"                  Resistance =  0.50  Thickness =  0.5000  Conductivity = 0.0330  Density =  18.0  SpecHeat = 0.32  ..
+; Mat  "OSB 7/16 in. (custom)"                           Resistance =  0.44  Thickness =  5.2500  Conductivity = 0.0667  Density =  34.0  SpecHeat = 0.29  ..
+
+
+;-------------------------------------------------------------------------
+; Misc Default Constructions
+;-------------------------------------------------------------------------
+
+Cons   "R0 ClgBlwAttic Cons"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "R15/4 Exterior Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "R4 Synthetic Stucco"
+   ..
+
+Cons   "Interior Wall"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "Interior Floor"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   InsideFinishLayer = "Gypsum Board"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "- no insulation -"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "R38 Ceiling"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   InsideFinishLayer = "Gypsum Board"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "Asphalt Shingle Roof"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "Tile Roof"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   ..
+
+Cons   "Garage Ext Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "- no insulation (vertical) -"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+;-------------------------------------------------------------------------
+; 2013 Title-24 Standard Design Constructions
+;-------------------------------------------------------------------------
+; Cons names from CAClimateZoneCodeBaselines.csv are:
+;T24-2013 ExtWall 2x4 16oc R15 R4
+;T24-2013 Ceiling 2x4 24oc R38
+;T24-2013 Ceiling 2x4 24oc R30
+;T24-2013 Roof R0 Ab
+;T24-2013 Roof R0 Ab RB
+;T24-2013 ExtWall 6in Conc R13
+;T24-2013 ExtWall 6in Conc R17
+;T24-2013 UndWall 6in Conc R13
+;T24-2013 UndWall 6in Conc R15
+
+Cons   "T24-2013 ExtWall Wd2x4 Cons"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "R4 Synthetic Stucco"
+   ..
+
+Cons   "T24-2013 ExtWall 2x4 16oc R15 R4"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "R4 Synthetic Stucco"
+   ..
+
+Cons   "T24-2013 ExtWall 6in Conc R13"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Concrete / ICF / Brick"
+   InsideFinishLayer = "Gypsum Board"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "R 13"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "3.5 in. Wood"
+   FurringLayer = "- none -"
+   WallExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 ExtWall 6in Conc R17"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Concrete / ICF / Brick"
+   InsideFinishLayer = "Gypsum Board"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "R 17"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "3.5 in. Wood"
+   FurringLayer = "- none -"
+   WallExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 UndWall 6in Conc R13"  
+   CanAssignTo = "Underground Walls"
+   Type = "Concrete / ICF / Brick"
+   InsideFinishLayer = "Gypsum Board"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "R 13"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "3.5 in. Wood"
+   FurringLayer = "- none -"
+   ..
+
+Cons   "T24-2013 UndWall 6in Conc R15"  
+   CanAssignTo = "Underground Walls"
+   Type = "Concrete / ICF / Brick"
+   InsideFinishLayer = "Gypsum Board"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "R 15"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "3.5 in. Wood"
+   FurringLayer = "- none -"
+   ..
+
+Cons   "T24-2013 R38 ClgBlwAttic Cons"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "T24-2013 Ceiling 2x4 24oc R38"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "T24-2013 R30 ClgBlwAttic Cons"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 30"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "T24-2013 Ceiling 2x4 24oc R30"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 30"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "T24-2016 Ceiling 2x4 24oc R22"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 22"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "T24-2013 R19 ExtFloor Cons"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 ExtFloor 2x6 16oc R19"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 ExtFloor Conc R0"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 ExtFloor Conc R4"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "R  4"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 ExtFloor Conc R8"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "R  8"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 FlrOvrCrawl Conc R0"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "- no insulation -"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 FlrOvrCrawl Conc R4"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "R  4"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 FlrOvrCrawl Conc R8"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Concrete / ICF / Brick"
+   FloorSurfaceLayer = "Carpeted"
+   MassLayer = "Concrete"
+   MassThickness = " 6 in."
+   FurringInsul2Layer = "- no insulation -"
+   FurringInsulLayer = "R  8"
+   Furring2Layer = "- none -"
+   FurringLayer = "- none -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "T24-2013 R19 FlrOvrCrawl Cons"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "T24-2013 FlrOvrCrawl 2x6 16oc R19"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "T24-2013 R15 IntWall Cons"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "T24-2013 R19 IntFloor Cons"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   InsideFinishLayer = "Gypsum Board"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "T24-2013 Roof R0 Ab"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   RadiantBarrier = 0
+   ..
+
+Cons   "T24-2013 Roof R0 Ab RB"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   RadiantBarrier = 1
+   ..
+
+;-------------------------------------------------------------------------
+; Title-24 Standard Design Constructions for E+A+A
+;-------------------------------------------------------------------------
+
+Cons   "T24-2013 2x4 Altered Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ; SAC 8/25/16 - switched from 0.101 -> 0.102 to ensure that 2x4, R-13 w/ Stucco analyzes properly (tic #604)
+   T24AltConsUValue = 0.102
+   ..
+
+Cons   "T24-2013 2x6 Altered Wall"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   T24AltConsUValue = 0.072
+   ..
+
+Cons   "T24-2013 R13 IntWall Cons"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   T24AltConsUValue = 0.092
+   ..
+
+Cons   "T24-2013 Altered Cathedral Ceiling"  
+   CanAssignTo = "Cathedral Ceilings"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 24 in. O.C."
+   T24AltConsUValue = 0.054
+   ..
+
+Cons   "T24-2013 Altered ClgBlwAttic"  
+   CanAssignTo = "Ceilings (below attic)"
+   InsideFinishLayer = "Gypsum Board"
+   CavityLayer = "R 30"
+   RaisedHeelTruss = 0
+   T24AltConsUValue = 0.032
+   ..
+Cons   "T24-2013 Altered CC ClgBlwAttic"  
+   CanAssignTo = "Ceilings (below attic)"
+   InsideFinishLayer = "Gypsum Board"
+   CavityLayer = "R 19"
+   RaisedHeelTruss = 0
+   T24AltConsUValue = 0.054
+   ..
+
+Cons   "T24-2013 Altered Ext Floor"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   FlrExtFinishLayer = "- select finish -"
+   FlrExtConditions = "Exterior"
+   T24AltConsUValue = 0.050
+   ..
+
+Cons   "T24-2013 Altered Floor Over Crawlspace"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   FlrExtFinishLayer = "- select finish -"
+   T24AltConsUValue = 0.049
+   ..
+
+;-------------------------------------------------------------------------
+; 2008 Title-24 Standard Design Constructions
+;-------------------------------------------------------------------------
+; new Cons names from CAClimateZoneCodeBaselines.csv are:
+;T24-2008 ExtWall 2x6 16oc R21
+;T24-2008 ExtWall 2x4 16oc R13
+;T24-2008 ExtWall 2x6 16oc R19
+
+Cons   "T24-2008 ExtWall 2x6 16oc R21"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+Cons   "T24-2008 ExtWall 2x4 16oc R13"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+Cons   "T24-2008 ExtWall 2x6 16oc R19"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+Cons   "T24-2008 IntWall 2x6 16oc R21"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 21"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "T24-2008 IntWall 2x6 16oc R19"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "T24-2008 IntWall 2x4 16oc R13"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+;-------------------------------------------------------------------------
+; 2016 Title-24 Standard Design Constructions
+;-------------------------------------------------------------------------
+; new Cons names from CAClimateZoneCodeBaselines.csv are:
+; Only added new ones needed for 2016; some 2013 constructions still valide KN 03/17/2015)
+
+Cons   "T24-2016 ExtWall 2x6 16oc R19 R5"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "R1 Sheathing"
+   WallExtFinishLayer = "R4 Synthetic Stucco"
+   ..
+
+Cons   "T24-2016 ExtWall 2x4 16oc R15 R4"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "R4 Synthetic Stucco"
+   ..
+
+Cons   "T24-2016 IntWall 2x6 16oc R19"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "T24-2016 IntWall 2x4 16oc R15"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 15"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "T24-2016 Roof R13 Below"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 13"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   RadiantBarrier = 0
+   ..
+
+Cons   "T24-2016 Roof R0 Below"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   RadiantBarrier = 0
+   ..
+
+;-------------------------------------------------------------------------
+; 2006 IECC Standard Design Constructions
+;-------------------------------------------------------------------------
+; new Cons names from CAClimateZoneCodeBaselines.csv are:
+;IECC-2006 ExtWall 2x6 16oc R19
+;IECC-2006 ExtWall 2x4 16oc R13
+;IECC-2006 ExtWall 2x6 16oc R21
+;IECC-2006 Ceiling 2x4 24oc R38
+;IECC-2006 Ceiling 2x4 24oc R30
+;IECC-2006 Roof R0 Ab
+;IECC-2006 FlrOvrCrawl 2x4 16oc R13
+
+Cons   "IECC-2006 ExtWall 2x6 16oc R19"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+Cons   "IECC-2006 ExtWall 2x4 16oc R13"  
+   CanAssignTo = "Exterior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   WallExtFinishLayer = "3 Coat Stucco"
+   ..
+
+Cons   "IECC-2006 IntWall 2x6 16oc R19"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "IECC-2006 IntWall 2x4 16oc R13"  
+   CanAssignTo = "Interior Walls"
+   Type = "Wood Framed Wall"
+   InsideFinishLayer = "Gypsum Board"
+   SheathInsul2Layer = "- no sheathing/insul. -"
+   CavityLayer = "R 13"
+   FrameLayer = "2x4 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   OtherSideFinishLayer = "Gypsum Board"
+   ..
+
+Cons   "IECC-2006 Ceiling 2x4 24oc R38"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 38"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "IECC-2006 Ceiling 2x4 24oc R30"  
+   CanAssignTo = "Ceilings (below attic)"
+   Type = "Wood Framed Ceiling"
+   AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "R 30"
+   FrameLayer = "2x4 Bottom Chord of Truss @ 24 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   InsideFinishLayer = "Gypsum Board"
+   RaisedHeelTruss = 0
+   ..
+
+Cons   "IECC-2006 Roof R0 Ab"  
+   CanAssignTo = "Attic Roofs"
+   Type = "Wood Framed Ceiling"
+   RoofingLayer = "10 PSF (RoofTile)"
+	AtticFloorLayer = "- no attic floor -"
+   CavityLayer = "- no insulation -"
+   SheathInsulLayer = "- no sheathing/insul. -"
+   RaisedHeelTruss = 0
+   RoofingType = "Steep Slope Roof tile, metal tile, or wood shakes"
+   RadiantBarrier = 0
+   ..
+
+Cons   "IECC-2006 ExtFloor 2x6 16oc R19"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "IECC-2006 ExtFloor 2x10 16oc R30"  
+   CanAssignTo = "Exterior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 30"
+   FrameLayer = "2x10 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   FlrExtFinishLayer = "- select finish -"
+   ..
+
+Cons   "IECC-2006 FlrOvrCrawl 2x6 16oc R19"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "IECC-2006 FlrOvrCrawl 2x10 16oc R30"  
+   CanAssignTo = "Floors Over Crawlspace"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 30"
+   FrameLayer = "2x10 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "IECC-2006 IntFloor 2x6 16oc R19"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 19"
+   FrameLayer = "2x6 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+Cons   "IECC-2006 IntFloor 2x10 16oc R30"  
+   CanAssignTo = "Interior Floors"
+   Type = "Wood Framed Floor"
+   FloorSurfaceLayer = "Carpeted"
+   FlrConcreteFillLayer = "- no concrete fill -"
+   FloorDeckLayer = "Wood Siding/sheathing/decking"
+   CavityLayer = "R 30"
+   FrameLayer = "2x10 @ 16 in. O.C."
+   SheathInsulLayer = "- no sheathing/insul. -"
+   ..
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;    H O U R L Y   P R O F I L E S
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+; Internal gains profiles based on 'IntgainAlgorithm5.txt' - BAW Rev 4 120727
+SchDay   "CARes2013 InsLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.023, 0.019, 0.015, 0.017, 0.021, 0.031, 0.042, 0.041, 0.034, 0.029, 0.027, 0.025,
+          0.021, 0.021, 0.021, 0.026, 0.031, 0.044, 0.084, 0.118, 0.113, 0.096, 0.063, 0.038 )
+   ..
+SchDay   "CARes2013 ExtLighting Hrly"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0.25, 0.25, 0.25 )
+   ..
+SchDay   "CARes2013 Occupancy Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.035, 0.035, 0.035, 0.035, 0.035, 0.059, 0.082, 0.055, 0.027, 0.014, 0.014, 0.014,
+          0.014, 0.014, 0.019, 0.027, 0.041, 0.055, 0.068, 0.082, 0.082, 0.070, 0.053, 0.035 )
+   ..
+SchDay   "CARes2013 Equipment Hrly"  
+   Type = "Fraction"
+   Hr = ( 0.037, 0.035, 0.034, 0.034, 0.032, 0.036, 0.042, 0.044, 0.037, 0.032, 0.033, 0.033,
+          0.032, 0.033, 0.035, 0.037, 0.044, 0.053, 0.058, 0.060, 0.062, 0.060, 0.052, 0.045 )
+   ..
+
+;-------------------------------------------------------------------------
+
+; thermostat setpoint profiles based on 'SeasonalAlgorithm.txt' - BAW 120727
+; SAC 5/6/13 - updated to 2013 schedules from Bruce (w/ minor update Htg Slp hr7 65->68) 
+   ; BAW changed heating to 2 hour setup  130508
+																				; hour:   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24 
+SchDay "CARes2013 SZ Heat Hrly"		Type = "Temperature"		Hr = (	65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 65 )	..
+SchDay "CARes2013 Liv Heat Hrly"		Type = "Temperature"	Hr = (	65, 65, 65, 65, 65, 65, 66.5, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 65 )	..
+SchDay "CARes2013 Slp Heat Hrly"		Type = "Temperature"	Hr = (	65, 65, 65, 65, 65, 65, 66.5, 68, 68, 65, 65, 65, 65, 65, 65, 65, 68, 68, 68, 68, 68, 68, 68, 65 )	..
+SchDay "CARes2013 SZ Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 79, 78, 78, 78, 78, 78, 78, 78 )	..
+SchDay "CARes2013 Liv Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 79, 78, 78, 78, 78, 78, 78, 78 )	..
+SchDay "CARes2013 Slp Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 83, 83, 83, 83, 83, 83, 82, 81, 80, 79, 78, 78, 78, 78, 78, 78, 78 )	..
+
+; revised for RESNET mjb 11/16/15
+																				; hour:   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24 
+SchDay "RESNET SZ Heat Hrly"		Type = "Temperature"		Hr = (	68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68 )	..
+SchDay "RESNET Liv Heat Hrly"		Type = "Temperature"	   Hr = (	68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68 )	..
+SchDay "RESNET Slp Heat Hrly"		Type = "Temperature"	   Hr = (	68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68 )	..
+SchDay "RESNET SZ Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78 )	..
+SchDay "RESNET Liv Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78 )	..
+SchDay "RESNET Slp Cool Hrly"		Type = "Temperature"		Hr = (	78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78 )	..
+
+; SAC 5/13/13 - removed constant temp schedule - now implemented via Zone:ConstHtgSetpt
+;SchDay "CARes2013 Constant 68"		Type = "Temperature"		Hr = (	68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68 )	..
+	
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+;    D H W H e a t e r s
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+; 2013
+DHWHeater   "Std NatGas DHW Heater"  
+   HeaterElementType = "Natural Gas"
+   TankType = "Small Storage"
+   ..
+DHWHeater   "Std Elec DHW Heater"  
+   HeaterElementType = "Electric Resistance"
+   TankType = "Small Storage"
+   ..
+; 2016
+DHWHeater   "Std Gas DHW Heater"  
+   HeaterElementType = "Gas"
+   TankType = "Small Instantaneous"
+   ..
+
+;-------------------------------------------------------------------------
+;-------------------------------------------------------------------------
+
+
+END_OF_INPUT

@@ -1,0 +1,1666 @@
+// Window - Simple Shading (overhang/fins) rules
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//
+//  n/a
+
+// ********** Project rules ****************************************************
+
+// ---------- Overhang/Fins Graphic name ---------------------------------------
+RULE NEW Proj:WinOvrhngFinsGraphic
+  DATATYPE
+    String
+  DESCRIPTION
+    "Name of Window Overhang graphic (file)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    "WinOvrhngFins.jpg"
+ENDRULE
+
+
+// ********** Window rules *****************************************************
+
+RULE NEW Win:AllowWinShades
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not simplified window shades are allowed for this window
+     (only allowed for windows on exterior walls)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ParentComponentType() = "ExtWall")
+    then  1
+    else  0
+    endif
+ENDRULE
+; WAS TEMPORARILY disabled for simplified geometry projects
+;    if (Proj:GeometryInpType = "Simplified")
+;    then  0
+;    else if (ParentComponentType() = "ExtWall")
+;    then  1
+;    else  0
+;    endif endif
+
+// -----------------------------------------------------------------------------
+RULE Win:EnableWinShades
+  DESCRIPTION
+    "Whether or not simplified window shades are defined for this window"
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  DEFAULT
+    0
+ENDRULE
+
+
+// ********** Project Summary rules ********************************************
+
+RULE NEW Win:HasWinShades
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not simplified window shades are defined for this window
+     (allowed, enabled and valid inputs exist)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if ( IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        (IfValidAnd( OverhangDepth >= 0.001 ) .OR. IfValidAnd( LeftFinDepth >= 0.001 ) .OR.
+         IfValidAnd( RightFinDepth >= 0.001 )) )
+    then  1
+    else  0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:NumWinsHavingShades
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Number of windows on this wall segment for which simplified window 
+     shades are defined"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumChildren( Win:HasWinShades )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Proj:NumWinsHavingShades
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Number of windows for which simplified window shades are defined"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    SumAll( ExtWall:NumWinsHavingShades )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:WinShadeGeomReqd
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not wall height/width and window/door ht/wd/X/Y are required inputs"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (Proj:IsDetailedGeometry < 1 .AND. NumWinsHavingShades > 0)
+    then  1
+    else  0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:WinShadeSingleWin
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not this wall has a single window w/ shade inputs"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (Proj:IsDetailedGeometry < 1 .AND. NumWinsHavingShades == 1 .AND.
+        ChildCount( Win ) < 2 .AND. ChildCount( Dr ) < 1)
+    then  1
+    else  0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:ShadeGeomReqd
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not window ht/wd/X/Y are required inputs"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ParentComponentType() != "ExtWall")
+    then  0
+    else if (ExtWall:WinShadeGeomReqd > 0 .OR.
+             ExtWall:WinShadeSingleWin > 0)
+    then  1
+    else  0
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Dr:ShadeGeomReqd
+  DATATYPE
+    Integer
+  DESCRIPTION
+    "Whether or not door ht/wd/X/Y are required inputs"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ParentComponentType() != "ExtWall")
+    then  0
+    else if (ExtWall:WinShadeGeomReqd > 0)
+    then  1
+    else  0
+    endif endif
+ENDRULE
+
+
+// ---------- Window Overhang --------------------------------------------------
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangDepth
+  DESCRIPTION
+    "The length of the overhang measured from the wall to the outer end. 
+     If the overhang is not perpendicular to the wall, this length is along the
+     surface of the overhang and it will be longer than the projected normal
+     distance."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+  MINIMUM
+    0.001 
+  REPORTPRECISION
+    1
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangDistance
+  DESCRIPTION
+    "The vertical distance between the base of the overhang and the top
+     edge of the window opening.  Positive distances mean the overhang is
+     above the window, a negative distance means the shade is below the top
+     of the window, shading only some lower part of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:ZHgt  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangLeftExtension
+  DESCRIPTION
+    "The distance the overhang extends to the left (looking from the
+     outside) of the vertical extension of the left edge of the window opening.
+     A negative value indicates that the overhang does not extend to be even
+     with the edge of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:XYLen  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangRightExtension
+  DESCRIPTION
+    "The distance the overhang extends to the right (looking from the
+     outside) of the vertical extension of the right edge of the window opening.
+     A negative value indicates that the overhang does not extend to be even
+     with the edge of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:XYLen
+//    **   AND (OverhangLeftExtension + OverhangRightExtension) > -Win:PolyLp:XYLen
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangAngle
+  DESCRIPTION
+    "The angle between the wall and the overhang, in degrees.  An angle of 90
+     means the overhang is perpendicular to the wall.  An angle less than 90
+     means that the overhang is tilted down toward the window, greater than
+     90 if the overhang tilts up, away from the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    deg
+  MINIMUM
+    0.01
+  MAXIMUM
+    179.99
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 )) 
+    then  90
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangTransOption
+  DESCRIPTION
+    "Indicates whether the tranmissivity of the overhang will be specified as
+     a constant value or will vary based on a schedule."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  OPTION
+    Constant
+    Scheduled
+  REPORTPRECISION
+    1
+  DEFAULT
+    "Constant"
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:OverhangTransLbl
+  DATATYPE
+    String
+  DESCRIPTION
+    "label for UI"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 ))
+    then  if (OverhangTransOption = "Constant")
+          then  "Transmittnc:"
+          else  "Trans Sched:"
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangTrans
+  DESCRIPTION
+    "The transmissivity of the overhang, as a fraction.  0 indicates no solar
+     radiation passes through the overhang, 0.5 means 50% of all types of
+     radiation passes through, etc.  This value is only used if the
+     transmissivity option is set to Constant."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    frac.
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+// to do
+//  CHECKSIM
+//    ** ensure VALID if EnableWinShades && OverhangDepth > 0 && OverhangTransOption = Constant **
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( OverhangDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:OverhangTransSchRef
+  DESCRIPTION
+    "The name of a schedule used to specify the transmissivity of the overhang.
+     This is only used if the transmissivity option is set to Scheduled."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+// to do
+//  CHECKSIM
+//    ** ensure schedule assiged if EnableWinShades && OverhangDepth > 0 && OverhangTransOption = Scheduled **
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+
+// ---------- Window Left Fin --------------------------------------------------
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinDepth
+  DESCRIPTION
+    "The length of the fin measured from the wall to the outer end. 
+     If the fin is not perpendicular to the wall, this length is along the
+     surface of the fin and it will be longer than the projected normal
+     distance."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+  MINIMUM
+    0.001 
+  REPORTPRECISION
+    1
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinDistance
+  DESCRIPTION
+    "The horizontal distance between the base of the overhang and the left
+     edge of the window opening (looking from the outside).  Negative distances
+     mean the fin is directly in front of the window opening, with some
+     portion of the window on each side of it."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:XYLen  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinDistanceAbove
+  DESCRIPTION
+    "The distance the top of the fin extends above the top of the window
+     opening.  A negative value indicates that the top of the fin is below the
+     top of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:ZHgt  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinDistanceBelow
+  DESCRIPTION
+    "The distance the bottom of the fin extends below the bottom of the window
+     opening.  A negative value indicates that the bottom of the fin is above
+     the bottom of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:ZHgt
+//    **   AND (LeftFinDistanceAbove + LeftFinDistanceBelow) > -Win:PolyLp:ZHgt
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinAngle
+  DESCRIPTION
+    "The angle between the wall and the fin, in degrees.  An angle of 90
+     means the fin is perpendicular to the wall.  An angle less than 90
+     means that the fin is tilted toward the window, greater than
+     90 if the fin tilts away from the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    deg
+  MINIMUM
+    0.01
+  MAXIMUM
+    179.99
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  90
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinTransOption
+  DESCRIPTION
+    "Indicates whether the tranmissivity of the fin will be specified as
+     a constant value or will vary based on a schedule."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  OPTION
+    Constant
+    Scheduled
+  DEFAULT
+    "Constant"
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:LeftFinTransLbl
+  DATATYPE
+    String
+  DESCRIPTION
+    "label for UI"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 ))
+    then  if (LeftFinTransOption = "Constant")
+          then  "Transmittnc:"
+          else  "Trans Sched:"
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinTrans
+  DESCRIPTION
+    "The transmissivity of the fin, as a fraction.  0 indicates no solar
+     radiation passes through the fin, 0.5 means 50% of all types of
+     radiation passes through, etc.  This value is only used if the
+     transmissivity option is set to Constant."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    frac.
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+// to do
+//  CHECKSIM
+//    ** ensure VALID if EnableWinShades && LeftFinDepth > 0 && LeftFinTransOption = Constant **
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:LeftFinTransSchRef
+  DESCRIPTION
+    "The name of a schedule used to specify the transmissivity of the fin.
+     This is only used if the transmissivity option is set to Scheduled."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+// to do
+//  CHECKSIM
+//    ** ensure schedule assiged if EnableWinShades && LeftFinDepth > 0 && LeftFinTransOption = Scheduled **
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+
+// ---------- Window Right Fin -------------------------------------------------
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinDepth
+  DESCRIPTION
+    "The length of the fin measured from the wall to the outer end. 
+     If the fin is not perpendicular to the wall, this length is along the
+     surface of the fin and it will be longer than the projected normal
+     distance."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+  MINIMUM
+    0.001 
+  REPORTPRECISION
+    1
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinDistance
+  DESCRIPTION
+    "The horizontal distance between the base of the overhang and the right
+     edge of the window opening (looking from the outside).  Negative distances
+     mean the fin is directly in front of the window opening, with some
+     portion of the window on each side of it."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:XYLen  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinDistanceAbove
+  DESCRIPTION
+    "The distance the top of the fin extends above the top of the window
+     opening.  A negative value indicates that the top of the fin is below the
+     top of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:ZHgt  **
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinDistanceBelow
+  DESCRIPTION
+    "The distance the bottom of the fin extends below the bottom of the window
+     opening.  A negative value indicates that the bottom of the fin is above
+     the bottom of the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    ft
+// to do
+//  CHECKSIM
+//    ** Ensure > -Win:PolyLp:ZHgt
+//    **   AND (RightFinDistanceAbove + RightFinDistanceBelow) > -Win:PolyLp:ZHgt
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinAngle
+  DESCRIPTION
+    "The angle between the wall and the fin, in degrees.  An angle of 90
+     means the fin is perpendicular to the wall.  An angle less than 90
+     means that the fin is tilted toward the window, greater than
+     90 if the fin tilts away from the window."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    deg
+  MINIMUM
+    0.01
+  MAXIMUM
+    179.99
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  90
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinTransOption
+  DESCRIPTION
+    "Indicates whether the tranmissivity of the fin will be specified as
+     a constant value or will vary based on a schedule."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  OPTION
+    Constant
+    Scheduled
+  DEFAULT
+    "Constant"
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:RightFinTransLbl
+  DATATYPE
+    String
+  DESCRIPTION
+    "label for UI"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 ))
+    then  if (RightFinTransOption = "Constant")
+          then  "Transmittnc:"
+          else  "Trans Sched:"
+          endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinTrans
+  DESCRIPTION
+    "The transmissivity of the fin, as a fraction.  0 indicates no solar
+     radiation passes through the fin, 0.5 means 50% of all types of
+     radiation passes through, etc.  This value is only used if the
+     transmissivity option is set to Constant."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS 
+    frac.
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+// to do
+//  CHECKSIM
+//    ** ensure VALID if EnableWinShades && RightFinDepth > 0 && RightFinTransOption = Constant **
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 ) .AND. IfValidAnd( EnableWinShades > 0.5 ) .AND.
+        IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  0
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:RightFinTransSchRef
+  DESCRIPTION
+    "The name of a schedule used to specify the transmissivity of the fin.
+     This is only used if the transmissivity option is set to Scheduled."
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+// to do
+//  CHECKSIM
+//    ** ensure schedule assiged if EnableWinShades && RightFinDepth > 0 && RightFinTransOption = Scheduled **
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+
+// ---------- Window Margins ---------------------------------------------------
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeMarginBot
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Distance between bottom of window and bottom of lowest fin"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 )==0 .OR. IfValidAnd( EnableWinShades > 0.5 )==0)
+    then  0
+    else if (IfValidAnd( LeftFinDepth >= 0.001 ) .AND. IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  max( 0, max( LeftFinDistanceBelow, RightFinDistanceBelow ) )
+    else if (IfValidAnd( LeftFinDepth >= 0.001 )) 
+    then  max( 0, LeftFinDistanceBelow )
+    else if (IfValidAnd( RightFinDepth >= 0.001 )) 
+    then  max( 0, RightFinDistanceBelow )
+    else  0
+    endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeMarginTop
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Distance between top of window and top of highest fin or overhang"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 )==0 .OR. IfValidAnd( EnableWinShades > 0.5 )==0)
+    then  0
+    else if (IfValidAnd( OverhangDepth >= 0.001 ))
+    then
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( OverhangDistance, max( LeftFinDistanceAbove, RightFinDistanceAbove ) ) )
+        else  max( 0, max( OverhangDistance, LeftFinDistanceAbove ) )
+        endif
+      else
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( OverhangDistance, RightFinDistanceAbove ) )
+        else  max( 0, OverhangDistance )
+        endif
+      endif
+    else
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( LeftFinDistanceAbove, RightFinDistanceAbove ) )
+        else  max( 0, LeftFinDistanceAbove )
+        endif
+      else
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, RightFinDistanceAbove )
+        else  0
+        endif
+      endif
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeMarginLft
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Distance between left edge of window and leftmost fin or overhang extension"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 )==0 .OR. IfValidAnd( EnableWinShades > 0.5 )==0)
+    then  0
+    else if (IfValidAnd( OverhangDepth >= 0.001 ))
+    then
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then  max( 0, max( OverhangLeftExtension, LeftFinDistance ) )
+      else  max( 0, OverhangLeftExtension )
+      endif
+    else
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then  max( 0, LeftFinDistance )
+      else  0
+      endif
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeMarginRgt
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Distance between right edge of window and rightmost fin or overhang extension"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 )==0 .OR. IfValidAnd( EnableWinShades > 0.5 )==0)
+    then  0
+    else if (IfValidAnd( OverhangDepth >= 0.001 ))
+    then
+      if (IfValidAnd( RightFinDepth >= 0.001 ))
+      then  max( 0, max( OverhangRightExtension, RightFinDistance ) )
+      else  max( 0, OverhangRightExtension )
+      endif
+    else
+      if (IfValidAnd( RightFinDepth >= 0.001 ))
+      then  max( 0, RightFinDistance )
+      else  0
+      endif
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeMaxDepth
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Depth of deepest window shade (overhang or fin)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( AllowWinShades > 0.5 )==0 .OR. IfValidAnd( EnableWinShades > 0.5 )==0)
+    then  0
+    else if (IfValidAnd( OverhangDepth >= 0.001 ))
+    then
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( OverhangDepth, max( LeftFinDepth, RightFinDepth ) ) )
+        else  max( 0, max( OverhangDepth, LeftFinDepth ) )
+        endif
+      else
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( OverhangDepth, RightFinDepth ) )
+        else  max( 0, OverhangDepth )
+        endif
+      endif
+    else
+      if (IfValidAnd( LeftFinDepth >= 0.001 ))
+      then
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, max( LeftFinDepth, RightFinDepth ) )
+        else  max( 0, LeftFinDepth )
+        endif
+      else
+        if (IfValidAnd( RightFinDepth >= 0.001 )) 
+        then  max( 0, RightFinDepth )
+        else  0
+        endif
+      endif
+    endif endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:WinShadeMaxDepth
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Depth of deepest window shade (overhang or fin)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (IfValidAnd( NumWinsHavingShades > 0 ))
+    then  ValidOr( MaxChild( Win:WinShadeMaxDepth ), 0 )
+    else  0
+    endif
+ENDRULE
+
+
+// ---------- Surface Dimensions & Position ------------------------------------
+
+// ExtWall
+// -----------------------------------------------------------------------------
+RULE ExtWall:Wd
+  DESCRIPTION
+    "Width of the exterior wall (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window(s) of this wall and there are
+     multiple window and/or door children of this wall)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:IsDetailedGeometry = 1 )
+    then MaxChild( PolyLp:XYLen )
+    else   
+    if ( WinShadeGeomReqd > 0 )
+    then
+      if (LocalStatus( Area ) == 7 .AND. LocalStatus( Hgt ) == 7 .AND. IfValidAnd( Hgt > 0.1 ))
+      then  ValidOr( Area, 0 ) / Hgt
+      else if (IfValidAnd( WinShadeSingleWin > 0 ))
+      then
+        if (SumChildren( Win:Hgt ) < 0.1 .OR. SumChildren( Win:Wd ) < 0.1)
+        then  ; single win, but invalid Hgt/Wd, so generic defaulting
+          if (IfValidAnd( Area > 1 ) .AND. IfValidAnd( Story:FlrToCeilingHgt > 0 ))
+          then  Area / Story:FlrToCeilingHgt
+          else  UNDEFINED
+          endif
+        else
+          if (SumChildren( Win:Hgt ) <= ValidOr( Story:FlrToCeilingHgt, 0 ) .AND.
+              (ValidOr( Area, 0 ) / ValidOr( Story:FlrToCeilingHgt, 1000 )) >= SumChildren( Win:Wd ))
+          then  Area / Story:FlrToCeilingHgt
+          else  SumChildren( Win:Wd ) * Area / (SumChildren( Win:Hgt ) * SumChildren( Win:Wd ))
+          endif
+        endif
+      else UNDEFINED
+      endif endif       
+    else if ( IfValidAnd( Area > 0 ) .AND. IfValidAnd( Story:FlrToCeilingHgt > 0 ) )
+    then Area / Story:FlrToCeilingHgt
+    else UNDEFINED
+    endif endif endif
+ENDRULE
+
+RULE IntWall:Wd
+  DESCRIPTION
+    "Width of the interior wall."
+  HELP
+    "For 'Detailed' geometry models, this is defaulted to the width of polygon
+     based on min/max X,Y vertices."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:IsDetailedGeometry = 1 )
+    then MaxChild( PolyLp:XYLen )
+    else UNCHANGED
+    endif 
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ExtWall:Hgt
+  DESCRIPTION
+    "Height of the exterior wall (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window(s) of this wall and there are
+     multiple window and/or door children of this wall)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+// now handled via WinShadeAreaMsg property
+//  CHECKSIM		// checks both Height & Width
+//    if (WinShadeGeomReqd < 1)
+//    then  UNCHANGED
+//    else if (LocalStatus( Hgt ) < 1 .OR. LocalStatus( Wd ) < 1)
+//    then  if (LocalStatus( Hgt ) < 1 .AND. LocalStatus( Wd ) < 1)
+//          then   PostError( "Exterior Wall '%s' is missing values for Hgt and Wd (height and width).  Both are required for simplified geometry models with window shades specified.", Name )
+//          else if (LocalStatus( Hgt ) < 1)
+//          then   PostError( "Exterior Wall '%s' is missing a value for Hgt (height). Height is a required input for simplified geometry models with window shades specified.", Name )
+//          else   PostError( "Exterior Wall '%s' is missing a value for Wd (width). Width is a required input for simplified geometry models with window shades specified.", Name )
+//          endif endif
+//    else if (Wd  < max( ValidOr( MaxChild( Win:WinShadeRightEdge ), 0 ), ValidOr( MaxChild( Dr:WinShadeRightEdge ), 0 ) ))
+//    then  PostError( "Exterior Wall '%s' is too narrow.  The value for Wd (width) of %g is smaller than the rightmost edge of a child window or door (%g).", Name, Wd,
+//                   max( ValidOr( MaxChild( Win:WinShadeRightEdge ), 0 ), ValidOr( MaxChild( Dr:WinShadeRightEdge ), 0 ) ) )
+//    else if (Hgt < max( ValidOr( MaxChild( Win:WinShadeTopEdge   ), 0 ), ValidOr( MaxChild( Dr:WinShadeTopEdge   ), 0 ) ))
+//    then  PostError( "Exterior Wall '%s' is too short.  The value for Hgt (height) of %g is smaller than the topmost edge of a child window or door (%g).", Name, Hgt,
+//                   max( ValidOr( MaxChild( Win:WinShadeTopEdge   ), 0 ), ValidOr( MaxChild( Dr:WinShadeTopEdge   ), 0 ) ) )
+//    else  UNCHANGED
+//    endif endif endif endif
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:IsDetailedGeometry = 1 )
+    then MaxChild( PolyLp:ZHgt )
+    else if ( WinShadeGeomReqd > 0 )
+    then
+      if( IfValidAnd( Area > 0 ) .AND. IfValidAnd( Wd > 0 ) )
+      then Area / Wd
+      else UNDEFINED
+      endif
+
+    else UNDEFINED
+    endif endif
+ENDRULE
+
+RULE IntWall:Hgt
+  DESCRIPTION
+    "Height of the interior wall"
+  HELP
+    "For 'Detailed' geometry models, this is defaulted to the area / width,
+     or the range of Z coordinates in PolyLp."
+  INPUTCLASS
+    NotInput
+  UNITS
+    ft
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:IsDetailedGeometry = 1 )
+    then MaxChild( PolyLp:ZHgt )
+    else UNCHANGED
+    endif 
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ExtWall:WinShadeAreaMsg
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  CHECKSIM		// checks all shade inputs
+    if (LocalStatus( WinShadeAreaMsg ) < 1)
+    then  UNCHANGED
+    else if (strlen( WinShadeAreaMsg ) > 1)
+    then  PostError( "ExtWall '%s' %s", Name, WinShadeAreaMsg )
+    else  UNCHANGED
+    endif endif
+  DEFAULT
+    if (WinShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (IfValidAnd( Wd > 0 )==0 .OR. IfValidAnd( Hgt > 0 )==0)
+    then
+      if (IfValidAnd( Wd > 0 )==0 .AND. IfValidAnd( Hgt > 0 )==0)
+      then  "Height and Width must be specified for this wall."
+      else if (IfValidAnd( Wd > 0 )==0)
+      then   "Width must be specified for this wall."
+      else  "Height must be specified for this wall."
+      endif endif
+    else if (LocalStatus( Area ) < 7 .OR. IfValidAnd( Area > 0 )==0)
+    then  UNDEFINED
+    else if (Area >= (1.01 * Hgt * Wd) .OR.
+             Area <= (0.99 * Hgt * Wd))
+    then  "Area is inconsistent with (Height * Width). 'Restore Default' of Area to correct."
+    else  UNDEFINED
+    endif endif endif endif
+ENDRULE
+
+
+
+//  Win / Window
+// -----------------------------------------------------------------------------
+RULE Win:Hgt
+  DESCRIPTION
+    "Height of the window (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window of the parent wall)"
+  HELP
+    ""
+  INPUTCLASS
+    CondRequired
+  UNITS
+    ft
+  MINIMUM
+    0.0001
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (LocalStatus( Area ) == 7)
+    then
+      ; base Hgt on user-specified Area
+      if (LocalStatus( Wd ) == 7 .AND. IfValidANd( Wd > 0.1 ))
+      then  Area / Wd
+      else if (IfValidAnd( IsGlazedDoor > 0 ))
+      then  ; defaulting of glazed door
+        if (Area >= 24)
+        then  7.0
+        else if (Area >= 20)
+        then  6.7
+        else  Area * 2 / 3
+        endif endif
+      else  ; defaulting of window (not glazed door)
+        if (IfValidAnd( ExtWall:Hgt > 1 ) .AND. IfValidAnd( ExtWall:WinArea > 0 ))
+        then  ; default window height based on WWR & flr-clg height
+          if (ExtWall:WinArea / ExtWall:Area < 0.9)
+          then  int(  2 * ExtWall:Hgt * 1.1 * ExtWall:WinArea / ExtWall:Area ) / 2
+          else  int( 10 * ExtWall:Hgt *       ExtWall:WinArea / ExtWall:Area ) / 10
+          endif
+        else if (IfValidAnd( ExtWall:Hgt > 0 ))
+        then  int( 2 * ExtWall:Hgt * 2 / 3 ) / 2
+        else  UNDEFINED
+        endif endif
+      endif endif
+    else  UNDEFINED
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:Wd
+  DESCRIPTION
+    "Width of the window (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window of the parent wall)"
+  HELP
+    ""
+  INPUTCLASS
+    CondRequired
+  UNITS
+    ft
+  MINIMUM
+    0.0001
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (LocalStatus( Area ) == 7)
+    then
+      if (IfValidAnd( Hgt > 0.1 ))
+      then  Area / Hgt
+      else  UNDEFINED
+      endif
+    else  UNDEFINED
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:X
+  DESCRIPTION
+    "Distance from the left edge of the parent wall to the left edge of the
+     window (required if/when GeometryInpType = Simplified and window
+     shades are activated on any child window of the parent wall and the
+     parent wall has more than one child window/door)"
+  HELP
+    ""
+  INPUTCLASS
+    CondRequired
+  UNITS
+    ft
+  MINIMUM
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ExtWall:WinShadeSingleWin > 0)
+    then  ; special defaulting for single shaded windows on walls
+      if (IfValidAnd( Wd > 0 )==0 .OR. IfValidAnd( ExtWall:Wd > 0 )==0 .OR.
+          IfValidAnd( ExtWall:Wd < Wd ))
+      then  0
+      else if (ExtWall:Wd >= (Wd + WinShadeMarginLft + WinShadeMarginRgt))
+      then  ; wall is wide enough to fit window + left/right overhang/fin extensions
+            ((ExtWall:Wd - (Wd + WinShadeMarginLft + WinShadeMarginRgt)) / 2) + WinShadeMarginLft
+      else   (ExtWall:Wd -  Wd) / 2
+      endif endif
+    else  UNDEFINED
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Win:Y
+  DESCRIPTION
+    "Distance from the bottom edge of the parent wall to the bottom edge of
+     the window (required if/when GeometryInpType = Simplified and window
+     shades are activated on any child window of the parent wall and the
+     parent wall has more than one child window/door)"
+  HELP
+    ""
+  INPUTCLASS
+    CondRequired
+  UNITS
+    ft
+  MINIMUM
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (IfValidAnd( IsGlazedDoor > 0 ))
+    then  0
+    else if (ExtWall:WinShadeSingleWin > 0)
+    then  ; special defaulting for single shaded windows on walls
+      if (IfValidAnd( Hgt > 0 )==0 .OR. IfValidAnd( ExtWall:Hgt > 0 )==0 .OR.
+          IfValidAnd( ExtWall:Hgt < Hgt ))
+      then  0
+      else if (ExtWall:Hgt >= (Hgt + WinShadeMarginBot + WinShadeMarginTop))
+      then  ; wall is tall enough to fit window + bottom/top overhang/fin extensions
+            ((ExtWall:Hgt - (Hgt + WinShadeMarginBot + WinShadeMarginTop)) / 2) + WinShadeMarginBot
+      else   (ExtWall:Hgt -  Hgt) / 2
+      endif endif
+    else  UNDEFINED
+    endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeRightEdge
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Rightmost edge of window (iff window shade geometry required, else 0)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ShadeGeomReqd < 1 .OR. IfValidAnd( Wd > 0 )==0)
+    then  0
+    else if (IfValidAnd( X > 0 ))
+    then  Wd + X
+    else  Wd
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeTopEdge
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Topmost edge of window (iff window shade geometry required, else 0)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ShadeGeomReqd < 1 .OR. IfValidAnd( Hgt > 0 )==0)
+    then  0
+    else if (IfValidAnd( Y > 0 ))
+    then  Hgt + Y
+    else  Hgt
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Win:WinShadeAreaMsg
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  CHECKSIM		// checks all shade inputs
+    if (LocalStatus( WinShadeAreaMsg ) < 1)
+    then  UNCHANGED
+    else if (strlen( WinShadeAreaMsg ) > 1)
+    then  PostError( "Window '%s' %s", Name, WinShadeAreaMsg )
+    else  UNCHANGED
+    endif endif
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (IfValidAnd( Wd > 0 )==0 .OR. IfValidAnd( Hgt > 0 )==0)
+    then
+      if (IfValidAnd( Wd > 0 )==0 .AND. IfValidAnd( Hgt > 0 )==0)
+      then  "Height and Width must be specified for this window."
+      else if (IfValidAnd( Wd > 0 )==0)
+      then   "Width must be specified for this window."
+      else  "Height must be specified for this window."
+      endif endif
+    else if (LocalStatus( Area ) == 7 .AND.
+             (IfValidAnd( Area >= (1.01 * Hgt * Wd) ) .OR.
+              IfValidAnd( Area <= (0.99 * Hgt * Wd) )))
+    then  "Area is inconsistent with (Height * Width). 'Restore Default' of Area to correct this."
+    else if (IfValidAnd( X >= 0 )==0 .OR. IfValidAnd( Y >= 0 )==0)
+    then
+      if (IfValidAnd( X >= 0 )==0 .AND. IfValidAnd( Y >= 0 )==0)
+      then  "The horizontal and vertical position of this window must be specified."
+      else if (IfValidAnd( X >= 0 )==0)
+      then  "The horizontal position of this window must be specified."
+      else  "The vertical position of this window must be specified."
+      endif endif
+    else if ((WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge )) .OR.
+             (WinShadeTopEdge   > 0 .AND. IfValidAnd( ExtWall:Hgt < WinShadeTopEdge   )))
+    then
+      if (WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge ) .AND.
+          WinShadeTopEdge   > 0 .AND. IfValidAnd( ExtWall:Hgt < WinShadeTopEdge   ))
+      then  Format( "Window doesn't fit on parent wall (exceeds Height %g and Width %g).", ExtWall:Hgt, ExtWall:Wd )
+      else if (WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge ))
+      then  Format( "Window doesn't fit on parent wall (exceeds Width %g).", ExtWall:Wd )
+      else  Format( "Window doesn't fit on parent wall (exceeds Height %g).", ExtWall:Hgt )
+      endif endif
+    else  UNDEFINED
+    endif endif endif endif endif
+ENDRULE
+
+
+// Dr / Door
+// -----------------------------------------------------------------------------
+RULE Dr:Hgt
+  DESCRIPTION
+    "Height of the door (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window of the parent wall)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+  MINIMUM
+    0.0001
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (LocalStatus( Wd ) == 7 .AND.
+             IfValidAnd( Area > 0.1 ) .AND. IfValidAnd( Wd > 0.1 ))
+    then  Area / Wd
+    else if (IfValidAnd( Area >= 24 ))
+    then  7.0
+    else if (IfValidAnd( Area >= 20 ))
+    then  6.7
+    else if (IfValidAnd( Area > 0 ))
+    then  Area * 2 / 3
+    else  UNDEFINED
+    endif endif endif endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Dr:Wd
+  DESCRIPTION
+    "Width of the door (required if/when GeometryInpType = Simplified and
+     window shades are activated on any child window of the parent wall)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+  MINIMUM
+    0.0001
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (IfValidAnd( Area > 0.1 ) .AND. IfValidAnd( Hgt > 0.1 ))
+    then  Area / Hgt
+    else  UNDEFINED
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Dr:X
+  DESCRIPTION
+    "Distance from the left edge of the parent wall to the left edge of the
+     door (required if/when GeometryInpType = Simplified and window
+     shades are activated on any child window)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+  MINIMUM
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE Dr:Y
+  DESCRIPTION
+    "Distance from the bottom edge of the parent wall to the bottom edge of
+     the door (required if/when GeometryInpType = Simplified and window
+     shades are activated on any child window)"
+  HELP
+    ""
+  INPUTCLASS
+    Optional
+  UNITS
+    ft
+  MINIMUM
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else  0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Dr:WinShadeRightEdge
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Rightmost edge of door (iff window shade geometry required, else 0)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ShadeGeomReqd < 1 .OR. IfValidAnd( Wd > 0 )==0)
+    then  0
+    else if (IfValidAnd( X > 0 ))
+    then  Wd + X
+    else  Wd
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Dr:WinShadeTopEdge
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Topmost edge of door (iff window shade geometry required, else 0)"
+  HELP
+    ""
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (ShadeGeomReqd < 1 .OR. IfValidAnd( Hgt > 0 )==0)
+    then  0
+    else if (IfValidAnd( Y > 0 ))
+    then  Hgt + Y
+    else  Hgt
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW Dr:WinShadeAreaMsg
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  CHECKSIM		// checks all shade inputs
+    if (LocalStatus( WinShadeAreaMsg ) < 1)
+    then  UNCHANGED
+    else if (strlen( WinShadeAreaMsg ) > 1)
+    then  PostError( "Door '%s' %s", Name, WinShadeAreaMsg )
+    else  UNCHANGED
+    endif endif
+  DEFAULT
+    if (ShadeGeomReqd < 1)
+    then  UNDEFINED
+    else if (IfValidAnd( Wd > 0 )==0 .OR. IfValidAnd( Hgt > 0 )==0)
+    then
+      if (IfValidAnd( Wd > 0 )==0 .AND. IfValidAnd( Hgt > 0 )==0)
+      then  "Height and Width must be specified for this door."
+      else if (IfValidAnd( Wd > 0 )==0)
+      then   "Width must be specified for this door."
+      else  "Height must be specified for this door."
+      endif endif
+    else if (LocalStatus( Area ) == 7 .AND.
+             (Area >= (1.01 * Hgt * Wd) .OR.
+              Area <= (0.99 * Hgt * Wd)))
+    then  "Area is inconsistent with (Height * Width). 'Restore Default' of Area to correct this."
+    else if (IfValidAnd( X >= 0 )==0 .OR. IfValidAnd( Y >= 0 )==0)
+    then
+      if (IfValidAnd( X >= 0 )==0 .AND. IfValidAnd( Y >= 0 )==0)
+      then  "The horizontal and vertical position of this door must be specified."
+      else if (IfValidAnd( X >= 0 )==0)
+      then  "The horizontal position of this door must be specified."
+      else  "The vertical position of this door must be specified."
+      endif endif
+    else if ((WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge )) .OR.
+             (WinShadeTopEdge   > 0 .AND. IfValidAnd( ExtWall:Hgt < WinShadeTopEdge   )))
+    then
+      if (WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge ) .AND.
+          WinShadeTopEdge   > 0 .AND. IfValidAnd( ExtWall:Hgt < WinShadeTopEdge   ))
+      then  Format( "Door doesn't fit on parent wall (exceeds Height %g and Width %g).", ExtWall:Hgt, ExtWall:Wd )
+      else if (WinShadeRightEdge > 0 .AND. IfValidAnd( ExtWall:Wd  < WinShadeRightEdge ))
+      then  Format( "Door doesn't fit on parent wall (exceeds Width %g).", ExtWall:Wd )
+      else  Format( "Door doesn't fit on parent wall (exceeds Height %g).", ExtWall:Hgt )
+      endif endif
+    else  UNDEFINED
+    endif endif endif endif endif
+ENDRULE
+
+
+//------------------------------------------------------------------------------
+// moved from Project-General.rule to ensure this is set AFTER window shade settings are setup
+RULE Proj:SolDistribution
+  DESCRIPTION
+    "SolarDistribution setting used in simulation(s)."
+  INPUTCLASS
+    NotInput    
+  OPTION
+    MinimalShadowing
+    FullExterior
+    FullInteriorAndExterior
+    FullExteriorWithReflections
+    FullInteriorAndExteriorWithReflections
+  DEFAULT 
+    if( IsDetailedGeometry .OR. NumWinsHavingShades > 0 )
+    then "FullExterior"
+    else "MinimalShadowing"
+    endif
+  SIZING
+    u:SolDistribution
+  ANNUAL
+    u:SolDistribution
+ENDRULE
+
+
+    
+// *****************************************************************************
+// *****************************************************************************
+// ** debugging rule evaluation duration **
+RULE NEW Proj:RuleEvalDuration
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    LogDuration( "            time to evaluate remaining 2DGeometry DEFAULT rules:  %.3f seconds" )
+  SIZING_PROPOSED
+    LogDuration( "            time to evaluate remaining 2DGeometry SIZING_PROPOSED rules:  %.3f seconds" )
+  SIZING_BASELINE
+    LogDuration( "            time to evaluate remaining 2DGeometry SIZING_BASELINE rules:  %.3f seconds" )
+  ANNUAL_PROPOSED
+    LogDuration( "            time to evaluate remaining 2DGeometry ANNUAL_PROPOSED rules:  %.3f seconds" )
+  ANNUAL_BASELINE
+    LogDuration( "            time to evaluate remaining 2DGeometry ANNUAL_BASELINE rules:  %.3f seconds" )
+ENDRULE
+

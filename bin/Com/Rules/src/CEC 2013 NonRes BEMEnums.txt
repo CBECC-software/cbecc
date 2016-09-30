@@ -1,0 +1,3991 @@
+;------------------------------------------------------------------------------------------------
+; The format of this file:
+;    Record
+;    Header   Record Contents
+;    -------------------------
+;      0      Class:Property[Array] - identifying the database parameter
+;                which the following symbol list describes (array index
+;                is 1-based (1-N))
+;             Integer - numeric value corresponding to the default symbol
+;                selection
+;
+;      1      Class:Property[Array] - identifying the database parameter
+;                which deteremines whether or not the following symbol
+;                list should be used to describe the parameter identified
+;                in the preceeding 0-record. (array index is 1-based)
+;             Float - value which the preceeding database parameter must
+;                equal in order for the following symbol list to be used
+;                to describe the parameter identified in the preceeding
+;                0-record.
+;             Integer - numeric value corresponding to the default symbol
+;                selection (overrides the default value contained in
+;                preceeding 0- or 1-records).
+;
+;      2      Integer - the numeric value corresponding to this symbol
+;             String - the symbol string which is used to select the
+;                value of the database parameter identified in the 
+;                preceeding 0-record.
+;
+;  Note regarding 0-records:
+;   - Multiple records beginning with 0 ocurring one after the other 
+;     cause the following symbol lists to be defined for each of the
+;     database parameters described in each 0 record.
+;
+;  Notes regarding 1-records:
+;   - Records beginning w/ 1 occur only when the list of selectable
+;     symbols or the default symbol varies based on the value of another
+;     database parameter.
+;   - There can be a maximum of 2 subsequent 1-records.
+;
+;  Characters to AVOID in enumeration strings:
+;   - & / < / " / > / superscripts / subscripts
+;-------------------------------------------------------------------------
+
+
+0, Proj:Ruleset,  0
+2,              0,    "Constructed At Runtime"  
+
+; 0, Proj:ErrorCode,  0
+; 2,              0,    "None"  
+; 2,              1,    "To Be Defined"  
+; 2,              2,    "To Be Defined"  
+
+; defined in rules - SAC 9/6/13
+; 0, Proj:AnalysisType,  0
+; 2,              0,    "Proposed and Standard"		; Complete Compliance run
+; ; 2,              1,    "Proposed Only"					; When developing a solution you save time by not rerunning STD
+; 2,              2,    "Research"							; Unlocks T24 rules
+
+0, Proj:RuleReportType,  0
+2,              0,    "None"
+2,              1,    "ModelRpt_Space_InteriorLoadsElec"
+2,              2,    "ModelRpt_Space_InteriorLoadsFuel"
+2,              3,    "ModelRpt_HVACPrimary"
+2,              4,    "ModelRpt_Envelope"
+2,              5,    "ModelRpt_HVACSecondary"
+2,              6,    "ModelRpt_HVACSecondarySizing"
+2,              7,    "ModelRpt_VentilationExhaust"
+
+0, Proj:CompType,  1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,             11,    "ExistingAddition"
+1,    Proj:Ruleset,   -999,  1   ; Current options
+2,              1,    "NewComplete"
+2,              2,    "NewEnvelope"
+2,              3,    "NewEnvelopeAndLighting"
+2,              4,    "NewEnvelopeAndPartialLighting"
+2,              5,    "NewEnvelopeAndMechanical"
+2,              6,    "NewMechanical"
+2,              7,    "NewMechanicalAndLighting"
+2,              8,    "NewMechanicalAndPartialLighting"
+2,              9,    "ExistingAlteration"
+2,             10,    "ExistingAdditionAndAlteration"
+2,             11,    "AdditionComplete"
+2,             12,    "AdditionEnvelope"
+2,             13,    "AdditionEnvelopeAndLighting"
+2,             14,    "AdditionEnvelopeAndPartialLighting"
+2,             15,    "AdditionEnvelopeAndMechanical"
+2,             16,    "AdditionMechanical"
+2,             17,    "AdditionMechanicalAndLighting"
+2,             18,    "AdditionMechanicalAndPartialLighting"
+
+0, Proj:RuleReportFileAppend,  0
+2,              0,    ".csv"
+2,              1,    " - SpcLoadsElec.csv"
+2,              2,    " - SpcLoadsFuel.csv"
+2,              3,    " - HVACPrimary.csv"
+2,              4,    " - Envelope.csv"
+2,              5,    " - HVACSecondary.csv"
+2,              6,    " - HVACSecondarySizing.csv"
+2,              7,    " - VentilationExhaust.csv"
+
+0, Proj:PermitScope,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              0,    "PermitNRAll"
+2,              1,    "PermitNREnv"
+2,              2,    "PermitNREnvLtg"
+2,              3,    "PermitNREnvMech"
+2,              4,    "PermitNRLtg"
+2,              5,    "PermitNRLtgMech"
+2,              6,    "PermitNRMech"
+1,    Proj:Ruleset,  -999,  0   ; Current options
+2,              0,    "PermitNonresidentialAll"
+2,              1,    "PermitNonresidentialEnvelope"
+2,              2,    "PermitNonresidentialEnvelopeLighting"
+2,              3,    "PermitNonresidentialEnvelopeMechanical"
+2,              4,    "PermitNonresidentialLighting"
+;         ???   PermitNonresidentialLightingAll
+2,              5,    "PermitNonresidentialLightingMechanical"
+2,              6,    "PermitNonresidentialMechanical"
+
+;0, Proj:SiteFuelType,  0
+;2,              0,    "- select -"
+;2,              1,    "Electricity"
+;2,              2,    "NaturalGas"
+;2,              3,    "Propane"
+
+
+0, Bldg:CompleteBldgFunc,  11
+0, Spc:SpcCompleteBldgFunc, 11
+2,              1,    "Auditorium Building"
+2,              2,    "Classroom Building"
+2,              3,    "Commercial and Insustrial Storage Building"
+2,              4,    "Convention Center Building"
+;2,              5,    "Data Center Building"
+2,              6,    "Financial Institution Building"
+2,              7,    "General Commerical or Industrial Work Building"
+2,              8,    "Grocery Store Building"
+2,              9,    "Library Building"
+2,             10,    "Medical Clinic Building"
+2,             11,    "Office Building"
+2,             12,    "Parking Garage Building"
+2,             13,    "Religious Building"
+2,             14,    "School Building"
+2,             15,    "Theater Building"
+
+;0, Bldg:CBCOccGrp,  0
+;2,              0,    "- select -"  
+;2,              1,    "GroupAssembly"
+;2,              2,    "GroupBusiness"
+;2,              3,    "GroupEducational"
+;2,              4,    "GroupFactory"
+;2,              5,    "GroupHighHazard"
+;2,              6,    "GroupMercantile"
+;2,              7,    "GroupResidentialR1"
+;2,              8,    "GroupResidentialR2"
+;2,              9,    "GroupStorage"
+
+
+0, Proj:CliZn,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              8,    "CZ8  (El Toro)"  
+1,    Proj:Ruleset,  -1002,  0   ; Backward compatibility
+2,              1,    "CZ1  (Arcata)"
+2,              2,    "CZ2  (Santa Rosa)"
+2,              3,    "CZ3  (Oakland)"
+2,              4,    "CZ4  (Sunnyvale)"
+2,              5,    "CZ5  (Santa Maria)"
+2,              6,    "CZ6  (Los Angeles)"
+2,              7,    "CZ7  (San Diego)"
+2,              8,    "CZ8  (Fullerton)"
+2,              9,    "CZ9  (Burbank)"
+2,             10,    "CZ10  (Riverside)"
+2,             11,    "CZ11  (Red Bluff)"
+2,             12,    "CZ12  (Sacramento)"
+2,             13,    "CZ13  (Fresno)"
+2,             14,    "CZ14  (China Lake)"
+2,             15,    "CZ15  (El Centro)"
+2,             16,    "CZ16  (Mt. Shasta)"  
+1,    Proj:Ruleset,  -999,  0   ; Current options
+2,              0,    "- select -"
+2,              1,    "ClimateZone1"
+2,              2,    "ClimateZone2"
+2,              3,    "ClimateZone3"
+2,              4,    "ClimateZone4"
+2,              5,    "ClimateZone5"
+2,              6,    "ClimateZone6"
+2,              7,    "ClimateZone7"
+2,              8,    "ClimateZone8"
+2,              9,    "ClimateZone9"
+2,             10,    "ClimateZone10"
+2,             11,    "ClimateZone11"
+2,             12,    "ClimateZone12"
+2,             13,    "ClimateZone13"
+2,             14,    "ClimateZone14"
+2,             15,    "ClimateZone15"
+2,             16,    "ClimateZone16"
+
+
+; 0, Proj:CliZnCity,  0
+; ; TO DO - TO DO
+; 2,              0,    "CliZnCity-0"
+; 2,              1,    "CliZnCity-1"
+; 2,              2,    "CliZnCity-2"
+
+
+0, Proj:CliZnCounty,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              6,    "ContraCosta"
+2,              7,    "DelNorte"
+2,              8,    "ElDorado"
+2,             34,    "SanBenito"
+2,             35,    "SanBernardino"
+2,             36,    "SanDiego"
+2,             37,    "SanFrancisco"
+2,             38,    "SanJoaquin"
+2,             39,    "SanLuisObispo"
+2,             40,    "SanMateo"
+2,             41,    "SantaBarbara"
+2,             42,    "SantaClara"
+2,             43,    "SantaCruz"
+1,    Proj:Ruleset,  -999,  0   ; Current options
+2,              0,    "Alameda"
+2,              1,    "Alpine"
+2,              2,    "Amador"
+2,              3,    "Butte"
+2,              4,    "Calaveras"
+2,              5,    "Colusa"
+2,              6,    "Contra Costa"
+2,              7,    "Del Norte"
+2,              8,    "El Dorado"
+2,              9,    "Fresno"
+2,             10,    "Glenn"
+2,             11,    "Humboldt"
+2,             12,    "Imperial"
+2,             13,    "Inyo"
+2,             14,    "Kern"
+2,             15,    "Kings"
+2,             16,    "Lake"
+2,             17,    "Lassen"
+2,             18,    "Los Angeles"
+2,             19,    "Madera"
+2,             20,    "Marin"
+2,             21,    "Mariposa"
+2,             22,    "Mendocino"
+2,             23,    "Merced"
+2,             24,    "Modoc"
+2,             25,    "Mono"
+2,             26,    "Monterey"
+2,             27,    "Napa"
+2,             28,    "Nevada"
+2,             29,    "Orange"
+2,             30,    "Placer"
+2,             31,    "Plumas"
+2,             32,    "Riverside"
+2,             33,    "Sacramento"
+2,             34,    "San Benito"
+2,             35,    "San Bernardino"
+2,             36,    "San Diego"
+2,             37,    "San Francisco"
+2,             38,    "San Joaquin"
+2,             39,    "San Luis Obispo"
+2,             40,    "San Mateo"
+2,             41,    "Santa Barbara"
+2,             42,    "Santa Clara"
+2,             43,    "Santa Cruz"
+2,             44,    "Shasta"
+2,             45,    "Sierra"
+2,             46,    "Siskiyou"
+2,             47,    "Solano"
+2,             48,    "Sonoma"
+2,             49,    "Stanislaus"
+2,             50,    "Sutter"
+2,             51,    "Tehama"
+2,             52,    "Trinity"
+2,             53,    "Tulare"
+2,             54,    "Tuolumne"
+2,             55,    "Ventura"
+2,             56,    "Yolo"
+2,             57,    "Yuba"
+
+
+0, Proj:BldgTerrain,   2		; default based on E+
+2,              1,    "Country"
+2,              2,    "Suburbs"
+2,              3,    "City"
+2,              4,    "Ocean"
+2,              5,    "Urban"
+
+
+0, Proj:WeatherStation,   0
+1,    Proj:AnalysisType,   3,  0   ; Research mode  - dependent value needs to be consistent w/ position of "Research" in option list of Proj:AnalysisType (in Project.rule file)
+2,              0,    "- select -"
+2,             82,    "ALTURAS_725958"
+2,              2,    "ARCATA_725945"
+2,             61,    "BAKERSFIELD_723840"
+2,             80,    "BISHOP_724800"
+2,             84,    "BLUE-CANYON_725845"
+2,             75,    "BLYTHE-RIVERSIDE-CO_747188"
+2,             41,    "BURBANK-GLENDALE_722880"
+2,             26,    "CAMARILLO_723926"
+2,             47,    "CAMP-PENDLETON_722926"
+2,             30,    "CARLSBAD_722927"
+2,             65,    "CHINA-LAKE_746120"
+2,             46,    "CHINO_722899"
+2,             53,    "CONCORD_724936"
+2,              1,    "CRESCENT-CITY_725946"
+2,             71,    "DAGGETT-BARSTOW_723815"
+2,             66,    "EDWARDS-AFB_723810"
+2,             73,    "EL-CENTRO_722810"
+2,              3,    "EUREKA_725940"
+2,             58,    "FAIRFLD-TRAVIS-AFB_745160"
+2,             60,    "FRESNO_723890"
+2,             38,    "FULLERTON_722976"
+2,             36,    "HAWTHORNE-NORTHROP-FLD_722956"
+2,              7,    "HAYWARD_724935"
+2,             74,    "IMPERIAL_747185"
+2,             31,    "IMPERIAL-BEACH_722909"
+2,             67,    "INYOKERN_723826"
+2,             69,    "LANCASTER_723816"
+2,             62,    "LEMOORE_747020"
+2,             52,    "LIVERMORE_724927"
+2,             18,    "LOMPOC_722895"
+2,             37,    "LONG-BEACH_722970"
+2,             39,    "LOS-ALAMITOS_722975"
+2,             42,    "LOS-ANGELES-DOWNTOWN_722874"
+2,             21,    "LOS-ANGELES-INTL_722950"
+2,             51,    "MARYSVILLE-BEALE-AFB_724837"
+2,             54,    "MERCED_724815"
+2,             59,    "MODESTO_724926"
+2,             68,    "MOJAVE_722953"
+2,             85,    "MONTAGUE-SISKIYOU-CO_725955"
+2,              9,    "MONTEREY_724915"
+2,             86,    "MOUNT-SHASTA_725957"
+2,              5,    "NAPA-CO_724955"
+2,             78,    "NEEDLES_723805"
+2,              8,    "OAKLAND_724930"
+2,             27,    "OXNARD_723927"
+2,             70,    "PALMDALE_723820"
+2,             76,    "PALM-SPRINGS-INTL_722868"
+2,             77,    "PALM-SPRINGS-THERMAL_747187"
+2,             14,    "PALO-ALTO_724937"
+2,             13,    "PASO-ROBLES_723965"
+2,             28,    "POINT-MUGU_723910"
+2,             63,    "PORTERVILLE_723895"
+2,             50,    "RED-BLUFF_725910"
+2,             48,    "REDDING_725920"
+2,             44,    "RIVERSIDE_722869"
+2,             45,    "RIVERSIDE-MARCH-AFB_722860"
+2,             55,    "SACRAMENTO-EXECUTIVE_724830"
+2,             56,    "SACRAMENTO-METRO_724839"
+2,             10,    "SALINAS_724917"
+2,             11,    "SAN-CARLOS_724938"
+2,             22,    "SAN-CLEMENTE-IS_722925"
+2,             81,    "SANDBERG_723830"
+2,             32,    "SAN-DIEGO-GILLESPIE_722907"
+2,             33,    "SAN-DIEGO-LINDBERGH_722900"
+2,             34,    "SAN-DIEGO-MONTGOMER_722903"
+2,             35,    "SAN-DIEGO-NORTH-IS_722906"
+2,             12,    "SAN-FRANCISCO-INTL_724940"
+2,             15,    "SAN-JOSE-INTL_724945"
+2,             16,    "SAN-JOSE-REID_724946"
+2,             17,    "SAN-LUIS-CO_722897"
+2,             29,    "SAN-NICHOLAS-IS_722910"
+2,             40,    "SANTA-ANA_722977"
+2,             25,    "SANTA-BARBARA_723925"
+2,             19,    "SANTA-MARIA_723940"
+2,             23,    "SANTA-MONICA_722885"
+2,              6,    "SANTA-ROSA_724957"
+2,             79,    "SOUTH-LAKE-TAHOE_725847"
+2,             57,    "STOCKTON_724920"
+2,             24,    "TORRANCE_722955"
+2,             83,    "TRUCKEE-TAHOE_725846"
+2,             72,    "TWENTYNINE-PALMS_690150"
+2,              4,    "UKIAH_725905"
+2,             20,    "VANDENBERG-AFB_723930"
+2,             43,    "VAN-NUYS_722886"
+2,             64,    "VISALIA_723896"
+2,             49,    "YUBA-CO_724838"
+1,    Proj:CliZnNum,   1,  0   ; CZ 1
+2,              0,    "- select -"
+2,              2,    "ARCATA_725945"
+2,              1,    "CRESCENT-CITY_725946"
+2,              3,    "EUREKA_725940"
+1,    Proj:CliZnNum,   2,  0   ; CZ 2
+2,              0,    "- select -"
+2,              5,    "NAPA-CO_724955"
+2,              6,    "SANTA-ROSA_724957"
+2,              4,    "UKIAH_725905"
+1,    Proj:CliZnNum,   3,  0   ; CZ 3
+2,              0,    "- select -"
+2,              7,    "HAYWARD_724935"
+2,              9,    "MONTEREY_724915"
+2,              8,    "OAKLAND_724930"
+2,             10,    "SALINAS_724917"
+2,             11,    "SAN-CARLOS_724938"
+2,             12,    "SAN-FRANCISCO-INTL_724940"
+1,    Proj:CliZnNum,   4,  0   ; CZ 4
+2,              0,    "- select -"
+2,             14,    "PALO-ALTO_724937"
+2,             13,    "PASO-ROBLES_723965"
+2,             15,    "SAN-JOSE-INTL_724945"
+2,             16,    "SAN-JOSE-REID_724946"
+1,    Proj:CliZnNum,   5,  0   ; CZ 5
+2,              0,    "- select -"
+2,             18,    "LOMPOC_722895"
+2,             17,    "SAN-LUIS-CO_722897"
+2,             19,    "SANTA-MARIA_723940"
+2,             20,    "VANDENBERG-AFB_723930"
+1,    Proj:CliZnNum,   6,  0   ; CZ 6
+2,              0,    "- select -"
+2,             26,    "CAMARILLO_723926"
+2,             21,    "LOS-ANGELES-INTL_722950"
+2,             27,    "OXNARD_723927"
+2,             28,    "POINT-MUGU_723910"
+2,             22,    "SAN-CLEMENTE-IS_722925"
+2,             29,    "SAN-NICHOLAS-IS_722910"
+2,             25,    "SANTA-BARBARA_723925"
+2,             23,    "SANTA-MONICA_722885"
+2,             24,    "TORRANCE_722955"
+1,    Proj:CliZnNum,   7,  0   ; CZ 7
+2,              0,    "- select -"
+2,             30,    "CARLSBAD_722927"
+2,             31,    "IMPERIAL-BEACH_722909"
+2,             32,    "SAN-DIEGO-GILLESPIE_722907"
+2,             33,    "SAN-DIEGO-LINDBERGH_722900"
+2,             34,    "SAN-DIEGO-MONTGOMER_722903"
+2,             35,    "SAN-DIEGO-NORTH-IS_722906"
+1,    Proj:CliZnNum,   8,  0   ; CZ 8
+2,              0,    "- select -"
+2,             38,    "FULLERTON_722976"
+2,             36,    "HAWTHORNE-NORTHROP-FLD_722956"
+2,             37,    "LONG-BEACH_722970"
+2,             39,    "LOS-ALAMITOS_722975"
+2,             40,    "SANTA-ANA_722977"
+1,    Proj:CliZnNum,   9,  0   ; CZ 9
+2,              0,    "- select -"
+2,             41,    "BURBANK-GLENDALE_722880"
+2,             42,    "LOS-ANGELES-DOWNTOWN_722874"
+2,             43,    "VAN-NUYS_722886"
+1,    Proj:CliZnNum,  10,  0   ; CZ 10
+2,              0,    "- select -"
+2,             47,    "CAMP-PENDLETON_722926"
+2,             46,    "CHINO_722899"
+2,             44,    "RIVERSIDE_722869"
+2,             45,    "RIVERSIDE-MARCH-AFB_722860"
+1,    Proj:CliZnNum,  11,  0   ; CZ 11
+2,              0,    "- select -"
+2,             51,    "MARYSVILLE-BEALE-AFB_724837"
+2,             50,    "RED-BLUFF_725910"
+2,             48,    "REDDING_725920"
+2,             49,    "YUBA-CO_724838"
+1,    Proj:CliZnNum,  12,  0   ; CZ 12
+2,              0,    "- select -"
+2,             53,    "CONCORD_724936"
+2,             58,    "FAIRFLD-TRAVIS-AFB_745160"
+2,             52,    "LIVERMORE_724927"
+2,             54,    "MERCED_724815"
+2,             59,    "MODESTO_724926"
+2,             55,    "SACRAMENTO-EXECUTIVE_724830"
+2,             56,    "SACRAMENTO-METRO_724839"
+2,             57,    "STOCKTON_724920"
+1,    Proj:CliZnNum,  13,  0   ; CZ 13
+2,              0,    "- select -"
+2,             61,    "BAKERSFIELD_723840"
+2,             60,    "FRESNO_723890"
+2,             62,    "LEMOORE_747020"
+2,             63,    "PORTERVILLE_723895"
+2,             64,    "VISALIA_723896"
+1,    Proj:CliZnNum,  14,  0   ; CZ 14
+2,              0,    "- select -"
+2,             65,    "CHINA-LAKE_746120"
+2,             71,    "DAGGETT-BARSTOW_723815"
+2,             66,    "EDWARDS-AFB_723810"
+2,             67,    "INYOKERN_723826"
+2,             69,    "LANCASTER_723816"
+2,             68,    "MOJAVE_722953"
+2,             70,    "PALMDALE_723820"
+2,             72,    "TWENTYNINE-PALMS_690150"
+1,    Proj:CliZnNum,  15,  0   ; CZ 15
+2,              0,    "- select -"
+2,             75,    "BLYTHE-RIVERSIDE-CO_747188"
+2,             73,    "EL-CENTRO_722810"
+2,             74,    "IMPERIAL_747185"
+2,             78,    "NEEDLES_723805"
+2,             76,    "PALM-SPRINGS-INTL_722868"
+2,             77,    "PALM-SPRINGS-THERMAL_747187"
+1,    Proj:CliZnNum,  16,  0   ; CZ 16
+2,              0,    "- select -"
+2,             82,    "ALTURAS_725958"
+2,             80,    "BISHOP_724800"
+2,             84,    "BLUE-CANYON_725845"
+2,             85,    "MONTAGUE-SISKIYOU-CO_725955"
+2,             86,    "MOUNT-SHASTA_725957"
+2,             81,    "SANDBERG_723830"
+2,             79,    "SOUTH-LAKE-TAHOE_725847"
+2,             83,    "TRUCKEE-TAHOE_725846"
+1,    Proj:CliZnNum, -999,  0   ; CZ ??
+2,              0,    "- select -"
+2,             82,    "ALTURAS_725958"
+2,              2,    "ARCATA_725945"
+2,             61,    "BAKERSFIELD_723840"
+2,             80,    "BISHOP_724800"
+2,             84,    "BLUE-CANYON_725845"
+2,             75,    "BLYTHE-RIVERSIDE-CO_747188"
+2,             41,    "BURBANK-GLENDALE_722880"
+2,             26,    "CAMARILLO_723926"
+2,             47,    "CAMP-PENDLETON_722926"
+2,             30,    "CARLSBAD_722927"
+2,             65,    "CHINA-LAKE_746120"
+2,             46,    "CHINO_722899"
+2,             53,    "CONCORD_724936"
+2,              1,    "CRESCENT-CITY_725946"
+2,             71,    "DAGGETT-BARSTOW_723815"
+2,             66,    "EDWARDS-AFB_723810"
+2,             73,    "EL-CENTRO_722810"
+2,              3,    "EUREKA_725940"
+2,             58,    "FAIRFLD-TRAVIS-AFB_745160"
+2,             60,    "FRESNO_723890"
+2,             38,    "FULLERTON_722976"
+2,             36,    "HAWTHORNE-NORTHROP-FLD_722956"
+2,              7,    "HAYWARD_724935"
+2,             74,    "IMPERIAL_747185"
+2,             31,    "IMPERIAL-BEACH_722909"
+2,             67,    "INYOKERN_723826"
+2,             69,    "LANCASTER_723816"
+2,             62,    "LEMOORE_747020"
+2,             52,    "LIVERMORE_724927"
+2,             18,    "LOMPOC_722895"
+2,             37,    "LONG-BEACH_722970"
+2,             39,    "LOS-ALAMITOS_722975"
+2,             42,    "LOS-ANGELES-DOWNTOWN_722874"
+2,             21,    "LOS-ANGELES-INTL_722950"
+2,             51,    "MARYSVILLE-BEALE-AFB_724837"
+2,             54,    "MERCED_724815"
+2,             59,    "MODESTO_724926"
+2,             68,    "MOJAVE_722953"
+2,             85,    "MONTAGUE-SISKIYOU-CO_725955"
+2,              9,    "MONTEREY_724915"
+2,             86,    "MOUNT-SHASTA_725957"
+2,              5,    "NAPA-CO_724955"
+2,             78,    "NEEDLES_723805"
+2,              8,    "OAKLAND_724930"
+2,             27,    "OXNARD_723927"
+2,             70,    "PALMDALE_723820"
+2,             76,    "PALM-SPRINGS-INTL_722868"
+2,             77,    "PALM-SPRINGS-THERMAL_747187"
+2,             14,    "PALO-ALTO_724937"
+2,             13,    "PASO-ROBLES_723965"
+2,             28,    "POINT-MUGU_723910"
+2,             63,    "PORTERVILLE_723895"
+2,             50,    "RED-BLUFF_725910"
+2,             48,    "REDDING_725920"
+2,             44,    "RIVERSIDE_722869"
+2,             45,    "RIVERSIDE-MARCH-AFB_722860"
+2,             55,    "SACRAMENTO-EXECUTIVE_724830"
+2,             56,    "SACRAMENTO-METRO_724839"
+2,             10,    "SALINAS_724917"
+2,             11,    "SAN-CARLOS_724938"
+2,             22,    "SAN-CLEMENTE-IS_722925"
+2,             81,    "SANDBERG_723830"
+2,             32,    "SAN-DIEGO-GILLESPIE_722907"
+2,             33,    "SAN-DIEGO-LINDBERGH_722900"
+2,             34,    "SAN-DIEGO-MONTGOMER_722903"
+2,             35,    "SAN-DIEGO-NORTH-IS_722906"
+2,             12,    "SAN-FRANCISCO-INTL_724940"
+2,             15,    "SAN-JOSE-INTL_724945"
+2,             16,    "SAN-JOSE-REID_724946"
+2,             17,    "SAN-LUIS-CO_722897"
+2,             29,    "SAN-NICHOLAS-IS_722910"
+2,             40,    "SANTA-ANA_722977"
+2,             25,    "SANTA-BARBARA_723925"
+2,             19,    "SANTA-MARIA_723940"
+2,             23,    "SANTA-MONICA_722885"
+2,              6,    "SANTA-ROSA_724957"
+2,             79,    "SOUTH-LAKE-TAHOE_725847"
+2,             57,    "STOCKTON_724920"
+2,             24,    "TORRANCE_722955"
+2,             83,    "TRUCKEE-TAHOE_725846"
+2,             72,    "TWENTYNINE-PALMS_690150"
+2,              4,    "UKIAH_725905"
+2,             20,    "VANDENBERG-AFB_723930"
+2,             43,    "VAN-NUYS_722886"
+2,             64,    "VISALIA_723896"
+2,             49,    "YUBA-CO_724838"
+
+
+;0, Proj:BuildingType,  0
+;2,              0,    "- specify -"
+;2,              1,    "Bldg type 1"
+
+
+0, Proj:ExcptCondCRRC,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondPartComp1,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondPartComp2,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondPartComp3,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondDisplayPerim,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondAtriumGT55ft,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+;0, Proj:ExcptCondUFactorLimit,  0
+;2,              1,    "Yes"
+;2,              2,    "No"
+
+;0, Proj:ExcptCondCompleteBldg,  0
+;2,              1,    "Yes"
+;2,              2,    "No"
+
+0, Proj:ExcptCondLtgCred,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondPAFCredit,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondNoLtg,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondDsgnIllum,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondExtLtg,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondNoClgSys,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondRtdCap,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondMinEffCheck,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondFanPress,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondWCC,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondElevEscal,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondWtrHtrSizing,  2
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondWtrHtr,  2
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondNarrative,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:ExcptCondPropane,  0
+2,              1,    "Yes"
+2,              2,    "No"
+
+0, Proj:CompPathEnv,  1
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathMech,  1
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathDHW,  1
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathLtg,  1
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathKit,  3
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathComputerRm,  3
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:CompPathLab,  3
+2,              1,    "Performance"
+2,              2,    "Prescriptive"
+2,              3,    "NA"
+
+0, Proj:LtgUncondComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:LtgOutdrComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:LtgSignComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:SolThrmlComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:SimpleHVACMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ComplexHVACMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ElecMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:SolReadyMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ParkingGarageMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ComRfrgMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:RfrgWarehouseMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:CompressedAirMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ProcBlrMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:CommKitchenMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ComputerRoomMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:LabExhaustMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:ElevLtgVentMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:EscalSpdCtrlMandComp,  2
+2,              1,    "Yes"
+2,              2,    "NA"
+
+0, Proj:EnvDsgnrType,  1
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              1,    " - specify - "
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,              1,    "- specify -"
+2,              2,    "Architect"
+2,              3,    "Engineer"
+2,              4,    "Contractor"
+2,              5,    "Builder/Owner"
+
+0, Proj:LtgDsgnrType,  1
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              1,    " - specify - "
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,              1,    "- specify -"
+2,              2,    "Architect"
+2,              3,    "Engineer"
+2,              4,    "Contractor"
+2,              5,    "Builder/Owner"
+
+0, Proj:MechDsgnrType,  1
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              1,    " - specify - "
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,              1,    "- specify -"
+2,              2,    "Architect"
+2,              3,    "Engineer"
+2,              4,    "Contractor"
+2,              5,    "Builder/Owner"
+
+; Schedule objects
+0, SchDay:Type,   1
+0, SchWeek:Type,   1
+0, Sch:Type,   1
+2,              1,    "Fraction"
+2,              2,    "OnOff"
+2,              3,    "Temperature"
+
+
+0, ConsAssm:CompatibleSurfType,  0
+1,    ConsAssm:AssignedSurfType,     1,  1     ; ExtWall
+2,              1,    "ExteriorWall"
+1,    ConsAssm:AssignedSurfType,     2,  2     ;      Roof
+2,              2,    "Roof"
+1,    ConsAssm:AssignedSurfType,     3,  3     ;    ExtFlr
+2,              3,    "ExteriorFloor"
+1,    ConsAssm:AssignedSurfType,     4,  4     ; UndgrWall
+2,              4,    "UndergroundWall"
+1,    ConsAssm:AssignedSurfType,     5,  5     ;  UndgrFlr
+2,              5,    "UndergroundFloor"
+1,    ConsAssm:AssignedSurfType,     6,  6     ;   IntWall
+2,              6,    "InteriorWall"
+1,    ConsAssm:AssignedSurfType,     7,  7     ;   Ceiling
+2,              7,    "Ceiling"
+1,    ConsAssm:AssignedSurfType,     8,  8     ;    IntFlr
+2,              8,    "InteriorFloor"
+1,    ConsAssm:AssignedSurfType,  -999, -1     ; not yet assigned
+2,              1,    "ExteriorWall"
+2,              2,    "Roof"
+2,              3,    "ExteriorFloor"
+2,              4,    "UndergroundWall"
+2,              5,    "UndergroundFloor"
+2,              6,    "InteriorWall"
+2,              7,    "Ceiling"
+2,              8,    "InteriorFloor"
+
+
+0, ConsAssm:SpecMthd,  1
+; 2,              0,    "- specify -"
+2,              1,    "Layers"
+2,              2,    "UFactor"
+2,              3,    "CFactor"
+2,              4,    "FFactor"
+
+0, ConsAssm:ExtRoughness,  0
+0, ExtWall:ExtRoughness,  0
+0, Roof:ExtRoughness,  0
+0, ExtFlr:ExtRoughness,  0
+2,              0,    "- specify -"
+2,              1,    "VeryRough"
+2,              2,    "Rough"
+2,              3,    "MediumRough"
+2,              4,    "MediumSmooth"
+2,              5,    "Smooth"
+2,              6,    "VerySmooth"
+
+0, ConsAssm:SlabType,  0
+2,              0,    "- specify -"
+2,              1,    "HeatedSlabOnGrade"
+2,              2,    "HeatedSlabBelowGrade"
+2,              3,    "UnheatedSlabOnGrade"
+2,              4,    "UnheatedSlabBelowGrade"
+
+0, ConsAssm:SlabInsOrientation,  1
+2,              1,    "None"
+2,              2,    "12inHorizontal"
+2,              3,    "24inHorizontal"
+2,              4,    "36inHorizontal"
+2,              5,    "48inHorizontal"
+2,              6,    "12inVertical"
+2,              7,    "24inVertical"
+2,              8,    "36inVertical"
+2,              9,    "48inVertical"
+2,             11,    "HorizontalAndVertical"
+2,             10,    "FullyInsulatedSlab"
+
+0, ConsAssm:SlabInsThrmlR,  0
+1, ConsAssm:SlabInsOrientation,  1,  0  ; None
+2,              0,    "R0"
+1, ConsAssm:SlabInsOrientation,  2,  0  ; 12inHorizontal
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+1, ConsAssm:SlabInsOrientation,  3,  0  ; 24inHorizontal
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+1, ConsAssm:SlabInsOrientation,  4,  0  ; 36inHorizontal
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+1, ConsAssm:SlabInsOrientation,  5,  0  ; 48inHorizontal
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+1, ConsAssm:SlabInsOrientation,  6,  0  ; 12inVertical
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+1, ConsAssm:SlabInsOrientation,  7,  0  ; 24inVertical
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+1, ConsAssm:SlabInsOrientation,  8,  0  ; 36inVertical
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+1, ConsAssm:SlabInsOrientation,  9,  0  ; 48inVertical
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+1, ConsAssm:SlabInsOrientation,  10,  0  ; FullyInsulatedSlab
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+2,              8,    "R35"
+2,              9,    "R40"
+2,             10,    "R45"
+2,             11,    "R50"
+2,             12,    "R55"
+1, ConsAssm:SlabInsOrientation,  11,  0  ; HorizontalAndVertical
+2,              0,    "R0"
+2,              1,    "R5"
+2,              2,    "R7_5"
+2,              3,    "R10"
+2,              4,    "R15"
+2,              5,    "R20"
+2,              6,    "R25"
+2,              7,    "R30"
+
+
+0, Mat:CodeCat,  0
+2,              0,    "- specify -"
+; 2,             10,    "Insulation"
+; 2,             20,    "Exterior Finishes"
+; 2,             30,    "Framing/Insulation"
+; 2,             40,    "Interior Finishes"
+; 2,             50,    "Concrete"
+; 2,             60,    "Masonry"
+; 2,             70,    "Air Layers"
+;-------
+; 2,             10,    "AirCavity"
+; 2,             20,    "CommonMaterials"
+; 2,             30,    "Insulation"
+; 2,             40,    "Composite"
+; 2,             50,    "CMU"
+; 2,             60,    "ConcreteSandwichPanel"
+; 2,             70,    "InsulatedConcreteForms"
+; 2,             80,    "SIPSRoof"
+; 2,             90,    "SIPSWall"
+; 2,            100,    "SIPSFloor"
+; 2,            110,    "MetalBuildingRoof"
+; 2,            120,    "MetalBuildingWall"
+; 2,            130,    "SpandrelPanel"
+; 2,            140,    "InsulatedMetalPanel"
+; 2,            150,    "LogWall"
+; 2,            160,    "StrawBale"
+;-------
+; 2,             10,    "AirCavity"
+; 2,             20,    "BoardAndSiding"
+; 2,             40,    "Composite"
+; 2,             30,    "Concrete"
+; 2,             60,    "ExteriorFinish"
+; 2,             70,    "Flooring"
+; 2,             80,    "Insulation"
+; 2,             50,    "MasonryUnits"
+; 2,            130,    "SpandrelPanel"
+;-------
+;2,             10,    "AirCavity"
+;2,             20,    "BoardAndSiding"
+;2,             40,    "Composite"
+;2,             30,    "Concrete"
+;2,             50,    "Finishes"
+;2,             60,    "Insulation"
+;2,             70,    "MasonryUnits"
+;2,             80,    "Membrane"
+;2,             90,    "Plastering"
+;2,            100,    "Roofing"
+;2,            110,    "Wood"
+;2,            120,    "Zone"
+;-------
+2,             10,    "Air"
+2,             20,    "Bldg Board and Siding"
+2,             30,    "Building Membrane"
+2,             40,    "Composite"
+2,             50,    "Concrete"
+2,             60,    "Concrete Sandwich Panel"
+2,             70,    "Finish Materials"
+2,             80,    "ICF Wall"
+2,             90,    "Insulation Batt"
+2,            100,    "Insulation Board"
+2,            110,    "Insulation Loose Fill"
+2,            120,    "Insulation Other"
+2,            130,    "Insulation Spray Applied"
+2,            140,    "Masonry Materials"
+2,            150,    "Masonry Units Hollow"
+2,            160,    "Masonry Units Solid"
+2,            170,    "Masonry Units with Fill"
+2,            180,    "Metal Insulated Panel Wall"
+2,            190,    "Plastering Materials"
+2,            200,    "Roofing"
+2,            210,    "SIPS Floor"
+2,            220,    "SIPS Roof"
+2,            230,    "SIPS Wall"
+2,            240,    "Spandrel Panels Curtain Walls"
+2,            250,    "Straw Bale Wall"
+2,            260,    "Woods"
+;--------------------------------------------------------
+0, Mat:CodeItem,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,           9035,    "Expanded Polystyrene - EPS - 8 5/3 in."
+2,          14000,    "Clay  - Part Grouted and Empty - 130 lb/ft3 - 6 in."
+2,          16000,    "Clay  - Part Grouted and Insulated - 130 lb/ft3 - 6 in."
+2,          16001,    "Clay - Part Grouted andInsulated - 130 lb/ft3 - 8 in."
+2,          21009,    "SIPS - R36 - Single 2x Splin - 10 1/4 in."
+
+1,    Proj:Ruleset,  -1002,  0   ; Backward compatibility
+2,           8000,    "Glass fiber batt - 3 1/2 in."
+2,           8004,    "Glass fiber batt - 5 1/2 in."
+2,           9008,    "Cellular polyisocyanurate (unfaced) - 3 1/2 in."
+2,           9009,    "Cellular polyisocyanurate (unfaced) - 4 in."
+2,           9010,    "Cellular polyisocyanurate (unfaced) - 4 1/2 in."
+2,           9011,    "Cellular polyisocyanurate (unfaced) - 5 in."
+2,           9012,    "Cellular polyisocyanurate (unfaced) - 5 1/2 in."
+2,           9013,    "Cellular polyisocyanurate (unfaced) - 6 in."
+2,           9014,    "Cellular polyisocyanurate (unfaced) - 6 1/2 in."
+2,           9015,    "Expanded perlite - organic bonded - 3/4 in."
+2,           9016,    "Expanded perlite - organic bonded - 1 in."
+2,           9017,    "Expanded perlite - organic bonded - 1 1/2 in."
+2,           9018,    "Expanded perlite - organic bonded - 2 in."
+2,           9019,    "Expanded perlite - organic bonded - 3 in."
+2,           9020,    "Expanded perlite - organic bonded - 4 in."
+2,           9021,    "Expanded perlite - organic bonded - 6 in."
+2,           9023,    "Expanded Polystyrene - EPS - 1/2 in."
+2,           9024,    "Expanded Polystyrene - EPS - 3/4 in."
+2,           9025,    "Expanded Polystyrene - EPS - 1 in."
+2,           9026,    "Expanded Polystyrene - EPS - 1 1/4 in."
+2,           9027,    "Expanded Polystyrene - EPS - 1 1/2 in."
+2,           9028,    "Expanded Polystyrene - EPS - 1 3/4 in."
+2,           9029,    "Expanded Polystyrene - EPS - 1 7/8 in."
+2,           9030,    "Expanded Polystyrene - EPS - 1 15/16 in."
+2,           9031,    "Expanded Polystyrene - EPS - 2 in."
+2,           9032,    "Expanded Polystyrene - EPS - 2 2/5 in."
+2,           9033,    "Expanded Polystyrene - EPS - 2 7/16 in."
+2,           9034,    "Expanded Polystyrene - EPS - 3 in."
+2,           9035,    "Expanded Polystyrene - EPS - 3 1/3 in."
+2,           9036,    "Expanded Polystyrene - EPS - 3 2/5 in."
+2,           9037,    "Expanded Polystyrene - EPS - 3 1/2 in."
+2,           9038,    "Expanded Polystyrene - EPS - 4 1/16 in."
+2,           9039,    "Expanded Polystyrene - EPS - 4 7/10 in."
+2,           9040,    "Expanded Polystyrene - EPS - 5 2/5 in."
+2,           9041,    "Expanded Polystyrene - EPS - 5 19/20 in."
+2,           9042,    "Expanded Polystyrene - EPS - 6 1/10 in."
+2,           9043,    "Expanded Polystyrene - EPS - 6 7/8 in."
+2,           9044,    "Expanded Polystyrene - EPS - 8 3/5 in."
+2,           9065,    "Expanded Polyurethane - 1/2 in."
+2,           9066,    "Expanded Polyurethane - 3/4 in."
+2,           9067,    "Expanded Polyurethane - 1 in."
+2,           9068,    "Expanded Polyurethane - 1 1/4 in."
+2,           9069,    "Expanded Polyurethane - 2 in."
+2,           9070,    "Perlite board - 3/4 in."
+2,           9071,    "Perlite board - 1 in."
+2,           9072,    "Perlite board - 1 1/2 in."
+2,           9073,    "Perlite board - 2 in."
+2,           9074,    "R-24 Batt Wall - 8 in."
+2,          13009,    "Concrete"
+
+1,    Mat:CodeCat,     0,  0     ; "- specify -"
+2,              0,    "- specify -"
+1,    Mat:CodeCat,    40,  0     ; "Composite"     // Not sure if this needs to be here
+2,              0,    "- specify -"                 // Not sure if this needs to be here
+1,    Mat:CodeCat,    10,  0     ; "Air"
+2,              0,    "- specify -"
+2,           1000,    "Air - Cavity - Wall Roof Ceiling - 4 in. or more"
+2,           1001,    "Air - Metal Wall Framing - 16 or 24 in. OC"
+2,           1002,    "Air - Wall - 1/2 in."
+2,           1003,    "Air - Wall - 3/4 in."
+2,           1004,    "Air - Wall - 1 1/2 in."
+2,           1005,    "Air - Wall - 3 1/2 in."
+2,           1006,    "Air - Ceiling - 1/2 in."
+2,           1007,    "Air - Ceiling - 3/4 in."
+2,           1008,    "Air - Ceiling - 1 1/2 in."
+2,           1009,    "Air - Ceiling - 3 1/2 in."
+2,           1010,    "Air - Roof - 1/2 in."
+2,           1011,    "Air - Roof - 3/4 in."
+2,           1012,    "Air - Roof - 1 1/2 in."
+2,           1013,    "Air - Roof - 3 1/2 in."
+2,           1014,    "Air - Floor - 1/2 in."
+2,           1015,    "Air - Floor - 3/4 in."
+2,           1016,    "Air - Floor - 1 1/2 in."
+2,           1017,    "Air - Floor - 3 1/2 in."
+
+1,    Mat:CodeCat,    20,  0     ; "Bldg Board and Siding"
+2,              0,    "- specify -"
+2,           2000,    "Fiber cement board - 63 lb/ft3 - 1/3 in."
+2,           2001,    "Fiber cement board - 88 lb/ft3 - 1/3 in."
+2,           2002,    "Fiber cement board - 88 lb/ft3 - 1/2 in."
+2,           2003,    "Fiberboard sheathing - 1/2 in."
+2,           2004,    "Gypsum Board - 3/8 in."
+2,           2005,    "Gypsum Board - 1/2 in."
+2,           2006,    "Gypsum Board - 5/8 in."
+2,           2007,    "Gypsum Board - 3/4 in."
+2,           2008,    "Hard Board - 3/4 in."
+2,           2009,    "Hardboard - HDF - 50 lb/ft3 - 3/8 in."
+2,           2010,    "Hardboard - HDF - 50 lb/ft3 - 1/2 in."
+2,           2011,    "Hardboard - HDF - 50 lb/ft3 - 5/8 in."
+2,           2012,    "Hardboard - HDF - 50 lb/ft3 - 3/4 in."
+2,           2013,    "HB Part. Brd - 3/4 in."
+2,           2014,    "Metal Deck - 1/16 in."
+2,           2015,    "Metal Siding - 1/16 in."
+2,           2016,    "OSB - Oriented Strand Board - 1/2 in."
+2,           2017,    "OSB - Oriented Strand Board - 5/8 in."
+2,           2018,    "OSB - Oriented Strand Board - 3/4 in."
+2,           2019,    "Plywood - 1/4 in."
+2,           2020,    "Plywood - 3/8 in."
+2,           2021,    "Plywood - 1/2 in."
+2,           2022,    "Plywood - 5/8 in."
+2,           2023,    "Plywood - 3/4 in."
+2,           2024,    "Plywood - 1 in."
+2,           2025,    "Plywood - 1 1/4 in."
+2,           2026,    "Plywood - 1 1/2 in."
+2,           2027,    "Shingles - Asbestos cement - lapped - 1/4 in."
+2,           2028,    "Shingles - Asphalt roll siding - 1/4 in."
+2,           2029,    "Shingles - Wood - 16 in. - 7 1/2 in. exposure - 1/2 in."
+2,           2030,    "Shingles - Wood - plus insulated backer board Siding - 5/16 in."
+2,           2031,    "Wood shingles - 3/4 in."
+2,           2032,    "Wood shingles - plain and plastic film faced - 3/4 in."
+2,           2033,    "Siding - Asphalt insulating siding - 1/2 in. bed - 1/2 in."
+2,           2034,    "Siding - Wood - bevel - 10 in. - lapped - 3/4 in."
+2,           2035,    "Synthetic Stucco - EIFS finish - 1 in."
+
+1,    Mat:CodeCat,    30,  0     ; "Building Membrane"
+2,              0,    "- specify -"
+2,           3000,    "Building Paper - 1/16 in."
+2,           3001,    "Roofing felt - 1/8 in."
+2,           3002,    "Vapor permeable felt - 1/8 in."
+2,           3003,    "Vapor seal - 2 layers of mopped 15 lb felt - 1/4 in."
+2,           3004,    "Vapor seal - plastic film - 1/16 in."
+
+1,    Mat:CodeCat,    50,  0     ; "Concrete"
+2,              0,    "- specify -"
+2,           4000,    "Concrete - 80 lb/ft3 - 2 in."
+2,           4001,    "Concrete - 80 lb/ft3 - 4 in."
+2,           4002,    "Concrete - 80 lb/ft3 - 6 in."
+2,           4003,    "Concrete - 80 lb/ft3 - 8 in."
+2,           4004,    "Concrete - 80 lb/ft3 - 10 in."
+2,           4005,    "Concrete - 80 lb/ft3 - 12 in."
+2,           4006,    "Concrete - 100 lb/ft3 - 2 in."
+2,           4007,    "Concrete - 100 lb/ft3 - 4 in."
+2,           4008,    "Concrete - 100 lb/ft3 - 6 in."
+2,           4009,    "Concrete - 100 lb/ft3 - 8 in."
+2,           4010,    "Concrete - 100 lb/ft3 - 10 in."
+2,           4011,    "Concrete - 100 lb/ft3 - 12 in."
+2,           4012,    "Concrete - 140 lb/ft3 - 2 in."
+2,           4013,    "Concrete - 140 lb/ft3 - 4 in."
+2,           4014,    "Concrete - 140 lb/ft3 - 6 in."
+2,           4015,    "Concrete - 140 lb/ft3 - 8 in."
+2,           4016,    "Concrete - 140 lb/ft3 - 10 in."
+2,           4017,    "Concrete - 140 lb/ft3 - 12 in."
+
+1,    Mat:CodeCat,    60,  0     ; "Concrete Sandwich Panel"
+2,              0,    "- specify -"
+2,           5000,    "Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in."
+2,           5001,    "Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 2 in."
+2,           5002,    "Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 3 in."
+2,           5003,    "Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 4 in."
+2,           5004,    "Concrete Sandwich Panel - 80% Ins. Layer - No Steel in Ins. - Ins. 6 in."
+2,           5005,    "Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in."
+2,           5006,    "Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 2 in."
+2,           5007,    "Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 3 in."
+2,           5008,    "Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 4 in."
+2,           5009,    "Concrete Sandwich Panel - 80% Ins. Layer - Steel in Ins. - Ins. 6 in."
+2,           5010,    "Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in."
+2,           5011,    "Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 2 in."
+2,           5012,    "Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 3 in."
+2,           5013,    "Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 4 in."
+2,           5014,    "Concrete Sandwich Panel - 90% Ins. Layer - No Steel in Ins. - Ins. 6 in."
+2,           5015,    "Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in."
+2,           5016,    "Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 2 in."
+2,           5017,    "Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 3 in."
+2,           5018,    "Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 4 in."
+2,           5019,    "Concrete Sandwich Panel - 90% Ins. Layer - Steel in Ins. - Ins. 6 in."
+2,           5020,    "Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 1 1/2 in."
+2,           5021,    "Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 2 in."
+2,           5022,    "Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 3 in."
+2,           5023,    "Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 4 in."
+2,           5024,    "Concrete Sandwich Panel - 100% Ins. Layer - No Steel in Ins. - Ins. 6 in."
+2,           5025,    "Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 1 1/2 in."
+2,           5026,    "Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 2 in."
+2,           5027,    "Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 3 in."
+2,           5028,    "Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 4 in."
+2,           5029,    "Concrete Sandwich Panel - 100% Ins. Layer - Steel in Ins. - Ins. 6 in."
+
+1,    Mat:CodeCat,    70,  0     ; "Finish Materials"
+2,              0,    "- specify -"
+2,           6000,    "Acoustic Tile - 3/8 in."
+2,           6001,    "Acoustic Tile - 1/2 in."
+2,           6002,    "Acoustic Tile - 3/4 in."
+2,           6003,    "Carpet - 3/4 in."
+2,           6004,    "Linoleum/cork tile - 1/4 in."
+2,           6005,    "Rubber tile - 1 in."
+2,           6006,    "Slate or tile - 1/2 in."
+2,           6007,    "Terrazzo - 1 in."
+
+1,    Mat:CodeCat,    80,  0     ; "ICF Wall"
+2,              0,    "- specify -"
+2,           7000,    "Insulating Concrete Forms - 1 1/2 in. Polyurethane Ins. each side - concrete 6 in."
+2,           7001,    "Insulating Concrete Forms - 1 1/2 in. Polyurethane Ins. each side - concrete 8 in."
+2,           7002,    "Insulating Concrete Forms - 2 in. Polyurethane Ins. each side - concrete 6 in."
+2,           7003,    "Insulating Concrete Forms - 2 in. Polyurethane Ins. each side - concrete 8 in."
+2,           7004,    "Insulating Concrete Forms - 4 1/2 in. Polyurethane Ins. each side - concrete 6 in."
+2,           7005,    "Insulating Concrete Forms - 4 1/2 in. Polyurethane Ins. each side - concrete 8 in."
+2,           7006,    "Insulating Concrete Forms - 2 in. EPS Ins. each side - concrete 6 in."
+2,           7007,    "Insulating Concrete Forms - 2 in. EPS Ins. each side - concrete 8 in."
+2,           7008,    "Insulating Concrete Forms - 2 1/2 in. EPS Ins. each side - concrete 6 in."
+2,           7009,    "Insulating Concrete Forms - 2 1/2 in. EPS Ins. each side - concrete 8 in."
+2,           7010,    "Insulating Concrete Forms - 3 in. EPS Ins. each side - concrete 6 in."
+2,           7011,    "Insulating Concrete Forms - 3 in. EPS Ins. each side - concrete 8 in."
+2,           7012,    "Insulating Concrete Forms - 4 in. EPS Ins. each side - concrete 6 in."
+2,           7013,    "Insulating Concrete Forms - 4 in. EPS Ins. each side - concrete 8 in."
+2,           7014,    "Insulating Concrete Forms - 2 in. XPS Ins. each side - concrete 6 in."
+2,           7015,    "Insulating Concrete Forms - 2 in. XPS Ins. each side - concrete 8 in."
+2,           7016,    "Insulating Concrete Forms - 3 in. XPS Ins. each side - concrete 6 in."
+2,           7017,    "Insulating Concrete Forms - 3 in. XPS Ins. each side - concrete 8 in."
+2,           7018,    "Insulating Concrete Forms - 4 in. XPS Ins. each side - concrete 6 in."
+2,           7019,    "Insulating Concrete Forms - 4 in. XPS Ins. each side - concrete 8 in."
+
+1,    Mat:CodeCat,    90,  0     ; "Insulation Batt"
+2,              0,    "- specify -"
+2,           8000,    "Glass fiber batt - 3 1/2 in. R11 (CEC Default)"
+2,           8001,    "Glass fiber batt - 3 1/2 in. R13 (CEC Default)"
+2,           8002,    "Glass fiber batt - 3 1/2 in. R15 (CEC Default)"
+2,           8003,    "Glass fiber batt - 5 1/2 in. R19 (CEC Default)"
+2,           8004,    "Glass fiber batt - 5 1/2 in. R21 (CEC Default)"
+2,           8005,    "Glass fiber batt - 7 1/4 in. R25 (CEC Default)"
+2,           8006,    "Glass fiber batt - 7 1/4 in. R30 (CEC Default)"
+2,           8007,    "Glass fiber batt - 8 1/4 in. R30C (CEC Default)"
+2,           8008,    "Glass fiber batt - 10 in. R30 (CEC Default)"
+2,           8009,    "Glass fiber batt - 12 in. R38 (CEC Default)"
+2,           8010,    "Glass fiber batt - 4 in."
+2,           8011,    "Glass fiber batt - 4 1/2 in."
+2,           8012,    "Glass fiber batt - 5 in."
+2,           8013,    "Glass fiber batt - 6 in."
+2,           8014,    "Glass fiber batt - 6 1/2 in."
+
+1,    Mat:CodeCat,    100,  0     ; "Insulation Board"
+2,              0,    "- specify -"
+2,           9000,    "Cellular polyisocyanurate (unfaced) - 1/8 in. R0.7"
+2,           9001,    "Cellular polyisocyanurate (unfaced) - 1/4 in. R1.5"
+2,           9002,    "Cellular polyisocyanurate (unfaced) - 1/2 in. R2.9"
+2,           9003,    "Cellular polyisocyanurate (unfaced) - 1 in. R5.9"
+2,           9004,    "Cellular polyisocyanurate (unfaced) - 1 1/2 in. R8.8"
+2,           9005,    "Cellular polyisocyanurate (unfaced) - 2 in. R12"
+2,           9006,    "Cellular polyisocyanurate (unfaced) - 2 1/2 in. R15"
+2,           9007,    "Cellular polyisocyanurate (unfaced) - 3 in. R18"
+2,           9008,    "Cellular polyisocyanurate (unfaced) - 3 1/2 in. R21"
+2,           9009,    "Cellular polyisocyanurate (unfaced) - 4 in. R23"
+2,           9010,    "Cellular polyisocyanurate (unfaced) - 4 1/2 in. R26"
+2,           9011,    "Cellular polyisocyanurate (unfaced) - 5 in. R29"
+2,           9012,    "Cellular polyisocyanurate (unfaced) - 5 1/2 in. R32"
+2,           9013,    "Cellular polyisocyanurate (unfaced) - 6 in. R35"
+2,           9014,    "Cellular polyisocyanurate (unfaced) - 6 1/2 in. R38"
+2,           9015,    "Expanded perlite - organic bonded - 3/4 in. R2.1"
+2,           9016,    "Expanded perlite - organic bonded - 1 in. R2.8"
+2,           9017,    "Expanded perlite - organic bonded - 1 1/2 in. R4.2"
+2,           9018,    "Expanded perlite - organic bonded - 2 in. R5.6"
+2,           9019,    "Expanded perlite - organic bonded - 3 in. R8.3"
+2,           9020,    "Expanded perlite - organic bonded - 4 in. R11"
+2,           9021,    "Expanded perlite - organic bonded - 6 in. R17"
+2,           9022,    "Expanded Polystyrene - EPS - 1/4 in. R1.0"
+2,           9023,    "Expanded Polystyrene - EPS - 1/2 in. R2.1"
+2,           9024,    "Expanded Polystyrene - EPS - 3/4 in. R3.1"
+2,           9025,    "Expanded Polystyrene - EPS - 1 in. R4.2"
+2,           9026,    "Expanded Polystyrene - EPS - 1 1/4 in. R5.2"
+2,           9027,    "Expanded Polystyrene - EPS - 1 1/2 in. R6.3"
+2,           9028,    "Expanded Polystyrene - EPS - 1 3/4 in. R7.3"
+2,           9029,    "Expanded Polystyrene - EPS - 1 7/8 in. R8.0"
+2,           9030,    "Expanded Polystyrene - EPS - 1 15/16 in. R8.1"
+2,           9031,    "Expanded Polystyrene - EPS - 2 in. R8.3"
+2,           9032,    "Expanded Polystyrene - EPS - 2 2/5 in. R10"
+2,           9033,    "Expanded Polystyrene - EPS - 2 7/16 in. R10"
+2,           9034,    "Expanded Polystyrene - EPS - 3 in. R13"
+2,           9035,    "Expanded Polystyrene - EPS - 3 1/3 in. R14"
+2,           9036,    "Expanded Polystyrene - EPS - 3 2/5 in. R14"
+2,           9037,    "Expanded Polystyrene - EPS - 3 1/2 in. R15"
+2,           9038,    "Expanded Polystyrene - EPS - 4 1/16 in. R17"
+2,           9039,    "Expanded Polystyrene - EPS - 4 7/10 in. R20"
+2,           9040,    "Expanded Polystyrene - EPS - 5 2/5 in. R22"
+2,           9041,    "Expanded Polystyrene - EPS - 5 19/20 in. R25"
+2,           9042,    "Expanded Polystyrene - EPS - 6 1/10 in. R25"
+2,           9043,    "Expanded Polystyrene - EPS - 6 7/8 in. R29"
+2,           9044,    "Expanded Polystyrene - EPS - 8 3/5 in. R35"
+2,           9045,    "Extruded Polystyrene - XPS - 1/4 in. R1.25"
+2,           9046,    "Extruded Polystyrene - XPS - 1/2 in. R2.50"
+2,           9047,    "Extruded Polystyrene - XPS - 3/4 in. R3.75"
+2,           9048,    "Extruded Polystyrene - XPS - 1 in. R5.00"
+2,           9049,    "Extruded Polystyrene - XPS - 1 1/4 in. R6.25"
+2,           9050,    "Extruded Polystyrene - XPS - 1 1/2 in. R7.50"
+2,           9051,    "Extruded Polystyrene - XPS - 1 3/4 in. R8.75"
+2,           9052,    "Extruded Polystyrene - XPS - 1 7/8 in. R9.37"
+2,           9053,    "Extruded Polystyrene - XPS - 2 in. R10.00"
+2,           9054,    "Extruded Polystyrene - XPS - 2 1/2 in. R12.50"
+2,           9055,    "Extruded Polystyrene - XPS - 3 in. R15.00"
+2,           9056,    "Extruded Polystyrene - XPS - 3 1/2 in. R17.50"
+2,           9057,    "Extruded Polystyrene - XPS - 4 in. R20.00"
+2,           9058,    "Extruded Polystyrene - XPS - 4 1/2 in. R22.50"
+2,           9059,    "Extruded Polystyrene - XPS - 5 in. R25.00"
+2,           9060,    "Extruded Polystyrene - XPS - 5 1/2 in. R27.50"
+2,           9061,    "Extruded Polystyrene - XPS - 6 in. R30.00"
+2,           9062,    "Extruded Polystyrene - XPS - 6 1/2 in. R32.50"
+2,           9063,    "Extruded Polystyrene - XPS - 8 in. R40.00"
+2,           9064,    "Extruded Polystyrene - XPS - 8 1/2 in. R42.50"
+2,           9065,    "Expanded Polyurethane - 1/2 in. R3.1"
+2,           9066,    "Expanded Polyurethane - 3/4 in. R4.7"
+2,           9067,    "Expanded Polyurethane - 1 in. R6.3"
+2,           9068,    "Expanded Polyurethane - 1 1/4 in. R7.8"
+2,           9069,    "Expanded Polyurethane - 2 in. R12.6"
+2,           9070,    "Perlite board - 3/4 in. R1.9"
+2,           9071,    "Perlite board - 1 in. R2.5"
+2,           9072,    "Perlite board - 1 1/2 in. R3.8"
+2,           9073,    "Perlite board - 2 in. R5.0"
+2,           9074,    "R-24 Batt Wall - 8 in. R24"
+2,           9075,    "Compliance Insulation R0.01"
+2,           9076,    "Compliance Insulation R0.02"
+2,           9077,    "Compliance Insulation R0.05"
+2,           9078,    "Compliance Insulation R0.10"
+2,           9079,    "Compliance Insulation R0.20"
+2,           9080,    "Compliance Insulation R0.50"
+2,           9081,    "Compliance Insulation R1.00"
+2,           9082,    "Compliance Insulation R1.35"
+2,           9083,    "Compliance Insulation R1.41"
+2,           9084,    "Compliance Insulation R1.54"
+2,           9085,    "Compliance Insulation R2.00"
+2,           9086,    "Compliance Insulation R2.15"
+2,           9087,    "Compliance Insulation R2.19"
+2,           9088,    "Compliance Insulation R2.85"
+2,           9089,    "Compliance Insulation R2.89"
+2,           9090,    "Compliance Insulation R3.63"
+2,           9091,    "Compliance Insulation R3.70"
+2,           9092,    "Compliance Insulation R3.80"
+2,           9093,    "Compliance Insulation R5.00"
+2,           9094,    "Compliance Insulation R5.60"
+2,           9095,    "Compliance Insulation R6.00"
+2,           9096,    "Compliance Insulation R6.32"
+2,           9097,    "Compliance Insulation R6.46"
+2,           9098,    "Compliance Insulation R7.10"
+2,           9099,    "Compliance Insulation R7.18"
+2,           9100,    "Compliance Insulation R7.39"
+2,           9101,    "Compliance Insulation R7.50"
+2,           9102,    "Compliance Insulation R7.60"
+2,           9103,    "Compliance Insulation R8.00"
+2,           9104,    "Compliance Insulation R8.07"
+2,           9105,    "Compliance Insulation R9.40"
+2,           9106,    "Compliance Insulation R9.80"
+2,           9107,    "Compliance Insulation R9.83"
+2,           9108,    "Compliance Insulation R9.94"
+2,           9109,    "Compliance Insulation R10.00"
+2,           9110,    "Compliance Insulation R10.06"
+2,           9111,    "Compliance Insulation R11.70"
+2,           9112,    "Compliance Insulation R12.50"
+2,           9113,    "Compliance Insulation R12.55"
+2,           9114,    "Compliance Insulation R12.69"
+2,           9115,    "Compliance Insulation R13.50"
+2,           9116,    "Compliance Insulation R13.99"
+2,           9117,    "Compliance Insulation R14.14"
+2,           9118,    "Compliance Insulation R14.32"
+2,           9119,    "Compliance Insulation R14.60"
+2,           9120,    "Compliance Insulation R15.00"
+2,           9121,    "Compliance Insulation R15.54"
+2,           9122,    "Compliance Insulation R16.20"
+2,           9123,    "Compliance Insulation R16.34"
+2,           9124,    "Compliance Insulation R16.58"
+2,           9125,    "Compliance Insulation R16.69"
+2,           9126,    "Compliance Insulation R17.67"
+2,           9127,    "Compliance Insulation R19.63"
+2,           9128,    "Compliance Insulation R20.00"
+2,           9129,    "Compliance Insulation R20.05"
+2,           9130,    "Compliance Insulation R21.18"
+2,           9131,    "Compliance Insulation R21.39"
+2,           9132,    "Compliance Insulation R21.60"
+2,           9133,    "Compliance Insulation R22.48"
+2,           9134,    "Compliance Insulation R23.70"
+2,           9135,    "Compliance Insulation R24.80"
+2,           9136,    "Compliance Insulation R24.86"
+2,           9137,    "Compliance Insulation R25.16"
+2,           9138,    "Compliance Insulation R28.12"
+2,           9139,    "Compliance Insulation R28.63"
+2,           9140,    "Compliance Insulation R34.93"
+
+1,    Mat:CodeCat,    110,  0     ; "Insulation Loose Fill"                                                            
+2,              0,    "- specify -"                                                                                    
+2,          10005,    "Loose fill - Mineral fiber - closed sidewalls - 3 1/2 in."                                      
+2,          10000,    "Loose fill - Mineral fiber - 2 lb/ft3 - 4 in."                                                  
+2,          10001,    "Loose fill - Mineral fiber - 2 lb/ft3 - 6 1/2 in."                                              
+2,          10002,    "Loose fill - Mineral fiber - 2 lb/ft3 - 7 1/2 in."                                              
+2,          10003,    "Loose fill - Mineral fiber - 2 lb/ft3 - 8 1/4 in."                                              
+2,          10004,    "Loose fill - Mineral fiber - 2 lb/ft3 - 13 3/4 in."                                             
+                                                                                                                       
+1,    Mat:CodeCat,    120,  0     ; "Insulation Other"                                                                 
+2,              0,    "- specify -"                                                                                    
+2,          11000,    "Rammed Earth"                                                                                   
+                                                                                                                       
+1,    Mat:CodeCat,    130,  0     ; "Insulation Spray Applied"                                                         
+2,              0,    "- specify -"                                                                                    
+2,          12000,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 3 1/2 in."                                      
+2,          12001,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 4 in."                                          
+2,          12002,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 4 1/2 in."
+2,          12003,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 5 in."
+2,          12004,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 5 1/2 in."
+2,          12005,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 6 in."
+2,          12006,    "Spray applied - Cellulosic fiber - 4.6 lb/ft3 - 6 1/2 in."
+2,          12007,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 3 1/2 in."
+2,          12008,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 4 in."
+2,          12009,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 4 1/2 in."
+2,          12010,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 5 in."
+2,          12011,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 5 1/2 in."
+2,          12012,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 6 in."
+2,          12013,    "Spray applied - Glass fiber - 3.9 lb/ft3 - 6 1/2 in."
+2,          12014,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 3 1/2 in."
+2,          12015,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 4 in."
+2,          12016,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 4 1/2 in."
+2,          12017,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 5 in."
+2,          12018,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 5 1/2 in."
+2,          12019,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 6 in."
+2,          12020,    "Spray applied - Polyurethane foam - 0.5 lb/ft3 - 6 1/2 in."
+2,          12021,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 3 1/2 in."
+2,          12022,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 4 in."
+2,          12023,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 4 1/2 in."
+2,          12024,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 5 in."
+2,          12025,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 5 1/2 in."
+2,          12026,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 6 in."
+2,          12027,    "Spray applied - Polyurethane foam - 3.0 lb/ft3 - 6 1/2 in."
+
+1,    Mat:CodeCat,    140,  0     ; "Masonry Materials"
+2,              0,    "- specify -"
+2,          13000,    "Brick - 48 lb/ft3 - 3 5/8 in."
+2,          13001,    "Brick - fired clay -  140 lb/ft3 - 3 5/8 in."
+2,          13002,    "Clay tile - hollow - 1 cell deep - 3 in."
+2,          13003,    "Clay tile - hollow - 1 cell deep - 4 in."
+2,          13004,    "Clay tile - hollow - 2 cells deep - 6 in."
+2,          13005,    "Clay tile - hollow - 2 cells deep - 8 in."
+2,          13006,    "Clay tile - hollow - 2 cells deep - 10 in."
+2,          13007,    "Clay tile - hollow - 3 cells deep - 12 in."
+2,          13008,    "Clay Tile - Paver"
+2,          13009,    "Concrete Paver"
+2,          13010,    "Gypsum partition block - solid - 3 in. x 12 in. x 30 in. - 3 in."
+2,          13011,    "Gypsum partition block - 4 cells - 3 in. x 12 in. x 30 in. - 3 in."
+2,          13012,    "Gypsum partition block - 3 cells - 4 in. x 12 in. x 30 in. - 4 in."
+2,          13013,    "Stone - 1 in."
+2,          13017,    "1 Coat Stucco"
+2,          13014,    "3 Coat Stucco"
+2,          13015,    "Synthetic Stucco - EIFS finish - 1 in."
+2,          13016,    "Terrazzo - 1 in."
+
+1,    Mat:CodeCat,    150,  0     ; "Masonry Units Hollow"
+2,              0,    "- specify -"
+2,          14000,    "Clay - Part Grouted and Empty - 130 lb/ft3 - 6 in."
+2,          14001,    "Clay - Part Grouted and Empty - 130 lb/ft3 - 8 in."
+2,          14002,    "Concrete - Part Grouted and Empty - 105 lb/ft3 - 6 in."
+2,          14003,    "Concrete - Part Grouted and Empty - 105 lb/ft3 - 8 in."
+2,          14004,    "Concrete - Part Grouted and Empty - 105 lb/ft3 - 10 in."
+2,          14005,    "Concrete - Part Grouted and Empty - 105 lb/ft3 - 12 in."
+2,          14006,    "Concrete - Part Grouted and Empty - 115 lb/ft3 - 6 in."
+2,          14007,    "Concrete - Part Grouted and Empty - 115 lb/ft3 - 8 in."
+2,          14008,    "Concrete - Part Grouted and Empty - 115 lb/ft3 - 10 in."
+2,          14009,    "Concrete - Part Grouted and Empty - 115 lb/ft3 - 12 in."
+2,          14010,    "Concrete - Part Grouted and Empty - 125 lb/ft3 - 6 in."
+2,          14011,    "Concrete - Part Grouted and Empty - 125 lb/ft3 - 8 in."
+2,          14012,    "Concrete - Part Grouted and Empty - 125 lb/ft3 - 10 in."
+2,          14013,    "Concrete - Part Grouted and Empty - 125 lb/ft3 - 12 in."
+
+1,    Mat:CodeCat,    160,  0     ; "Masonry Units Solid"
+2,              0,    "- specify -"
+2,          15000,    "Clay - Solid Grout - 130 lb/ft3 - 6 in."
+2,          15001,    "Clay - Solid Grout - 130 lb/ft3 - 8 in."
+2,          15002,    "Concrete - Solid Grout - 105 lb/ft3 - 6 in."
+2,          15003,    "Concrete - Solid Grout - 105 lb/ft3 - 8 in."
+2,          15004,    "Concrete - Solid Grout - 105 lb/ft3 - 10 in."
+2,          15005,    "Concrete - Solid Grout - 105 lb/ft3 - 12 in."
+2,          15006,    "Concrete - Solid Grout - 115 lb/ft3 - 6 in."
+2,          15007,    "Concrete - Solid Grout - 115 lb/ft3 - 8 in."
+2,          15008,    "Concrete - Solid Grout - 115 lb/ft3 - 10 in."
+2,          15009,    "Concrete - Solid Grout - 115 lb/ft3 - 12 in."
+2,          15010,    "Concrete - Solid Grout - 125 lb/ft3 - 6 in."
+2,          15011,    "Concrete - Solid Grout - 125 lb/ft3 - 8 in."
+2,          15012,    "Concrete - Solid Grout - 125 lb/ft3 - 10 in."
+2,          15013,    "Concrete - Solid Grout - 125 lb/ft3 - 12 in."
+
+1,    Mat:CodeCat,    170,  0     ; "Masonry Units with Fill"
+2,              0,    "- specify -"
+2,          16000,    "Clay - Part Grouted and Insulated - 130 lb/ft3 - 6 in."
+2,          16001,    "Clay - Part Grouted and Insulated - 130 lb/ft3 - 8 in."
+2,          16002,    "Concrete - Part Grouted and Insulated - 105 lb/ft3 - 6 in."
+2,          16003,    "Concrete - Part Grouted and Insulated - 105 lb/ft3 - 8 in."
+2,          16004,    "Concrete - Part Grouted and Insulated - 105 lb/ft3 - 10 in."
+2,          16005,    "Concrete - Part Grouted and Insulated - 105 lb/ft3 - 12 in."
+2,          16006,    "Concrete - Part Grouted and Insulated - 115 lb/ft3 - 6 in."
+2,          16007,    "Concrete - Part Grouted and Insulated - 115 lb/ft3 - 8 in."
+2,          16008,    "Concrete - Part Grouted and Insulated - 115 lb/ft3 - 10 in."
+2,          16009,    "Concrete - Part Grouted and Insulated - 115 lb/ft3 - 12 in."
+2,          16010,    "Concrete - Part Grouted and Insulated - 125 lb/ft3 - 6 in."
+2,          16011,    "Concrete - Part Grouted and Insulated - 125 lb/ft3 - 8 in."
+2,          16012,    "Concrete - Part Grouted and Insulated - 125 lb/ft3 - 10 in."
+2,          16013,    "Concrete - Part Grouted and Insulated - 125 lb/ft3 - 12 in."
+
+1,    Mat:CodeCat,    180,  0     ; "Metal Insulated Panel Wall"
+2,              0,    "- specify -"
+2,          17000,    "Metal Insulated Panels - 2 in."
+2,          17001,    "Metal Insulated Panels - 2 1/2 in."
+2,          17002,    "Metal Insulated Panels - 3 in."
+2,          17003,    "Metal Insulated Panels - 4 in."
+2,          17004,    "Metal Insulated Panels - 5 in."
+2,          17005,    "Metal Insulated Panels - 6 in."
+
+1,    Mat:CodeCat,    190,  0     ; "Plastering Materials"
+2,              0,    "- specify -"
+2,          18000,    "Aggregate - 45 lb/ft3 - 1/2 in."
+2,          18001,    "Aggregate - 45 lb/ft3 - 5/8 in."
+2,          18002,    "Aggregate - 45 lb/ft3 - on metal lath - 3/4 in."
+2,          18003,    "Aggregate - Perlite - 1/2 in."
+2,          18004,    "Aggregate - Perlite - 5/8 in."
+2,          18005,    "Aggregate - Perlite - on metal lath - 3/4 in."
+2,          18006,    "Concrete/Sand Aggregate - 6 in."
+2,          18007,    "Gypsum plaster - 80 lb/ft3 - 1/2 in."
+2,          18008,    "Gypsum plaster - 80 lb/ft3 - 5/8 in."
+2,          18009,    "Gypsum plaster - on metal lath 70 lb/ft3 - 3/4 in."
+2,          18010,    "Gypsum plaster - on metal lath 80 lb/ft3 - 3/4 in."
+2,          18011,    "Mortar - Cement - 1 in."
+2,          18012,    "Mortar - Cement - 1 3/4 in."
+2,          18013,    "Perlite plaster - 25 lb/ft3 - 1/2 in."
+2,          18014,    "Perlite plaster - 38 lb/ft3 - 1/2 in."
+2,          18015,    "Plaster/Sand Aggregate - 1 in."
+2,          18016,    "Pulpboard or paper plaster - 1/2 in."
+2,          18017,    "Sand aggregate - 3/8 in."
+2,          18018,    "Sand aggregate - 1/2 in."
+2,          18019,    "Sand aggregate - 5/8 in."
+2,          18020,    "Sand aggregate - 3/4 in."
+2,          18021,    "Sand aggregate on metal lath - 3/4 in."
+2,          18022,    "Vermiculite aggregate - 45 lb/ft3 - 1/2 in."
+2,          18023,    "Stucco - 3/8 in."
+2,          18024,    "Stucco - 7/8 in."
+2,          18025,    "Synthetic Stucco - EIFS finish - 1 in."
+
+1,    Mat:CodeCat,    200,  0     ; "Roofing"
+2,              0,    "- specify -"
+2,          19003,    "5 PSF Roof - 1/2 in."
+2,          19000,    "10 PSF Roof - 1 in."
+2,          19001,    "15 PSF Roof - 1 1/2 in."
+2,          19002,    "25 PSF Roof - 2 1/2 in."
+2,          19004,    "Asbestos or cement shingles - 3/8 in."
+2,          19005,    "Asphalt - bitumen with inert fill - 100 lb/ft3 - 3/4 in."
+2,          19006,    "Asphalt - bitumen with inert fill - 144 lb/ft3 - 3/4 in."
+2,          19007,    "Asphalt roll roofing - 1/4 in."
+2,          19008,    "Asphalt shingles - 1/4 in."
+2,          19009,    "Built-up roofing - 3/8 in."
+2,          19010,    "Clay tile - 1/2 in."
+2,          19011,    "Light Roof - 2/5 in."
+2,          19012,    "Mastic asphalt (heavy - 20% grit) - 1 in."
+2,          19013,    "Metal Standing Seam - 1/16 in."
+2,          19014,    "Roof Gravel - 1 in."
+2,          19015,    "Roof Gravel - 1/2 in."
+2,          19016,    "Slate - 1/2 in."
+2,          19017,    "Tile Gap - 3/4 in."
+2,          19018,    "Wood shingles - 3/4 in."
+2,          19019,    "Wood shingles - plain and plastic film faced - 3/4 in."
+
+1,    Mat:CodeCat,    210,  0     ; "SIPS Floor"
+2,              0,    "- specify -"
+2,          20000,    "SIPS - Crawl Space - R22 - I Joist Spline - 6 1/2 in."
+2,          20001,    "SIPS - Crawl Space - R33 - I Joist Spline - 6 1/2 in."
+2,          20002,    "SIPS - Crawl Space - R28 - I Joist Spline - 8 1/4 in."
+2,          20003,    "SIPS - Crawl Space - R36 - I Joist Spline - 10 1/4 in."
+2,          20004,    "SIPS - Crawl Space - R22 - Single 2x Spline - 6 1/2 in."
+2,          20005,    "SIPS - Crawl Space - R33 - Single 2x Spline - 6 1/2 in."
+2,          20006,    "SIPS - Crawl Space - R28 - Single 2x Spline - 8 1/4 in."
+2,          20007,    "SIPS - Crawl Space - R36 - Single 2x Spline - 10 1/4 in."
+2,          20008,    "SIPS - Crawl Space - R22 - Double 2x Spline - 6 1/2 in."
+2,          20009,    "SIPS - Crawl Space - R33 - Double 2x Spline - 6 1/2 in."
+2,          20010,    "SIPS - Crawl Space - R28 - Double 2x Spline - 8 1/4 in."
+2,          20011,    "SIPS - Crawl Space - R36 - Double 2x Spline - 10 1/4 in."
+2,          20012,    "SIPS - No Crawl Space - R22 - I Joist Spline - 6 1/2 in."
+2,          20013,    "SIPS - No Crawl Space - R33 - I Joist Spline - 6 1/2 in."
+2,          20014,    "SIPS - No Crawl Space - R28 - I Joist Spline - 8 1/4 in."
+2,          20015,    "SIPS - No Crawl Space - R36 - I Joist Spline - 10 1/4 in."
+2,          20016,    "SIPS - No Crawl Space - R22 - Single 2x Spline - 6 1/2 in."
+2,          20017,    "SIPS - No Crawl Space - R33 - Single 2x Spline - 6 1/2 in."
+2,          20018,    "SIPS - No Crawl Space - R28 - Single 2x Spline - 8 1/4 in."
+2,          20019,    "SIPS - No Crawl Space - R36 - Single 2x Spline - 10 1/4 in."
+2,          20020,    "SIPS - No Crawl Space - R22 - Double 2x Spline - 6 1/2 in."
+2,          20021,    "SIPS - No Crawl Space - R33 - Double 2x Spline - 6 1/2 in."
+2,          20022,    "SIPS - No Crawl Space - R28 - Double 2x Spline - 8 1/4 in."
+2,          20023,    "SIPS - No Crawl Space - R36 - Double 2x Spline - 10 1/4 in."
+
+1,    Mat:CodeCat,    220,  0     ; "SIPS Roof"
+2,              0,    "- specify -"
+2,          21000,    "SIPS - R22 - I joist Spline - 6 1/2 in."
+2,          21001,    "SIPS - R33 - I joist Spline - 6 1/2 in."
+2,          21002,    "SIPS - R28 - I joist Spline - 8 1/2 in."
+2,          21003,    "SIPS - R36 - I joist Spline - 10 1/4 in."
+2,          21004,    "SIPS - R55 - I joist Spline - 10 1/4 in."
+2,          21005,    "SIPS - R44 - I joist Spline - 12 1/4 in."
+2,          21006,    "SIPS - R22 - Single 2x Spline - 6 1/2 in."
+2,          21007,    "SIPS - R33 - Single 2x Spline - 6 1/2 in."
+2,          21008,    "SIPS - R28 - Single 2x Spline - 8 1/2 in."
+2,          21009,    "SIPS - R36 - Single 2x Spline - 10 1/4 in."
+2,          21010,    "SIPS - R55 - Single 2x Spline - 10 1/4 in."
+2,          21011,    "SIPS - R44 - Single 2x Spline - 12 1/4 in."
+2,          21012,    "SIPS - R22 - Double 2x Spline - 6 1/2 in."
+2,          21013,    "SIPS - R33 - Double 2x Spline - 6 1/2 in."
+2,          21014,    "SIPS - R28 - Double 2x Spline - 8 1/2 in."
+2,          21015,    "SIPS - R36 - Double 2x Spline - 10 1/4 in."
+2,          21016,    "SIPS - R55 - Double 2x Spline - 10 1/4 in."
+2,          21017,    "SIPS - R44 - Double 2x Spline - 12 1/4 in."
+2,          21018,    "SIPS - R22 - OSB Spline - 6 1/2 in."
+2,          21019,    "SIPS - R33 - OSB Spline - 6 1/2 in."
+2,          21020,    "SIPS - R28 - OSB Spline - 8 1/2 in."
+2,          21021,    "SIPS - R36 - OSB Spline - 10 1/4 in."
+2,          21022,    "SIPS - R55 - OSB Spline - 10 1/4 in."
+2,          21023,    "SIPS - R44 - OSB Spline - 12 1/4 in."
+2,          21024,    "SIPS - R14 - Metal Spline - 48 in."
+2,          21025,    "SIPS - R22 - Metal Spline - 48 in."
+2,          21026,    "SIPS - R28 - Metal Spline - 48 in."
+2,          21027,    "SIPS - R36 - Metal Spline - 48 in."
+
+1,    Mat:CodeCat,    230,  0     ; "SIPS Wall"
+2,              0,    "- specify -"
+2,          22000,    "SIPS - R14 - I joist Spline - 4 1/2 in."
+2,          22001,    "SIPS - R18 - I joist Spline - 4 1/2 in."
+2,          22002,    "SIPS - R22 - I joist Spline - 6 1/2 in."
+2,          22003,    "SIPS - R33 - I joist Spline - 6 1/2 in."
+2,          22004,    "SIPS - R28 - I joist Spline - 8 1/4 in."
+2,          22005,    "SIPS - R36 - I joist Spline - 10 1/4 in."
+2,          22006,    "SIPS - R55 - I joist Spline - 10 1/4 in."
+2,          22007,    "SIPS - R44 - I joist Spline - 12 1/4 in."
+2,          22008,    "SIPS - R14 - Single 2x Spline - 4 1/2 in."
+2,          22009,    "SIPS - R18 - Single 2x Spline - 4 1/2 in."
+2,          22010,    "SIPS - R22 - Single 2x Spline - 6 1/2 in."
+2,          22011,    "SIPS - R33 - Single 2x Spline - 6 1/2 in."
+2,          22012,    "SIPS - R28 - Single 2x Spline - 8 1/4 in."
+2,          22013,    "SIPS - R36 - Single 2x Spline - 10 1/4 in."
+2,          22014,    "SIPS - R55 - Single 2x Spline - 10 1/4 in."
+2,          22015,    "SIPS - R44 - Single 2x Spline - 12 1/4 in."
+2,          22016,    "SIPS - R14 - Double 2x Spline - 4 1/2 in."
+2,          22017,    "SIPS - R18 - Double 2x Spline - 4 1/2 in."
+2,          22018,    "SIPS - R22 - Double 2x Spline - 6 1/2 in."
+2,          22019,    "SIPS - R33 - Double 2x Spline - 6 1/2 in."
+2,          22020,    "SIPS - R28 - Double 2x Spline - 8 1/4 in."
+2,          22021,    "SIPS - R36 - Double 2x Spline - 10 1/4 in."
+2,          22022,    "SIPS - R55 - Double 2x Spline - 10 1/4 in."
+2,          22023,    "SIPS - R44 - Double 2x Spline - 12 1/4 in."
+2,          22024,    "SIPS - R14 - OSB Spline - 4 1/2 in."
+2,          22025,    "SIPS - R18 - OSB Spline - 4 1/2 in."
+2,          22026,    "SIPS - R22 - OSB Spline - 6 1/2 in."
+2,          22027,    "SIPS - R33 - OSB Spline - 6 1/2 in."
+2,          22028,    "SIPS - R28 - OSB Spline - 8 1/4 in."
+2,          22029,    "SIPS - R36 - OSB Spline - 10 1/4 in."
+2,          22030,    "SIPS - R55 - OSB Spline - 10 1/4 in."
+2,          22031,    "SIPS - R44 - OSB Spline - 12 1/4 in."
+
+1,    Mat:CodeCat,    240,  0     ; "Spandrel Panels Curtain Walls"
+2,              0,    "- specify -"
+2,          23000,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - No Ins."
+2,          23001,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R4 Ins."
+2,          23002,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R7 Ins."
+2,          23003,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R10 Ins."
+2,          23004,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R15 Ins."
+2,          23005,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R20 Ins."
+2,          23006,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R25 Ins."
+2,          23007,    "Aluminum w/out Thrml Break - Single glass pane. stone. or metal pane - R30 Ins."
+2,          23008,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - No Ins."
+2,          23009,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R4 Ins."
+2,          23010,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R7 Ins."
+2,          23011,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R10 Ins."
+2,          23012,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R15 Ins."
+2,          23013,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R20 Ins."
+2,          23014,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R25 Ins."
+2,          23015,    "Aluminum w/out Thrml Break - Double glass with no low e coatings - R30 Ins."
+2,          23016,    "Aluminum w/out Thrml Break - Triple or low e glass - No Ins."
+2,          23017,    "Aluminum w/out Thrml Break - Triple or low e glass - R4 Ins."
+2,          23018,    "Aluminum w/out Thrml Break - Triple or low e glass - R7 Ins."
+2,          23019,    "Aluminum w/out Thrml Break - Triple or low e glass - R10 Ins."
+2,          23020,    "Aluminum w/out Thrml Break - Triple or low e glass - R15 Ins."
+2,          23021,    "Aluminum w/out Thrml Break - Triple or low e glass - R20 Ins."
+2,          23022,    "Aluminum w/out Thrml Break - Triple or low e glass - R25 Ins."
+2,          23023,    "Aluminum w/out Thrml Break - Triple or low e glass - R30 Ins."
+2,          23024,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - No Ins."
+2,          23025,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R4 Ins."
+2,          23026,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R7 Ins."
+2,          23027,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R10 Ins."
+2,          23028,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R15 Ins."
+2,          23029,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R20 Ins."
+2,          23030,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R25 Ins."
+2,          23031,    "Aluminum w/ Thrml Break - Single glass pane. stone. or metal pane - R30 Ins."
+2,          23032,    "Aluminum w/ Thrml Break - Double glass with no low e - No Ins."
+2,          23033,    "Aluminum w/ Thrml Break - Double glass with no low e - R4 Ins."
+2,          23034,    "Aluminum w/ Thrml Break - Double glass with no low e - R7 Ins."
+2,          23035,    "Aluminum w/ Thrml Break - Double glass with no low e - R10 Ins."
+2,          23036,    "Aluminum w/ Thrml Break - Double glass with no low e - R15 Ins."
+2,          23037,    "Aluminum w/ Thrml Break - Double glass with no low e - R20 Ins."
+2,          23038,    "Aluminum w/ Thrml Break - Double glass with no low e - R25 Ins."
+2,          23039,    "Aluminum w/ Thrml Break - Double glass with no low e - R30 Ins."
+2,          23040,    "Aluminum w/ Thrml Break - Triple or low e glass - No Ins."
+2,          23041,    "Aluminum w/ Thrml Break - Triple or low e glass - R4 Ins."
+2,          23042,    "Aluminum w/ Thrml Break - Triple or low e glass - R7 Ins."
+2,          23043,    "Aluminum w/ Thrml Break - Triple or low e glass - R10 Ins."
+2,          23044,    "Aluminum w/ Thrml Break - Triple or low e glass - R15 Ins."
+2,          23045,    "Aluminum w/ Thrml Break - Triple or low e glass - R20 Ins."
+2,          23046,    "Aluminum w/ Thrml Break - Triple or low e glass - R25 Ins."
+2,          23047,    "Aluminum w/ Thrml Break - Triple or low e glass - R30 Ins."
+2,          23048,    "Continuous Ins. - Single glass pane. stone. or metal pane - No Ins."
+2,          23049,    "Continuous Ins. - Single glass pane. stone. or metal pane - R4 Ins."
+2,          23050,    "Continuous Ins. - Single glass pane. stone. or metal pane - R7 Ins."
+2,          23051,    "Continuous Ins. - Single glass pane. stone. or metal pane - R10 Ins."
+2,          23052,    "Continuous Ins. - Single glass pane. stone. or metal pane - R15 Ins."
+2,          23053,    "Continuous Ins. - Single glass pane. stone. or metal pane - R20 Ins."
+2,          23054,    "Continuous Ins. - Single glass pane. stone. or metal pane - R25 Ins."
+2,          23055,    "Continuous Ins. - Single glass pane. stone. or metal pane - R30 Ins."
+2,          23056,    "Continuous Ins. - Double glass with no low e coatings - No Ins."
+2,          23057,    "Continuous Ins. - Double glass with no low e coatings - R4 Ins."
+2,          23058,    "Continuous Ins. - Double glass with no low e coatings - R7 Ins."
+2,          23059,    "Continuous Ins. - Double glass with no low e coatings - R10 Ins."
+2,          23060,    "Continuous Ins. - Double glass with no low e coatings - R15 Ins."
+2,          23061,    "Continuous Ins. - Double glass with no low e coatings - R20 Ins."
+2,          23062,    "Continuous Ins. - Double glass with no low e coatings - R25 Ins."
+2,          23063,    "Continuous Ins. - Double glass with no low e coatings - R30 Ins."
+2,          23064,    "Continuous Ins. - Triple or low e glass - No Ins."
+2,          23065,    "Continuous Ins. - Triple or low e glass - R4 Ins."
+2,          23066,    "Continuous Ins. - Triple or low e glass - R7 Ins."
+2,          23067,    "Continuous Ins. - Triple or low e glass - R10 Ins."
+2,          23068,    "Continuous Ins. - Triple or low e glass - R15 Ins."
+2,          23069,    "Continuous Ins. - Triple or low e glass - R20 Ins."
+2,          23070,    "Continuous Ins. - Triple or low e glass - R25 Ins."
+2,          23071,    "Continuous Ins. - Triple or low e glass - R30 Ins."
+2,          23072,    "Structural Glazing - Single glass pane. stone. or metal pane - No Ins."
+2,          23073,    "Structural Glazing - Single glass pane. stone. or metal pane - R4 Ins."
+2,          23074,    "Structural Glazing - Single glass pane. stone. or metal pane - R7 Ins."
+2,          23075,    "Structural Glazing - Single glass pane. stone. or metal pane - R10 Ins."
+2,          23076,    "Structural Glazing - Single glass pane. stone. or metal pane - R15 Ins."
+2,          23077,    "Structural Glazing - Single glass pane. stone. or metal pane - R20 Ins."
+2,          23078,    "Structural Glazing - Single glass pane. stone. or metal pane - R25 Ins."
+2,          23079,    "Structural Glazing - Single glass pane. stone. or metal pane - R30 Ins."
+2,          23080,    "Structural Glazing - Double glass with no low e coatings - No Ins."
+2,          23081,    "Structural Glazing - Double glass with no low e coatings - R4 Ins."
+2,          23082,    "Structural Glazing - Double glass with no low e coatings - R7 Ins."
+2,          23083,    "Structural Glazing - Double glass with no low e coatings - R10 Ins."
+2,          23084,    "Structural Glazing - Double glass with no low e coatings - R15 Ins."
+2,          23085,    "Structural Glazing - Double glass with no low e coatings - R20 Ins."
+2,          23086,    "Structural Glazing - Double glass with no low e coatings - R25 Ins."
+2,          23087,    "Structural Glazing - Double glass with no low e coatings - R30 Ins."
+2,          23088,    "Structural Glazing - Triple or low e glass - No Ins."
+2,          23089,    "Structural Glazing - Triple or low e glass - R4 Ins."
+2,          23090,    "Structural Glazing - Triple or low e glass - R7 Ins."
+2,          23091,    "Structural Glazing - Triple or low e glass - R10 Ins."
+2,          23092,    "Structural Glazing - Triple or low e glass - R15 Ins."
+2,          23093,    "Structural Glazing - Triple or low e glass - R20 Ins."
+2,          23094,    "Structural Glazing - Triple or low e glass - R25 Ins."
+2,          23095,    "Structural Glazing - Triple or low e glass - R30 Ins."
+
+1,    Mat:CodeCat,    250,  0     ; "Straw Bale Wall"
+2,              0,    "- specify -"
+2,          24000,    "Straw Bale - Int and Ext Stucco - 18 in."
+
+1,    Mat:CodeCat,    260,  0     ; "Woods"
+2,              0,    "- specify -"
+2,          25000,    "Ash - 1 in."
+2,          25001,    "Birch - 1 in."
+2,          25002,    "California Redwood - 1 in."
+2,          25003,    "Douglas Fir-Larch - 1 in."
+2,          25004,    "Hardwood - 1 in."
+2,          25005,    "Hardwood - 1/2 in."
+2,          25006,    "Hardwood - 3/4 in."
+2,          25007,    "Maple - 1 in."
+2,          25008,    "Oak - 1 in."
+2,          25009,    "Pine (oven-dried) - 1 in."
+2,          25010,    "Wood - 1 in."
+2,          25011,    "Wood - 1/2 in."
+2,          25012,    "Wood - 2 in."
+2,          25013,    "Wood - 4 in."
+2,          25014,    "Wood siding - 1/2 in."
+;--------------------------------------------------------
+
+
+0, Mat:FrmMat,  0
+2,              0,    "- specify -"
+2,              1,    "Wood"
+2,              2,    "Metal"
+
+0, Mat:FrmConfig,  0
+1,    Mat:FrmMat,     2,  0     ; "Metal"
+2,              0,    "- specify -"
+2,              1,    "Wall16inOC"
+2,              2,    "Wall24inOC"
+2,              5,    "Floor16inOC"
+2,              6,    "Floor24inOC"
+2,              7,    "Roof16inOC"
+2,              8,    "Roof24inOC"
+2,             10,    "RoofMetalScrewDown"
+2,             11,    "RoofMetalStandingSeam"
+2,             12,    "RoofMetalStandingSeamFilledCavity"
+1,    Mat:FrmMat,  -999,  0     ; any other case (wood)
+2,              0,    "- specify -"
+2,              1,    "Wall16inOC"
+2,              2,    "Wall24inOC"
+2,              3,    "WallAWS24inOC"
+2,              4,    "WallAWS48inOC"
+2,              5,    "Floor16inOC"
+2,              6,    "Floor24inOC"
+2,              7,    "Roof16inOC"
+2,              8,    "Roof24inOC"
+2,              9,    "Roof48inOC"
+
+0, Mat:FrmDepth,  0
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     1,  0     ; "Wall16inOC" 
+2,              0,    "- specify -"
+2,              8,    "3_5In"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     2,  0     ; "Wall24inOC" 
+2,              0,    "- specify -"
+2,              8,    "3_5In"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     5,  0     ; "Floor16inOC"
+2,              0,    "- specify -"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+2,             14,    "9_25In"
+2,             15,    "11_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     6,  0     ; "Floor24inOC"
+2,              0,    "- specify -"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+2,             14,    "9_25In"
+2,             15,    "11_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     7,  0     ; "Roof16inOC"
+2,              0,    "- specify -"
+2,              8,    "3_5In"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+2,             14,    "9_25In"
+2,             15,    "11_25In"
+2,             16,    "13_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,     8,  0     ; "Roof24inOC"
+2,              0,    "- specify -"
+2,              8,    "3_5In"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+2,             14,    "9_25In"
+2,             15,    "11_25In"
+2,             16,    "13_25In"
+1,    Mat:FrmMat,        2,  0     ; "Metal"
+1,    Mat:FrmConfig,  -999,  0     ; any other case (metal)
+2,              0,    "- specify -"
+1,    Mat:FrmMat,     -999,  0     ; any other case (wood)
+2,              0,    "- specify -"
+2,              1,    "0_5In"
+2,              2,    "0_75In"
+2,              3,    "1In"
+2,              4,    "1_5In"
+2,              5,    "2In"
+2,              6,    "2_5In"
+2,              7,    "3In"
+2,              8,    "3_5In"
+2,              9,    "4In"
+2,             10,    "4_5In"
+2,             11,    "5In"
+2,             12,    "5_5In"
+2,             13,    "7_25In"
+2,             14,    "9_25In"
+2,             15,    "11_25In"
+
+0, Mat:CavityInsOpt,  0		; SAC 6/11/13 - added to facilitate metal construction assembly R-value look-ups
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     1,   0     ; "Wall16inOC" 
+1,    Mat:FrmDepth,      8,   0     ; "3_5In"
+2,              0,    "R-0"
+2,              5,    "R-5"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     1,  19     ; "Wall16inOC" 
+1,    Mat:FrmDepth,     12,  19     ; "5_5In"
+2,             19,    "R-19"
+2,             21,    "R-21"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     1,  19     ; "Wall16inOC" 
+1,    Mat:FrmDepth,     13,  19     ; "7_25In" 
+2,             19,    "R-19"
+2,             22,    "R-22"
+2,             25,    "R-25"
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     2,   0     ; "Wall24inOC" 
+1,    Mat:FrmDepth,      8,   0     ; "3_5In"
+2,              0,    "R-0"
+2,              5,    "R-5"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     2,  19     ; "Wall24inOC" 
+1,    Mat:FrmDepth,     12,  19     ; "5_5In"
+2,             19,    "R-19"
+2,             21,    "R-21"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     2,  19     ; "Wall24inOC" 
+1,    Mat:FrmDepth,     13,  19     ; "7_25In" 
+2,             19,    "R-19"
+2,             22,    "R-22"
+2,             25,    "R-25"
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     5,   0     ; "Floor16inOC"
+1,    Mat:FrmDepth,     12,   0     ; "5_5In"
+2,              0,    "R-0"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     5,  19     ; "Floor16inOC"
+1,    Mat:FrmDepth,     13,  19     ; "7_25In" 
+2,             19,    "R-19"
+2,             22,    "R-22"
+1,    Mat:FrmMat,        2,  30     ; "Metal"
+1,    Mat:FrmConfig,     5,  30     ; "Floor16inOC"
+1,    Mat:FrmDepth,     14,  30     ; "9_25In" 
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,  38     ; "Metal"
+1,    Mat:FrmConfig,     5,  38     ; "Floor16inOC"
+1,    Mat:FrmDepth,     15,  38     ; "11_25In"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     6,   0     ; "Floor24inOC"
+1,    Mat:FrmDepth,     12,   0     ; "5_5In"
+2,              0,    "R-0"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,  19     ; "Metal"
+1,    Mat:FrmConfig,     6,  19     ; "Floor24inOC"
+1,    Mat:FrmDepth,     13,  19     ; "7_25In" 
+2,             19,    "R-19"
+2,             22,    "R-22"
+1,    Mat:FrmMat,        2,  30     ; "Metal"
+1,    Mat:FrmConfig,     6,  30     ; "Floor24inOC"
+1,    Mat:FrmDepth,     14,  30     ; "9_25In" 
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,  38     ; "Metal"
+1,    Mat:FrmConfig,     6,  38     ; "Floor24inOC"
+1,    Mat:FrmDepth,     15,  38     ; "11_25In"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,      8,   0     ; "3_5In"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,      12,   0     ; "5_5In"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,     13,   0     ; "7_25In"
+2,             19,    "R-19"
+2,             21,    "R-21"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,     14,   0     ; "9_25In"
+2,             25,    "R-25"
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,     15,   0     ; "11_25In"
+2,             30,    "R-30"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     7,   0     ; "Roof16inOC"
+1,    Mat:FrmDepth,     16,   0     ; "13_25In"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,      8,   0     ; "3_5In"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,      12,   0     ; "5_5In"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             15,    "R-15"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,     13,   0     ; "7_25In"
+2,             19,    "R-19"
+2,             21,    "R-21"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,     14,   0     ; "9_25In"
+2,             25,    "R-25"
+2,             30,    "R-30"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,     15,   0     ; "11_25In"
+2,             30,    "R-30"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,     8,   0     ; "Roof24inOC"
+1,    Mat:FrmDepth,     16,   0     ; "13_25In"
+2,             38,    "R-38"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,    10,   0     ; "RoofMetalScrewDown" 
+2,             10,    "R-10"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             16,    "R-16"
+2,             19,    "R-19"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,    11,   0     ; "RoofMetalStandingSeam" 
+2,              6,    "R-6"
+2,             10,    "R-10"
+2,             11,    "R-11"
+2,             13,    "R-13"
+2,             16,    "R-16"
+2,             19,    "R-19"
+2,             20,    "R-20"
+2,             21,    "R-21"
+2,             22,    "R-22"
+2,             23,    "R-23"
+2,             24,    "R-24"
+2,             26,    "R-26"
+2,             29,    "R-29"
+2,             30,    "R-30"
+2,             32,    "R-32"
+2,             35,    "R-35"
+2,             36,    "R-36"
+1,    Mat:FrmMat,        2,   0     ; "Metal"
+1,    Mat:FrmConfig,    12,   0     ; "RoofMetalStandingSeamFilledCavity" 
+2,             29,    "R-29"
+1,    Mat:FrmMat,     -999,  -1     ; any other case (wood)
+2,             -1,    "- specify -"
+
+0, Mat:CMUWt,  0
+2,              0,    "- specify -"
+2,              1,    "LightWeight"
+2,              2,    "MediumWeight"
+2,              3,    "NormalWeight"
+2,              4,    "ClayUnit"
+
+0, Mat:CMUFill,  0
+2,              0,    "- specify -"
+2,              1,    "Solid"
+2,              2,    "Empty"
+2,              3,    "Insulated"
+
+0, FenCons:AssmContext,  0
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,          1,    "FieldFabricated"   
+1,    FenCons:FenType,   1,  1  ; VerticalFenestration
+2,          1,    "Manufactured"
+2,          2,    "FieldFabricated"
+2,          3,    "SiteBuilt"
+1,    FenCons:FenType,   2,  1   ; Skylight
+2,          1,    "Manufactured"
+2,          3,    "SiteBuilt"
+
+0, FenCons:CertificationMthd,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          2,    "CECDefaultPerformance"
+2,          3,    "NA6Equations"
+1,    FenCons:AssmContext,   0,  0  ; Undefined
+1,    FenCons:FenType,       1,  1  ; VerticalFenestration
+2,          0,    "- specify -"
+1,    FenCons:AssmContext,   1,  1  ; Manufactured
+1,    FenCons:FenType,       1,  1  ; VerticalFenestration
+2,          0,    "- specify -"
+2,          1,    "NFRCRated"
+2,          2,    "DefaultPerformance"
+1,    FenCons:AssmContext,   2,  1  ; Field Fabricated
+1,    FenCons:FenType,       1,  1  ; VerticalFenestration
+2,          0,    "- specify -"
+2,          2,    "DefaultPerformance"
+1,    FenCons:AssmContext,   3,  1  ; SiteBuilt
+1,    FenCons:FenType,       1,  1  ; VerticalFenestration
+2,          0,    "- specify -"
+2,          1,    "NFRCRated"
+2,          2,    "DefaultPerformance"
+2,          3,    "COGEquations"
+1,    FenCons:AssmContext,   0,  0  ; Undefined
+1,    FenCons:FenType,       2,  1  ; Skylight
+2,          0,    "- specify -"
+1,    FenCons:AssmContext,   1,  1  ; Manufactured
+1,    FenCons:FenType,       2,  1  ; Skylight
+2,          0,    "- specify -"
+2,          1,    "NFRCRated"
+2,          2,    "DefaultPerformance"
+2,          3,    "COGEquations"
+1,    FenCons:AssmContext,   2,  1  ; Field Fabricated
+1,    FenCons:FenType,       2,  1  ; Skylight
+2,          0,    "- specify -"
+2,          2,    "DefaultPerformance"
+2,          3,    "COGEquations"
+1,    FenCons:AssmContext,   3,  1  ; SiteBuilt
+1,    FenCons:FenType,       2,  1  ; Skylight
+2,          0,    "- specify -"
+2,          1,    "NFRCRated"
+2,          2,    "DefaultPerformance"
+2,          3,    "COGEquations"
+
+
+
+0, FenCons:FenProdType,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    FenCons:FenType,   1,  0  ; Vertical
+2,          0,    "- specify -"
+2,          1,    "FixedWindow"
+2,          2,    "OperableWindow"
+2,          3,    "CurtainWall"
+2,          4,    "GlazedDoor"
+1,    FenCons:FenType,   2,  0  ; Skylight
+2,          0,    "- specify -"
+2,          1,    "FixedWindow"
+2,          2,    "OperableWindow"
+
+0, FenCons:SkyltCurb,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    FenCons:FenType,   1,  0  ; Vertical
+2,          0,    "- specify -"
+1,    FenCons:FenType,   2,  0  ; Skylight
+2,          0,    "- specify -"
+2,          1,    "CurbMounted"
+2,	    2,    "DeckMounted"
+
+0, FenCons:SkyltGlz,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    FenCons:FenType,   1,  0  ; Vertical
+2,          0,    "- specify -"
+1,    FenCons:FenType,   2,  0  ; Skylight
+2,          0,    "- specify -"
+2,          1,    "Glass"
+2,	    2,    "Plastic"
+
+0, FenCons:FenPanes,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    FenCons:CertificationMthd,   0,  0  ; Specify
+2,          0,    "- specify -"
+1,    FenCons:CertificationMthd,   1,  0  ; NFRC
+2,          0,    "- specify -"
+1,    FenCons:FenType,   1,  0  ; Vertical
+1,    FenCons:CertificationMthd,   2,  0  ; CECDefaultPerformance
+2,          0,    "- specify -"
+2,          1,    "SinglePane"
+2,          2,    "DoublePane"
+2,          3,    "GlassBlock"
+1,    FenCons:FenType,   2,  0  ; Skylight
+1,    FenCons:CertificationMthd,   2,  0  ; CECDefaultPerformance
+2,          0,    "- specify -"
+2,          1,    "SinglePane"
+2,          2,    "DoublePane"
+2,          4,    "TranslucentOrTransparentPanel"
+1,    FenCons:CertificationMthd,   3,  0  ; NA6
+2,          0,    "- specify -"
+
+
+0, FenCons:OperableWinConfiguration,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,          0,    "- specify -"
+2,          1,    "CasementAwning"
+2,	    2,    "Sliding"
+
+0, FenCons:FenFrm,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    FenCons:CertificationMthd,   0,  0  ; Specify
+2,          0,    "- specify -"
+1,    FenCons:CertificationMthd,   1,  0  ; NFRC
+2,          0,    "- specify -"
+1,    FenCons:CertificationMthd,   2,  0   ; CECDefaultPerformance
+2,          0,    "- specify -"
+2,          1,    "MetalFraming"
+2,          2,    "MetalFramingWithThermalBreak"
+2,	    3,    "NonMetalFraming"
+1,    FenCons:CertificationMthd,   3,  0  ; NA6
+2,          0,    "- specify -"
+2,          1,    "MetalFraming"
+2,	    2,    "MetalFramingWithThermalBreak"
+2,	    3,    "NonMetalFraming"
+
+0, FenCons:WinDivider,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,          0,    "- specify -"
+2,          1,    "NoDivider"
+2,          2,    "TrueDividedLite"
+2,	    3,    "DividerBtwnPanesLessThan7_16in"
+2,	    4,    "DividerBtwnPanesGreaterThanOrEqualTo7_16in"
+
+0, FenCons:GlzTint,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,          0,    "- n/a -"
+1,    Proj:Ruleset,  -999,  0   ; current options
+2,          0,    "- specify -"
+2,          1,    "ClearGlazing"
+2,	    2,    "TintedGlazing"
+
+
+0, DrCons:Type,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              1,    "InsulatedSingleLayerSectionalMetal"
+2,              2,    "InsulatedSwingingMetal"
+2,              3,    "UninsulatedDoubleLayerMetal"
+2,              4,    "UninsulatedSingleLayerMetal"
+2,              5,    "UninsulatedSingleLayerRollupMetal"
+2,              6,    "WoodOther"
+2,              7,    "WoodThick"
+1,    Proj:Ruleset,   -999,  0   ; Current options
+2,              0,    "- specify -"
+2,              1,    "MetalInsulatedSingleLayerSectionalDoor"
+2,              2,    "MetalInsulatedSwingingDoor"
+2,              3,    "MetalUninsulatedDoubleLayerDoor"
+2,              4,    "MetalUninsulatedSingleLayerDoor"
+2,              5,    "MetalUninsulatedSingleLayerRollupDoor"
+2,              6,    "WoodLessThan1.75inThickDoor"
+2,              7,    "WoodGreaterThanOrEqualTo1.75inThickDoor"
+
+0, DrCons:CertificationMthd,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              2,    "CECDefaultPerformance"
+1,    Proj:Ruleset,   -999,  0   ; Current options
+2,              0,    "- specify -"
+2,              1,    "NFRCRated"
+2,              2,    "DefaultPerformance"
+
+//0, DrCons:Frm,  0
+//2,              0,    "- specify -"
+//2,              1,    "MetalFraming"
+//2,              2,    "MetalFramingWithThermalBreak"
+//2,              3,    "NonMetalFraming"
+
+//0, DrCons:GlsArea,  0
+//2,              0,    "None"
+
+//0, DrCons:GlsPn,  0
+//2,              0,    "- specify -"
+//2,              1,    "SinglePane"
+//2,              2,    "DoublePane"
+
+0, DrCons:Open,  0
+2,              0,    "- specify -"
+2,              1,    "Swinging"
+2,              2,    "NonSwinging"
+
+//0, DrCons:GlsTnt,  0
+//2,              0,    "- specify -"
+//2,              1,    "Clear"
+//2,              2,    "Tinted"
+
+; Lum:Cat split into two properties, FxtrType and LampType - SAC restored to facilitate backward compat (but switch to invalid default value: 1 -> -1)
+0, Lum:Cat,  -1
+2,             -1,    "n/a"
+2,              0,    "- specify -"
+2,              1,    "DownlightCompactFluorescentLuminaire"
+2,              2,    "DownlightIncandescentLuminaire"
+2,              3,    "NonInCeilingFluorescentLuminaire"
+2,              4,    "RecessedFluorescentLuminaireWithLens"
+2,              5,    "RecessedFluorescentLuminaireWithoutLens"
+
+0, Lum:FxtrType, 2
+2,               0,    "- specify -"
+2,               1,    "RecessedWithLens"
+2,               2,    "RecessedOrDownlight"
+2,               3,    "NotInCeiling"
+
+0, Lum:LampType, 1
+2,               0,    "- specify -"
+2,               1,    "LinearFluorescent"
+2,               2,    "CFL"
+2,               3,    "Incandescent"
+2,               4,    "LED"
+2,               5,    "MetalHalide"
+2,               6,    "MercuryVapor"
+2,               7,    "HighPressureSodium"
+
+
+0, Bldg:Status,  1
+0, Story:Status,  1
+; 0, Spc:Status,  1
+0, Ceiling:Status,  1
+; 0, CeilingBelowAttic:Status,  1
+0, ExtFlr:Status,  1
+0, ExtWall:Status,  1
+; 0, FlrAboveCrawlSpc:Status,  1
+0, IntFlr:Status,  1
+0, IntWall:Status,  1
+0, Roof:Status,  1
+0, UndgrFlr:Status,  1
+0, UndgrWall:Status,  1
+0, Dr:Status,  1
+0, Win:Status,  1
+0, Skylt:Status,  1
+0, ExtShdgObj:Status,  1
+0, Dr:Status,  1
+;0, AirSys:Status, 1
+0, FluidSys:Status, 1
+0, ResDHWSys:Status, 1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,              2,    "ExistingUnchanged"
+2,              3,    "ExistingAlteration"
+2,              1,    "Removed"
+1,    Proj:Ruleset,   -999,  1   ; current selections
+2,              1,    "New"
+2,              2,    "Existing"
+2,              3,    "Altered"
+
+; Change options for AirSys, per email w/ NK & RH on 10/16/15
+0, AirSys:Status, 1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,              2,    "ExistingUnchanged"
+2,              3,    "ExistingAlteration"
+2,              1,    "Removed"
+1,    Proj:Ruleset,  -1002,  2   ; Backward compatibility
+2,              2,    "Altered"
+1,    AirSys:Type,    1,  1      ; PVAV
+2,              1,    "New"
+2,              2,    "Existing"
+2,              3,    "Altered"
+1,    AirSys:Type,    2,  1      ; VAV
+2,              1,    "New"
+2,              2,    "Existing"
+2,              3,    "Altered"
+1,    Proj:Ruleset,   -999,  1   ; current selections
+2,              1,    "New"
+2,              2,    "Existing"
+
+; These HVAC objects are only either New or Existing
+; AirSeg/FluidSeg objects do not have Status definitions
+0, ZnSys:Status, 1
+0, EvapClr:Status, 1
+0, CoilClg:Status, 1
+0, CoilHtg:Status, 1
+0, Fan:Status, 1
+0, TrmlUnit:Status, 1
+0, OACtrl:Status, 1
+0, HtRcvry:Status, 1
+0, Chlr:Status, 1
+0, Blr:Status, 1
+0, HtRej:Status, 1
+0, HX:Status, 1
+0, Pump:Status, 1
+0, WtrHtr:Status, 1
+0, ResWtrHtr:Status, 1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,              1,    "Altered"
+1,    Proj:Ruleset,   -999,  1   ; current selections
+2,              1,    "New"
+2,              2,    "Existing"
+
+
+;0, Bldg:ConsPhase,  1
+;2,              1,    "NewConstruction"
+;2,              2,    "Addition"
+;2,              3,    "Alteration"
+;2,              4,    "Repair"
+
+
+0, Spc:CondgType,  1
+2,              1,    "DirectlyConditioned"
+2,              2,    "IndirectlyConditioned"
+2,              3,    "Unconditioned"
+2,              4,    "Plenum"
+; 2,              5,    "ProcessEnvironment"
+; 2,              6,    "Refrigerated"
+
+
+0, Spc:KitExhHoodDuty,  1 
+1,    Proj:Ruleset,  -1001,  -1   ; Backward compatibility
+2,              1,    "None"
+1, Spc:KitExhHoodStyle,  5, 1  ; Eyebrow
+2,              1,    "Light"
+2,              2,    "Medium"
+1, Spc:KitExhHoodStyle,  6, 1  ; BackshelfOrPassover
+2,              1,    "Light"
+2,              2,    "Medium"
+2,              3,    "Heavy"
+1, Spc:KitExhHoodStyle,  -999, 1  ; All other
+2,              1,    "Light"
+2,              2,    "Medium"
+2,              3,    "Heavy"
+2,              4,    "ExtraHeavy"
+
+0, Spc:InfMthd,  -1
+0, SpcFuncDefaults:InfMthd,  -1
+1,    Proj:Ruleset,  -1001,  -1   ; Backward compatibility
+2,              1,    "FlowZone"
+1,    Proj:Ruleset,   -999,  -1   ; current selections
+2,              0,    "- specify -"
+2,              1,    "FlowSpace"
+2,              2,    "FlowArea"
+2,              3,    "FlowExteriorArea"
+2,              4,    "FlowExteriorWallArea"
+2,              5,    "AirChangesPerHour"
+
+; last updated based on NACM App 5.4A spreadsheet 10/19/12
+0, SpcFuncDefaults:FuncSchGrp,  0  
+0, Spc:FuncSchGrp,  0
+2,              0,    "- specify -"
+2,              1,    "Assembly"
+2,              2,    "Data"
+2,              3,    "Health"
+2,              4,    "Laboratory"
+2,              5,    "Manufacturing"
+2,              6,    "Office"
+2,              7,    "Parking"
+2,              8,    "ResidentialLiving"
+2,              9,    "ResidentialCommon"
+2,             10,    "Restaurant"
+2,             11,    "Retail"
+2,             12,    "School"
+2,             13,    "Warehouse"
+
+
+; last updated by R.Hedrick to add new space functions-060330 
+; 360LDH - removed all conditional enumerations that rely on Bldg:FuncClassMthd = "CompleteBuildingMethod", these no longer align with current space functions-060330 
+0, Spc:SpcFunc,  0
+1,     Spc:CondgType,           4,   99    ; "Plenum" 
+2,             99,    "Unoccupied-Exclude from Gross Floor Area"
+; last updated based on NACM App 5.4A spreadsheet RLH 3/31/16
+1,    Bldg:FuncClassMthd,  -1001,  0   ; Backward compatibility
+2,            116,    "Exercise Center, Gymnasium Areas"
+2,            201,    "Sports Arena, Indoor Playing Area"
+1,    Bldg:FuncClassMthd,   -999,  0   ; any other case
+2,              0,    "- specify -"
+2,             98,    "Unoccupied-Include in Gross Floor Area"
+2,             99,    "Unoccupied-Exclude from Gross Floor Area"
+2,            101,    "Auditorium Area"
+2,            102,    "Auto Repair Area"
+2,            103,    "Bar, Cocktail Lounge and Casino Areas"
+2,            104,    "Beauty Salon Area"
+2,            106,    "Civic Meeting Place Area"
+2,            105,    "Classrooms, Lecture, Training, Vocational Areas"
+2,            107,    "Commercial and Industrial Storage Areas (conditioned or unconditioned)"
+2,            108,    "Commercial and Industrial Storage Areas (refrigerated)"
+2,            109,    "Computer Room"
+2,            110,    "Convention, Conference, Multipurpose and Meeting Center Areas"
+2,            111,    "Corridors, Restrooms, Stairs, and Support Areas"
+2,            112,    "Dining Area"
+2,            113,    "Dry Cleaning (Coin Operated)"
+2,            114,    "Dry Cleaning (Full Service Commercial)"
+2,            115,    "Electrical, Mechanical, Telephone Rooms"
+2,            116,    "Exercise Room"
+2,            117,    "Exhibit, Museum Areas"
+2,            118,    "Financial Transaction Area"
+2,            119,    "General Commercial and Industrial Work Areas, High Bay"
+2,            120,    "General Commercial and Industrial Work Areas, Low Bay"
+2,            121,    "General Commercial and Industrial Work Areas, Precision"
+2,            122,    "Grocery Sales Areas"
+2,            201,    "Gymnasium/Sports Arena"
+2,            123,    "High-Rise Residential Living Spaces"
+2,            124,    "Hotel Function Area"
+2,            125,    "Hotel/Motel Guest Room"
+2,            126,    "Housing, Public and Common Areas: Multi-family, Dormitory"
+2,            127,    "Housing, Public and Common Areas: Senior Housing"
+2,            128,    "Kitchen, Commercial Food Preparation"
+2,            129,    "Kitchenette or Residential Kitchen"
+2,            131,    "Laboratory, Equipment Room"
+2,            130,    "Laboratory, Scientific"
+2,            132,    "Laundry"
+2,            133,    "Library, Reading Areas"
+2,            134,    "Library, Stacks"
+2,            135,    "Lobby, Hotel"
+2,            136,    "Lobby, Main Entry"
+2,            137,    "Locker/Dressing Room"
+2,            138,    "Lounge, Recreation"
+2,            139,    "Malls and Atria"
+2,            140,    "Medical and Clinical Care"
+2,            202,    "Nurseries for Children - Day Care"
+2,            142,    "Office (250 square feet in floor area or less)"
+2,            141,    "Office (Greater than 250 square feet in floor area)"
+2,            145,    "Parking Garage Area Daylight Adaptation Zones"
+2,            144,    "Parking Garage Area Dedicated Ramps"
+2,            143,    "Parking Garage Building, Parking Area"
+2,            146,    "Police Station and Fire Station"
+2,            147,    "Religious Worship Area"
+2,            148,    "Retail Merchandise Sales, Wholesale Showroom"
+2,            150,    "Theater, Motion Picture"
+2,            151,    "Theater, Performance"
+2,            152,    "Transportation Function"
+2,            155,    "Transportation Function, Concourse & Baggage"
+2,            156,    "Transportation Function, Ticketing"
+2,            203,    "Unleased Tenant Area"
+2,            153,    "Videoconferencing Studio"
+2,            154,    "Waiting Area"
+                                                                                                
+
+0, SpcFuncDefaults:SpcFunc,  0
+1,    Bldg:FuncClassMthd,  -1001,  0   ; Backward compatibility
+2,            116,    "Exercise Center, Gymnasium Areas"
+2,            201,    "Sports Arena, Indoor Playing Area"
+1,    Bldg:FuncClassMthd,   -999,  0   ; any other case
+2,              0,    "- specify -"
+2,             98,    "Unoccupied-Include in Gross Floor Area"
+2,             99,    "Unoccupied-Exclude from Gross Floor Area"
+2,            101,    "Auditorium Area"
+2,            102,    "Auto Repair Area"
+2,            103,    "Bar, Cocktail Lounge and Casino Areas"
+2,            104,    "Beauty Salon Area"
+2,            106,    "Civic Meeting Place Area"
+2,            105,    "Classrooms, Lecture, Training, Vocational Areas"
+2,            107,    "Commercial and Industrial Storage Areas (conditioned or unconditioned)"
+2,            108,    "Commercial and Industrial Storage Areas (refrigerated)"
+2,            109,    "Computer Room"
+2,            110,    "Convention, Conference, Multipurpose and Meeting Center Areas"
+2,            111,    "Corridors, Restrooms, Stairs, and Support Areas"
+2,            112,    "Dining Area"
+2,            113,    "Dry Cleaning (Coin Operated)"
+2,            114,    "Dry Cleaning (Full Service Commercial)"
+2,            115,    "Electrical, Mechanical, Telephone Rooms"
+2,            116,    "Exercise Room"
+2,            117,    "Exhibit, Museum Areas"
+2,            118,    "Financial Transaction Area"
+2,            119,    "General Commercial and Industrial Work Areas, High Bay"
+2,            120,    "General Commercial and Industrial Work Areas, Low Bay"
+2,            121,    "General Commercial and Industrial Work Areas, Precision"
+2,            122,    "Grocery Sales Areas"
+2,            201,    "Gymnasium/Sports Arena"
+2,            123,    "High-Rise Residential Living Spaces"
+2,            124,    "Hotel Function Area"
+2,            125,    "Hotel/Motel Guest Room"
+2,            126,    "Housing, Public and Common Areas: Multi-family, Dormitory"
+2,            127,    "Housing, Public and Common Areas: Senior Housing"
+2,            128,    "Kitchen, Commercial Food Preparation"
+2,            129,    "Kitchenette or Residential Kitchen"
+2,            131,    "Laboratory, Equipment Room"
+2,            130,    "Laboratory, Scientific"
+2,            132,    "Laundry"
+2,            133,    "Library, Reading Areas"
+2,            134,    "Library, Stacks"
+2,            135,    "Lobby, Hotel"
+2,            136,    "Lobby, Main Entry"
+2,            137,    "Locker/Dressing Room"
+2,            138,    "Lounge, Recreation"
+2,            139,    "Malls and Atria"
+2,            140,    "Medical and Clinical Care"
+2,            202,    "Nurseries for Children - Day Care"
+2,            142,    "Office (250 square feet in floor area or less)"
+2,            141,    "Office (Greater than 250 square feet in floor area)"
+2,            145,    "Parking Garage Area Daylight Adaptation Zones"
+2,            144,    "Parking Garage Area Dedicated Ramps"
+2,            143,    "Parking Garage Building, Parking Area"
+2,            146,    "Police Station and Fire Station"
+2,            147,    "Religious Worship Area"
+2,            148,    "Retail Merchandise Sales, Wholesale Showroom"
+2,            150,    "Theater, Motion Picture"
+2,            151,    "Theater, Performance"
+2,            152,    "Transportation Function"
+2,            155,    "Transportation Function, Concourse & Baggage"
+2,            156,    "Transportation Function, Ticketing"
+2,            203,    "Unleased Tenant Area"
+2,            153,    "Videoconferencing Studio"
+2,            154,    "Waiting Area"
+
+
+0, Spc:IntLtgSpecMthd,  1
+0, IntLtgSys:IntLtgSpecMthd,  1
+; CompleteBuildingMethod is not currently supported
+;1,    Proj:FuncClassMthd,  2,  1   ; CompleteBuildingMethed
+;2,              3,    "CompleteBuildingMethod"
+2,              1,    "AreaCategoryMethod"
+2,              2,    "TailoredMethod"
+
+0, Spc:MandatoryLtgCtrlIsManAreaCtrlRpt,  0
+0, Spc:MandatoryLtgCtrlIsMultiLvlCtrlRpt,  0
+0, Spc:MandatoryLtgCtrlIsAutoShutOffCtrlRpt,  0
+0, Spc:MandatoryLtgCtrlIsDayltgCtrlRpt,  0
+0, Spc:MandatoryLtgCtrlIsDemandResponseCtrlRpt,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              2,     "Yes"
+1,    Proj:Ruleset,  -999,  0   ; Current options
+2,              1,     "NA"
+2,              2,     "Required"
+2,              3,     "Exempt"
+
+0, Spc:SkyltReqExcpt, 0
+2,              0,     "- none -"
+2,              1,     "Auditorium"
+2,              2,     "Church"
+2,              3,     "MovieTheater"
+2,              4,     "Museum"
+2,              5,     "RefrigeratedWarehouse"
+2,              6,     "ExistingWalls"
+2,              7,     "FutureWalls"
+2,              8,     "FutureCeilings"
+
+; 0, IntLtgSys:Type,  0
+; 2,              0,    "- specify -"
+; 2,              1,    "General"
+; 2,              2,    "Ambient"
+; 2,              3,    "Decorative"
+; 2,              4,    "Task"
+; 2,              5,    "Portable"
+; 2,              6,    "Furniture Mounted"
+; 2,              7,    "Track"
+
+0, IntLtgSys:ParentSpcFunc,  0
+2,              0,    "- specify -"
+2,             98,    "Unoccupied-Include in Gross Floor Area"
+2,             99,    "Unoccupied-Exclude from Gross Floor Area"
+2,            101,    "Auditorium Area"
+2,            102,    "Auto Repair Area"
+2,            103,    "Bar, Cocktail Lounge and Casino Areas"
+2,            104,    "Beauty Salon Area"
+2,            106,    "Civic Meeting Place Area"
+2,            105,    "Classrooms, Lecture, Training, Vocational Areas"
+2,            107,    "Commercial and Industrial Storage Areas (conditioned or unconditioned)"
+2,            108,    "Commercial and Industrial Storage Areas (refrigerated)"
+2,            109,    "Computer Room"
+2,            110,    "Convention, Conference, Multipurpose and Meeting Center Areas"
+2,            111,    "Corridors, Restrooms, Stairs, and Support Areas"
+2,            112,    "Dining Area"
+2,            113,    "Dry Cleaning (Coin Operated)"
+2,            114,    "Dry Cleaning (Full Service Commercial)"
+2,            115,    "Electrical, Mechanical, Telephone Rooms"
+2,            116,    "Exercise Room"
+2,            117,    "Exhibit, Museum Areas"
+2,            118,    "Financial Transaction Area"
+2,            119,    "General Commercial and Industrial Work Areas, High Bay"
+2,            120,    "General Commercial and Industrial Work Areas, Low Bay"
+2,            121,    "General Commercial and Industrial Work Areas, Precision"
+2,            122,    "Grocery Sales Areas"
+2,            201,    "Gymnasium/Sports Arena"
+2,            123,    "High-Rise Residential Living Spaces"
+2,            124,    "Hotel Function Area"
+2,            125,    "Hotel/Motel Guest Room"
+2,            126,    "Housing, Public and Common Areas: Multi-family, Dormitory"
+2,            127,    "Housing, Public and Common Areas: Senior Housing"
+2,            128,    "Kitchen, Commercial Food Preparation"
+2,            129,    "Kitchenette or Residential Kitchen"
+2,            131,    "Laboratory, Equipment Room"
+2,            130,    "Laboratory, Scientific"
+2,            132,    "Laundry"
+2,            133,    "Library, Reading Areas"
+2,            134,    "Library, Stacks"
+2,            135,    "Lobby, Hotel"
+2,            136,    "Lobby, Main Entry"
+2,            137,    "Locker/Dressing Room"
+2,            138,    "Lounge, Recreation"
+2,            139,    "Malls and Atria"
+2,            140,    "Medical and Clinical Care"
+2,            202,    "Nurseries for Children - Day Care"
+2,            142,    "Office (250 square feet in floor area or less)"
+2,            141,    "Office (Greater than 250 square feet in floor area)"
+2,            145,    "Parking Garage Area Daylight Adaptation Zones"
+2,            144,    "Parking Garage Area Dedicated Ramps"
+2,            143,    "Parking Garage Building, Parking Area"
+2,            146,    "Police Station and Fire Station"
+2,            147,    "Religious Worship Area"
+2,            148,    "Retail Merchandise Sales, Wholesale Showroom"
+
+2,            150,    "Theater, Motion Picture"
+2,            151,    "Theater, Performance"
+2,            152,    "Transportation Function"
+2,            155,    "Transportation Function, Concourse & Baggage"
+2,            156,    "Transportation Function, Ticketing"
+2,            203,    "Unleased Tenant Area"
+2,            153,    "Videoconferencing Studio"
+2,            154,    "Waiting Area"
+
+0, IntLtgSys:NonRegExclusion,  0
+2,              0,    "- specify -"
+2,              1,    "ThemeParksThemeAndSpecialEffects" 
+2,              2,    "FilmOrPhotoStudioLightingSeparatelySwitched" 
+2,              3,    "DanceFloorOrTheatrical" 
+2,              4,    "TemporaryExhibitSeparatelySwitchedInCivicTransConvOrHotel" 
+2,              5,    "ManufacturerInstalledInFreezerVendingFoodPrepScientificOrIndEquip" 
+2,              6,    "ExamSurgicalNightOrEquipmentIntegratedInMedicalOrClinical" 
+2,              7,    "PlantGrowthOrMaintWithMultiLevelAstroTimer" 
+2,              8,    "LightingEquipmentForSale" 
+2,              9,    "LightingDemonstrationEquipInLightingEducationFacilities" 
+2,             10,    "CBCRequiredExitSign" 
+2,             11,    "CBCRequiredExitwayOrEgressNormallyOff" 
+2,             12,    "HotelMotelGuestroom" 
+2,             13,    "HighRiseResidentialDwellingUnit" 
+2,             14,    "TemporaryLightingSystems" 
+2,             15,    "SmallAgriculturalBuilding" 
+2,             16,    "SmallUnconditionedAgriculturalBuilding" 
+2,             17,    "HistoricBuilding" 
+2,             18,    "SmallNonresidentialParkingGarage" 
+2,             19,    "SignageLighting" 
+2,             20,    "ATMLighting" 
+2,             21,    "SmallRefrigeratedCases" 
+2,             22,    "ElevatorLighting" 
+
+0, IntLtgSys:AllowType,  0
+; 1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+; 2,              0,    "SpecializedLabTaskWork"
+//
+//  ********** T-24 Area Category Method Allowances ************************************ 
+//
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  101,  0   ; Auditorium Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  102,  0   ; Auto Repair Airea
+2,              0,    "- none specified -"
+2,              2,    "SpecializedTaskWork" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  105,  0   ; Classrooms, Lecture, Training, Vocational Areas
+2,              0,    "- none specified -"
+2,              5,    "WhiteOrChalkBoard" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  106,  0   ; Civic Meeting Place
+2,              0,    "- none specified -"
+2,              3,    "Ornamental" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  110,  0   ; Convention, Conference, Multipurpose and Meeting Center Areas
+2,              0,    "- none specified -"
+2,              3,    "Ornamental" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  112,  0   ; Dining Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  115,  0   ; Electrical, Mechanical, Telephone Rooms
+2,              0,    "- none specified -"
+2,              2,    "SpecializedTaskWork"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  118,  0   ; Financial Transaction Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  119,  0   ; General Commercial and Industrial Work Areas, High Bay
+2,              0,    "- none specified -"
+2,              2,    "SpecializedTaskWork" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  120,  0   ; General Commercial and Industrial Work Areas, Low Bay
+2,              0,    "- none specified -"
+2,              2,    "SpecializedTaskWork" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  121,  0   ; General Commercial and Industrial Work Areas, Precision
+2,              0,    "- none specified -"
+2,              4,    "PrecisionCommercialIndustrial" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  122,  0   ; Grocery Sales Areas
+2,              0,    "- none specified -"
+2,              6,    "AccentDisplayFeature" 
+2,              7,    "Decorative"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  124,  0   ; Hotel Function Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  130,  0   ; Laboratory, Scientific
+2,              0,    "- none specified -"
+2,              1,    "SpecializedLabTaskWork" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  133,  0   ; Library, Reading Areas
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  134,  0   ; Library, Stacks
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  135,  0   ; Lobby, Hotel
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  136,  0   ; Lobby, Main Entry
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  138,  0   ; Lounge, Recreation
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  139,  0   ; Malls and Atria
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  147,  0   ; Religious Worship Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  148,  0   ; Retail Merchandise Sales, Wholesale Showroom
+2,              0,    "- none specified -"
+2,              6,    "AccentDisplayFeature" 
+2,              7,    "Decorative"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  150,  0   ; Theater, Motion Picture
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  151,  0   ; Theater, Performance
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  153,  0   ; Videoconferencing Studio
+2,              0,    "- none specified -"
+2,              8,    "VideoconferencingStudioLighting" 
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  154,  0   ; Waiting Area
+2,              0,    "- none specified -"
+2,              3,    "Ornamental"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  143,  0   ; 2016 ONLY - ADD Checkcode for 2013 Parking Garage Building, Parking Area  
+2,              0,    "- none specified -"
+2,              10,    "ParkingGarageATMLighting"
+1,    IntLtgSys:IntLtgSpecMthd,   1,  0   ; AreaCategoryMethod
+1,    IntLtgSys:ParentSpcFunc,  -999,  0   ; All Others
+2,              0,    "- none specified -"
+//
+//  ********** T-24 Tailored Method Allowances ************************************
+//
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  101,  0   ; Auditorium Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  106,  0   ; "Civic Meeting Place Area"
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  110,  0   ; Convention, Conference, Multipurpose and Meeting Center Areas
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  112,  0   ; Dining Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  117,  0   ; Exhibit, Museum Areas
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  118,  0   ; Financial Transaction Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  122,  0   ; Grocery Sales Areas
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  124,  0   ; Hotel Function Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  135,  0   ; Lobby, Hotel
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  136,  0   ; Lobby, Main Entry
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  138,  0   ; Lounge, Recreation
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  139,  0   ; Malls and Atria
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  147,  0   ; Religious Worship Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance" 
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  148,  0   ; Retail Merchandise Sales, Wholesale Showroom
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  150,  0   ; Theater, Motion Picture
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  151,  0   ; Theater, Performance
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  152,  0   ; Transportation Function
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:ParentSpcFunc,  155,  0   ; Transportation Function, Concourse & Baggage
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:ParentSpcFunc,  156,  0   ; Transportation Function, Ticketing
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  154,  0   ; Waiting Area
+2,              0,    "- none specified -"
+2,             11,    "TailoredWallDisplayAllowance"
+2,             12,    "TailoredFloorDisplayAllowance"
+2,             13,    "TailoredTaskAllowance"
+2,             14,    "TailoredOrnamentalAndSpecialEffectAllowance"
+2,             15,    "TailoredVeryValuableDisplayCaseAllowance"
+1,    IntLtgSys:IntLtgSpecMthd,   2,  0   ; TailoredMethod
+1,    IntLtgSys:ParentSpcFunc,  -999,  0   ; All Others
+2,              0,    "- none specified -"
+
+
+;  Moved to Rule Blocks - LH 150720
+;0, IntLtgSys:PAFCredType,  0
+;2,              0,    "- none specified -" 
+;2,              1,    "PartialOnOccupantSensingControl"
+;2,              2,    "OccupantSensingControls-1to125SF"
+;2,              3,    "OccupantSensingControls-126to250SF"
+;2,              4,    "OccupantSensingControls-251to500SF"
+;2,              5,    "ManualDimming"
+;2,              6,    "MultisceneProgrammableControls"
+;2,              7,    "DemandResponsiveControl"
+;2,              8,    "CombinedManualDimmingPlusPartialOnOccupantSensingControl"
+
+0, IntLtgSys:DaylitAreaType,  0
+2,              0,    "- none -"
+2,              1,    "SkylitDaylit"
+2,              2,    "PrimarySidelit"
+2,              3,    "SecondarySidelit"
+
+; 0, DayltgCtrl:DaylitAreaType, 1
+; 2,              1,    "SkylitDaylit"
+; 2,              2,    "PrimarySidelit"
+; 2,              3,    "SecondarySidelit"
+
+
+0, ThrmlZn:DayltgCtrlType, 0
+0, Spc:DayltgCtrlType, 0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              0     "- none specified -"
+2               3,    "SteppedDimming"
+1,    Proj:Ruleset,   -999,  0   ; Current options
+2,              0,    "None"
+2,              1,    "Continuous"
+2,              2,    "ContinuousPlusOff"
+;2,              3,    "SteppedDimming"
+2,              3,    "SteppedSwitching"
+
+0, ThrmlZn:VentSrc, 0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              1,    "NotRequired"
+2,              2,    "Forced"
+1,    Proj:Ruleset,   -999,  0   ; Current options
+2,              1,    "None"
+2,              2,    "Forced"
+2,              3,    "Natural"
+
+0, ThrmlZn:VentStd, 1
+2,              1,    "T24-2013"
+
+
+; 0, Ceiling:ConsType,  0
+; ; 0, CeilingBelowAttic:ConsType,  0
+; 2,              0,    "- specify -"
+; 2,              1,    "Suspended"
+; 2,              2,    "TBar"
+
+
+; 0, ExtFlr:ConsType,  0
+; 1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+; 2,              1,    "MassHeavyFlr"
+; 2,              2,    "MassMediumFlr"
+; 2,              3,    "MtlFrmFlr"
+; 2,              4,    "WoodFrmAndOtherFlr"
+; 1,    Proj:Ruleset,   -999,  0   ; current selections
+; 2,              0,    "- specify -"
+; 2,              1,    "MassHeavyFloor"          
+; 2,              2,    "MassMediumFloor"         
+; 2,              3,    "MetalFramingFloor"       
+; 2,              4,    "WoodFramingAndOtherFloor"
+
+
+; 0, ExtWall:ConsType,  0
+; 1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+; 2,              1,    "WoodFrmAndOtherWall"
+; 2,              2,    "MtlFrmWall"
+; 2,              3,    "MtlBldgWall"
+; 2,              4,    "MassLtgWall"
+; 2,              5,    "MassMediumWall"
+; 2,              6,    "MassHeavyWall"
+; 1,    Proj:Ruleset,   -999,  0   ; current selections
+; 2,              0,    "- specify -"
+; 2,              1,    "WoodFramingAndOtherWall"  
+; 2,              2,    "MetalFramingWall"         
+; 2,              3,    "MetalBuildingWall"        
+; 2,              4,    "MassLightWall"            
+; 2,              5,    "MassMediumWall"           
+; 2,              6,    "MassHeavyWall"            
+
+
+; 0, Roof:ConsType,  0
+; 1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+; 2,              1,    "MtlBldgRf"
+; 2,              2,    "WoodFrmAndOtherRf"
+; 1,    Proj:Ruleset,   -999,  1   ; current selections
+; 2,              1,    "MetalBuildingRoof" 
+; 2,              2,    "WoodFramingAndOtherRoof" 
+
+
+; 0, UndgrFlr:SlabHtg,  0
+; 2,              0,    "- specify -"
+; 2,              1,    "Heated"
+; 2,              2,    "Unheated"
+
+; 0, UndgrFlr:MthodUsed,  0
+; 2,              0,    "- specify -"
+; 2,              1,    "FfactorMethod"
+; 2,              2,    "LayerByLayerMethod"
+
+
+; 0, Attic:InsType,  -1
+; 2,              1,    "Cellulose
+; 2,              2,    "Fiberglass
+; 2,              3,    "MineralWool
+; 2,              4,    "PlasticPolystyrene
+; 2,              5,    "UreaFormaldehyde
+; 
+; 0, Attic:InsPlcmt,  -1
+; 2,              1,    "CavityAttic
+; 2,              2,    "CavityFraming
+; 2,              3,    "CavityFurring
+; 2,              4,    "Continuous
+; 2,              5,    "ContinuousAboveDeckNoSleepers
+; 2,              6,    "ContinuousAboveDeckSleepers
+; 2,              7,    "ContinuousAboveWaterproofMembrane
+; 2,              8,    "ContinuousBelowDeck
+; 2,              9,    "OverSuspendedCeiling
+; 2,             10,    "SlabFullyInsulated
+; 2,             11,    "SlabHorizontal
+; 2,             12,    "SlabVertical
+
+
+0, Door:Oper,  0
+2,              0,    "- specify -"
+2,              1,    "NonSwinging"
+2,              2,    "Swinging"
+
+
+; SAC 6/20/13 - need COPIES of any enumeration referenced by rule library objects included in this Enums.txt file or rule library compilation will be incomplete
+; ======= AirSys =======
+0, AirSys:Type, -1
+2,              0,    "- specify -"
+2,              1,    "PVAV"
+2,              2,    "VAV"
+2,              3,    "SZAC"
+2,              4,    "SZHP"
+2,              5,    "SZVAVAC"
+2,              6,    "SZVAVHP"
+2,              7,    "HV"
+2,              8,    "Exhaust"
+2,              9,    "SPVAC"
+2,             10,    "SPVHP"
+; 2,              11,    "VentOnly"
+; 2,              ,    "DFDD"
+; 2,              ,    "ACHB"
+; 2,              ,    "UFAD"
+; 2,              ,    "DV"
+; 2,              ,    "GSHP"
+; 2,              ,    "VRF"
+; 2,              ,    "IdealLds"
+; 2,              ,    "Other"
+; ======= ZnSys =======
+0, ZnSys:Type, -1
+2,              0,    "- specify -"
+2,              1,    "SZAC"
+2,              2,    "SZHP"
+2,              3,    "FPFC"
+2,              4,    "WSHP"
+2,              5,    "PTAC"
+2,              6,    "PTHP"
+2,              7,    "Baseboard"
+2,              8,    "Exhaust"
+2,              9,    "SPVAC"
+2,             10,    "SPVHP"
+; 2,              ,    "HV"
+; 2,              ,    "PCHB"
+; 2,              ,    "GSHP"
+; 2,              ,    "ERV"
+; 2,              ,    "RadFlr"
+; 2,              ,    "IdealLds"
+; 2,              ,    "Other"
+
+0, AirSys:SubType, 1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,              1,    "SinglePackage"
+2,              2,    "SplitSystem"
+1,    AirSys:Type,      7,  5    ; HV
+2,              5,    "NA"  ; Not applicable
+1,    AirSys:Type,      8,  5    ; Exhaust
+2,              5,    "NA"  ; Not applicable
+1,    AirSys:Type,      9,  1    ; SPVAC
+2,              1,    "Packaged3Phase"
+2,              3,    "Packaged1Phase"
+1,    AirSys:Type,     10,  1    ; SPVHP
+2,              1,    "Packaged3Phase"
+2,              3,    "Packaged1Phase"
+1,    AirSys:Type,    -999,  1   ; All Other Systems
+2,              1,    "Packaged3Phase"
+2,              2,    "Split3Phase"
+2,              3,    "Packaged1Phase"
+2,              4,    "Split1Phase"
+2,              5,    "CRAC"
+2,              6,    "CRAH"
+2,              7,    "NA"  ; Not applicable
+
+0, ZnSys:SubType, 4
+1,    ZnSys:Type,       7,  5   ; Baseboard
+2,              5,    "NA"  ; Not applicable
+1,    ZnSys:Type,       8,  5   ; Exhaust
+2,              5,    "NA"  ; Not applicable
+1,    ZnSys:Type,      9,  1    ; SPVAC
+2,              1,    "Packaged3Phase"
+2,              3,    "Packaged1Phase"
+1,    ZnSys:Type,     10,  1    ; SPVHP
+2,              1,    "Packaged3Phase"
+2,              3,    "Packaged1Phase"
+1,    ZnSys:Type,    -999,  4   ; All Other Systems
+2,              1,    "Packaged3Phase"
+2,              2,    "Split3Phase"
+2,              3,    "Packaged1Phase"
+2,              4,    "Split1Phase"
+2,              5,    "NA"  ; Not applicable
+
+; ======= AirSys =======
+0, AirSys:NightCycleFanCtrl,  3
+1,    AirSys:Type,  1,  3   ; PVAV 
+2,              1,    "StaysOff"
+;2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+2,              4,    "CycleZoneFansOnly"
+1,    AirSys:Type,  2,  3   ; VAV
+2,              1,    "StaysOff"
+;2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+2,              4,    "CycleZoneFansOnly"
+1,    AirSys:Type,  3,  2   ; SZAC
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+1,    AirSys:Type,  4,  2   ; SZHP
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+1,    AirSys:Type,  5,  2   ; SZVAVAC
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+1,    AirSys:Type,  6,  2   ; SZVAVHP
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+1,    AirSys:Type,  7,  2   ; HV
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+1,    AirSys:Type,  -999,  3   ; All Other Systems
+2,              1,    "StaysOff"
+2,              2,    "CycleOnCallPrimaryZone"
+2,              3,    "CycleOnCallAnyZone"
+2,              4,    "CycleZoneFansOnly"
+
+0, AirSys:VentCtrl,  1
+2,              1,    "AverageFlow"
+;2,              2,    "CriticalZone"  ; DR: Not yet supported
+
+; ======= AirSys =======
+0, AirSys:ClgCtrl,  1
+; Potential future enhancement: Reinstall conditional enumeration list for VAV systems based on CtrlSysType
+; Before implementing, ensure that backward compatibility of modified enumeration lists is in place
+;1,    AirSys:Type,         1,  1  ; PVAV
+;1,    AirSys:CtrlSysType,  2,  1  ; Other
+;2,              1,    "Fixed"
+;2,              3,    "OutsideAirReset"
+;2,              4,    "Scheduled"
+;1,    AirSys:Type,         1,  2  ; PVAV
+;1,    AirSys:CtrlSysType,  1,  2  ; DDCToZone
+;2,              1,    "Fixed"
+;2,              2,    "WarmestResetFlowFirst"
+;2,              3,    "OutsideAirReset"
+;2,              4,    "Scheduled"
+;1,    AirSys:Type,         2,  1  ; VAV
+;1,    AirSys:CtrlSysType,  2,  1  ; Other
+;2,              1,    "Fixed"
+;2,              3,    "OutsideAirReset"
+;2,              4,    "Scheduled"
+;1,    AirSys:Type,         2,  2  ; VAV
+;1,    AirSys:CtrlSysType,  1,  2  ; DDCToZone
+;2,              1,    "Fixed"
+;2,              2,    "WarmestResetFlowFirst"
+;2,              3,    "OutsideAirReset"
+;2,              4,    "Scheduled"
+1,    AirSys:Type,  1,  5   ; PVAV
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              5,    "WarmestResetFlowFirst"
+2,              6,    "WarmestResetTemperatureFirst"
+2,              7,    "WarmestReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  2,  5   ; VAV
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              5,    "WarmestResetFlowFirst"
+2,              6,    "WarmestResetTemperatureFirst"
+2,              7,    "WarmestReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  3,  1   ; SZAC
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  4,  1   ; SZHP
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  5,  1   ; SZVAVAC
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  6,  1   ; SZVAVHP
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  7,  1   ; HV
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+1,    AirSys:Type,  -999,  1   ; All others
+2,              1,    "NoSATControl"
+2,              2,    "Fixed"
+2,              3,    "Scheduled"
+2,              4,    "OutsideAirReset"
+2,              5,    "WarmestResetFlowFirst"
+2,              6,    "WarmestResetTemperatureFirst"
+2,              7,    "WarmestReset"
+2,              8,    "FixedDualSetpoint"
+2,              9,    "ScheduledDualSetpoint"
+; ======= ZnSys =======
+0, ZnSys:ClgCtrl,  1
+1,    AirSys:Type,  -999,  1   ; All others
+2,              1,    "NoSATControl"
+
+0, AirSys:ExhCtrlMthd,  0
+1,    AirSys:ExhSysType,  1,  1   ; General
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    AirSys:ExhSysType,  2,  1   ; Laboratory
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    AirSys:ExhSysType,  3,  1   ; CommercialKitchen
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    AirSys:ExhSysType,  4,  4   ; ParkingGarage
+2,              4,    "NoCOControl"
+2,              5,    "COControl"
+1,    AirSys:ExhSysType,  -999,  1   ; All others
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan"
+2,              4,    "NoCOControl"
+2,              5,    "COControl"  
+
+0, ZnSys:ExhCtrlMthd,  0
+1,    ZnSys:ExhSysType,  1,  1   ; General
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    ZnSys:ExhSysType,  2,  1   ; Laboratory
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    ZnSys:ExhSysType,  3,  1   ; CommercialKitchen
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan" 
+1,    ZnSys:ExhSysType,  4,  4   ; ParkingGarage
+2,              4,    "NoCOControl"
+2,              5,    "COControl"
+1,    ZnSys:ExhSysType,  -999,  1   ; All others
+2,              1,    "ConstantFlowConstantSpeedFan"
+2,              2,    "VariableFlowConstantSpeedFan"
+2,              3,    "VariableFlowVariableSpeedFan"
+2,              4,    "NoCOControl"
+2,              5,    "COControl"
+
+
+0, AirSys:DuctLctn, 0
+0, ZnSys:DuctLctn, 0
+1,   Proj:Ruleset,  -1001,   1        ; Backward compatibility
+2,              4,    "- specify -"
+1,   Proj:Ruleset,  -1002,   1        ; Backward compatibility
+2,              4,    "NA"
+1,   Proj:Ruleset,   -999,   1        ; All other
+2,              1,    "Conditioned"
+2,              2,    "Unconditioned"
+2,              3,    "Other"
+2,              4,    "None"
+
+
+0, AirSeg:Type,  0
+2,              0,    "- specify -"
+2,              1,    "Supply"
+2,              2,    "Return"
+2,              3,    "Relief"
+2,              4,    "Exhaust"
+2,              5,    "OutdoorAir"
+2,              6,    "Connector"
+;2,              7,    "DualDuctSplitter"
+;2,              8,    "MakeupAir"
+
+
+0, EvapClr:Type,  0
+2,              0,    "- specify -"
+2,              1,    "Direct"
+2,              2,    "Indirect"
+
+
+0, CoilClg:Type,  0
+2,              0,    "- specify -"
+2,              1,    "ChilledWater"
+2,              2,    "DirectExpansion"
+;2,              3,    "WaterEconomizer"
+
+0, CoilClg:FuelSrc,  0
+1,    CoilClg:Type,  2,  1   ; DirectExpansion
+2,              0,    "- specify -"
+2,              1,    "Electric"   
+;2,              2,    "Gas"
+1,    CoilClg:Type,  -999,  0  ; All others
+2,              0,    "- specify -"
+2,              1,    "Electric"   
+;2,              2,    "Gas"
+;2,              3,    "Oil"
+
+;0, CoilClg:WtrEconoType,  0
+;2,              0,    "- specify -"
+;2,              1,    "None"
+;2,              2,    "ParallelHeatExchanger"
+;2,              3,    "SeriesHeatExchanger"
+;2,              4,    "StrainerCycle"
+;2,              5,    "ThermoCycle"
+
+;0, CoilClg:CndsrFlowType,  0
+;0, CoilHtg:CndsrFlowType,  0
+;2,              0,    "- specify -"
+;2,              1,    "FixedFlow"
+;2,              2,    "TwoPositionFlow"
+;2,              3,    "VariableFlow"
+
+0, CoilHtg:Type,  0
+2,              0,    "- specify -"
+2,              1,    "Resistance"
+2,              2,    "Furnace"
+2,              3,    "HeatPump"
+2,              4,    "HotWater"
+;2,              5,    "Steam"
+
+0, CoilHtg:FuelSrc ,  0
+1,   Proj:Ruleset,  -1001,   1        ; Backward compatibility
+2,              2,    "NaturalGas" 
+2,              3,    "Oil" 
+1,    CoilHtg:Type,  1,  1   ; Resistance
+2,              0,    "- specify -"
+2,              1,    "Electric"   
+1,    CoilHtg:Type,  2,  2   ; Furnace
+2,              0,    "- specify -"
+2,              2,    "Gas" 
+2,              3,    "Oil (no longer valid)"
+1,    CoilHtg:Type,  3,  1   ; HeatPump
+2,              0,    "- specify -"
+2,              1,    "Electric"   
+;2,              2,    "Gas" 
+1,    CoilHtg:Type,  -999,  0  ; All others
+2,              0,    "- specify -"
+2,              1,    "Electric"
+2,              2,    "Gas" 
+2,              3,    "Oil (no longer valid)"
+
+
+0, Fan:ModelingMthd,  1
+;1,   Proj:Ruleset,  -1001,   1        ; Backward compatibility
+;2,                1,    "StaticPressure"
+;2,                2,    "BrakeHorsePower"
+;2,                3,    "PowerPerUnitFlow"
+;1,   Proj:AnalysisType,  1,  1        ; Title24Compliance
+;2,                1,    "StaticPressure"
+;2,                2,    "BrakeHorsePower"
+;1,   Proj:AnalysisType,  2,  1        ; Title24ProposedOnly
+;2,                1,    "StaticPressure"
+;2,                2,    "BrakeHorsePower"
+;1,   Proj:AnalysisType, -999,  1      ; All other
+2,                1,    "StaticPressure"
+2,                2,    "BrakeHorsePower"
+2,                3,    "PowerPerUnitFlow"
+
+0, Fan:ParentComp,  0
+2,              0,    "None"
+2,              1,    "AirSys"
+2,              2,    "ZnSys"
+2,              3,    "TrmlUnit"
+
+0, Fan:CtrlMthd,  1
+1,   Fan:ParentComp,     1,  1    ; AirSys
+2,                1,    "ConstantVolume"
+2,                2,    "VariableSpeedDrive"
+2,                3,    "Dampers"                  ; Applicable to Class = Centrifugal
+2,                4,    "InletVanes"               ; Applicable to Class = Centrifugal
+2,                5,    "VariablePitchBlades"      ; Applicable to Class = Centrifugal
+;2,                6,    "TwoSpeed"                 ; Only applicable to ZnSys: Type = FPFC
+1,   Fan:ParentComp,     2,  1    ; ZnSys
+2,                1,    "ConstantVolume"
+2,                2,    "VariableSpeedDrive"
+2,                6,    "TwoSpeed"                 ; Only applicable to ZnSys: Type = FPFC
+1,   Fan:ParentComp,     3,  1    ; TrmlUnit
+2,                1,    "ConstantVolume"
+1,   Fan:ParentComp,  -999,  1   ; All other
+2,                1,    "ConstantVolume"
+2,                2,    "VariableSpeedDrive"
+2,                3,    "Dampers"
+2,                4,    "InletVanes"
+2,                5,    "VariablePitchBlades"
+2,                6,    "TwoSpeed"                 
+    
+
+0, TrmlUnit:Type,  0
+2,              0,    "- specify -"
+2,              1,    "Uncontrolled"
+2,              2,    "VAVReheatBox"
+2,              3,    "ParallelFanBox"
+2,              4,    "SeriesFanBox"
+2,              5,    "VAVNoReheatBox"
+;2,              6,    "ConstantVolumeReheatBox"  ; DR: Not yet supported
+;2,              7,    "InductionVAVBox"          ; DR: Not yet supported
+;2,              8,    "DualDuctMixingBox"        ; DR: Not yet supported
+
+0, TrmlUnit:ReheatCtrlMthd,  0
+2,              1,    "SingleMaximum"
+2,              2,    "DualMaximum"
+
+
+0, HtRcvry:Type,  1
+2,              1,    "Plate"
+2,              2,    "Wheel"
+;2,              2,    "RunAroundLoop"
+
+0, HtRcvry:RcvryType,  1
+2,              1,    "Total"
+2,              2,    "SensibleOnly"
+2,              3,    "LatentOnly"
+
+0, FluidSys:Type,  0
+2,              0,    "- specify -"
+2,              1,    "ChilledWater"
+2,              2,    "CondenserWater"
+2,              3,    "HotWater"
+2,              4,    "ServiceHotWater"
+;2,              5,    "TwoPipeWater"             ; DR: Not supported yet
+
+0, FluidSys:CtrlType,  0
+2,              0,    "- specify -"
+2,              1,    "DDC"
+2,              2,    "Other"
+
+0, FluidSeg:Type,  0
+2,              0,    "- specify -"
+2,              1,    "PrimarySupply"
+2,              2,    "PrimaryReturn"
+2,              3,    "SecondarySupply"
+2,              4,    "SecondaryReturn"
+2,              5,    "MakeupFluid"
+;2,              6,    "Connector"
+
+0, FluidSeg:Src,  0
+2,              1,    "NoExternalSource"
+2,              2,    "MunicipalWater"
+; 2,              3,    "WellWater"              ; DR: Not supported yet
+
+
+0, Chlr:CndsrType,  1
+2,              1,    "Air"
+2,              2,    "Fluid"
+;2,              3,    "EvaporativePreCooled"
+
+0, Chlr:Type,  4
+; Potential future enhancement: Re-install conditional enumeration list for Chlr based on CndsrType
+; Before implementing, ensure that backward compatibility of modified enumeration lists is in place
+;1, Chlr:CndsrType,     1,  4    ; Air
+;2,              2,    "Reciprocating"
+;2,              3,    "Scroll"
+;2,              4,    "Screw"
+;1, Chlr:CndsrType,     2,  1    ; Fluid
+2,              1,    "Centrifugal"
+2,              2,    "Reciprocating"
+2,              3,    "Scroll"
+2,              4,    "Screw"
+2,              5,    "AbsorptionSingleEffect"
+;2,              6,    "AbsorptionDoubleEffect"   ; Not supported
+;2,              7,    "GasEngineDriven"          ; Not supported
+
+
+0, Blr:FuelSrc,  0
+1,   Proj:Ruleset,  -1001,   1        ; Backward compatibility
+2,              2,    "Oil" 
+1,   Proj:Ruleset,   -999,   0        ; All others
+2,              1,    "Gas" 
+2,              2,    "Oil (no longer valid)"
+2,              3,    "Electric"
+
+
+0, DesignDay:Type,  1
+2,              1,    "Cooling"
+2,              2,    "Heating"
+
+
+;0, RfrgEqp:Type,  0
+;2,              0,    "- specify -"
+;2,              1,    "Casework"
+;2,              2,    "WalkInCooler"
+;2,              3,    "WalkInFreezer"
+
+;0, PrehtCoil:Type,  0
+;2,              0,    "- specify -"
+;2,              1,    "Resistance"
+;2,              2,    "Furnace"
+;2,              3,    "HeatPump"
+;2,              4,    "HotWater"
+;2,              5,    "Steam"
+
+
+;0, HX:Type,  1
+;2,              1,    "WaterEconomizer"
+
+;0, ProcLd:Type,  0
+;2,              0,    "- specify -"
+;2,              1,    "Energy"
+;2,              2,    "Flow"
+
+0, WtrHtr:Type,  4
+2,              0,    "- specify -"
+;2,              1,    "Boiler"
+;2,              2,    "HeatPump"
+2,              3,    "Instantaneous"
+2,              4,    "Storage"
+
+0, WtrHtr:CtrlType,  0
+2,              0,    "- specify -"
+2,              1,    "Cycle"
+2,              2,    "Modulate"
+
+;0, WtrHtr:SHWDistSysType,  0
+;2,              0,    "- specify -"
+;2,              1,    "NonRecirculating"
+;2,              2,    "RecirculatingNonDemandControled"
+;2,              3,    "RecirculatingDemandControledPushButton"
+;2,              4,    "RecirculatingDemandControledOccupancyMotion"
+
+;0, WtrHtr:AmbLctn,  0
+;2,              0,    "- specify -"
+;2,              1,    "Zone"
+;2,              2,    "Outdoors"
+
+0, WtrHtr:FuelSrc,  0
+0, WtrHtr:OffCycleFuelSrc,  0
+0, WtrHtr:OnCycleFuelSrc,  0
+1,   Proj:Ruleset,  -1001,   2        ; Backward compatibility
+2,              2,    "FuelOil#1"
+1,   Proj:Ruleset,  -1002,   2        ; Backward compatibility
+2,              2,    "NaturalGas"
+1,   Proj:Ruleset,  -1003,   2        ; Backward compatibility
+2,              2,    "PropaneGas"
+1,   Proj:Ruleset,   -999,   0        ; current selections
+2,              0,    "- specify -"
+2,              1,    "Electricity"
+2,              2,    "Gas"
+;2,              2,    "FuelOil#1"
+;2,              3,    "NaturalGas"
+;2,              4,    "PropaneGas"
+
+;0, WtrHtr:PipeLocation,  0
+;2,              0,    "- specify -"
+;2,              1,    "SemiConditionedSpace"
+;2,              2,    "UnconditionedSpace"
+;2,              3,    "UndergroundOrBurriedInSlabOrUnderSlab"
+
+0, WtrHtr:Size,  0
+2,              0,    "- specify -"
+2,              1,    "Large"
+2,              2,    "Small"
+
+; Objects added to handle Residential DHW Simulation via CEC T-24 DHW DLLs (SAC 9/25/13)
+0, ResDHWSys:Type, 3840
+1,    Proj:Ruleset,  -1001,  5504   ; Backward compatibility
+2,       5504, "Recurculation, Demand Control Occupancy/Motion"                ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000   ' recurculation, demand control occupancy/motion
+1,    ResDHWSys:CentralSys,     1,  3840                                                                                                                                                                                 
+2,          0, "- specify -"                                                                                                                                                                                          
+2,       3840, "Standard"                                                    ; %WHDIST2013_STD =           3840 * 256 =     983040  &B 00000000 0000 1111 00000000 00000000 ' Standard                                
+2,       4096, "Pipe Insulation, All Lines"                                  ; %WHDIST2013_PIA =           4096 * 256 =    1048576  &B 00000000 0001 0000 00000000 00000000 ' pipe insulation, all lines              
+; 2,     4352, "Insulated and Protected Pipe Below Grade"                    ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+2,    8392704, "(HERS req'd) Pipe Insulation, All Lines"                     ; %WHDIST2013_HERSPIA =    8392704 * 256 = 2148532224  &B 10000000 0001 0000 00000000 00000000 ' pipe insulation, all lines              
+; 2,  8392960, "(HERS req'd) Insulated and Protected Pipe Below Grade"       ; %WHDIST2013_HERSIPBG =   8392960 * 256 = 2148597760  &B 10000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+1,    Proj:Ruleset,   -999,  3840   ; Current options
+2,          0, "- specify -"
+2,       3840, "Standard"                                                      ; %WHDIST2013_STD =           3840 * 256 =     983040  &B 00000000 0000 1111 00000000 00000000   ' Standard
+2,       4096, "Pipe Insulation, All Lines"                                    ; %WHDIST2013_PIA =           4096 * 256 =    1048576  &B 00000000 0001 0000 00000000 00000000   ' pipe insulation, all lines
+;2,       4352, "Insulated and Protected Pipe Below Grade"                      ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000   ' insulated and protected pipe below grade
+2,       4608, "Parallel Piping"                                               ; %WHDIST2013_PP =            4608 * 256 =    1179648  &B 00000000 0001 0010 00000000 00000000   ' parallel piping
+2,       4992, "Recirculation, Non-Demand Control"                             ; %WHDIST2013_RND =           4992 * 256 =    1277952  &B 00000000 0001 0011 10000000 00000000   ' recirculation, non-demand control
+2,       5248, "Recirculation, Demand Control Push Button"                     ; %WHDIST2013_RDMan =         5248 * 256 =    1343488  &B 00000000 0001 0100 10000000 00000000   ' recirculation, demand control push button
+2,       5504, "Recirculation, Demand Control Occupancy/Motion"                ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000   ' recurculation, demand control occupancy/motion
+;2,    8388608, ""                                                              ; %HERS_REQUIRED =         8388608 * 256 = 2147483648  &B 10000000 0000 0000 00000000 00000000
+2,    8392704, "(HERS req'd) Pipe Insulation, All Lines"                       ; %WHDIST2013_HERSPIA =    8392704 * 256 = 2148532224  &B 10000000 0001 0000 00000000 00000000	  ' pipe insulation, all lines
+2,    8393216, "(HERS req'd) Parallel Piping"                                  ; %WHDIST2013_HERSPP =     8393216 * 256 = 2148663296  &B 10000000 0001 0010 00000000 00000000   ' parallel piping
+;2,    8393600, "(HERS req'd) Recirculation, Non-Demand Control"                ; %WHDIST2013_HERSRND =    8393600 * 256 = 2148761600  &B 10000000 0001 0011 10000000 00000000   ' recirculation, non-demand control
+2,    8393856, "(HERS req'd) Recirculation, Demand Control Push Button"        ; %WHDIST2013_HERSRDMan =  8393856 * 256 = 2148827136  &B 10000000 0001 0100 10000000 00000000   ' recirculation, demand control push button
+2,    8394112, "(HERS req'd) Recirculation, Demand Control Occupancy/Motion"   ; %WHDIST2013_HERSRDAuto = 8394112 * 256 = 2148892672  &B 10000000 0001 0101 10000000 00000000   ' recirculation, demand control occupancy/motion
+2,    8394240, "(HERS req'd) Point of Use"                                     ; %WHDIST2013_HERSPOU =    8394240 * 256 = 2148925440  &B 10000000 0001 0110 00000000 00000000   ' point of use
+2,    8394496, "(HERS req'd) Compact Distribution System"                      ; %WHDIST2013_HERSCDS =    8394496 * 256 = 2148990976  &B 10000000 0001 0111 00000000 00000000   ' compact distribution system
+;2,       5056, "Multi-Family Central Recirc Non-Demand Control"                ; %WHDIST2013_CRND =          5056 * 256 =    1294336  &B 00000000 0001 0011 11000000 00000000   ' multi-family central recirc non-demand control
+;2,       6336, "Multi-Family Central Recirc Monitoring"                        ; %WHDIST2013_CRM =           6336 * 256 =    1622016  &B 00000000 0001 1000 11000000 00000000   ' multi-family central recirc monitoring
+;2,       6592, "Multi-Family Central Demand Recirc (new cons std design)"      ; %WHDIST2013_CRD =           6592 * 256 =    1687552  &B 00000000 0001 1001 11000000 00000000   ' multi-family central demand recirc - std design for new construction
+
+0, ResDHWSys:DistType,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,	         0, "- None -"
+2,	      5056, "No Control"						;  No control = 00000000000100111100000000000000, or 1294336 (5056 * 256 = 1622016)  - SAC 7/1/16 - switched ID from 0 -> 5056 for 2016.2.0 release
+2,	      6336, "Demand Control"	                                        ;  Demand Control = 00000000000100111100000000000000, or 1622016 (6336 * 256 = 1294336)
+1,    Proj:Ruleset,   -999,  0   ; Current options
+;2,	         0, "- None -"
+2,	         0,	"No loops or central system pump"
+2,	      5056, "No Control (continuous pumping)"						;  No control = 00000000000100111100000000000000, or 1294336 (5056 * 256 = 1622016)
+;2,	      5056, "No Control"						;  No control = 00000000000100111100000000000000, or 1294336 (5056 * 256 = 1622016)
+2,	      6336, "Demand Control (Standard Design for new construction)"	                                        ;  Demand Control = 00000000000100111100000000000000, or 1622016 (6336 * 256 = 1294336)
+2,	      6592, "Temperature modulation"				;  Temperature modulation = 00000000000110011100000000000000, or 1687552 (6592 * 256 = 1687552)
+2,	      6848, "Temperature modulation and monitoring"			;  Temperature modulation & monitoring = 00000000000110101100000000000000, or 1753088 (6592 * 256 = 1753088)
+;2,	   8393664, "No Control with HERS verification"			;  No control with HERS verification = 10000000000100111100000000000000, or 2148777984 (8393664 * 256 = 2148777984)
+;2,	   8394944, "Demand Control with HERS verification"		;  Demand Control with HERS verification  = 00000000000110101100000000000000, or 2149105664 (8394944 * 256 = 2149105664)
+;2,	   8395200, "Temperature modulation with HERS verification"	;  Temperature modulation with HERS verification = 10000000000110011100000000000000, or 2149171200 (8395200 * 256 = 2149171200)
+;2,	   8395456, "Temperature modulation and monitoring with HERS verification"	;  Temperature modulation & monitoring with HERS verification = 10000000000110101100000000000000, or 2149236736 (8395456 * 256 = 2149236736)
+
+0, ResDHWSys:PipeLctn, 0
+2,          0, "Conditioned"
+2,          1, "Semi-Conditioned"	; SAC 10/22/15 - added
+2,          2, "Unconditioned"
+2,          3, "Underground"
+
+; 0, ResDHWSys:SolFracType,  0
+; 2,	         0, "- none -"
+; 2,          1, "Annual"                  
+; 2,          2, "Monthly"                 
+
+0, ResWtrHtr:ElementType,  1
+; 1,    Proj:NatGasAvailable,  0,  0   ; Prevent selection of Natural Gas when Nat gas not available on site
+; 2,          0, "Electric Resistance"
+; 2,          2, "Propane"
+; 2,          3, "Heat Pump"
+; 2,          4, "Oil"
+; 1,    Proj:ErrorCode,     -999,  0   ; remaining cases
+1,   Proj:Ruleset,  -1001,   1        ; Backward compatibility
+2,          1, "Natural Gas"
+1,   Proj:Ruleset,  -1002,   1        ; Backward compatibility
+2,          1, "Propane"
+1,   Proj:Ruleset,  -1003,   1        ; Backward compatibility
+2,          1, "Oil"
+1,   Proj:Ruleset,   -999,   0        ; current selections
+2,          0, "Electric Resistance"
+2,          1, "Gas"
+2,          2, "Heat Pump"
+;2,          1, "Natural Gas"
+;2,          2, "Propane"
+;2,          3, "Heat Pump"
+;2,          4, "Oil"
+
+0, ResWtrHtr:TankCat,  3
+1,    ResWtrHtr:ElementType,     0,  3		; "Electric Resistance"
+2,          2, "Instantaneous"
+2,          3, "Storage"
+1,    ResWtrHtr:ElementType,     2,  3		; "Heat Pump"
+; 2,          1, "Indirect"							- SAC 7/1/16 - removed item inconsistent w/ latest HPWH options (for 2016.2.0 release)
+2,          3, "Storage"
+1,    ResWtrHtr:ElementType,  -999,  3		; all others
+2,          0, "Boiler"
+2,          1, "Indirect"
+2,          2, "Instantaneous"
+2,          3, "Storage"
+
+0, ResWtrHtr:TankType,  6
+1,   Proj:Ruleset,  -1001,   6        ; Backward compatibility
+2,          2, "Large Tankless"          ; %WHTYPE_LTANKLES = 2		' large tankless, same as large instantaneous
+2,          5, "Small Tankless"          ; %WHTYPE_STANKLES = 5		' small tankless, same as small instantaneous
+1,   Proj:Ruleset,   -999,   6        ; current selections
+2,          0, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect
+2,          2, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous
+2,          3, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage
+2,          5, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+;2,          7, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank
+
+0, ResWtrHtr:TankZn,  3
+2,          0, "Conditioned"
+2,          1, "Unconditioned"
+2,          2, "Outside or in Exterior Closet"
+
+0, ResWtrHtr:AmbCond,  1
+2,          1, "Unconditioned"
+2,         -1, "Conditioned"
+
+0, ResWtrHtr:AirSrcHtPumpType,  0
+2,          0, "- select HPWH type -"
+2,         11, "AO Smith PHPT 60"
+2,         12, "AO Smith PHPT 80"
+2,         13, "AO Smith HPTU 50"
+2,         14, "AO Smith HPTU 66"
+2,         15, "AO Smith HPTU 80"
+2,         19, "GE2014 50"
+2,         23, "GE2014 80"
+2,         21, "Rheem HB 50"
+2,         22, "Stiebel 220E"
+
+
+0, cseTOP:jan1DOW,  5
+2,              1,    "SUN"
+2,              2,    "MON"
+2,              3,    "TUE"
+2,              4,    "WED"
+2,              5,    "THU"
+2,              6,    "FRI"
+2,              7,    "SAT"
+
+0, cseTOP:skyModel,  2
+2,              1,    "isotropic"
+2,              2,    "anisotropic"
+
+0, cseTOP:dt,  2
+2,              1,    "NO"
+2,              2,    "YES"
+
+0, cseDHWHEATER:whType,  1
+2,          1, "SmallStorage"
+2,          2, "LargeStorage"
+2,          3, "SmallInstantaneous"
+2,          4, "LargeInstantaneous"
+
+0, cseDHWHEATER:whHeatSrc,  1
+2,          1, "Fuel"
+2,          2, "Resistance"
+2,          3, "ASHP"
+2,          4, "ASHPX"
+2,          5, "ResistanceX"		; SAC 4/14/16
+
+0, cseDHWLOOPSEG:wgTy,  0
+2,	         0, "- specify -"
+2,          1, "Supply"                  
+2,          2, "Return"                 
+
+0, cseEXPORT:exType,  -1
+2,              1,    "ZEB"
+2,              2,    "ZST"
+2,              3,    "MTR"
+2,              4,    "AH"
+2,              5,    "UDT"
+2,              6,    "SUM"
+
+0, cseEXPORT:exFreq,  -1
+2,              1,    "YEAR"
+2,              2,    "MONTH"
+2,              3,    "DAY"
+2,              4,    "HOUR"
+2,              5,    "HOURANDSUB"
+2,              6,    "SUBHOUR"
+
+
+0, Hol:SpecMthd, -1
+2,              1,    "Date"
+2,              2,    "First"
+2,              3,    "Second"
+2,              4,    "Third"
+2,              5,    "Fourth"
+2,              6,    "Last"
+
+0, Hol:DayOfWeek, -1
+2,              1,    "Monday"
+2,              2,    "Tuesday"
+2,              3,    "Wednesday"
+2,              4,    "Thursday"
+2,              5,    "Friday"
+2,              6,    "Saturday"
+2,              7,    "Sunday"
+
+0, Hol:Month, -1
+2,              1,    "January"
+2,              2,    "February"
+2,              3,    "March"
+2,              4,    "April"
+2,              5,    "May"
+2,              6,    "June"
+2,              7,    "July"
+2,              8,    "August"
+2,              9,    "September"
+2,             10,    "October"
+2,             11,    "November"
+2,             12,    "December"
+
+
+0, INISettings:SimulationStorage, 1
+2,              0,    "0 - ALL simulation sub-directories and files deleted"
+2,              1,    "1 - Only the input (.idf) files are retained (user default)"
+2,              2,    "2 - (#1 above) + summary output (.htm) retained"
+2,              3,    "3 - (#2 above) + limited additional output (.csv|.eio|.err|.rdd) retained"
+2,              4,    "4 - (#3 above) + SQL output (.sql) retained"
+2,              5,    "5 - (#3 (not 4) above) + other standard output (.eso|.mtr) retained"
+2,              6,    "6 - (#4 & 5 above) - both SQL & other standard output files retained"
+2,              7,    "7 - ALL simulation input and output files retained"
+
+0, INISettings:AnalysisStorage, 2
+2,              0,    "0 - ALL analysis files deleted (along w/ processing directory if no other sim/csv files stored)"
+2,              1,    "1 - Only simulation SDD XML (.xml) files are retained"
+2,              2,    "2 - (#1 above) + OpenStudio model (.osm) files are retained (user default)"
+2,              3,    "3 - ALL files produced during analysis are retained"
+
+
+-1  

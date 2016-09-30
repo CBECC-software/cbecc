@@ -1,0 +1,3104 @@
+;------------------------------------------------------------------------------------------------
+; The format of this file:
+;    Record
+;    Header   Record Contents
+;    -------------------------
+;      0      Class:Property[Array] - identifying the database parameter
+;                which the following symbol list describes (array index
+;                is 1-based (1-N))
+;             Integer - numeric value corresponding to the default symbol
+;                selection
+;
+;      1      Class:Property[Array] - identifying the database parameter
+;                which deteremines whether or not the following symbol
+;                list should be used to describe the parameter identified
+;                in the preceeding 0-record. (array index is 1-based)
+;             Float - value which the preceeding database parameter must
+;                equal in order for the following symbol list to be used
+;                to describe the parameter identified in the preceeding
+;                0-record.
+;             Integer - numeric value corresponding to the default symbol
+;                selection (overrides the default value contained in
+;                preceeding 0- or 1-records).
+;
+;      2      Integer - the numeric value corresponding to this symbol
+;             String - the symbol string which is used to select the
+;                value of the database parameter identified in the 
+;                preceeding 0-record.
+;
+;  Note regarding 0-records:
+;   - Multiple records beginning with 0 ocurring one after the other 
+;     cause the following symbol lists to be defined for each of the
+;     database parameters described in each 0 record.
+;
+;  Notes regarding 1-records:
+;   - Records beginning w/ 1 occur only when the list of selectable
+;     symbols or the default symbol varies based on the value of another
+;     database parameter.
+;   - There can be a maximum of 2 subsequent 1-records.
+;             
+;-------------------------------------------------------------------------
+
+
+0, Proj:Ruleset,  0
+2,              0,    "Constructed At Runtime"  
+2,             16,    "CA Residential 2016, Vers. 1.0 (CA Res 2016.bin)"
+
+0, Proj:ErrorCode,  0
+2,              0,    "None"  
+2,              1,    "To Be Defined"  
+2,              2,    "To Be Defined"  
+
+0, Proj:SimSpeedOption,  0
+2,              0,    "Compliance"  
+2,              1,    "Quick"  
+2,              2,    "- specify -"  
+
+0, Proj:AnalysisType, 13
+; 2,              0,    "Annual Simulation"  
+; 2,              1,    "2013 Residential Title-24"  
+1,    Proj:EnableResearchMode,     0,  13   ; disable Research mode
+2,             13,    "Proposed and Standard"		; Complete Compliance run
+2,             12,    "Proposed Only"					; When developing a solution you save time by not rerunning STD
+1,    Proj:EnableResearchMode,  -999,  13   ; enable Research mode
+2,             13,    "Proposed and Standard"		; Complete Compliance run
+2,             12,    "Proposed Only"					; When developing a solution you save time by not rerunning STD
+2,              0,    "Research"							; Unlocks T24 rules
+
+0, Proj:StandardsVersion, 0
+1,    Proj:StdDesignBase,     2013,  2015   ; only valid options for 2013 Stds is 2014 or 2015
+2,              0,    "- select -"  
+2,           2014,    "Compliance 2014"		; valid through December 2014 (with current Federal Air Conditioning efficiency requirements)
+2,           2015,    "Compliance 2015"		; any time (with 2015 Federal Air Conditioning Requirements)  and solar credit
+1,    Proj:StdDesignBase,     2008,  2010   ; only valid options for 2008 Stds is 2010
+2,              0,    "- select -"  
+2,           2010,    "Fed Equip Stds applicable in 2010"		; for design rating calcs
+1,    Proj:StdDesignBase,     2006,  2007   ; only valid options for 2006 IECC is 2007
+2,              0,    "- select -"  
+2,           2007,    "Fed Equip Stds applicable in 2007"		; for design rating calcs
+1,    Proj:StdDesignBase,     2014,  2014   ; only valid options for RESNET2014 is 2014
+2,              0,    "- select -"  
+2,           2014,    "RESNET 2014-based reference run"			; for design rating calcs
+1,    Proj:StdDesignBase,     2016,  2017   ; only valid options for 2016 Stds is 2017
+2,              0,    "- select -"  
+2,           2017,    "Compliance 2017"		; for 2016 Stds
+
+0, Proj:GasType,  1
+1,    Proj:NatGasAvailable,     0,  2   ; Natural Gas is NOT available
+2,              1,	"Natural Gas"
+2,	             2,	"Propane"
+1,    Proj:NatGasAvailable,  -999,  1   ; Natural Gas IS available
+2,              1,	"Natural Gas"
+2,	             2,	"Propane"
+
+;	mjb	added for E+A+A implementation	9/20/13
+0, Proj:RunScope, 1
+2,		1,	"Newly Constructed"
+2,		2,	"Addition and/or Alteration"
+
+0, Proj:AnalysisReport, 1		; SAC 2/6/14 - switched default from 0 to 1
+2,              0,    "- specify -"
+2,              1,    "Building Summary (csv)"  ; SAC 6/10/13 - first one hard coded.  In future, could populate this @ runtime based on available ReportMaster_* rulelists
+
+;	mjb	added for design rating calcs	1/12/15
+0, Proj:StdDesignBase, 2016
+0, Proj:CompCodeBase, 2016
+2,           2008,    "CA2008"		; 
+2,           2013,    "CA2013"		; 
+2,           2016,    "CA2016"		; 
+;2,           2006,    "IECC2006"		; 
+
+; SAC 3/8/16 - added 'RESNET2014' to list, set it as the default and associate it w/ mods from MJB for CA EDR reference run
+0, Proj:DesignRatingBase, 2014
+1,    Proj:BypassRuleLimits,    2,  2014		; SAC 4/20/15 - allow 'CA2008' when BypassRuleLimits = 2
+2,           2008,    "CA2008"		; 
+2,           2006,    "IECC2006"		; 
+2,           2014,    "RESNET2014"	; 
+1,    Proj:BypassRuleLimits, -999,  2014
+2,           2006,    "IECC2006"		; 
+2,           2014,    "RESNET2014"	; 
+
+0, Proj:IntGainsMethod,  0		; SAC 4/13/16 - defaulted in rules
+2,              0,    "- select -"  
+2,           2013,    "CA2013"		; 
+2,           2016,    "CA2016"		; 
+
+; SAC 11/2/15 - switched default from T24DHW to CSE
+0, Proj:DHWCalcMethod, 1
+2,              0,    "T24DHW"
+2,              1,    "CSE"
+2,              2,    "CSE (T24 match)"
+
+0, Proj:CSEDHWUseMethod,  1		; SAC 3/17/16
+2,              1,    "Old (via wsUse)"
+2,              2,    "New (via wsDayUse)"
+
+0, Proj:CAHPProgram, 0
+1,    Proj:IsMultiFamily,     0,  0   ; Single family
+2,              0,    "- none -"
+2,              1,    "California Advanced Homes Program Single Family (CAHP)"
+1,    Proj:IsMultiFamily,  -999,  0   ; Multifamily
+2,              0,    "- none -"
+2,             11,    "California Advanced Homes Program MultiFamily (CAHP-MF)"
+2,             12,    "PG&E California MultiFamily New Homes (PG&E CMFNH)"
+
+0, Proj:ClimateZone,  0
+1,    Proj:Ruleset,  -1001,  0   ; Backward compatibility
+2,              4,    "CZ4  (Sunnyvale)"  
+2,              6,    "CZ6  (Los Angeles)"  
+2,              8,    "CZ8  (El Toro)"  
+2,             14,    "CZ14  (China Lake)"  
+2,             15,    "CZ15  (El Centro)"  
+2,             16,    "CZ16  (Mt. Shasta)"  
+1,    Proj:Ruleset,   -999,  0   ; Current selections
+2,              0,    "- select -"  
+2,              1,    "CZ1  (Arcata)"  
+2,              2,    "CZ2  (Santa Rosa)"  
+2,              3,    "CZ3  (Oakland)"  
+2,              4,    "CZ4  (San Jose)"  
+2,              5,    "CZ5  (Santa Maria)"  
+2,              6,    "CZ6  (Torrance)"  
+2,              7,    "CZ7  (San Diego)"  
+2,              8,    "CZ8  (Fullerton)"  
+2,              9,    "CZ9  (Burbank)"  
+2,             10,    "CZ10  (Riverside)"  
+2,             11,    "CZ11  (Red Bluff)"  
+2,             12,    "CZ12  (Sacramento)"  
+2,             13,    "CZ13  (Fresno)"  
+2,             14,    "CZ14  (Palmdale)"  
+2,             15,    "CZ15  (Palm Springs)"  
+2,             16,    "CZ16  (Blue Canyon)"  
+
+
+;0, Project:BuildingType,  0
+;2,              0,    "- specify -"
+;2,              1,    "Bldg type 1"
+
+
+0, Proj:MultiFamilyType,  3	; SAC 4/15/15
+2,              1,    "Duplex"
+2,              2,    "Townhomes"
+2,              3,    "Other"
+
+0, Project:ExistingCondVerif,  0
+2,              0,    "No"
+2,              1,    "Yes"
+
+
+0, Project:InsulConsQuality,  1
+2,              1,    "Standard"
+2,              2,    "Improved"
+
+; mjb-10/15/13	E+A+A
+;mjb	2/18/14	E+A+A added Zone Status
+0, ExtWall:Status,  3
+0, ExteriorFloor:Status,  3
+0, CathedralCeiling:Status,  3
+0, CeilingBelowAttic:Status,  3
+0, FloorOverCrawl:Status,  3
+0, Window:Status,  3
+0, Door:Status,  3
+;0, Zone:HVACSysStatus,  3
+0, HVACSys:Status,  3
+0, HVACSys:StatusArray,  3
+;0, HVACHeat:Status,  3
+;0, HVACCool:Status,  3
+;0, HVACHtPump:Status,  3
+0, HVACFan:Status,  3
+;0, HVACDist:Status,  3
+;0, Zone:DHWSys1Status,  3
+;0, Zone:DHWSys2Status,  3
+0, DHWSys:Status,  3
+;0, DHWHeater:Status,  3
+0, IntWall:Status,  3
+0, UndWall:Status,  3
+0, UndFloor:Status,  3
+0, SlabFloor:Status,  3
+0, Attic:Status,  3
+0, Skylt:Status,  3
+0, InteriorFloor:Status,  3
+0, InteriorCeiling:Status,  3
+2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+
+0, Zone:Status,  3
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,              1,    "Altered"
+1,    Proj:Ruleset,   -999,  3   ; Current selections
+2,              1,    "Existing"
+2,              3,    "New"
+
+0, Zone:HVACSysStatus,  3
+0, Zone:DHWSys1Status,  3
+0, Zone:DHWSys2Status,  3
+1,    Proj:IsAddAlone,   0,  3   ; Not Addition Alone
+2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+1,    Proj:IsAddAlone,   1,  3   ; Addition Alone
+2,              1,    "Existing"
+2,              3,    "New"
+
+0, HVACDist:Status,  3
+2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+2,              4,    "Existing + New"
+
+0, SCSysRpt:Status,  0
+2,              0,    "(not specified)"
+2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+2,              4,    "Existing + New Ducts"
+
+0, DHWSysRpt:Status,  0
+2,              0,    "(not specified)"
+2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+
+0, Proj:Status,  3
+;2,              1,    "Existing"
+2,              2,    "Altered"
+2,              3,    "New"
+
+;; mjb-11/27/13	E+A+A
+;0, HVACSys:EAAtype,  1
+;0, HVACDist:EAAtype,  1
+;0, HVACFan:EAAtype,  1
+;2,              1,    "New"  
+;2,              2,    "Altered"  
+;2,              3,    "Existing"  
+;2,              4,    "Verified"  
+
+; SAC 12/26/14 - new properties to help track system performance vs. std design
+0, HVACSys:HeatEqpVsStandard,  -1
+0, HVACSys:CoolEqpVsStandard,  -1
+0, HVACSys:DuctsVsStandard,  -1
+0, HVACDist:DuctsVsStandard,  -1
+2,             -1,    "Worse than Standard"
+2,              0,    "Equal to Standard"
+2,              1,    "Better than Standard"
+
+0, Proj:ApplDryerFuel, 2
+0, Proj:ApplCookFuel, 2
+0, DwellUnitType:DryerFuel, 2
+0, DwellUnitType:CookFuel, 2
+1,    Proj:Ruleset,  -1001,  2   ; Backward compatibility - previous fuel choice
+2,				2,	"Natural gas"
+1,    Proj:Ruleset,  -1002,  2   ; Backward compatibility - previous fuel choice
+2,				3,	"Other"
+1,    Proj:Ruleset,   -999,  2   ; current options
+2,				1,	"Electricity"
+2,				2,	"Gas"
+
+0, Proj:ApplRefrigEffMethod, 1
+0, DwellUnitType:RefrigEffMethod, 1
+1,    Proj:IntGainsMethod,  2013,  1
+2,				1,	"default (669 kWh/yr)"
+2,				2,	"- specify -"
+1,    Proj:IntGainsMethod,  -999,  1
+2,				1,	"from # bedrooms/unit"
+2,				2,	"- specify -"
+
+0, Proj:ApplDishUsageMethod, 1
+0, DwellUnitType:DishUsageMethod, 1
+2,				1,	"from # bedrooms/unit"
+2,				2,	"- specify -"
+
+0, Proj:UnitIAQOption,  1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,				1,	"Default Minimum IQA Fan"
+2,				2,	"Specify Individual Fans"
+1,    Proj:Ruleset,  -1002,  2   ; Backward compatibility
+2,				2,	"Specify Individual Whole House Fans"
+1,    Proj:Ruleset,   -999,  1   ; Current selections
+2,				1,	"Default Minimum IAQ Fan"
+2,				2,	"Specify Individual IAQ Fans"
+2,				3,	"CFI (Central Fan Integrated) IAQ"
+
+0, DwellUnitType:IAQOption,  1
+2,				1,	"Default Minimum IAQ Fan"
+2,				2,	"Specify Individual IAQ Fans"
+2,				3,	"CFI (Central Fan Integrated) IAQ"
+
+0, Proj:UnitClVentOption,  0
+1,    Proj:Ruleset,   -1001,  1   ; Backward compatibility
+2,				2,	"Specify Individual Fans"
+1,    Proj:Ruleset,    -999,  1   ; Current selections
+2,				0,	"- none -"
+2,				1,	"Default Prescriptive Whole House Fan"
+2,				2,	"Specify Individual Whole House Fans"
+2,				3,	"CFI (Central Fan Integrated) Cool Vent"
+
+
+0, cseTOP:jan1DOW,  5
+2,              1,    "SUN"
+2,              2,    "MON"
+2,              3,    "TUE"
+2,              4,    "WED"
+2,              5,    "THU"
+2,              6,    "FRI"
+2,              7,    "SAT"
+
+0, cseTOP:skyModel,  2
+2,              1,    "isotropic"
+2,              2,    "anisotropic"
+
+0, cseTOP:dt,  2
+2,              1,    "NO"
+2,              2,    "YES"
+
+
+0, cseIZXFER:izNVType,  1
+2,              1,    "NONE"				; No interzone ventilation
+2,              2,    "TWOWAY"			; Uncontrolled flow in either direction
+2,              3,    "AIRNETIZ"			; Single opening to another zone
+2,              4,    "AIRNETEXT"		; Single opening to ambient
+2,              5,    "AIRNETHORIZ"		; Horizontal (large) opening between two zones
+2,              6,    "AIRNETEXTFAN"	; Fan from exterior to zone
+2,              7,    "AIRNETIZFAN"		; Fan between two zones
+2,              8,    "AIRNETEXTFLOW"	; Specified flow from exterior to zone
+2,              9,    "AIRNETIZFLOW"	; Specicified flow between two zones 
+2,             10,    "AIRNETHERV"		; SAC 5/20/13 - New option for IAQ balanced / heat recovery ventilator
+
+
+0, SchDay:Type,   1
+;0, SchWeek:Type,   1
+;0, Schedule:Type,   1
+2,              1,    "Fraction"
+2,              2,    "OnOff"
+2,              3,    "Temperature"
+
+
+; SAC 1/20/16 - added PVWatts input & CSE properties
+0, Proj:PVWInputs,  0
+2,              0,    "Simplified"
+2,              1,    "Detailed"
+
+0, Proj:PVWArrayTiltInput,  0
+2,              0,    "deg"
+2,              1,    "pitch"
+
+0, Proj:PVWModuleType,  1
+1,     Proj:PVWInputs,     0,  1
+2,              1,    "Standard"
+2,              2,    "Premium"
+1,     Proj:PVWInputs,     1,  1
+1,     Proj:AllowPVWModTypeCust,     1,  1	; SAC 2/25/16
+2,              1,    "Standard"
+2,              2,    "Premium"
+2,              3,    "Thin Film"
+2,              4,    "Custom"
+1,     Proj:PVWInputs,  -999,  1
+2,              1,    "Standard"
+2,              2,    "Premium"
+2,              3,    "Thin Film"
+0, csePVARRAY:pvModuleType,  1
+2,              1,    "Standard"
+2,              2,    "Premium"
+2,              3,    "ThinFilm"
+2,              4,    "Custom"
+
+0, Proj:PVWArrayType,  1
+2,              1,    "Fixed (open rack)"
+2,              2,    "Fixed (roof mount)"
+0, csePVARRAY:pvArrayType,  1
+2,              1,    "FixedOpenRack"
+2,              2,    "FixedRoofMount"
+2,              3,    "OneAxisTracking"
+2,              4,    "OneAxisBacktracking"
+2,              5,    "TwoAxisTracking"
+
+
+; ; SAC 6/18/14 - added - allow for zonal & non-zonal settings regardless of project selection of zonal controls
+; 0, DwellUnitType:EZType,  -1
+; 0, EquipZone:EZType,  -1
+; 2,              1,    "Conditioned"
+; 2,              2,    "Living"
+; 2,              3,    "Sleeping"
+; 2,             10,    "Unconditioned"
+
+
+0, Zone:Type,  1
+1,    Proj:ZonalControl,    0,  1   ; NOT zonal control
+2,              1,    "Conditioned"
+2,             10,    "Unconditioned"
+1,    Proj:ZonalControl, -999,  2   ; Zonal control selected
+2,              2,    "Living"
+2,              3,    "Sleeping"
+2,             10,    "Unconditioned"
+
+0, Zone:ZnModel,  0
+0, cseZONE:znModel,  0
+2,              0,    "- select -"
+2,              1,    "CNE"
+2,              2,    "CSE"
+2,              3,    "CZM"
+2,              4,    "UZM"
+2,              5,    "UZX"
+
+
+0, Attic:Type,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              1,    "Conditioned (not yet implemented)"
+1,    Proj:Ruleset,   -1002,  0   ; Backward compatibility
+2,              1,    "Conditioned"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              0,    "Ventilated"
+2,              1,    "Unventilated"
+
+;0, Attic:VentAreaChoice,  300
+;2,            300,    "attic floor area / 300"
+;2,            150,    "attic floor area / 150"
+
+; 0, AtticRoof:Orientation,  1
+; 2,             99,    "- specify -"
+; 2,              1,    "Front"
+; 2,              2,    "Left"
+; 2,              3,    "Right"
+; 2,              4,    "Back"
+
+
+0, CrawlSpace:Type,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              0,    "Vented"
+2,              1,    "Sealed w/ Insulated Walls"
+2,              2,    "Sealed w/ Powered Exhaust"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              0,    "Normal (vented)"
+2,              1,    "Insulated w/ Reduced Ventilation"
+2,              2,    "Sealed and Mechanically Ventilated"
+
+
+; 0, UndWall:Orientation,  1
+0, ExtWall:Orientation,  1
+0, CathedralCeiling:Orientation, 2
+2,             99,    "- specify -"
+2,              1,    "Front"
+2,              2,    "Left"
+2,              3,    "Right"
+2,              4,    "Back"
+
+; 0, ExtWall:CavityRValue,  13
+; 2,             13,    "R-13"
+; 2,             15,    "R-15"
+; 2,             17,    "R-17"
+; 2,             19,    "R-19"
+; 2,             21,    "R-21"
+; 2,             24,    "R-24"
+; 2,             26,    "R-26"
+; 2,             29,    "R-29"
+; 
+; 0, ExtWall:SheathingVRValue,  4
+; 2,              4,    "R-4"
+; 2,              8,    "R-8"
+; 
+; 0, ExtWall:FrameType,  4
+; 2,              4,    "Wood, 2x4"
+; 2,              6,    "Wood, 2x6"
+; 
+; 0, ExtWall:FrameSpacing,  16
+; 2,             16,    "16 in. O.C."
+; 2,             24,    "24 in. O.C."
+
+
+0, SlabFloor:Surface,  0
+0, SlabFloor:exSurface,  0
+0, UndFloor:Surface,  0
+2,              0,    "Default (80% carpeted/covered, 20% exposed)"
+2,              1,    "Carpeted"
+2,              2,    "Exposed"
+
+0, SlabFloor:EdgeInsulOption,  5008		; Edge insulation R-value & depth (in inches)
+0, SlabFloor:exEdgeInsulOption,  5008		; existing Edge insulation R-value & depth (in inches)
+2,              0,    "- none -"
+2,           5008,    "R-5, 8 inches"
+2,           7008,    "R-7, 8 inches"
+2,          10008,    "R-10, 8 inches"
+2,           5016,    "R-5, 16 inches"
+2,           7016,    "R-7, 16 inches"
+2,          10016,    "R-10, 16 inches"
+2,           5024,    "R-5, 2 feet"
+2,           7024,    "R-7, 2 feet"
+2,          10024,    "R-10, 2 feet"
+2,          15024,    "R-15, 2 feet"
+2,           5048,    "R-5, 4 feet"
+2,           7048,    "R-7, 4 feet"
+2,          10048,    "R-10, 4 feet"
+2,          15048,    "R-15, 4 feet"
+2,          20048,    "R-20, 4 feet"
+
+
+0, ExteriorFloor:Type,  0
+2,              0,    "- select floor type -"
+2,              1,    "Raised Light Floor"
+; 2,              1,    "Raised Light Floor (above crawl space)"
+; 2,              2,    "Raised Light Floor (no crawl space)"
+; 2,              3,    "Raised Concrete Floor"
+
+
+0, cseSURFACE:sfType,  -1  ; 2
+2,              1,    "Floor"
+2,              2,    "Wall"
+2,              3,    "Ceiling"
+2,              4,    "IntMass1"
+2,              5,    "IntMass2"
+
+0, cseSURFACE:sfModel,   -1
+0, cseDOOR:drModel,   -1
+2,              1,    "Forward_Difference"
+
+0, cseSURFACE:sfExCnd,  -1
+2,              1,    "Ambient"
+2,              2,    "SpecifiedT"
+2,              3,    "AdjZn"
+2,              4,    "Adiabatic"
+2,              5,    "Ground"
+
+0, cseSURFACE:sfExHcModel,  -1
+2,              1,    "Unified"
+
+0, cseSURFACE:sfInHcModel,  -1
+2,              1,    "Unified"
+
+0, cseSURFACE:UI_Con,  2
+1,    cseSURFACE:sfType,  1,  1001   ; "Floor"
+2,           1001,    "ExpSlabfloor"
+2,           1002,    "CarpSlabfloor"
+2,           1003,    "Flr2Mass"
+2,           1004,    "FFrm2x6  (5.25in - 2x6)"
+2,           1005,    "IntFFrm2x10  (9.25in - 2x10)"
+2,           1006,    "IntFCav2x10  (9.25in - 2x10)"
+2,           1007,    "FFrm2x6Crawl  (5.25in - 2x6)"
+2,           1008,    "FCav19  (F.19 - 2x6)"
+2,           1009,    "FCav19Crawl  F(.19 - 2x6)"
+1,    cseSURFACE:sfType,  2,  2001   ; "Wall"
+2,           2001,    "WFrm2x4  (3.5in)"
+2,           2002,    "WFrm2x4_Foam  (3.5in)"
+2,           2003,    "WFrm2x6  (5.5in - 2x6)"
+2,           2004,    "WFrm2x6_Foam  (5.5in - 2x6)"
+2,           2005,    "WCav13  (W.13 - 2X4)"
+2,           2006,    "WCav13_Foam  (W.13 - 2X4)"
+2,           2007,    "WCav15  (W.15 - 2X4)"
+2,           2008,    "WCav15_Foam  (W.15 - 2X4)"
+2,           2009,    "WCav17  (W.17 - 2X4)"
+2,           2010,    "WCav17_Foam  (W.17 - 2X4)"
+2,           2011,    "WCav19  (W.19 - 2X6)"
+2,           2012,    "WCav19_Foam  (W.19 - 2X6)"
+2,           2013,    "WCav21  (W.21 - 2X6)"
+2,           2014,    "WCav21_Foam  (W.21 - 2X6)"
+2,           2015,    "WCav24  (W.24 - 2X6)"
+2,           2016,    "WCav24_Foam  (W.24 - 2X6)"
+2,           2017,    "WCav26  (W.26 - 2X6)"
+2,           2018,    "WCav26_Foam  (W.26 - 2X6)"
+2,           2019,    "WCav29  (W.29 - 2X6)"
+2,           2020,    "WCav29_Foam  (W.29 - 2X6)"
+2,           2021,    "IntwallCav  (2x4)"
+2,           2022,    "IntwallFrm  (2x4)"
+2,           2023,    "FurnCon  (2.5in wood)"
+1,    cseSURFACE:sfType,  3,  3001   ; "Ceiling"
+2,           3001,    "Ceiling"
+2,           3002,    "CFrm2x10  (9.25in - 2x10)"
+2,           3003,    "CCav30  (9.25in - 2x10)"
+1,    cseSURFACE:sfType,  -999,  1001   ; other...
+2,           1001,    "ExpSlabfloor"
+2,           1002,    "CarpSlabfloor"
+2,           1003,    "Flr2Mass"
+2,           1004,    "FFrm2x6  (5.25in - 2x6)"
+2,           1005,    "IntFFrm2x10  (9.25in - 2x10)"
+2,           1006,    "IntFCav2x10  (9.25in - 2x10)"
+2,           1007,    "FFrm2x6Crawl  (5.25in - 2x6)"
+2,           1008,    "FCav19  (F.19 - 2x6)"
+2,           1009,    "FCav19Crawl  F(.19 - 2x6)"
+2,           2001,    "WFrm2x4  (3.5in)"
+2,           2002,    "WFrm2x4_Foam  (3.5in)"
+2,           2003,    "WFrm2x6  (5.5in - 2x6)"
+2,           2004,    "WFrm2x6_Foam  (5.5in - 2x6)"
+2,           2005,    "WCav13  (W.13 - 2X4)"
+2,           2006,    "WCav13_Foam  (W.13 - 2X4)"
+2,           2007,    "WCav15  (W.15 - 2X4)"
+2,           2008,    "WCav15_Foam  (W.15 - 2X4)"
+2,           2009,    "WCav17  (W.17 - 2X4)"
+2,           2010,    "WCav17_Foam  (W.17 - 2X4)"
+2,           2011,    "WCav19  (W.19 - 2X6)"
+2,           2012,    "WCav19_Foam  (W.19 - 2X6)"
+2,           2013,    "WCav21  (W.21 - 2X6)"
+2,           2014,    "WCav21_Foam  (W.21 - 2X6)"
+2,           2015,    "WCav24  (W.24 - 2X6)"
+2,           2016,    "WCav24_Foam  (W.24 - 2X6)"
+2,           2017,    "WCav26  (W.26 - 2X6)"
+2,           2018,    "WCav26_Foam  (W.26 - 2X6)"
+2,           2019,    "WCav29  (W.29 - 2X6)"
+2,           2020,    "WCav29_Foam  (W.29 - 2X6)"
+2,           2021,    "IntwallCav  (2x4)"
+2,           2022,    "IntwallFrm  (2x4)"
+2,           2023,    "FurnCon  (2.5in wood)"
+2,           3001,    "Ceiling"
+2,           3002,    "CFrm2x10  (9.25in - 2x10)"
+2,           3003,    "CCav30  (9.25in - 2x10)"
+
+; 0, cseSURFACE:sfCon,  1001
+; 2,           1001,    "ExpSlabfloor"
+; 2,           1002,    "CarpSlabfloor"
+; 2,           1003,    "Flr2Mass"
+; 2,           1004,    "FFrm2x6"
+; 2,           1005,    "IntFFrm2x10"
+; 2,           1006,    "IntFCav2x10"
+; 2,           1007,    "FFrm2x6Crawl"
+; 2,           1008,    "FCav19"
+; 2,           1009,    "FCav19Crawl"
+; 2,           2001,    "WFrm2x4"
+; 2,           2002,    "WFrm2x4_Foam"
+; 2,           2003,    "WFrm2x6"
+; 2,           2004,    "WFrm2x6_Foam"
+; 2,           2005,    "WCav13"
+; 2,           2006,    "WCav13_Foam"
+; 2,           2007,    "WCav15"
+; 2,           2008,    "WCav15_Foam"
+; 2,           2009,    "WCav17"
+; 2,           2010,    "WCav17_Foam"
+; 2,           2011,    "WCav19"
+; 2,           2012,    "WCav19_Foam"
+; 2,           2013,    "WCav21"
+; 2,           2014,    "WCav21_Foam"
+; 2,           2015,    "WCav24"
+; 2,           2016,    "WCav24_Foam"
+; 2,           2017,    "WCav26"
+; 2,           2018,    "WCav26_Foam"
+; 2,           2019,    "WCav29"
+; 2,           2020,    "WCav29_Foam"
+; 2,           2021,    "IntwallCav"
+; 2,           2022,    "IntwallFrm"
+; 2,           2023,    "FurnCon"
+; 2,           3001,    "Ceiling"
+; 2,           3002,    "CFrm2x10"
+; 2,           3003,    "CCav30"
+
+
+0, Cons:CanAssignTo,  0
+2,              0,    "Exterior Walls"  
+2,             10,    "Interior Walls"  
+2,             20,    "Underground Walls"      ; SAC 2/15/12
+2,              1,    "Attic Roofs"  
+2,              2,    "Cathedral Ceilings"  
+2,              3,    "Ceilings (below attic)"  
+2,              6,    "Interior Ceilings"        ; SAC 2/15/12 - restored by SAC 9/30/13  
+2,              4,    "Interior Floors"  
+2,              5,    "Exterior Floors"  
+2,              9,    "Floors Over Crawlspace"   ; SAC 3/4/13
+; 2,              7,    "Slab Floors"            ; SAC 2/15/12
+; 2,              8,    "Underground Floors"     ; SAC 2/15/12
+
+0, Cons:Type,  0
+1, 	Cons:CanAssignTo,  0,  0   ; "Exterior Walls"     
+; 2,              9,    "No Frame (concrete/CMU)"  
+2,              0,    "Wood Framed Wall"  
+2,              1,    "Steel Framed Wall"  					; DD 2/11/14
+2,				2,    "Concrete / ICF / Brick"				; DD 2/12/14	
+2,				3,    "Hollow Unit Masonry"				    ; DD 2/12/14	
+2,				4,    "Adobe / Strawbale / Log"				; DD 2/12/14	
+2,				5, 	  "SIPS Wall"
+1, 	Cons:CanAssignTo, 10,  0   ; "Interior Walls"     
+2,              0,    "Wood Framed Wall"  
+2,              1,    "Steel Framed Wall"   	
+2,				2,    "Concrete / ICF / Brick"				; DD 2/14/14	
+2,				3,    "Hollow Unit Masonry"					; DD 2/14/14	
+2,				4,    "Adobe / Strawbale / Log"				; DD 2/14/14
+2,				5, 	  "SIPS Wall"
+1, 	Cons:CanAssignTo, 20,  0   ; "Underground Walls"     
+; 2,              9,    "No Frame (concrete/CMU)"  		; SAC 11/18/14 - remove unsupported options
+; 2,              0,    "Wood Framed Wall"  
+; 2,              1,    "Steel Framed Wall"  					; DD 2/11/14
+2,				2,    "Concrete / ICF / Brick"				; DD 2/14/14	
+; 2,				3,    "Hollow Unit Masonry"					; DD 2/14/14	
+; 2,				4,    "Adobe / Strawbale / Log"				; DD 2/14/14
+; 2,				5, 	  "SIPS Wall"
+1, 	Cons:CanAssignTo,  1, 10   ; "Attic Roofs"   
+2,             10,    "Wood Framed Ceiling"  
+2,             11,    "Built-up Roof"  
+; 2, 			   12,    "Steel Framed Ceiling" 				; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+2, 			   13,    "SIPS Ceiling" 						; DD 2/26/14
+1, 	Cons:CanAssignTo,  2, 10   ; "Cathedral Ceilings"   
+2,             10,    "Wood Framed Ceiling"  
+2,             11,    "Built-up Roof"  
+; 2, 			   12,    "Steel Framed Ceiling" 				; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+2, 			   13,    "SIPS Ceiling" 						; DD 2/26/14
+1, 	Cons:CanAssignTo,  3, 10   ; "Ceilings (below attic)"   
+2,             10,    "Wood Framed Ceiling"
+; 2, 			   12,    "Steel Framed Ceiling"   				; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+; 2, 			   13,    "SIPS Ceiling" 						; DD 2/26/14
+1, 	Cons:CanAssignTo,  6, 10   ; "Interior Ceilings" 
+2,             10,    "Wood Framed Ceiling"  
+; 2, 			   12,    "Steel Framed Ceiling" 				; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+; 2, 			   13,    "SIPS Ceiling" 						; DD 2/26/14
+1, 	Cons:CanAssignTo,  4, 20   ; "Interior Floors" 
+2,             20,    "Wood Framed Floor"  
+; 2,			   23,	  "Steel Framed Floor"					; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+2,			   24,	  "SIPS Floor"
+2,				25,     "Concrete / ICF / Brick"				; SAC 5/27/14	
+1, 	Cons:CanAssignTo,  5, 20   ; "Exterior Floors" 
+2,             20,    "Wood Framed Floor"  
+; 2,			   23,	  "Steel Framed Floor"					; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+2,			   24,	  "SIPS Floor"
+2,				25,     "Concrete / ICF / Brick"				; SAC 5/27/14	
+1, 	Cons:CanAssignTo,  9, 20   ; "Floors Over Crawlspaces" 
+2,             20,    "Wood Framed Floor"  
+; 2,			   23,	  "Steel Framed Floor"					; DD 2/11/14   - SAC 8/22/14 - removed per GC #356
+2,			   24,	  "SIPS Floor"
+2,				25,     "Concrete / ICF / Brick"				; SAC 5/27/14	
+1, 	Cons:CanAssignTo,  7,  9   ; "Slab Floors"            	; SAC 2/15/12
+2,              9,    "No Frame (concrete/CMU)"  
+1, 	Cons:CanAssignTo,  8,  9   ; "Underground Floors"    	; SAC 2/15/12
+2,              9,    "No Frame (concrete/CMU)"  
+; 2,             21,    "Floor Slab"  
+; 2,             22,    "Basement (underground) Floor"  
+
+; SAC 12/3/12 - enumeration to identify WA vs. WB vs. non-attic edge (n/a) construction 
+0, Cons:AtcEdg_ConsType,  0
+2,              0,    "n/a"  
+2,              1,    "WA"  
+2,              2,    "WB"  
+
+0, Cons:MaterialLibItem,  0
+2,              0,    "none"
+2,         100101,  "Gypsum Board"
+2,         100102,  "Wood layer"
+2,         100103,  "R4 Synth Stucco"
+2,         100104,  "3 Coat Stucco"
+2,         100105,  "Carpet"
+2,         100201,  "Light Roof"
+2,         100202,  "5 PSF Roof"
+2,         100203,  "10 PSF Roof"
+2,         100204,  "15 PSF Roof"
+2,         100205,  "25 PSF Roof"
+2,         100206,  "TileGap"
+2,         100207,  "GHR"
+2,         100208,  "ENSOPRO"
+2,         100209,  "ENSOPRO Plus"
+2,         100301,  "SlabOnGrade"
+2,         100302,  "Earth"
+2,         100303,  "Crawl"
+2,         100106,  "SoftWood"
+2,         100107,  "Concrete"
+2,         100108,  "Hardwood"
+2,         100109,  "FloorTile"
+2,         100110,  "FloorVinyl"
+2,         100111,  "Brick"				; SAC 2/26/14
+2,         100401,  "VertWallCavity"	; SAC 1/28/13
+2,           9803,  "LW CMU Solid Grout" 
+2,           9804,  "MW CMU Solid Grout"
+2,           9805,  "NW CMU Solid Grout"
+2,           9806,  "Clay Unit Solid Grout"
+2,           9807,  "LW CMU Insulated Cores"
+2,           9808,  "MW CMU Insulated Cores"
+2,           9809,  "NW CMU Insulated Cores"
+2,           9810,  "Clay Unit Insulated Cores"
+2,           9811,  "LW CMU Empty Cores"
+2,           9812,  "MW CMU Empty Cores"
+2,           9813,  "NW CMU Empty Cores"
+2,           9814,  "Clay Unit Empty Cores"
+2,          98015,  "Adobe" 
+2,          98016,  "Log"
+2,          98017,  "Straw Bale"
+2,          98018,  "SIPSskin"
+
+
+0, Cons:RoofingType,  0		; Roofing type (table R3-8)
+2,         100206,    "Steep Slope Roof tile, metal tile, or wood shakes"
+2,              0,    "all others"
+
+0, Cons:RoofingLayer,  100201
+1, 	Cons:RoofingType,  100206,  100201   ; "Steep Slope Roof tile, metal tile, or wood shakes"
+2,         100201,    "Light Roof (Metal Tile)"
+2,         100203,    "10 PSF (RoofTile)"
+2,         100207,    "Green Hybrid Roofing Tile"
+2,         100208,    "GHR Tile with ENSOPRO"
+2,         100209,    "GHR Tile with ENSOPRO Plus"
+1, 	Cons:RoofingType,    -999,  100201   ; any others
+;2,              0,    "- no outer roofing -"
+2,         100201,    "Light Roof (Asphalt Shingle)"
+2,         100202,    "5 PSF (Normal Gravel)"
+2,         100203,    "10 PSF (RoofTile)"
+2,         100204,    "15 PSF (Heavy Ballast or Pavers)"
+2,         100205,    "25 PSF (Very Heavy Ballast or Pavers)"
+
+; Cons w/ airspace
+; 
+; others
+
+; SAC 4/30/14 - added R13-60 options
+0, Cons:AbvDeckInsulLayer,  0
+2,              0,    "- no insulation -"
+2,          99001,    "R1 Sheathing"
+2,          99002,    "R2 Sheathing"
+2,          99003,    "R3 Sheathing"
+2,          99004,    "R4 Sheathing"
+2,          99005,    "R5 Sheathing"
+2,          99006,    "R6 Sheathing"
+2,          99007,    "R7 Sheathing"
+2,          99008,    "R8 Sheathing"
+2,          99009,    "R9 Sheathing"
+2,          99010,    "R10 Sheathing"
+2,          99011,    "R11 Sheathing"
+2,          99012,    "R12 Sheathing"
+2,          99013,    "R13 Sheathing"
+2,          99014,    "R14 Sheathing"
+2,          99015,    "R15 Sheathing"
+2,          99016,    "R16 Sheathing"
+2,          99017,    "R17 Sheathing"
+2,          99018,    "R18 Sheathing"
+2,          99019,    "R19 Sheathing"
+2,          99020,    "R20 Sheathing"
+2,          99021,    "R21 Sheathing"
+2,          99022,    "R22 Sheathing"
+2,          99023,    "R23 Sheathing"
+2,          99024,    "R24 Sheathing"
+2,          99025,    "R25 Sheathing"
+2,          99026,    "R26 Sheathing"
+2,          99027,    "R27 Sheathing"
+2,          99028,    "R28 Sheathing"
+2,          99029,    "R29 Sheathing"
+2,          99030,    "R30 Sheathing"
+2,          99031,    "R31 Sheathing"
+2,          99032,    "R32 Sheathing"
+2,          99033,    "R33 Sheathing"
+2,          99034,    "R34 Sheathing"
+2,          99035,    "R35 Sheathing"
+2,          99036,    "R36 Sheathing"
+2,          99037,    "R37 Sheathing"
+2,          99038,    "R38 Sheathing"
+2,          99039,    "R39 Sheathing"
+2,          99040,    "R40 Sheathing"
+2,          99041,    "R41 Sheathing"
+2,          99042,    "R42 Sheathing"
+2,          99043,    "R43 Sheathing"
+2,          99044,    "R44 Sheathing"
+2,          99045,    "R45 Sheathing"
+2,          99046,    "R46 Sheathing"
+2,          99047,    "R47 Sheathing"
+2,          99048,    "R48 Sheathing"
+2,          99049,    "R49 Sheathing"
+2,          99050,    "R50 Sheathing"
+2,          99051,    "R51 Sheathing"
+2,          99052,    "R52 Sheathing"
+2,          99053,    "R53 Sheathing"
+2,          99054,    "R54 Sheathing"
+2,          99055,    "R55 Sheathing"
+2,          99056,    "R56 Sheathing"
+2,          99057,    "R57 Sheathing"
+2,          99058,    "R58 Sheathing"
+2,          99059,    "R59 Sheathing"
+2,          99060,    "R60 Sheathing"
+
+0, Cons:RoofDeckLayer,  100102
+; 2,              0,    "- no roof deck -"
+2,         100102,    "Wood Siding/sheathing/decking"
+
+0, Cons:InsideFinishLayer,  100101
+0, Cons:OtherSideFinishLayer,  100101
+2,              0,    "- select inside finish -"
+2,         100101,    "Gypsum Board"
+
+0, Cons:AtticFloorLayer,  0
+2,              0,    "- no attic floor -"
+2,         100102,    "Wood Siding/sheathing/decking"
+
+0, Cons:FloorSurfaceLayer,  100105
+2,              0,    "- no floor surface -"
+2,         100105,    "Carpeted"
+2,         100108,    "Hardwood"
+2,         100109,    "Tile"
+2,         100110,    "Vinyl"
+
+0, Cons:FlrConcreteFillLayer,  0
+2,              0,    "- no concrete fill -"
+2,         100107,    "Concrete fill"
+
+0, Cons:FloorDeckLayer,  100102
+2,              0,    "- no floor deck -"
+2,         100102,    "Wood Siding/sheathing/decking"
+
+; SAC 4/30/14 - added R13-60 options
+0, Cons:SheathInsul2Layer,  0
+0, Cons:SheathInsulLayer,  0
+2,              0,    "- no sheathing/insul. -"
+2,         100101,    "Gypsum Board"
+2,         100102,    "Wood Siding/sheathing/decking"
+2,          99001,    "R1 Sheathing"
+2,          99002,    "R2 Sheathing"
+2,          99003,    "R3 Sheathing"
+2,          99004,    "R4 Sheathing"
+2,          99005,    "R5 Sheathing"
+2,          99006,    "R6 Sheathing"
+2,          99007,    "R7 Sheathing"
+2,          99008,    "R8 Sheathing"
+2,          99009,    "R9 Sheathing"
+2,          99010,    "R10 Sheathing"
+2,          99011,    "R11 Sheathing"
+2,          99012,    "R12 Sheathing"
+2,          99013,    "R13 Sheathing"
+2,          99014,    "R14 Sheathing"
+2,          99015,    "R15 Sheathing"
+2,          99016,    "R16 Sheathing"
+2,          99017,    "R17 Sheathing"
+2,          99018,    "R18 Sheathing"
+2,          99019,    "R19 Sheathing"
+2,          99020,    "R20 Sheathing"
+2,          99021,    "R21 Sheathing"
+2,          99022,    "R22 Sheathing"
+2,          99023,    "R23 Sheathing"
+2,          99024,    "R24 Sheathing"
+2,          99025,    "R25 Sheathing"
+2,          99026,    "R26 Sheathing"
+2,          99027,    "R27 Sheathing"
+2,          99028,    "R28 Sheathing"
+2,          99029,    "R29 Sheathing"
+2,          99030,    "R30 Sheathing"
+2,          99031,    "R31 Sheathing"
+2,          99032,    "R32 Sheathing"
+2,          99033,    "R33 Sheathing"
+2,          99034,    "R34 Sheathing"
+2,          99035,    "R35 Sheathing"
+2,          99036,    "R36 Sheathing"
+2,          99037,    "R37 Sheathing"
+2,          99038,    "R38 Sheathing"
+2,          99039,    "R39 Sheathing"
+2,          99040,    "R40 Sheathing"
+2,          99041,    "R41 Sheathing"
+2,          99042,    "R42 Sheathing"
+2,          99043,    "R43 Sheathing"
+2,          99044,    "R44 Sheathing"
+2,          99045,    "R45 Sheathing"
+2,          99046,    "R46 Sheathing"
+2,          99047,    "R47 Sheathing"
+2,          99048,    "R48 Sheathing"
+2,          99049,    "R49 Sheathing"
+2,          99050,    "R50 Sheathing"
+2,          99051,    "R51 Sheathing"
+2,          99052,    "R52 Sheathing"
+2,          99053,    "R53 Sheathing"
+2,          99054,    "R54 Sheathing"
+2,          99055,    "R55 Sheathing"
+2,          99056,    "R56 Sheathing"
+2,          99057,    "R57 Sheathing"
+2,          99058,    "R58 Sheathing"
+2,          99059,    "R59 Sheathing"
+2,          99060,    "R60 Sheathing"
+
+0, Cons:FurringInsul2Layer,  100401 ; DD 2/14/14 - for mass walls
+0, Cons:FurringInsulLayer,  100401
+2,         100401,    "- no insulation -"   ; maps to new "VertWallCavity" material
+2,              1,    "R  1"
+2,              2,    "R  2"
+2,              3,    "R  3"
+2,              4,    "R  4"
+2,              5,    "R  5"
+2,              6,    "R  6"
+2,              7,    "R  7"
+2,              8,    "R  8"
+2,              9,    "R  9"
+2,             10,    "R 10"
+2,             11,    "R 11"
+2,             12,    "R 12"
+2,             13,    "R 13"
+2,             14,    "R 14"
+2,             15,    "R 15"
+2,             16,    "R 16"
+2,             17,    "R 17"
+2,             18,    "R 18"
+2,             19,    "R 19"
+2,             20,    "R 20"
+2,             21,    "R 21"
+2,             22,    "R 22"
+2,             23,    "R 23"
+2,             24,    "R 24"
+2,             25,    "R 25"
+2,             26,    "R 26"
+2,             27,    "R 27"
+2,             28,    "R 28"
+2,             29,    "R 29"
+2,             30,    "R 30"
+2,             31,    "R 31"
+2,             32,    "R 32"
+2,             33,    "R 33"
+2,             34,    "R 34"
+2,             35,    "R 35"
+2,             36,    "R 36"
+2,             37,    "R 37"
+2,             38,    "R 38"
+2,             39,    "R 39"
+2,             40,    "R 40"
+2,             41,    "R 41"
+2,             42,    "R 42"
+2,             43,    "R 43"
+2,             44,    "R 44"
+2,             45,    "R 45"
+2,             46,    "R 46"
+2,             47,    "R 47"
+2,             48,    "R 48"
+2,             49,    "R 49"
+2,             50,    "R 50"
+2,             51,    "R 51"
+2,             52,    "R 52"
+2,             53,    "R 53"
+2,             54,    "R 54"
+2,             55,    "R 55"
+2,             56,    "R 56"
+2,             57,    "R 57"
+2,             58,    "R 58"
+2,             59,    "R 59"
+2,             60,    "R 60"
+
+0, Cons:FurringInsul2LayerAbr,  100401		; SAC 6/4/14
+0, Cons:FurringInsulLayerAbr,  100401
+2,              0,    "no insul."
+2,         100401,    "no insul."
+2,              1,    "R-1"
+2,              2,    "R-2"
+2,              3,    "R-3"
+2,              4,    "R-4"
+2,              5,    "R-5"
+2,              6,    "R-6"
+2,              7,    "R-7"
+2,              8,    "R-8"
+2,              9,    "R-9"
+2,             10,    "R-10"
+2,             11,    "R-11"
+2,             12,    "R-12"
+2,             13,    "R-13"
+2,             14,    "R-14"
+2,             15,    "R-15"
+2,             16,    "R-16"
+2,             17,    "R-17"
+2,             18,    "R-18"
+2,             19,    "R-19"
+2,             20,    "R-20"
+2,             21,    "R-21"
+2,             22,    "R-22"
+2,             23,    "R-23"
+2,             24,    "R-24"
+2,             25,    "R-25"
+2,             26,    "R-26"
+2,             27,    "R-27"
+2,             28,    "R-28"
+2,             29,    "R-29"
+2,             30,    "R-30"
+2,             31,    "R-31"
+2,             32,    "R-32"
+2,             33,    "R-33"
+2,             34,    "R-34"
+2,             35,    "R-35"
+2,             36,    "R-36"
+2,             37,    "R-37"
+2,             38,    "R-38"
+2,             39,    "R-39"
+2,             40,    "R-40"
+2,             41,    "R-41"
+2,             42,    "R-42"
+2,             43,    "R-43"
+2,             44,    "R-44"
+2,             45,    "R-45"
+2,             46,    "R-46"
+2,             47,    "R-47"
+2,             48,    "R-48"
+2,             49,    "R-49"
+2,             50,    "R-50"
+2,             51,    "R-51"
+2,             52,    "R-52"
+2,             53,    "R-53"
+2,             54,    "R-54"
+2,             55,    "R-55"
+2,             56,    "R-56"
+2,             57,    "R-57"
+2,             58,    "R-58"
+2,             59,    "R-59"
+2,             60,    "R-60"
+
+; SAC 3/13/14 - revised Furring* layer IDs to represent <Mat/Type * 10,000> + <Thickness * 100>
+0, Cons:FurringLayer, 0				
+0, Cons:Furring2Layer, 0 
+2,      0, "- none -"
+2,  10050, "0.5 in. Wood"
+2,  10075, "0.75 in. Wood"
+2,  10100, "1.0 in. Wood"
+2,  10150, "1.5 in. Wood"
+2,  10200, "2.0 in. Wood"
+2,  10250, "2.5 in. Wood"
+2,  10300, "3.0 in. Wood"
+2,  10350, "3.5 in. Wood"
+2,  10400, "4.0 in. Wood"
+2,  10450, "4.5 in. Wood"
+2,  10500, "5.0 in. Wood"
+2,  10550, "5.5 in. Wood"
+2,  20050, "0.5 in. Metal"
+2,  20075, "0.75 in. Metal"
+2,  20100, "1.0 in. Metal"
+2,  20150, "1.5 in. Metal"
+2,  20200, "2.0 in. Metal"
+2,  20250, "2.5 in. Metal"
+2,  20300, "3.0 in. Metal"
+2,  20350, "3.5 in. Metal"
+2,  20400, "4.0 in. Metal"
+2,  20450, "4.5 in. Metal"
+2,  20500, "5.0 in. Metal"
+2,  20550, "5.5 in. Metal"
+; 2,  30000, "EIFS"     - 3/15/14 - removed per Bruces request - no difference in modeling vs. '- none -'
+
+0, Cons:FurringLayerAbr,  0		; SAC 6/4/14
+0, Cons:Furring2LayerAbr,  0
+2,      0, "no furring"
+2,  10050, "0.5in. wd"
+2,  10075, "0.75in. wd"
+2,  10100, "1 in. wd"
+2,  10150, "1.5in. wd"
+2,  10200, "2 in. wd"
+2,  10250, "2.5in. wd"
+2,  10300, "3 in. wd"
+2,  10350, "3.5in. wd"
+2,  10400, "4 in. wd"
+2,  10450, "4.5in. wd"
+2,  10500, "5 in. wd"
+2,  10550, "5.5in. wd"
+2,  20050, "0.5in. mtl"
+2,  20075, "0.75in. mtl"
+2,  20100, "1 in. mtl"
+2,  20150, "1.5in. mtl"
+2,  20200, "2 in. mtl"
+2,  20250, "2.5in. mtl"
+2,  20300, "3 in. mtl"
+2,  20350, "3.5in. mtl"
+2,  20400, "4 in. mtl"
+2,  20450, "4.5in. mtl"
+2,  20500, "5 in. mtl"
+2,  20550, "5.5in. mtl"
+
+0, Cons:MassLayer, 100107          
+1, 	Cons:Type,     2, 100107   ; "Concrete / ICF / Brick"  - wall
+; 2,          98001,    "Concrete" 
+; 2,          98002,    "Brick"		; SAC 2/26/14 - replaced enum values newly defined (above) with one already associated w/ Concrete (& now brick)
+2,         100107,  "Concrete"
+2,         100111,  "Brick"				; SAC 2/26/14
+1, 	Cons:Type,    25, 100107   ; "Concrete / ICF / Brick" - floor - SAC 5/27/14
+2,         100107,  "Concrete"
+2,         100111,  "Brick"
+1, 	Cons:Type,     3,  9803    ; "Hollow Unit Masonry"   - SAC 3/12/14 - reduced values by factor of 10 to trigger incorporation of layer thickness in Mat library look-ups
+2,           9803,    "LW CMU Solid Grout" 
+2,           9804,    "MW CMU Solid Grout"
+2,           9805,    "NW CMU Solid Grout"
+2,           9806,    "Clay Unit Solid Grout"
+2,           9807,    "LW CMU Insulated Cores"
+2,           9808,    "MW CMU Insulated Cores"
+2,           9809,    "NW CMU Insulated Cores"
+2,           9810,    "Clay Unit Insulated Cores"
+2,           9811,    "LW CMU Empty Cores"
+2,           9812,    "MW CMU Empty Cores"
+2,           9813,    "NW CMU Empty Cores"
+2,           9814,    "Clay Unit Empty Cores"
+1, 	Cons:Type,     4,  98015   ; "Adobe / Strawbale / Log" 
+2,          98015,    "Adobe" 
+2,          98016,    "Log"
+2,          98017,    "Straw Bale"
+1, 	Cons:Type,     -999,  0   ; "All Others" 
+2,              0,    "- none -"
+
+
+0, Cons:MassThickness, 3      
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility - initial expansion to 24" included preceding space...
+2,			   10,  " 10 in."
+2,			   11,  " 11 in."
+2,			   12,  " 12 in."  
+2,          13,  " 13 in."
+2,          14,  " 14 in."
+2,			   15,  " 15 in."
+2,			   16,  " 16 in."
+2,			   17,  " 17 in."
+2,			   18,  " 18 in."
+2,			   19,  " 19 in."
+2,			   20,  " 20 in."
+2,			   21,  " 21 in."
+2,			   22,  " 22 in."  
+2,			   23,  " 23 in."
+2,			   24,  " 24 in." 
+1, 	Cons:MassLayer,    100107,  3   ; "Concrete" 
+2,          3,    " 3 in."
+2,          4,    " 4 in."
+2,			   5,	   " 5 in."
+2,			   6,	   " 6 in."
+2,			   7,	   " 7 in."
+2,			   8,	   " 8 in."
+2,			   9,	   " 9 in."
+2,			   10,   "10 in."
+2,			   11,   "11 in."
+2,			   12,   "12 in."  
+2,          13,   "13 in."
+2,          14,   "14 in."
+2,			   15,   "15 in."
+2,			   16,   "16 in."
+2,			   17,   "17 in."
+2,			   18,   "18 in."
+2,			   19,   "19 in."
+2,			   20,   "20 in."
+2,			   21,   "21 in."
+2,			   22,   "22 in."  
+2,			   23,   "23 in."
+2,			   24,   "24 in." 
+1, 	Cons:MassLayer,    100111,  3   ; "Brick" 
+2,          3,    " 3 in."
+2,          4,    " 4 in."
+2,			5,	  " 5 in."
+1, 	Cons:MassLayer,      9803,  6   ; "LW CMU Solid Grout" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9804,  6   ; "MW CMU Solid Grout" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9805,  6   ; "NW CMU Solid Grout" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9806,  6   ; "Clay Unit Solid Grout" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+1, 	Cons:MassLayer,      9807,  6   ; "LW CMU Insulated Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9808,  6   ; "MW CMU Insulated Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9809,  6   ; "NW CMU Insulated Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9810,  6   ; "Clay Unit Insulated Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+1, 	Cons:MassLayer,      9811,  6   ; "LW CMU Empty Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9812,  6   ; "MW CMU Empty Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9813,  6   ; "NW CMU Empty Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+1, 	Cons:MassLayer,      9814,  6   ; "Clay Unit Empty Cores" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+1, 	Cons:MassLayer,     98015,  6   ; "Adobe" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+2,			14,	  "14 in."
+2,			16,	  "16 in."
+1, 	Cons:MassLayer,     98016,  6   ; "Log" 
+2,			6,	  " 6 in."
+2,			8,	  " 8 in."
+2,			10,	  "10 in."
+2,			12,	  "12 in."
+2,			14,	  "14 in."
+2,			16,	  "16 in."
+1, 	Cons:MassLayer,     98017,  16   ; "Straw Bale" 
+2,			16,	  "16 in."
+1, 	Cons:MassLayer,     -999,  0   ; "All Others" 
+2,              0,    "- none -"
+
+0, Cons:CavityLayer,  0
+; SAC 1/15/13 - removed logic preventing insulation in interior walls
+; 1, 	Cons:CanAssignTo,    10,    0   ; "Interior Walls"  
+; 2,              0,    "- no insulation -"
+; SAC 1/28/13 - added conditional enumerations to map empty vertical wall cavities to a new library material
+; DD 2/19/14 - Changed to key off of Type instead of CanAssignTo 
+; SAC 2/20/14 - revised no insulation vertical entries (w/ unique IDs) to have unique enum strings
+1, 	Cons:Type,     0,  100401   ; "Exterior Walls"  
+2,         100401,    "- no insulation (vertical) -"   ; maps to new "VertWallCavity" material
+2,              1,    "R  1"
+2,              2,    "R  2"
+2,              3,    "R  3"
+2,              4,    "R  4"
+2,              5,    "R  5"
+2,              6,    "R  6"
+2,              7,    "R  7"
+2,              8,    "R  8"
+2,              9,    "R  9"
+2,             10,    "R 10"
+2,             11,    "R 11"
+2,             12,    "R 12"
+2,             13,    "R 13"
+2,             14,    "R 14"
+2,             15,    "R 15"
+2,             16,    "R 16"
+2,             17,    "R 17"
+2,             18,    "R 18"
+2,             19,    "R 19"
+2,             20,    "R 20"
+2,             21,    "R 21"
+2,             22,    "R 22"
+2,             23,    "R 23"
+2,             24,    "R 24"
+2,             25,    "R 25"
+2,             26,    "R 26"
+2,             27,    "R 27"
+2,             28,    "R 28"
+2,             29,    "R 29"
+2,             30,    "R 30"
+2,             31,    "R 31"
+2,             32,    "R 32"
+2,             33,    "R 33"
+2,             34,    "R 34"
+2,             35,    "R 35"
+2,             36,    "R 36"
+2,             37,    "R 37"
+2,             38,    "R 38"
+2,             39,    "R 39"
+2,             40,    "R 40"
+2,             41,    "R 41"
+2,             42,    "R 42"
+2,             43,    "R 43"
+2,             44,    "R 44"
+2,             45,    "R 45"
+2,             46,    "R 46"
+2,             47,    "R 47"
+2,             48,    "R 48"
+2,             49,    "R 49"
+2,             50,    "R 50"
+2,             51,    "R 51"
+2,             52,    "R 52"
+2,             53,    "R 53"
+2,             54,    "R 54"
+2,             55,    "R 55"
+2,             56,    "R 56"
+2,             57,    "R 57"
+2,             58,    "R 58"
+2,             59,    "R 59"
+2,             60,    "R 60"
+1, 	Cons:Type,    1,  100401   ; "Interior Walls"  
+2,         100401,    "- no insulation (vertical) -"   ; maps to new "VertWallCavity" material
+2,              1,    "R  1"
+2,              2,    "R  2"
+2,              3,    "R  3"
+2,              4,    "R  4"
+2,              5,    "R  5"
+2,              6,    "R  6"
+2,              7,    "R  7"
+2,              8,    "R  8"
+2,              9,    "R  9"
+2,             10,    "R 10"
+2,             11,    "R 11"
+2,             12,    "R 12"
+2,             13,    "R 13"
+2,             14,    "R 14"
+2,             15,    "R 15"
+2,             16,    "R 16"
+2,             17,    "R 17"
+2,             18,    "R 18"
+2,             19,    "R 19"
+2,             20,    "R 20"
+2,             21,    "R 21"
+2,             22,    "R 22"
+2,             23,    "R 23"
+2,             24,    "R 24"
+2,             25,    "R 25"
+2,             26,    "R 26"
+2,             27,    "R 27"
+2,             28,    "R 28"
+2,             29,    "R 29"
+2,             30,    "R 30"
+2,             31,    "R 31"
+2,             32,    "R 32"
+2,             33,    "R 33"
+2,             34,    "R 34"
+2,             35,    "R 35"
+2,             36,    "R 36"
+2,             37,    "R 37"
+2,             38,    "R 38"
+2,             39,    "R 39"
+2,             40,    "R 40"
+2,             41,    "R 41"
+2,             42,    "R 42"
+2,             43,    "R 43"
+2,             44,    "R 44"
+2,             45,    "R 45"
+2,             46,    "R 46"
+2,             47,    "R 47"
+2,             48,    "R 48"
+2,             49,    "R 49"
+2,             50,    "R 50"
+2,             51,    "R 51"
+2,             52,    "R 52"
+2,             53,    "R 53"
+2,             54,    "R 54"
+2,             55,    "R 55"
+2,             56,    "R 56"
+2,             57,    "R 57"
+2,             58,    "R 58"
+2,             59,    "R 59"
+2,             60,    "R 60"
+1,  Cons:Type, 5, 100401 ; "SIPS Wall" 
+2,             100401,    "- no insulation (vertical) -" ; DD - 2/19/14 - TODO - Should this map to  vert cavity or no insulation?
+2,             14,    "R 14"
+2,             15,    "R 15"
+2,             16,    "R 16"
+2,             17,    "R 17"
+2,             18,    "R 18"
+2,             19,    "R 19"
+2,             20,    "R 20"
+2,             21,    "R 21"
+2,             22,    "R 22"
+2,             23,    "R 23"
+2,             24,    "R 24"
+2,             25,    "R 25"
+2,             26,    "R 26"
+2,             27,    "R 27"
+2,             28,    "R 28"
+2,             29,    "R 29"
+2,             30,    "R 30"
+2,             31,    "R 31"
+2,             32,    "R 32"
+2,             33,    "R 33"
+2,             34,    "R 34"
+2,             35,    "R 35"
+2,             36,    "R 36"
+2,             37,    "R 37"
+2,             38,    "R 38"
+2,             39,    "R 39"
+2,             40,    "R 40"
+2,             41,    "R 41"
+2,             42,    "R 42"
+2,             43,    "R 43"
+2,             44,    "R 44"
+2,             45,    "R 45"
+2,             46,    "R 46"
+2,             47,    "R 47"
+2,             48,    "R 48"
+2,             49,    "R 49"
+2,             50,    "R 50"
+2,             51,    "R 51"
+2,             52,    "R 52"
+2,             53,    "R 53"
+2,             54,    "R 54"
+2,             55,    "R 55"
+1, 	Cons:Type,  -999,    0   ; other...
+2,              0,    "- no insulation -"
+2,              1,    "R  1"
+2,              2,    "R  2"
+2,              3,    "R  3"
+2,              4,    "R  4"
+2,              5,    "R  5"
+2,              6,    "R  6"
+2,              7,    "R  7"
+2,              8,    "R  8"
+2,              9,    "R  9"
+2,             10,    "R 10"
+2,             11,    "R 11"
+2,             12,    "R 12"
+2,             13,    "R 13"
+2,             14,    "R 14"
+2,             15,    "R 15"
+2,             16,    "R 16"
+2,             17,    "R 17"
+2,             18,    "R 18"
+2,             19,    "R 19"
+2,             20,    "R 20"
+2,             21,    "R 21"
+2,             22,    "R 22"
+2,             23,    "R 23"
+2,             24,    "R 24"
+2,             25,    "R 25"
+2,             26,    "R 26"
+2,             27,    "R 27"
+2,             28,    "R 28"
+2,             29,    "R 29"
+2,             30,    "R 30"
+2,             31,    "R 31"
+2,             32,    "R 32"
+2,             33,    "R 33"
+2,             34,    "R 34"
+2,             35,    "R 35"
+2,             36,    "R 36"
+2,             37,    "R 37"
+2,             38,    "R 38"
+2,             39,    "R 39"
+2,             40,    "R 40"
+2,             41,    "R 41"
+2,             42,    "R 42"
+2,             43,    "R 43"
+2,             44,    "R 44"
+2,             45,    "R 45"
+2,             46,    "R 46"
+2,             47,    "R 47"
+2,             48,    "R 48"
+2,             49,    "R 49"
+2,             50,    "R 50"
+2,             51,    "R 51"
+2,             52,    "R 52"
+2,             53,    "R 53"
+2,             54,    "R 54"
+2,             55,    "R 55"
+2,             56,    "R 56"
+2,             57,    "R 57"
+2,             58,    "R 58"
+2,             59,    "R 59"
+2,             60,    "R 60"
+
+0, Cons:CavityLayerAbr,  0		; SAC 6/4/14 - abbreviated version of CavityLayer used for reporting
+2,              0,    "no insul."
+2,         100401,    "no insul."
+2,              1,    "R-1"
+2,              2,    "R-2"
+2,              3,    "R-3"
+2,              4,    "R-4"
+2,              5,    "R-5"
+2,              6,    "R-6"
+2,              7,    "R-7"
+2,              8,    "R-8"
+2,              9,    "R-9"
+2,             10,    "R-10"
+2,             11,    "R-11"
+2,             12,    "R-12"
+2,             13,    "R-13"
+2,             14,    "R-14"
+2,             15,    "R-15"
+2,             16,    "R-16"
+2,             17,    "R-17"
+2,             18,    "R-18"
+2,             19,    "R-19"
+2,             20,    "R-20"
+2,             21,    "R-21"
+2,             22,    "R-22"
+2,             23,    "R-23"
+2,             24,    "R-24"
+2,             25,    "R-25"
+2,             26,    "R-26"
+2,             27,    "R-27"
+2,             28,    "R-28"
+2,             29,    "R-29"
+2,             30,    "R-30"
+2,             31,    "R-31"
+2,             32,    "R-32"
+2,             33,    "R-33"
+2,             34,    "R-34"
+2,             35,    "R-35"
+2,             36,    "R-36"
+2,             37,    "R-37"
+2,             38,    "R-38"
+2,             39,    "R-39"
+2,             40,    "R-40"
+2,             41,    "R-41"
+2,             42,    "R-42"
+2,             43,    "R-43"
+2,             44,    "R-44"
+2,             45,    "R-45"
+2,             46,    "R-46"
+2,             47,    "R-47"
+2,             48,    "R-48"
+2,             49,    "R-49"
+2,             50,    "R-50"
+2,             51,    "R-51"
+2,             52,    "R-52"
+2,             53,    "R-53"
+2,             54,    "R-54"
+2,             55,    "R-55"
+2,             56,    "R-56"
+2,             57,    "R-57"
+2,             58,    "R-58"
+2,             59,    "R-59"
+2,             60,    "R-60"
+
+
+0, Cons:FrameLayer,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,					 0,    "- none -"		; added generic 'none' entry for compatibility to EPro files
+2,          10424,    "2x4 Bottom Cord of Truss @ 24 in. O.C."
+2,          20424,    "2x4 Top Cord of Roof Truss @ 24 in. O.C."
+1,		Cons:Type,	   1,   416   ; "Steel Framed Wall"             ; DD 2/11/14 - Changed from only no framing to appropriate options
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+1,		Cons:Type,	   0,   416   ; "Wood Framed Wall"		; SAC 3/13/14 - separated out wood framed walls in order to add AWF options
+; 2,              0,    "- no framing -"
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+2,            425,    "2x4 AWF"					; SAC 3/13/14 - added AWF options per data from Bruce
+2,            625,    "2x6 AWF"
+		; SAC 3/16/14 - revised numeric values to eliminate duplicate (81225) and be able to determine pabel thickness via generic formula
+1, 	Cons:Type,     5, 80450  ; "SIPS Wall" ; DD 2/19/14     -> USE FOR CATH CEILINGS & ATTIC ROOFS
+2,		    80450,  "4.5 in. Panel, OSB Spline"
+2,		    80650,  "6.5 in. Panel, OSB Spline"
+2,		    80825,  "8.25 in. Panel, OSB Spline"
+2,        81025,  "10.25 in. Panel, OSB Spline"
+2,        81225,  "12.25 in. Panel, OSB Spline"
+2,        90450,  "4.5 in. Panel, Not OSB Spline"
+2,        90650,  "6.5 in. Panel, Not OSB Spline"
+2,        90825,  "8.25 in. Panel, Not OSB Spline"
+2,        91025,  "10.25 in. Panel, Not OSB Spline"
+2,        91225,  "12.25 in. Panel, Not OSB Spline"
+1,		Cons:Type, 24, 70650 	; "SIPS Floor" ; DD 2/19/14
+2,			 70650,  "6.5 in. Panel"
+2,			 70825,  "8.25 in. Panel"
+2,			 71025,  "10.25 in. Panel"
+2,			 71225,  "12.25 in. Panel"
+	; SAC 5/3/16 - added new conditional lists so that non-framing ConsTypes can display something other than a valid (but absent) framing selection
+1,		Cons:Type,     2,     0   ; "Concrete / ICF / Brick"	
+2,              0,    "- no framing -"
+1,		Cons:Type,     3,     0   ; "Hollow Unit Masonry"	
+2,              0,    "- no framing -"
+1,		Cons:Type,     4,     0   ; "Adobe / Strawbale / Log"	
+2,              0,    "- no framing -"
+; 1,		Cons:Type, 						21,  0	; "Floor Slab"                    
+; 2,              0,    "- no framing -"
+; 1,		Cons:Type, 						22,  0	; "Basement (underground) Floor"  
+; 2,              0,    "- no framing -"
+1, 	Cons:CanAssignTo,			 3, 10424   ; "Ceilings (below attic)"   
+; 2,              0,    "- no framing -"
+2,          10424,    "2x4 Bottom Chord of Truss @ 24 in. O.C."
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+1, 	Cons:CanAssignTo,			 1, 20424   ; "Attic Roofs"   
+; 2,              0,    "- no framing -"
+2,          20424,    "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+1, 	Cons:CanAssignTo,			 2, 20424   ; "Cathedral Ceilings"   
+; 2,              0,    "- no framing -"
+2,          20424,    "2x4 Top Chord of Roof Truss @ 24 in. O.C."
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+1,		Cons:Type, 					-999,   416	; all others -> "2x4 @ 16 in. O.C."
+; 2,              0,    "- no framing -"
+2,            416,    "2x4 @ 16 in. O.C."
+2,            616,    "2x6 @ 16 in. O.C."
+2,            816,    "2x8 @ 16 in. O.C."
+2,           1016,    "2x10 @ 16 in. O.C."
+2,           1216,    "2x12 @ 16 in. O.C."
+2,            424,    "2x4 @ 24 in. O.C."
+2,            624,    "2x6 @ 24 in. O.C."
+2,            824,    "2x8 @ 24 in. O.C."
+2,           1024,    "2x10 @ 24 in. O.C."
+2,           1224,    "2x12 @ 24 in. O.C."
+
+0, Cons:FrameLayerAbr,  0		; SAC 6/4/14 - abbreviated version of FrameLayer used for reporting
+2,		        0,  "no frame"
+2,		    80450,  "4.5in. OSB"
+2,		    80650,  "6.5in. OSB"
+2,		    80825,  "8.25in. OSB"
+2,        81025,  "10.25in. OSB"
+2,        81225,  "12.25in. OSB"
+2,        90450,  "4.5in. no OSB"
+2,        90650,  "6.5in. no OSB"
+2,        90825,  "8.25in. no OSB"
+2,        91025,  "10.25in. no OSB"
+2,        91225,  "12.25in. no OSB"
+2,			 70650,  "6.5in. Pnl"
+2,			 70825,  "8.25in. Pnl"
+2,			 71025,  "10.25in. Pnl"
+2,			 71225,  "12.25in. Pnl"
+2,        10424,  "2x4 Btm Chrd"
+2,        20424,  "2x4 Top Chrd"
+2,          416,  "2x4"
+2,          616,  "2x6"
+2,          816,  "2x8"
+2,         1016,  "2x10"
+2,         1216,  "2x12"
+2,          424,  "2x4"
+2,          624,  "2x6"
+2,          824,  "2x8"
+2,         1024,  "2x10"
+2,         1224,  "2x12"
+2,          425,  "2x4 AWF"
+2,          625,  "2x6 AWF"
+
+
+0, Cons:WallExtFinishLayer,  0
+0, Cons:FlrExtFinishLayer,  0
+2,              0,    "- select finish -"
+2,         100104,    "3 Coat Stucco"
+2,         100103,    "R4 Synthetic Stucco"
+2,         100102,    "Wood Siding/sheathing/decking"
+
+; SAC 3/4/13 - NO LONGER USED - RETAINED FOR BACKWARD COMPAT ONLY
+0, Cons:FlrExtConditions,  0		; Conditions outside exterior floor
+1,		Cons:Type, 					   99,  1	; backward compatibility
+2,              1,    "Conventional Crawl Space - Not Yet Implemented"
+1,		Cons:Type, 					 -999,  0	; all others
+2,              0,    "Exterior"
+2,              1,    "Conventional Crawl Space"
+
+0, CeilingBelowAttic:AtcEdg_CalcPath,  0
+2,              0,    "unknown"
+2,              1,    "D >= Ym"
+2,              2,    "D < Ym & D > Y"
+2,              3,    "D <= Y"
+
+0, Cons:UfactorCalcMethod,  0
+2,              0,    "- not specified -" 
+2,              1,    "Parallel Path" 
+2,              2,    "Isothermal Planes" 
+2,              3,    "Modified Zone" 
+
+
+0, LayerParams:Type,  0
+2,              0,    "- no action required -" 
+2,              1,    "Wood Framed Layer" 
+2,              2,    "Steel Framed Layer" 
+2,             11,    "Wood Furring Layer" 
+2,             12,    "Steel Furring Layer" 
+; 2,             13,    "EIFS Furring Layer" 
+
+
+;       ^^^^  NEWER CONSTRUCTIONS  ^^^^
+;  -----------------------------------------
+;  -----------------------------------------
+;  -----------------------------------------
+;       vvvv  OLDER CONSTRUCTIONS  vvvv
+
+
+; 0, Cons:CavityPathLyr1,  0
+; 0, Cons:FramePathLyr1,   0
+; 2,              0,    "- select inside finish -"
+; 2,              1,    "1/2 in. Gypsum Wall Board"
+; 2,              2,    "5/8 in. Type X Gypsum Wall Board"
+; 
+; 0, Cons:CavityPathLyr2,  0
+; 1,		Cons:Type, 						21,  0	; "Floor Slab"                    
+; 2,              0,    "- select layer -"
+; 2,              1,    "floor slab cavity 1"
+; 2,              2,    "floor slab cavity 2"
+; 1,		Cons:Type, 						22,  0	; "Basement (underground) Floor"  
+; 2,              0,    "- select layer -"
+; 2,              1,    "basement floor cavity 1"
+; 2,              2,    "basement floor cavity 2"
+; 1,		Cons:Type, 					 -999,  0	; all others
+; 2,              0,    "- no insulation -"
+; 2,             11,    "R 11"
+; 2,             12,    "R 12"
+; 2,             13,    "R 13"
+; 2,             14,    "R 14"
+; 2,             15,    "R 15"
+; 2,             16,    "R 16"
+; 2,             17,    "R 17"
+; 2,             18,    "R 18"
+; 2,             19,    "R 19"
+; 2,             20,    "R 20"
+; 2,             21,    "R 21"
+; 2,             22,    "R 22"
+; 2,             23,    "R 23"
+; 2,             24,    "R 24"
+; 2,             25,    "R 25"
+; 2,             26,    "R 26"
+; 2,             27,    "R 27"
+; 2,             28,    "R 28"
+; 2,             29,    "R 29"
+; 2,             30,    "R 30"
+; 2,             31,    "R 31"
+; 2,             32,    "R 32"
+; 2,             33,    "R 33"
+; 2,             34,    "R 34"
+; 2,             35,    "R 35"
+; 2,             36,    "R 36"
+; 2,             37,    "R 37"
+; 2,             38,    "R 38"
+; 2,             39,    "R 39"
+; 2,             40,    "R 40"
+; 2,             41,    "R 41"
+; 2,             42,    "R 42"
+; 2,             43,    "R 43"
+; 2,             44,    "R 44"
+; 2,             45,    "R 45"
+; 2,             46,    "R 46"
+; 2,             47,    "R 47"
+; 2,             48,    "R 48"
+; 2,             49,    "R 49"
+; 2,             50,    "R 50"
+; 2,             51,    "R 51"
+; 2,             52,    "R 52"
+; 2,             53,    "R 53"
+; 2,             54,    "R 54"
+; 2,             55,    "R 55"
+; 2,             56,    "R 56"
+; 2,             57,    "R 57"
+; 2,             58,    "R 58"
+; 2,             59,    "R 59"
+; 2,             60,    "R 60"
+; 
+; 0, Cons:FramePathLyr2,   0
+; 1,		Cons:Type, 						 1,  0	; "Steel Framed Wall"             
+; 2,              0,    "- no framing -"
+; 1,		Cons:Type, 						21,  0	; "Floor Slab"                    
+; 2,              0,    "- no framing -"
+; 1,		Cons:Type, 						22,  0	; "Basement (underground) Floor"  
+; 2,              0,    "- no framing -"
+; 1,		Cons:Type, 					 -999,  0	; all others
+; 2,              0,    "- no framing -"
+; 2,            416,    "2x4 @ 16 in. O.C."
+; 2,            616,    "2x6 @ 16 in. O.C."
+; 2,            816,    "2x8 @ 16 in. O.C."
+; 2,           1016,    "2x10 @ 16 in. O.C."
+; 2,           1216,    "2x12 @ 16 in. O.C."
+; 2,            424,    "2x4 @ 24 in. O.C."
+; 2,            624,    "2x6 @ 24 in. O.C."
+; 2,            824,    "2x8 @ 24 in. O.C."
+; 2,           1024,    "2x10 @ 24 in. O.C."
+; 2,           1224,    "2x12 @ 24 in. O.C."
+; 
+; 0, Cons:CavityPathLyr3,  0
+; 0, Cons:FramePathLyr3,   0
+; 1,		Cons:Type, 						21,  0	; "Floor Slab"                    
+; 2,              0,    "- select layer -"
+; 2,              1,    "floor slab lyr3 1"
+; 2,              2,    "floor slab lyr3 2"
+; 1,		Cons:Type, 						22,  0	; "Basement (underground) Floor"  
+; 2,              0,    "- select layer -"
+; 2,              1,    "basement floor lyr3 1"
+; 2,              2,    "basement floor lyr3 2"
+; 1,		Cons:Type, 					 -999,  0	; all others
+; 2,              0,    "- no sheathing/insul. -"
+; 2,             11,    "15/32 in. OSB"
+; 2,             12,    "1/2 in. OSB"
+; 2,             13,    "5/8 in. OSB"
+; 2,             14,    "3/4 in. OSB"
+; 2,             21,    "R1 Sheathing"
+; 2,             22,    "R2 Sheathing"
+; 2,             23,    "R3 Sheathing"
+; 2,             24,    "R4 Sheathing"
+; 2,             25,    "R5 Sheathing"
+; 2,             26,    "R6 Sheathing"
+; 2,             27,    "R7 Sheathing"
+; 2,             28,    "R8 Sheathing"
+; 
+; 0, Cons:CavityPathLyr4,  0
+; 0, Cons:FramePathLyr4,   0
+; 1,		Cons:CanAssignTo, 			0,  0	; "Exterior Walls"                    
+; 2,              0,    "- select finish -"
+; 2,              1,    "7/8 in. 3 Coat Cement Stucco"
+; 2,              2,    "R4 Synthetic Stucco on Foam"
+; 2,              3,    "Wood Siding"
+; 1,		Cons:CanAssignTo, 			2,  0	; "Ceilings / Roofs"  
+; 2,              0,    "- select finish -"
+; 2,             21,    "Asphalt Shingle"
+; 2,             22,    "Roof Tile"
+; 1,		Cons:CanAssignTo, 		-999,  0	; all others
+; 2,              0,    "- no finish -"
+
+
+0, Win:SpecMethod,  1
+0, WindowType:SpecMethod,  1
+2,              1,    "Window Dimensions (required for fins/overhangs)"
+2,              2,    "Overall Window Area"
+
+0, Win:ExteriorShade,  1
+0, Win:exExteriorShade,  1
+0, WindowType:ExteriorShade,  1
+2,              0,    "None"
+2,              1,    "Insect Screen (default)"
+
+0, Win:UfactorSHGCSource,  1
+0, Skylt:UfactorSHGCSource,  1
+0, Win:exUfactorSHGCSource,  1
+0, Skylt:exUfactorSHGCSource,  1
+2,              1,    "NFRC"
+2,              2,    "default"
+2,              3,    "ADFP"
+
+0, cseWINDOW:wnModel,   1
+2,              1,    "ASHWAT"
+
+0, cseWINDOW:wnExShd,   2
+2,              1,    "None"
+2,              2,    "Inscrn"
+
+0, cseWINDOW:wnInShd,   2
+2,              1,    "None"
+2,              2,    "DrapeMed"
+
+
+0, cseSGDIST:sgSide,   0
+2,              1,    "INTERIOR"
+2,              2,    "EXTERIOR"
+
+
+0, DwellUnitType:HVACSysType,  0
+2,              0,    "- select system type -"
+2,              2,    "Heat Pump Heating and Cooling System"
+; 2,              3,    "Variable Outdoor Air Ventilation Central Heat/Cool System"
+2,              1,    "Other Heating and Cooling System"
+
+0, HVACSys:Type,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              1,    "Central Heating and Cooling System"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              0,    "- select system type -"
+2,              2,    "Heat Pump Heating and Cooling System"
+2,              3,    "Variable Outdoor Air Ventilation Central Heat/Cool System"
+2,              1,    "Other Heating and Cooling System"
+
+0, HVACSys:TypeAbbrev,  0
+0, DwellUnitType:HVACSysTypeAbbrev,  0
+2,              0,    "type not specified"
+2,              2,    "Heat Pump"
+2,              3,    "Var OA Vent Heat/Cool"
+2,              1,    "Other Heat/Cool"
+;2,             10,    "Cooling Vent"
+;2,             20,    "IAQ Vent"
+
+; SAC 8/26/13 - added to enable Smart Vent systems
+0, HVACSys:CFIClVentOption,  0
+2,              0,    "- none -"
+2,              1,    "Fixed Flow"
+
+
+0, HVACHeat:Type,  1
+0, HVACSys:HeatSysType,  1
+0, HVACSys:PrevHeatSysType,  1
+0, DwellUnitType:HeatEqpType,  1
+0, DwellUnitType:PrevHeatEqpType,  1
+1,    Proj:Ruleset,   -1001,  1   ; Backward compatibility
+2,              9,    "CombHydro - Water heating system can be storage gas/elec/ht pump"
+2,              2,    "Heater - Non-central fuel-fired space heater"
+1,    Proj:Ruleset,   -1002,  1   ; Backward compatibility
+2,              9,    "CombHydro - Water heating system can be gas storage"
+1,    Proj:Ruleset,    -999,  1   ; Current selections
+2,              0,    "- select heating component type -"
+2,              1,    "CntrlFurnace - Fuel-fired central furnace"
+2,              2,    "WallFurnaceFan - Ductless fan forced wall furnace"
+2,              3,    "Boiler - Gas or oil boiler"
+2,             17,    "WoodHeat - Wood heat meeting exceptional method criteria"   ; DR 8/19/16 - added (tic 632)
+2,              8,    "Electric - All electric heating systems other than heat pump"
+2,              9,    "CombHydro - Combined hydronic space and water heating"
+2,             14,    "WallFurnaceGravity - Ductless gravity flowed wall furnace"  ; SAC 11/25/14 - value 4->14
+2,             15,    "FloorFurnace - Ductless floor heating system"							 ; SAC 11/25/14 - value 5->15
+2,             16,    "RoomHeater - Ductless non-central space heater"						 ; SAC 11/25/14 - value 6->16
+
+0, HVACHeat:TypeAbbrev,  1
+0, HVACHeat:StdType,  1
+2,              0,    "type unknown"
+2,              1,    "CntrlFurnace"
+2,              2,    "WallFurnaceFan"
+2,              3,    "Boiler"
+2,              8,    "Electric"
+2,              9,    "CombHydro"
+2,             14,    "WallFurnaceGravity"  ; SAC 11/25/14 - value 4->14
+2,             15,    "FloorFurnace"				; SAC 11/25/14 - value 5->15
+2,             16,    "RoomHeater"					; SAC 11/25/14 - value 6->16
+2,             17,    "WoodHeat"            ; DR 8/19/16 - added (tic 632)
+2,             29,    "ElecCombHydro"		    ; SAC 1/6/16 - added (tic 374)
+
+0, HVACSys:StdHeatingType,  1
+2,              0,    "type unknown"
+2,              1,    "CntrlFurnace"
+2,              2,    "WallFurnaceFan"
+2,              3,    "Boiler"
+2,              4,    "SplitHeatPump"
+2,              5,    "PkgHeatPump"
+2,              6,    "LrgPkgHeatPump"
+2,              7,    "RoomHeatPump"
+2,              8,    "Electric"
+2,              9,    "CombHydro"
+2,             10,    "DuctlessHeatPump"
+2,             14,    "WallFurnaceGravity"    ; SAC 11/25/14 - value 4->14
+2,             15,	  "FloorFurnace"          ; SAC 11/25/14 - value 5->15
+2,             16,    "RoomHeater"	          ; SAC 11/25/14 - value 6->16
+2,             19,    "SDHVSplitHeatPump"     ; SAC 1/7/16 - added (tic 598)
+2,             29,    "ElecCombHydro"         ; SAC 1/6/16 - added (tic 374)
+
+0, HVACHtPump:Type,  4
+0, DwellUnitType:HtPumpEqpType,  4
+0, DwellUnitType:PrevHtPumpEqpType,  4
+0, HVACSys:HtPumpSysType,  0
+0, HVACSys:PrevHtPumpSysType,  0
+1,    Proj:Ruleset,   -1001,  1   ; Backward compatibility
+2,              0,    "- select heating component type -"
+2,              4,    "SplitHeatPump - Heating side of central split heat pump"
+2,             10,    "DuctlessHeatPump - Heating side of ductless mini-split heat pump"
+2,              5,    "PkgHeatPump - Heating side of central packaged heat pump"
+2,              6,    "LrgPkgHeatPump - Heating side of large (>= 65 kBtuh) packaged unit"
+2,              7,    "RoomHeatPump - Heating side of non-central room A/C system"
+1,    Proj:Ruleset,   -1002,  4   ; Backward compatibility
+2,             10,    "DuctlessHeatPump - Ductless mini-split heat pump"
+1,    Proj:Ruleset,    -999,  1   ; Current selections
+2,              0,    "- select heat pump component type -"
+2,              4,    "SplitHeatPump - Central split heat pump"
+2,             19,    "SDHVSplitHeatPump - Small duct, high velocity, central split heat pump" 		      ; SAC 1/7/16 - added (tic 598)
+2,             10,    "DuctlessMiniSplitHeatPump - Ductless mini-split heat pump"                       ; DR 8/29/16 - revised (tic 632)
+2,             20,    "DuctlessMultiSplitHeatPump - Ductless multi-split heat pump"                     ; DR 8/29/16 - added (tic 632)
+2,             21,    "DuctlessVRFHeatPump - Ductless variable refrigerant flow (VRF) heat pump" 	      ; DR 8/29/16 - added (tic 632)
+2,              5,    "PkgHeatPump - Central packaged heat pump"
+2,              6,    "LrgPkgHeatPump - Large (>= 65 kBtuh) packaged unit"
+2,              7,    "RoomHeatPump - Non-central room A/C system"
+2,             11,    "AirToWaterHeatPump - Air to water heat pump (able to heat DHW)"
+2,             12,    "GroundSourceHeatPump - Ground source heat pump (able to heat DHW)"
+
+0, HVACHtPump:TypeAbbrev,  4
+0, HVACHtPump:StdType,  4
+2,              0,    "type unknown"
+2,              4,    "SplitHeatPump"
+2,              5,    "PkgHeatPump"
+2,              6,    "LrgPkgHeatPump"
+2,              7,    "RoomHeatPump"
+2,             10,    "DuctlessMiniSplitHeatPump"     
+2,             11,    "AirToWaterHeatPump"
+2,             12,    "GroundSourceHeatPump"
+2,             20,    "DuctlessMultiSplitHeatPump"  ; DR 8/29/16 - added (tic 632)
+2,             21,    "DuctlessVRFHeatPump" 	      ; DR 8/29/16 - added (tic 632)
+2,             19,    "SDHVSplitHeatPump"           ; SAC 1/7/16 - added (tic 598)
+
+			; CntrlFurnace Gas- or oil-fired central furnaces, propane furnaces or heating equipment considered equivalent to a
+			; gas-fired central furnace, such as wood stoves that qualify for the wood heat exceptional method.
+			; Gas fan-type central furnaces have a minimum AFUE=78%. Distribution can be gravity flow or use
+			; any of the ducted systems. [Efficiency Metric: AFUE]
+			; 
+			; Heater Non-central gas- or oil-fired space heaters, such as wall heaters floor heaters or unit heater.
+			; Equipment has varying efficiency requirements. Distribution is ductless and may be gravity flow or
+			; fan-forced.. Can refer to floor furnaces and wall heaters within the description field for CntrlFurnaces,
+			; [Efficiency Metric: AFUE]
+			; 
+			; Boiler Gas or oil boilers. Distribution systems can be Radiant, Baseboard or any of the ducted systems.
+			; Boiler may be specified for dedicated hydronic systems. Systems in which the boiler provides space
+			; heating and fires an indirect gas water heater (IndGas) may be listed as Boiler/CombHydro Boiler and
+			; shall be listed under “Equipment Type” in the HVAC Systems listing. [Efficiency Metric: AFUE]
+			; 
+			; SplitHeatPump Heating side of central split system heat pump heating systems. Distribution system shall be one of
+			; the ducted systems. [Efficiency Metric: HSPF]
+			; 
+			; PkgHeatPump Heating side of central packaged heat pump systems. Central packaged heat pumps are heat pumps
+			; in which the blower, coils and compressor are contained in a single package, powered by single
+			; phase electric current, air cooled, rated below 65,000 Btuh. Distribution system shall be one of the
+			; ducted systems. [Efficiency Metric: HSPF]
+			; 
+			; LrgPkgHeatPump Heating side of large packaged units rated at or above 65,000 Btu/hr (heating mode). Distribution
+			; system shall be one of the ducted systems. These include water source and ground source heat
+			; pumps. [Efficiency Metric: COP]
+			; 
+			; RoomHeatPump Heating side of non-central room air conditioning systems. These include small ductless split system
+			; heat pump units and packaged terminal (commonly called “through-the-wall”) units. Distribution
+			; system shall be Ductnone. [Efficiency Metric: COP]
+			; 
+			; Electric All electric heating systems other than space conditioning heat pumps. Included are electric
+			; resistance heaters, electric boilers and storage water heat pumps (air-water) (StoHP). Distribution
+			; system can be Radiant, Baseboard or any of the ducted systems. [Efficiency Metric: HSPF]
+			; 
+			; CombHydro: Water heating system can be a boiler, storage or instantaneous gas, propane, or electric water heater.
+			; Distribution systems can be ducted or non-ducted.
+
+0, HVACCool:Type,  2
+0, HVACCool:TypeRpt,  2
+0, HVACSys:CoolSysType,  2
+0, HVACSys:PrevCoolSysType,  2
+1,    Proj:Ruleset,   -1001,  2   ; Backward compatibility
+2,              2,    "IceSAC - Ice storage air conditioning system"		; SAC 4/20/14 - removed from list - was val=15 -> mapped to default
+1,    Proj:Ruleset,   -1002,  2   ; Backward compatibility
+2,              2,    "Evap/CC - Evaporatively-cooled condensers"			; SAC 4/20/14 - removed from list - was val=14 -> mapped to default
+1,    Proj:Ruleset,   -1003,  2   ; Backward compatibility
+2,              2,    "GasCooling - Gas absorption cooling"					; SAC 4/20/14 - removed from list - was val= 9 -> mapped to default
+1,    Proj:Ruleset,   -1004,  2   ; Backward compatibility
+2,             16,    "DuctlessSplitAirCond - Ductless mini-split and multi-split heat A/C"
+1,    Proj:Ruleset,    -999,  2   ; Current selections
+2,              0,    "- select cooling component type -"
+2,              1,    "NoCooling - No cooling equipment"
+2,              2,    "SplitAirCond - Split air conditioning system"
+2,              3,    "PkgAirCond - Central packaged A/C system (< 65 kBtuh)"
+2,              4,    "LrgPkgAirCond - Large packaged A/C system (>= 65 kBtuh)"
+2,             18,    "SDHVSplitAirCond - Small duct, high velocity, split A/C system"		          ; SAC 1/7/16 - added (tic 598)
+2,             16,    "DuctlessMiniSplitAirCond – Ductless mini-split A/C system"                   ; DR 8/29/16 - revised (tic 632)
+2,             20,    "DuctlessMultiSplitAirCond - Ductless multi-split A/C system" 	              ; DR 8/29/16 - added (tic 632)   
+2,             21,    "DuctlessVRFAirCond - Ductless variable refrigerant flow (VRF) A/C system"    ; DR 8/29/16 - added (tic 632)
+2,              5,    "RoomAirCond - Non-central room A/C system"
+2,             11,    "EvapDirect - Direct evaporative cooling system"
+2,             12,    "EvapIndirDirect - Indirect-direct evaporative cooling system"
+2,             13,    "EvapIndirect - Indirect evaporative cooling system"
+2,					   14,    "EvapCondenser - Evaporatively-cooled condenser for split AC systems"
+
+0, HVACCool:TypeAbbrev,  2
+0, HVACCool:StdType,  2
+1,    Proj:Ruleset,   -1001,  2   ; Backward compatibility
+2,              2,    "IceSAC"											; SAC 4/20/14 - removed from list - was val=15 -> mapped to default
+1,    Proj:Ruleset,   -1002,  2   ; Backward compatibility
+2,              2,    "Evap/CC"											; SAC 4/20/14 - removed from list - was val=14 -> mapped to default
+1,    Proj:Ruleset,   -1003,  2   ; Backward compatibility
+2,              2,    "GasCooling"										; SAC 4/20/14 - removed from list - was val= 9 -> mapped to default
+1,    Proj:Ruleset,    -999,  2   ; Current selections
+2,              0,    "type unknown"
+2,              1,    "NoCooling"
+2,              2,    "SplitAirCond"
+2,              3,    "PkgAirCond"
+2,              4,    "LrgPkgAirCond"
+2,              5,    "RoomAirCond"
+2,             11,    "EvapDirect"
+2,             12,    "EvapIndirDirect"
+2,             13,    "EvapIndirect"
+2,             14,    "EvapCondenser"
+2,             16,    "DuctlessMiniSplitAirCond"  ; DR 8/29/16 - revised (tic 632)
+2,             18,	  "SDHVSplitAirCond"		      ; SAC 1/7/16 - added (tic 598)
+2,             20,    "DuctlessMultiSplitAirCond" ; DR 8/29/16 - added (tic 632)
+2,             21,    "DuctlessVRFAirCond"        ; DR 8/29/16 - added (tic 632)
+
+0, HVACSys:StdCoolingType,  2
+2,              0,    "type unknown"
+2,              1,    "NoCooling"
+2,              2,    "SplitAirCond"
+2,              3,    "PkgAirCond"
+2,              4,    "LrgPkgAirCond"
+2,              5,    "RoomAirCond"
+2,              6,    "SplitHeatPump"
+2,              7,    "PkgHeatPump"
+2,              8,    "LrgPkgHeatPump"
+2,             10,    "RoomHeatPump"
+2,             11,    "EvapDirect"
+2,             12,    "EvapIndirDirect"
+2,             13,    "EvapIndirect"
+2,             14,    "EvapCondenser"
+2,             17,    "DuctlessHeatPump"
+2,             18,    "SDHVSplitAirCond"		; SAC 1/7/16 - added (tic 598)
+2,             19,    "SDHVSplitHeatPump"		; SAC 1/7/16 - added (tic 598)
+
+			; NoCooling Entered when the proposed building is not air conditioned or when cooling is optional (to be installed
+			; at some future date). Both the standard design equivalent building and the proposed design use the
+			; same default system (refer to sections 3.9.4. [Efficiency Metric: SEER]
+			; 
+			; SplitAirCond Split air conditioning systems. Distribution system shall be one of the ducted systems. [Efficiency
+			; Metric: SEER and EER]
+			; 
+			; PkgAirCond Central packaged air conditioning systems less than 65,000 Btuh cooling capacity. Distribution
+			; system shall be one of the ducted systems. [Efficiency Metric: SEER and EER]
+			; 
+			; LrgPkgAirCond Large packaged air conditioning systems rated at or above 65,000 Btu/hr (cooling capacity).
+			; Distribution system shall be one of the ducted systems. [Efficiency Metric: EER]
+			; 
+			; RoomAirCond Non-central room air conditioning cooling systems. These include small ductless split-system air
+			; conditioning units and packaged terminal (commonly called through-the-wall) air conditioning units.
+			; Distribution system shall be Ductnone. [Efficiency Metric: EER]
+			; 
+			; SplitHeatPump Cooling side of split heat pump systems. Distribution system shall be one of the ducted systems.
+			; [Efficiency Metric: SEER and EER<65,000 Btu/hr EER>65,000 Btu/hr]
+			; 
+			; PkgHeatPump Cooling side of central single-packaged heat pump systems with a cooling capacity less than 65,000
+			; Btuh. Distribution system shall be one of the ducted systems. [Efficiency Metric: SEER]
+			; 
+			; LrgPkgHeatPump Cooling side of large packaged heat pump systems rated at or above 65,000 Btu/hr (cooling
+			; capacity). Distribution system shall be one of the ducted systems. [Efficiency Metric: EER]
+			; 
+			; GasCooling Gas absorption cooling. Three descriptors, COP95, the rated COP for the gas portion, CAP95, the
+			; rated capacity, and PPC, the parasitic electric energy at rated conditions in Watts.
+			; 
+			; RoomHeatPump Cooling side of non-central, room heat pump systems. These include small ductless split-system air
+			; conditioning units and packaged terminal (commonly called ”through-the-wall”) units. Distribution
+			; system shall be Ductnone. [Efficiency Metric: EER]
+			; 
+			; EvapDirect Direct evaporative cooling systems. Assume minimal efficiency air conditioner. The default
+			; distribution system location is DuctAttic; evaporative cooler duct insulation requirements are the same
+			; as those for air conditioner ducts. [Efficiency Metric: SEER]
+			; 
+			; EvapIndirDirect Indirect-direct evaporative cooling systems. Assume energy efficiency ratio of 13 EER.
+			; 
+			; EvapIndirect Indirect evaporative cooling systems. Assume energy efficiency ratio (EER) or 13. The default
+			; distribution system location is DuctAttic; evaporative cooler duct insulation requirements are the same
+			; as those for air conditioner ducts. [Efficiency Metric: EER]
+			; 
+			; Evap/CC Evaporatively Cooled Condensers A split mechanical system, with a water-cooled condenser coil.
+			; (Efficiency metric: EER)
+			; 
+			; IceSAC Ice Storage Air Conditioning. Split air conditioner condensing coil in combination with ice storage.
+			; (Efficiency metric ia system performance tables)
+
+; SAC 5/6/16 - switch from 'CID (charge indicator)' to 'FID (fault indicator)' for 2016 models/analysis (tic #635)
+0, HVACCool:ACCharge,  2    ; SAC 4/1/13 - switched default enum to 'Verified' (issue #59)
+0, HVACHtPump:ACCharge,  2
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              3,    "CID (charge indicator)"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              1,    "Not Verified"
+2,              2,    "Verified"
+2,              3,    "FID (fault indicator)"
+0, HERSCool:ACChargRptMsg,  0
+2,              0,    "n/a"
+2,              1,    "Not Verified"
+2,              2,    "Verified"
+2,              3,    "FID (fault indicator)"
+
+0, HVACCool:RefrigerantType,  1
+0, HVACHtPump:RefrigerantType,  1
+2,              1,    "R410A"
+
+
+0, HVACDist:Type,  1
+1,    Proj:Ruleset,   -1003,  0   ; Backward compatibility
+2,              1,    "Ducts located in attic"
+1,    Proj:Ruleset,   -1002,  0   ; Backward compatibility
+2,              1,    "Ducts located in unconditioned attic"
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              1,    "DuctsAttic - Ducts located overhead in unconditioned attic"
+2,              2,    "DuctsCrawl - Ducts located underfloor in unconditioned crawl space"
+; 2,              3,    "DuctsCVC - Ducts located underfloor in a controlled ventilation crawl space"
+2,              4,    "DuctsGarage - Ducts located in an unconditioned garage"
+; 2,              5,    "DuctsBasemt - Ducts located in an unconditioned basement"
+2,              6,    "DuctsInEx12 - Ducts located within the conditioned space (except < 12 lineal ft)"
+2,              7,    "DuctsInAll - HVAC system(s) with all HVAC ducts located in conditioned space"
+2,              8,    "DuctsNone - Air distribution systems without ducts"
+2,              9,    "DuctsOutdoor - Ducts located in exposed outdoor locations"
+; 2,             10,    "Ductless-Furnaces - Heating equipment such as wall and floor furnaces"
+; 2,             11,    "Ductless-Radiant - Radiant electric panels or fanless systems"
+2,             12,    "LowLlCod - Verified low-leakage ducts in conditioned space"
+; 2,             13,    "LowLkAH - Low-leakage air handlers (certified by CEC as <= 2% leakage @ 1-inch wg)"
+; 2,             14,    "Baseboard - Electric or hydronic baseboards"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              0,    "- select distribution system type -"
+2,              1,    "Ducts located in attic (Ventilated and Unventilated)"
+2,              2,    "Ducts located in a crawl space"
+2,              4,    "Ducts located in a garage"
+2,              6,    "Ducts located within the conditioned space (except < 12 lineal ft)"
+2,              7,    "Ducts located entirely in conditioned space"
+2,              8,    "Distribution systems without ducts"
+2,              9,    "Ducts located in outdoor locations"
+2,             12,    "Verified low-leakage ducts entirely in conditioned space"
+2,             13,    "Ducts located in multiple places"
+
+; SAC 6/27/16 - revised HERS messages for certain selections (tic #627)
+0, HERSDist:DuctLocRptMsg,  -1
+1,    Proj:Ruleset,   -1004,  0   ; Backward compatibility
+2,              7,    "Ducts located entirely in conditioned space"
+2,             12,    "Verified low-leakage ducts entirely in conditioned space"
+1,    Proj:Ruleset,   -1003,  0   ; Backward compatibility
+2,              1,    "Ducts located in attic"
+1,    Proj:Ruleset,   -1002,  0   ; Backward compatibility
+2,              1,    "Ducts located in unconditioned attic"
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,              1,    "DuctsAttic - Ducts located overhead in unconditioned attic"
+2,              2,    "DuctsCrawl - Ducts located underfloor in unconditioned crawl space"
+2,              4,    "DuctsGarage - Ducts located in an unconditioned garage"
+2,              6,    "DuctsInEx12 - Ducts located within the conditioned space (except < 12 lineal ft)"
+2,              7,    "DuctsInAll - HVAC system(s) with all HVAC ducts located in conditioned space"
+2,              8,    "DuctsNone - Air distribution systems without ducts"
+2,              9,    "DuctsOutdoor - Ducts located in exposed outdoor locations"
+2,             12,    "LowLlCod - Verified low-leakage ducts in conditioned space"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,              0,    "- select distribution system type -"
+2,              1,    "Ducts located in attic (Ventilated and Unventilated)"
+2,              2,    "Ducts located in a crawl space"
+2,              4,    "Ducts located in a garage"
+2,              6,    "Ducts located within the conditioned space (except < 12 lineal ft)"
+2,              7,    "Ducts located entirely in conditioned space confirmed by duct leakage testing"
+2,              8,    "Distribution systems without ducts"
+2,              9,    "Ducts located in outdoor locations"
+2,             12,    "Verified low-leakage ducts in conditioned space must meet maximum 25 cfm leakage to outside (RA3.1.4.3.8)"
+2,             13,    "Ducts located in multiple places"
+
+0, HVACDist:TypeAbbrev,  1
+2,              0,    "type unknown"
+2,              1,    "DuctsAttic"
+2,              2,    "DuctsCrawl"
+; 2,              3,    "DuctsCVC"
+2,              4,    "DuctsGarage"
+; 2,              5,    "DuctsBasemt"
+2,              6,    "DuctsInEx12"
+2,              7,    "DuctsInAll"
+2,              8,    "DuctsNone"
+2,              9,    "DuctsOutdoor"
+; 2,             10,    "Ductless-Furnaces"
+; 2,             11,    "Ductless-Radiant"
+2,             12,    "LowLlCod"
+2,             13,    "DuctsMult"
+; 2,             13,    "LowLkAH"
+; 2,             14,    "Baseboard"
+
+0, SCSysRpt:DuctLocationRpt,  -1		; SAC 4/30/15 - to be set via direct assignment of HVACDist:Type (issue 517)
+2,              0,    "unknown"
+2,              1,    "Attic"
+2,              2,    "Crawl space"
+2,              4,    "Garage"
+2,              6,    "Conditioned zone (except < 12')"
+2,              7,    "Conditioned zone"
+2,              8,    "no ducts"
+2,              9,    "Outside"
+2,             12,    "Conditioned zone (VLL)"
+2,             13,    "Multiple places"
+
+;	mjb-10/9/13 updated enumerations for better reporting
+0, HVACDist:DuctLeakage,  800
+1,    Proj:Ruleset,   -1001,  800   ; Backward compatibility
+2,              0,    "- specify -"
+1,    HVACDist:LowLkgAH,  0,  800   ; LowLkgAH unchecked  - SAC 5/6/14 - 
+2,            800,    "Sealed and tested"
+2,            900,    "Existing (not specified)"		; mjb	8/1/14	- added for E+A+A reporting
+;	mjb	12/10/13	E+A+A add enumeration to specify existing duct leakage
+1,    Proj:Ruleset,    -999,  800   ; Current selections
+2,              0,    "Specified Lower Leakage Target"
+2,            800,    "Sealed and tested"
+2,            900,    "Existing (not specified)"		; mjb	8/1/14	- added for E+A+A reporting
+;2,           1500,    "- specify -"
+
+0, HVACDist:DuctLocation,  1
+0, HVACDist:SupplyRptLocation,  1
+0, HVACDist:ReturnRptLocation,  1
+; 0, HERSDist:DuctLocRptMsg,  -1		- SAC 4/21/15 - commented out - multiple enum definitions - above occurrence seems to be the valid one
+2,              0,    "n/a"
+2,              1,    "Attic"
+2,              2,    "Garage"
+2,              3,    "Conditioned Zone"
+;2,              4,    "Unconditioned Zone"
+2,              5,    "Crawl Space"
+2,              6,    "Outside"
+2,              7,    "Multiple"
+
+0, HVACDist:DuctInsRvalOpt,  420
+0, HVACDist:exDuctInsRvalOpt,  210
+0, HVACDist:RetDuctInsRvalOpt,  420
+2,              0,    "0"
+2,            210,    "2.1"
+2,            420,    "4.2"
+2,            600,    "6.0"
+2,            800,    "8.0"
+2,	     		 1000,    "10.0"
+2,	     		 1200,    "12.0"
+
+
+0, HVACFan:Type,  0
+2,              0,    "- select fan type -"
+2,              1,    "Single Speed PSC Furnace Fan"
+; 2,              2,    "Whole House Fan"
+; 2,              3,    "Single Speed Stand Alone IAQ Fan"
+
+0, HVACFan:TypeAbbrev,  0
+2,              0,    "type unknown"
+2,              1,    "Furnace Fan"
+; 2,              2,    "Whole House Fan"
+; 2,              3,    "IAQ Fan"
+
+0, IAQFan:IAQFanType,  1
+; 0, Proj:UnitIAQFanType,  1
+2,              1,    "Exhaust"
+2,              2,    "Supply"
+2,              3,    "Balanced"
+
+0, Proj:StdDHWFuelErrMsg,  0
+2,              0,    "none"
+2,              1,    "appliance fuel (cooking and/or dryer) TDV inconsistency"
+2,              2,    "proposed model HVAC fuel use TDV inconsistency"
+2,              3,    "combination of Natural Gas and Propane water heaters prescribed in standard model"
+
+0, DHWSys:SystemType, 3840
+1,    Proj:Ruleset,   -1001,  3840   ; Backward compatibility - fixed typo ; removed options that are now mandatory requirements - mjb 5/5/14
+2,       5504, "Recurculation, Demand Control Occupancy/Motion"              ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000 ' recurculation, demand control occupancy/motion
+2,       4352, "Insulated and Protected Pipe Below Grade"                    ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+2,    8392960, "(HERS req'd) Insulated and Protected Pipe Below Grade"       ; %WHDIST2013_HERSIPBG =   8392960 * 256 = 2148597760  &B 10000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+1,    Proj:Ruleset,   -1002,  3840   ; Backward compatibility - SDS 07/27/16
+2,       4608, "Parallel Piping"                                             ; %WHDIST2013_PP =            4608 * 256 =    1179648  &B 00000000 0001 0010 00000000 00000000 ' parallel piping
+2,       5248, "Recirculation, Demand Control Push Button"                   ; %WHDIST2013_RDMan =         5248 * 256 =    1343488  &B 00000000 0001 0100 10000000 00000000 ' recirculation, demand control push button
+2,       5504, "Recirculation, Demand Control Occupancy/Motion"              ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000 ' recurculation, demand control occupancy/motion
+2,       4992, "Recirculation, Non-Demand Control"                           ; %WHDIST2013_RND =           4992 * 256 =    1277952  &B 00000000 0001 0011 10000000 00000000 ' recirculation, non-demand control
+2,    8393216, "(HERS req'd) Parallel Piping"                                ; %WHDIST2013_HERSPP =     8393216 * 256 = 2148663296  &B 10000000 0001 0010 00000000 00000000 ' parallel piping
+2,    8393856, "(HERS req'd) Recirculation, Demand Control Push Button"      ; %WHDIST2013_HERSRDMan =  8393856 * 256 = 2148827136  &B 10000000 0001 0100 10000000 00000000 ' recirculation, demand control push button
+2,    8394112, "(HERS req'd) Recirculation, Demand Control Occupancy/Motion" ; %WHDIST2013_HERSRDAuto = 8394112 * 256 = 2148892672  &B 10000000 0001 0101 10000000 00000000 ' recirculation, demand control occupancy/motion
+2,       4609, "(HERS req'd) Point of Use" 				                     ; no longer valid in 2016 RACM removed - 07/27/16 SDS #707 and being reset to 'Standard' - SAC 8/27/16 reset to non-HERS POU (tic #736)
+1,    Proj:IsMultiFamily,    1,  3840   ; reduced options for multifamily, central systems - SAC 5/13/15 (issue 537)
+1,    DHWSys:CentralDHW,     1,  3840
+2,          0, "- specify -"
+2,       3840, "Standard"                                                    ; %WHDIST2013_STD =           3840 * 256 =     983040  &B 00000000 0000 1111 00000000 00000000 ' Standard
+2,       4096, "Pipe Insulation, All Lines"                                  ; %WHDIST2013_PIA =           4096 * 256 =    1048576  &B 00000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+2,    8392704, "(HERS req'd) Pipe Insulation, All Lines"                     ; %WHDIST2013_HERSPIA =    8392704 * 256 = 2148532224  &B 10000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+; 2,     4352, "Insulated and Protected Pipe Below Grade"                    ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+; 2,  8392960, "(HERS req'd) Insulated and Protected Pipe Below Grade"       ; %WHDIST2013_HERSIPBG =   8392960 * 256 = 2148597760  &B 10000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+1,    Proj:Ruleset,    -999,  3840   ; Current selections
+2,          0, "- specify -"
+2,       3840, "Standard"                                                    ; %WHDIST2013_STD =           3840 * 256 =     983040  &B 00000000 0000 1111 00000000 00000000 ' Standard
+2,       4096, "Pipe Insulation, All Lines"                                  ; %WHDIST2013_PIA =           4096 * 256 =    1048576  &B 00000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+2,       4608, "Central Parallel Piping"                                     ; %WHDIST2013_PP =            4608 * 256 =    1179648  &B 00000000 0001 0010 00000000 00000000 ' central parallel piping
+2,       4609, "Point of use"                                                ; %WHDIST2013_POU =           4609 * 256 =    1179904  &B  ' point of use
+2,       5248, "Recirculation with demand control, push button"              ; %WHDIST2013_RDMan =         5248 * 256 =    1343488  &B 00000000 0001 0100 10000000 00000000 ' recirculation with demand control, push button
+2,       5504, "Recirculation with demand control, occupancy/motion sensor"  ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000 ' recirculation with demand control, occupancy/motion sensor
+2,       4992, "Recirculation with non-demand control (continuous pumping)"  ; %WHDIST2013_RND =           4992 * 256 =    1277952  &B 00000000 0001 0011 10000000 00000000 ' recirculation with non-demand control (continuous pumping)
+; 2,  8388608, ""                                                            ; %HERS_REQUIRED =         8388608 * 256 = 2147483648  &B 10000000 0000 0000 00000000 00000000
+2,    8392704, "(HERS req'd) Pipe Insulation, All Lines"                     ; %WHDIST2013_HERSPIA =    8392704 * 256 = 2148532224  &B 10000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+2,    8393216, "(HERS req'd) Central Parallel Piping"                                ; %WHDIST2013_HERSPP =     8393216 * 256 = 2148663296  &B 10000000 0001 0010 00000000 00000000 ' parallel piping
+2,    8393856, "(HERS req'd) Recirculation with demand control, push button" ; %WHDIST2013_HERSRDMan =  8393856 * 256 = 2148827136  &B 10000000 0001 0100 10000000 00000000 ' recirculation, demand control push button
+2,    8394112, "(HERS req'd) Recirculation with demand control, occupancy/motion sensor" ; %WHDIST2013_HERSRDAuto = 8394112 * 256 = 2148892672  &B 10000000 0001 0101 10000000 00000000 ' recirculation, demand control occupancy/motion
+2,    8394496, "(HERS req'd) Compact Distribution System"                    ; %WHDIST2013_HERSCDS =    8394496 * 256 = 2148990976  &B 10000000 0001 0111 00000000 00000000 ' compact distribution system
+; 2,  8394240, "(HERS req'd) Point of Use"                                   ; %WHDIST2013_HERSPOU =    8394240 * 256 = 2148925440  &B 10000000 0001 0110 00000000 00000000 ' point of use ; no longer valid in 2016 RACM removed - 07/27/16 SDS #707
+; 2,  8392960, "(HERS req'd) Insulated and Protected Pipe Below Grade"       ; %WHDIST2013_HERSIPBG =   8392960 * 256 = 2148597760  &B 10000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+; 2,     4352, "Insulated and Protected Pipe Below Grade"                    ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+; 2,  8393600, "(HERS req'd) Recirculation, Non-Demand Control"              ; %WHDIST2013_HERSRND =    8393600 * 256 = 2148761600  &B 10000000 0001 0011 10000000 00000000 ' recirculation with demand control, push button
+; 2,     5056, "Multi-Family Central Recirc Non-Demand Control"              ; %WHDIST2013_CRND =          5056 * 256 =    1294336  &B 00000000 0001 0011 11000000 00000000 ' multi-family central recirc non-demand control
+; 2,     6336, "Multi-Family Central Recirc Monitoring"                      ; %WHDIST2013_CRM =           6336 * 256 =    1622016  &B 00000000 0001 1000 11000000 00000000 ' multi-family central recirc monitoring
+; 2,     6592, "Multi-Family Central Demand Recirc (new cons std design)"    ; %WHDIST2013_CRD =           6592 * 256 =    1687552  &B 00000000 0001 1001 11000000 00000000 ' multi-family central demand recirc - std design for new construction
+
+0, DwellUnitType:DHWSystemType, 3840
+; 2,          0, "- specify -"
+2,       3840, "Standard"                                                    ; %WHDIST2013_STD =           3840 * 256 =     983040  &B 00000000 0000 1111 00000000 00000000 ' Standard
+2,       4096, "Pipe Insulation, All Lines"                                  ; %WHDIST2013_PIA =           4096 * 256 =    1048576  &B 00000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+2,       4608, "Central Parallel Piping"                                     ; %WHDIST2013_PP =            4608 * 256 =    1179648  &B 00000000 0001 0010 00000000 00000000 ' central parallel piping
+2,       4609, "Point of use"						     ; SDS 07/27/2016:Added (tic #707)
+2,       5248, "Recirculation with demand control, push button"              ; %WHDIST2013_RDMan =         5248 * 256 =    1343488  &B 00000000 0001 0100 10000000 00000000 ' recirculation with demand control, push button
+2,       5504, "Recirculation with demand control, occupancy/motion sensor"  ; %WHDIST2013_RDAuto =        5504 * 256 =    1409024  &B 00000000 0001 0101 10000000 00000000 ' recirculation with demand control, occupancy/motion sensor
+2,       4992, "Recirculation with non-demand control (continuous pumping)"  ; %WHDIST2013_RND =           4992 * 256 =    1277952  &B 00000000 0001 0011 10000000 00000000 ' recirculation with non-demand control (continuous pumping)
+; 2,  8388608, ""                                                            ; %HERS_REQUIRED =         8388608 * 256 = 2147483648  &B 10000000 0000 0000 00000000 00000000
+2,    8392704, "(HERS req'd) Pipe Insulation, All Lines"                     ; %WHDIST2013_HERSPIA =    8392704 * 256 = 2148532224  &B 10000000 0001 0000 00000000 00000000 ' pipe insulation, all lines
+2,    8393216, "(HERS req'd) Central Parallel Piping"                                ; %WHDIST2013_HERSPP =     8393216 * 256 = 2148663296  &B 10000000 0001 0010 00000000 00000000 ' parallel piping
+2,    8393856, "(HERS req'd) Recirculation with demand control, push button" ; %WHDIST2013_HERSRDMan =  8393856 * 256 = 2148827136  &B 10000000 0001 0100 10000000 00000000 ' recirculation, demand control push button
+2,    8394112, "(HERS req'd) Recirculation with demand control, occupancy/motion sensor" ; %WHDIST2013_HERSRDAuto = 8394112 * 256 = 2148892672  &B 10000000 0001 0101 10000000 00000000 ' recirculation, demand control occupancy/motion
+2,    8394496, "(HERS req'd) Compact Distribution System"                    ; %WHDIST2013_HERSCDS =    8394496 * 256 = 2148990976  &B 10000000 0001 0111 00000000 00000000 ' compact distribution system
+; 2,  8394240, "(HERS req'd) Point of Use"                                   ; %WHDIST2013_HERSPOU =    8394240 * 256 = 2148925440  &B 10000000 0001 0110 00000000 00000000 ' point of use ; no longer valid in 2016 RACM removed - 07/27/16 SDS #707
+; 2,  8392960, "(HERS req'd) Insulated and Protected Pipe Below Grade"       ; %WHDIST2013_HERSIPBG =   8392960 * 256 = 2148597760  &B 10000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+; 2,     4352, "Insulated and Protected Pipe Below Grade"                    ; %WHDIST2013_IPBG =          4352 * 256 =    1114112  &B 00000000 0001 0001 00000000 00000000 ' insulated and protected pipe below grade
+; 2,  8393600, "(HERS req'd) Recirculation, Non-Demand Control"              ; %WHDIST2013_HERSRND =    8393600 * 256 = 2148761600  &B 10000000 0001 0011 10000000 00000000 ' recirculation with demand control, push button
+; 2,     5056, "Multi-Family Central Recirc Non-Demand Control"              ; %WHDIST2013_CRND =          5056 * 256 =    1294336  &B 00000000 0001 0011 11000000 00000000 ' multi-family central recirc non-demand control
+; 2,     6336, "Multi-Family Central Recirc Monitoring"                      ; %WHDIST2013_CRM =           6336 * 256 =    1622016  &B 00000000 0001 1000 11000000 00000000 ' multi-family central recirc monitoring
+; 2,     6592, "Multi-Family Central Demand Recirc (new cons std design)"    ; %WHDIST2013_CRD =           6592 * 256 =    1687552  &B 00000000 0001 1001 11000000 00000000 ' multi-family central demand recirc - std design for new construction
+
+0, DHWHeater:HeaterElementType,  1
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility - enabling old projects w/ NatGas/Oil combo to read in simply NatGas
+2,          1, "Natural Gas / Oil"
+; SAC 1/14/14 - allow for selection of Natural Gas - even when NatGas flagged as unavailable @ the project level - AND added analysis error in the case that nat gas is selected here, but not available for the project (GC issue #264)
+; 1,    Proj:NatGasAvailable,  0,  0   ; Prevent selection of Natural Gas when Nat gas not available on site
+; 2,          0, "Electric Resistance"
+; 2,          2, "Propane"
+; 2,          3, "Heat Pump"
+; 2,          4, "Oil"
+1,    Proj:Ruleset,   -1002,  1   ; Backward compatibility - previous fuel option
+2,          1, "Natural Gas"
+2,          5, "Heat Pump (detailed)"		; SAC 3/18/16
+1,    Proj:Ruleset,   -1003,  1   ; Backward compatibility - previous fuel option
+2,          1, "Propane"
+2,          5, "Heat Pump"
+1,    Proj:Ruleset,   -1004,  1   ; Backward compatibility - previous fuel option
+2,          1, "Oil"
+2,          5, "Heat Pump (2016)"		; SAC 3/18/16
+1,    Proj:EnableResearchMode,   1,  0   ; Research mode enabled
+2,          1, "Gas"
+2,          0, "Electric Resistance"
+2,          5, "Heat Pump"
+2,          3, "Heat Pump (2013 being phased out)"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,          1, "Gas"
+2,          0, "Electric Resistance"
+2,          5, "Heat Pump"
+
+; SAC 6/3/14 - separated HVACSys from DHWHeater definitions to include GSHP
+0, HVACSys:DHWHeaterElementType,  1
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,          3, "Heat Pump"
+1,    Proj:Ruleset,   -1002,  1   ; Backward compatibility - previous fuel option
+2,          1, "Natural Gas"
+1,    Proj:Ruleset,   -1003,  1   ; Backward compatibility - previous fuel option
+2,          1, "Propane"
+1,    Proj:Ruleset,   -1004,  1   ; Backward compatibility - previous fuel option
+2,          1, "Oil"
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,          0, "Electric Resistance"
+2,          1, "Gas"
+2,          3, "Air-Source Heat Pump"
+2,          6, "Ground-Source Heat Pump"
+
+0, DwellUnitType:DHWHeaterElementType,  3
+2,          3, "Air-Source Heat Pump"
+2,          6, "Ground-Source Heat Pump"
+
+; 0, HVACHeat:HydronicWHType,  1
+; 2,          0, "Electric Resistance"
+; 2,          1, "Natural Gas"
+; 2,          2, "Oil / Propane"
+; 2,          3, "Heat Pump"
+
+0, DHWHeater:TankType,  6
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,          5, "Small Tankless"          ; %WHTYPE_STANKLES = 5		' small tankless, same as small instantaneous
+2,        100, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler                                        ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        101, "Indirect"                ; %WHTYPE_IND =      1		' indirect                                      ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        102, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous                           ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        103, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage                                 ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        104, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        105, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous                           ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        107, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use ; SAC 6/17/14 - added in combination with backward compat messaging
+2,          8, "Electric Mini Tank"      ; %WHTYPE_MINI =     8		' electric mini-tank                            ; SAC 6/17/14 - added in combination with backward compat messaging
+1,    DHWHeater:HeaterElementType,     0,  6		; "Electric Resistance"
+; 2,          0, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler                       ; SAC 6/17/14 - removed
+; 2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect                     ; SAC 6/17/14 - removed
+2,          2, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous
+2,          3, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage
+; 2,          4, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - removed
+2,          5, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+;2,          7, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use
+2,          8, "Electric Mini Tank (Invalid Selection)"      ; %WHTYPE_MINI =     8		' electric mini-tank				; SAC 11/10/15 - invalidated
+1,    DHWHeater:HeaterElementType,     3,  6		; "Heat Pump (2013)"
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+1,    DHWHeater:HeaterElementType,     5,  6		; "Heat Pump (2016)"
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+1,    DHWHeater:HeaterElementType,  -999,  6		; all others
+2,          0, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect                     ; SAC 6/17/14 - removed / 6/25 - restored
+2,          2, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous
+2,          3, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage
+; 2,          4, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - removed
+2,          5, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+;2,          7, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use
+
+0, HVACSys:DHWTankType,  6
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,          5, "Small Tankless"          ; %WHTYPE_STANKLES = 5		' small tankless, same as small instantaneous
+2,        100, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler                                        ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        101, "Indirect"                ; %WHTYPE_IND =      1		' indirect                                      ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        102, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous                           ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        103, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage                                 ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        104, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        105, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous                           ; SAC 6/17/14 - added in combination with backward compat messaging
+2,        107, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use ; SAC 6/17/14 - added in combination with backward compat messaging
+2,          8, "Electric Mini Tank"      ; %WHTYPE_MINI =     8		' electric mini-tank                            ; SAC 6/17/14 - added in combination with backward compat messaging
+1,    HVACSys:DHWHeaterElementType,     0,  6		; "Electric Resistance"
+; 2,          0, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler                                        ; SAC 6/17/14 - removed
+; 2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect                                      ; SAC 6/17/14 - removed
+2,          2, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous
+2,          3, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage
+; 2,          4, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - removed
+2,          5, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+;2,          7, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use
+2,          8, "Electric Mini Tank (Invalid Selection)"      ; %WHTYPE_MINI =     8		' electric mini-tank				; SAC 11/10/15 - invalidated
+1,    HVACSys:DHWHeaterElementType,     3,  1		; "Heat Pump"
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+1,    HVACSys:DHWHeaterElementType,  -999,  6		; all others
+2,          0, "Boiler"                  ; %WHTYPE_BOIL =     0		' boiler
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect                                      ; SAC 6/17/14 - removed / 6/25 - restored
+2,          2, "Large Instantaneous"     ; %WHTYPE_LINST =    2		' large instantaneous
+2,          3, "Large Storage"           ; %WHTYPE_LSTOR =    3		' large storage
+; 2,          4, "Large Tankless"          ; %WHTYPE_LTANKLES = 4		' large tankless, same as large instantaneous   ; SAC 6/17/14 - removed
+2,          5, "Small Instantaneous"     ; %WHTYPE_SINST =    5		' small instantaneous
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+;2,          7, "Unfired Storage Tank"    ; %WHTYPE_STO =      7		' unfired storage tank - deprecated, do not use
+
+0, DwellUnitType:DHWTankType,  1
+2,          1, "Indirect"                ; %WHTYPE_IND =      1		' indirect    
+2,          6, "Small Storage"           ; %WHTYPE_SSTOR =    6		' small storage
+
+0, DHWHeater:ASHPType,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,          0, "- select ASHP type -"
+2,         11, "60 gal Voltex (AOSmithPHPT60)"
+2,         12, "80 gal Voltex (AOSmithPHPT80)"
+2,         13, "50 gal AOSmith HPTU (AOSmithHPTU50)"
+2,         14, "66 gal AOSmith HPTU (AOSmithHPTU66)"
+2,         15, "80 gal AOSmith HPTU (AOSmithHPTU80)"
+2,         16, "Sanden 40 gal CO2 external HP (Sanden40)"
+2,         17, "Sanden 80 gal CO2 external HP (Sanden80)"
+2,          0, "2012 era GeoSpring (GE2012)"						; was 18
+2,         19, "2014 GE model, standard mode (GE2014StdMode)"
+2,          0, "2014 GE model, efficiency mode (GE2014)"		; was: 20
+2,         21, "Rheem (2014?, RheemHB50)"
+2,         22, "Stiebel Eltron (2014?, Stiebel220E)"
+2,          0, "Resistance Tank"				; was: 6
+2,          0, "Basic Integrated HPWH"		; was: 7
+2,          0, "Generic Tier 1"				; was: 1
+2,          0, "Generic Tier 2"				; was: 2
+2,          0, "Generic Tier 3"				; was: 3
+2,          0, "Worst Case Medium"			; was: 99
+2,          1, "Generic"
+1,    Proj:EnableResearchMode,   1,  0   ; Research mode enabled
+2,          0, "- select HPWH type -"
+2,         11, "AO Smith PHPT 60"
+2,         12, "AO Smith PHPT 80"
+2,         13, "AO Smith HPTU 50"
+2,         14, "AO Smith HPTU 66"
+2,         15, "AO Smith HPTU 80"
+2,         19, "GE2014 50"
+2,         23, "GE2014 80"
+2,         21, "Rheem HB 50"
+2,         16, "Sanden 40"
+2,         17, "Sanden 80"
+2,         22, "Stiebel 220E"
+1,    Proj:Ruleset,   -999,  0   ; Current selections
+2,          0, "- select HPWH type -"
+2,         11, "AO Smith PHPT 60"
+2,         12, "AO Smith PHPT 80"
+2,         13, "AO Smith HPTU 50"
+2,         14, "AO Smith HPTU 66"
+2,         15, "AO Smith HPTU 80"
+2,         19, "GE2014 50"
+2,         23, "GE2014 80"
+2,         21, "Rheem HB 50"
+2,         22, "Stiebel 220E"
+
+0, DHWHeater:AmbientCond,  1
+0, HVACSys:DHWAmbientCond,  1
+0, DwellUnitType:DHWAmbientCond,  1
+1,    Proj:Ruleset,  -1001,  1   ; Backward compatibility
+2,          1, "WthrDB"
+2,          4, "WthrTG"
+1,    Proj:Ruleset,   -999,  1   ; Current selections
+2,          1, "Unconditioned"
+2,         -1, "Conditioned"
+
+0, DHWSys:MFamDistType,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,	    0,	"- None -"
+1,    Proj:Ruleset,   -1002,  0   ; Backward compatibility
+2,	    0,	"- none -"
+2,	 5056,	"No Control"															;  No control = 00000000000100111100000000000000, or 1294336 (5056 * 256 = 1622016)
+2,	 6336,	"Demand Control (Standard Design for new construction)"	;  Demand Control = 00000000000100111100000000000000, or 1622016 (6336 * 256 = 1294336)
+2,	 6592,	"Temperature modulation"											;  Temperature modulation = 00000000000110011100000000000000, or 1687552 (6592 * 256 = 1687552)
+2,	 6848,	"Temperature modulation & monitoring"							;  Temperature modulation & monitoring = 00000000000110101100000000000000, or 1753088 (6592 * 256 = 1753088)
+1,    Proj:Ruleset,   -1003,  0   ; Backward compatibility - SAC 11/10/15
+2,	 5056,	"No Control with HERS verification"								;  No control with HERS verification = 10000000000100111100000000000000, or 2148777984 (8393664 * 256 = 2148777984)
+2,	 6336,	"Demand Control with HERS verification"						;  Demand Control with HERS verification  = 00000000000110101100000000000000, or 2149105664 (8394944 * 256 = 2149105664)
+2,	 6592,	"Temperature modulation with HERS verification"				;  Temperature modulation with HERS verification = 10000000000110011100000000000000, or 2149171200 (8395200 * 256 = 2149171200)
+2,	 6848,	"Temperature modulation & monitoring with HERS verification"	;  Temperature modulation & monitoring with HERS verification = 10000000000110101100000000000000, or 2149236736 (8395456 * 256 = 2149236736)
+1,    Proj:Ruleset,   -1004,  0   ; Backward compatibility - SAC 11/10/15
+2,	 5056,	"1 or more loops with No Control (continuous pumping)"					;  No control = 00000000000100111100000000000000, or 1294336 (5056 * 256 = 1622016)
+2,	 6336,	"1 loop with Demand Control (Standard Design for new construction)"	;  Demand Control = 00000000000100111100000000000000, or 1622016 (6336 * 256 = 1294336)
+2,	 6592,	"1 loop with Temperature Modulation"											;  Temperature modulation = 00000000000110011100000000000000, or 1687552 (6592 * 256 = 1687552)
+2,	 6848,	"1 loop with Temperature Modulation & Monitoring"							;  Temperature modulation & monitoring = 00000000000110101100000000000000, or 1753088 (6592 * 256 = 1753088)
+1,    Proj:Ruleset,   -1005,  0   ; Backward compatibility - SAC 11/10/15
+2,	 5056,	"2 or more loops with No Control & HERS verification"						;  No control with HERS verification = 10000000000100111100000000000000, or 2148777984 (8393664 * 256 = 2148777984)
+2,	 6336,	"2 or more loops with Demand Control & HERS verification"				;  Demand Control with HERS verification  = 00000000000110101100000000000000, or 2149105664 (8394944 * 256 = 2149105664)
+2,	 6592,	"2 or more loops with Temperature Modulation & HERS verification"		;  Temperature modulation with HERS verification = 10000000000110011100000000000000, or 2149171200 (8395200 * 256 = 2149171200)
+2,	 6848,	"2 or more loops with Temperature Modulation, Monitoring & HERS verification"	;  Temperature modulation & monitoring with HERS verification = 10000000000110101100000000000000, or 2149236736 (8395456 * 256 = 2149236736)
+1,    Proj:Ruleset,   -1006,  0   ; Backward compatibility - SDS 07/27/16
+2,	    0,	"No loops or central system pump"
+2,	 5056,	"No Control (continuous pumping)"
+2,	 6336,	"Demand Control (Standard Design for new construction)"
+2,	 6592,	"Temperature modulation"	
+2,	 6848,	"Temperature modulation & monitoring"	
+1,    Proj:Ruleset,   -1007,  0   ; Backward compatibility - SAC 8/28/16
+2,	 5056,	"(HERS req'd) Multi-family: Central water heating recirculating dual loop design"	; SDS 07/26/2016:Added (tic #707) - SAC 8/29/16 removed option (was 5051) w/ change of std dsgn recirc loops 2->1 (tic #670)
+2,	 6848,	"Multi-family: Recirculating with temperature modulation and monitoring "     ; SAC 8/28/16 - remove trailing space
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,	    0,	"Multi-family: No loops or recirc pump"							; SDS 07/26/2016: modified (tic #707)
+2,	 5056,	"Multi-family: Recirculating with no control (continuous pumping)"
+2,	 6336,	"Multi-family: Recirculation demand control"
+2,	 6592,	"Multi-family: Recirculating with temperature modulation"	
+2,	 6848,	"Multi-family: Recirculating with temperature modulation and monitoring"
+; 2,	 5050,	"Multi-family: Central water heating recirculating dual loop design"			; SDS 07/26/2016: Removed (tic #707)	
+
+; updated above by mjb 5/15/2013 per DH
+;2,       5056, "Multi-Family Central Recirc Non-Demand Control"                                 ; %WHDIST2013_CRND =          5056 * 256 =    1294336  &B 00000000 0001 0011 11000000 00000000   ' multi-family central recirc non-demand control
+;2,       6336, "Multi-Family Central Recirc Monitoring"                                         ; %WHDIST2013_CRM =           6336 * 256 =    1622016  &B 00000000 0001 1000 11000000 00000000   ' multi-family central recirc monitoring
+;2,       6592, "Multi-Family Central Demand Recirc (new cons std design)"                       ; %WHDIST2013_CRD =           6592 * 256 =    1687552  &B 00000000 0001 1001 11000000 00000000   ' multi-family central demand recirc - std design for new construction
+;2,    8393664, "Multi-Family Central Recirc Non-Demand Control w/ HERS Verification"            ; %WHDIST2013_HERSCRND =   8393664 * 256 = 2148777984  &B 10000000 0001 0011 11000000 00000000   ' multi-family central recirc non-demand control
+;2,    8394944, "Multi-Family Central Recirc Monitoring w/ HERS Verification"                    ; %WHDIST2013_HERSCRM =    8394944 * 256 = 2149105664  &B 10000000 0001 1000 11000000 00000000   ' multi-family central recirc monitoring
+;2,    8395200, "Multi-Family Central Demand Recirc (new cons std design) w/ HERS Verification"  ; %WHDIST2013_HEERSCRD =   8395200 * 256 = 2149171200  &B 10000000 0001 1001 11000000 00000000   ' multi-family central demand recirc - std design for new construction
+
+
+0, cseDHWHEATER:whType,  1
+2,          1, "SmallStorage"
+2,          2, "LargeStorage"
+2,          3, "SmallInstantaneous"
+2,          4, "LargeInstantaneous"
+
+0, cseDHWHEATER:whHeatSrc,  1
+2,          1, "Fuel"
+2,          2, "Resistance"
+2,          3, "ASHP"
+2,          4, "ASHPX"
+2,          5, "ResistanceX"		; SAC 4/14/16
+
+
+0, DHWSys:RecircPipeLoc, 0
+2,          0, "Conditioned"
+2,          1, "Semi-Conditioned"	; SAC 10/22/15 - added
+2,          2, "Unconditioned"
+2,          3, "Underground"
+
+
+0, cseDHWLOOPSEG:wgTy,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,          2, "Demand"                 
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,	         0, "- specify -"
+2,          1, "Supply"                  
+2,          2, "Return"                 
+
+
+0, DHWSys:SolFracType,  0
+0, DwellUnitType:DHWSolFracType,  0
+1,    Proj:Ruleset,   -1001,  0   ; Backward compatibility
+2,	         0, "- None -"
+2,          2, "Monthly"                 
+1,    Proj:Ruleset,    -999,  0   ; Current selections
+2,	         0, "- none -"
+2,          1, "Annual"                  
+2,          2, "Monthly (invalid for compliance)" 
+
+0, cseRSYS:rsType,  1
+2,              1,    "ACFurnace"
+2,              2,    "ACResistance"
+2,              3,    "ASHP"
+2,              4,    "AC"            ; SAC 2/19/13 - added
+2,              5,    "Furnace"       ; SAC 2/19/13 - added
+2,              6,    "Resistance"    ; SAC 2/19/13 - added
+2,              7,    "ASHPHydronic"  ; SAC 4/20/14 - added
+
+0, cseRSYS:rsOAVType,  0
+2,              0,    "None"
+2,              1,    "FixedFlow"
+2,              2,    "VarFlow"
+
+0, cseDUCTSEG:dsTy,  0
+2,              1,    "SUPPLY"
+2,              2,    "RETURN"
+
+; 0, cseDUCTSEG:dsExCnd,  0
+; 2,              1,    "ADIABATIC"
+; 2,              2,    "AMBIENT"
+; 2,              3,    "SPECIFIEDT"
+; 2,              4,    "ADJZN"
+
+
+0, cseEXPORT:exType,  -1
+2,              1,    "ZEB"
+2,              2,    "ZST"
+2,              3,    "MTR"
+2,              4,    "AH"
+2,              5,    "UDT"
+2,              6,    "SUM"
+
+0, cseEXPORT:exFreq,  -1
+2,              1,    "YEAR"
+2,              2,    "MONTH"
+2,              3,    "DAY"
+2,              4,    "HOUR"
+2,              5,    "HOURANDSUB"
+2,              6,    "SUBHOUR"
+
+
+0, cseREPORT:rpType,  5
+2,              1,    "ERR"
+2,              2,    "LOG"
+2,              3,    "INP"
+2,              4,    "SUM"
+2,              5,    "ZDD"
+2,              6,    "ZST"
+2,              7,    "ZEB"
+2,              8,    "MTR"
+2,              9,    "AH"
+2,             10,    "AHSIZE"
+2,             11,    "AHLOAD"
+2,             12,    "TUSIZE"
+2,             13,    "TULOAD"
+2,             14,    "UDT"
+
+0, HERSOther:QIIRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "Insulation Inspection"                  
+2,          2, "Spray Foam Insulation Inspection"                  
+
+0, HERSOther:IAQFanRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "IAQ mechanical ventilation"                  
+
+0, HERSOther:CIAQRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "Central Fan IAQ ventilation"                  
+
+;0, HERSOther:CoolVentRptMsg,  0
+;2,	    0,	" n/a "
+;2,          1, "Cooling Ventilation Fan"                  
+
+0, HERSOther:ZonalRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "Zonal Control Heating Credit"                  
+
+0, HERSOther:SprayFoamRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "High R-value Spray Foam Insulation"                  
+
+0, HERSOther:ExCondRptMsg,  0
+2,	    0,	" n/a "
+2,          1, "Verified Existing Conditions"                  
+
+0, HERSDHWSys:PipeInsRptMsg,  0
+2,	    0,	" n/a "
+2,    8392704, "Pipe Insulation, All Lines"                       
+
+0, HERSDHWSys:ParaPipeRptMsg,  0
+2,	    0,	" n/a "
+2,    8393216, "Parallel Piping"                                  
+
+; 0, HERSDHWSys:BelowGradeRptMsg,  0
+; 2,	    0,	" n/a "
+; 2,    8392960, "Insulated & Protected Below Grade Pipes"                
+
+0, HERSDHWSys:PushBtnRptMsg,  0
+2,	    0,	" n/a "
+2,    8393856, "Recirculation, Demand Control Push Button"        
+
+0, HERSDHWSys:OccRptMsg,  0
+2,	    0,	" n/a "
+2,    8394112, "Recirculation, Demand Control Occupancy/Motion"   
+
+; 0, HERSDHWSys:POURptMsg,  0
+; 2,	      0,	" n/a "
+; 2,    8394240, "Point of Use"                                     
+
+0, HERSDHWSys:CompactRptMsg,  0
+2,	    0,	" n/a "
+2,    8394496, "Compact Distribution System"                      
+
+; 08/26/16 CG added HERSDHWSys to fix tic #707
+0, HERSDHWSys:MFCtrlRecircDualLpRptMsg,  0
+2,	    0,	" n/a "
+2,       5051, "Multi-family: Central water heating recirculating dual loop design"                      
+
+; SAC 11/10/15 - revised following enum values to adjust for MFamDistType options which no longer include HERSVerif 
+; 0, HERSDHWSys:MFNoCtrlRptMsg,  0
+; 2,	    0,	" n/a "
+; 2,	 5056,"No Control"				
+; 2,	 8393664,"No Control"				
+
+; 0, HERSDHWSys:MFDCRptMsg,  0
+; 2,	    0,	" n/a "
+; 2,	 6336,"Demand Control"			
+; 2,	 8394944,"Demand Control"			
+
+; 0, HERSDHWSys:MFTmpModRptMsg,  0
+; 2,	    0,	" n/a "
+; 2,	 6592,"Temperature modulation"		
+; 2,	 8395200,"Temperature modulation"		
+
+; 0, HERSDHWSys:MFTmpModMonRptMsg,  0
+; 2,	    0,	" n/a "
+; 2,	 6848,"Temperature modulation & monitoring"	
+; 2,	 8395456,"Temperature modulation & monitoring"	
+
+; mjb	10/11/13 message symbol/strings added
+
+;0, SpeclFtr:AllOrientationMsg,  0
+;2,	    0,	" "
+;2,	    1,"All four cardinal orientations analyzed"	
+
+0, SpeclFtr:ZonalControlMsg,  0
+2,	    0,	" "
+2,	    1,"Zonal heating controls"	
+
+;0, SpeclFtr:VentCoolMsg,  0
+;2,	    0,	" "
+;2,	    1,"Ventilative cooling"	
+
+;0, SpeclFtr:DuctLocationMsg,  0
+;2,	    0,	" "
+;2,	    1,"Ducts not located in attic"	
+
+0, SpeclFtr:DuctInsulMsg,  0
+2,	    0,	" "
+2,	    1,"Ducts with high level of insulation"	
+
+;0, SpeclFtr:NoDuctsMsg,  0
+;2,	    0,	" "
+;2,	    1,"No ducts"	
+
+0, SpeclFtr:RHTrussMsg,  0
+2,	    0,	" "
+2,	    1,"Raised heel truss"	
+
+;0, SpeclFtr:RadiantBarrierMsg,  0
+;2,	    0,	" "
+;2,	    1,"Radiant barrier"	
+
+; mjb-10/14/13	added enumeration for kinda-cool roofs
+0, SpeclFtr:CoolRoofMsg,  0
+2,	    0,	" "
+2,	    1,"Non-standard roof reflectance"	
+2,	    2,"Cool roof"
+
+;0, SpeclFtr:NonStdExtWallMsg,  0
+;2,	    0,	" "
+;2,	    1,"Non-standard exterior wall construction"	
+
+;0, SpeclFtr:NonStdExtWallMsg,  0
+;2,	    0,	" "
+;2,	    1,"Non-standard exterior wall construction"	
+
+0, SpeclFtr:CathedralCeilingMsg,  0
+2,	    0,	" "
+2,	    1,"Cathedral Ceiling"	
+
+0, SpeclFtr:NonStdCeilBelowAtticMsg, 0
+2,	    0,	" "
+2,	    1,"Ceiling has high level of insulation"	
+
+0, SpeclFtr:NonStdFloorMsg,  0
+2,	    0,	" "
+2,	    1,"Floor has high level of insulation"	
+
+0, SpeclFtr:AboveDeckRoofInsMsg,  0
+2,	    0,	" "
+2,	    1,"Insulation above roof deck"	
+
+0, SpeclFtr:BelowDeckRoofInsMsg,  0
+2,	    0,	" "
+2,	    1,"Insulation below roof deck"	
+
+0, SpeclFtr:ExtShadeMsg,  0
+2,	    0,	" "
+2,	    1,"Exterior window shades"	
+
+0, SpeclFtr:WinOVerHngFinMsg,  0
+2,	    0,	" "
+2,	    1,"Window overhangs and/or fins"	
+
+0, SpeclFtr:ExposedSlabMsg,  0
+2,	    0,	" "
+2,	    1,"Exposed slab floor in conditioned zone"	
+
+0, SpeclFtr:CoolVentRptMsg,  0
+2,	    0,	" n/a "
+2,     1, "Whole house fan" 
+
+0, SpeclFtr:VarCFIClVentRptMsg,  0
+2,	    0,	" n/a "
+2,     1, "Has Variable Central Fan Ventilation Cooling Systems (CFVCS)" 
+
+0, SpeclFtr:FixCFIClVentRptMsg,  0
+2,	    0,	" n/a "
+2,     1, "Has Fixed Central Fan Ventilation Cooling Systems (CFVCS)"          
+
+0, SpeclFtr:NoCoolingMsg,  0
+2,	    0,	" "
+2,     1, "No cooling system included"       
+
+0, SpeclFtr:AddedShortDuctMsg,  0
+2,	    0,	" "
+2,     1, "New ductwork added is less than 40 ft. in length"       
+
+0, SpeclFtr:AWFWallsMsg,  0
+2,	    0,	" "
+2,     1, "Advanced wall framing included (see opaque surface constructions)"       
+
+0, SpeclFtr:MetalFramedWallsMsg,  0
+2,	    0,	" "
+2,     1, "Metal-framed assembly"       
+
+0, SpeclFtr:SIPAssemblyMsg,  0
+2,	    0,	" "
+2,     1, "Structurally insulated panel (SIP) assembly"       
+
+0, SpeclFtr:DuctsInCrawlSpcMsg,  0
+2,	    0,	" "
+2,     1, "Ducts in crawl space"       
+
+0, SpeclFtr:NonStdDuctLocMsg,  0
+2,	    0,	" "
+2,     1, "Non-standard duct location (any location other than attic)"       
+
+0, SpeclFtr:SFamSolarWHMsg,  0
+2,	    0,	" "
+2,     1, "Solar water heating credit, single family building Special feature and additional documentation"       
+
+0, SpeclFtr:MFamSolarWHMsg,  0
+2,	    0,	" "
+2,     1, "Solar water heating credit, Multi-family building special feature and additional documentation"
+
+0, SpeclFtr:SlabEdgeInsulMsg,  0
+2,	    0,	" "
+2,     1, "Slab Edge Insulation"       
+
+0, SpeclFtr:HeatedSlabMsg,  0
+2,	    0,	" "
+2,     1, "Heated slab"
+
+0, SpeclFtr:DHWMFRecircDemCtrlMsg,      0
+2,	    0,	" "
+2,     1, "Multi-family: Recirculation demand control"
+
+0, SpeclFtr:DHWMFNLpNRecircMsg,      0
+2,	    0,	" "
+2,     1, "Multi-family: No loops or recirc pump"
+
+0, SpeclFtr:DHWMFRecircNDemCtrlMsg,      0
+2,	    0,	" "
+2,     1, "Multi-family: Recirculating with no control (continuous pumping)"
+
+0, SpeclFtr:DHWMFRecircTempModMsg,      0
+2,	    0,	" "
+2,     1, "Multi-family: Recirculating with temperature modulation"
+
+0, SpeclFtr:DHWMFRecircTempModMonMsg,      0
+2,	    0,	" "
+2,     1, "Multi-family: Recirculating with temperature modulation and monitoring "	  	       
+
+0, SpeclFtr:DHWParaPipeCntrlMsg,  0
+2,	    0,	" "
+2,     1, "Central parallel piping"
+
+0, SpeclFtr:DHWPipeInsulMsg,      0
+2,	    0,	" "
+2,     1, "Pipe insulation, all lines"	
+
+; 0, SpeclFtr:DHWParaPipeNCntrlMsg, 0
+; 2,	    0,	" "
+; 2,     1, "Parallel piping"
+
+0, SpeclFtr:DHWPointOfUseMsg,   0
+2,	    0,	" "
+2,     1, "Point of use"
+
+0, SpeclFtr:DHWRecircDemOccMsg,   0
+2,	    0,	" "
+2,     1, "Recirculation with demand control, occupancy/motion sensor"	
+
+0, SpeclFtr:DHWRecircDemPBtnMsg,  0
+2,	    0,	" "
+2,     1, "Recirculation with demand control, push button"
+
+0, SpeclFtr:DHWRecircNDemCtrlMsg, 0
+2,	    0,	" "
+2,     1, "Recirculation with non-demand control"
+
+-1  

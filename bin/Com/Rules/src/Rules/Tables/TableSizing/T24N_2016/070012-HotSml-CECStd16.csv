@@ -1,0 +1,198 @@
+TABLE HotSmlCECStd16070012TrmlUnit,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,PriAirFlowMax,PriAirFlowMin,HtgAirFlowMax,ReheatCtrlMthd,,,,
+;,,,,,(cfm),(cfm),( cfm),,,,,
+BaseVAVTrmlUnit,BaseVAVBox TrmlUnit,VAVReheatBox,BaseAirSys5,CorridorFlr1 Thermal Zone,1003.812,243.005,501.906,DualMaximum,,,,
+BaseVAVTrmlUnit-5,BaseVAVBox TrmlUnit-2,VAVReheatBox,BaseAirSys5,EmployeeLoungeFlr1 Thermal Zone,171.553,52.65,85.776,DualMaximum,,,,
+BaseVAVTrmlUnit-6,BaseVAVBox TrmlUnit-3,VAVReheatBox,BaseAirSys5,ExerciseCenterFlr1 Thermal Zone,176.967,52.65,88.483,DualMaximum,,,,
+BaseVAVTrmlUnit-7,BaseVAVBox TrmlUnit-4,VAVReheatBox,BaseAirSys5,FrontLoungeFlr1 Thermal Zone,2325.669,465.134,1162.834,DualMaximum,,,,
+BaseVAVTrmlUnit-8,BaseVAVBox TrmlUnit-5,VAVReheatBox,BaseAirSys5,FrontOfficeFlr1 Thermal Zone,895.412,210.6,447.706,DualMaximum,,,,
+BaseVAVTrmlUnit-9,BaseVAVBox TrmlUnit-6,VAVReheatBox,BaseAirSys5,LaundryRoomFlr1 Thermal Zone,685.213,157.951,342.607,DualMaximum,,,,
+BaseVAVTrmlUnit-10,BaseVAVBox TrmlUnit-7,VAVReheatBox,BaseAirSys5,MechanicalRoomFlr1 Thermal Zone,412.993,82.599,206.497,DualMaximum,,,,
+BaseVAVTrmlUnit-11,BaseVAVBox TrmlUnit-8,VAVReheatBox,BaseAirSys5,MeetingRoomFlr1 Thermal Zone,1112.941,222.588,556.471,DualMaximum,,,,
+BaseVAVTrmlUnit-12,BaseVAVBox TrmlUnit-9,VAVReheatBox,BaseAirSys5,FrontStairsFlr1 Thermal Zone,171.807,34.361,85.904,DualMaximum,,,,
+BaseVAVTrmlUnit-16,BaseVAVBox TrmlUnit-10,VAVReheatBox,BaseAirSys5,FrontStorageFlr1 Thermal Zone,117.152,23.43,58.576,DualMaximum,,,,
+BaseVAVTrmlUnit-20,BaseVAVBox TrmlUnit-11,VAVReheatBox,BaseAirSys5,RearStairsFlr1 Thermal Zone,155.699,32.408,77.85,DualMaximum,,,,
+BaseVAVTrmlUnit-24,BaseVAVBox TrmlUnit-12,VAVReheatBox,BaseAirSys5,RearStorageFlr1 Thermal Zone,160.019,32.41,80.009,DualMaximum,,,,
+BaseVAVTrmlUnit-28,BaseVAVBox TrmlUnit-13,VAVReheatBox,BaseAirSys5,RestroomFlr1 Thermal Zone,268.785,53.757,134.393,DualMaximum,,,,
+BaseVAVTrmlUnit-2,BaseVAVBox TrmlUnit-14,VAVReheatBox,BaseAirSys5-2,CorridorFlr2 Thermal Zone,634.406,202.502,317.203,DualMaximum,,,,
+BaseVAVTrmlUnit-13,BaseVAVBox TrmlUnit-15,VAVReheatBox,BaseAirSys5-2,FrontStairsFlr2 Thermal Zone,122.054,32.4,61.027,DualMaximum,,,,
+BaseVAVTrmlUnit-17,BaseVAVBox TrmlUnit-16,VAVReheatBox,BaseAirSys5-2,FrontStorageFlr2 Thermal Zone,86.982,20.25,43.491,DualMaximum,,,,
+BaseVAVTrmlUnit-21,BaseVAVBox TrmlUnit-17,VAVReheatBox,BaseAirSys5-2,RearStairsFlr2 Thermal Zone,123.433,32.408,61.716,DualMaximum,,,,
+BaseVAVTrmlUnit-25,BaseVAVBox TrmlUnit-18,VAVReheatBox,BaseAirSys5-2,RearStorageFlr2 Thermal Zone,125.122,32.41,62.561,DualMaximum,,,,
+BaseVAVTrmlUnit-3,BaseVAVBox TrmlUnit-19,VAVReheatBox,BaseAirSys5-3,CorridorFlr3 Thermal Zone,621.372,202.502,310.686,DualMaximum,,,,
+BaseVAVTrmlUnit-14,BaseVAVBox TrmlUnit-20,VAVReheatBox,BaseAirSys5-3,FrontStairsFlr3 Thermal Zone,120.7,32.4,60.35,DualMaximum,,,,
+BaseVAVTrmlUnit-18,BaseVAVBox TrmlUnit-21,VAVReheatBox,BaseAirSys5-3,FrontStorageFlr3 Thermal Zone,85.925,20.25,42.963,DualMaximum,,,,
+BaseVAVTrmlUnit-22,BaseVAVBox TrmlUnit-22,VAVReheatBox,BaseAirSys5-3,RearStairsFlr3 Thermal Zone,122.809,32.408,61.404,DualMaximum,,,,
+BaseVAVTrmlUnit-26,BaseVAVBox TrmlUnit-23,VAVReheatBox,BaseAirSys5-3,RearStorageFlr3 Thermal Zone,124.439,32.41,62.22,DualMaximum,,,,
+BaseVAVTrmlUnit-4,BaseVAVBox TrmlUnit-24,VAVReheatBox,BaseAirSys5-4,CorridorFlr4 Thermal Zone,720.155,202.502,360.078,DualMaximum,,,,
+BaseVAVTrmlUnit-15,BaseVAVBox TrmlUnit-25,VAVReheatBox,BaseAirSys5-4,FrontStairsFlr4 Thermal Zone,141.522,32.4,70.761,DualMaximum,,,,
+BaseVAVTrmlUnit-19,BaseVAVBox TrmlUnit-26,VAVReheatBox,BaseAirSys5-4,FrontStorageFlr4 Thermal Zone,102.073,20.415,51.036,DualMaximum,,,,
+BaseVAVTrmlUnit-23,BaseVAVBox TrmlUnit-27,VAVReheatBox,BaseAirSys5-4,RearStairsFlr4 Thermal Zone,137.574,32.408,68.787,DualMaximum,,,,
+BaseVAVTrmlUnit-27,BaseVAVBox TrmlUnit-28,VAVReheatBox,BaseAirSys5-4,RearStorageFlr4 Thermal Zone,141.16,32.41,70.58,DualMaximum,,,,
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlCECStd16070012CoilClg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,DXSEER,DXEER,NumClgStages,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+BaseSys5 CoilClg,BaseSys5 CoilClg,DirectExpansion,BaseAirSys5,NONE,350931.688,366130.75,-99996,-99996,9.8,2,,
+BaseSys5 CoilClg-2,BaseSys5 CoilClg-2,DirectExpansion,BaseAirSys5-2,NONE,49570.484,51717.414,-99996,13,10.845,2,,
+BaseSys5 CoilClg-3,BaseSys5 CoilClg-3,DirectExpansion,BaseAirSys5-3,NONE,49015.699,51138.598,-99996,13,10.845,2,,
+BaseSys5 CoilClg-4,BaseSys5 CoilClg-4,DirectExpansion,BaseAirSys5-4,NONE,52291.922,54556.715,-99996,13,10.845,2,,
+GuestRoom101_FPFC CoilClg,BaseSys2 CoilClg,ChilledWater,BaseZnSys2,GuestRoom101 Thermal Zone,4500.911,4500.911,0.44992,-99996,-99996,-99996,,
+GuestRoom102_FPFC CoilClg,BaseSys2 CoilClg-2,ChilledWater,BaseZnSys2-2,GuestRoom102 Thermal Zone,4595.19,4595.19,0.45934,-99996,-99996,-99996,,
+GuestRoom103_FPFC CoilClg,BaseSys2 CoilClg-3,ChilledWater,BaseZnSys2-3,GuestRoom103 Thermal Zone,4395.839,4395.839,0.43942,-99996,-99996,-99996,,
+GuestRoom104_FPFC CoilClg,BaseSys2 CoilClg-4,ChilledWater,BaseZnSys2-4,GuestRoom104 Thermal Zone,4190.085,4190.085,0.41885,-99996,-99996,-99996,,
+GuestRoom105_FPFC CoilClg,BaseSys2 CoilClg-5,ChilledWater,BaseZnSys2-5,GuestRoom105 Thermal Zone,4218.68,4218.68,0.42171,-99996,-99996,-99996,,
+GuestRoom201_FPFC CoilClg,BaseSys2 CoilClg-6,ChilledWater,BaseZnSys2-6,GuestRoom201 Thermal Zone,5105.622,5105.622,0.51037,-99996,-99996,-99996,,
+GuestRoom202_205_FPFC CoilClg,BaseSys2 CoilClg-7,ChilledWater,BaseZnSys2-7,GuestRoom202_205 Thermal Zone,4213.279,4213.279,0.42117,-99996,-99996,-99996,,
+GuestRoom206_208_FPFC CoilClg,BaseSys2 CoilClg-8,ChilledWater,BaseZnSys2-8,GuestRoom206_208 Thermal Zone,4311.292,4311.292,0.43097,-99996,-99996,-99996,,
+GuestRoom209_212_FPFC CoilClg,BaseSys2 CoilClg-9,ChilledWater,BaseZnSys2-9,GuestRoom209_212 Thermal Zone,3855.396,3855.396,0.38539,-99996,-99996,-99996,,
+GuestRoom213_FPFC CoilClg,BaseSys2 CoilClg-10,ChilledWater,BaseZnSys2-10,GuestRoom213 Thermal Zone,3850.78,3850.78,0.38493,-99996,-99996,-99996,,
+GuestRoom214_FPFC CoilClg,BaseSys2 CoilClg-11,ChilledWater,BaseZnSys2-11,GuestRoom214 Thermal Zone,3600.012,3600.012,0.35986,-99996,-99996,-99996,,
+GuestRoom215_218_FPFC CoilClg,BaseSys2 CoilClg-12,ChilledWater,BaseZnSys2-12,GuestRoom215_218 Thermal Zone,3568.396,3568.396,0.3567,-99996,-99996,-99996,,
+GuestRoom219_FPFC CoilClg,BaseSys2 CoilClg-13,ChilledWater,BaseZnSys2-13,GuestRoom219 Thermal Zone,3632.572,3632.572,0.36312,-99996,-99996,-99996,,
+GuestRoom220_223_FPFC CoilClg,BaseSys2 CoilClg-14,ChilledWater,BaseZnSys2-14,GuestRoom220_223 Thermal Zone,3557.656,3557.656,0.35563,-99996,-99996,-99996,,
+GuestRoom224_FPFC CoilClg,BaseSys2 CoilClg-15,ChilledWater,BaseZnSys2-15,GuestRoom224 Thermal Zone,3598.331,3598.331,0.3597,-99996,-99996,-99996,,
+GuestRoom301_FPFC CoilClg,BaseSys2 CoilClg-16,ChilledWater,BaseZnSys2-16,GuestRoom301 Thermal Zone,4719.153,4719.153,0.47174,-99996,-99996,-99996,,
+GuestRoom302_305_FPFC CoilClg,BaseSys2 CoilClg-17,ChilledWater,BaseZnSys2-17,GuestRoom302_305 Thermal Zone,3908.403,3908.403,0.39069,-99996,-99996,-99996,,
+GuestRoom306_308_FPFC CoilClg,BaseSys2 CoilClg-18,ChilledWater,BaseZnSys2-18,GuestRoom306_308 Thermal Zone,4279.221,4279.221,0.42776,-99996,-99996,-99996,,
+GuestRoom309_312_FPFC CoilClg,BaseSys2 CoilClg-19,ChilledWater,BaseZnSys2-19,GuestRoom309_312 Thermal Zone,3853.086,3853.086,0.38516,-99996,-99996,-99996,,
+GuestRoom313_FPFC CoilClg,BaseSys2 CoilClg-20,ChilledWater,BaseZnSys2-20,GuestRoom313 Thermal Zone,3853.349,3853.349,0.38519,-99996,-99996,-99996,,
+GuestRoom314_FPFC CoilClg,BaseSys2 CoilClg-21,ChilledWater,BaseZnSys2-21,GuestRoom314 Thermal Zone,3612.002,3612.002,0.36106,-99996,-99996,-99996,,
+GuestRoom315_318_FPFC CoilClg,BaseSys2 CoilClg-22,ChilledWater,BaseZnSys2-22,GuestRoom315_318 Thermal Zone,3609.603,3609.603,0.36082,-99996,-99996,-99996,,
+GuestRoom319_FPFC CoilClg,BaseSys2 CoilClg-23,ChilledWater,BaseZnSys2-23,GuestRoom319 Thermal Zone,3585.317,3585.317,0.3584,-99996,-99996,-99996,,
+GuestRoom320_323_FPFC CoilClg,BaseSys2 CoilClg-24,ChilledWater,BaseZnSys2-24,GuestRoom320_323 Thermal Zone,3574.865,3574.865,0.35735,-99996,-99996,-99996,,
+GuestRoom324_FPFC CoilClg,BaseSys2 CoilClg-25,ChilledWater,BaseZnSys2-25,GuestRoom324 Thermal Zone,3539.804,3539.804,0.35385,-99996,-99996,-99996,,
+GuestRoom401_FPFC CoilClg,BaseSys2 CoilClg-26,ChilledWater,BaseZnSys2-26,GuestRoom401 Thermal Zone,5651.984,5651.984,0.56498,-99996,-99996,-99996,,
+GuestRoom402_405_FPFC CoilClg,BaseSys2 CoilClg-27,ChilledWater,BaseZnSys2-27,GuestRoom402_405 Thermal Zone,4729.636,4729.636,0.47278,-99996,-99996,-99996,,
+GuestRoom406_408_FPFC CoilClg,BaseSys2 CoilClg-28,ChilledWater,BaseZnSys2-28,GuestRoom406_408 Thermal Zone,5266.769,5266.769,0.52648,-99996,-99996,-99996,,
+GuestRoom409_412_FPFC CoilClg,BaseSys2 CoilClg-29,ChilledWater,BaseZnSys2-29,GuestRoom409_412 Thermal Zone,4709.99,4709.99,0.47082,-99996,-99996,-99996,,
+GuestRoom413_FPFC CoilClg,BaseSys2 CoilClg-30,ChilledWater,BaseZnSys2-30,GuestRoom413 Thermal Zone,4690.276,4690.276,0.46885,-99996,-99996,-99996,,
+GuestRoom414_FPFC CoilClg,BaseSys2 CoilClg-31,ChilledWater,BaseZnSys2-31,GuestRoom414 Thermal Zone,4325.584,4325.584,0.43239,-99996,-99996,-99996,,
+GuestRoom415_418_FPFC CoilClg,BaseSys2 CoilClg-32,ChilledWater,BaseZnSys2-32,GuestRoom415_418 Thermal Zone,4305.145,4305.145,0.43035,-99996,-99996,-99996,,
+GuestRoom419_FPFC CoilClg,BaseSys2 CoilClg-33,ChilledWater,BaseZnSys2-33,GuestRoom419 Thermal Zone,4288.039,4288.039,0.42864,-99996,-99996,-99996,,
+GuestRoom420_423_FPFC CoilClg,BaseSys2 CoilClg-34,ChilledWater,BaseZnSys2-34,GuestRoom420_423 Thermal Zone,4254.138,4254.138,0.42525,-99996,-99996,-99996,,
+GuestRoom424_FPFC CoilClg,BaseSys2 CoilClg-35,ChilledWater,BaseZnSys2-35,GuestRoom424 Thermal Zone,4228.289,4228.289,0.42267,-99996,-99996,-99996,,
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlCECStd16070012CoilHtg,,,,,,,,,,,,
+PropName,BaseName,Type,System,Zone,CapTotNetRtd,CapTotGrossRtd,FluidFlowRtDsgn,FurnAFUE,FurnThrmlEff,,,
+;,,,,,(Btu/hr),(Btu/hr),( gpm),,,,,
+BaseSys5 CoilHtg,BaseSys5 CoilHtg,HotWater,BaseAirSys5,NONE,114303.32,114303.32,5.713,-99996,-99996,,,
+BaseSys5 CoilHtg-2,BaseSys5 CoilHtg-2,HotWater,BaseAirSys5-2,NONE,9262.15,9262.15,0.46293,-99996,-99996,,,
+BaseSys5 CoilHtg-3,BaseSys5 CoilHtg-3,HotWater,BaseAirSys5-3,NONE,9330.662,9330.662,0.46636,-99996,-99996,,,
+BaseSys5 CoilHtg-4,BaseSys5 CoilHtg-4,HotWater,BaseAirSys5-4,NONE,8736.725,8736.725,0.43667,-99996,-99996,,,
+GuestRoom101_FPFC CoilHtg,BaseSys2 CoilHtg,HotWater,BaseZnSys2,GuestRoom101 Thermal Zone,5432.075,5432.075,0.2715,-99996,-99996,,,
+GuestRoom102_FPFC CoilHtg,BaseSys2 CoilHtg-2,HotWater,BaseZnSys2-2,GuestRoom102 Thermal Zone,5630.825,5630.825,0.28143,-99996,-99996,,,
+GuestRoom103_FPFC CoilHtg,BaseSys2 CoilHtg-3,HotWater,BaseZnSys2-3,GuestRoom103 Thermal Zone,5481.912,5481.912,0.27399,-99996,-99996,,,
+GuestRoom104_FPFC CoilHtg,BaseSys2 CoilHtg-4,HotWater,BaseZnSys2-4,GuestRoom104 Thermal Zone,5466.362,5466.362,0.27321,-99996,-99996,,,
+GuestRoom105_FPFC CoilHtg,BaseSys2 CoilHtg-5,HotWater,BaseZnSys2-5,GuestRoom105 Thermal Zone,5430.538,5430.538,0.27142,-99996,-99996,,,
+GuestRoom201_FPFC CoilHtg,BaseSys2 CoilHtg-6,HotWater,BaseZnSys2-6,GuestRoom201 Thermal Zone,5309.963,5309.963,0.2654,-99996,-99996,,,
+GuestRoom202_205_FPFC CoilHtg,BaseSys2 CoilHtg-7,HotWater,BaseZnSys2-7,GuestRoom202_205 Thermal Zone,3969.891,3969.891,0.19842,-99996,-99996,,,
+GuestRoom206_208_FPFC CoilHtg,BaseSys2 CoilHtg-8,HotWater,BaseZnSys2-8,GuestRoom206_208 Thermal Zone,4148.142,4148.142,0.20733,-99996,-99996,,,
+GuestRoom209_212_FPFC CoilHtg,BaseSys2 CoilHtg-9,HotWater,BaseZnSys2-9,GuestRoom209_212 Thermal Zone,3949.906,3949.906,0.19742,-99996,-99996,,,
+GuestRoom213_FPFC CoilHtg,BaseSys2 CoilHtg-10,HotWater,BaseZnSys2-10,GuestRoom213 Thermal Zone,4512.2,4512.2,0.22552,-99996,-99996,,,
+GuestRoom214_FPFC CoilHtg,BaseSys2 CoilHtg-11,HotWater,BaseZnSys2-11,GuestRoom214 Thermal Zone,4507.362,4507.362,0.22528,-99996,-99996,,,
+GuestRoom215_218_FPFC CoilHtg,BaseSys2 CoilHtg-12,HotWater,BaseZnSys2-12,GuestRoom215_218 Thermal Zone,3920.413,3920.413,0.19595,-99996,-99996,,,
+GuestRoom219_FPFC CoilHtg,BaseSys2 CoilHtg-13,HotWater,BaseZnSys2-13,GuestRoom219 Thermal Zone,4301.088,4301.088,0.21497,-99996,-99996,,,
+GuestRoom220_223_FPFC CoilHtg,BaseSys2 CoilHtg-14,HotWater,BaseZnSys2-14,GuestRoom220_223 Thermal Zone,3837.066,3837.066,0.19178,-99996,-99996,,,
+GuestRoom224_FPFC CoilHtg,BaseSys2 CoilHtg-15,HotWater,BaseZnSys2-15,GuestRoom224 Thermal Zone,4234.788,4234.788,0.21166,-99996,-99996,,,
+GuestRoom301_FPFC CoilHtg,BaseSys2 CoilHtg-16,HotWater,BaseZnSys2-16,GuestRoom301 Thermal Zone,5550.063,5550.063,0.2774,-99996,-99996,,,
+GuestRoom302_305_FPFC CoilHtg,BaseSys2 CoilHtg-17,HotWater,BaseZnSys2-17,GuestRoom302_305 Thermal Zone,4136.847,4136.847,0.20676,-99996,-99996,,,
+GuestRoom306_308_FPFC CoilHtg,BaseSys2 CoilHtg-18,HotWater,BaseZnSys2-18,GuestRoom306_308 Thermal Zone,4396.721,4396.721,0.21975,-99996,-99996,,,
+GuestRoom309_312_FPFC CoilHtg,BaseSys2 CoilHtg-19,HotWater,BaseZnSys2-19,GuestRoom309_312 Thermal Zone,4111.116,4111.116,0.20548,-99996,-99996,,,
+GuestRoom313_FPFC CoilHtg,BaseSys2 CoilHtg-20,HotWater,BaseZnSys2-20,GuestRoom313 Thermal Zone,4592,4592,0.22951,-99996,-99996,,,
+GuestRoom314_FPFC CoilHtg,BaseSys2 CoilHtg-21,HotWater,BaseZnSys2-21,GuestRoom314 Thermal Zone,4590.237,4590.237,0.22942,-99996,-99996,,,
+GuestRoom315_318_FPFC CoilHtg,BaseSys2 CoilHtg-22,HotWater,BaseZnSys2-22,GuestRoom315_318 Thermal Zone,4094.603,4094.603,0.20465,-99996,-99996,,,
+GuestRoom319_FPFC CoilHtg,BaseSys2 CoilHtg-23,HotWater,BaseZnSys2-23,GuestRoom319 Thermal Zone,4514.737,4514.737,0.22565,-99996,-99996,,,
+GuestRoom320_323_FPFC CoilHtg,BaseSys2 CoilHtg-24,HotWater,BaseZnSys2-24,GuestRoom320_323 Thermal Zone,4018.453,4018.453,0.20085,-99996,-99996,,,
+GuestRoom324_FPFC CoilHtg,BaseSys2 CoilHtg-25,HotWater,BaseZnSys2-25,GuestRoom324 Thermal Zone,4466.225,4466.225,0.22323,-99996,-99996,,,
+GuestRoom401_FPFC CoilHtg,BaseSys2 CoilHtg-26,HotWater,BaseZnSys2-26,GuestRoom401 Thermal Zone,6478.237,6478.237,0.32379,-99996,-99996,,,
+GuestRoom402_405_FPFC CoilHtg,BaseSys2 CoilHtg-27,HotWater,BaseZnSys2-27,GuestRoom402_405 Thermal Zone,4607.353,4607.353,0.23028,-99996,-99996,,,
+GuestRoom406_408_FPFC CoilHtg,BaseSys2 CoilHtg-28,HotWater,BaseZnSys2-28,GuestRoom406_408 Thermal Zone,4936.054,4936.054,0.24671,-99996,-99996,,,
+GuestRoom409_412_FPFC CoilHtg,BaseSys2 CoilHtg-29,HotWater,BaseZnSys2-29,GuestRoom409_412 Thermal Zone,4601.065,4601.065,0.22997,-99996,-99996,,,
+GuestRoom413_FPFC CoilHtg,BaseSys2 CoilHtg-30,HotWater,BaseZnSys2-30,GuestRoom413 Thermal Zone,5360.25,5360.25,0.26791,-99996,-99996,,,
+GuestRoom414_FPFC CoilHtg,BaseSys2 CoilHtg-31,HotWater,BaseZnSys2-31,GuestRoom414 Thermal Zone,5358.325,5358.325,0.26781,-99996,-99996,,,
+GuestRoom415_418_FPFC CoilHtg,BaseSys2 CoilHtg-32,HotWater,BaseZnSys2-32,GuestRoom415_418 Thermal Zone,4595.188,4595.188,0.22967,-99996,-99996,,,
+GuestRoom419_FPFC CoilHtg,BaseSys2 CoilHtg-33,HotWater,BaseZnSys2-33,GuestRoom419 Thermal Zone,5320.175,5320.175,0.26591,-99996,-99996,,,
+GuestRoom420_423_FPFC CoilHtg,BaseSys2 CoilHtg-34,HotWater,BaseZnSys2-34,GuestRoom420_423 Thermal Zone,4525.075,4525.075,0.22617,-99996,-99996,,,
+GuestRoom424_FPFC CoilHtg,BaseSys2 CoilHtg-35,HotWater,BaseZnSys2-35,GuestRoom424 Thermal Zone,5271.3,5271.3,0.26346,-99996,-99996,,,
+BaseVAVReheatCoil,BaseVAVBox CoilHtg,HotWater,BaseAirSys5,CorridorFlr1 Thermal Zone,31743.238,31743.238,1.58656,-99996,-99996,,,
+BaseVAVReheatCoil-5,BaseVAVBox CoilHtg-2,HotWater,BaseAirSys5,EmployeeLoungeFlr1 Thermal Zone,6469.675,6469.675,0.32336,-99996,-99996,,,
+BaseVAVReheatCoil-6,BaseVAVBox CoilHtg-3,HotWater,BaseAirSys5,ExerciseCenterFlr1 Thermal Zone,5963.388,5963.388,0.29806,-99996,-99996,,,
+BaseVAVReheatCoil-7,BaseVAVBox CoilHtg-4,HotWater,BaseAirSys5,FrontLoungeFlr1 Thermal Zone,47328.051,47328.051,2.3655,-99996,-99996,,,
+BaseVAVReheatCoil-8,BaseVAVBox CoilHtg-5,HotWater,BaseAirSys5,FrontOfficeFlr1 Thermal Zone,21197.648,21197.648,1.05948,-99996,-99996,,,
+BaseVAVReheatCoil-9,BaseVAVBox CoilHtg-6,HotWater,BaseAirSys5,LaundryRoomFlr1 Thermal Zone,16249.387,16249.387,0.81216,-99996,-99996,,,
+BaseVAVReheatCoil-10,BaseVAVBox CoilHtg-7,HotWater,BaseAirSys5,MechanicalRoomFlr1 Thermal Zone,8173.075,8173.075,0.4085,-99996,-99996,,,
+BaseVAVReheatCoil-11,BaseVAVBox CoilHtg-8,HotWater,BaseAirSys5,MeetingRoomFlr1 Thermal Zone,22322.813,22322.813,1.11572,-99996,-99996,,,
+BaseVAVReheatCoil-12,BaseVAVBox CoilHtg-9,HotWater,BaseAirSys5,FrontStairsFlr1 Thermal Zone,5251.387,5251.387,0.26247,-99996,-99996,,,
+BaseVAVReheatCoil-16,BaseVAVBox CoilHtg-10,HotWater,BaseAirSys5,FrontStorageFlr1 Thermal Zone,2905.563,2905.563,0.14522,-99996,-99996,,,
+BaseVAVReheatCoil-20,BaseVAVBox CoilHtg-11,HotWater,BaseAirSys5,RearStairsFlr1 Thermal Zone,6040.475,6040.475,0.30191,-99996,-99996,,,
+BaseVAVReheatCoil-24,BaseVAVBox CoilHtg-12,HotWater,BaseAirSys5,RearStorageFlr1 Thermal Zone,6043.738,6043.738,0.30207,-99996,-99996,,,
+BaseVAVReheatCoil-28,BaseVAVBox CoilHtg-13,HotWater,BaseAirSys5,RestroomFlr1 Thermal Zone,6194.612,6194.612,0.30961,-99996,-99996,,,
+BaseVAVReheatCoil-2,BaseVAVBox CoilHtg-14,HotWater,BaseAirSys5-2,CorridorFlr2 Thermal Zone,17228.188,17228.188,0.86108,-99996,-99996,,,
+BaseVAVReheatCoil-13,BaseVAVBox CoilHtg-15,HotWater,BaseAirSys5-2,FrontStairsFlr2 Thermal Zone,2997.575,2997.575,0.14982,-99996,-99996,,,
+BaseVAVReheatCoil-17,BaseVAVBox CoilHtg-16,HotWater,BaseAirSys5-2,FrontStorageFlr2 Thermal Zone,1927.462,1927.462,0.09634,-99996,-99996,,,
+BaseVAVReheatCoil-21,BaseVAVBox CoilHtg-17,HotWater,BaseAirSys5-2,RearStairsFlr2 Thermal Zone,3634.85,3634.85,0.18167,-99996,-99996,,,
+BaseVAVReheatCoil-25,BaseVAVBox CoilHtg-18,HotWater,BaseAirSys5-2,RearStorageFlr2 Thermal Zone,3636.15,3636.15,0.18174,-99996,-99996,,,
+BaseVAVReheatCoil-3,BaseVAVBox CoilHtg-19,HotWater,BaseAirSys5-3,CorridorFlr3 Thermal Zone,18459.738,18459.738,0.92264,-99996,-99996,,,
+BaseVAVReheatCoil-14,BaseVAVBox CoilHtg-20,HotWater,BaseAirSys5-3,FrontStairsFlr3 Thermal Zone,3059.45,3059.45,0.15291,-99996,-99996,,,
+BaseVAVReheatCoil-18,BaseVAVBox CoilHtg-21,HotWater,BaseAirSys5-3,FrontStorageFlr3 Thermal Zone,1945.675,1945.675,0.09725,-99996,-99996,,,
+BaseVAVReheatCoil-22,BaseVAVBox CoilHtg-22,HotWater,BaseAirSys5-3,RearStairsFlr3 Thermal Zone,3707.188,3707.188,0.18529,-99996,-99996,,,
+BaseVAVReheatCoil-26,BaseVAVBox CoilHtg-23,HotWater,BaseAirSys5-3,RearStorageFlr3 Thermal Zone,3707.8,3707.8,0.18532,-99996,-99996,,,
+BaseVAVReheatCoil-4,BaseVAVBox CoilHtg-24,HotWater,BaseAirSys5-4,CorridorFlr4 Thermal Zone,34596.125,34596.125,1.72915,-99996,-99996,,,
+BaseVAVReheatCoil-15,BaseVAVBox CoilHtg-25,HotWater,BaseAirSys5-4,FrontStairsFlr4 Thermal Zone,5786.612,5786.612,0.28922,-99996,-99996,,,
+BaseVAVReheatCoil-19,BaseVAVBox CoilHtg-26,HotWater,BaseAirSys5-4,FrontStorageFlr4 Thermal Zone,3631.1,3631.1,0.18149,-99996,-99996,,,
+BaseVAVReheatCoil-23,BaseVAVBox CoilHtg-27,HotWater,BaseAirSys5-4,RearStairsFlr4 Thermal Zone,6309.163,6309.163,0.31534,-99996,-99996,,,
+BaseVAVReheatCoil-27,BaseVAVBox CoilHtg-28,HotWater,BaseAirSys5-4,RearStorageFlr4 Thermal Zone,6309.888,6309.888,0.31537,-99996,-99996,,,
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlCECStd16070012Fan,,,,,,,,,,,,
+PropName,BaseName,CtrlMthd,System,Zone,FlowCap,FlowMin,FlowEff,ModelingMthd,TotStaticPress,MtrHP,MtrPos,MtrEff
+;,,,,,(cfm),(cfm),,,(inH2O),( hp),,
+BaseSys5 Fan,BaseSys5 Fan,VariableSpeedDrive,BaseAirSys5,NONE,8606.255,1663.544,0.6,StaticPressure,3.5,10,InAirStream,0.917
+BaseSys5 Fan-2,BaseSys5 Fan-2,VariableSpeedDrive,BaseAirSys5-2,NONE,1245.576,319.971,0.5,StaticPressure,3,1.5,InAirStream,0.865
+BaseSys5 Fan-3,BaseSys5 Fan-3,VariableSpeedDrive,BaseAirSys5-3,NONE,1227.533,319.971,0.5,StaticPressure,3,1.5,InAirStream,0.865
+BaseSys5 Fan-4,BaseSys5 Fan-4,VariableSpeedDrive,BaseAirSys5-4,NONE,1376.24,320.135,0.5,StaticPressure,3,1.5,InAirStream,0.865
+GuestRoom101_FPFC Fan,BaseSys2 Fan,ConstantVolume,BaseZnSys2,GuestRoom101 Thermal Zone,148.83,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom102_FPFC Fan,BaseSys2 Fan-2,ConstantVolume,BaseZnSys2-2,GuestRoom102 Thermal Zone,151.99,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom103_FPFC Fan,BaseSys2 Fan-3,ConstantVolume,BaseZnSys2-3,GuestRoom103 Thermal Zone,145.3,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom104_FPFC Fan,BaseSys2 Fan-4,ConstantVolume,BaseZnSys2-4,GuestRoom104 Thermal Zone,137.62,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom105_FPFC Fan,BaseSys2 Fan-5,ConstantVolume,BaseZnSys2-5,GuestRoom105 Thermal Zone,136.71,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom201_FPFC Fan,BaseSys2 Fan-6,ConstantVolume,BaseZnSys2-6,GuestRoom201 Thermal Zone,169.18,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom202_205_FPFC Fan,BaseSys2 Fan-7,ConstantVolume,BaseZnSys2-7,GuestRoom202_205 Thermal Zone,139.193,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom206_208_FPFC Fan,BaseSys2 Fan-8,ConstantVolume,BaseZnSys2-8,GuestRoom206_208 Thermal Zone,142.113,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom209_212_FPFC Fan,BaseSys2 Fan-9,ConstantVolume,BaseZnSys2-9,GuestRoom209_212 Thermal Zone,127.202,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom213_FPFC Fan,BaseSys2 Fan-10,ConstantVolume,BaseZnSys2-10,GuestRoom213 Thermal Zone,127.05,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom214_FPFC Fan,BaseSys2 Fan-11,ConstantVolume,BaseZnSys2-11,GuestRoom214 Thermal Zone,114.39,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom215_218_FPFC Fan,BaseSys2 Fan-12,ConstantVolume,BaseZnSys2-12,GuestRoom215_218 Thermal Zone,113.342,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom219_FPFC Fan,BaseSys2 Fan-13,ConstantVolume,BaseZnSys2-13,GuestRoom219 Thermal Zone,115.48,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom220_223_FPFC Fan,BaseSys2 Fan-14,ConstantVolume,BaseZnSys2-14,GuestRoom220_223 Thermal Zone,112.988,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom224_FPFC Fan,BaseSys2 Fan-15,ConstantVolume,BaseZnSys2-15,GuestRoom224 Thermal Zone,114.34,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom301_FPFC Fan,BaseSys2 Fan-16,ConstantVolume,BaseZnSys2-16,GuestRoom301 Thermal Zone,156.24,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom302_305_FPFC Fan,BaseSys2 Fan-17,ConstantVolume,BaseZnSys2-17,GuestRoom302_305 Thermal Zone,128.982,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom306_308_FPFC Fan,BaseSys2 Fan-18,ConstantVolume,BaseZnSys2-18,GuestRoom306_308 Thermal Zone,141.047,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom309_312_FPFC Fan,BaseSys2 Fan-19,ConstantVolume,BaseZnSys2-19,GuestRoom309_312 Thermal Zone,127.13,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom313_FPFC Fan,BaseSys2 Fan-20,ConstantVolume,BaseZnSys2-20,GuestRoom313 Thermal Zone,127.14,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom314_FPFC Fan,BaseSys2 Fan-21,ConstantVolume,BaseZnSys2-21,GuestRoom314 Thermal Zone,115.56,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom315_318_FPFC Fan,BaseSys2 Fan-22,ConstantVolume,BaseZnSys2-22,GuestRoom315_318 Thermal Zone,114.707,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom319_FPFC Fan,BaseSys2 Fan-23,ConstantVolume,BaseZnSys2-23,GuestRoom319 Thermal Zone,113.9,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom320_323_FPFC Fan,BaseSys2 Fan-24,ConstantVolume,BaseZnSys2-24,GuestRoom320_323 Thermal Zone,113.555,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom324_FPFC Fan,BaseSys2 Fan-25,ConstantVolume,BaseZnSys2-25,GuestRoom324 Thermal Zone,112.44,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom401_FPFC Fan,BaseSys2 Fan-26,ConstantVolume,BaseZnSys2-26,GuestRoom401 Thermal Zone,187.53,-99996,0.5,PowerPerUnitFlow,1.273,0.125,InAirStream,0.855
+GuestRoom402_405_FPFC Fan,BaseSys2 Fan-27,ConstantVolume,BaseZnSys2-27,GuestRoom402_405 Thermal Zone,156.508,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom406_408_FPFC Fan,BaseSys2 Fan-28,ConstantVolume,BaseZnSys2-28,GuestRoom406_408 Thermal Zone,174.147,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom409_412_FPFC Fan,BaseSys2 Fan-29,ConstantVolume,BaseZnSys2-29,GuestRoom409_412 Thermal Zone,155.85,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom413_FPFC Fan,BaseSys2 Fan-30,ConstantVolume,BaseZnSys2-30,GuestRoom413 Thermal Zone,155.19,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom414_FPFC Fan,BaseSys2 Fan-31,ConstantVolume,BaseZnSys2-31,GuestRoom414 Thermal Zone,138.53,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom415_418_FPFC Fan,BaseSys2 Fan-32,ConstantVolume,BaseZnSys2-32,GuestRoom415_418 Thermal Zone,137.85,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom419_FPFC Fan,BaseSys2 Fan-33,ConstantVolume,BaseZnSys2-33,GuestRoom419 Thermal Zone,137.28,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom420_423_FPFC Fan,BaseSys2 Fan-34,ConstantVolume,BaseZnSys2-34,GuestRoom420_423 Thermal Zone,136.15,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+GuestRoom424_FPFC Fan,BaseSys2 Fan-35,ConstantVolume,BaseZnSys2-35,GuestRoom424 Thermal Zone,135.29,-99996,0.5,PowerPerUnitFlow,1.273,0.083,InAirStream,0.855
+BaseSys5 ReliefFan,BaseRelief Fan,VariableSpeedDrive,BaseAirSys5,NONE,8162.084,0,0.4,StaticPressure,0.75,3,InAirStream,0.895
+ENDTABLE,,,,,,,,,,,,
+TABLE HotSmlCECStd16070012OACtrl,,,,,,,,,,,,
+PropName,BaseName,EconoCtrlMthd,System,EconoIntegration,,,,,,,,
+;,,,,,,,,,,,,
+BaseSys5 OACtrl,BaseSys5 OACtrl,DifferentialDryBulb,BaseAirSys5,Integrated,,,,,,,,
+BaseSys5 OACtrl-2,BaseSys5 OACtrl-2,NoEconomizer,BaseAirSys5-2,UNDEFINED,,,,,,,,
+BaseSys5 OACtrl-3,BaseSys5 OACtrl-3,NoEconomizer,BaseAirSys5-3,UNDEFINED,,,,,,,,
+BaseSys5 OACtrl-4,BaseSys5 OACtrl-4,NoEconomizer,BaseAirSys5-4,UNDEFINED,,,,,,,,
+ENDTABLE,,,,,,,,,,,,

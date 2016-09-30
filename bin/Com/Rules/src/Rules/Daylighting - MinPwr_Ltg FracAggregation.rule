@@ -1,0 +1,361 @@
+// Interior Lighting - Heat Gain Distribution
+//
+// -------------------------------------------------------------------------
+//  Copyright (c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+
+
+
+// ---------- Light Heat Gain Distribution - Luminaire ------------------------
+
+RULE NEW Lum:MinDimPwrFrac
+  DESCRIPTION
+     "The minimum power fraction when controlled lighting is fully dimmed. 
+      Minimum power fraction = (Minimum power) / (Full rated power)."  
+  REFERENCE 
+     ACM 5.5.5 - Daylighting, Minimum Dimming Power Fraction
+  LONGFORM
+    MinimumDimmingPowerFraction
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+  DEFAULT
+    DayltCtrlParms:MinDimPwrFrac( "LampType",u:LampType )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Lum:MinDimLtgFrac
+  DESCRIPTION
+     "Minimum light output of controlled lighting when fully dimmed. 
+      Minimum light fraction = (Minimum light output) / (Rated light output)."     
+  REFERENCE 
+     ACM 5.5.5 - Daylighting, Minimum Dimming Light Fraction
+  LONGFORM
+    MinimumDimmingLightFraction
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  MAXIMUM 
+    1
+  DEFAULT
+    DayltCtrlParms:MinDimLtgFrac( "LampType",u:LampType )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Light Heat Gain Distribution - IntLtgSys ------------------------
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr1
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent1 < 0.5 ) then 0 
+		else LumRef[1]:MinDimPwrFrac * LumRef[1]:Pwr * LumCnt[1] endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr2
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent2 < 0.5 ) then  0
+		else  LumRef[2]:MinDimPwrFrac * LumRef[2]:Pwr * LumCnt[2]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr3
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent3 < 0.5 ) then  0
+		else  LumRef[3]:MinDimPwrFrac * LumRef[3]:Pwr * LumCnt[3]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr4
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent4 < 0.5 ) then  0
+		else  LumRef[4]:MinDimPwrFrac * LumRef[4]:Pwr * LumCnt[4]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr5
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent5 < 0.5 ) then  0
+		else  LumRef[5]:MinDimPwrFrac * LumRef[5]:Pwr * LumCnt[5]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimPwrFracXPwr
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+     ( LumMinDimPwrFracXPwr1 + 
+      LumMinDimPwrFracXPwr2 + 
+      LumMinDimPwrFracXPwr3 + 
+      LumMinDimPwrFracXPwr4 + 
+      LumMinDimPwrFracXPwr5 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr1
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent1 < 0.5 ) then  0
+		else  LumRef[1]:MinDimLtgFrac * LumRef[1]:Pwr * LumCnt[1]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr2
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent2 < 0.5 ) then  0
+		else  LumRef[2]:MinDimLtgFrac * LumRef[2]:Pwr * LumCnt[2]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr3
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent3 < 0.5 ) then  0
+		else  LumRef[3]:MinDimLtgFrac * LumRef[3]:Pwr * LumCnt[3]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr4
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent4 < 0.5 ) then  0
+		else  LumRef[4]:MinDimLtgFrac * LumRef[4]:Pwr * LumCnt[4]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr5
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		if ( LumRefPresent5 < 0.5 ) then  0
+		else  LumRef[5]:MinDimLtgFrac * LumRef[5]:Pwr * LumCnt[5]  endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumMinDimLtgFracXPwr
+   DATATYPE
+     Float
+   MINIMUM 
+     0
+   INPUTCLASS
+     NotInput
+   DEFAULT
+     ( LumMinDimLtgFracXPwr1 + 
+      LumMinDimLtgFracXPwr2 + 
+      LumMinDimLtgFracXPwr3 + 
+      LumMinDimLtgFracXPwr4 + 
+      LumMinDimLtgFracXPwr5 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:MinDimPwrFrac
+  DESCRIPTION
+     "Weight Averaged Minimum Dimming Power Fraction for all luminaires belonging
+      to an interior lighting system"  
+  REFERENCE 
+     ACM 5.5.5 - Daylighting, Minimum Dimming Power Fraction
+  LONGFORM
+    MinimumDimmingPowerFraction
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+   MINIMUM 
+     0
+   DEFAULT
+		if ( Pwr > 0 ) 
+    then 
+      LumMinDimPwrFracXPwr / Pwr  
+    else 
+      0
+    endif
+  SIZING
+    u:MinDimPwrFrac
+  ANNUAL
+    z:MinDimPwrFrac
+ENDRULE
+RULE NEW IntLtgSys:MinDimPwrFracXPwr
+  DATATYPE
+    Float
+  LONGFORM
+    MinimumDimmingPowerFractionXPower
+  MINIMUM 
+    0
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    MinDimPwrFrac * Pwr
+  SIZING
+    u:MinDimPwrFracXPwr
+  ANNUAL
+    z:MinDimPwrFracXPwr
+ENDRULE
+
+RULE NEW IntLtgSys:MinDimLtgFrac
+  DESCRIPTION
+     "Weight Averaged Minimum Dimming Power Fraction for all luminaires belonging
+      to an interior lighting system"    
+  REFERENCE 
+     ACM 5.5.4 - Interior Lighting System, Table 9
+  LONGFORM
+    MinimumDimmingPowerFraction
+  DATATYPE
+    Float
+  INPUTCLASS
+    NotInput
+   MINIMUM 
+     0
+   DEFAULT
+		if ( Pwr > 0 ) 
+    then  LumMinDimLtgFracXPwr / Pwr  
+    else  0
+    endif
+  SIZING
+    u:MinDimLtgFrac
+  ANNUAL
+    z:MinDimLtgFrac
+ENDRULE
+RULE NEW IntLtgSys:MinDimLtgFracXPwr
+  DATATYPE
+    Float
+  LONGFORM
+    MinimumDimmingLightFractionXPower
+  MINIMUM 
+    0
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    MinDimLtgFrac * Pwr
+  SIZING
+    u:MinDimLtgFracXPwr
+  ANNUAL
+    z:MinDimLtgFracXPwr
+ENDRULE
+
+
+

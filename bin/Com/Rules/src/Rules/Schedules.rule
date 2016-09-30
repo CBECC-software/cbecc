@@ -1,0 +1,1108 @@
+// Schedules
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+// 
+// The main objects in the SDD are:
+//     SchDay  (no rules to date??)
+//     SchWeek
+//     Schedule
+//             
+// -------------------------------------------------------------------------
+// Updates:            
+//    SAC 4/10/13 - revised rules for each post-DEFAULT transform to NOT override existing data (to prevent overwrite of valid inputs w/ "defaults")
+//    
+// -------------------------------------------------------------------------
+
+
+RULE SchDay:Hr[2]
+  DEFAULT
+    if( LocalStatus( Hr[1] ) > 0 )
+    then Hr[1]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[3]
+  DEFAULT
+    if( LocalStatus( Hr[2] ) > 0 )
+    then Hr[2]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[4]
+  DEFAULT
+    if( LocalStatus( Hr[3] ) > 0 )
+    then Hr[3]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[5]
+  DEFAULT
+    if( LocalStatus( Hr[4] ) > 0 )
+    then Hr[4]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[6]
+  DEFAULT
+    if( LocalStatus( Hr[5] ) > 0 )
+    then Hr[5]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[7]
+  DEFAULT
+    if( LocalStatus( Hr[6] ) > 0 )
+    then Hr[6]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[8]
+  DEFAULT
+    if( LocalStatus( Hr[7] ) > 0 )
+    then Hr[7]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[9]
+  DEFAULT
+    if( LocalStatus( Hr[8] ) > 0 )
+    then Hr[8]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[10]
+  DEFAULT
+    if( LocalStatus( Hr[9] ) > 0 )
+    then Hr[9]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[11]
+  DEFAULT
+    if( LocalStatus( Hr[10] ) > 0 )
+    then Hr[10]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[12]
+  DEFAULT
+    if( LocalStatus( Hr[11] ) > 0 )
+    then Hr[11]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[13]
+  DEFAULT
+    if( LocalStatus( Hr[12] ) > 0 )
+    then Hr[12]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[14]
+  DEFAULT
+    if( LocalStatus( Hr[13] ) > 0 )
+    then Hr[13]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[15]
+  DEFAULT
+    if( LocalStatus( Hr[14] ) > 0 )
+    then Hr[14]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[16]
+  DEFAULT
+    if( LocalStatus( Hr[15] ) > 0 )
+    then Hr[15]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[17]
+  DEFAULT
+    if( LocalStatus( Hr[16] ) > 0 )
+    then Hr[16]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[18]
+  DEFAULT
+    if( LocalStatus( Hr[17] ) > 0 )
+    then Hr[17]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[19]
+  DEFAULT
+    if( LocalStatus( Hr[18] ) > 0 )
+    then Hr[18]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[20]
+  DEFAULT
+    if( LocalStatus( Hr[19] ) > 0 )
+    then Hr[19]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[21]
+  DEFAULT
+    if( LocalStatus( Hr[20] ) > 0 )
+    then Hr[20]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[22]
+  DEFAULT
+    if( LocalStatus( Hr[21] ) > 0 )
+    then Hr[21]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[23]
+  DEFAULT
+    if( LocalStatus( Hr[22] ) > 0 )
+    then Hr[22]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[23]
+  DEFAULT
+    if( LocalStatus( Hr[22] ) > 0 )
+    then Hr[22]
+    else UNDEFINED
+    endif
+ENDRULE
+
+RULE SchDay:Hr[24]
+  DEFAULT
+    if( LocalStatus( Hr[23] ) > 0 )
+    then Hr[23]
+    else UNDEFINED
+    endif
+ENDRULE
+
+// -------------- SchWeek *DayRef Defaults --------------------
+//
+RULE SchWeek:SchDaySunRef
+   DESCRIPTION
+     "Reference to the Sunday schedule (usage profile)."  
+   DEFAULT
+		     if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+		else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+		else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+		else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+		else if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+		else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+		else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+		else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif
+   SIZING
+		     if (LocalCompAssigned( SchDaySunRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+		else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+		else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+		else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+		else if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+		else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+		else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+		else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDaySunRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+;	else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+;	else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+;	else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+;	else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+;	else if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+;	else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+;	else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+;	else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+;	else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+;	else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+;	else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+;	else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayMonRef
+   DESCRIPTION
+     "Reference to the Monday schedule (usage profile)."  
+   DEFAULT
+		     if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+		else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+		else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+		else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+		else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+		else if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+		else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+		else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif
+   SIZING
+		     if (LocalCompAssigned( SchDayMonRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+		else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+		else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+		else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+		else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+		else if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+		else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+		else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayMonRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayWDRef    )) then  SchDayWDRef    
+;	else if (LocalCompAssigned( SchDayAllRef   )) then  SchDayAllRef   
+;	else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+;	else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+;	else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+;	else if (LocalCompAssigned( SchDayFriRef   )) then  SchDayFriRef   
+;	else if (LocalCompAssigned( SchDayClgDDRef )) then  SchDayClgDDRef 
+;	else if (LocalCompAssigned( SchDaySatRef   )) then  SchDaySatRef   
+;	else if (LocalCompAssigned( SchDayWERef    )) then  SchDayWERef    
+;	else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+;	else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+;	else if (LocalCompAssigned( SchDayHtgDDRef )) then  SchDayHtgDDRef 
+;	else  UNDEFINED  endif endif endif endif endif endif endif endif endif endif endif endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayTueRef
+   DESCRIPTION
+     "Reference to the Tuesday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayTueRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayTueRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayWedRef
+   DESCRIPTION
+     "Reference to the Wednesday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else  UNDEFINED  endif
+  SIZING
+		     if (LocalCompAssigned( SchDayWedRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayWedRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayTueRef   )) then  SchDayTueRef
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayThuRef
+   DESCRIPTION
+     "Reference to the Thursday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayThuRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayThuRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayWedRef   )) then  SchDayWedRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayFriRef
+   DESCRIPTION
+     "Reference to the Friday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayFriRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayFriRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayThuRef   )) then  SchDayThuRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDaySatRef
+   DESCRIPTION
+     "Reference to the Saturday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDaySatRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDaySatRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayHolRef
+   DESCRIPTION
+     "Reference to the Holiday schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayHolRef   )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayHolRef   )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDaySunRef   )) then  SchDaySunRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayClgDDRef
+   DESCRIPTION
+     "Reference to the Cooling Design (sizing) day schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayClgDDRef )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayClgDDRef )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayMonRef   )) then  SchDayMonRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE SchWeek:SchDayHtgDDRef
+   DESCRIPTION
+     "Reference to the Heating Design (sizing) day schedule (usage profile)."  
+   DEFAULT
+		if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else  UNDEFINED  endif
+   SIZING
+		     if (LocalCompAssigned( SchDayHtgDDRef )) then  UNCHANGED
+		else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+		else  UNDEFINED  endif endif
+;   ANNUAL
+;	     if (LocalCompAssigned( SchDayHtgDDRef )) then  UNCHANGED
+;	else if (LocalCompAssigned( SchDayHolRef   )) then  SchDayHolRef   
+;	else  UNDEFINED  endif endif
+ENDRULE
+
+
+
+// -------------- Schedule EndMonth/Day Defaults --------------------
+//
+
+RULE Sch:EndMonth[1]
+   DESCRIPTION
+     "Index of ending month (1-12) for the first referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[1] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[1] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[1] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[1] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[1] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[2]
+   DESCRIPTION
+     "Index of ending month (1-12) for the second referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[2] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[2] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[2] )) then  12  else  UNDEFINED  endif endif
+;    ANNUAL
+;	if (LocalStatus( EndMonth[2] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[2] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[3]
+   DESCRIPTION
+     "Index of ending month (1-12) for the third referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[3] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[3] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[3] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[3] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[3] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[4]
+   DESCRIPTION
+     "Index of ending month (1-12) for the fourth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[4] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[4] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[4] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[4] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[4] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[5]
+   DESCRIPTION
+     "Index of ending month (1-12) for the fifth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[5] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[5] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[5] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[5] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[5] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[6]
+   DESCRIPTION
+     "Index of ending month (1-12) for the sixth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[6] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[6] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[6] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[6] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[6] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[7]
+   DESCRIPTION
+     "Index of ending month (1-12) for the seventh referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[7] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[7] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[7] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[7] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[7] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[8]
+   DESCRIPTION
+     "Index of ending month (1-12) for the eighth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[8] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[8] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[8] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[8] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[8] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+RULE Sch:EndMonth[9]
+   DESCRIPTION
+     "Index of ending month (1-12) for the ninth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned(  SchWeekRef[9] )) then  12  else  UNDEFINED  endif
+   SIZING
+		if (LocalStatus( EndMonth[9] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[9] )) then  12  else  UNDEFINED  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndMonth[9] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[9] )) then  12  else  UNDEFINED  endif endif
+ENDRULE
+
+
+
+RULE Sch:EndDay[1]
+   DESCRIPTION
+     "Index of ending day (1-31) for the first referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[1] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[1] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[1] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[1] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[1] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[1] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[1] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[1] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[2]
+   DESCRIPTION
+     "Index of ending day (1-31) for the second referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[2] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[2] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[2] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[2] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[2] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[2] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[2] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[2] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[3]
+   DESCRIPTION
+     "Index of ending day (1-31) for the third referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[3] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[3] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[3] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[3] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[3] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[3] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[3] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[3] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[4]
+   DESCRIPTION
+     "Index of ending day (1-31) for the fourth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[4] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[4] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[4] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[4] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[4] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[4] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[4] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[4] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[5]
+   DESCRIPTION
+     "Index of ending day (1-31) for the fifth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[5] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[5] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[5] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[5] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[5] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[5] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[5] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[5] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[6]
+   DESCRIPTION
+     "Index of ending day (1-31) for the sixth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[6] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[6] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[6] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[6] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[6] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[6] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[6] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[6] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[7]
+   DESCRIPTION
+     "Index of ending day (1-31) for the seventh referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[7] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[7] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[7] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[7] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[7] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[7] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[7] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[7] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[8]
+   DESCRIPTION
+     "Index of ending day (1-31) for the eighth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[8] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[8] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[8] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[8] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[8] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[8] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[8] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[8] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+RULE Sch:EndDay[9]
+   DESCRIPTION
+     "Index of ending day (1-31) for the ninth referenced week schedule."  
+   DEFAULT
+		if (LocalCompAssigned( SchWeekRef[9] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[9] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif
+   SIZING
+		if (LocalStatus( EndDay[9] ) > 1) then  UNCHANGED
+		else if (LocalCompAssigned( SchWeekRef[9] ) == 0) then  UNDEFINED
+		else  switch (Local( EndMonth[9] ))
+					case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+					case 11 : 30	default : 31
+				endswitch  endif endif
+;   ANNUAL
+;	if (LocalStatus( EndDay[9] ) > 1) then  UNCHANGED
+;	else if (LocalCompAssigned( SchWeekRef[9] ) == 0) then  UNDEFINED
+;	else  switch (Local( EndMonth[9] ))
+;				case  2 : 28	case  4 : 30	case 6 : 30		case 9 : 30
+;				case 11 : 30	default : 31
+;			endswitch  endif endif
+ENDRULE
+
+
+; TO DO ?? need for tracking exact num week assignments beyond 20 (since only used to toggle UI controls on/off) ??
+RULE NEW Sch:NumWeeks
+   DESCRIPTION
+     "Number of weeks currently assigned to annual schedule."
+	MINIMUM
+		0  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+		     if (IfValidAnd( EndMonth[20] > 0 ) .AND. IfValidAnd( EndDay[20] > 0 ) .AND. LocalCompAssigned( SchWeekRef[20] )) then  52
+		else if (IfValidAnd( EndMonth[19] > 0 ) .AND. IfValidAnd( EndDay[19] > 0 ) .AND. LocalCompAssigned( SchWeekRef[19] )) then  19
+		else if (IfValidAnd( EndMonth[18] > 0 ) .AND. IfValidAnd( EndDay[18] > 0 ) .AND. LocalCompAssigned( SchWeekRef[18] )) then  18
+		else if (IfValidAnd( EndMonth[17] > 0 ) .AND. IfValidAnd( EndDay[17] > 0 ) .AND. LocalCompAssigned( SchWeekRef[17] )) then  17
+		else if (IfValidAnd( EndMonth[16] > 0 ) .AND. IfValidAnd( EndDay[16] > 0 ) .AND. LocalCompAssigned( SchWeekRef[16] )) then  16
+		else if (IfValidAnd( EndMonth[15] > 0 ) .AND. IfValidAnd( EndDay[15] > 0 ) .AND. LocalCompAssigned( SchWeekRef[15] )) then  15
+		else if (IfValidAnd( EndMonth[14] > 0 ) .AND. IfValidAnd( EndDay[14] > 0 ) .AND. LocalCompAssigned( SchWeekRef[14] )) then  14
+		else if (IfValidAnd( EndMonth[13] > 0 ) .AND. IfValidAnd( EndDay[13] > 0 ) .AND. LocalCompAssigned( SchWeekRef[13] )) then  13
+		else if (IfValidAnd( EndMonth[12] > 0 ) .AND. IfValidAnd( EndDay[12] > 0 ) .AND. LocalCompAssigned( SchWeekRef[12] )) then  12
+		else if (IfValidAnd( EndMonth[11] > 0 ) .AND. IfValidAnd( EndDay[11] > 0 ) .AND. LocalCompAssigned( SchWeekRef[11] )) then  11
+		else if (IfValidAnd( EndMonth[10] > 0 ) .AND. IfValidAnd( EndDay[10] > 0 ) .AND. LocalCompAssigned( SchWeekRef[10] )) then  10
+		else if (IfValidAnd( EndMonth[ 9] > 0 ) .AND. IfValidAnd( EndDay[ 9] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 9] )) then   9
+		else if (IfValidAnd( EndMonth[ 8] > 0 ) .AND. IfValidAnd( EndDay[ 8] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 8] )) then   8
+		else if (IfValidAnd( EndMonth[ 7] > 0 ) .AND. IfValidAnd( EndDay[ 7] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 7] )) then   7
+		else if (IfValidAnd( EndMonth[ 6] > 0 ) .AND. IfValidAnd( EndDay[ 6] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 6] )) then   6
+		else if (IfValidAnd( EndMonth[ 5] > 0 ) .AND. IfValidAnd( EndDay[ 5] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 5] )) then   5
+		else if (IfValidAnd( EndMonth[ 4] > 0 ) .AND. IfValidAnd( EndDay[ 4] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 4] )) then   4
+		else if (IfValidAnd( EndMonth[ 3] > 0 ) .AND. IfValidAnd( EndDay[ 3] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 3] )) then   3
+		else if (IfValidAnd( EndMonth[ 2] > 0 ) .AND. IfValidAnd( EndDay[ 2] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 2] )) then   2
+		else if (IfValidAnd( EndMonth[ 1] > 0 ) .AND. IfValidAnd( EndDay[ 1] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 1] )) then   1
+		else  0  endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif
+   SIZING
+		     if (IfValidAnd( EndMonth[20] > 0 ) .AND. IfValidAnd( EndDay[20] > 0 ) .AND. LocalCompAssigned( SchWeekRef[20] )) then  52
+		else if (IfValidAnd( EndMonth[19] > 0 ) .AND. IfValidAnd( EndDay[19] > 0 ) .AND. LocalCompAssigned( SchWeekRef[19] )) then  19
+		else if (IfValidAnd( EndMonth[18] > 0 ) .AND. IfValidAnd( EndDay[18] > 0 ) .AND. LocalCompAssigned( SchWeekRef[18] )) then  18
+		else if (IfValidAnd( EndMonth[17] > 0 ) .AND. IfValidAnd( EndDay[17] > 0 ) .AND. LocalCompAssigned( SchWeekRef[17] )) then  17
+		else if (IfValidAnd( EndMonth[16] > 0 ) .AND. IfValidAnd( EndDay[16] > 0 ) .AND. LocalCompAssigned( SchWeekRef[16] )) then  16
+		else if (IfValidAnd( EndMonth[15] > 0 ) .AND. IfValidAnd( EndDay[15] > 0 ) .AND. LocalCompAssigned( SchWeekRef[15] )) then  15
+		else if (IfValidAnd( EndMonth[14] > 0 ) .AND. IfValidAnd( EndDay[14] > 0 ) .AND. LocalCompAssigned( SchWeekRef[14] )) then  14
+		else if (IfValidAnd( EndMonth[13] > 0 ) .AND. IfValidAnd( EndDay[13] > 0 ) .AND. LocalCompAssigned( SchWeekRef[13] )) then  13
+		else if (IfValidAnd( EndMonth[12] > 0 ) .AND. IfValidAnd( EndDay[12] > 0 ) .AND. LocalCompAssigned( SchWeekRef[12] )) then  12
+		else if (IfValidAnd( EndMonth[11] > 0 ) .AND. IfValidAnd( EndDay[11] > 0 ) .AND. LocalCompAssigned( SchWeekRef[11] )) then  11
+		else if (IfValidAnd( EndMonth[10] > 0 ) .AND. IfValidAnd( EndDay[10] > 0 ) .AND. LocalCompAssigned( SchWeekRef[10] )) then  10
+		else if (IfValidAnd( EndMonth[ 9] > 0 ) .AND. IfValidAnd( EndDay[ 9] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 9] )) then   9
+		else if (IfValidAnd( EndMonth[ 8] > 0 ) .AND. IfValidAnd( EndDay[ 8] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 8] )) then   8
+		else if (IfValidAnd( EndMonth[ 7] > 0 ) .AND. IfValidAnd( EndDay[ 7] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 7] )) then   7
+		else if (IfValidAnd( EndMonth[ 6] > 0 ) .AND. IfValidAnd( EndDay[ 6] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 6] )) then   6
+		else if (IfValidAnd( EndMonth[ 5] > 0 ) .AND. IfValidAnd( EndDay[ 5] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 5] )) then   5
+		else if (IfValidAnd( EndMonth[ 4] > 0 ) .AND. IfValidAnd( EndDay[ 4] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 4] )) then   4
+		else if (IfValidAnd( EndMonth[ 3] > 0 ) .AND. IfValidAnd( EndDay[ 3] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 3] )) then   3
+		else if (IfValidAnd( EndMonth[ 2] > 0 ) .AND. IfValidAnd( EndDay[ 2] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 2] )) then   2
+		else if (IfValidAnd( EndMonth[ 1] > 0 ) .AND. IfValidAnd( EndDay[ 1] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 1] )) then   1
+		else  0  endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif
+;   ANNUAL
+;	     if (IfValidAnd( EndMonth[20] > 0 ) .AND. IfValidAnd( EndDay[20] > 0 ) .AND. LocalCompAssigned( SchWeekRef[20] )) then  52
+;	else if (IfValidAnd( EndMonth[19] > 0 ) .AND. IfValidAnd( EndDay[19] > 0 ) .AND. LocalCompAssigned( SchWeekRef[19] )) then  19
+;	else if (IfValidAnd( EndMonth[18] > 0 ) .AND. IfValidAnd( EndDay[18] > 0 ) .AND. LocalCompAssigned( SchWeekRef[18] )) then  18
+;	else if (IfValidAnd( EndMonth[17] > 0 ) .AND. IfValidAnd( EndDay[17] > 0 ) .AND. LocalCompAssigned( SchWeekRef[17] )) then  17
+;	else if (IfValidAnd( EndMonth[16] > 0 ) .AND. IfValidAnd( EndDay[16] > 0 ) .AND. LocalCompAssigned( SchWeekRef[16] )) then  16
+;	else if (IfValidAnd( EndMonth[15] > 0 ) .AND. IfValidAnd( EndDay[15] > 0 ) .AND. LocalCompAssigned( SchWeekRef[15] )) then  15
+;	else if (IfValidAnd( EndMonth[14] > 0 ) .AND. IfValidAnd( EndDay[14] > 0 ) .AND. LocalCompAssigned( SchWeekRef[14] )) then  14
+;	else if (IfValidAnd( EndMonth[13] > 0 ) .AND. IfValidAnd( EndDay[13] > 0 ) .AND. LocalCompAssigned( SchWeekRef[13] )) then  13
+;	else if (IfValidAnd( EndMonth[12] > 0 ) .AND. IfValidAnd( EndDay[12] > 0 ) .AND. LocalCompAssigned( SchWeekRef[12] )) then  12
+;	else if (IfValidAnd( EndMonth[11] > 0 ) .AND. IfValidAnd( EndDay[11] > 0 ) .AND. LocalCompAssigned( SchWeekRef[11] )) then  11
+;	else if (IfValidAnd( EndMonth[10] > 0 ) .AND. IfValidAnd( EndDay[10] > 0 ) .AND. LocalCompAssigned( SchWeekRef[10] )) then  10
+;	else if (IfValidAnd( EndMonth[ 9] > 0 ) .AND. IfValidAnd( EndDay[ 9] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 9] )) then   9
+;	else if (IfValidAnd( EndMonth[ 8] > 0 ) .AND. IfValidAnd( EndDay[ 8] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 8] )) then   8
+;	else if (IfValidAnd( EndMonth[ 7] > 0 ) .AND. IfValidAnd( EndDay[ 7] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 7] )) then   7
+;	else if (IfValidAnd( EndMonth[ 6] > 0 ) .AND. IfValidAnd( EndDay[ 6] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 6] )) then   6
+;	else if (IfValidAnd( EndMonth[ 5] > 0 ) .AND. IfValidAnd( EndDay[ 5] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 5] )) then   5
+;	else if (IfValidAnd( EndMonth[ 4] > 0 ) .AND. IfValidAnd( EndDay[ 4] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 4] )) then   4
+;	else if (IfValidAnd( EndMonth[ 3] > 0 ) .AND. IfValidAnd( EndDay[ 3] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 3] )) then   3
+;	else if (IfValidAnd( EndMonth[ 2] > 0 ) .AND. IfValidAnd( EndDay[ 2] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 2] )) then   2
+;	else if (IfValidAnd( EndMonth[ 1] > 0 ) .AND. IfValidAnd( EndDay[ 1] > 0 ) .AND. LocalCompAssigned( SchWeekRef[ 1] )) then   1
+;	else  0  endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif
+ENDRULE
+
+
+
+// -------------- SchDay stats --------------------
+//
+
+RULE NEW SchDay:Sum
+   DESCRIPTION
+     "Sum of hourly schedule values."
+	MINIMUM
+		0  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+		ValidOr(Hr[1],0) +ValidOr(Hr[2],0) +ValidOr(Hr[3],0) +ValidOr(Hr[4],0) +ValidOr(Hr[5],0) +ValidOr(Hr[6],0) +
+		ValidOr(Hr[7],0) +ValidOr(Hr[8],0) +ValidOr(Hr[9],0) +ValidOr(Hr[10],0)+ValidOr(Hr[11],0)+ValidOr(Hr[12],0)+ 
+		ValidOr(Hr[13],0)+ValidOr(Hr[14],0)+ValidOr(Hr[15],0)+ValidOr(Hr[16],0)+ValidOr(Hr[17],0)+ValidOr(Hr[18],0)+ 
+		ValidOr(Hr[19],0)+ValidOr(Hr[20],0)+ValidOr(Hr[21],0)+ValidOr(Hr[22],0)+ValidOr(Hr[23],0)+ValidOr(Hr[24],0) 
+  SIZING
+		ValidOr(Hr[1],0) +ValidOr(Hr[2],0) +ValidOr(Hr[3],0) +ValidOr(Hr[4],0) +ValidOr(Hr[5],0) +ValidOr(Hr[6],0) +
+		ValidOr(Hr[7],0) +ValidOr(Hr[8],0) +ValidOr(Hr[9],0) +ValidOr(Hr[10],0)+ValidOr(Hr[11],0)+ValidOr(Hr[12],0)+ 
+		ValidOr(Hr[13],0)+ValidOr(Hr[14],0)+ValidOr(Hr[15],0)+ValidOr(Hr[16],0)+ValidOr(Hr[17],0)+ValidOr(Hr[18],0)+ 
+		ValidOr(Hr[19],0)+ValidOr(Hr[20],0)+ValidOr(Hr[21],0)+ValidOr(Hr[22],0)+ValidOr(Hr[23],0)+ValidOr(Hr[24],0)  
+ENDRULE
+
+RULE NEW SchDay:Avg
+   DESCRIPTION
+     "Average of hourly schedule values."
+	MINIMUM
+		0  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+		Sum / 24
+  SIZING
+		Sum / 24
+  ANNUAL
+		Sum / 24
+ENDRULE
+
+//ISSUE: Waiting for LocalMaxArray function
+RULE NEW SchDay:MaxVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Maximum of hourly schedule values."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    ValidOr(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(ValidOr(Hr[1],0),ValidOr(Hr[2],0)),ValidOr(Hr[3],0)),ValidOr(Hr[4],0)),ValidOr(Hr[5],0)),ValidOr(Hr[6],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[9],0)),ValidOr(Hr[10],0)),ValidOr(Hr[11],0)),ValidOr(Hr[12],0)),ValidOr(Hr[13],0)),ValidOr(Hr[14],0)),ValidOr(Hr[15],0)),ValidOr(Hr[16],0)),ValidOr(Hr[17],0)),ValidOr(Hr[18],0)),ValidOr(Hr[19],0)),ValidOr(Hr[20],0)),ValidOr(Hr[21],0)),ValidOr(Hr[22],0)),ValidOr(Hr[23],0)),ValidOr(Hr[24],0)),0)
+  SIZING
+    ValidOr(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(Max(ValidOr(Hr[1],0),ValidOr(Hr[2],0)),ValidOr(Hr[3],0)),ValidOr(Hr[4],0)),ValidOr(Hr[5],0)),ValidOr(Hr[6],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[9],0)),ValidOr(Hr[10],0)),ValidOr(Hr[11],0)),ValidOr(Hr[12],0)),ValidOr(Hr[13],0)),ValidOr(Hr[14],0)),ValidOr(Hr[15],0)),ValidOr(Hr[16],0)),ValidOr(Hr[17],0)),ValidOr(Hr[18],0)),ValidOr(Hr[19],0)),ValidOr(Hr[20],0)),ValidOr(Hr[21],0)),ValidOr(Hr[22],0)),ValidOr(Hr[23],0)),ValidOr(Hr[24],0)),0)
+ENDRULE
+
+RULE NEW SchDay:MinVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Minimum of hourly schedule values."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    ValidOr(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(ValidOr(Hr[1],0),ValidOr(Hr[2],0)),ValidOr(Hr[3],0)),ValidOr(Hr[4],0)),ValidOr(Hr[5],0)),ValidOr(Hr[6],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[9],0)),ValidOr(Hr[10],0)),ValidOr(Hr[11],0)),ValidOr(Hr[12],0)),ValidOr(Hr[13],0)),ValidOr(Hr[14],0)),ValidOr(Hr[15],0)),ValidOr(Hr[16],0)),ValidOr(Hr[17],0)),ValidOr(Hr[18],0)),ValidOr(Hr[19],0)),ValidOr(Hr[20],0)),ValidOr(Hr[21],0)),ValidOr(Hr[22],0)),ValidOr(Hr[23],0)),ValidOr(Hr[24],0)),0)
+  SIZING
+    ValidOr(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(Min(ValidOr(Hr[1],0),ValidOr(Hr[2],0)),ValidOr(Hr[3],0)),ValidOr(Hr[4],0)),ValidOr(Hr[5],0)),ValidOr(Hr[6],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[7],0)),ValidOr(Hr[8],0)),ValidOr(Hr[9],0)),ValidOr(Hr[10],0)),ValidOr(Hr[11],0)),ValidOr(Hr[12],0)),ValidOr(Hr[13],0)),ValidOr(Hr[14],0)),ValidOr(Hr[15],0)),ValidOr(Hr[16],0)),ValidOr(Hr[17],0)),ValidOr(Hr[18],0)),ValidOr(Hr[19],0)),ValidOr(Hr[20],0)),ValidOr(Hr[21],0)),ValidOr(Hr[22],0)),ValidOr(Hr[23],0)),ValidOr(Hr[24],0)),0)
+ENDRULE
+
+//ISSUE: Waiting for LocalMaxArray function
+RULE NEW SchWeek:MaxVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Maximum weekly schedule value."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+		Max(Max(Max(Max(Max(Max(ValidOr(SchDaySunRef:MaxVal,0),ValidOr(SchDaySatRef:MaxVal,0)),
+                            ValidOr(SchDayMonRef:MaxVal,0)),
+                            ValidOr(SchDayTueRef:MaxVal,0)),
+                            ValidOr(SchDayWedRef:MaxVal,0)),
+                            ValidOr(SchDayThuRef:MaxVal,0)),
+                            ValidOr(SchDayFriRef:MaxVal,0))
+  SIZING
+		Max(Max(Max(Max(Max(Max(ValidOr(SchDaySunRef:MaxVal,0),ValidOr(SchDaySatRef:MaxVal,0)),
+                            ValidOr(SchDayMonRef:MaxVal,0)),
+                            ValidOr(SchDayTueRef:MaxVal,0)),
+                            ValidOr(SchDayWedRef:MaxVal,0)),
+                            ValidOr(SchDayThuRef:MaxVal,0)),
+                            ValidOr(SchDayFriRef:MaxVal,0))
+ENDRULE
+
+//ISSUE: Waiting for LocalMaxArray function
+RULE NEW SchWeek:MinVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Minimum weekly schedule value."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+		Min(Min(Min(Min(Min(Min(ValidOr(SchDaySunRef:MinVal,0),ValidOr(SchDaySatRef:MinVal,0)),
+                            ValidOr(SchDayMonRef:MinVal,0)),
+                            ValidOr(SchDayTueRef:MinVal,0)),
+                            ValidOr(SchDayWedRef:MinVal,0)),
+                            ValidOr(SchDayThuRef:MinVal,0)),
+                            ValidOr(SchDayFriRef:MinVal,0))
+  SIZING
+		Min(Min(Min(Min(Min(Min(ValidOr(SchDaySunRef:MinVal,0),ValidOr(SchDaySatRef:MinVal,0)),
+                            ValidOr(SchDayMonRef:MinVal,0)),
+                            ValidOr(SchDayTueRef:MinVal,0)),
+                            ValidOr(SchDayWedRef:MinVal,0)),
+                            ValidOr(SchDayThuRef:MinVal,0)),
+                            ValidOr(SchDayFriRef:MinVal,0))
+ENDRULE
+
+//ISSUE: Waiting for LocalMaxArray function
+RULE NEW Sch:MaxVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Maximum weekly schedule value."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+// Only covers the case of 1 week schedule
+    SchWeekRef[1]:MaxVal
+  SIZING
+    SchWeekRef[1]:MaxVal
+ENDRULE
+
+RULE NEW Sch:MinVal
+  DATATYPE
+    Float
+  DESCRIPTION
+    "Minimum weekly schedule value."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+// Only covers the case of 1 week schedule
+    SchWeekRef[1]:MinVal
+  SIZING
+    SchWeekRef[1]:MinVal
+ENDRULE
+
+RULE NEW Sch:ApproxFullLdHrs
+  DATATYPE
+    Float
+  LONGFORM
+    ApproximateFullLoadHours
+  DESCRIPTION
+    "APPROXIMATE full load hours - currently valid only when a single week schedule
+     is assigned and assuming run year of 2009 and standard CEC holidays."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (NumWeeks > 1 .OR. EndMonth[1] != 12 .OR. EndDay[1] != 31) then  0
+    else if (Type != "Fraction") then  0
+; IF NO HOLIDAYS ...
+;    else  (SchWeekRef[1]:SchDaySunRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDayMonRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDayTueRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDayWedRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDayThuRef:Sum * 53 ) +
+;          (SchWeekRef[1]:SchDayFriRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDaySatRef:Sum * 52 ) +
+;          (SchWeekRef[1]:SchDayHolRef:Sum *  0 )
+; WITH HOLIDAYS ...
+    else  (SchWeekRef[1]:SchDaySunRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayMonRef:Sum * 46 ) +
+          (SchWeekRef[1]:SchDayTueRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayWedRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDayThuRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDayFriRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDaySatRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayHolRef:Sum * 10 )
+    endif endif
+  ANNUAL_PROPOSED
+    if (NumWeeks > 1 .OR. EndMonth[1] != 12 .OR. EndDay[1] != 31) then  0
+    else if (Type != "Fraction") then  0
+    else  (SchWeekRef[1]:SchDaySunRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayMonRef:Sum * 46 ) +
+          (SchWeekRef[1]:SchDayTueRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayWedRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDayThuRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDayFriRef:Sum * 51 ) +
+          (SchWeekRef[1]:SchDaySatRef:Sum * 52 ) +
+          (SchWeekRef[1]:SchDayHolRef:Sum * 10 )
+    endif endif
+ENDRULE
+
+

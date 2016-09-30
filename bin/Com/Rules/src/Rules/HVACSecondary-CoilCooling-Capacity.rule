@@ -1,0 +1,1951 @@
+// HVAC Secondary Systems - Cooling Coils - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.7.5.1 - General
+//      Cooling Source
+//      Total Cooling Capacity
+//      Sensible Cooling Capacity
+//      Cooling Capacity Adjustment Curves
+//      Coil Latent Modeling Method
+//      Cooling Capacity Aiflow Adjustment Curve
+//  Section 5.7.5.2 - Direct Expansion
+//      Condenser Type
+
+
+// -----------------------------------------------------------------------------
+// Data model structure/QC rules
+RULE CoilClg:FluidSegInRef
+  DESCRIPTION
+    "Defines the inlet/supply-side fluid segment of hydronic coils."
+  HELP
+    "Required input for Type = 'ChilledWater' coils and 'DirectExpansion' coils with 
+     CondenserType = 'Water'."
+  INPUTCLASS 
+    CondRequired     
+  CHECKSIM
+    if( Type = "ChilledWater" )
+    then
+      if( LocalCompAssigned( FluidSegInRef ) = 0 )
+      then
+        PostError("The inlet fluid segment of coil '%s' must be defined.", Name)
+      else if( FluidSegInRef:ParentFluidSysType != "ChilledWater" .AND. 
+               FluidSegInRef:ParentFluidSysType != "CondenserWater" )
+      then
+        PostError("The inlet fluid segment of coil '%s' must belong to a 
+                   ChilledWater or CondenserWater system.", Name)      
+      else UNCHANGED
+      endif endif
+    else if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) then
+      if( LocalCompAssigned( FluidSegInRef ) = 0  ) then
+        PostError("The inlet fluid segment of coil '%s' must be defined.", Name)
+      else if( FluidSegInRef:ParentFluidSysType != "CondenserWater" ) then
+        PostError("The inlet fluid segment of coil '%s' must belong to a 
+                   CondenserWater system.", Name)      
+    else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. IfValidAnd( CndsrType = "Air") )
+    then UNDEFINED // Purge reference for when not applicable
+    else UNCHANGED
+    endif
+  ANNUAL
+    z:FluidSegInRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:FluidSegOutRef
+  DESCRIPTION
+    "Defines the outlet/return-side fluid segment of hydronic coils."
+  HELP
+    "Required input for Type = 'ChilledWater' coils and 'DirectExpansion' coils with 
+     CondenserType = 'Water'."
+  INPUTCLASS 
+    CondRequired    
+  CHECKSIM
+    if( Type = "ChilledWater" )
+    then
+      if( LocalCompAssigned( FluidSegOutRef ) = 0 )
+      then
+        PostError("The outlet fluid segment of coil '%s' must be defined.", Name)
+      else if( FluidSegOutRef:ParentFluidSysType != "ChilledWater" .AND. 
+               FluidSegOutRef:ParentFluidSysType != "CondenserWater" )
+      then
+        PostError("The outlet fluid segment of coil '%s' must belong to a 
+                   ChilledWater or CondenserWater system.", Name)      
+      else UNCHANGED
+      endif endif
+    else if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) then
+      if( LocalCompAssigned( FluidSegOutRef ) = 0 ) then
+        PostError("The outlet fluid segment of coil '%s' must be defined.", Name)
+      else if( FluidSegOutRef:ParentFluidSysType != "CondenserWater" ) then
+        PostError("The outlet fluid segment of coil '%s' must belong to a 
+                   CondenserWater system.", Name)      
+    else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then UNDEFINED // Purge reference for when not applicable
+    else UNCHANGED
+    endif
+  ANNUAL
+    z:FluidSegOutRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// ParentComponentType set to property of local component, for screen rules
+RULE NEW CoilClg:ParentComp
+  DATATYPE
+    Enumeration
+  LONGFORM
+    ParentComponent
+  DESCRIPTION
+    "ComponentType of Parent; used for screen edit rules and conditional enums."
+  INPUTCLASS 
+    NotInput 
+  OPTION
+    AirSys
+    ZnSys
+    TrmlUnit
+  DEFAULT
+    if( ParentComponentType() = "AirSeg" )
+    then "AirSys"
+    else if( ParentComponentType() = "ZnSys" )
+    then "ZnSys"
+    else ParentComponentType()
+    endif endif
+  SIZING
+    if( ParentComponentType() = "AirSeg" )
+    then "AirSys"
+    else if( ParentComponentType() = "ZnSys" )
+    then "ZnSys"
+    else ParentComponentType()
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// SystemType set to property of local component, for screens, rules etc
+RULE NEW CoilClg:SysType
+  DATATYPE
+    Enumeration
+  LONGFORM
+    SystemType
+  DESCRIPTION
+    "Type of Parent; used for system type specific rules and conditional enums."
+  INPUTCLASS 
+    NotInput 
+  OPTION
+    PVAV
+    VAV
+    SZAC
+    SZHP
+    SZVAVAC
+    SZVAVHP
+    HV
+    FPFC
+    WSHP
+    PTAC
+    PTHP
+    Baseboard
+    Exhaust
+    SPVAC
+    SPVHP
+    NA
+  DEFAULT
+    if( ParentComp = "AirSys" )
+    then AirSys:Type
+    else if( ParentComp = "ZnSys" )
+    then ZnSys:Type
+    else "NA"
+    endif endif
+  SIZING
+    if( ParentComp = "AirSys" )
+    then AirSys:Type
+    else if( ParentComp = "ZnSys" )
+    then ZnSys:Type
+    else "NA"
+    endif endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// Echo system count for reference in UI and capacity/efficiency adjustment rules
+RULE CoilClg:SysCnt
+  DESCRIPTION
+    "Echo of Air/System:Count, or if the Coil parent is a TerminalUnit, the 
+     SystemCount is TerminalUnit:SystemCount * TerminalUnit:Count."
+  HELP
+    "The number of duplicate systems can only be > 1 when all attributes of 
+     the system are the same.  If Count is specified to be > 1, all parameters
+     (capacities, power, etc) should be specified for the single piece of equipment.
+     The ruleset will apply multipliers for the final simulation."
+  INPUTCLASS 
+    NotInput 
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( ParentComponentType() = "AirSeg" )
+    then // AirSystem
+      AirSys:Cnt
+    else if( ParentComponentType() = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:Cnt
+    else 0
+    endif endif
+  SIZING
+    if( ParentComponentType() = "AirSeg" )
+    then // AirSystem
+      AirSys:Cnt
+    else if( ParentComponentType() = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:Cnt
+    else 0
+    endif endif
+  ANNUAL
+    z:SysCnt
+ENDRULE
+// Echo system cooling capacity for efficiency check rules
+RULE NEW CoilClg:SysClgCap
+  DATATYPE
+    Float
+  LONGFORM
+    SystemCoolingCapacity
+  DESCRIPTION
+    "The capacity of the systems correpsonding cooling coil. Used for minimum
+     efficency and QC checks."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentComp = "AirSys" )
+    then // AirSystem
+      AirSys:ClgCap
+    else if( ParentComp = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:ClgCap
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( ParentComp = "AirSys" )
+    then // AirSystem
+      AirSys:ClgCap
+    else if( ParentComp = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:ClgCap
+    else UNDEFINED
+    endif endif
+  ANNUAL
+   z:SysClgCap
+ENDRULE
+// Define parent system object reference at coil
+RULE NEW CoilClg:ParentAirSysRef
+  DATATYPE
+    AirSys
+  LONGFORM
+    AirSystemReference
+  DESCRIPTION
+    "Reference property for accessing values of system from coils."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentComp = "AirSys" .OR. ParentComp = "TrmlUnit" )
+    then AirSys:Name
+    else UNDEFINED
+    endif
+  SIZING
+    if( ParentComp = "AirSys" .OR. ParentComp = "TrmlUnit" )
+    then AirSys:Name
+    else UNDEFINED
+    endif
+  ANNUAL
+   z:ParentAirSysRef
+ENDRULE
+RULE NEW CoilClg:ParentZnSysRef
+  DATATYPE
+    ZnSys
+  LONGFORM
+    ZoneSystemReference
+  DESCRIPTION
+    "Reference property for accessing values of system from coils."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentComp = "ZnSys" )
+    then ZnSys:Name
+    else UNDEFINED
+    endif
+  SIZING
+    if( ParentComp = "ZnSys" )
+    then ZnSys:Name
+    else UNDEFINED
+    endif
+  ANNUAL
+   z:ParentZnSysRef
+ENDRULE
+// For FluidSys:CtrlType rule
+RULE NEW CoilClg:CondHVACZnCntWithMult
+  DATATYPE
+    Integer
+  LONGFORM
+    ConditionedHVACZoneCountWithMult
+  DESCRIPTION
+    "The number of conditioned HVAC zones of the coil's parent system."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentComp = "AirSys" .OR. ParentComp = "TrmlUnit" )
+    then // AirSystem
+      AirSys:CondHVACZnCntWithMult
+    else if( ParentComp = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:CondHVACZnCntWithMult
+    else 0
+    endif endif
+  SIZING
+    if( ParentComp = "AirSys" .OR. ParentComp = "TrmlUnit" )
+    then // AirSystem
+      AirSys:CondHVACZnCntWithMult
+    else if( ParentComp = "ZnSys" )
+    then // ZoneSystem
+      ZnSys:CondHVACZnCntWithMult
+    else 0
+    endif endif
+  ANNUAL
+    z:CondHVACZnCntWithMult   
+ENDRULE
+
+
+// Calculate actual fan heat at design condition
+// =========================== AirSystem ======================================
+RULE NEW AirSys:FanHtDsgn
+  DATATYPE
+    Float
+  LONGFORM
+    FanHeatDesign
+  DESCRIPTION
+    "The total supply fan heat of the AirSystem at design conditions."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  SIZING
+    0
+  ANNUAL
+    SumChildren( Fan:SupFanHtDsgn )
+ENDRULE
+
+// =========================== ZoneSystem ======================================
+RULE NEW ZnSys:FanHtDsgn
+  DATATYPE
+    Float
+  LONGFORM
+    FanHeatDesign
+  DESCRIPTION
+    "The total supply fan heat of the ZoneSystem at design conditions."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  SIZING
+    0
+  ANNUAL
+    SumChildren( Fan:SupFanHtDsgn )
+ENDRULE
+
+
+// ********** Status ***********************************************************
+RULE CoilClg:Status
+  DESCRIPTION
+    "The status of the system or component, used for additions/alterations."
+  INPUTCLASS 
+    NotInput
+; OPTION
+;   * Defined in BEMEnums, shown here for reference. Default is 'New' 
+;   New
+;   Existing  
+  DEFAULT
+// Status defined from top-down. If parent system is altered, child objects
+// are defaulted to Existing
+    if( Parent( IsNew ) ) then "New" else "Existing" endif
+// SIZING and ANNUAL rules not used; status of any new objects created by rules 
+// is defined by BEMEnums default
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW CoilClg:IsNew
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( Status = "New" ) then 1 else 0 endif
+  SIZING : T24N
+    if( Status = "New" ) then 1 else 0 endif
+  SIZING : S901G ECBC
+    if( Status = "New" .AND. Parent( IsNew ) = 1 ) then 1 else 0 endif
+  ANNUAL
+    z:IsNew
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW CoilClg:IsExisting
+  DATATYPE
+    Integer
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IsNew ) then 0 else 1 endif
+  SIZING
+    if( IsNew ) then 0 else 1 endif
+  ANNUAL
+    z:IsExisting
+ENDRULE
+
+
+// ---------- Section 5.7.5.1 - General ----------------------------------------
+// ********** Cooling Source ***************************************************
+RULE CoilClg:Type
+  DESCRIPTION
+    "The type of cooling coil."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    Compulsory
+// Enums defined in BEMBase since property referenced in Library file
+;  OPTION
+;    - specify -
+;    ChilledWater
+;    DirectExpansion
+;    WaterEconomizer      // Not supported
+;  DEFAULT
+;    - specify -
+  CHECKSIM
+    if( ParentComponentType() = "ZnSys" )
+    then 
+      if( Type = "DirectExpansion" .AND. 
+          ZnSys:Type != "SZAC" .AND. ZnSys:Type != "SZHP" .AND.  
+          ZnSys:Type != "PTAC" .AND. ZnSys:Type != "PTHP" .AND. 
+          ZnSys:Type != "WSHP" .AND. ZnSys:Type != "SPVAC" .AND.
+          ZnSys:Type != "SPVHP" )
+      then
+        PostError("Coil object '%s' is Type = 'DirectExpansion', which is only
+                   supported for ZoneSystems of Type = SZAC/SZHP, PTAC/PTHP,
+                   WSHP, or SPVAC/SPVHP.", Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then // Baseline system definitions defined by Library_HVAC.txt file.
+      UNCHANGED
+    else u:Type
+    endif
+  ANNUAL
+    z:Type
+ENDRULE
+// Fuel Source
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:FuelSrc
+  DESCRIPTION
+    "The fuel source (if any) for the cooling coil."
+  INPUTCLASS 
+    Prescribed
+//Enums defined in BEMBase since property referenced in Library file 
+;  OPTION
+;    Electric   
+;    Gas         // Not supported
+  DEFAULT
+    if( Type = "DirectExpansion" )
+    then "Electric"
+    else UNDEFINED
+    endif
+  SIZING
+    // Only Electric DX are currently supported
+    if( Type = "DirectExpansion" )
+    then "Electric"
+    else UNDEFINED
+    endif
+  ANNUAL
+    z:FuelSrc
+ENDRULE
+
+
+// ********** Condenser Type ***************************************************
+RULE CoilClg:CndsrType
+  DESCRIPTION
+    "The type of condenser for a direct expansion (DX) cooling system."
+  HELP
+    "Required input for Type = 'DirectExpansion' coils."
+  REFERENCE 
+    NACM Section 5.7.5.2
+  INPUTCLASS 
+    Default
+  OPTION
+    Air
+    WaterSource
+;    EvaporativelyCooled   // Not supported
+;    GroundwaterSource     // Not supported
+;    GroundSource          // Not supported
+  DEFAULT
+    if( Type = "DirectExpansion" )
+    then "Air"
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( Type = "DirectExpansion" .AND. LocalStatus( CndsrType ) = 0 ) then
+      PostError("Condenser type is a required input for DX coil '%s'.", Name)
+    else if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) then
+      if( ParentComponentType() != "ZnSys" ) then
+        PostError("Water source DX cooling coils such as coil '%s'  may not 
+                   be assigned to air systems or terminal units.", Name)
+      else if( Parent( Type ) != "WSHP" ) then
+        PostError("Water source DX cooling coils such as coil '%s'  may only 
+                   be assigned to WSHP type zone systems.", Name)
+      else UNCHANGED
+      endif endif
+    else if( Type != "DirectExpansion" ) then 
+      if( ParentComponentType() = "ZnSys" .AND. Parent( Type ) = "WSHP" ) then
+        PostError("Cooling coils other than DX such as coil '%s' may not be 
+                   assigned to WSHP zone systems.", Name)
+      else UNCHANGED
+      endif
+    else if ( CndsrType != "WaterSource" ) then
+      if( ParentComponentType() = "ZnSys" .AND. Parent( Type ) = "WSHP" ) then
+        PostError("DX cooling coils that do not have water source condensing 
+                   such as coil '%s' may not be assigned to WSHP zone systems.",
+                   Name)
+      else UNCHANGED
+      endif
+    else UNCHANGED
+    endif endif endif endif
+  SIZING
+    if( BaseSysNum > 0 .AND. Type = "DirectExpansion")
+    then "Air"
+    else if( Type = "DirectExpansion" )
+    then u:CndsrType
+    else UNDEFINED
+    endif endif 
+  ANNUAL
+    z:CndsrType
+ENDRULE
+
+
+// ********** Total Cooling Capacity *******************************************
+RULE CoilClg:SizingRat
+  DESCRIPTION
+    "Multiplier used to adjust the gross/net cooling coil capacity."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    Prescribed    
+  COMMONMINIMUM
+    1.0
+  COMMONMAXIMUM
+    1.25
+  SIZING 
+    1.0
+  ANNUAL
+    if( z:IsBaseHVAC = 1 )
+    then Proj:ClgSizingRat
+    else 1.0
+    endif
+ENDRULE
+
+
+// Rules for DEFAULT/SIZING case
+// =========================== AirSystem =======================================
+RULE AirSys:AirSeg:CoilClg:CapTotNetRtd
+  DESCRIPTION
+    "The net total (both sensible and latent) cooling capacity (both sensible 
+     and latent) of a cooling coil in unitary system at AHRI conditions."
+  HELP
+    "The net capacity is the total cooling capacity of the coil after adjusting  
+     for fan heat at rated conditions. This is a required input for Type =
+     'DirectExpansion' coils."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    CondRequired 
+  MINIMUM 
+    1
+  COMMONMINIMUM
+    300
+  COMMONMAXIMUM
+    1200000
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else
+      if( Type != "DirectExpansion" .AND. LocalStatus( CapTotGrossRtd ) > 0 )
+      then // Net is same as gross for non-HP coils
+        CapTotGrossRtd
+      else 
+      if( IfValidAnd( AirSys:TotTrmlPriAirFlowMaxSim > 0 ) .AND.
+          SysCnt > 0 .AND.
+          IfValidAnd( AirSys:AirFlowPerTon > 0 ) )
+      then // Calculate capacity based on AutoHardSize cfm/ft2 and cfm/ton 
+        AirSys:TotTrmlPriAirFlowMaxSim / SysCnt / AirSys:AirFlowPerTon * 12000
+      else UNDEFINED
+      endif endif endif
+    else if( Type != "DirectExpansion" )
+    then CapTotGrossRtd // Net is same as gross for non-DX coils
+    else UNDEFINED
+    endif endif
+  CHECKCODE
+    if( Type = "DirectExpansion" .AND. 
+        IfValidAnd( CapTotNetRtd <= 0 ) )
+    then // User is required to enter net capacity if it is a DX coil
+      PostError("Net capacity for coil '%s' a required input for 
+                 DirectExpansion coils", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 ) 
+    then UNDEFINED
+    else if( Type = "DirectExpansion" )
+    then u:CapTotNetRtd 
+    else u:CapTotGrossRtd
+    endif endif
+ENDRULE
+
+// =========================== ZoneSystem ======================================
+RULE ZnSys:CoilClg:CapTotNetRtd
+// See DESCRIPTION and other fields above 
+  DEFAULT
+    if( Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else
+      if( Type != "DirectExpansion" .AND. LocalStatus( CapTotGrossRtd ) > 0 )
+      then // Net is same as gross for non-HP coils
+        CapTotGrossRtd
+      else 
+      if( IfValidAnd( ZnSys:SupFanCap >= 0 ) .AND. 
+          IfValidAnd( ZnSys:AirFlowPerTon > 0 ) )
+      then // Calculate capacity based on AutoHardSize cfm/ft2 and cfm/ton 
+        ZnSys:SupFanCap / ZnSys:AirFlowPerTon * 12000
+      else UNDEFINED
+      endif endif endif
+    else if( Type != "DirectExpansion" )
+    then CapTotGrossRtd // Net is same as gross for non-DX coils
+    else UNDEFINED
+    endif endif
+  CHECKCODE
+    if( Type = "DirectExpansion" .AND. 
+        IfValidAnd( CapTotNetRtd <= 0 ) )
+    then // User is required to enter net capacity if it is a DX coil
+      PostError("Net capacity for coil '%s' a required input for 
+                 DirectExpansion coils", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0 ) 
+    then UNDEFINED
+    else if( Type = "DirectExpansion" )
+    then u:CapTotNetRtd
+    else u:CapTotGrossRtd
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Fan heat at AHRI rating condition.  Based on Gross-Net or default
+RULE NEW CoilClg:FanHtRtd
+  DATATYPE
+    Float
+  LONGFORM
+    FanHeatRated
+  DESCRIPTION
+    "The heat generated by the fan and fan motor (if fan motor is in air stream)
+     at AHRI rated conditions."
+  HELP
+    "Fan heat at rated conditions is the difference between the gross and
+     net capacities at AHRI rated conditions. If gross cpacity is not known, the
+     fan heat can be estimated using the assumptions of 400cfm/ton and 0.365 W/cfm."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h
+  DEFAULT
+    if( Type != "DirectExpansion" )
+    then 0 // Fan heat not accounted for with non-DX coils
+    else if( ParentComp = "ZnSys" .AND. 
+             Type = "DirectExpansion" .AND. 
+             CndsrType = "WaterSource" )
+    then // Calculate ISO-13256-1 fan heat adjustment assuming 0.5" internal static.
+      ( ValidOr( ZnSys:SupFanCap, 0 ) * 0.472 ) * ( 0.5 * 249 ) / 300 * 3.412  
+    else if( IfValidAnd( u:CapTotNetRtd > 0 ) )
+    then // Calculate gross by adding AHRI fan heat to net capacity
+     ( CapTotNetRtd / ( 1 - Proj:FanHtCoeff ) ) * Proj:FanHtCoeff
+    else 0
+    endif endif endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then 0
+    else u:FanHtRtd
+    endif
+  ANNUAL
+    z:FanHtRtd
+ENDRULE
+
+RULE NEW CoilClg:PumpPwrRtd
+  DATATYPE
+    Float
+  LONGFORM
+    PumpPowerRated
+  DESCRIPTION
+    "The energy needed for WSHP liquid pumps when no pump is provided, 
+     per AHRI rated conditions."
+  HELP
+    "It is assumed WSHPs have no internal pump, and therefore the rated heating/
+     cooling efficiencies include the AHRI standard assumpton for pump power
+     needed to overcome the pressure drop through the condenser coil."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W
+  DEFAULT
+    if( ParentComp = "ZnSys" .AND. 
+        Type = "DirectExpansion" .AND. 
+        CndsrType = "WaterSource" )
+    then 
+      // Calculate pump energy adjustment assuming user-defined CoilHdDsgn
+      // Default assumption of 5 gpm and 5 ftH2O
+      ( ValidOr( FluidFlowRtDsgn, 5 ) * 0.0631 ) * ( ValidOr( CoilHdDsgn, 5 ) * 2990 ) / 300
+    else 0
+    endif
+  SIZING
+    if( ParentComp = "ZnSys" .AND. 
+        Type = "DirectExpansion" .AND. 
+        CndsrType = "WaterSource" )
+    then 
+      // Calculate pump energy adjustment assuming user-defined CoilHdDsgn
+      // Default assumption of 5 gpm and 5 ftH2O
+      ( ValidOr( FluidFlowRtDsgn, 5 ) * 0.0631 ) * ( ValidOr( CoilHdDsgn, 5 ) * 2990 ) / 300
+    else 0
+    endif
+  ANNUAL
+    z:PumpPwrRtd
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:CapTotGrossRtd
+  DESCRIPTION
+    "The gross total (both sensible and latent) cooling capacity of a cooling 
+     coil or packaged DX system at AHRI rating conditions."
+  HELP
+    "The gross capacity is the total cooling capacity without adjustments for 
+     fan heat. This is a required input for Type = 'ChilledWater' coils."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS 
+    CondRequired    
+  MINIMUM 
+    1
+  COMMONMINIMUM
+    300
+  COMMONMAXIMUM
+    1200000
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( IfValidAnd( CapTotNetRtd > 0 ) )
+    then 
+      if( Type = "DirectExpansion" .AND. IfValidAnd( FanHtRtd >= 0 ) )
+      then CapTotNetRtd + FanHtRtd
+      else if( Proj:AutoHardSize = 1 )
+      then CapTotNetRtd
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Type = "ChilledWater" .AND. 
+        IfValidAnd( CapTotGrossRtd <= 0 ) )
+    then // User is required to enter gross capacity
+      PostError("Gross capacity for coil '%s' a required input for 
+                 ChilledWater coils", Name)
+    else UNCHANGED
+    endif
+  SIZING
+    if( BaseSysNum > 0)
+    then UNDEFINED
+    else if( IfValidAnd( CapTotGrossRtd > 0 ) .AND. Type != "DirectExpansion" )
+    then // User has defined gross capacity
+      u:CapTotGrossRtd
+    else if( IfValidAnd( CapTotNetRtd > 0 ) .AND. Type = "DirectExpansion")
+        then // Calculate gross by adding AHRI fan heat to net capacity
+      u:CapTotNetRtd + FanHtRtd
+    else 0
+    endif endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( IfValidAnd( z:CapTotGrossRtdSim >= 0) .AND. 
+          SysCnt > 0 ) 
+      then
+        if( ParentComponentType() = "ZnSys" )
+        then // Is a ZoneSystem
+          if( Type = "DirectExpansion" )
+          then 
+            Min( z:CapTotGrossRtdSim / SysCnt * SizingRat + ZnSys:FanHtDsgn,
+                 ZnSys:SupFanCap / 280 * 12000 )
+          else z:CapTotGrossRtdSim / SysCnt * SizingRat + ZnSys:FanHtDsgn
+          endif
+        else if( ParentComponentType() = "AirSeg" ) 
+        then // Is an AirSystem
+          if( Type = "DirectExpansion" )
+          then 
+            Min( z:CapTotGrossRtdSim / SysCnt * SizingRat + AirSys:FanHtDsgn,
+                 AirSys:SupFanCap / 280 * 12000 )
+          else z:CapTotGrossRtdSim / SysCnt * SizingRat + AirSys:FanHtDsgn
+          endif
+        else 0
+        endif endif
+      else 0
+      endif
+    else z:CapTotGrossRtd
+    endif
+ENDRULE
+
+// ------------ ANNUAL rule for FanHtRtd and CapTotNetRtd ----------------------
+RULE NEW CoilClg:FanHtRtd
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "DirectExpansion" .AND. IfValidAnd( CapTotGrossRtd >= 0 ) )
+      then CapTotGrossRtd * Proj:FanHtCoeff   
+      else 0
+      endif
+    else z:FanHtRtd
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:CapTotNetRtd
+  ANNUAL 
+    if( BaseSysNum > 0 )
+    then
+      // Make adjustment for fan heat for baseline systems with DX coils
+      // Q_gross = Q_net + Q_fan 
+      // Q_net = Q_gross - Q_fan
+      CapTotGrossRtd - FanHtRtd
+    else z:CapTotNetRtd
+    endif
+ENDRULE
+
+
+// ********** Number of Cooling Stages *****************************************
+RULE CoilClg:NumClgStages
+  DESCRIPTION
+    "The number of mechanical cooling stages for a DX cooling coil."
+  HELP
+    "This applies to DX systems with more than one stage of DX cooling.  This 
+     system is typically a packaged unit with multiple compressors and a 
+     two-speed or variable-speed fan.
+
+     One stage cooling is currently the only option for ZoneSystem cooling coils."
+  REFERENCE 
+    NACM Section 5.7.5.2
+  INPUTCLASS 
+    Default
+  MINIMUM   
+    1
+  MAXIMUM 
+    2
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type = "DirectExpansion" .AND. ParentComponentType() = "AirSeg" )
+    then 1
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. ParentComponentType() = "AirSeg" )
+    then
+      if( BaseSysNum > 0 )
+      then 1 // Sizing performed with 1-stage heating/cooling
+      else u:NumClgStages 
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 ) 
+    then // Ruleset created HVAC, follow standard design rules
+      if( Type = "DirectExpansion" .AND. ParentComponentType() = "AirSeg" )
+      then
+        if( AirSys:Type = "SZVAVAC" .OR. AirSys:Type = "PVAV" )
+        then 2 // 2 stage cooling for SZVAV and PVAV systems
+        else 1 // 1-stage for all other systems
+        endif
+      else UNDEFINED
+      endif 
+    else // Proposed HVAC, model as user-specified, as defined in -zp model)
+      z:NumClgStages
+    endif
+ENDRULE
+
+
+// ********** Total Cooling Capacity by Stage **********************************
+RULE CoilClg:CapTotRtdStageFrac[1]
+  DESCRIPTION
+    "The fraction of total cooling capacity (at ARI rated conditions) provided
+     for the first [1] stage of mechanical cooling."
+  HELP
+    "The property is expressed as an array, with each entry a fraction of the 
+     rated total cooling capacity for the unit (CoilClg:CapacityTotalRated). 
+     For example, if the first stage of cooling has rated cooling capacity of 4 
+     tons (48,000 Btu/h), and the rated total cooling capacity is 8 tons 
+     (96,000 Btu/h), this array property value is '0.5'." 
+  REFERENCE 
+    NACM Section 5.7.5.2
+  INPUTCLASS 
+    Default
+  MINIMUM   
+    0
+  COMMONMINIMUM
+    0.2
+  MAXIMUM 
+    1.0
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( Type = "DirectExpansion" .AND. 
+        ParentComponentType() = "AirSeg" .AND. 
+        NumClgStages = 2 )
+    then 0.5
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. 
+        ParentComponentType() = "AirSeg" .AND. 
+        NumClgStages = 2 )
+    then
+      if( BaseSysNum > 0 )
+      then UNDEFINED // Sizing performed with 1-stage heating/cooling
+      else u:CapTotRtdStageFrac[1]
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "DirectExpansion" .AND. 
+          ParentComponentType() = "AirSeg" .AND. 
+          NumClgStages = 2 )
+      then 0.5
+      else UNDEFINED
+      endif
+    else z:CapTotRtdStageFrac[1]
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:CapTotRtdStageFrac[2]
+  DESCRIPTION
+    "The fraction of total cooling capacity (at ARI rated conditions) provided
+     for the second [2] stage of mechanical cooling."
+  HELP
+    "The property is expressed as an array, with each entry a fraction of the 
+     rated total cooling capacity for the unit (CoilClg:CapacityTotalRated). 
+     For example, for a system with two cooling stages, this array property 
+     value is '1.0'." 
+  REFERENCE 
+    NACM Section 5.7.5.2
+  INPUTCLASS 
+    Default
+  MINIMUM   
+    0
+  COMMONMINIMUM
+    0.2
+  MAXIMUM 
+    1.0
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( Type = "DirectExpansion" .AND. 
+        ParentComponentType() = "AirSeg" .AND. 
+        NumClgStages = 2 )
+    then 1.0  
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. 
+        ParentComponentType() = "AirSeg" .AND. 
+        NumClgStages = 2 )
+    then
+      if( BaseSysNum > 0 )
+      then UNDEFINED // Sizing performed with 1-stage heating/cooling
+      else u:CapTotRtdStageFrac[2]
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "DirectExpansion" .AND. 
+          ParentComponentType() = "AirSeg" .AND. 
+          NumClgStages = 2 )
+      then 1.0  
+      else UNDEFINED
+      endif
+    else z:CapTotRtdStageFrac[2]
+    endif
+ENDRULE
+
+
+// ********** Cooling Capacity Adjustment Curves *******************************
+RULE CoilClg:Cap_fTempCrvRef
+  DESCRIPTION
+    "A curve hat describes the adjustment of cooling coil capacity as a function 
+     of temperature."
+  REFERENCE 
+    NACM Section 5.7.5.1
+  INPUTCLASS
+    Prescribed
+  SIZING
+    if( Type = "DirectExpansion" )
+    then
+      if( CndsrType = "WaterSource" ) 
+      then UNDEFINED
+        // RuleLibrary(QuadplLin, "CoilClgWSDXQRatio_fTwbRatioTwtRatioCFMRatioGPMRatioSI")
+      else if( ParentComp = "ZnSys" )
+      then if ( SysType = "PTAC" .OR. SysType = "PTHP"  .OR.
+                SysType = "SPVAC" .OR. SysType = "SPVHP" )
+        then RuleLibrary(CrvDblQuad, "CoilClgPTACQRatio_fTwbToadbSI")
+        else RuleLibrary( CrvDblQuad, "CoilClgDXQRatio_fTwbToadbSI" )
+        endif
+      else if( ParentComp = "AirSys" )
+      then if( ( SysType = "PTAC" .OR. SysType = "PTHP"  .OR.
+                 SysType = "SPVAC" .OR. SysType = "SPVHP" ) .AND.
+                 Parent2( HasAirEcono ) != 1 )
+        then RuleLibrary(CrvDblQuad, "CoilClgPTACQRatio_fTwbToadbSI")
+        else RuleLibrary( CrvDblQuad, "CoilClgDXQRatio_fTwbToadbSI" )
+        endif
+      else UNDEFINED  // Should never land here
+      endif endif endif
+    else UNDEFINED // Not used for other coils
+    endif
+  ANNUAL
+    z:Cap_fTempCrvRef
+ENDRULE
+
+
+// ********** Coil Latent Modeling Method **************************************
+RULE CoilClg:LatModelingMthd
+  DESCRIPTION
+    "The method of modeling coil latent performance at part-load conditions."
+  REFERENCE 
+    NACM Section 5.7.5.1 
+  INPUTCLASS 
+    NotInput
+  OPTION
+    NTUEffectiveness
+;   BypassFactor - Not used with E+
+  DEFAULT
+    if( Type = "DirectExpansion" .AND. CndsrType = "Air" )
+    then "NTUEffectiveness"
+    else UNDEFINED // Not used for other E+ cooling coil models
+    endif
+  SIZING
+    if( Type = "DirectExpansion" .AND. CndsrType = "Air" )
+    then "NTUEffectiveness"
+    else UNDEFINED // Not used for other E+ cooling coil models
+    endif
+  ANNUAL
+    z:LatModelingMthd
+ENDRULE
+
+// ********** Cooling Capacity AirFlow Adjustment Curve ************************
+RULE CoilClg:Cap_fFlowCrvRef
+  DESCRIPTION
+    "Normalized curve that varies cooling capacity as a function of airflow, 
+     which affects system latent capacity. Used for EnergyPlus DX coil model only."
+  REFERENCE 
+    NACM Section 5.7.5.1 
+  INPUTCLASS
+    Prescribed  
+  SIZING
+    if( IfValidAnd( LatModelingMthd = "NTUEffectiveness" ) )
+    then RuleLibrary(CrvQuad, "CoilClgDXSnglQRatio_fCFMRatio")
+    else UNDEFINED
+    endif
+  ANNUAL
+    if( IfValidAnd( LatModelingMthd = "NTUEffectiveness" ) )
+    then 
+      if( IfValidAnd( NumClgStages > 1 ) )
+      then RuleLibrary(CrvCubic, "CoilClgDXDblQRatio_fCFMRatio")
+      else RuleLibrary(CrvQuad, "CoilClgDXSnglQRatio_fCFMRatio")
+      endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// Design fluid flow rate, used for sizing E+ chilled water coils
+// Derivation of calculating design water flow from input gross capacity
+// for sizing E+ chilled water coils
+
+// Standard OS/E+ sizing assumptions:
+// ----- Coil Inlet Conditions -------
+; Tdb,in   = 77°F   [25.0°C]
+; W,in     = 0.012
+; Twb,in   = 67.2°F [19.4°C
+; %RH,in   = 60 %
+; h,in     = 31.6 Btu/lba
+; SpHt,in  = 0.245 Btu/lba-°F
+; Rho,in   = 0.072 lba/ft3
+
+; ----- Coil Outlet Conditions ------
+; Tdb,out  = 55°F   [12.8°C]
+; W,out    = 0.0085
+; Twb,out  = 53.7°F [12.1°C]
+; %RH,out  = 95 %
+; h,out    = 22.4 Btu/lba
+
+; AirVol = 300 cfm/ton
+; SHR    = 0.6
+; dh     = 9.2 Btu/lba
+
+
+; Q,w = mdot,w * Cp,w * (Tout,w - Tin,w)
+; mdot,w = [62.361 lbw/ft3  * 1/7.4805 ft3/USgal * 60 min/hr] * FluidFlowRtDsgn
+; Cp,w = 1.000 Btu/lbw-F
+; (Tout,w - Tin,w) = dT (from attached loop)
+; Q,w  = 500.19 * FluidFlowRtDsgn * dT
+
+; Q,a = mdot,a * (hin,w - hout,w)
+; mdot,a = [0.072 lba/ft3 * 60 min/hr] * AirVol
+;        = [0.072 lba/ft3 * 60 min/hr * 300 ft3/min / 12000 Btu/hr] * CapTotGrossRtd
+; (hin,w - hout,w) = dh = 9.2 Btu/lba (E+ sizing assumptions)
+; Q,a = 1.00 * CapTotGrossRtd
+
+; Q,w = Q,a
+; 500.19 * FluidFlowRtDsgn * dT = CapTotGrossRtd
+; FluidFlowRtDsgn = CapTotGrossRtd / (500.19 * dT)
+
+
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:FluidFlowRtDsgn
+// TO DO: Update density/specific heat values to be lookup table based on average loop T
+  DESCRIPTION
+    "The design water volume flow rate (gpm) through the coil." 
+  HELP
+    "Required input for Type = 'ChilledWater' coils and 'DirectExpansion' coils with 
+     CondenserType = 'Water'."
+  UNITS
+    gpm
+  INPUTCLASS 
+    CondRequired
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Type = "ChilledWater" .OR. 
+        ( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) )
+    then // For PROPOSED AutoHardSizing only
+      if( Proj:AutoHardSize = 1 .AND. Proj:ModelName != "" )
+      then UNCHANGED // TableSizing is used, see Project-TableSizing rules
+      else
+      if( LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then // Default flow rate to value calculated from Cap and DelT
+        if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" )
+        then // Is water-source DX, add heat of rejection to total capacity
+          ( CapTotGrossRtd * ( 1 + ( 3.412 / ValidOr( DXEER, 12 ) ) ) ) / 
+          ( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT )
+        else if( Type = "ChilledWater" )
+        then // Is chilled water
+          CapTotGrossRtd / 
+          ( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT )
+        else UNDEFINED
+        endif endif
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Type = "ChilledWater" .AND. 
+        IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) = 0 )
+    then
+      PostError("The chilled water loop serving coil '%s' has an undefined or 0F
+                 DesignSupplyWaterDeltaT.", Name)
+    else if( Type = "DirectExpansion" .AND.
+             CndsrType = "WaterSource" .AND. 
+             IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) = 0 )
+    then
+      PostError("The condenser water loop serving coil '%s' has an undefined or 0F
+                 DesignSupplyWaterDeltaT.", Name)
+    else UNCHANGED
+    endif endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED // Not used for sizing run
+    else if( Type = "ChilledWater" )
+    then // Is chilled water coil
+      if( IfValidAnd( u:FluidFlowRtDsgn > 0 ) )
+      then u:FluidFlowRtDsgn 
+      else // User-defined flow
+      if( LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then // Calculate default from capacity 
+        CapTotGrossRtd / ( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT)
+      else 0
+      endif endif
+    else if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" )
+    then // Is water-cooled DX coil
+      if( IfValidAnd( u:FluidFlowRtDsgn > 0 ) )
+      then u:FluidFlowRtDsgn 
+      else // User-defined flow
+      if( LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then // Calculated default from capacity. Add heat of rejection to total capacity
+        ( CapTotGrossRtd * ( 1 + ( 3.412 / ValidOr( DXEER, 12 ) ) ) ) / 
+        ( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT )
+      else 0
+      endif endif
+    else UNDEFINED
+    endif endif endif
+  ANNUAL
+    if( BaseSysNum > 0 )
+    then
+      if( Type = "ChilledWater" .AND. 
+          LocalStatus( CapTotGrossRtd ) > 0 .AND. 
+          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) )
+      then CapTotGrossRtd /( 500.19 * FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT)
+      else UNDEFINED
+      endif
+    else z:FluidFlowRtDsgn
+    endif
+ENDRULE   
+
+// Load on water side of coil
+;RULE CoilClg:FluidLdDsgn
+;  DESCRIPTION
+;    "The load on fluid side of coil at design conditions."
+;  HELP
+;    "Used to describe capacity for E+ sizing calculations."
+;  UNITS
+;    Btu/h
+;  INPUTCLASS 
+;    NotInput
+;  ANNUAL
+;    if( Type = "ChilledWater" )
+;    // Calculate coil load based on design water flow rate
+;    then
+;      if( IfValidAnd( FluidFlowRtDsgn > 0 ) .AND.
+;          IfValidAnd( FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT > 0 ) ) 
+;      then 
+;        FluidFlowRtDsgn / SizingRat * 500.19 *
+;        FluidSegInRef:ParentFluidSysRef:DsgnSupWtrDelT
+;      else 0
+;      endif
+;    else UNDEFINED
+;    endif 
+;ENDRULE
+
+
+// ********** Coil Head ********************************************************
+RULE CoilClg:CoilHdDsgn
+  DESCRIPTION
+    "The pressure drop though the coil at design conditions." 
+  HELP
+    "For coils with water-source condensers, the pressure drop is used to calculated
+     the simulated EIR by removing the power consumed by pumps from the rated EER.
+
+
+     For all other water coils, this property is does not affect the simulation
+     of the coil or fluid system.  The pressure drop of the fluid system is
+     defined at the pump. If defined, it is used as a reference or reporting only."
+  INPUTCLASS 
+    Default
+  COMMONMINIMUM
+    1.0
+  COMMONMAXIMUM
+    15
+  UNITS 
+    ft H2O
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Type = "ChilledWater" )
+    then 5.0
+    else if( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" )
+    then 5.0 
+    else UNDEFINED
+    endif endif
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else
+    if( Type = "ChilledWater" .OR.
+        ( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) )
+    then u:CoilHdDsgn
+    else UNDEFINED
+    endif endif
+  ANNUAL
+    z:CoilHdDsgn
+ENDRULE
+
+
+// ********** Simulated Capacities *********************************************
+RULE CoilClg:CapTotGrossRtdSim
+  DESCRIPTION
+    "The total (gross) cooling capacity at design conditions, for simulation" 
+  INPUTCLASS 
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IfValidAnd( CapTotGrossRtd > 0 ) )
+    then CapTotGrossRtd * SysCnt
+    else 0
+    endif
+  SIZING
+    // Source for Autosize data:
+    // E+ Report: Equipment Summary -> Cooling Coils -> Nominal Total Capacity
+    // This value reflects multipliers of zone loads
+  ANNUAL
+    if( IfValidAnd( CapTotGrossRtd > 0 ) )
+    then CapTotGrossRtd * SysCnt
+    else 1
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW CoilClg:CapTotNetRtdSim
+  DATATYPE
+    Float
+  LONGFORM
+    CapacityTotalNewRatedSimulated
+  DESCRIPTION
+    "The total (net) cooling capacity at design conditions" 
+  INPUTCLASS 
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( IfValidAnd( CapTotNetRtd > 0 ) )
+    then CapTotNetRtd * SysCnt
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    if( IfValidAnd( CapTotNetRtd > 0 ) )
+    then CapTotNetRtd * SysCnt
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilClg:FluidFlowRtDsgnSim
+  DESCRIPTION
+    "The design water volume flow rate (gpm) through the coil, for simulation" 
+  INPUTCLASS 
+    NotInput
+  MINIMUM 
+    0
+  UNITS 
+    gpm
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( IfValidAnd( FluidFlowRtDsgn > 0 ) )
+    then FluidFlowRtDsgn * SysCnt
+    else UNDEFINED
+    endif
+  SIZING
+    // Source for Autosize data:
+    // E+ Report: 
+    // This value reflects multipliers of zone loads
+  ANNUAL
+    if( IfValidAnd( FluidFlowRtDsgn > 0 ) )
+    then FluidFlowRtDsgn * SysCnt
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+
+// ********** Bypass Minimum Efficincy Check ***********************************
+RULE CoilClg:BypassMinEffCheck
+  DESCRIPTION
+    "A boolean (0/1) flag to indicate whether the minimum efficiency checks for
+     the HVAC system are bypassed."
+  HELP
+    "Selecting this option (value = 1 ) triggers an Exceptional Condition to 
+     be shown on the compliance report, and requires code reviewers to manually
+     check that the equipment meets the minimum efficiency requirements for the
+     applicable equipment category in the Standards. This option should only be
+     selected in the following circustances:
+
+     1) The equipment category of the system in the proposed design is not
+        supported in CBECC-Com by the combinations of Type/SubType
+
+     2) The equipment was manufactured prior to a change in equipment efficiency
+        Standards and does not meet current efficiency requirements, but it is
+        still legal to install."
+  INPUTCLASS
+    Default 
+  DEFAULT
+    0
+  SIZING_PROPOSED
+    if( Type = "ChilledWater" )
+    then 0
+    else UNCHANGED
+    endif
+  ANNUAL_PROPOSED
+    z:BypassMinEffCheck
+ENDRULE
+
+
+// ********** Cooling Capacity for Add/Alt rules *******************************
+RULE NEW CoilClg:CapAddAlt
+  DATATYPE
+    Float
+  LONGFORM
+    CapacityAdditionsAlterations
+  DESCRIPTION
+    "Net capacity of cooling coil for determining the baseline system for 
+     Additions/Alterations. Does not include Type = ChilledWater coil capacity,
+     but does includes 'SystemCount' multipliers."
+  INPUTCLASS
+    NotInput  
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type != "ChilledWater" .AND. 
+        IfValidAnd( CapTotNetRtdSim >= 0 ) )
+    then CapTotNetRtdSim
+    else 0
+    endif
+  SIZING 
+    UNDEFINED
+  ANNUAL
+    if( Type != "ChilledWater" .AND. 
+        IfValidAnd( CapTotNetRtdSim >= 0 ) )
+    then CapTotNetRtdSim
+    else 0
+    endif
+ENDRULE
+
+
+// ********** Total Cooling Capacity of System *********************************
+// =========================== AirSystem =======================================
+RULE AirSys:ClgCap
+  DESCRIPTION
+    "The net cooling capacity of the AirSystem."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT  
+    SumChildren( CoilClg:CapTotNetRtd ) 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:ClgCap
+    endif
+  ANNUAL
+    SumChildren( CoilClg:CapTotNetRtd ) 
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW AirSys:FanHtRtd
+  DATATYPE
+    Float
+  LONGFORM
+    FanHeatRated
+  DESCRIPTION
+    "See CoilClg:FanHtRtd"
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  DEFAULT 
+    SumChildren( CoilClg:FanHtRtd )
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:FanHtRtd
+    endif
+  ANNUAL
+    SumChildren( CoilClg:FanHtRtd ) 
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW AirSys:PumpPwrRtd
+  DATATYPE
+    Float
+  LONGFORM
+    PumpPwrRated
+  DESCRIPTION
+    "See CoilClg:PumpPwrRtd"
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  DEFAULT  
+    SumChildren( CoilClg:PumpPwrRtd )
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:PumpPwrRtd
+    endif
+  ANNUAL
+    SumChildren( CoilClg:PumpPwrRtd )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW AirSys:CoilClgCapAddAlt
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingCapacityAdditionsAlterations
+  DESCRIPTION
+    "Net capacity of cooling coil for determining the baseline system for 
+     Additions/Alterations. Does not include Type = ChilledWater coil capacity,
+     but does include 'Count' multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:CapAddAlt > 0 )
+  SIZING 
+    UNDEFINED
+  ANNUAL
+    SumChildrenIf( CoilClg:CapAddAlt, CoilClg:CapAddAlt > 0 )
+ENDRULE
+
+
+// =========================== ZoneSystem ======================================
+RULE ZnSys:ClgCap
+  DESCRIPTION
+    "The net cooling capacity of the ZoneSystem."
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT 
+    SumChildren( CoilClg:CapTotNetRtd ) 
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:ClgCap
+    endif
+  ANNUAL
+    SumChildren( CoilClg:CapTotNetRtd )  
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ZnSys:FanHtRtd
+  DATATYPE
+    Float
+  LONGFORM
+    FanHeatRated  
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  DEFAULT 
+    SumChildren( CoilClg:FanHtRtd )
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:FanHtRtd
+    endif
+  ANNUAL
+    SumChildren( CoilClg:FanHtRtd ) 
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ZnSys:PumpPwrRtd
+  DATATYPE
+    Float
+  LONGFORM
+    PumpPwrRated
+  INPUTCLASS 
+    NotInput         
+  UNITS 
+    Btu/h
+  DEFAULT  
+    SumChildren( CoilClg:PumpPwrRtd )
+  SIZING
+    if( BaseSysNum > 0 )
+    then UNDEFINED
+    else u:PumpPwrRtd
+    endif
+  ANNUAL
+    SumChildren( CoilClg:PumpPwrRtd )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE NEW ZnSys:CoilClgCapAddAlt
+  DATATYPE
+    Float
+  LONGFORM
+    CoilCoolingCapacityAdditionsAlterations
+  DESCRIPTION
+    "Net capacity of cooling coil for determining the baseline system for 
+     Additions/Alterations. Does not include Type = ChilledWater coil capacity,
+     but does include 'Count' multipliers."
+  INPUTCLASS
+    NotInput  
+  DEFAULT
+    SumChildren( CoilClg:CapAddAlt )
+  SIZING 
+    UNDEFINED
+  ANNUAL
+    SumChildren( CoilClg:CapAddAlt )
+ENDRULE
+
+
+
+;// -----------------------------------------------------------------------------
+;// ********** Sensible Cooling Capacity ****************************************
+;RULE CoilClg:SensHtRatRtd
+;  DESCRIPTION
+;    "The sensible capacity ratio - the gross sensible capacity of the coil
+;     divided by the total gross capacity of a cooling coil or packaged DX
+;     system at AHRI rating conditions."
+;  REFERENCE 
+;    NACM Section 5.7.5.1
+;  INPUTCLASS 
+;    NotInput     
+;  MINIMUM 
+;    0.3
+;  COMMONMINIMUM
+;    0.6
+;  MAXIMUM
+;    0.9
+;  DEFAULT
+;    0.78
+;  SIZING
+;    if( BaseSysNum > 0 )
+;    then UNDEFINED
+;    else u:SensHtRatRtd
+;    endif
+;  ANNUAL
+;    0.78
+;ENDRULE
+;
+;
+;// -----------------------------------------------------------------------------
+;RULE CoilClg:CapSensGrossRtd
+;  DESCRIPTION
+;    "The gross sensible cooling capacity of a cooling coil or packaged DX system 
+;     at AHRI rating conditions."
+;  HELP
+;    "The gross sensible capacity is the sensible cooling cpacity of the coil 
+;     without adjustments for fan heat."
+;  REFERENCE 
+;    NACM Section 5.7.5.1
+;  INPUTCLASS 
+;    NotInput
+;  MINIMUM 
+;    0
+;  COMMONMINIMUM
+;    300
+;  COMMONMAXIMUM
+;    2400000  
+;  UNITS 
+;    Btu/h
+;  DEFAULT
+;    if( IfValidAnd( CapTotGrossRtd > 0 ) ) then
+;      CapTotGrossRtd * SensHtRatRtd
+;    else 0
+;    endif
+;  SIZING
+;    if( IfValidAnd( CapTotGrossRtd > 0 ) ) then
+;      CapTotGrossRtd * SensHtRatRtd
+;    else 0
+;    endif
+;  ANNUAL
+;    CapTotGrossRtd * SensHtRatRtd
+;ENDRULE
+;
+;
+;// -----------------------------------------------------------------------------
+;RULE CoilClg:CapSensGrossRtdSim
+;  DESCRIPTION
+;    "The sensible cooling capacity at design conditions, for simulation" 
+;  INPUTCLASS 
+;    NotInput
+;  MINIMUM 
+;    0
+;  UNITS 
+;    Btu/h
+;  SIZING
+;    if( IfValidAnd( CapSensGrossRtd > 0 ) ) then
+;      CapSensGrossRtd * SysCnt
+;    else 0
+;    endif
+;  ANNUAL
+;;  ANNUAL_PROPOSED
+;    CapSensGrossRtd * SysCnt
+;ENDRULE
+;
+;
+;// -----------------------------------------------------------------------------
+;// ********** Sensible Cooling Capacity by Stage *******************************
+;RULE AirSys:AirSeg:CoilClg:CapSensRtdStageFrac[1]
+;  DESCRIPTION
+;    "The fraction of sensible cooling capacity (at ARI rated conditions) provided
+;     for the first [1] stage of mechanical cooling."
+;  HELP
+;    "This provides the sensible cooling capacity of each cooling stage, at ARI rated 
+;     conditions. The capacity is expressed as an array, with each entry a fraction 
+;     of the rated sensible cooling capacity for the unit (CoilClg:CapacitySensibleRated).   
+;     For example, if the stage sensible cooling capacity is 3.5 tons (42,000 Btu/h) 
+;     and the total sensible cooling capacity is 7 tons (72,000 Btu/h), the array
+;     property value is '0.5' for that stage."
+;  REFERENCE 
+;    NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    NotInput
+;  MINIMUM   
+;    0.0
+;  COMMONMINIMUM
+;    0.2
+;  COMMONMAXIMUM
+;    0.8
+;  MAXIMUM 
+;    1.0
+;  DEFAULT
+;    if( Type = "DirectExpansion" )
+;    then
+;      if( NumClgStages = 2 )
+;       then 0.5
+;      else UNDEFINED
+;      endif
+;    else UNDEFINED
+;    endif
+;  SIZING
+;    if( Type = "DirectExpansion" .AND. 
+;        ParentComponentType() = "AirSeg" .AND. 
+;        NumClgStages = 2 )
+;    then
+;      if( BaseSysNum > 0 )
+;      then UNDEFINED // Sizing performed with 1-stage heating/cooling
+;      else u:CapSensRtdStageFrac[1]
+;      endif
+;    else UNDEFINED
+;    endif
+;  ANNUAL
+;    if( BaseSysNum > 0 )
+;    then
+;	    if( Type = "DirectExpansion" .AND. 
+;	        ParentComponentType() = "AirSeg" .AND. 
+;	        NumClgStages = 2 )
+;	    then 0.5
+;	    else UNDEFINED
+;	    endif
+;    else z:CapSensRtdStageFrac[1]
+;    endif
+;ENDRULE
+;
+;
+;
+;// -----------------------------------------------------------------------------
+;RULE AirSys:AirSeg:CoilClg:CapSensRtdStageFrac[2]
+;  DESCRIPTION
+;    "The fraction of sensible cooling capacity (at ARI rated conditions) provided
+;     for the second [2] stage of mechanical cooling."
+;  HELP
+;    "The property is expressed as an array, with each entry a fraction of the 
+;     rated sensible cooling capacity for the unit (CoilClg:CapacitySensibleRated). 
+;     For example, for a system with two cooling stages, this array property 
+;     value is '1.0'." 
+;  REFERENCE 
+;    NACM Section 5.7.5.2
+;  INPUTCLASS 
+;    NotInput
+;  MINIMUM   
+;    0.0
+;  COMMONMINIMUM
+;    0.2
+;  MAXIMUM 
+;    1.0
+;  DEFAULT
+;    if( Type = "DirectExpansion" )
+;    then
+;      if( NumClgStages = 2 )
+;       then 1.0
+;      else UNDEFINED
+;      endif   
+;    else UNDEFINED
+;    endif
+;  SIZING
+;    if( Type = "DirectExpansion" .AND. 
+;        ParentComponentType() = "AirSeg" .AND. 
+;        NumClgStages = 2 )
+;    then
+;      if( BaseSysNum > 0 )
+;      then UNDEFINED // Sizing performed with 1-stage heating/cooling
+;      else u:CapSensRtdStageFrac[2]
+;      endif
+;    else UNDEFINED
+;    endif
+;  ANNUAL
+;    if( BaseSysNum > 0 )
+;    then
+;	    if( Type = "DirectExpansion" .AND. 
+;	        ParentComponentType() = "AirSeg" .AND. 
+;	        NumClgStages = 2 )
+;	    then 1.0
+;	    else UNDEFINED
+;	    endif
+;    else z:CapSensRtdStageFrac[2]
+;    endif
+;ENDRULE
+;
+;
+;// -----------------------------------------------------------------------------
+;RULE ZnSys:CoilClg:CapSensRtdStageFrac[1]
+;  INPUTCLASS 
+;    Prescribed
+;  DEFAULT
+;    UNDEFINED // Zone systems currently cannot have multistage cooling equipment. 
+;ENDRULE
+;
+;
+;// -----------------------------------------------------------------------------
+;RULE ZnSys:CoilClg:CapSensRtdStageFrac[2]
+;  INPUTCLASS 
+;    Prescribed
+;  DEFAULT
+;    UNDEFINED // Zone systems currently cannot have multistage cooling equipment. 
+;ENDRULE
+;
+;
+;
+;;RULE CoilClg:CapSensNetRtd
+;  DESCRIPTION
+;    "The gross sensible cooling capacity of a cooling coil or packaged DX system 
+;     at AHRI rating conditions."
+;  HELP
+;    "The gross sensible capacity is the sensible cooling cpacity of the coil 
+;     without adjustments for fan heat."
+;  REFERENCE 
+;    NACM Section 5.7.5.1
+;  INPUTCLASS 
+;    Optional     
+;  MINIMUM 
+;    0
+;  COMMONMINIMUM
+;    300
+;  COMMONMAXIMUM
+;    2400000
+;  UNITS 
+;    Btu/h
+;// Removed default since sensible capacity is now auto-sized in simulation
+;;  DEFAULT
+;;    if( LocalStatus( u:CapSensNetRtd ) < 5 .AND. u:Proj:AutoHardSize = 1 )
+;;    then // For PROPOSED AutoHardSizing only
+;;      u:CapTotNetRtd*u:SensHtRatRtd
+;;    else UNDEFINED
+;;    endif
+;  PROPOSED
+;    u:CapSensNetRtd
+;ENDRULE
+;RULE CoilClg:CapSensNetRtd
+;  BASELINESIZING  
+;    UNDEFINED // Not used
+;  BASELINE  
+;    if( b:Type = "DirectExpansion" )
+;    then // Make adjustment for fan heat for baseline systems with DX coils
+;      b:CapSensGrossRtd - b:FanHtRtd
+;    else b:CapSensGrossRtd // Net = Gross for other coils
+;    endif
+;ENDRULE
+;RULE NEW CoilClg:SensHtRatRtd
+;  DATATYPE
+;    Float
+;  LONGFORM
+;    SensibleHeatRatioRated
+;  INPUTCLASS 
+;    NotInput         
+;  COMMONMINIMUM
+;    0.4
+;  COMMONMAXIMUM
+;    0.9
+;;  DEFAULT
+;;    if( ParentComponentType() = "AirSeg" )
+;;     then Parent2( SensHtRatRtd )
+;;    else if( ParentComponentType() = "ZnSys" )
+;;     then Parent( SensHtRatRtd )
+;;    else UNCHANGED
+;;    endif endif
+;  PROPOSED
+;    if (LocalStatus( p:CapTotNetRtd ) < 1)   then UNDEFINED
+;	 else if (p:CapTotNetRtd == 0)   then 0
+;	 else  p:CapSensNetRtd/p:CapTotNetRtd  endif endif
+;  BASELINESIZING
+;    // Autosize
+;  BASELINE
+;    if (LocalStatus( b:CapTotNetRtd ) < 1)   then UNDEFINED
+;	 else if (b:CapTotNetRtd == 0)   then 0
+;	 else  b:CapSensNetRtd/b:CapTotNetRtd  endif endif
+;ENDRULE
+
+
+
+

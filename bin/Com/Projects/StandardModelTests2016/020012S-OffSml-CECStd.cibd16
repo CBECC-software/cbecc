@@ -1,0 +1,1350 @@
+RulesetFilename   "CEC 2016 NonRes.bin"  
+
+Proj   "020012S-OffSml-CECStd16"  
+   BldgEngyModelVersion = 12
+   CreateDate = 1414975490
+   ModDate = 1474010681
+   RunDate = 1474010682
+   GeometryInpType = "Simplified"
+   ZipCode = 95814
+   DDWeatherFile = "D:/AEC Ruleset/branches/CBECC-Com13-BZ/Data/EPW/SACRAMENTO-EXECUTIVE_724830_CZ2010.ddy"
+   AnnualWeatherFile = "D:/AEC Ruleset/branches/CBECC-Com13-BZ/Data/EPW/SACRAMENTO-EXECUTIVE_724830_CZ2010.epw"
+   ExcptCondNoClgSys = "No"
+   ExcptCondRtdCap = "No"
+   ExcptCondNarrative = "No"
+   AutoHardSize = 0
+   AutoEffInput = 0
+   DefaultDayltgCtrls = 0
+   CompType = "NewComplete"
+   SoftwareVersion = "CBECC-Com 2016.2.1 (868)"
+   ..
+
+ConsAssm   "Base_CZ12-SlabOnOrBelowGradeF073"  
+   CompatibleSurfType = "UndergroundFloor"
+   SlabType = "UnheatedSlabOnGrade"
+   MatRef[1] = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+Mat   "Concrete - 140 lb/ft3 - 6 in."  
+   CodeCat = "Concrete"
+   CodeItem = "Concrete - 140 lb/ft3 - 6 in."
+   ..
+
+ConsAssm   "Base_CZ12-NonresMetalFrameWallU062"  
+   CompatibleSurfType = "ExteriorWall"
+   MatRef[1] = "Stucco - 7/8 in."
+   MatRef[2] = "Compliance Insulation R13.99"
+   MatRef[3] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[4] = "Gypsum Board - 1/2 in."
+   ..
+
+Mat   "Stucco - 7/8 in."  
+   CodeCat = "Plastering Materials"
+   CodeItem = "Stucco - 7/8 in."
+   ..
+
+Mat   "Compliance Insulation R13.99"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R13.99"
+   ..
+
+Mat   "Air - Metal Wall Framing - 16 or 24 in. OC"  
+   CodeCat = "Air"
+   CodeItem = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   ..
+
+Mat   "Gypsum Board - 1/2 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 1/2 in."
+   ..
+
+ConsAssm   "NACM_Interior Wall"  
+   CompatibleSurfType = "InteriorWall"
+   MatRef[1] = "Gypsum Board - 5/8 in."
+   MatRef[2] = "Air - Metal Wall Framing - 16 or 24 in. OC"
+   MatRef[3] = "Gypsum Board - 5/8 in."
+   ..
+
+Mat   "Gypsum Board - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Gypsum Board - 5/8 in."
+   ..
+
+ConsAssm   "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"  
+   CompatibleSurfType = "Roof"
+   CRRCInitialRefl = 0.2
+   CRRCAgedRefl = 0.2
+   CRRCInitialEmit = 0.85
+   CRRCAgedEmit = 0.85
+   CRRCProdID = "XXXX-XXXX"
+   MatRef[1] = "Metal Standing Seam - 1/16 in."
+   MatRef[2] = "Compliance Insulation R28.63"
+   ..
+
+Mat   "Metal Standing Seam - 1/16 in."  
+   CodeCat = "Roofing"
+   CodeItem = "Metal Standing Seam - 1/16 in."
+   ..
+
+Mat   "Compliance Insulation R28.63"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R28.63"
+   ..
+
+ConsAssm   "Base_CZ12-NonresOtherFloorU071"  
+   CompatibleSurfType = "ExteriorFloor"
+   MatRef[1] = "Compliance Insulation R9.83"
+   MatRef[2] = "Plywood - 5/8 in."
+   MatRef[3] = "Carpet - 3/4 in."
+   ..
+
+Mat   "Compliance Insulation R9.83"  
+   CodeCat = "Insulation Board"
+   CodeItem = "Compliance Insulation R9.83"
+   ..
+
+Mat   "Plywood - 5/8 in."  
+   CodeCat = "Bldg Board and Siding"
+   CodeItem = "Plywood - 5/8 in."
+   ..
+
+Mat   "Carpet - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Carpet - 3/4 in."
+   ..
+
+ConsAssm   "NACM_Drop Ceiling"  
+   CompatibleSurfType = "InteriorFloor"
+   MatRef[1] = "Acoustic Tile - 3/4 in."
+   ..
+
+Mat   "Acoustic Tile - 3/4 in."  
+   CodeCat = "Finish Materials"
+   CodeItem = "Acoustic Tile - 3/4 in."
+   ..
+
+FenCons   "Base_AllCZ_FixedWindowU36"  
+   FenType = "VerticalFenestration"
+   FenProdType = "FixedWindow"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.25
+   UFactor = 0.36
+   VT = 0.42
+   ..
+
+FenCons   "Glazed Door"  
+   FenType = "VerticalFenestration"
+   FenProdType = "GlazedDoor"
+   AssmContext = "Manufactured"
+   CertificationMthd = "NFRCRated"
+   SHGC = 0.23
+   UFactor = 0.45
+   VT = 0.17
+   ..
+
+Sch   "Office Occupancy"  
+   Type = "Fraction"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeOccupancyWk"
+   ..
+
+SchWeek   "OfficeOccupancyWk"  
+   Type = "Fraction"
+   SchDaySunRef = "OfficeOccupancySun"
+   SchDayMonRef = "OfficeOccupancyWD"
+   SchDayTueRef = "OfficeOccupancyWD"
+   SchDayWedRef = "OfficeOccupancyWD"
+   SchDayThuRef = "OfficeOccupancyWD"
+   SchDayFriRef = "OfficeOccupancyWD"
+   SchDaySatRef = "OfficeOccupancySat"
+   SchDayHolRef = "OfficeOccupancySun"
+   SchDayClgDDRef = "OnDay"
+   SchDayHtgDDRef = "OffDay"
+   ..
+
+SchDay   "OfficeOccupancySun"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05, 0.05, 0.05, 0, 0, 0, 0, 0, 0 )
+   ..
+
+SchDay   "OfficeOccupancyWD"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0.1, 0.2, 0.95, 0.95, 0.95, 0.95, 0.5, 0.95, 
+          0.95, 0.95, 0.95, 0.3, 0.1, 0.1, 0.1, 0.1, 0.05, 0.05 )
+   ..
+
+SchDay   "OfficeOccupancySat"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.3, 0.3, 0.3, 0.3, 0.1, 0.1, 0.1, 
+          0.1, 0.1, 0.05, 0.05, 0, 0, 0, 0, 0 )
+   ..
+
+Sch   "Office Receptacle"  
+   Type = "Fraction"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeReceptacleWk"
+   ..
+
+SchWeek   "OfficeReceptacleWk"  
+   Type = "Fraction"
+   SchDaySunRef = "OfficeReceptacleSun"
+   SchDayMonRef = "OfficeReceptacleWD"
+   SchDayTueRef = "OfficeReceptacleWD"
+   SchDayWedRef = "OfficeReceptacleWD"
+   SchDayThuRef = "OfficeReceptacleWD"
+   SchDayFriRef = "OfficeReceptacleWD"
+   SchDaySatRef = "OfficeReceptacleSat"
+   SchDayHolRef = "OfficeReceptacleSun"
+   SchDayClgDDRef = "OnDay"
+   SchDayHtgDDRef = "OffDay"
+   ..
+
+SchDay   "OfficeReceptacleSun"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05, 0.05 )
+   ..
+
+SchDay   "OfficeReceptacleWD"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.3, 0.9, 0.9, 0.9, 
+          0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.5, 0.3, 0.3, 0.2, 0.2, 0.1, 
+          0.05 )
+   ..
+
+SchDay   "OfficeReceptacleSat"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.3, 0.3, 0.3, 
+          0.3, 0.15, 0.15, 0.15, 0.15, 0.15, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05 )
+   ..
+
+Sch   "Office ServiceHotWater"  
+   Type = "Fraction"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeServiceHotWaterWk"
+   ..
+
+SchWeek   "OfficeServiceHotWaterWk"  
+   Type = "Fraction"
+   SchDaySunRef = "OfficeServiceHotWaterSun"
+   SchDayMonRef = "OfficeServiceHotWaterWD"
+   SchDayTueRef = "OfficeServiceHotWaterWD"
+   SchDayWedRef = "OfficeServiceHotWaterWD"
+   SchDayThuRef = "OfficeServiceHotWaterWD"
+   SchDayFriRef = "OfficeServiceHotWaterWD"
+   SchDaySatRef = "OfficeServiceHotWaterSat"
+   SchDayHolRef = "OfficeServiceHotWaterSun"
+   SchDayClgDDRef = "OnDay"
+   SchDayHtgDDRef = "OffDay"
+   ..
+
+SchDay   "OfficeServiceHotWaterSun"  
+   Type = "Fraction"
+   Hr = ( 0.04, 0.04, 0.04, 0.04, 0.04, 0.07, 0.04, 0.04, 0.04, 0.04, 
+          0.04, 0.06, 0.06, 0.09, 0.06, 0.04, 0.04, 0.04, 0.04, 0.04, 
+          0.04, 0.07, 0.04, 0.04 )
+   ..
+
+SchDay   "OfficeServiceHotWaterWD"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.08, 0.07, 0.19, 0.35, 0.38, 
+          0.39, 0.47, 0.57, 0.54, 0.34, 0.33, 0.44, 0.26, 0.21, 0.15, 
+          0.17, 0.08, 0.05, 0.05 )
+   ..
+
+SchDay   "OfficeServiceHotWaterSat"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.08, 0.07, 0.11, 0.15, 0.21, 
+          0.19, 0.23, 0.2, 0.19, 0.15, 0.12, 0.14, 0.07, 0.07, 0.07, 
+          0.07, 0.09, 0.05, 0.05 )
+   ..
+
+Sch   "Office Elevator"  
+   Type = "Fraction"
+   SchWeekRef[1] = "OfficeElevatorWk"
+   ..
+
+SchWeek   "OfficeElevatorWk"  
+   Type = "Fraction"
+   SchDayWDRef = "OfficeElevatorWD"
+   SchDaySunRef = "OfficeElevatorSun"
+   SchDaySatRef = "OfficeElevatorSat"
+   ..
+
+SchDay   "OfficeElevatorWD"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0.35, 0.69, 0.43, 0.37, 0.43, 0.58, 0.48, 
+          0.37, 0.37, 0.46, 0.62, 0.2, 0.12, 0.04, 0.04, 0, 0 )
+   ..
+
+SchDay   "OfficeElevatorSat"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0.16, 0.14, 0.21, 0.18, 0.25, 0.21, 0.13, 
+          0.08, 0.04, 0.05, 0.06, 0, 0, 0, 0, 0, 0 )
+   ..
+
+SchDay   "OfficeElevatorSun"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0, 0, 0 )
+   ..
+
+Sch   "Office Lights"  
+   Type = "Fraction"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeLightsWk"
+   ..
+
+SchWeek   "OfficeLightsWk"  
+   Type = "Fraction"
+   SchDaySunRef = "OfficeLightsSun"
+   SchDayMonRef = "OfficeLightsWD"
+   SchDayTueRef = "OfficeLightsWD"
+   SchDayWedRef = "OfficeLightsWD"
+   SchDayThuRef = "OfficeLightsWD"
+   SchDayFriRef = "OfficeLightsWD"
+   SchDaySatRef = "OfficeLightsSat"
+   SchDayHolRef = "OfficeLightsSun"
+   SchDayClgDDRef = "OnDay"
+   SchDayHtgDDRef = "OffDay"
+   ..
+
+SchDay   "OfficeLightsSun"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05, 0.05 )
+   ..
+
+SchDay   "OfficeLightsWD"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.3, 0.65, 0.65, 0.65, 
+          0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 0.35, 0.3, 0.3, 0.2, 0.2, 
+          0.1, 0.05 )
+   ..
+
+SchDay   "OfficeLightsSat"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.3, 0.3, 0.3, 
+          0.3, 0.15, 0.15, 0.15, 0.15, 0.15, 0.05, 0.05, 0.05, 0.05, 
+          0.05, 0.05, 0.05 )
+   ..
+
+Sch   "Assembly Lights"  
+   Type = "Fraction"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "AssemblyLightsWk"
+   ..
+
+SchWeek   "AssemblyLightsWk"  
+   Type = "Fraction"
+   SchDaySunRef = "AssemblyLightsSun"
+   SchDayMonRef = "AssemblyLightsWD"
+   SchDayTueRef = "AssemblyLightsWD"
+   SchDayWedRef = "AssemblyLightsWD"
+   SchDayThuRef = "AssemblyLightsWD"
+   SchDayFriRef = "AssemblyLightsWD"
+   SchDaySatRef = "AssemblyLightsSat"
+   SchDayHolRef = "AssemblyLightsSun"
+   SchDayClgDDRef = "OnDay"
+   SchDayHtgDDRef = "OffDay"
+   ..
+
+SchDay   "OnDay"  
+   Type = "Fraction"
+   Hr = ( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+          1, 1, 1 )
+   ..
+
+SchDay   "OffDay"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0, 0, 0 )
+   ..
+
+SchDay   "AssemblyLightsSun"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.3, 0.3, 0.3, 0.3, 
+          0.3, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 
+          0.55, 0.05, 0.05 )
+   ..
+
+SchDay   "AssemblyLightsWD"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.35, 0.35, 0.35, 0.65, 
+          0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65, 
+          0.65, 0.65, 0.25, 0.05 )
+   ..
+
+SchDay   "AssemblyLightsSat"  
+   Type = "Fraction"
+   Hr = ( 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.3, 0.3, 0.4, 0.4, 
+          0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 
+          0.05 )
+   ..
+
+Sch   "Office ClgSetPt"  
+   Type = "Temperature"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeClgSetPtWk"
+   ..
+
+SchWeek   "OfficeClgSetPtWk"  
+   Type = "Temperature"
+   SchDaySunRef = "OfficeClgSetPtSun"
+   SchDayMonRef = "OfficeClgSetPtWD"
+   SchDayTueRef = "OfficeClgSetPtWD"
+   SchDayWedRef = "OfficeClgSetPtWD"
+   SchDayThuRef = "OfficeClgSetPtWD"
+   SchDayFriRef = "OfficeClgSetPtWD"
+   SchDaySatRef = "OfficeClgSetPtSat"
+   SchDayHolRef = "OfficeClgSetPtSun"
+   SchDayClgDDRef = "OfficeClgSetPtWD"
+   SchDayHtgDDRef = "OfficeClgSetPtWD"
+   ..
+
+SchDay   "OfficeClgSetPtSun"  
+   Type = "Temperature"
+   Hr = ( 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 85, 
+          85, 85, 85, 85, 85, 85, 85, 85 )
+   ..
+
+SchDay   "OfficeClgSetPtWD"  
+   Type = "Temperature"
+   Hr = ( 85, 85, 85, 85, 85, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 
+          75, 75, 75, 75, 75, 75, 75, 75 )
+   ..
+
+SchDay   "OfficeClgSetPtSat"  
+   Type = "Temperature"
+   Hr = ( 85, 85, 85, 85, 85, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 
+          75, 75, 75, 85, 85, 85, 85, 85 )
+   ..
+
+Sch   "Office HtgSetPt"  
+   Type = "Temperature"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeHtgSetPtWk"
+   ..
+
+SchWeek   "OfficeHtgSetPtWk"  
+   Type = "Temperature"
+   SchDaySunRef = "OfficeHtgSetPtSun"
+   SchDayMonRef = "OfficeHtgSetPtWD"
+   SchDayTueRef = "OfficeHtgSetPtWD"
+   SchDayWedRef = "OfficeHtgSetPtWD"
+   SchDayThuRef = "OfficeHtgSetPtWD"
+   SchDayFriRef = "OfficeHtgSetPtWD"
+   SchDaySatRef = "OfficeHtgSetPtSat"
+   SchDayHolRef = "OfficeHtgSetPtSun"
+   SchDayClgDDRef = "OfficeHtgSetPtWD"
+   SchDayHtgDDRef = "OfficeHtgSetPtWD"
+   ..
+
+SchDay   "OfficeHtgSetPtSun"  
+   Type = "Temperature"
+   Hr = ( 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 
+          60, 60, 60, 60, 60, 60, 60, 60 )
+   ..
+
+SchDay   "OfficeHtgSetPtWD"  
+   Type = "Temperature"
+   Hr = ( 60, 60, 60, 60, 60, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 
+          70, 70, 70, 70, 70, 70, 70, 70 )
+   ..
+
+SchDay   "OfficeHtgSetPtSat"  
+   Type = "Temperature"
+   Hr = ( 60, 60, 60, 60, 60, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 
+          70, 70, 70, 60, 60, 60, 60, 60 )
+   ..
+
+Sch   "OpqShdgTrans Sch"  
+   Type = "Fraction"
+   SchWeekRef[1] = "OpqShdgTrans Week"
+   ..
+
+SchWeek   "OpqShdgTrans Week"  
+   Type = "Fraction"
+   SchDayWDRef = "OpqShdgTrans ALL"
+   SchDaySunRef = "OpqShdgTrans ALL"
+   SchDaySatRef = "OpqShdgTrans ALL"
+   ..
+
+SchDay   "OpqShdgTrans ALL"  
+   Type = "Fraction"
+   Hr = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+          0, 0, 0 )
+   ..
+
+Sch   "Office WtrHtrSetPt"  
+   Type = "Temperature"
+   EndMonth[1] = 12
+   EndDay[1] = 31
+   SchWeekRef[1] = "OfficeWtrHtrSetPtWk"
+   ..
+
+SchWeek   "OfficeWtrHtrSetPtWk"  
+   Type = "Temperature"
+   SchDaySunRef = "OfficeWtrHtrSetPtSun"
+   SchDayMonRef = "OfficeWtrHtrSetPtWD"
+   SchDayTueRef = "OfficeWtrHtrSetPtWD"
+   SchDayWedRef = "OfficeWtrHtrSetPtWD"
+   SchDayThuRef = "OfficeWtrHtrSetPtWD"
+   SchDayFriRef = "OfficeWtrHtrSetPtWD"
+   SchDaySatRef = "OfficeWtrHtrSetPtSat"
+   SchDayHolRef = "OfficeWtrHtrSetPtSun"
+   SchDayClgDDRef = "OfficeWtrHtrSetPtWD"
+   SchDayHtgDDRef = "OfficeWtrHtrSetPtWD"
+   ..
+
+SchDay   "OfficeWtrHtrSetPtSun"  
+   Type = "Temperature"
+   Hr = ( 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 
+          135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135 )
+   ..
+
+SchDay   "OfficeWtrHtrSetPtWD"  
+   Type = "Temperature"
+   Hr = ( 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 
+          135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135 )
+   ..
+
+SchDay   "OfficeWtrHtrSetPtSat"  
+   Type = "Temperature"
+   Hr = ( 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 
+          135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135 )
+   ..
+
+Bldg   "Small Office"  
+   FuncClassMthd = "AreaCategoryMethod"
+   TotStoryCnt = 1
+   AboveGrdStoryCnt = 1
+   ..
+
+Story   "Building Story 1"  
+   Z = 0
+   FlrToFlrHgt = 10.7
+   FlrToCeilingHgt = 10
+   ..
+
+Spc   "Perimeter_ZN_1"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_1 Thermal Zone"
+   Area = 1221.17
+   SpcFunc = "Office (Greater than 250 square feet in floor area)"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupply1"
+   ..
+
+IntWall   "Perimeter_ZN_1_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 232.144
+   ..
+
+IntWall   "Perimeter_ZN_1_wall_north"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 580.764
+   ..
+
+UndgrFlr   "Perimeter_ZN_1_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 1221.17
+   ..
+
+ExtWall   "Perimeter_ZN_1_wall_south"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU062"
+   Area = 909.065
+   Az = 180
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_door"  
+   FenConsRef = "Glazed Door"
+   Area = 42
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_5"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_6"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_1_wall_south_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Spc   "Perimeter_ZN_2"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_2 Thermal Zone"
+   Area = 724.411
+   SpcFunc = "Office (Greater than 250 square feet in floor area)"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupply1"
+   ..
+
+ExtWall   "Perimeter_ZN_2_wall_east"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU062"
+   Area = 606.043
+   Az = 90
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_2_wall_east_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+UndgrFlr   "Perimeter_ZN_2_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 724.411
+   ..
+
+Spc   "Perimeter_ZN_3"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_3 Thermal Zone"
+   Area = 1221.17
+   SpcFunc = "Office (Greater than 250 square feet in floor area)"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupply1"
+   ..
+
+UndgrFlr   "Perimeter_ZN_3_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 1221.17
+   ..
+
+ExtWall   "Perimeter_ZN_3_wall_north"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU062"
+   Area = 909.065
+   Az = 0
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_5"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_6"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_3_wall_north_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+IntWall   "Perimeter_ZN_3_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 232.144
+   ..
+
+IntWall   "Perimeter_ZN_3_wall_south"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 580.764
+   ..
+
+Spc   "Perimeter_ZN_4"  
+   TreeState = 254
+   ThrmlZnRef = "Perimeter_ZN_4 Thermal Zone"
+   Area = 724.411
+   SpcFunc = "Office (Greater than 250 square feet in floor area)"
+   SecSide100PctControlled = 1
+   SHWFluidSegRef = "SHWSupply1"
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_south"  
+   AdjacentSpcRef = "Perimeter_ZN_1"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 232.144
+   ..
+
+ExtWall   "Perimeter_ZN_4_wall_west"  
+   ConsAssmRef = "Base_CZ12-NonresMetalFrameWallU062"
+   Area = 606.043
+   Az = 270
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_1"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_2"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_4"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+Win   "Perimeter_ZN_4_wall_west_Window_3"  
+   FenConsRef = "Base_AllCZ_FixedWindowU36"
+   Area = 30
+   ..
+
+UndgrFlr   "Perimeter_ZN_4_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 724.411
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_east"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 277.742
+   ..
+
+IntWall   "Perimeter_ZN_4_wall_north"  
+   AdjacentSpcRef = "Perimeter_ZN_3"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 232.144
+   ..
+
+Spc   "Core_ZN"  
+   TreeState = 254
+   ThrmlZnRef = "Core_ZN Thermal Zone"
+   Area = 1610.9
+   SpcFunc = "Office (Greater than 250 square feet in floor area)"
+   CommRfrgEPD = 0
+   SHWFluidSegRef = "SHWSupply1"
+   ..
+
+UndgrFlr   "Core_ZN_floor"  
+   ConsAssmRef = "Base_CZ12-SlabOnOrBelowGradeF073"
+   Area = 1610.9
+   ..
+
+IntWall   "Core_ZN_wall_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Interior Wall"
+   Area = 277.742
+   ..
+
+Spc   "Attic"  
+   TreeState = 254
+   CondgType = "IndirectlyConditioned"
+   ThrmlZnRef = "Attic Thermal Zone"
+   Area = 6113.67
+   SpcFunc = "Unoccupied-Exclude from Gross Floor Area"
+   ..
+
+Roof   "Attic_roof_north"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   Area = 2126.03
+   Az = 0
+   Tilt = 18.4524
+   ..
+
+IntFlr   "Attic_floor_core"  
+   AdjacentSpcRef = "Core_ZN"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1610.9
+   ..
+
+Roof   "Attic_roof_west"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   Area = 1096.48
+   Az = 270
+   Tilt = 18.4523
+   ..
+
+ExtFlr   "Attic_soffit_north"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   Area = 182.706
+   ..
+
+IntFlr   "Attic_floor_perimeter_east"  
+   AdjacentSpcRef = "Perimeter_ZN_2"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 724.411
+   ..
+
+IntFlr   "Attic_floor_perimeter_west"  
+   AdjacentSpcRef = "Perimeter_ZN_4"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 724.411
+   ..
+
+Roof   "Attic_roof_east"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   Area = 1096.48
+   Az = 90
+   Tilt = 18.4523
+   ..
+
+IntFlr   "Attic_floor_perimeter_south"  
+   AdjacentSpcRef = "Perimeter_ZN_1"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1221.17
+   ..
+
+IntFlr   "Attic_floor_perimeter_north"  
+   AdjacentSpcRef = "Perimeter_ZN_3"
+   ConsAssmRef = "NACM_Drop Ceiling"
+   Area = 1221.17
+   ..
+
+ExtFlr   "Attic_soffit_east"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   Area = 123.096
+   ..
+
+ExtFlr   "Attic_soffit_west"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   Area = 123.096
+   ..
+
+ExtFlr   "Attic_soffit_south"  
+   ConsAssmRef = "Base_CZ12-NonresOtherFloorU071"
+   Area = 182.706
+   ..
+
+Roof   "Attic_roof_south"  
+   ConsAssmRef = "Base_CZ12-SteepNonresWoodFramingAndOtherRoofU034"
+   Area = 2126.03
+   Az = 180
+   Tilt = 18.4523
+   ..
+
+ThrmlZn   "Attic Thermal Zone"  
+   Type = "Unconditioned"
+   ..
+
+ThrmlZn   "Core_ZN Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef = "CoreZnPSZ AirSys"
+   ClgTstatSchRef = "Office ClgSetPt"
+   HtgTstatSchRef = "Office HtgSetPt"
+   ..
+
+ThrmlZn   "Perimeter_ZN_1 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef = "Perim1ZnPSZ AirSys"
+   ClgTstatSchRef = "Office ClgSetPt"
+   HtgTstatSchRef = "Office HtgSetPt"
+   ..
+
+ThrmlZn   "Perimeter_ZN_2 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef = "Perim2ZnPSZ AirSys"
+   ClgTstatSchRef = "Office ClgSetPt"
+   HtgTstatSchRef = "Office HtgSetPt"
+   ..
+
+ThrmlZn   "Perimeter_ZN_3 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef = "Perim3ZnPSZ AirSys"
+   ClgTstatSchRef = "Office ClgSetPt"
+   HtgTstatSchRef = "Office HtgSetPt"
+   ..
+
+ThrmlZn   "Perimeter_ZN_4 Thermal Zone"  
+   Type = "Conditioned"
+   PriAirCondgSysRef = "Perim4ZnPSZ AirSys"
+   ClgTstatSchRef = "Office ClgSetPt"
+   HtgTstatSchRef = "Office HtgSetPt"
+   ..
+
+AirSys   "CoreZnPSZ AirSys"  
+   Type = "SZAC"
+   CtrlZnRef = "Core_ZN Thermal Zone"
+   DuctLctn = "Conditioned"
+   ..
+
+AirSeg   "CoreZnSysSupply AirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "CoreZnCoolingCoil"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   CapTotNetRtd = 32230.7
+   DXSEER = 13
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "CoreZnHeatingCoil"  
+   Type = "Furnace"
+   FuelSrc = "Gas"
+   CapTotGrossRtd = 47296.5
+   FurnAFUE = 0.78
+   ..
+
+Fan   "CoreZnSupplyFan"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 1159.39
+   FlowEff = 0.5
+   TotStaticPress = 2.5
+   MtrHP = 1
+   MtrEff = 0.855
+   ..
+
+AirSeg   "CoreZnSysReturnAirSeg"  
+   Type = "Return"
+   Path = "Ducted"
+   ..
+
+TrmlUnit   "CoreZn TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Core_ZN Thermal Zone"
+   PriAirSegRef = "CoreZnSysSupply AirSeg"
+   ..
+
+OACtrl   "CoreZnOAControl"  
+   AirSegSupRef = "CoreZnSysSupply AirSeg"
+   AirSegRetRef = "CoreZnSysReturnAirSeg"
+   ..
+
+AirSys   "Perim1ZnPSZ AirSys"  
+   Type = "SZAC"
+   CtrlZnRef = "Perimeter_ZN_1 Thermal Zone"
+   DuctLctn = "Conditioned"
+   ..
+
+AirSeg   "Perim1ZnSysSupply AirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "Perim1ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   CapTotNetRtd = 31193.6
+   DXSEER = 13
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "Perim1ZnHeatingCoil"  
+   Type = "Furnace"
+   FuelSrc = "Gas"
+   CapTotGrossRtd = 43451.7
+   FurnAFUE = 0.78
+   ..
+
+Fan   "Perim1ZnSupplyFan"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 1122.08
+   FlowEff = 0.5
+   TotStaticPress = 2.5
+   MtrHP = 1
+   MtrEff = 0.855
+   ..
+
+TrmlUnit   "Perim1 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_1 Thermal Zone"
+   PriAirSegRef = "Perim1ZnSysSupply AirSeg"
+   ..
+
+AirSeg   "Perim1ZnSysReturn AirSeg"  
+   Type = "Return"
+   Path = "Ducted"
+   ..
+
+OACtrl   "Perime1OAControl"  
+   EconoIntegration = "Integrated"
+   AirSegSupRef = "Perim1ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim1ZnSysReturn AirSeg"
+   ..
+
+AirSys   "Perim2ZnPSZ AirSys"  
+   Type = "SZAC"
+   CtrlZnRef = "Perimeter_ZN_2 Thermal Zone"
+   DuctLctn = "Conditioned"
+   ..
+
+AirSeg   "Perim2ZnSysSupply AirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "Perim2ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   CapTotNetRtd = 19056
+   DXSEER = 13
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "Perim2ZnHeatingCoil"  
+   Type = "Furnace"
+   FuelSrc = "Gas"
+   CapTotGrossRtd = 25713.7
+   FurnAFUE = 0.78
+   ..
+
+Fan   "Perim2ZnSupplyFan"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 663.548
+   FlowEff = 0.5
+   TotStaticPress = 2.5
+   MtrHP = 0.75
+   MtrEff = 0.855
+   ..
+
+AirSeg   "Perim2ZnSysReturnAirSeg"  
+   Type = "Return"
+   Path = "Direct"
+   ..
+
+TrmlUnit   "Perim2 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_2 Thermal Zone"
+   PriAirSegRef = "Perim2ZnSysSupply AirSeg"
+   ..
+
+OACtrl   "Perim2OAControl"  
+   AirSegSupRef = "Perim2ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim2ZnSysReturnAirSeg"
+   ..
+
+AirSys   "Perim3ZnPSZ AirSys"  
+   Type = "SZAC"
+   CtrlZnRef = "Perimeter_ZN_3 Thermal Zone"
+   DuctLctn = "Conditioned"
+   ..
+
+AirSeg   "Perim3ZnSysSupply AirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "Perim3ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   CapTotNetRtd = 31587.8
+   DXSEER = 13
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "Perim3ZnHeatingCoil"  
+   Type = "Furnace"
+   FuelSrc = "Gas"
+   CapTotGrossRtd = 37781
+   FurnAFUE = 0.78
+   ..
+
+Fan   "Perim3ZnSupplyFan"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 936.76
+   FlowEff = 0.5
+   TotStaticPress = 2.5
+   MtrHP = 0.75
+   MtrEff = 0.855
+   ..
+
+AirSeg   "Perim3ZnSysReturn AirSeg"  
+   Type = "Return"
+   Path = "Ducted"
+   ..
+
+TrmlUnit   "Perim3 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_3 Thermal Zone"
+   PriAirSegRef = "Perim3ZnSysSupply AirSeg"
+   ..
+
+OACtrl   "Perim3 OAControl"  
+   AirSegSupRef = "Perim3ZnSysSupply AirSeg"
+   AirSegRetRef = "Perim3ZnSysReturn AirSeg"
+   ..
+
+AirSys   "Perim4ZnPSZ AirSys"  
+   Type = "SZAC"
+   CtrlZnRef = "Perimeter_ZN_4 Thermal Zone"
+   DuctLctn = "Conditioned"
+   ..
+
+AirSeg   "Perim4ZnSysSupplyAirSeg"  
+   Type = "Supply"
+   Path = "Ducted"
+   ..
+
+CoilClg   "Perim4ZnCoolingCoil"  
+   Type = "DirectExpansion"
+   FuelSrc = "Electric"
+   CapTotNetRtd = 23100
+   DXSEER = 13
+   CndsrType = "Air"
+   ..
+
+CoilHtg   "Perim4ZnHeatingCoil"  
+   Type = "Furnace"
+   FuelSrc = "Gas"
+   CapTotGrossRtd = 28547.7
+   FurnAFUE = 0.78
+   ..
+
+Fan   "Perim4ZnSupplyFan"  
+   CtrlMthd = "ConstantVolume"
+   ModelingMthd = "StaticPressure"
+   FlowCap = 756.651
+   FlowEff = 0.5
+   TotStaticPress = 2.5
+   MtrHP = 0.75
+   MtrEff = 0.855
+   ..
+
+AirSeg   "Perim4ZnSysReturnAirSeg"  
+   Type = "Return"
+   Path = "Ducted"
+   ..
+
+TrmlUnit   "Perim4 TU"  
+   Type = "Uncontrolled"
+   ZnServedRef = "Perimeter_ZN_4 Thermal Zone"
+   PriAirSegRef = "Perim4ZnSysSupplyAirSeg"
+   ..
+
+OACtrl   "Perim4 OAControl"  
+   AirSegSupRef = "Perim4ZnSysSupplyAirSeg"
+   AirSegRetRef = "Perim4ZnSysReturnAirSeg"
+   ..
+
+FluidSys   "SHWFluidSys1"  
+   Type = "ServiceHotWater"
+   ..
+
+WtrHtr   "WaterHeater1"  
+   FluidSegOutRef = "SHWSupply1"
+   FluidSegMakeupRef = "SHWMakeup1"
+   StorCap = 2.32
+   EF = 0.672
+   RE = 0.8
+   CapRtd = 2341.8
+   ..
+
+FluidSeg   "SHWSupply1"  
+   Type = "PrimarySupply"
+   ..
+
+FluidSeg   "SHWMakeup1"  
+   Type = "MakeupFluid"
+   Src = "MunicipalWater"
+   ..
+
+CrvQuad   "WtHtrStorFIRRatio_fQRatio"  
+   Coef1 = 0.021826
+   Coef2 = 0.97763
+   Coef3 = 0.000543
+   MaxOut = 1
+   MaxVar1 = 1
+   MinOut = 0.1
+   MinVar1 = 0.1
+   ..
+
+Lum   "4x2 T-8 Recessed"  
+   Pwr = 64
+   ..
+
+EUseSummary   "EUseSummary"  
+   Title1[2] = "Proposed"
+   Title1[3] = "Proposed"
+   Title1[4] = "Proposed"
+   Title1[5] = "Standard"
+   Title1[6] = "Standard"
+   Title1[7] = "Standard"
+   Title1[8] = "Compliance"
+   Title2[2] = "Design"
+   Title2[3] = "Design"
+   Title2[4] = "Design TDV"
+   Title2[5] = "Design"
+   Title2[6] = "Design"
+   Title2[7] = "Design TDV"
+   Title2[8] = "TDV Margin"
+   Title3[1] = "End Use"
+   Title3[2] = "Site (MWh)"
+   Title3[3] = "Site (MBtu)"
+   Title3[4] = "(kBtu/ft²-yr)"
+   Title3[5] = "Site (MWh)"
+   Title3[6] = "Site (MBtu)"
+   Title3[7] = "(kBtu/ft²-yr)"
+   Title3[8] = "(kBtu/ft²-yr)"
+   Enduse1[1] = "Space Heating"
+   Enduse1[2] = "--"
+   Enduse1[3] = "23.8"
+   Enduse1[4] = "7.31"
+   Enduse1[5] = "--"
+   Enduse1[6] = "23.8"
+   Enduse1[7] = "7.31"
+   Enduse1[8] = "--"
+   Enduse2[1] = "Space Cooling"
+   Enduse2[2] = "9.9"
+   Enduse2[3] = "--"
+   Enduse2[4] = "72.50"
+   Enduse2[5] = "9.9"
+   Enduse2[6] = "--"
+   Enduse2[7] = "72.50"
+   Enduse2[8] = "--"
+   Enduse3[1] = "Indoor Fans"
+   Enduse3[2] = "20.1"
+   Enduse3[3] = "--"
+   Enduse3[4] = "81.49"
+   Enduse3[5] = "20.1"
+   Enduse3[6] = "--"
+   Enduse3[7] = "81.49"
+   Enduse3[8] = "--"
+   Enduse4[1] = "Heat Rejection"
+   Enduse4[2] = "--"
+   Enduse4[3] = "--"
+   Enduse4[4] = "--"
+   Enduse4[5] = "--"
+   Enduse4[6] = "--"
+   Enduse4[7] = "--"
+   Enduse4[8] = "--"
+   Enduse5[1] = "Pumps & Misc."
+   Enduse5[2] = "--"
+   Enduse5[3] = "--"
+   Enduse5[4] = "--"
+   Enduse5[5] = "--"
+   Enduse5[6] = "--"
+   Enduse5[7] = "--"
+   Enduse5[8] = "--"
+   Enduse6[1] = "Domestic Hot Water"
+   Enduse6[2] = "--"
+   Enduse6[3] = "25.6"
+   Enduse6[4] = "6.65"
+   Enduse6[5] = "--"
+   Enduse6[6] = "25.4"
+   Enduse6[7] = "6.60"
+   Enduse6[8] = "-0.05"
+   Enduse7[1] = "Indoor Lighting"
+   Enduse7[2] = "9.3"
+   Enduse7[3] = "--"
+   Enduse7[4] = "41.38"
+   Enduse7[5] = "9.3"
+   Enduse7[6] = "--"
+   Enduse7[7] = "41.38"
+   Enduse7[8] = "--"
+   Enduse8[1] = "COMPLIANCE TOTAL"
+   Enduse8[2] = "39.3"
+   Enduse8[3] = "49.4"
+   Enduse8[4] = "209.33"
+   Enduse8[5] = "39.3"
+   Enduse8[6] = "49.2"
+   Enduse8[7] = "209.28"
+   Enduse8[8] = "-0.05"
+   Enduse9[1] = "Receptacle"
+   Enduse9[2] = "23.6"
+   Enduse9[3] = "--"
+   Enduse9[4] = "106.83"
+   Enduse9[5] = "23.6"
+   Enduse9[6] = "--"
+   Enduse9[7] = "106.83"
+   Enduse10[1] = "Process"
+   Enduse10[2] = "--"
+   Enduse10[3] = "--"
+   Enduse10[4] = "--"
+   Enduse10[5] = "--"
+   Enduse10[6] = "--"
+   Enduse10[7] = "--"
+   Enduse11[1] = "Other Ltg"
+   Enduse11[2] = "--"
+   Enduse11[3] = "--"
+   Enduse11[4] = "--"
+   Enduse11[5] = "--"
+   Enduse11[6] = "--"
+   Enduse11[7] = "--"
+   Enduse12[1] = "TOTAL"
+   Enduse12[2] = "62.9"
+   Enduse12[3] = "49.4"
+   Enduse12[4] = "316.16"
+   Enduse12[5] = "62.9"
+   Enduse12[6] = "49.2"
+   Enduse12[7] = "316.11"
+   ZoneUMLHsLoaded = ( 1, 1 )
+   ZoneUMLHs = ( 
+                 "clg: 0  htg: 0  'Attic Thermal Zone'
+clg: 0  htg: 0  'Core_ZN Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_4 Thermal Zone'", 
+                 "clg: 0  htg: 0  'Attic Thermal Zone'
+clg: 0  htg: 0  'Core_ZN Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_1 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_2 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_3 Thermal Zone'
+clg: 0  htg: 0  'Perimeter_ZN_4 Thermal Zone'" )
+   SimSummary[1] = "Successful (106 warnings)"
+   SimSummary[3] = "Successful (106 warnings)"
+   PassFail = "FAIL"
+   PctSavingsTDV = -0.0158173
+   PctSavingsCmpTDV = -0.0238914
+   PctSavTDVLbl = "-0.0"
+   PctSavCmpTDVLbl = "-0.0"
+   ..
+
+
+END_OF_FILE

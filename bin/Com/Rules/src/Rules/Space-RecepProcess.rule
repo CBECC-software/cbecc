@@ -1,0 +1,1290 @@
+// Space Use - Receptacles and Process Loads
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+//
+// According to 5.4.5 and 5.4.8 ACM Draft October 2012, items:  
+//     Receptacle Power
+//     Receptacle Schedule
+//     Process Gas Power
+//     Process Gas Schedule
+//
+// 
+// The main objects in the SDD are:
+//     Project:Building:BuildingStory:Space
+//     SpaceUseDefaults
+
+// --------------  Receptacle Power Density Exceptional Condition --------------------
+RULE Spc:RecptPwrExcptCond
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "Used when the baseline receptacle power density is different than the proposed."
+  HELP
+    ""  
+  INPUTCLASS
+    Optional
+  DEFAULT
+    1
+  SIZING
+    u:RecptPwrExcptCond
+  ANNUAL
+    z:RecptPwrExcptCond
+ENDRULE
+
+// -------------- Gas Equipmrnet Power Density Exceptional Condition --------------------
+RULE Spc:GasEqpPwrDensExcptCond
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "Used when the baseline gas equipment power density is different than the proposed."
+  HELP
+    ""  
+  INPUTCLASS
+    Optional
+  DEFAULT
+    1
+  SIZING
+    u:GasEqpPwrDensExcptCond
+  ANNUAL
+    z:GasEqpPwrDensExcptCond
+ENDRULE
+
+// -------------- Baseline Receptacle Power Density --------------------
+RULE Spc:BaseRecptPwrDens
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The use of baseline electrical devices represented by a receptacle power density 
+     (W/ft2) and associated with the occupancy type selected from the  Area 
+     Category Method or Complete Building Method in ACM Appendix 5.4A."
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    0.2
+  COMMONMAXIMUM
+    40.0
+  MAXIMUM 
+    500
+  UNITS 
+    W per ft2
+  DEFAULT
+    if( RecptPwrExcptCond = 0 )
+    then
+      if( HasNoInternalLds )
+      then UNDEFINED
+      else SpaceFunctionData:RecptPwrDens("FuncType",SpcFunc)
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( u:BaseRecptPwrDens = 0 .OR.
+        LocalStatus(u:BaseRecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( RecptPwrExcptCond = 0 )
+      then u:BaseRecptPwrDens
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseRecptPwrDens
+ENDRULE
+
+
+// -------------- Receptacle Power Density --------------------
+RULE Spc:RecptPwrDens
+  DESCRIPTION
+    "The use of electrical devices represented by a receptacle power density 
+     (W/ft2) and associated with the occupancy type selected from the  Area 
+     Category Method or Complete Building Method in ACM Appendix 5.4A."
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    0.2
+  COMMONMAXIMUM
+    40.0
+  MAXIMUM 
+    500
+  UNITS 
+    W per ft2
+  DEFAULT : S901G ECBC
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) ) 
+    then SpcFuncDefaultsRef:RecptPwrDens
+    else SpaceFunctionData:RecptPwrDens("FuncType",SpcFunc)
+    endif endif
+  DEFAULT
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:RecptPwrDens
+    else if( SpcFunc = "Computer Room" )
+    then 20 // 20 W/ft2 is Standard's definition for 'Computer Room'
+    else SpaceFunctionData:RecptPwrDens("FuncType",SpcFunc)
+    endif endif endif
+  CHECKCODE : T24N
+    // Data Centers or Computer Rooms must have a RecptPwrDens of 20 w/ft2 or 
+    // more.  If not, then send a message to the user.  
+    if( SpcFunc = "Computer Room" .AND. IfValidAnd( RecptPwrDens < 20 ) )
+    then 
+      PostWarning("Space '%s' is a 'Computer Room. For compliance analysis,
+                   the receptacle power will be increased to 20 W/ft2, per the
+                   Standards definition. If the design receptacle load is not
+                   a 'Computer Room', assign a different space function.",
+                   Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( HasNoInternalLds )
+      then UNDEFINED
+      else u:RecptPwrDens
+      endif
+    endif
+  SIZING_PROPOSED
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else if( SpcFunc = "Computer Room" )
+    then Max( ValidOr( u:RecptPwrDens, 0 ), 20 )
+    else SpaceFunctionData:RecptPwrDens("FuncType",SpcFunc)
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+      else
+      if( RecptPwrExcptCond = 0 )
+      then z:BaseRecptPwrDens
+      else zp:RecptPwrDens
+      endif
+    endif
+  SIZING_BASELINE
+    zp:RecptPwrDens
+  ANNUAL
+    z:RecptPwrDens
+ENDRULE
+
+
+//   Certain Space Types have special requirements.  This table provides 
+//      criteria to determine whether a space is one of those space types. 
+;TABLE ProcSpcCrit
+;    FuncType         MinRecptPwrDens    UserRecptPwrDens    MinExhRate
+; //                  W/ft²              Use user value?     cfm/ft²
+;    "Data Center"    20                 1                   -1  
+;    "Computer Room"  20                 1                   -1
+;    Kitchen          -1                 -1                  0.5
+;    Laboratory       -1                 -1                  0.75
+;    *                -1                 -1                  -1
+;ENDTABLE
+
+
+
+// -------------- Receptacle Radiation Fraction --------------------
+RULE Spc:RecptRadFrac
+  DESCRIPTION
+    "The fraction of radiant heat gain to a space based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0.20
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(RecptPwrDens) = 0 )
+      then UNDEFINED
+      else 0.20
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0.20
+    endif
+  SIZING_BASELINE
+    zp:RecptRadFrac
+  ANNUAL
+    z:RecptRadFrac
+ENDRULE
+
+
+// -------------- Receptacle Latant Fraction --------------------
+RULE Spc:RecptLatFrac
+  DESCRIPTION
+    "The fraction of latent heat gain to a space based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(RecptPwrDens) = 0 )
+      then UNDEFINED
+      else 0
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:RecptLatFrac
+  ANNUAL
+    z:RecptLatFrac
+ENDRULE
+
+
+// -------------- Receptacle lost Fraction --------------------
+RULE Spc:RecptLostFrac
+  DESCRIPTION
+    "The fraction of heat lost to the exterior based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  CHECKSIM
+    if( Int( ValidOr( RecptRadFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( RecptLatFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( RecptLostFrac ,0 ) *100 )/100 > 1.0 )
+    then 
+      PostError("The sum of the receptacle radiant, latent, and lost fractions
+                 is greater than 1.0. Revise for consistency with this requirement.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(RecptPwrDens) = 0 )
+      then UNDEFINED
+      else 0
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(RecptPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:RecptLostFrac
+  ANNUAL
+    z:RecptLostFrac
+ENDRULE
+
+
+;// -------------- Laboratory Receptacle Use Type --------------------
+;RULE Spc:LabRecptUseType
+;  DESCRIPTION
+;    "For all Laboratory Spaces a Use Type is required to dermine the Receptacle
+;     Schedule.  'Low Use' is for equipment that is used only during weekdays.
+;     'Typical Use' is for equipment that is used 7 days a week but with peaks
+;     during the day and lows at night.  High Use is for equipment that is
+;     running at a high level all hours of the day, 7 days a week."  
+;  HELP
+;    ""  
+;  REFERENCE 
+;    ACM-5.4.6 Receptacle Loads
+;  INPUTCLASS
+;    Optional
+;  OPTION
+;    LowUse
+;    TypicalUse
+;    HighUse
+;  DEFAULT
+;    if( LocalStatus(RecptPwrDens) > 0
+;        .AND. (SpcFunc = "Laboratory, Equipment Room"
+;	.OR. SpcFunc = "Laboratory, Scientific") )
+;    then  "TypicalUse"
+;    else  UNDEFINED
+;    endif
+;  SIZING
+;    if( LocalStatus(u:RecptPwrDens) < 1 )
+;    then UNDEFINED    
+;    else if( u:SpcFunc = "Laboratory, Equipment Room"
+;            .OR. u:SpcFunc = "Laboratory, Scientific" )
+;    then u:LabRecptUseType
+;    else UNDEFINED
+;    endif endif
+;  ANNUAL
+;    z:LabRecptUseType
+;ENDRULE
+
+// -------------- Baseline Receptacle Schedule Reference --------------------
+RULE Spc:BaseRecptSchRef
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The use of baseline electrical devices represented by a a 24 hour schedule 
+     (fraction of density) associated with the occupancy type selected 
+     from the  Area Category Method or Complete Building Method in ACM
+     Appendix 5.4B."  
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+//  DEFAULT
+//    if( RecptPwrExcptCond = 0 )
+//    then RuleLibrary(Schedule,(SpaceFunctionGroups:RecptSchRef("FuncGroup",FuncSchGrp)))
+//    else UNDEFINED
+//    endif
+  SIZING
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( RecptPwrExcptCond = 0 )
+      then
+        if( (u:BaseRecptSchRef = "- none -" .OR.
+             LocalCompAssigned(u:BaseRecptSchRef) = 0) .AND.
+             IfValidAnd(u:RecptPwrDens > 0) )
+        then RuleLibrary(Schedule,(SpaceFunctionGroups:RecptSchRef("FuncGroup",u:FuncSchGrp)))
+        else 
+          if( (u:BaseRecptSchRef = "- none -" .OR.
+               LocalCompAssigned(u:BaseRecptSchRef) = 0) .AND.
+               LocalStatus(u:RecptPwrDens) = 0 )
+          then UNDEFINED
+          else u:BaseRecptSchRef
+ 	  endif
+        endif
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseRecptSchRef
+ENDRULE
+
+
+// -------------- Receptacle Schedule Reference --------------------
+RULE Spc:RecptSchRef
+  DESCRIPTION
+    "The use of electrical devices represented by a 24 hour schedule 
+     (fraction of density) associated with the occupancy type selected 
+     from the  Area Category Method or Complete Building Method in ACM
+     Appendix 5.4B."  
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS 
+    Prescribed
+  INPUTCLASS
+    Default
+  DEFAULT : S901G ECBC
+    if( LocalStatus(RecptPwrDens) = 0 .OR. 
+        RecptPwrDens = 0 ) 
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) ) 
+    then SpcFuncDefaultsRef:RecptSchRef
+    else u:RecptSchRef
+    endif endif
+  DEFAULT
+    if( LocalStatus(RecptPwrDens) = 0 ) 
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:RecptSchRef
+    else UNDEFINED
+    endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:RecptPwrDens = 0 .OR.
+        LocalStatus(u:RecptPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( (u:RecptSchRef = "- none -" .OR.
+           LocalCompAssigned(u:RecptSchRef) = 0) .AND.
+	   IfValidAnd(u:RecptPwrDens > 0) )
+      then RuleLibrary(Schedule,(SpaceFunctionGroups:RecptSchRef("FuncGroup",u:FuncSchGrp)))
+      else if( u:RecptSchRef != "- none -" .AND.
+	       IfValidAnd(u:RecptPwrDens > 0) )
+      then u:RecptSchRef
+      else if( (u:RecptSchRef = "- none -" .OR.
+                LocalCompAssigned(u:RecptSchRef) = 0) .AND.
+	        LocalStatus(u:RecptPwrDens) = 0 )
+      then UNDEFINED
+      else UNDEFINED
+      endif endif endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(RecptPwrDens) = 0 ) 
+    then UNDEFINED
+;    else if( LabRecptUseType = "HighUse" )
+;    then RuleLibrary(Schedule, "LabEquipmentHighUse")
+;    else if( LabRecptUseType = "TypicalUse" )
+;    then RuleLibrary(Schedule, "LabEquipmentTypicalUse")
+;    else if( LabRecptUseType = "LowUse" )
+;    then
+;      RuleLibrary(Schedule,(SpaceFunctionGroups:RecptSchRef("FuncGroup",FuncSchGrp)))
+    else
+      RuleLibrary(Schedule,(SpaceFunctionGroups:RecptSchRef("FuncGroup",FuncSchGrp)))
+    endif ; endif endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( RecptPwrExcptCond = 0 )
+    then zb:BaseRecptSchRef
+    else zp:RecptSchRef
+    endif
+  SIZING_BASELINE
+    zp:RecptSchRef   
+  ANNUAL
+    z:RecptSchRef
+ENDRULE
+
+// -------------- Baselin Gas Equipment Power Density --------------------
+RULE Spc:BaseGasEqpPwrDens
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The use of baseline gas devices represented by a gas equipment power density
+     (Btu/h-ft2) and associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4A."
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMINIMUM
+    0.2
+  COMMONMAXIMUM
+    20
+  MAXIMUM 
+    100
+  UNITS 
+    Btu per h ft2
+  DEFAULT
+    if( GasEqpPwrDensExcptCond = 0 )
+    then
+      if( HasNoInternalLds )
+      then UNDEFINED
+      else SpaceFunctionData:GasEqpPwrDens("FuncType",SpcFunc)
+      endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( u:BaseGasEqpPwrDens = 0 .OR.
+        LocalStatus(u:BaseGasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( GasEqpPwrDensExcptCond = 0 )
+      then u:BaseGasEqpPwrDens
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseGasEqpPwrDens
+ENDRULE
+
+
+// -------------- Gas Equipment Power Density --------------------
+RULE Spc:GasEqpPwrDens
+  DESCRIPTION
+    "The use of gas devices represented by a gas equipment power density
+     (Btu/h-ft2) and associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4A."
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  COMMONMAXIMUM
+    20
+  MAXIMUM 
+    100
+  UNITS 
+    Btu per h ft2
+  DEFAULT
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else if( IfValidAnd( IsProcExhSpc > 0 ) .AND. IfValidAnd( HasProcExh = 0 ) )  
+    then UNDEFINED // See issue 1032, comment #10
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:GasEqpPwrDens
+    else if( Proj:GasType = "None" )
+    then 0
+    else SpaceFunctionData:GasEqpPwrDens("FuncType",SpcFunc)
+    endif endif endif endif
+  CHECKCODE
+    if( Proj:GasType = "None" .AND. IfValidAnd( GasEqpPwrDens > 0 ) )
+    then
+      PostError("Space '%s' specifies process gas equipment 
+                 but the project gas type is specified as none.  Make the 
+                 process gas equipment load zero or change the project gas 
+                 type.", Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( HasNoInternalLds )
+      then UNDEFINED
+      else u:GasEqpPwrDens
+      endif
+    endif
+  SIZING_PROPOSED
+    if( HasNoInternalLds )
+    then UNDEFINED
+    else if( IsProcExhSpc .AND. HasProcExh = 0 ) 
+    then UNDEFINED // See issue 1032, comment #10
+    else SpaceFunctionData:GasEqpPwrDens("FuncType",SpcFunc)
+    endif endif
+  SIZING_BASELINE : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( GasEqpPwrDensExcptCond = 0 )
+      then z:BaseGasEqpPwrDens
+      else zp:GasEqpPwrDens
+      endif
+    endif
+  SIZING_BASELINE
+    zp:GasEqpPwrDens
+  ANNUAL
+    z:GasEqpPwrDens
+ENDRULE
+
+
+// -------------- Gas Equipment Radiation Fraction --------------------
+RULE Spc:GasEqpRadFrac
+  DESCRIPTION
+    "The fraction of radiant heat gain to a space based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0.15
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(GasEqpPwrDens) = 0 )
+      then UNDEFINED
+      else 0.15
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0.15
+    endif
+  SIZING_BASELINE
+    zp:GasEqpRadFrac
+  ANNUAL
+    z:GasEqpRadFrac
+ENDRULE
+
+
+// -------------- Gas Equipment Latent Fraction --------------------
+RULE Spc:GasEqpLatFrac
+  DESCRIPTION
+    "The fraction of latent heat gain to a space based on appliance energy
+     use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT : S901G ECBC
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0.20
+    endif
+  DEFAULT
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(GasEqpPwrDens) = 0 )
+      then UNDEFINED
+      else 0.20
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0 // Per 8/18 conference with JA and RHe
+    endif
+  SIZING_BASELINE
+    zp:GasEqpLatFrac
+  ANNUAL
+    z:GasEqpLatFrac
+ENDRULE
+
+
+//
+// -------------- Gas Equipment lost Fraction --------------------
+RULE Spc:GasEqpLostFrac
+  DESCRIPTION
+    "The fraction of heat lost to the exterior based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+  DEFAULT : S901G ECBC
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0
+    endif
+  DEFAULT
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0.85
+    endif
+  CHECKSIM
+    if( Int( ValidOr( GasEqpRadFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( GasEqpLatFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( GasEqpLostFrac ,0 ) *100 )/100 > 1.0 )
+    then 
+      PostError("The sum of the gas equipment radiant, latent, and lost fractions
+                 is greater than 1.0. Revise for consistency with this requirement.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( LocalStatus(GasEqpPwrDens) = 0 )
+      then UNDEFINED
+      else 0
+      endif
+    endif
+  SIZING_PROPOSED
+    if( LocalStatus(GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else 0.85 // Per 8/18 conference with JA and RHe
+    endif
+  SIZING_BASELINE
+    zp:GasEqpLostFrac
+  ANNUAL
+    z:GasEqpLostFrac
+ENDRULE
+
+// -------------- Baseline Gas Equipment Schedule --------------------
+RULE Spc:BaseGasEqpSchRef
+  RULESETS
+    S901G ECBC
+  DESCRIPTION
+    "The use of baseline gas equipment represented by a a 24 hour schedule
+    (fraction of density) associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4B."  
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Default
+//  DEFAULT
+//    if( GasEqpPwrDensExcptCond = 0 )
+//    then RuleLibrary(Schedule,(SpaceFunctionGroups:GasEqpSchRef("FuncGroup",FuncSchGrp)))
+//    else UNDEFINED
+//    endif
+  SIZING
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( GasEqpPwrDensExcptCond = 0 )
+      then
+        if( (u:BaseGasEqpSchRef = "- none -" .OR.
+             LocalCompAssigned(u:BaseGasEqpSchRef) = 0) .AND.
+             IfValidAnd(u:GasEqpPwrDens > 0) )
+        then RuleLibrary(Schedule,(SpaceFunctionGroups:GasEqpSchRef("FuncGroup",u:FuncSchGrp)))
+        else 
+          if( (u:BaseGasEqpSchRef = "- none -" .OR.
+               LocalCompAssigned(u:BaseGasEqpSchRef) = 0) .AND.
+               LocalStatus(u:GasEqpPwrDens) = 0 )
+          then UNDEFINED
+          else u:BaseGasEqpSchRef
+          endif
+        endif
+      else UNDEFINED
+      endif
+    endif
+  ANNUAL
+    z:BaseGasEqpSchRef
+ENDRULE
+
+
+// -------------- Gas Equipment Schedule --------------------
+RULE Spc:GasEqpSchRef
+  DESCRIPTION
+    "The use of gas equipment represented by a a 24 hour schedule
+    (fraction of density) associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4B."  
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.4.6 Receptacle Loads
+  INPUTCLASS
+    Prescribed
+  DEFAULT
+    if( LocalStatus(GasEqpPwrDens) = 0 ) 
+    then UNDEFINED
+    else if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:GasEqpSchRef
+    else UNDEFINED
+    endif endif
+  SIZING_PROPOSED : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( (u:GasEqpSchRef = "- none -" .OR.
+           LocalCompAssigned(u:GasEqpSchRef) = 0) .AND.
+	   IfValidAnd(u:GasEqpPwrDens > 0) )
+      then RuleLibrary(Schedule,(SpaceFunctionGroups:GasEqpSchRef("FuncGroup",FuncSchGrp)))
+      else if( u:GasEqpSchRef != "- none -" .AND.
+	       IfValidAnd(u:GasEqpPwrDens > 0) )
+      then u:GasEqpSchRef
+      else if( (u:GasEqpSchRef = "- none -" .OR.
+                LocalCompAssigned(u:GasEqpSchRef) = 0) .AND.
+	        LocalStatus(u:GasEqpPwrDens) = 0 )
+      then UNDEFINED
+      else UNDEFINED
+      endif endif endif
+    endif
+  SIZING_PROPOSED
+    if( HasNoInternalLds = 0 .AND.
+        LocalStatus(GasEqpPwrDens) > 0 ) 
+    then RuleLibrary(Schedule,(SpaceFunctionGroups:GasEqpSchRef("FuncGroup",FuncSchGrp)))
+    else UNDEFINED
+    endif
+  SIZING_BASELINE : S901G ECBC
+    if( u:GasEqpPwrDens = 0 .OR.
+        LocalStatus(u:GasEqpPwrDens) = 0 )
+    then UNDEFINED
+    else
+      if( GasEqpPwrDensExcptCond = 0 )
+      then zb:BaseGasEqpSchRef
+      else zp:GasEqpSchRef
+      endif
+    endif
+  SIZING_BASELINE
+    zp:GasEqpSchRef
+  ANNUAL
+    z:GasEqpSchRef
+ENDRULE
+
+
+// -------------- Process Electrical Power Density --------------------
+RULE Spc:ProcElecPwrDens
+  DESCRIPTION
+    "Process load is the electric energy consumption in the conditioned space
+     of a building resulting from an activity or treatment not related to the
+     space conditioning, lighting, service water heating, or ventilating of a
+     building as it relates to human occupancy.  Process load may include
+     convective (sensible) and/or latent components " 
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  MINIMUM 
+    0
+  COMMONMAXIMUM
+    10
+  MAXIMUM 
+    100
+  UNITS 
+    W per h ft2
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. CondgType != "Plenum"
+        .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:ProcElecPwrDens
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( CondgType != "Plenum" )
+    then u:ProcElecPwrDens
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcElecPwrDens
+  ANNUAL
+    z:ProcElecPwrDens
+ENDRULE
+
+
+// -------------- Process Electrical Radiation Fraction --------------------
+RULE Spc:ProcElecRadFrac
+  DESCRIPTION
+    "The fraction of radiant heat gain to a space based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcElecPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcElecRadFrac
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcElecPwrDens > 0 ) )
+    then u:ProcElecRadFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcElecRadFrac
+  ANNUAL
+    z:ProcElecRadFrac
+ENDRULE
+
+
+// -------------- Process Electrical Latent Fraction --------------------
+RULE Spc:ProcElecLatFrac
+  DESCRIPTION
+    "The fraction of latent heat gain to a space based on appliance energy
+     use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost." 
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcElecPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcElecLatFrac
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcElecPwrDens > 0 ) )
+    then u:ProcElecLatFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcElecLatFrac
+  ANNUAL
+    z:ProcElecLatFrac   
+ENDRULE
+
+
+// -------------- Process Electrical Lost Fraction --------------------
+RULE Spc:ProcElecLostFrac
+  DESCRIPTION
+    "The fraction of the equipment heat that is 'lost' to the exterior, i.e. does
+     not impact the zone energy balance."
+  HELP
+    "Fraction convective (sensible) is equal to:
+     1.0 – (Fraction Latent + Fraction Radiant + Fraction Lost).
+     Therefore, the sum of the fractions cannot exceed 1.0."
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcElecPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcElecLostFrac
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Int( ValidOr( ProcElecRadFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( ProcElecLatFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( ProcElecLostFrac ,0 ) *100 )/100 > 1.0 )
+    then 
+      PostError("The sum of the process electric radiant, latent, and lost fractions
+                 is greater than 1.0. Revise for consistency with this requirement.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcElecPwrDens > 0 ) )
+    then u:ProcElecLostFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcElecLostFrac
+  ANNUAL 
+    z:ProcElecLostFrac
+ENDRULE
+
+
+// -------------- Process Electrical Schedule Reference --------------------
+RULE Spc:ProcElecSchRef
+  DESCRIPTION
+    "The use of process electric represented by a a 24 hour schedule
+    (fraction of density) associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4B."  
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( IfValidAnd( ProcElecPwrDens > 0 ) .AND. LocalCompAssigned(SpcFuncDefaultsRef)
+        .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:ProcElecSchRef
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IfValidAnd( ProcElecPwrDens > 0 ) .AND. LocalCompAssigned(ProcElecSchRef) < 1 )
+    then
+      PostError("A schedule is required for all Process Electric loads greater than 0.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcElecPwrDens > 0 ) )
+    then u:ProcElecSchRef
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcElecSchRef
+  ANNUAL 
+    z:ProcElecSchRef
+ENDRULE
+
+
+// -------------- Process Gas Power Density --------------------
+RULE Spc:ProcGasPwrDens
+  DESCRIPTION
+    "Process load is the gas energy consumption in the conditioned space of a
+     building resulting from an activity or treatment not related to the space
+     conditioning, lighting, service water heating, or ventilating of a
+     building as it relates to human occupancy.  Process load may include
+     convective (sensible) and/or latent components " 
+  HELP
+    ""  
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  MINIMUM 
+    0
+  COMMONMAXIMUM
+    20
+  MAXIMUM 
+    100
+  UNITS 
+    Btu per h ft2
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. CondgType != "Plenum"
+        .AND. LocalStatus(SpcFunc)<5) 
+    then SpcFuncDefaultsRef:ProcGasPwrDens
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( Proj:GasType = "None" .AND. IfValidAnd( ProcGasPwrDens > 0 ) )
+    then
+      PostError("Space '%s' specifies a process gas load 
+                 but the project gas type is specified as none.  Make the 
+                 process gas load zero or change the project gas 
+                 type.", Name)
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( CondgType != "Plenum" )
+    then u:ProcGasPwrDens
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcGasPwrDens
+  ANNUAL
+    z:ProcGasPwrDens
+ENDRULE
+
+
+// -------------- Process Gas Radiation Fraction --------------------
+RULE Spc:ProcGasRadFrac
+  DESCRIPTION
+    "The fraction of radiant heat gain to a space based on appliance energy use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost."
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcGasPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcGasRadFrac
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcGasPwrDens > 0 ) ) 
+    then u:ProcGasRadFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcGasRadFrac
+  ANNUAL
+    z:ProcGasRadFrac
+ENDRULE
+
+
+// -------------- Process Gas Latent Fraction --------------------
+RULE Spc:ProcGasLatFrac
+  DESCRIPTION
+    "The fraction of latent heat gain to a space based on appliance energy
+     use."
+  HELP
+    "Fraction convective (sensible) is typically equal to 1.0 minus fraction
+     radiant, minus fraction latent, minus fraction lost." 
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcGasPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcGasLatFrac
+    else UNDEFINED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcGasPwrDens > 0 ) ) 
+    then u:ProcGasLatFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcGasLatFrac
+  ANNUAL
+    z:ProcGasLatFrac
+ENDRULE
+
+
+// -------------- Process Gas Lost Fraction --------------------
+RULE Spc:ProcGasLostFrac
+  DESCRIPTION
+    "The fraction of the equipment heat that is 'lost' to the exterior, i.e. does
+     not impact the zone energy balance."
+  HELP
+    "Fraction convective (sensible) is equal to:
+     1.0 – (Fraction Latent + Fraction Radiant + Fraction Lost).
+     Therefore, the sum of the fractions cannot exceed 1.0."
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND.
+        IfValidAnd( ProcGasPwrDens > 0 ) ) 
+    then SpcFuncDefaultsRef:ProcGasLostFrac
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( Int( ValidOr( ProcGasRadFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( ProcGasLatFrac ,0 ) *100 )/100 + 
+        Int( ValidOr( ProcGasLostFrac ,0 ) *100 )/100 > 1.0 )
+    then 
+      PostError("The sum of the process gas radiant, latent, and lost fractions
+                 is greater than 1.0. Revise for consistency with this requirement.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcGasPwrDens > 0 )  )
+    then u:ProcGasLostFrac
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcGasLostFrac
+  ANNUAL
+    z:ProcGasLostFrac
+ENDRULE
+
+
+// -------------- Process Gas Schedule Reference --------------------
+RULE Spc:ProcGasSchRef
+  DESCRIPTION
+    "The use of process gas equipment represented by a a 24 hour schedule
+    (fraction of density) associated with the occupancy type selected from the
+     Area Category Method or Complete Building Method in ACM Appendix 5.4B."
+  HELP
+    ""
+  REFERENCE 
+    ACM-5.4.9 Process, Gas and Electric
+  INPUTCLASS
+    Optional
+  DEFAULT
+    if( LocalCompAssigned(SpcFuncDefaultsRef) .AND. IfValidAnd( ProcGasPwrDens > 0 )
+        .AND. LocalStatus(SpcFunc)<5)
+    then SpcFuncDefaultsRef:ProcGasSchRef
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IfValidAnd( ProcGasPwrDens > 0 ) .AND. LocalCompAssigned(ProcGasSchRef) < 1 )
+    then
+      PostError("A schedule is required for all Process Gas loads greater than 0.")
+    else UNCHANGED
+    endif
+  SIZING_PROPOSED
+    if( IfValidAnd( ProcGasPwrDens > 0 ) )
+    then u:ProcGasSchRef
+    else UNDEFINED
+    endif
+  SIZING_BASELINE
+    zp:ProcGasSchRef
+  ANNUAL 
+    z:ProcGasSchRef
+ENDRULE
+
+
+// Calculate receptacle power for Computer Room spaces.  Summed to ThrmlZn and Bldg
+// to determine baseline HVAC system (CRAC vs CRAH)
+RULE NEW Spc:CompRmPwrNew
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerNew
+  DESCRIPTION
+    "The NEW receptacle end-use power for the space, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 .AND. 
+        IfValidAnd( RecptPwrDens >= 0 ) .AND.
+        HVACStatus = "New" )
+    then RecptPwrDens * CompRmArea / 1000
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmPwrNew
+ENDRULE
+
+RULE NEW Spc:CompRmPwrExisting
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerExisting
+  DESCRIPTION
+    "The EXISTING receptacle end-use power for the space, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 .AND. 
+        IfValidAnd( RecptPwrDens >= 0 ) .AND.
+        HVACStatus = "Existing" )
+    then RecptPwrDens * CompRmArea / 1000
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmPwrExisting
+ENDRULE
+
+RULE NEW Spc:CompRmPwrAltered
+  DATATYPE
+    Float
+  LONGFORM
+    ComputerRoomPowerAltered
+  DESCRIPTION
+    "The ALTERED receptacle end-use power for the space, in kW, if SpcFunc = 'Computer Room'."
+  INPUTCLASS
+    NotInput
+  SIZING_PROPOSED
+    if( CompRmArea > 0 .AND. 
+        IfValidAnd( RecptPwrDens >= 0 ) .AND.
+        HVACStatus = "Altered" )
+    then RecptPwrDens * CompRmArea / 1000
+    else 0
+    endif
+  SIZING_BASELINE
+    zp:CompRmPwrAltered
+ENDRULE

@@ -1,0 +1,1031 @@
+// HVAC Secondary Systems - Heating Coils - Heat Pumps
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2014, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+//  This rule file addresses the following building descriptors:
+//  Section 5.7.6.5 - Electric Heat Pumps
+//      Electric Heat Pump Heating Efficiency
+//      Electric Heat Pump Heating Efficiency Adjustment Curve
+
+
+
+
+// ---------- Section 5.7.6.5 - Electric Heat Pump -----------------------------
+
+// ********** Electric Heat Pump Heating Efficiency (HSPF) *********************
+RULE NEW CoilHtg:CodeMinHSPF
+  DATATYPE
+    Float
+  LONGFORM
+    CodeMinimumHSPF
+  INPUTCLASS
+    NotInput
+  UNITS 
+    Btu/h-W
+  DEFAULT
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then
+      if( ParentComp = "AirSys" )
+      then // Part of an AirSystem
+        if(  AirSys:Type ="SPVHP" )
+        then // efficiency for SPVHP is described in terms of COP
+          UNDEFINED
+        else
+        if( IfValidAnd( Parent2Valid( ClgCap ) < 65000 ) .AND. 
+            AirSys:SubType != "NA" )
+        then
+          if( Proj:StdsVersion = "Compliance2015" .AND. 
+              AirSys:SubType = "Packaged1Phase" )
+          then 8.0
+          else
+          if( Proj:StdsVersion = "Compliance2015" .AND. 
+              AirSys:SubType = "Split1Phase" )
+          then 8.2
+          else 7.7
+          endif endif
+        else UNDEFINED
+        endif endif
+      else if( ParentComp = "ZnSys" )
+      then // Part of a ZoneSystem
+        if( ZnSys:Type ="SPVHP" )
+        then // efficiency for SPVHP is described in terms of COP
+          UNDEFINED
+        else
+        if( ZnSys:Type = "SZHP" .AND. 
+            IfValidAnd( ParentValid( ClgCap ) < 65000 ) .AND. 
+            ZnSys:SubType != "NA" )
+        then
+          if( Proj:StdsVersion = "Compliance2015" .AND. 
+              ZnSys:SubType = "Packaged1Phase" )
+          then 8.0
+          else
+          if( Proj:StdsVersion = "Compliance2015" .AND. 
+              ZnSys:SubType = "Split1Phase" )
+          then 8.2
+          else 7.7
+          endif endif
+        else UNDEFINED
+        endif endif
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+RULE CoilHtg:HtPumpHSPF
+  DESCRIPTION
+    "The Heating Season Performance Factor (HSPF) is an indicator of expected, 
+     average seasonal heat pump efficiency. It is determined in accordance with 
+     AHRI Standards." 
+  HELP
+    "This is a required input for air-source HeatPump heating coils in packaged/split units
+     where COP is not entered and the net capacity is <65 MBH."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    CondRequired
+  COMMONMINIMUM
+    5.0
+  COMMONMAXIMUM
+    13.0
+  MAXIMUM
+    15.0
+  UNITS 
+    Btu/h-W
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:AutoEffInput = 1 .AND. 
+        LocalStatus( CodeMinHSPF ) > 0 )    
+    then // For PROPOSED AutoEffInput only 
+      CodeMinHSPF
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( LocalStatus( CodeMinHSPF ) > 0 .AND. 
+        IfValidAnd( HtPumpHSPF > 0 ) = 0 )
+    then
+      PostError("Heat pump coil '%s' must be specified with AHRI rated HSPF.", Name )
+    else 
+    if( BypassMinEffCheck = 0 .AND.
+        LocalStatus( CodeMinHSPF ) > 0 .AND. 
+        IfValidAnd( HtPumpHSPF < CodeMinHSPF ) .AND.
+        IsNew )
+    then 
+      PostError("HSPF of coil '%s' is less than the code minimum required 
+                 efficiency of HSPF-%.1f. Select the bypass of efficiency
+                 check at the coil if this is not applicable.",
+                 Name, CodeMinHSPF )
+    else UNCHANGED 
+    endif endif
+  CHECKCODE : S901G ECBC
+    if( LocalStatus( CodeMinHSPF ) > 0 .AND. 
+        IfValidAnd( HtPumpHSPF > 0 ) = 0 )
+    then
+      PostError("Heat pump coil '%s' must be specified with AHRI rated HSPF.", Name )
+    else UNCHANGED 
+    endif
+  SIZING
+    if( BaseSysNum > 0 .OR. Type != "HeatPump" )
+    then UNDEFINED
+    else u:HtPumpHSPF
+    endif
+  ANNUAL : T24N
+    if( BaseSysNum > 0 )
+    then UNDEFINED // T24N baseline system is never a HP
+    else z:HtPumpHSPF
+    endif    
+  ANNUAL : S901G ECBC
+    if( BaseSysNum > 0 .AND. Type = "HeatPump" )
+    then
+      if( ParentComp = "ZnSys" )
+      then UNDEFINED
+      else if( IfValidAnd( SysClgCap < 65000 ) )
+      then 7.7 // Baseline is assumed 3Phase
+      else UNDEFINED
+      endif endif
+    else z:HtPumpHSPF
+    endif
+ENDRULE
+
+
+// ********** Electric Heat Pump Heating Efficiency (COP) **********************
+// Calculate code minimum EER for DX cooling coils
+RULE NEW CoilHtg:CodeMinCOP
+  DATATYPE
+    Float
+  LONGFORM
+    CodeMinimumCOP
+  INPUTCLASS
+    NotInput
+  UNITS 
+    W/W
+  DEFAULT
+    if( Type = "HeatPump" .AND. IfValidAnd( CapTotNetRtd > 0 ) )
+    then
+      if( ParentComp = "AirSys" )
+      then // Part of an AirSystem
+        if( AirSys:Type = "SPVHP" )
+        then // efficiency for SPVHP is described in terms of COP
+          if( CapTotNetRtd >= 240000)
+          then UNDEFINED
+          else SPVACHtgEfficiencyT24N:COP("SizeCategory", CapTotNetRtd)
+          endif
+        else
+        if( IfValidAnd( Parent2Valid( ClgCap ) >= 65000 ) .AND.
+            IfValidAnd( CndsrType = "Air" ) .AND.
+            AirSys:UnitaryCat = "HP" )
+        then
+        // Heating coil is in an AirSys it is subject to unitary equipment 
+        // efficiency requirements of T24 Table 110.2-B 
+          UnitaryACHPMinEffReq:COP47(
+            "StandardsVersion", Proj:StdsVersion,
+            "Category", AirSys:UnitaryCat,
+            "SubCategory", AirSys:SubType,
+            "CondenserType", "Air",
+            "SizeCategory", SysClgCap )
+        else
+        if( IfValidAnd( Parent2Valid( ClgCap ) >= 65000 ) .AND.
+            IfValidAnd( Parent2Valid( ClgCap ) < 240000 ) .AND.
+            IfValidAnd( CndsrType = "WaterSource" ) .AND.
+            AirSys:UnitaryCat = "HP" )
+        then
+        // Heating coil is in an AirSys it is subject to unitary equipment 
+        // efficiency requirements of T24 Table 110.2-B 
+          UnitaryACHPMinEffReq:COP47(
+            "StandardsVersion", Proj:StdsVersion,
+            "Category", AirSys:UnitaryCat,
+            "SubCategory", AirSys:SubType,
+            "CondenserType", "WaterSource",
+            "SizeCategory", SysClgCap )
+        else UNDEFINED
+        endif endif endif
+      else if( ParentComp = "ZnSys" )
+      then // Part of a ZoneSystem
+        if( ZnSys:Type = "SPVHP" )
+        then // efficiency for SPVHP is described in terms of COP
+          if( CapTotNetRtd >= 240000)
+          then UNDEFINED
+          else SPVACHtgEfficiencyT24N:COP("SizeCategory", CapTotNetRtd)
+          endif
+        else
+        if( ZnSys:Type = "SZHP" .AND. IfValidAnd( ParentValid( ClgCap ) >= 65000 ) )
+        then 3.3 // For systems 65-135 MBH
+        else if( ZnSys:Type = "PTHP" .AND. IfValidAnd( ParentValid( ClgCap ) > 0 ) )
+        then
+          // This is a heating coil in a Znsys PTHP, and subject the efficiency 
+          // requirements of Table 110.2-E.  
+          // Rules currently only cover PTAC and PTHP in new constrution or newly 
+          // conditioned buildings or additions.  Rules for PTHP replacements 
+          // and SPVHP not currently supported.
+          3.2 - (0.026 * ( Min( 15000, Max( 7000, SysClgCap ) ) ) / 1000 )
+        else if( ZnSys:Type = "WSHP" .AND. IfValidAnd( ParentValid( ClgCap ) > 0 ) )
+        then
+          // This is a heating coil in a Znsys WSHP, and subject the efficiency 
+          // requirements of Table 110.2-B and Table C-4
+          if( SysClgCap < 135000 ) 
+          then
+            if( Proj:StdsVersion != "Compliance2016" )
+            then 4.2
+            else 4.3
+            endif
+          else if( SysClgCap >= 135000 .AND. SysClgCap < 240000 )
+          then 2.9
+          else UNDEFINED
+          endif endif   
+        else UNDEFINED
+        endif endif endif endif
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+ENDRULE
+
+TABLE StdHPHtgEfficiency
+    SizeCategory    COP47   
+//  <65000          Based on HSPF -> COP equation
+    <135000         3.2  
+    <240000         2.8     
+    >=240000        2.8  
+ENDTABLE  
+
+TABLE SPVACHtgEfficiencyT24N
+    SizeCategory    COP   
+    <65000          3.0
+    <135000         3.0  
+    <240000         2.9  
+ENDTABLE  
+
+// -----------------------------------------------------------------------------
+RULE CoilHtg:HtPumpCOP
+  DESCRIPTION
+    "The heating efficiency of a heat pump at AHRI rated conditions."
+  HELP
+    "This is a required input for HeatPump heating coils in PTHP, WSHP, and other
+     packaged/split units >= 65 MBH cooling capacity. For air-source heat pumps,
+     this value should be the COP at 47°F outdoor dry bulb temperature."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    CondRequired
+  COMMONMINIMUM
+    2.0
+  COMMONMAXIMUM
+    5.0
+  UNITS 
+    W/W
+  REPORTPRECISION
+    1
+  DEFAULT
+    if( Proj:AutoEffInput = 1 ) 
+    then // For PROPOSED AutoEffInput only    
+      if( LocalStatus( HtPumpHSPF ) > 0 .AND. LocalStatus( CodeMinHSPF ) > 0 ) 
+      then // Calulate COP from HSPF for reference
+        ( 0.2778 * HtPumpHSPF ) + 0.9667 
+      else // Code minimum COP based on capacity
+        CodeMinCOP
+      endif
+    else UNDEFINED
+    endif
+  CHECKCODE : T24N
+    if( LocalStatus( CodeMinCOP ) > 0 .AND. 
+        IfValidAnd( HtPumpCOP > 0 ) = 0 )
+    then 
+      PostError("Heat pump coil '%s' must be specified with AHRI rated COP", Name)
+    else 
+    if( BypassMinEffCheck = 0 .AND.
+        LocalStatus( CodeMinCOP ) > 0 .AND. 
+        IfValidAnd( HtPumpCOP < CodeMinCOP ) .AND.
+        IsNew )
+    then 
+      PostError("COP of coil '%s' is less than the code minimum required 
+                 efficiency of COP-%.1f. Select the bypass of
+                 efficiency check at the coil if this is not applicable.",
+                 Name, CodeMinCOP)
+    else UNCHANGED 
+    endif endif 
+  CHECKCODE : S901G ECBC
+    if( LocalStatus( CodeMinCOP ) > 0 .AND. 
+        IfValidAnd( HtPumpCOP > 0 ) = 0 )
+    then 
+      PostError("Heat pump coil '%s' must be specified with AHRI rated COP", Name)
+    else UNCHANGED 
+    endif 
+  SIZING
+    if( BaseSysNum > 0 .OR. Type != "HeatPump" )
+    then
+      // Not used for non-HP coils, and 
+      // AHRI rated COP unknown for baseline systems 
+      UNDEFINED
+    else if( IfValidAnd( u:HtPumpHSPF > 0 ) .AND. LocalStatus( u:HtPumpCOP ) = 0 )
+    then
+      // User has provided HSPF but not COP, so use default equation to calculate COP
+      ( 0.2778 * u:HtPumpHSPF ) + 0.9667
+    else u:HtPumpCOP
+    endif endif
+  ANNUAL : T24N
+    if( BaseSysNum > 0 )
+    then UNDEFINED // T24N baseline system is never a HP
+    else z:HtPumpCOP
+    endif   
+  ANNUAL : S901G ECBC
+    if( BaseSysNum > 0 .AND. Type = "HeatPump")
+    then
+      if( ParentComp = "ZnSys" )
+      then // Is PTHP
+        3.2 - (0.026 * ( Min( 15000, Max( 7000, SysClgCap ) ) ) / 1000 )
+      else if( IfValidAnd( SysClgCap < 65000 ) ) 
+      then // Use HSPF -> COP equation
+        ( 0.2778 * HtPumpHSPF ) + 0.9667
+      else // Look-up minimum efficiency based on baseline rated net capacity 
+        StdHPHtgEfficiency:COP47("SizeCategory", SysClgCap)
+      endif endif
+    else z:HtPumpCOP
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Adjust rated COP to remove fan heat at AHRI rating condtion
+RULE CoilHtg:HtPumpCOPAdj
+  DESCRIPTION
+    "The heating efficiency of a  heat pump heating system at AHRI 
+     rated conditions, adjusted to remove fan energy."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    W/W
+  SIZING
+    if( BaseSysNum > 0 .OR. Type != "HeatPump" )
+    then UNDEFINED
+    else 
+    if( IfValidAnd( CapTotGrossRtd > 0 ) .AND.
+        IfValidAnd( HtPumpCOP > 0 ) .AND.
+        IfValidAnd( CapTotNetRtd > 0 ) )
+    then
+      // HtPumpCOPAdj = ( Net capacity (Btu/hr) - Fan heat (Btu/hr) ) /
+      //                ( Rated power (W) - fan power (W) - pump power (W) )
+      // where the fan heat/power is the power associated with overcoming the
+      // internal static and coil pressure drop ( for water-source equipment )
+      // ( CapTotNetRtd - FanHtRtd ) /
+      // ( CapTotNetRtd / HtPumpCOP ) - ( FanHtRtd / 3.412 ) - PumpPwrRtd )
+      // CapTotGrossRtd = CapTotNetRtd - FanHtRtd
+      ( CapTotGrossRtd / 3.412 ) /  ; CapTotGrossRtd = CapTotNetRtd - FanHtRtd
+      ( ( CapTotNetRtd / ( HtPumpCOP * 3.412 ) ) - ( FanHtRtd / 3.412 ) - PumpPwrRtd )
+    else 0
+    endif endif
+  ANNUAL
+    if( BaseSysNum > 0 .AND. Type = "HeatPump" )
+    then 
+      if( IfValidAnd( CapTotGrossRtd > 0 ) .AND.
+          IfValidAnd( HtPumpCOP > 0 ) .AND.
+          IfValidAnd( CapTotNetRtd > 0 ) )
+      then
+        ( CapTotGrossRtd / 3.412 ) / ; CapTotGrossRtd = CapTotNetRtd - FanHtRtd
+        ( ( CapTotNetRtd / ( HtPumpCOP * 3.412 ) ) - ( FanHtRtd / 3.412 ) - PumpPwrRtd )
+      else 0
+      endif
+    else z:HtPumpCOPAdj
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Convert EERAdj to EIR for simulation purposes
+RULE CoilHtg:HtPumpEIR
+  DESCRIPTION
+    "The heating efficiency of a heat pump heating coil, described for simulation
+      purposes. Enery Input Ratio (EIR) is the inverse of the COP."
+  REFERENCE 
+    NACM Section 5.7.6.5 
+  INPUTCLASS 
+    NotInput
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( HtPumpCOPAdj > 0 ) )
+    then
+      1 / HtPumpCOPAdj
+//      if( ParentComp = "AirSys" )
+//      then
+//        if( IfValidAnd( Parent2Valid( DuctLeakage ) > 0 ) )
+//        then // For now, increase EIR by 4.86% if DuctLeakage > 0
+//          1 / HtPumpCOPAdj * 1.0486        
+//        else 
+//          1 / HtPumpCOPAdj
+//        endif
+//      else if( ParentComp = "ZnSys" )
+//      then
+//        if( IfValidAnd( ParentValid( DuctLeakage ) > 0 ) )
+//        then // For now, increase EIR by 4.86% if DuctLeakage > 0
+//          1 / HtPumpCOPAdj * 1.0486        
+//        else 
+//          1 / HtPumpCOPAdj
+//        endif
+//      else  1 / HtPumpCOPAdj   
+//      endif endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    if( Type = "HeatPump" .AND. IfValidAnd( HtPumpCOPAdj > 0 ) )
+    then 
+      z:HtPumpEIR
+    else UNDEFINED
+    endif
+ENDRULE
+
+
+// ********** Heat Pump Heating Efficiency Temperature Adjustment Curve ********
+RULE CoilHtg:HtPumpEIR_fTempCrvRef
+  DESCRIPTION
+    "Normalized curve that varies full-load efficiency (EIR) as a function of 
+     indoor coil and condenser conditions."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS
+    Prescribed 
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then
+      RuleLibrary(CrvCubic, "CoilHtgHPEIRRatio_fToadbSI")
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpEIR_fTempCrvRef
+ENDRULE
+
+
+// ********** Heat Pump Part-Load Efficiency Adjustment Curve ******************
+RULE CoilHtg:HtPumpEIR_fPLFCrvRef
+  DESCRIPTION
+    "Normalized curve that varies full-load efficiency (EIR) as a function of 
+     part-load factor.  This curve type is specific to EnergyPlus."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS
+    Prescribed 
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then
+      RuleLibrary(CrvQuad, "CoilHtgHPEIRRatio_fQFrac") 
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpEIR_fPLFCrvRef
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Heating efficiency as a function of indoor coil coil flow.
+RULE CoilHtg:HtPumpEIR_fFlowCrvRef
+  DESCRIPTION
+    "Normalized curve that varies full-load efficiency (EIR) as a function of 
+     indoor coil flow. This curve type is specific to EnergyPlus."
+  INPUTCLASS
+    Prescribed 
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then
+      RuleLibrary(CrvQuad, "CoilHtgHPEIRRatio_fCFMRatio")
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpEIR_fFlowCrvRef
+ENDRULE
+
+
+// ********** Heat Pump Compressor Minimum Operating Temp **********************
+RULE CoilHtg:HtPumpCprsrLockoutTemp
+  DESCRIPTION
+    "The outside dry-bulb temperature below which the heat pump supplemental 
+     heating is allowed to operate."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Default
+  COMMONMINIMUM
+    -10.0
+  COMMONMAXIMUM
+    40.0
+  UNITS 
+    °F
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type = "HeatPump" )
+    then
+      if( CndsrType = "Air" )
+      then 
+        if( ParentComp = "ZnSys" )
+        then
+          if( ZnSys:Type = "PTHP" )
+          then 35
+          else 17
+          endif
+        else 17
+        endif
+      else if( CndsrType = "WaterSource" )
+      then -50
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        IfValidAnd( CapTotNetRtd > 1 ) .AND.
+        IfValidAnd( HtPumpCprsrLockoutTemp > 40 ) )
+    then 
+      PostError("The compressor lockout temperature for heat pump coil '%s'
+                 is %g°F. Supplemental heating is not allowed above this
+                 temperature.", Name, HtPumpCprsrLockoutTemp)
+    else UNCHANGED
+    endif    
+  CHECKSIM
+    if( Type = "HeatPump" .AND.
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalCompAssigned(HtPumpSuppCoilHtgRef) = 0 .AND.
+        IfValidAnd( HtPumpCprsrLockoutTemp < 35 ) )
+    then 
+      PostWarning("A supplemental heating coil for heat pump coil '%s' is not
+                   defined and heat pump operation is specified to disable below %g°F.
+                   If unmet heating hours occur, a supplemental heating coil
+                   may be needed.",
+                   Name, HtPumpCprsrLockoutTemp)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( Type = "HeatPump" )
+    then 
+      if( BaseSysNum > 0 )
+      then
+        if( ParentComp = "ZnSys" )
+        then 35
+        else 17
+        endif
+      else u:HtPumpCprsrLockoutTemp
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpCprsrLockoutTemp
+ENDRULE
+
+
+// ********** Electric Supplemental Heating Coil *******************************
+RULE CoilHtg:HtPumpSuppCoilHtgRef
+  DESCRIPTION
+    "The name of the CoilHeating object that provide supplemental heating for
+     the heat pump."
+  HELP
+    "The valid CoilHeating Types are Resistance and Furnace."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Optional
+  CHECKSIM
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalCompAssigned( HtPumpSuppCoilHtgRef ) .AND.
+        ParentComp = "ZnSys" )
+    then
+      if( IfValidAnd( ParentValid( Type ) = "PTHP" ) .AND.
+          ( HtPumpSuppCoilHtgRef:Type != "Resistance" .AND. 
+;            HtPumpSuppCoilHtgRef:Type != "HotWater" .AND.
+            HtPumpSuppCoilHtgRef:Type != "Furnace" ) )
+      then 
+        PostError("The supplemental heat coil, '%s', for PTHP system '%s' must be Type =
+                   'Resistance' or 'Furnace'.", Name, Parent( Name ))
+      else UNCHANGED
+      endif
+    else
+    if( Type = "HeatPump" .AND. 
+        CndsrType = "WaterSource" .AND.
+        LocalCompAssigned( HtPumpSuppCoilHtgRef ) .AND.
+        ParentComp = "ZnSys" )
+    then
+      if( IfValidAnd( ParentValid( Type ) = "WSHP" ) .AND.
+          ( HtPumpSuppCoilHtgRef:Type != "Resistance" .AND. 
+            HtPumpSuppCoilHtgRef:Type != "HotWater" .AND.
+            HtPumpSuppCoilHtgRef:Type != "Furnace" ) )
+      then 
+        PostError("The supplemental heat coil, '%s', for WSHP system '%s' must be Type =
+                   'Resistance', 'Furnace', or 'HotWater'.", Name, Parent( Name ))
+      else UNCHANGED
+      endif
+    else
+    if( Type != "HeatPump" .AND. LocalCompAssigned( HtPumpSuppCoilHtgRef ) )
+    then
+      PostError("CoilHeating '%s' is not a HeatPump, but a supplemental heating
+                 coil is defined. Coil '%s' must deleted from the system.",
+                 Name, HtPumpSuppCoilHtgRef:Name ) 
+    else UNCHANGED
+    endif endif endif
+//SIZING
+// Supplemental heating coil for baseline systems defined in library object
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilHtg:HtPumpSuppTemp
+  DESCRIPTION
+    "The outside dry-bulb temperature below which the heat pump supplemental 
+     heating is allowed to operate."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Default
+  COMMONMINIMUM
+    32.0
+  COMMONMAXIMUM
+    40.0
+  UNITS 
+    °F
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type = "HeatPump" .AND. LocalCompAssigned( HtPumpSuppCoilHtgRef ) > 0 )
+    then 40.0     
+    else UNDEFINED
+    endif 
+  CHECKCODE
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        IfValidAnd( CapTotNetRtd > 1 ) .AND.
+        LocalCompAssigned( HtPumpSuppCoilHtgRef ) > 0 .AND.
+        IfValidAnd( HtPumpCprsrLockoutTemp > 40 ) )
+    then 
+      PostError("The supplemental temperature for heat pump coil '%s'
+                 is great than 40°F.", Name)
+    else UNCHANGED
+    endif 
+  SIZING
+    if( Type = "HeatPump" .AND. LocalCompAssigned( HtPumpSuppCoilHtgRef ) > 0 )
+    then 
+      if( BaseSysNum > 0 )
+      then 40
+      else u:HtPumpSuppTemp
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpSuppTemp
+ENDRULE
+
+
+// ********** Coil Defrost ********************************************
+RULE CoilHtg:HtPumpDefHtSrc
+  DESCRIPTION
+    "The defrost heating source for an air-cooled heat pump."
+  HELP
+    "Only applicable if Type = 'HeatPump' and CondenserType = 'Air'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Default
+  OPTION
+    Electric
+    HotGas
+  DEFAULT
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then "HotGas"
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) )
+    then 
+      if( BaseSysNum > 0 )
+      then "HotGas"
+      else u:HtPumpDefHtSrc
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpDefHtSrc
+ENDRULE
+
+
+// ********** Coil Defrost Capacity ********************************************
+RULE CoilHtg:HtPumpDefHtrCap
+  DESCRIPTION
+    "The capacity of the electric resistance defrost heater."
+  HELP
+    "Only applicable if Type = 'HeatPump', CondenserType = 'Air', and
+    HeatPumpDefrostHeatSource = 'Electric'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    CondRequired
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND. 
+        IfValidAnd( HtPumpDefHtSrc = "Electric" ) .AND.
+        Proj:AutoHardSize = 1 )
+    then // For PROPOSED AutoHardSizing only
+      if( ParentComp = "AirSys" )
+      then // AirSys
+        1.25 * ValidOr( SysClgCap, 0 )
+      else if( ParentComp = "ZnSys" )
+      then // ZnSys
+        1.25 * ValidOr( SysClgCap, 0 )
+      else UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND. 
+        IfValidAnd( HtPumpDefHtSrc = "Electric" ) )
+    then u:HtPumpDefHtrCap
+    else UNDEFINED
+    endif
+  ANNUAL 
+    if( BaseSysNum > 0 .AND. Type = "HeatPump" )
+    then UNDEFINED
+    else
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND. 
+        IfValidAnd( HtPumpDefHtSrc = "Electric" ) )
+    then z:HtPumpDefHtrCap
+    else UNDEFINED
+    endif endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilHtg:HtPumpDefHtrCapSim
+  DESCRIPTION
+    "The capacity of the electric resistance defrost heater, for simulation."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h
+  SIZING
+    if( LocalStatus ( HtPumpDefHtrCap ) > 0 )
+    then HtPumpDefHtrCap * SysCnt
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpDefHtrCapSim
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Defrost control method
+RULE CoilHtg:HtPumpDefCtrl
+  DESCRIPTION
+    "The defrost control mechanism for an air-cooled heat pump.  If TimedCycle, 
+     the prescribed time period is 3.5 minutes."
+  HELP
+    "Only applicable if Type = 'HeatPump' and CondenserType = 'Air'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Default
+  OPTION
+    OnDemand
+    TimedCycle
+  DEFAULT
+    if( Type = "HeatPump" .AND. 
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalStatus( HtPumpDefHtSrc ) > 0 )
+    then "TimedCycle"
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) ) 
+    then
+      if( BaseSysNum > 0 )
+      then "TimedCycle"
+      else u:HtPumpDefCtrl
+      endif
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpDefCtrl
+ENDRULE
+
+// -----------------------------------------------------------------------------
+// Defrost limit temperature
+RULE CoilHtg:HtPumpDefCtrlTemp
+  DESCRIPTION
+    "The outside dry-bulb temperature below which the coil defrost is allowed to 
+     operate."
+  HELP
+    "Only applicable if Type = 'HeatPump' and CondenserType = 'Air'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS : T24N
+    Prescribed
+  INPUTCLASS : S901G ECBC
+    Default
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalStatus( HtPumpDefHtSrc ) > 0 ) 
+    then 40
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HeatPump" .AND. IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalStatus( HtPumpDefHtSrc ) > 0 ) 
+    then 40
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpDefCtrlTemp
+ENDRULE
+
+
+// ********** Crankcase Heater Capacity ****************************************
+RULE CoilHtg:HtPumpCrankcaseHtrCap
+  DESCRIPTION
+    "The capacity of the electric resistance crankcase heater."
+  HELP
+    "Only applicable if Type = 'HeatPump' and CondenserType = 'Air'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Optional
+  UNITS 
+    Btu/h
+  SIZING 
+    if( BaseSysNum > 0 .OR. 
+        Type != "HeatPump" .OR.
+        IfValidAnd( CndsrType != "Air" ) )
+    then UNDEFINED
+    else u:HtPumpCrankcaseHtrCap
+    endif
+  ANNUAL 
+    z:HtPumpCrankcaseHtrCap
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE CoilHtg:HtPumpCrankcaseHtrCapSim
+  DESCRIPTION
+    "The capacity of the electric resistance cranckcase heater, for simulation."
+  INPUTCLASS 
+    NotInput
+  UNITS 
+    Btu/h
+  SIZING
+    if( LocalStatus( HtPumpCrankcaseHtrCap ) > 0 )
+    then HtPumpCrankcaseHtrCap * SysCnt
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpCrankcaseHtrCapSim
+ENDRULE
+
+
+// ********** Crankcase Heater Shutoff Temperature ****************************
+RULE CoilHtg:HtPumpCrankcaseCtrlTemp
+  DESCRIPTION
+    "The outdoor air dry-bulb temperature above which the crank case heater is 
+     not permitted to operate."
+  HELP
+    "Only applicable if Type = 'HeatPump' and CondenserType = 'Air'."
+  REFERENCE 
+    NACM Section 5.7.6.5
+  INPUTCLASS 
+    Default
+  COMMONMINIMUM
+    32
+  COMMONMAXIMUM
+    50 
+  UNITS 
+    °F
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( Type = "HeatPump" .AND.
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalStatus( HtPumpCrankcaseHtrCap ) > 0 )
+    then 50
+    else UNDEFINED
+    endif
+  SIZING
+    if( Type = "HeatPump" .AND.
+        IfValidAnd( CndsrType = "Air" ) .AND.
+        LocalStatus( HtPumpCrankcaseHtrCap ) > 0 )
+    then u:HtPumpCrankcaseCtrlTemp
+    else UNDEFINED
+    endif
+  ANNUAL 
+    z:HtPumpCrankcaseCtrlTemp
+ENDRULE
+
+
+// -----------------------------------------------------------------------------
+// For reporting/QC purposes
+RULE NEW CoilHtg:SuppHtgCap
+  DATATYPE
+    Float
+  LONGFORM
+    SupplementalCoilHeatingCapacity
+  DESCRIPTION
+    "The capacity of the heat pump supplemental heaing coils"
+  UNITS 
+    Btu/h
+  INPUTCLASS 
+    NotInput         
+  DEFAULT
+    if( CountRefs(CoilHtg:HtPumpSuppCoilHtgRef) > 0 )
+    then CapTotNetRtd
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL  
+    if( CountRefs(CoilHtg:HtPumpSuppCoilHtgRef) > 0 )
+    then CapTotNetRtd
+    else 0
+    endif
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE AirSys:SuppHtgCap
+  DESCRIPTION
+    "The capacity of the heat pump supplemental heaing coils"   
+  INPUTCLASS
+    NotInput
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumChildren( CoilHtg:SuppHtgCap )
+  SIZING
+    UNDEFINED
+  ANNUAL  
+    SumChildren( CoilHtg:SuppHtgCap )
+ENDRULE
+
+// -----------------------------------------------------------------------------
+RULE ZnSys:SuppHtgCap
+  DESCRIPTION
+    "The capacity of the heat pump supplemental heaing coils"   
+  INPUTCLASS
+    NotInput
+  UNITS 
+    Btu/h
+  REPORTPRECISION
+    -3
+  DEFAULT
+    SumChildren( CoilHtg:SuppHtgCap )
+  SIZING
+    UNDEFINED
+  ANNUAL  
+    SumChildren( CoilHtg:SuppHtgCap )
+ENDRULE
+
+// ********** Heat Extraction for Water-cooled Condenser ************************
+RULE NEW CoilHtg:HtExtractionLdSim
+  DATATYPE
+    Float
+  LONGFORM
+    HeatExtractionLoadSimulated
+  DESCRIPTION
+    "The total amount of heat that needs to be extracted by the heating coil
+     condenser."
+  INPUTCLASS
+    NotInput
+  UNITS
+    Btu/h
+  DEFAULT
+    if( IfValidAnd( CndsrType = "WaterSource" ) .AND. CapTotGrossRtdSim > 0 )
+    then CapTotGrossRtdSim * ( 1 - ( 1 / ValidOr( HtPumpCOPAdj, 3 ) ) )
+    else 0
+    endif
+ENDRULE

@@ -1,0 +1,1051 @@
+// HVAC Secondary Systems - Cooling Coils - General
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+//  This rule file addresses the following building descriptors:
+//
+//  Section 5.5.3 - Roofs
+//      Roof Geometry - Area
+//
+//  Section 5.5.4 - Exterior Walls
+//      Exterior Wall Geometry - Area
+//
+////  Section 5.5.7 - Fenestration
+//      Fenestration Geometry - Area
+  
+// ---------- Section 5.5.3 - Roofs -------------------------------------------
+// ********** Roof Geometry - Area ********************************************  
+RULE Roof:Area
+  DESCRIPTION
+    "Area of Roof"  
+  HELP
+    "The area of each individual roof surface in a space"  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED  endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then  if(ChildCount(PolyLp) < 1)
+          then POSTERROR("Roof '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+          else UNCHANGED
+          endif
+    else  UNCHANGED  
+    endif
+  SIZING
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW Roof:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) .AND. IfValidAnd( Tilt > -999 ) )
+    then  Format( "%s, %s ft2, %s deg tilt", ConsAssmRef:Name, FltToStr( Area ), FltToStr( Tilt ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+	  else if( IfValidAnd( Tilt > -999 ) )
+    then  Format( "%s deg tilt", FltToStr( Tilt ) )
+    else  " "  endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Roof Geometry - Azimuth  ****************************************
+// ---------- Unit Outward Normal Vector (projected into x-y plane) --------
+RULE NEW Roof:UnitVectorPi
+  DATATYPE
+    Float
+  LONGFORM
+    UnitVectorPi
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "X component of roof unit vector 'P', projected into x-y plane"  
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorPi, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW Roof:UnitVectorPj
+  DATATYPE
+    Float
+  LONGFORM
+    UnitVectorPj 
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Y component of roof unit vector 'P', projected into x-y plane" 
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorPj, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE Roof:Az
+  DESCRIPTION
+    "Angle between roof vector 'P' and True North as defined by NVector"  
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then // will reclaculate in later rule
+      UNDEFINED
+    else // require user input
+      UNCHANGED
+    endif
+  SIZING
+    u:Az  // set to undefinded once other rules are updated/tested
+  ANNUAL
+    z:Az  // set to undefinded once other rules are updated/tested
+ENDRULE
+RULE NEW Roof:RealAz
+  LONGFORM
+    RealAzimuth
+  DESCRIPTION
+    "The Azimuth of a surface with respect to true north"
+  INPUTCLASS
+    NotInput
+  UNITS
+    Deg - relative to true north
+  DEFAULT
+    if( Proj:IsDetailedGeometry == 0 )
+    then if( GlobalStatus( Bldg:BldgAz ) < 1 )  
+      then  // undefined
+       -999
+      else if( (Az + Bldg:BldgAz) > 360 ) // user input for Simple Geometry
+      then 
+        Az + Bldg:BldgAz - 360
+      else  
+        Az + Bldg:BldgAz  
+      endif endif 
+    else if((UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)==1)
+    then // due north
+      0
+     else if((UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)==-1)
+     then // due south
+       180
+     else if((Bldg:UnitVectorNi*UnitVectorPj-Bldg:UnitVectorNj*UnitVectorPi)<0)
+     then // postive rotation
+       (ACOS(UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)*
+       (180/3.14159265359))
+     else // negative rotation
+       360-
+       (ACOS(UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)*
+       (180/3.14159265359))
+    endif endif endif endif
+  SIZING
+    u:RealAz
+  ANNUAL
+    u:RealAz
+ENDRULE
+RULE Roof:Az  
+  REPORTPRECISION
+    0
+  DEFAULT
+    // recalculate Az for Detailed Geometry
+    if (Proj:IsDetailedGeometry = 0)
+    then // rely on previously defined user input
+      UNCHANGED
+    else if( ( RealAz + 0.01 ) < Bldg:BldgAz ) 
+    then  
+      360 - (Bldg:BldgAz - RealAz)
+    else 
+       ( RealAz + 0.01 )- Bldg:BldgAz  
+    endif endif
+  SIZING
+    u:Az  // set to undefinde once other rules are updated/tested
+  ANNUAL
+    z:Az  // set to undefinde once other rules are updated/tested
+ENDRULE
+
+// ********** Roof Geometry - Tilt  *******************************************
+RULE NEW Roof:UnitVectorOk
+  DATATYPE
+    Float
+  LONGFORM
+    UnitVectorOk
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Z component of roof outward normal vector, inherited from polyloop"  
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorOk, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE Roof:Tilt
+  HELP
+    "The angle between the roof surface and horizontal"    
+  DESCRIPTION
+    "Angle Between Roof and Horizontal"  
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  if(UnitVectorOk == 1) 
+      then 0
+      else if(UnitVectorOk == -1) 
+      then 180
+        else ACOS(UnitVectorOk)*180/3.14159265395
+        endif
+      endif
+    else  UNDEFINED  
+    endif
+  SIZING
+    u:Tilt
+  ANNUAL
+    z:Tilt
+ENDRULE
+
+// ---------- Section 5.5.4 - Exterior Walls ----------------------------------
+// ********** Exterior Wall Geometry - Area ***********************************
+RULE ExtWall:Area
+  DESCRIPTION
+    "Area of Exterior Wall"  
+  HELP
+    "The area of each individual exterior wall surface in a space"  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired       
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else if (IfValidAnd( WinShadeGeomReqd > 0 ) .AND. IfValidAnd( Hgt > 0 ) .AND. IfValidAnd( Wd > 0 ))
+    then  Hgt * Wd
+    else  UNDEFINED
+    endif endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then  if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Exterior Wall '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED  
+    endif
+  SIZING   
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+
+// ********** Exterior Wall Geometry - Azimuth ********************************
+// --------- Calclulate Length of Vector P ------------------------------------
+RULE NEW ExtWall:VectorPLen
+  DATATYPE
+    Float         
+  LONGFORM
+    VectorPLength     
+  INPUTCLASS
+    NotInput     
+  DESCRIPTION
+    "Length of projected normal vector"  
+  DEFAULT
+    SumChildren( PolyLp:VectorPLen, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Unit Outward Normal Vector (projected into x-y plane) --------
+RULE NEW ExtWall:UnitVectorPi
+  DATATYPE
+    Float
+  LONGFORM
+    UnitVectorPi
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "X component of cardinal direction unit vector"
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorPi, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW ExtWall:UnitVectorPj
+  DATATYPE
+    Float
+  LONGFORM
+    UnitVectorPj              
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Y component of cardinal direction unit vector"  
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorPj, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE ExtWall:Az
+  DESCRIPTION
+    "Angle between Vector P and True North as defined by NVector"  
+  INPUTCLASS
+    CondRequired       
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then // will reclaculate in later rule
+      UNDEFINED
+    else // require user input
+      UNCHANGED
+    endif
+  SIZING
+    u:Az  // set to undefinded once other rules are updated/tested
+  ANNUAL
+    z:Az  // set to undefinded once other rules are updated/tested
+ENDRULE
+RULE NEW ExtWall:RealAz
+  LONGFORM
+    RealAzimuth
+  DESCRIPTION
+    "The Azimuth of a surface with respect to true north, including unlimited decimal places"
+  INPUTCLASS
+    NotInput
+  UNITS
+    Deg - relative to true north
+  DEFAULT
+    if( Proj:IsDetailedGeometry == 0 )
+    then if( GlobalStatus( Bldg:BldgAz ) < 1 )  
+      then  // undefined
+       -999
+      else if( (Az + Bldg:BldgAz) > 360 ) // user input for Simple Geometry
+      then  
+        Az + Bldg:BldgAz - 360
+      else  
+        Az + Bldg:BldgAz  
+      endif endif 
+    else if( ( UnitVectorPi*Bldg:UnitVectorNi +
+               UnitVectorPj*Bldg:UnitVectorNj ) = 1 )
+    then // due north
+      0
+    else if((UnitVectorPi*Bldg:UnitVectorNi +
+             UnitVectorPj*Bldg:UnitVectorNj) = -1 )
+    then // due south
+      180
+    else if((Bldg:UnitVectorNi*UnitVectorPj -
+             Bldg:UnitVectorNj*UnitVectorPi) < 0 )
+    then // postive rotation 
+      (ACOS(UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)*
+      (180/3.14159265359))
+    else // negative rotation
+      360-
+      (ACOS(UnitVectorPi*Bldg:UnitVectorNi+UnitVectorPj*Bldg:UnitVectorNj)*
+      (180/3.14159265359))
+    endif endif endif endif
+  SIZING
+    u:RealAz
+  ANNUAL
+    u:RealAz
+ENDRULE
+RULE ExtWall:Az  
+  REPORTPRECISION
+    0
+  DEFAULT
+    // recalculate Az for Detailed Geometry
+    if (Proj:IsDetailedGeometry = 0)
+    then // rely on previously defined user input
+      UNCHANGED
+    else if( ( RealAz + 0.01 ) < Bldg:BldgAz ) 
+    then  
+      360 - (Bldg:BldgAz - RealAz)
+    else 
+       ( RealAz + 0.01 )- Bldg:BldgAz  
+    endif endif
+  SIZING
+    u:Az  // set to undefinde once other rules are updated/tested
+  ANNUAL
+    z:Az  // set to undefinde once other rules are updated/tested
+ENDRULE
+
+RULE NEW ExtWall:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if (LocalCompAssigned( ConsAssmRef )) then
+      if (RealAz < -998) then  Format( "unknown facing direction, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 0 .OR. RealAz == 360) then  Format( "N-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz ==  45) then  Format( "NE-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz ==  90) then  Format(  "E-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 135) then  Format( "SE-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 180) then  Format(  "S-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 225) then  Format( "SW-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 270) then  Format(  "W-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz == 315) then  Format( "NW-facing, %s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <   45) then  Format( "faces %.0f deg E of N, %s, %s ft2", RealAz,     ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <   90) then  Format( "faces %.0f deg N of E, %s, %s ft2", 90-RealAz,  ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <  135) then  Format( "faces %.0f deg S of E, %s, %s ft2", RealAz-90,  ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <  180) then  Format( "faces %.0f deg E of S, %s, %s ft2", 180-RealAz, ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <  225) then  Format( "faces %.0f deg W of S, %s, %s ft2", RealAz-180, ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <  270) then  Format( "faces %.0f deg S of W, %s, %s ft2", 270-RealAz, ConsAssmRef:Name, FltToStr( Area ) )
+      else if (RealAz <  315) then  Format( "faces %.0f deg N of W, %s, %s ft2", RealAz-270, ConsAssmRef:Name, FltToStr( Area ) )
+      else  Format( "%.0f deg azimuth, %s, %s ft2", RealAz, ConsAssmRef:Name, FltToStr( Area ) )
+      endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif endif
+    else		; abbreviated 
+      if (RealAz < -998) then  Format( "unknown facing direction, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 0 .OR. RealAz == 360) then  Format( "N-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz ==  45) then  Format( "NE-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz ==  90) then  Format(  "E-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 135) then  Format( "SE-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 180) then  Format(  "S-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 225) then  Format( "SW-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 270) then  Format(  "W-facing, %s ft2", FltToStr( Area ) )
+      else if (RealAz == 315) then  Format( "NW-facing, %s ft2", FltToStr( Area ) )
+      else  Format( "%.0f deg azimuth, %s ft2", RealAz, FltToStr( Area ) )
+      endif endif endif endif endif endif endif endif endif
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Wall Geometry - Tilt  *******************************************
+RULE NEW ExtWall:UnitVectorOk
+  DATATYPE
+    Float   
+  LONGFORM
+    UnitVectorOk           
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Z component of Exterior Wall outward normal vector, 
+     inherited from polyloop"  
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorOk, 1 )
+ SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE ExtWall:Tilt
+  HELP
+    "The angle between the wall surface and horizontal"    
+  DESCRIPTION
+    "Angle Between Wall and Horizontal"  
+  INPUTCLASS
+    Default       
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then if(UnitVectorOk == 1) then 0
+      else if(UnitVectorOk == -1) 
+        then 180
+        else ACOS(UnitVectorOk)*180/3.14159265395
+        endif
+      endif
+    else  UNCHANGED
+	  endif
+  SIZING
+    u:Tilt
+  ANNUAL
+    z:Tilt
+ENDRULE
+
+// ---------- Section 5.5.5 - Exterior Floors -------------------------------------------
+// ********** Floor Geometry - Area ********************************************  
+RULE ExtFlr:Area
+  DESCRIPTION
+    "Calculates the Area of each Exterior Floor"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED  
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Exterior Floor '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED  
+    endif
+  SIZING 
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW ExtFlr:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Floor Geometry - Tilt  *******************************************
+RULE NEW ExtFlr:UnitVectorOk
+  DATATYPE
+    Float          
+  LONGFORM
+    UnitVectorOk    
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "Z component of Exterior Floor outward normal vector, 
+inherited from polyloop"  
+  DEFAULT
+    SumChildren( PolyLp:UnitVectorOk, 1 )
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE ExtFlr:Tilt
+  HELP
+    "The angle between the Exterior Floor surface and horizontal"    
+  DESCRIPTION
+    "Angle Between Floor and Horizontal"  
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then if(UnitVectorOk == 1) 
+      then 0
+      else if(UnitVectorOk == -1) 
+        then 180
+        else ACOS(UnitVectorOk)*180/3.14159265395
+        endif
+      endif
+    else  UNCHANGED  
+    endif
+ SIZING
+    u:Tilt
+  ANNUAL
+    z:Tilt
+ENDRULE
+
+// ---------- Section 5.5.7 - Fenestration ----------------------------------
+// ********** Fenestration Geometry - Window Area *****************************
+RULE Win:Area
+  DESCRIPTION
+    "Calculate Area of each Window"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional       
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry .OR. SumChildren( PolyLp:Area, 1 ) > 0.01)
+    then  SumChildren( PolyLp:Area, 1 )   ;added to populate CBECC dialog
+    else if (IfValidAnd( ShadeGeomReqd > 0 ) .AND. IfValidAnd( Hgt > 0 ) .AND. IfValidAnd( Wd > 0 ))
+    then  Hgt * Wd
+    else  UNDEFINED
+    endif endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then  if(ChildCount(PolyLp) < 1)
+          then POSTERROR("Window '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+          else UNCHANGED
+          endif
+    else  UNCHANGED  endif
+  SIZING
+    u:Area   ; will be recalculated for baseline after window size adjustments
+  ANNUAL
+    z:Area  ; will be recalculated for baseline after window size adjustments
+ENDRULE
+RULE NEW Win:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( FenConsRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", FenConsRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( FenConsRef ) )
+    then  Format( "%s", FenConsRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ********** Fenestration Geometry - Skylight Area ***************************
+RULE Skylt:Area
+  DESCRIPTION
+    "Calculate Area of each Skylight"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional      
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )   ;added to populate CBECC dialog 
+    else  UNDEFINED  endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Skylight '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED  
+    endif
+  SIZING
+    u:Area   ; will be recalculated for baseline after window size adjustments
+  ANNUAL
+    z:Area  ; will be recalculated for baseline after window size adjustments
+ENDRULE
+RULE NEW Skylt:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( FenConsRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", FenConsRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( FenConsRef ) )
+    then  Format( "%s", FenConsRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Section 5.5.6 - Doors ----------------------------------
+// ********** Door Geometry - Door Area *****************************
+RULE Dr:Area
+  DESCRIPTION
+    "Calculate Area of each Door"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM 5.5.6
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )   ;added to populate CBECC dialog
+    else if (IfValidAnd( ShadeGeomReqd > 0 ) .AND. IfValidAnd( Hgt > 0 ) .AND. IfValidAnd( Wd > 0 ))
+    then  Hgt * Wd
+    else  UNDEFINED
+    endif endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then  if(ChildCount(PolyLp) < 1)
+          then POSTERROR("Door '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+          else UNCHANGED
+          endif
+    else  UNCHANGED  endif
+  SIZING
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW Dr:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( DrConsRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", DrConsRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( DrConsRef ) )
+    then  Format( "%s", DrConsRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// --------- Default areas of various surface types -----------------------------------
+RULE Ceiling:Area
+  DESCRIPTION
+    "Calculate Area of each Ceiling"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Ceiling '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED
+    endif
+  SIZING
+    u:Area   ; will be recalculated for baseline after window size adjustments
+  ANNUAL
+    z:Area  
+ENDRULE
+RULE NEW Ceiling:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE IntFlr:Area
+  DESCRIPTION
+    "Calculate Area of each IntFlr"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+	  else  UNDEFINED
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Interior Floor '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+	  else  UNCHANGED
+    endif
+  SIZING 
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW IntFlr:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE IntWall:Area
+  DESCRIPTION
+    "Calculate Area of each IntWall"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired       
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Interior Wall '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED
+    endif
+  SIZING 
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW IntWall:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE UndgrFlr:Area
+  DESCRIPTION
+    "Calculate Area of each UndgrFlr"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Underground Floor '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED
+    endif
+  SIZING 
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW UndgrFlr:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE UndgrWall:Area
+  DESCRIPTION
+    "Calculate Area of each UndgrWall"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    CondRequired
+  REPORTPRECISION
+    0
+  DEFAULT
+    if (Proj:IsDetailedGeometry)
+    then  SumChildren( PolyLp:Area, 1 )
+    else  UNDEFINED
+    endif
+  CHECKSIM
+    if (Proj:IsDetailedGeometry)
+    then if(ChildCount(PolyLp) < 1)
+      then POSTERROR("Underground Wall '%s' has no Polyloop defined.  A polyloop is required for this object.",u:Name)
+      else UNCHANGED
+      endif
+    else  UNCHANGED
+    endif
+  SIZING 
+    u:Area
+  ANNUAL
+    z:Area
+ENDRULE
+RULE NEW UndgrWall:TreeDescrip
+  DATATYPE
+    String
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( LocalCompAssigned( ConsAssmRef ) .AND. IfValidAnd( Area > 0 ) )
+    then  Format( "%s, %s ft2", ConsAssmRef:Name, FltToStr( Area ) )
+	  else if( LocalCompAssigned( ConsAssmRef ) )
+    then  Format( "%s", ConsAssmRef:Name )
+	  else if( IfValidAnd( Area > 0 ) )
+    then  Format( "%s ft2", FltToStr( Area ) )
+    else  " "  endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ** debugging rule evaluation duration **
+RULE NEW Proj:RuleEvalDuration
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    LogDuration( "            time to evaluate remaining PolyLp & ComponentAreas DEFAULT rules:  %.3f seconds" )
+  SIZING_PROPOSED 
+    LogDuration( "            time to evaluate remaining PolyLp & ComponentAreas SIZING_PROPOSED rules:  %.3f seconds" )
+  SIZING_BASELINE
+    LogDuration( "            time to evaluate remaining PolyLp & ComponentAreas SIZING_BASELINE rules:  %.3f seconds" )
+  ANNUAL_PROPOSED
+    LogDuration( "            time to evaluate remaining PolyLp & ComponentAreas ANNUAL_PROPOSED rules:  %.3f seconds" )
+  ANNUAL_BASELINE
+    LogDuration( "            time to evaluate remaining PolyLp & ComponentAreas ANNUAL_BASELINE rules:  %.3f seconds" )
+ENDRULE
+
+
+RULE NEW Proj:TotExtSurfArea
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    TotalExteriorSurfaceArea
+  DESCRIPTION
+    "Calculating the above and below grade exterior surfaces of a building
+     for conditioned spaces."  
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    ( SumAll(UndgrWall:Area) + SumAll(UndgrFlr:Area) + 
+      SumAll(ExtFlr:Area) + SumAll(ExtWall:Area) + 
+      SumAll(Roof:Area) )
+  SIZING
+    u:TotExtSurfArea
+  ANNUAL
+    z:TotExtSurfArea
+ENDRULE
+
+RULE NEW Proj:AboveGrdExtWallArea
+  RULESETS
+    S901G ECBC
+  DATATYPE
+    Float
+  LONGFORM
+    AboveGradeExteriorWallArea
+  DESCRIPTION
+    "Calculating the above grade exterior wall of a building
+     for conditioned spaces."  
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    SumAll(ExtWall:Area)
+  SIZING
+    u:AboveGrdExtWallArea
+  ANNUAL
+    z:AboveGrdExtWallArea
+ENDRULE

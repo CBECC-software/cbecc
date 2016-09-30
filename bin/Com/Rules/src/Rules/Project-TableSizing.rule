@@ -1,0 +1,672 @@
+// Project - TableSizing
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2015, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+
+// ********** TableHardSizing **************************************************
+RULE NEW Proj:ModelName
+  DATATYPE
+    String
+  LONGFORM
+    ModelName
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "An intermediate model name used for TableSizing 0X00 model HVAC system capacities."
+  DEFAULT
+    switch ( Name )
+      case "010012-SchSml-CECStd13"       : "SchSmlCECStd13010012"
+      case "020012-OffSml-CECStd13"       : "OffSmlCECStd13020012"
+      case "020012S-OffSml-CECStd13"      : "OffSmlCECStd13020012S"
+      case "030012-OffMed-CECStd13"       : "OffMedCECStd13030012"
+      case "030012S-OffMed-CECStd13"       : "OffMedCECStd13030012S"
+      case "040012-OffLrg-CECStd13"       : "OffLrgCECStd13040012"
+      case "050012-RetlMed-CECStd13"      : "RetlMedCECStd13050012"
+      case "060012-RstntSml-CECStd13"     : "RstntSmlCECStd13060012"
+      case "070012-HotSml-CECStd13"       : "HotSmlCECStd13070012"
+      case "080012-Whse-CECStd13"         : "WhseCECStd13080012"
+      case "090012-RetlLrg-CECStd13"      : "RetlLrgCECStd13090012"
+; T24N_2016 models
+      case "010012-SchSml-CECStd16"       : "SchSmlCECStd16010012"
+      case "020012-OffSml-CECStd16"       : "OffSmlCECStd16020012"
+      case "020012S-OffSml-CECStd16"      : "OffSmlCECStd16020012S"
+      case "030012-OffMed-CECStd16"       : "OffMedCECStd16030012"
+      case "030012S-OffMed-CECStd16"      : "OffMedCECStd16030012S"
+      case "040012-OffLrg-CECStd16"       : "OffLrgCECStd16040012"
+      case "050012-RetlMed-CECStd16"      : "RetlMedCECStd16050012"
+      case "060012-RstntSml-CECStd16"     : "RstntSmlCECStd16060012"
+      case "070012-HotSml-CECStd16"       : "HotSmlCECStd16070012"
+      case "080012-Whse-CECStd16"         : "WhseCECStd16080012"
+      case "090012-RetlLrg-CECStd16"      : "RetlLrgCECStd16090012"
+; S901G models
+      case "020032-OffSml-S901GElectric"  : "OffSmlS901GElectric020032"
+      case "020032-OffSml-S901GFossil"    : "OffSmlS901GFossil020032"
+      case "030032-OffMed-S901GElectric"  : "OffMedS901GElectric030032"
+      case "070032-HotSml-S901GElectric"  : "HotSmlS901GElectric070032"
+      case "080032-Whse-S901GFossil"      : "WhseS901GFossil080032"
+; ECBC models
+      case "020032-OffSml-ECBC-Electric"  : "OffSmlS901GElectric020032"
+      case "020032-OffSml-ECBC-Fossil"    : "OffSmlS901GFossil020032"
+      case "030032-OffMed-ECBC-Electric"  : "OffMedS901GElectric030032"
+      case "070032-HotSml-ECBC-Electric"  : "HotSmlS901GElectric070032"
+      case "080032-Whse-ECBC-Fossil"      : "WhseS901GFossil080032"
+      default : ""
+    endswitch
+ENDRULE
+
+RULE NEW Proj:IsStdModel
+  DATATYPE
+    Integer
+  LONGFORM
+    IsStandardModel
+  INPUTCLASS
+    NotInput
+  DESCRIPTION
+    "An integer indicating the model is a Standard model."
+  DEFAULT
+    if( ModelName != "" )
+    then 1
+    else 0
+    endif
+ENDRULE
+
+// TrmlUnit
+RULE TrmlUnit:PriAirFlowMax
+  DEFAULT
+    if( LocalCompAssigned( PriAirSegRef ) .AND.
+        LocalCompAssigned( ZnServedRef ) .AND.
+        Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch( Proj:Name ) 
+; T24N_2013
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012STrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012STrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+; S90.1G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032TrmlUnit:PriAirFlowMax( "PropName", Name )
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032TrmlUnit:PriAirFlowMax( "PropName", Name )
+;       case "070032-HotSml-S901GElectric" : // No TrmlUnits in this model
+;         HotSmlS901GElectric070032TrmlUnit:PriAirFlowMax( "PropName", Name )
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032TrmlUnit:PriAirFlowMax( "PropName", Name )
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032TrmlUnit:PriAirFlowMax( "PropName", Name ) 
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032TrmlUnit:PriAirFlowMax( "PropName", Name )
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032TrmlUnit:PriAirFlowMax( "PropName", Name )
+;       case "070032-HotSml-ECBC-Electric" : // No TrmlUnits in this model
+;         HotSmlS901GElectric070032TrmlUnit:PriAirFlowMax( "PropName", Name )
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032TrmlUnit:PriAirFlowMax( "PropName", Name )
+        default : UNCHANGED
+      endswitch
+    else UNCHANGED
+    endif
+ENDRULE
+
+// AirSys:Fan
+RULE AirSys:AirSeg:Fan:FlowCap
+  DEFAULT
+    if( AirSys:IsExhSys = 0 .AND.
+        Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch ( Proj:Name )
+; T24N_2013 
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012Fan:FlowCap( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012Fan:FlowCap( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SFan:FlowCap( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012Fan:FlowCap( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SFan:FlowCap( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012Fan:FlowCap( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012Fan:FlowCap( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012Fan:FlowCap( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012Fan:FlowCap( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012Fan:FlowCap( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012Fan:FlowCap( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012Fan:FlowCap( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012Fan:FlowCap( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012SFan:FlowCap( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012Fan:FlowCap( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012SFan:FlowCap( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012Fan:FlowCap( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012Fan:FlowCap( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012Fan:FlowCap( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012Fan:FlowCap( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012Fan:FlowCap( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012Fan:FlowCap( "PropName", Name ) 
+; S901G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032Fan:FlowCap( "PropName", Name )
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032Fan:FlowCap( "PropName", Name ) 
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032Fan:FlowCap( "PropName", Name )
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032Fan:FlowCap( "PropName", Name )
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032Fan:FlowCap( "PropName", Name )
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032Fan:FlowCap( "PropName", Name )
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032Fan:FlowCap( "PropName", Name ) 
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032Fan:FlowCap( "PropName", Name )
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032Fan:FlowCap( "PropName", Name )
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032Fan:FlowCap( "PropName", Name )
+        default : UNCHANGED
+      endswitch 
+    else UNCHANGED
+    endif
+ENDRULE
+
+// ZnSys:Fan
+RULE ZnSys:Fan:FlowCap
+  DEFAULT
+    if( ZnSys:IsExhSys = 0 .AND.
+        Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch ( Proj:Name )
+; T24N_2013 
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012Fan:FlowCap( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012Fan:FlowCap( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SFan:FlowCap( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012Fan:FlowCap( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SFan:FlowCap( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012Fan:FlowCap( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012Fan:FlowCap( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012Fan:FlowCap( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012Fan:FlowCap( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012Fan:FlowCap( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012Fan:FlowCap( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012Fan:FlowCap( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012Fan:FlowCap( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012SFan:FlowCap( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012Fan:FlowCap( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012SFan:FlowCap( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012Fan:FlowCap( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012Fan:FlowCap( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012Fan:FlowCap( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012Fan:FlowCap( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012Fan:FlowCap( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012Fan:FlowCap( "PropName", Name ) 
+; S901G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032Fan:FlowCap( "PropName", Name )
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032Fan:FlowCap( "PropName", Name ) 
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032Fan:FlowCap( "PropName", Name )
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032Fan:FlowCap( "PropName", Name )
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032Fan:FlowCap( "PropName", Name )
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032Fan:FlowCap( "PropName", Name )
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032Fan:FlowCap( "PropName", Name ) 
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032Fan:FlowCap( "PropName", Name )
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032Fan:FlowCap( "PropName", Name )
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032Fan:FlowCap( "PropName", Name )
+        default : UNCHANGED
+      endswitch 
+    else UNCHANGED
+    endif
+ENDRULE
+
+// CoilClg
+RULE CoilClg:CapTotNetRtd
+  DEFAULT
+    if( Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch ( Proj:Name ) 
+; T24N_2013
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SCoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SCoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012CoilClg:CapTotNetRtd( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012SCoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012SCoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012CoilClg:CapTotNetRtd( "PropName", Name ) 
+; S901G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032CoilClg:CapTotNetRtd( "PropName", Name )
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032CoilClg:CapTotNetRtd( "PropName", Name ) 
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032CoilClg:CapTotNetRtd( "PropName", Name )
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032CoilClg:CapTotNetRtd( "PropName", Name )
+        default : UNCHANGED
+      endswitch 
+   else UNCHANGED
+   endif
+ENDRULE
+RULE CoilClg:FluidFlowRtDsgn
+  DEFAULT
+    if( ( Type = "ChilledWater" .OR. 
+          ( Type = "DirectExpansion" .AND. CndsrType = "WaterSource" ) ) .AND.
+        Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then
+      switch ( Proj:Name ) 
+; T24N_2013
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SCoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SCoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SCoilClg:FluidFlowRtDsgn( "PropName", Name )
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+         case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SCoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+; S901G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032CoilClg:FluidFlowRtDsgn( "PropName", Name )
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032CoilClg:FluidFlowRtDsgn( "PropName", Name )  
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032CoilClg:FluidFlowRtDsgn( "PropName", Name )
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032CoilClg:FluidFlowRtDsgn( "PropName", Name )  
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032CoilClg:FluidFlowRtDsgn( "PropName", Name ) 
+        default : UNCHANGED
+      endswitch
+    else UNCHANGED
+    endif
+ENDRULE   
+
+
+// CoilHtg
+RULE CoilHtg:CapTotNetRtd
+  DEFAULT
+    if( Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch ( Proj:Name ) 
+; T24N_2013
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SCoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SCoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012SCoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012SCoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012CoilHtg:CapTotNetRtd( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012CoilHtg:CapTotNetRtd( "PropName", Name )
+; S901G
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032CoilHtg:CapTotNetRtd( "PropName", Name )
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032CoilHtg:CapTotNetRtd( "PropName", Name )
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032CoilHtg:CapTotNetRtd( "PropName", Name )
+        default : UNCHANGED
+      endswitch 
+    else UNCHANGED
+    endif
+ENDRULE
+RULE CoilHtg:FluidFlowRtDsgn
+  DEFAULT
+    if( Type = "HotWater" .AND.
+        Proj:AutoHardSize = 1 .AND.
+        Proj:Name != "" )
+    then // For PROPOSED TableSizing
+      switch ( Proj:Name ) 
+; T24N_2013
+        case "010012-SchSml-CECStd13" : 
+          SchSmlCECStd13010012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012-OffSml-CECStd13" : 
+          OffSmlCECStd13020012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012S-OffSml-CECStd13" : 
+          OffSmlCECStd13020012SCoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012-OffMed-CECStd13" : 
+          OffMedCECStd13030012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012S-OffMed-CECStd13" : 
+          OffMedCECStd13030012SCoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "040012-OffLrg-CECStd13" : 
+          OffLrgCECStd13040012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "050012-RetlMed-CECStd13" : 
+          RetlMedCECStd13050012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "060012-RstntSml-CECStd13" : 
+          RstntSmlCECStd13060012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070012-HotSml-CECStd13" : 
+          HotSmlCECStd13070012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080012-Whse-CECStd13" : 
+          WhseCECStd13080012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd13" : 
+          RetlLrgCECStd13090012CoilHtg:FluidFlowRtDsgn( "PropName", Name )
+; T24N_2016
+        case "010012-SchSml-CECStd16" : 
+          SchSmlCECStd16010012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012-OffSml-CECStd16" : 
+          OffSmlCECStd16020012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020012S-OffSml-CECStd16" : 
+          OffSmlCECStd16020012SCoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012-OffMed-CECStd16" : 
+          OffMedCECStd16030012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030012S-OffMed-CECStd16" : 
+          OffMedCECStd16030012SCoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "040012-OffLrg-CECStd16" : 
+          OffLrgCECStd16040012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "050012-RetlMed-CECStd16" : 
+          RetlMedCECStd16050012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "060012-RstntSml-CECStd16" : 
+          RstntSmlCECStd16060012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070012-HotSml-CECStd16" : 
+          HotSmlCECStd16070012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080012-Whse-CECStd16" : 
+          WhseCECStd16080012CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "090012-RetlLrg-CECStd16" : 
+          RetlLrgCECStd16090012CoilHtg:FluidFlowRtDsgn( "PropName", Name )
+; S901G 
+        case "020032-OffSml-S901GElectric" : 
+          OffSmlS901GElectric020032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020032-OffSml-S901GFossil" : 
+          OffSmlS901GFossil020032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030032-OffMed-S901GElectric" : 
+          OffMedS901GElectric030032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070032-HotSml-S901GElectric" : 
+          HotSmlS901GElectric070032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080032-Whse-S901GFossil" : 
+          WhseS901GFossil080032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+; ECBC
+        case "020032-OffSml-ECBC-Electric" : 
+          OffSmlS901GElectric020032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "020032-OffSml-ECBC-Fossil" : 
+          OffSmlS901GFossil020032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "030032-OffMed-ECBC-Electric" : 
+          OffMedS901GElectric030032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "070032-HotSml-ECBC-Electric" : 
+          HotSmlS901GElectric070032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        case "080032-Whse-ECBC-Fossil" : 
+          WhseS901GFossil080032CoilHtg:FluidFlowRtDsgn( "PropName", Name ) 
+        default : UNCHANGED
+      endswitch
+    else UNCHANGED
+    endif
+ENDRULE      

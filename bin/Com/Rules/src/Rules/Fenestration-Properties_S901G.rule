@@ -1,0 +1,684 @@
+// Vertical Fenestration - Properties
+//
+// -------------------------------------------------------------------------
+//  Copyright (c) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+//  
+
+// The main objects in the SDD are:
+//    Bldg:Space:Roof:Window:ConsAssyRef
+//    FenestationConstruction
+//
+
+// --------------  --------------------
+// Input restriction summary: 
+//  There are no restrictions, other than a match with the construction drawings or 
+//  as-built drawings. Specification of the fenestration position within its parent
+//  surface is required for the following conditions: 1) exterior shading is modeled
+//  from buildings, vegetation, other objects; or 2) if daylighting is modeled within
+//  the adjacent space.
+//
+//      
+
+// ---------- Modify/Set Fenestration Performance ----------
+
+// ---- Identify whether FenCons is located in a semiheated space ----
+RULE NEW FenCons:SemiExteriorFenAssigned
+  DATATYPE
+    Integer
+  LONGFORM
+    SemiExteriorFenestrationAssigned
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction has been assigned to a
+     Fenestration object in a Semiheated Space"
+  HELP
+    "" 
+  REFERENCE
+   
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    if(FenType == "VerticalFenestration")
+    then if(SumRevRef(Win:FenConsRef,Win:IsSemiExterior ) > 0 )
+         then 1
+         else 0
+         endif
+    else if(SumRevRef(Skylt:FenConsRef,Skylt:IsSemiExterior ) > 0 )
+         then 1
+         else 0
+         endif
+    endif
+ENDRULE
+RULE NEW FenCons:ConditionedFenAssigned
+  DATATYPE
+    Integer
+  LONGFORM
+    ConditionedFenestrationAssigned
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction has been assigned to a
+     Fenestration object in a Non-Semiheated Space"
+  HELP
+    "" 
+  REFERENCE
+   
+  INPUTCLASS
+    NotInput       
+  DEFAULT 
+    if( FenType == "VerticalFenestration" ) 
+    then if( SumRevRef( Win:FenConsRef,Win:IsResWin ) > 0 .OR.
+             SumRevRef( Win:FenConsRef,Win:IsNonResWin ) > 0 )
+         then 1
+         else 0
+         endif
+    else if( SumRevRef( Skylt:FenConsRef,Skylt:IsResSkylt ) > 0 .OR.
+             SumRevRef( Skylt:FenConsRef,Skylt:IsNonResSkylt ) > 0 )
+         then 1
+         else 0
+         endif
+    endif
+ENDRULE
+RULE NEW FenCons:NotEnclosedFenAssigned
+  DATATYPE
+    Integer
+  LONGFORM
+    NotEnclosedFenestrationAssigned
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction has been assigned to a
+     Fenestration object in a Not Enclosed Space."
+  HELP
+    "" 
+  REFERENCE
+   
+  INPUTCLASS
+    NotInput      
+  DEFAULT
+    if(IfValidAnd( FenType == "VerticalFenestration" ) )
+    then if(SumRevRef(Win:FenConsRef,Win:IsNotEnclosed ) > 0 )
+         then 1
+         else 0
+         endif
+    else if(IfValidAnd( FenType == "Skylight" ) )
+    then if(SumRevRef(Skylt:FenConsRef,Skylight:IsNotEnclosed) > 0 )
+         then 1
+         else 0
+         endif
+    else 0
+    endif endif
+ENDRULE
+
+RULE NEW FenCons:FenCondStatus
+  DATATYPE
+    Enumeration
+  LONGFORM
+    FenestrationConditioningStatus
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction is applied to windows 
+     in SemiExterior, Non-SemiExterior and/or both space types."
+  HELP
+    "In order to apply the baseline performance parameters at the 
+     FenestrationConstruction level, a single Fenestration Construction
+     cannot be applied to both SemiExterior and Non-SemiExterior occupancies"  
+  REFERENCE 
+    
+  INPUTCLASS
+    NotInput
+  OPTION
+    Conditioned    
+    SemiExterior
+    NotEnclosed
+    MixedHeatingStatus
+    Unassigned
+  DEFAULT
+    if( SemiExteriorFenAssigned == 1 .AND. 
+        ConditionedFenAssigned == 0 .AND.
+        NotEnclosedFenestrationAssigned == 0 ) then
+      "SemiExterior"
+    else if( SemiExteriorFenAssigned == 0 .AND. 
+             ConditionedFenAssigned == 1 .AND.
+             NotEnclosedFenestrationAssigned == 0 ) then
+      "Conditioned"
+    else if( SemiExteriorFenAssigned == 0 .AND. 
+             ConditionedFenAssigned == 0 .AND.
+             NotEnclosedFenestrationAssigned == 1 ) then
+      "NotEnclosed"
+    else if( SemiExteriorFenAssigned == 0 .AND. 
+             ConditionedFenAssigned == 0 .AND.
+             NotEnclosedFenestrationAssigned == 0 ) then
+      "Unassigned"
+    else
+      "MixedHeatingStatus"
+    endif endif endif endif
+  CHECKCODE : S901G ECBC
+    if ( u:FenCondStatus == "MixedHeatingStatus" ) then
+      PostError("Fenestration construction '%s' is assigned to glazing located 
+                 in two or more heating classifications (Conditioned, 
+                 Semiheated, NotEnclosed).  A fenestration construction cannot
+                 be referenced by fenestration located spaces with more than
+                 one heating classification.", u:Name)
+    else 
+      UNCHANGED
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// ---------- Determine the FenCons Baseline Category -------------------------
+RULE NEW FenCons:FenBaseCat
+  DATATYPE
+    Enumeration
+  LONGFORM
+    FenestrationBaselineCategory
+  DESCRIPTION
+    "Identifies whether a FenestrationConstruction is applicable to Residential,
+     NonResidential or Semiheated space types, or a combination.  Used to 
+     identify baseline performance parameters."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    NotEnclosed
+    SemiExterior
+    Nonresidential
+    Residential
+    MixedHeatingStatus
+    MixedOccupancyStatus
+    Unassigned
+  DEFAULT
+    if( FenCondStatus = "MixedHeatingStatus" .OR.
+        FenCondStatus = "NotEnclosed" .OR.
+        FenCondStatus = "SemiExterior" )
+    then
+      FenCondStatus
+    else 
+      FenOcc
+    endif
+  CHECKCODE
+    if( FenCondStatus = "MixedHeatingStatus" .OR.
+        FenCondStatus = "MixedOccupancyStatus" )
+    then
+      PostError( "Fenestration construction '%s' is assigned to more than one 
+                  conditioning or occupancy Category.  To properly assign baseline
+                  performance parameters, seperate fenestration costructions must
+                  be provided for SemiConditioned, Residential and Nonresidential 
+                  envelope components.", Name )
+    else UNCHANGED
+    endif
+  SIZING
+    u:FenBaseCat
+  ANNUAL
+    u:FenBaseCat
+ENDRULE
+RULE NEW FenCons:FenSRRCat
+  DATATYPE
+    String
+  LONGFORM
+    FenestrationSkylightRoofRatioCategory
+  DESCRIPTION
+    "The SRR Cat for a Fenestration Construction's particular FenBaseCat "  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( FenBaseCat = "Residential" )
+    then Bldg:ResSRRCat
+    else if( FenBaseCat = "SemiExterior" )
+    then Bldg:SemiExtSRRCat
+    else Bldg:NonResSRRCat
+    endif endif
+  SIZING
+    if( FenBaseCat = "Residential" )
+    then Bldg:ResSRRCat
+    else if( FenBaseCat = "SemiExterior" )
+    then Bldg:SemiExtSRRCat
+    else Bldg:NonResSRRCat
+    endif endif
+  ANNUAL
+    u:FenSRRCat
+ENDRULE
+
+RULE NEW FenCons:DefaultUFactor
+  DATATYPE
+    Float
+  LONGFORM
+    DefaultUFactor
+  DESCRIPTION
+    "The Default U-Value of an unrated Fenestration Construction, or a flag 
+     indicating that the input combination is not valid"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( CertificationMthd = "DefaultPerformance" ) then 
+      if ( IfValidAnd( FenType = "VerticalFenestration" ) ) then
+        DefaultVertFenPerf:UFactor(
+        "FenestrationFraming",FenFrm,
+        "FenestrationPanes",FenPanes,
+        "GlazingTint",GlazingTint )
+      else if( IfValidAnd( FenType = "Skylight" ) ) then
+        DefaultSkyltUFactors:UFactor( 
+        "FenestrationPanes",FenPanes,
+        "SkylightCurb",SkylightCurb,
+        "FenestrationFraming",FenFrm )
+      else
+        UNDEFINED
+      endif endif
+    else
+      UNDEFINED
+      endif
+  CHECKCODE
+    if( IfValidAnd(CertificationMthd = "DefaultPerformance") )
+    then if( IfValidAnd( u:DefaultUFactor = -999 ) )
+      then PostError( "Invalid default parameter input combination for 
+                       fenestration construction '%s'.  Check Inputs.",
+                       u:Name )
+      else if( IfValidAnd( u:DefaultUFactor <= 0 ) )
+      then PostError( "Default UFactor must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    UNDEFINED                  
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW FenCons:BaselineUFactor
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineUFactor
+  DESCRIPTION
+    "The Baseline U-Value for Fenestration Construction, or a flag 
+     indicating that the input combination is not valid"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( FenBaseCat = "MixedHeatingStatus" .OR.
+        FenBaseCat = "MixedOccupancyStatus" .OR.
+        FenBaseCat = "Unassigned" )
+    then UNDEFINED
+    else if( FenBaseCat = "NotEnclosed" )
+    then // Flag to indicate 'Same as Proposed'
+      999 
+    else 
+      BaselineFenPerf:UFactor(
+      "BaselineEnvelopeCategory",FenBaseCat,
+      "ClimateZone",CliZnNumOnly,
+      "FenestrationType",FenType,
+      "FenestrationFraming",FenFrm,
+      "FenestrationProductType",FenProdType,
+      "SkylightCurb",SkyltCurb,
+      "SkylightGlazing",SkyltGlz,
+      "SkylightRoofRatioCat",FenSRRCat )
+    endif endif
+  CHECKCODE
+    if( IfValidAnd( u:BaselineUFactor > 0 ) .OR.
+      FenBaseCat = "Unassigned" )
+    then UNCHANGED
+    else PostError( "Baseline UFactor must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+    endif
+  ANNUAL
+    z:BaselineUFactor
+ENDRULE
+RULE FenCons:UFactor
+  DESCRIPTION
+    "The simulated overall U-Factor of the fenestration product, including 
+     glazing and frame"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  MINIMUM
+    0
+  MAXIMUM
+    2.5
+  COMMONMAXIMUM
+    2.3
+  REPORTPRECISION
+    2
+  DEFAULT
+      if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( DefaultUFactor ) > 0 ) then 
+        u:DefaultUFactor
+      else UNDEFINED
+      endif
+  CHECKSIM
+    if( LocalStatus( UFactor ) < 1 )
+    then 
+      PostError( "UFactor must be defined for fenestration construction '%s'.",
+                 Name )
+    else 
+      UNCHANGED
+    endif
+  SIZING
+    switch( FenPropRuleFlag )
+    case 0:  // apply proposed model properties
+      if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( u:DefaultUFactor ) > 0 ) then 
+        u:DefaultUFactor
+      else  u:UFactor
+      endif
+    case 1: // apply standard design properties 
+        if( u:BaselineUFactor = 999 ) 
+        then  //  No Requirement - standard design properties = proposed property
+          if( CertificationMthd = "DefaultPerformance" ) then 
+            u:DefaultUFactor
+          else  u:UFactor
+          endif
+        else  
+          u:BaselineUFactor
+        endif
+    default:
+      u:UFactor
+    endswitch                     
+  ANNUAL
+    z:UFactor
+ENDRULE
+
+RULE NEW FenCons:DefaultSHGC
+  DATATYPE
+    Float
+  LONGFORM
+    DefaultSolarHeatGainCoefficient
+  DESCRIPTION
+   "The Default SHGC for an unrated Fenestration Construction, or a flag 
+   indicating that the input combination is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( CertificationMthd = "DefaultPerformance" )
+    then 
+      if ( FenType = "VerticalFenestration" ) 
+			then  // Vertical Fenestration - lookup default
+        DefaultVertFenPerf:SHGC(
+        "FenestrationFraming",FenFrm,
+        "FenestrationPanes",FenPanes,
+        "GlazingTint",GlazingTint )
+      else if ( FenType = "Skylight" )
+      then
+        DefaultSkyltSHGC:SHGC(
+        "GlazingTint",GlzTint,
+        "FenestrationPanes",FenPanes,
+        "FenestrationFraming",FenFrm )
+      else 
+        UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IfValidAnd(CertificationMthd = "DefaultPerformance") )
+    then if( IfValidAnd( u:DefaultSHGC = -999 ) )
+      then PostError( "Invalid default parameter input combination for 
+                       fenestration construction '%s'.  Check Inputs.",
+                       u:Name )
+      else if( IfValidAnd( u:DefaultSHGC <= 0 ) )
+      then PostError( "Default SHGC must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    UNDEFINED                  
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW FenCons:BaselineSHGC
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineSHGC
+  DESCRIPTION
+    "The Baseline SHGC for Fenestration Construction, or a flag 
+     indicating that the input combination is not valid"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( FenBaseCat = "MixedHeatingStatus" .OR.
+        FenBaseCat = "MixedOccupancyStatus" .OR.
+        FenBaseCat = "Unassigned" )
+    then UNDEFINED
+    else if( FenBaseCat = "NotEnclosed" )
+    then // Flag to indicate 'Same as Proposed'
+      999 
+    else
+      BaselineFenPerf:SHGC(
+      "BaselineEnvelopeCategory",FenBaseCat,
+      "ClimateZone",CliZnNumOnly,
+      "FenestrationType",FenType,
+      "FenestrationFraming",FenFrm,
+      "FenestrationProductType",FenProdType,
+      "SkylightCurb",SkyltCurb,
+      "SkylightGlazing",SkyltGlz,
+      "SkylightRoofRatioCat",FenSRRCat )
+    endif endif
+  CHECKCODE
+    if( IfValidAnd( u:BaselineSHGC > 0 ) .OR.
+        FenBaseCat = "Unassigned" )
+    then UNCHANGED
+    else PostError( "Baseline SHGC must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+    endif
+  ANNUAL
+    z:BaselineSHGC
+ENDRULE
+RULE FenCons:SHGC
+  DESCRIPTION
+    "The simulated overall SHGC of the fenestration product, including 
+     glazing and frame"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( DefaultSHGC ) > 0 ) then
+      DefaultSHGC
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( LocalStatus( SHGC ) < 1 ) then 
+      PostError( "SHGC must be defined for fenestration construction '%s'.",
+                 Name )
+    else UNCHANGED
+    endif
+  SIZING
+    switch( FenPropRuleFlag )
+    case 0:                                 // apply proposed design properties
+      if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( u:DefaultSHGC ) > 0 ) then
+        u:DefaultSHGC
+      else u:SHGC                              
+      endif
+    case 1:                                 // apply standard design properties 
+      if( u:BaselineSHGC = 999 ) 
+      then  //  No Requirement - standard design properties = proposed property
+        if( CertificationMthd = "DefaultPerformance" ) then 
+          u:DefaultSHGC
+        else  u:SHGC
+        endif
+      else  
+        u:BaselineSHGC
+      endif
+    default: 
+      u:SHGC
+    endswitch
+  ANNUAL
+    z:SHGC
+ENDRULE
+
+RULE NEW FenCons:DefaultVT
+  DATATYPE
+    Float
+  LONGFORM
+    DefaultVisibleTransmittance
+  DESCRIPTION
+   "The Default VT for an unrated Fenestration Construction, or a flag 
+   indicating that the input combination is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( CertificationMthd = "DefaultPerformance" )
+    then 
+      if ( FenType = "VerticalFenestration" ) 
+			then  // Vertical Fenestration - lookup default
+        DefaultVertFenPerf:VT(
+        "FenestrationFraming",FenFrm,
+        "FenestrationPanes",FenPanes,
+        "GlazingTint",GlazingTint )
+      else if ( FenType = "Skylight" )
+      then
+        DefaultSkyltSHGC:VT(
+        "GlazingTint",GlzTint,
+        "FenestrationPanes",FenPanes,
+        "FenestrationFraming",FenFrm )
+      else 
+        UNDEFINED
+      endif endif
+    else UNDEFINED
+    endif
+  CHECKCODE
+    if( IfValidAnd(CertificationMthd = "DefaultPerformance") )
+    then if( IfValidAnd( u:DefaultVT = -999 ) )
+      then PostError( "Invalid default parameter input combination for 
+                       fenestration construction '%s'.  Check Inputs.",
+                       u:Name )
+      else if( IfValidAnd( u:DefaultVT <= 0 ) )
+      then PostError( "Default VT must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+      else UNCHANGED
+      endif endif
+    else UNCHANGED
+    endif
+  SIZING
+    UNDEFINED                  
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW FenCons:BaselineVT
+  DATATYPE
+    Float
+  LONGFORM
+    BaselineVT
+  DESCRIPTION
+    "The Baseline VT for Fenestration Construction, or a flag 
+     indicating that the input combination is not valid"  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( FenBaseCat = "MixedHeatingStatus" .OR.
+        FenBaseCat = "MixedOccupancyStatus" .OR.
+        FenBaseCat = "Unassigned" )
+    then UNDEFINED
+    else if( FenBaseCat = "NotEnclosed" )
+    then   // Flag to indicate 'Same as Proposed'
+      999 
+    else
+      BaselineFenPerf:VT(
+      "BaselineEnvelopeCategory",FenBaseCat,
+      "ClimateZone",CliZnNumOnly,
+      "FenestrationType",FenType,
+      "FenestrationFraming",FenFrm,
+      "FenestrationProductType",FenProdType,
+      "SkylightCurb",SkyltCurb,
+      "SkylightGlazing",SkyltGlz,
+      "SkylightRoofRatioCat",FenSRRCat )
+    endif endif
+  CHECKCODE
+    if( IfValidAnd( u:BaselineVT > 0 ) .OR.
+        FenBaseCat = "Unassigned" )
+    then UNCHANGED
+    else PostError( "Baseline VT must be defined for fenestration construction '%s'.
+                     Check Inputs.",
+                     u:Name )
+    endif
+  ANNUAL
+    z:BaselineVT
+ENDRULE
+RULE FenCons:VT
+  DESCRIPTION
+    "The simulated overall VT of the fenestration product, including 
+     glazing and frame"  
+  HELP
+    ""  
+  REFERENCE 
+    
+  INPUTCLASS
+    Optional
+  REPORTPRECISION
+    2
+  DEFAULT
+    if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( DefaultVT ) > 0 ) then
+      DefaultVT
+    else UNDEFINED
+    endif
+  CHECKSIM
+    if( LocalStatus( VT ) < 1 ) then 
+      PostError( "VT must be defined for fenestration construction '%s'.",
+                 Name )
+    else UNCHANGED
+    endif
+  SIZING
+    switch( FenPropRuleFlag )
+    case 0:                                 // apply proposed design properties
+      if( CertificationMthd = "DefaultPerformance" .AND.
+          LocalStatus( u:DefaultVT ) > 0 ) then
+        u:DefaultVT
+      else u:VT                              
+      endif
+    case 1:                                 // apply standard design properties 
+      if( u:BaselineVT = 999 ) 
+      then  //  No Requirement - standard design properties = proposed property
+        if( CertificationMthd = "DefaultPerformance" ) then 
+          u:DefaultVT
+        else  u:VT
+        endif
+      else  
+        u:BaselineVT
+      endif
+    default: 
+      u:VT
+    endswitch
+  ANNUAL
+    z:VT
+ENDRULE

@@ -1,0 +1,2627 @@
+// Interior Lighting - General Information
+//
+// -------------------------------------------------------------------------
+//  Copyright (c ) 2012, California Energy Commission
+//  All rights reserved.
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+// 
+//    * Redistributions of source code must retain the above copyright
+//  notice, this list of conditions and the following disclaimer.
+//    * Redistributions in binary form must reproduce the above copyright
+//  notice, this list of conditions and the following disclaimer in
+//  the documentation and/or other materials provided with the
+//  distribution.
+//    * Neither the name of the California Energy Commission nor the names of its
+//  contributors may be used to endorse or promote products
+//  derived from this software without specific prior written
+//  permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+//  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+//  PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION
+//  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+//  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+//  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+//  BUSINESS INTERRUPTION ) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+//  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+//  OTHERWISE ) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN if
+//  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// -------------------------------------------------------------------------
+
+
+// ********** Luminaire Props *************************************************
+RULE Lum:Pwr
+  DESCRIPTION
+    "Luminaire power in Watts." 
+  REFERENCE 
+    
+  INPUTCLASS
+    Compulsory  
+  UNITS 
+    W
+  MINIMUM 
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    0
+ENDRULE
+RULE Lum:FxtrType
+  DESCRIPTION
+    "The Luminaire's fixture type." 
+  REFERENCE 
+    5.4.4 - Interior Lighting, Fixture Type
+  INPUTCLASS
+    Required 
+  OPTION
+    RecessedWithLens    
+    RecessedOrDownlight
+    NotInCeiling
+  DEFAULT
+    "RecessedOrDownlight"
+ENDRULE
+RULE Lum:LampType
+  DESCRIPTION
+    "The lamp type utilized in the luminaire." 
+  REFERENCE 
+    5.4.4 - Interior Lighting, Fixture Type
+  INPUTCLASS
+    Required 
+  OPTION
+   LinearFluorescent
+   CFL
+   Incandescent
+   LED
+   MetalHalide
+   MercuryVapor
+   HighPressureSodium
+  DEFAULT
+    "LinearFluorescent"
+ENDRULE
+
+
+// ********** Manage Luminaire References *************************************
+// TO DO - Add Rules for Luminaire[1-5]
+
+RULE NEW IntLtgSys:LumRefPresent1
+   DATATYPE
+     Integer
+   LONGFORM
+     LuminaireReferencePresent1
+   DESCRIPTION
+     "Whether or not first luminaire is assigned." 
+   INPUTCLASS
+     NotInput
+   DEFAULT
+      if ( LocalCompAssigned( LumRef[1] )) then  1  else  0  endif
+   SIZING
+     u:LumRefPresent1
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE NEW IntLtgSys:LumRefPresent2
+   DATATYPE
+     Integer
+   LONGFORM
+     LuminaireReferencePresent2
+   DESCRIPTION
+     "Whether or not second luminaire is assigned."  
+   INPUTCLASS
+     NotInput
+   DEFAULT
+      if ( LocalCompAssigned( LumRef[2] )) then  1  else  0  endif
+   SIZING
+     u:LumRefPresent2
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE NEW IntLtgSys:LumRefPresent3
+   DATATYPE
+     Integer
+   LONGFORM
+     LuminaireReferencePresent3
+   DESCRIPTION
+     "Whether or not third luminaire is assigned." 
+   INPUTCLASS
+     NotInput
+   DEFAULT
+      if ( LocalCompAssigned( LumRef[3] )) then  1  else  0  endif
+   SIZING
+     u:LumRefPresent3
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE NEW IntLtgSys:LumRefPresent4
+   DATATYPE
+     Integer
+   LONGFORM
+     LuminaireReferencePresent4
+   DESCRIPTION
+     "Whether or not fourth luminaire is assigned."  
+   INPUTCLASS
+     NotInput
+   DEFAULT
+      if ( LocalCompAssigned( LumRef[4] )) then  1  else  0  endif
+   SIZING
+     u:LumRefPresent4
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE NEW IntLtgSys:LumRefPresent5
+   DATATYPE
+     Integer
+   LONGFORM
+     LuminaireReferencePresent5
+   DESCRIPTION
+     "Whether or not fifth luminaire is assigned."  
+   INPUTCLASS
+     NotInput
+   DEFAULT
+      if ( LocalCompAssigned( LumRef[5] )) then  1  else  0  endif
+   SIZING
+     u:LumRefPresent5
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE NEW IntLtgSys:LastLumRefPresent
+   DATATYPE
+     Integer
+   LONGFORM
+     LastLuminaireReferencePresent
+   DESCRIPTION
+     "Index ( 1-5 ) of last luminaire assigned to lighting system."  
+   INPUTCLASS
+     NotInput
+   DEFAULT
+		     if ( LumRefPresent5 > 0.5 ) then  5
+		else if ( LumRefPresent4 > 0.5 ) then  4
+		else if ( LumRefPresent3 > 0.5 ) then  3
+		else if ( LumRefPresent2 > 0.5 ) then  2
+		else if ( LumRefPresent1 > 0.5 ) then  1
+		else  0  endif endif endif endif endif
+ENDRULE
+
+RULE IntLtgSys:LumCnt[1]
+   DESCRIPTION
+     "Luminaire count."  
+  INPUTCLASS
+    Default
+   MINIMUM 
+     0
+   REPORTPRECISION
+    0
+  DEFAULT
+     if ( LumRefPresent1 )  
+     then 0
+     else UNDEFINED 
+     endif
+   SIZING
+     if ( LumRefPresent1 ) 
+     then u:LumCnt[1]
+     else UNDEFINED
+     endif
+
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumCnt[2]
+   DESCRIPTION
+     "Luminaire count."  
+  INPUTCLASS
+    Default
+   MINIMUM 
+     0
+   REPORTPRECISION
+    0
+  DEFAULT
+     if ( LumRefPresent2 ) 
+     then 0
+     else UNDEFINED 
+     endif
+   SIZING
+     if ( LumRefPresent2 ) 
+     then u:LumCnt[2]
+     else UNDEFINED
+     endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumCnt[3]
+   DESCRIPTION
+     "Luminaire count."  
+  INPUTCLASS
+    Default
+   MINIMUM 
+     0
+   REPORTPRECISION
+    0
+  DEFAULT
+     if ( LumRefPresent3 ) 
+     then 0
+     else UNDEFINED 
+     endif
+   SIZING
+     if ( LumRefPresent3 ) 
+     then u:LumCnt[3]
+     else UNDEFINED
+     endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumCnt[4]
+   DESCRIPTION
+     "Luminaire count."  
+  INPUTCLASS
+    Default
+   MINIMUM 
+     0
+   REPORTPRECISION
+    0
+  DEFAULT
+     if ( LumRefPresent4 )  
+     then 0
+     else UNDEFINED 
+     endif
+   SIZING
+     if ( LumRefPresent4 ) 
+     then u:LumCnt[4]
+     else UNDEFINED
+     endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumCnt[5]
+   DESCRIPTION
+     "Luminaire count."  
+  INPUTCLASS
+    Default
+   MINIMUM 
+     0
+   REPORTPRECISION
+    0
+  DEFAULT
+     if ( LumRefPresent5 ) 
+     then 0
+     else UNDEFINED 
+     endif
+   SIZING
+     if ( LumRefPresent5 ) 
+     then u:LumCnt[5]
+     else UNDEFINED
+     endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+RULE IntLtgSys:LumPwr[1]
+  DESCRIPTION
+    "Luminaire power ( taking Count into account )."  
+  UNITS 
+   Watts ( W )
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+	  if ( IfValidAnd( LumRefPresent1 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[1] < 0.1 ) )
+    then 0
+	  else  LumRef[1]:Pwr * LumCnt[1] 
+    endif endif
+   SIZING
+	  if ( IfValidAnd( LumRefPresent1 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[1] < 0.1 ) )
+    then 0
+	  else  LumPwr[1]
+    endif endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumPwr[2]
+  DESCRIPTION
+    "Luminaire power ( taking Count into account )."  
+  UNITS 
+   Watts ( W )
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+	  if ( IfValidAnd( LumRefPresent2 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[2] < 0.1 ) )
+    then 0
+  	else  LumRef[2]:Pwr * LumCnt[2]
+    endif endif
+   SIZING
+	  if ( IfValidAnd( LumRefPresent2 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[2] < 0.1 ) )
+    then 0
+	  else  LumPwr[2]
+    endif endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumPwr[3]
+  DESCRIPTION
+    "Luminaire power ( taking Count into account )."  
+  UNITS 
+    Watts ( W )
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+	  if ( IfValidAnd( LumRefPresent3 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[3] < 0.1 ) )
+    then 0
+		else  LumRef[3]:Pwr * LumCnt[3]
+    endif endif
+   SIZING
+	  if ( IfValidAnd( LumRefPresent3 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[3] < 0.1 ) )
+    then 0
+	  else  LumPwr[3]
+    endif endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumPwr[4]
+  DESCRIPTION
+    "Luminaire power ( taking Count into account )."  
+  UNITS 
+    Watts ( W )
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+	  if ( IfValidAnd( LumRefPresent4 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[4] < 0.1 ) )
+    then 0
+		else  LumRef[4]:Pwr * LumCnt[4]
+    endif endif
+   SIZING
+	  if ( IfValidAnd( LumRefPresent4 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[4] < 0.1 ) )
+    then 0
+	  else  LumPwr[4]
+    endif endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:LumPwr[5]
+  DESCRIPTION
+    "Luminaire power ( taking Count into account )."  
+  UNITS 
+    Watts ( W )
+  INPUTCLASS
+    NotInput
+  MINIMUM 
+    0
+  REPORTPRECISION
+    1
+  DEFAULT
+	  if ( IfValidAnd( LumRefPresent5 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[5] < 0.1 ) )
+    then 0
+		else  LumRef[5]:Pwr * LumCnt[5]
+    endif endif
+   SIZING
+	  if ( IfValidAnd( LumRefPresent5 < 0.1 ) )
+    then UNDEFINED
+    else if( IfValidAnd( LumCnt[5] < 0.1 ) )
+    then 0
+	  else  LumPwr[5]
+    endif endif
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+
+// ********** Luminaire Status ************************************************
+// Rules to identify whether 'user' defined lighting power is to be utilized
+// for propsed and/or standard design.
+
+RULE NEW IntLtgSys:DefaultLumStatus
+  DATATYPE 
+    Enumeration
+  LONGFORM
+    DefaultLuminaireStatus
+  DESCRIPTION
+    "This property holds the default Luminaire Status based on project compliance
+     and envelope status."  
+  INPUTCLASS
+    NotInput
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  DEFAULT 
+    if( Proj:IsNewLtg )
+    then "New"
+    else if( Proj:IsExistingLtg )
+    then "Existing"
+    else if( Proj:IsFutureLtg )
+    then "Future"           
+    else if( Proj:CompType = "ExistingAlteration" .OR.
+             Proj:CompType = "ExistingAdditionAndAlteration" .OR.
+             Proj:CompType = "AdditionComplete" .OR.
+             Proj:CompType = "AdditionEnvelopeAndPartialLighting" .OR.
+             Proj:CompType = "AdditionEnvelopeAndLighting" )
+    then ValidOr( Spc:EnvStatus, "New" )
+    else if( Proj:CompType = "AdditionEnvelope" .OR.
+             Proj:CompType = "AdditionEnvelopeAndMechanical" )
+    then if( IfValidAnd( Spc:EnvStatus = "New" ) )
+      then "Future"
+      else "Existing"
+      endif
+    else "New"
+    endif endif endif endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE IntLtgSys:LumStatus[1]
+// Proj:CompType options:
+//    ComplianceType                         Valid Options                Default (* indicates the only option)
+//    --------------                         -------------                -------
+//    NewComplete                            New                          *New
+//    NewEnvelope                            Future                       *Future
+//    NewEnvelopeAndLighting                 New                          *New     
+//    NewEnvelopeAndPartialLighting          New, Future                  New    
+//    NewEnvelopeAndMechanical               Future                       *Future
+//    NewMechanical                          Existing                     *Existing     
+//    NewMechanicalAndLighting               New                          *New     
+//    NewMechanicalAndPartialLighting        New, Existing                New
+//    ExistingAlteration                     New, Altered, Existing       REF:EnvStatus
+//    ExistingAdditionAndAlteration          New, Altered, Existing       REF:EnvStatus
+//    AdditionComplete                       New, Existing                REF:EnvStatus
+//    AdditionEnvelope                       Future, Exist                If(EnvStatus = New) then Future, else Existing
+//    AdditionEnvelopeAndLighting            New, Existing                REF:EnvStatus
+//    AdditionEnvelopeAndPartialLighting     New, Existing, Future,       REF:EnvStatus
+//    AdditionEnvelopeAndMechanical          Future, Exist                If(EnvStatus = New) then Future, else Existing
+//    AdditionMechanical                     Existing                     *Existing
+//    AdditionMechanicalAndLighting          New, Existing                New
+//    AdditionMechanicalAndPartialLighting   New, Future,                 New
+
+  DESCRIPTION
+    "Property to identify whether a Luminaire is to be treated as 
+     New, Altered or Existing." 
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to luminaires in 'New' Spaces or luminaires in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Luminaires located in Existing or Altered spaces
+                 which have been changed, replaced, removed, relocated; or 
+                 connected to altered or revised wiring.  Matches the 
+                 definition of ‘affected’ luminaires in Standards Table 141.0-E.
+                 If more than 10% of the luminaires have been altered, the
+                 lighting power in the standard design will be subject to the 
+                 prescriptive requirements of 140.6.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which lighting compliance has been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where luminaires are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Luminaires 
+                 and Interior Lighting Systems with Status = Future will be
+                 ignored."
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  INPUTCLASS : S901G
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT : S901G
+	  if( LumRefPresent1 ) 
+    then "New"
+    else UNCHANGED
+    endif
+  DEFAULT
+	  if( LumRefPresent1 ) 
+    then DefaultLumStatus
+    else UNCHANGED
+    endif
+ENDRULE
+RULE IntLtgSys:LumStatus[2]
+  DESCRIPTION
+    "Property to identify whether a Luminaire is to be treated as 
+     New, Altered or Existing." 
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to luminaires in 'New' Spaces or luminaires in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Luminaires located in Existing or Altered spaces
+                 which have been changed, replaced, removed, relocated; or 
+                 connected to altered or revised wiring.  Matches the 
+                 definition of ‘affected’ luminaires in Standards Table 141.0-E.
+                 If more than 10% of the luminaires have been altered, the
+                 lighting power in the standard design will be subject to the 
+                 prescriptive requirements of 140.6.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which lighting compliance has been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where luminaires are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Luminaires 
+                 and Interior Lighting Systems with Status = Future will be
+                 ignored."
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  INPUTCLASS : S901G
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT
+	  if ( LumRefPresent2 )
+    then LumStatus[1]
+    else UNCHANGED
+    endif
+ENDRULE
+RULE IntLtgSys:LumStatus[3]
+  DESCRIPTION
+    "Property to identify whether a Luminaire is to be treated as 
+     New, Altered or Existing." 
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to luminaires in 'New' Spaces or luminaires in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Luminaires located in Existing or Altered spaces
+                 which have been changed, replaced, removed, relocated; or 
+                 connected to altered or revised wiring.  Matches the 
+                 definition of ‘affected’ luminaires in Standards Table 141.0-E.
+                 If more than 10% of the luminaires have been altered, the
+                 lighting power in the standard design will be subject to the 
+                 prescriptive requirements of 140.6.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which lighting compliance has been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where luminaires are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Luminaires 
+                 and Interior Lighting Systems with Status = Future will be
+                 ignored."
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  INPUTCLASS : S901G
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT
+	  if ( LumRefPresent3 )
+    then LumStatus[2]
+    else UNCHANGED
+    endif
+ENDRULE
+RULE IntLtgSys:LumStatus[4]
+  DESCRIPTION
+    "Property to identify whether a Luminaire is to be treated as 
+     New, Altered or Existing." 
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to luminaires in 'New' Spaces or luminaires in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Luminaires located in Existing or Altered spaces
+                 which have been changed, replaced, removed, relocated; or 
+                 connected to altered or revised wiring.  Matches the 
+                 definition of ‘affected’ luminaires in Standards Table 141.0-E.
+                 If more than 10% of the luminaires have been altered, the
+                 lighting power in the standard design will be subject to the 
+                 prescriptive requirements of 140.6.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which lighting compliance has been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where luminaires are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Luminaires 
+                 and Interior Lighting Systems with Status = Future will be
+                 ignored."
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  INPUTCLASS : S901G
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT
+	  if ( LumRefPresent4 )
+    then LumStatus[3]
+    else UNCHANGED
+    endif
+ENDRULE
+RULE IntLtgSys:LumStatus[5]
+  DESCRIPTION
+    "Property to identify whether a Luminaire is to be treated as 
+     New, Altered or Existing." 
+  HELP
+    "Used to determine whether user specified or standard design values for 
+     lighting power are installed in the proposed and baseline models.
+
+      New:       Applies to luminaires in 'New' Spaces or luminaires in 'Altered'
+                 spaces wheere th following conditions are met: 
+                    a) Alteration increases space area.
+                    b) Alteration increases total lighting power in a space.
+
+      Altered:   Luminaires located in Existing or Altered spaces
+                 which have been changed, replaced, removed, relocated; or 
+                 connected to altered or revised wiring.  Matches the 
+                 definition of ‘affected’ luminaires in Standards Table 141.0-E.
+                 If more than 10% of the luminaires have been altered, the
+                 lighting power in the standard design will be subject to the 
+                 prescriptive requirements of 140.6.
+                  
+      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+                 Compliance, in which lighting compliance has been evaluated in 
+                 in a previous compliance evaluation.  Also applies to 
+                 Additions/Alterations Compliance where luminaires are
+                 not being modified as part the addition/alteration.
+
+      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+                 NewEnvelopeAndMechanical compliance, where Lighting
+                 is not part of the current compliance evaluation, Luminaires 
+                 and Interior Lighting Systems with Status = Future will be
+                 ignored."
+  OPTION
+    New
+    Altered
+    Existing
+    Future
+  INPUTCLASS : S901G
+    NotInput
+  INPUTCLASS
+    Default
+  DEFAULT
+	  if ( LumRefPresent5 )
+    then LumStatus[4]
+    else UNCHANGED
+    endif
+ENDRULE
+
+RULE NEW IntLtgSys:IsValidLumStatus1
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLuminaireStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LumStatus[1] = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[1] = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[1] = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[1] = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsValidLumStatus2
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLuminaireStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LumStatus[2] = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[2] = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[2] = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[2] = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsValidLumStatus3
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLuminaireStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LumStatus[3] = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[3] = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[3] = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[3] = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsValidLumStatus4
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLuminaireStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LumStatus[4] = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[4] = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[4] = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[4] = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsValidLumStatus5
+  DATATYPE 
+    Integer
+  LONGFORM
+    IsValidLuminaireStatus
+  DESCRIPTION
+    "This flag identifies whether the user selected luminaire status is not valid."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( (IfValidAnd( LumStatus[5] = "New" ) .AND.
+         ValidCompStatus:Ltg_New( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[5] = "Altered" ) .AND.
+         ValidCompStatus:Ltg_Altered( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[5] = "Existing" ) .AND.
+         ValidCompStatus:Ltg_Existing( "ComplianceType", Proj:CompType ) = 1 ) .OR.
+        (IfValidAnd( LumStatus[5] = "Future" ) .AND.
+         ValidCompStatus:Ltg_Future( "ComplianceType", Proj:CompType ) = 1 ) )
+    then 1
+    else 0
+    endif   
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// Confirm or Reassign the Acutal Luminaire Status that will be used for compliance
+RULE NEW IntLtgSys:LumStatusForComp1
+  DATATYPE 
+    String
+  LONGFORM
+    LuminaireStatusForCompliance1
+  DESCRIPTION
+    "String to hold the status of the luminaire that will be used for compliance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumRefPresent1 < 0.1 ) ) then UNDEFINED else
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLumStatus1 ) then LumStatus[1] else
+    DefaultLumStatus
+    endif endif endif endif endif
+  CHECKCODE
+	  if ( IfValidAnd( LumRefPresent1 < 0.1 ) )
+    then UNCHANGED
+    else if( IsValidLumStatus1 = 0 )
+    then
+      PostWarning( "For Interior Lighting Systems '%s': Luminaire 1 status '%s'
+                    is not valid for the selected compliance type: '%s'.  
+                    Luminaire 1 Status has been reset to '%s'.",
+                    Name, LumStatus[1], Proj:CompType, LumStatusForComp1 )
+     else UNCHANGED
+     endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumStatusForComp2
+  DATATYPE 
+    String
+  LONGFORM
+    LuminaireStatusForCompliance2
+  DESCRIPTION
+    "String to hold the status of the luminaire that will be used for compliance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumRefPresent2 < 0.1 ) ) then UNDEFINED else
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLumStatus2 ) then LumStatus[2] else
+    DefaultLumStatus
+    endif endif endif endif endif
+  CHECKCODE
+	  if ( IfValidAnd( LumRefPresent2 < 0.1 ) )
+    then UNCHANGED
+    else if( IsValidLumStatus2 = 0 )
+    then
+      PostWarning( "For Interior Lighting Systems '%s': Luminaire 2 status '%s'
+                    is not valid for the selected compliance type: '%s'.  
+                    Luminaire 2 Status has been reset to '%s'.",
+                    Name, LumStatus[2], Proj:CompType, LumStatusForComp2 )
+     else UNCHANGED
+     endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumStatusForComp3
+  DATATYPE 
+    String
+  LONGFORM
+    LuminaireStatusForCompliance3
+  DESCRIPTION
+    "String to hold the status of the luminaire that will be used for compliance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumRefPresent3 < 0.1 ) ) then UNDEFINED else
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLumStatus3 ) then LumStatus[3] else
+    DefaultLumStatus
+    endif endif endif endif endif
+  CHECKCODE
+	  if ( IfValidAnd( LumRefPresent3 < 0.1 ) )
+    then UNCHANGED
+    else if( IsValidLumStatus3 = 0 )
+    then
+      PostWarning( "For Interior Lighting Systems '%s': Luminaire 3 status '%s'
+                    is not valid for the selected compliance type: '%s'.  
+                    Luminaire 3 Status has been reset to '%s'.",
+                    Name, LumStatus[3], Proj:CompType, LumStatusForComp3 )
+     else UNCHANGED
+     endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumStatusForComp4
+  DATATYPE 
+    String
+  LONGFORM
+    LuminaireStatusForCompliance4
+  DESCRIPTION
+    "String to hold the status of the luminaire that will be used for compliance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumRefPresent4 < 0.1 ) ) then UNDEFINED else
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLumStatus4 ) then LumStatus[4] else
+    DefaultLumStatus
+    endif endif endif endif endif
+  CHECKCODE
+	  if ( IfValidAnd( LumRefPresent4 < 0.1 ) )
+    then UNCHANGED
+    else if( IsValidLumStatus4 = 0 )
+    then
+      PostWarning( "For Interior Lighting Systems '%s': Luminaire 4 status '%s'
+                    is not valid for the selected compliance type: '%s'.  
+                    Luminaire 4 Status has been reset to '%s'.",
+                    Name, LumStatus[4], Proj:CompType, LumStatusForComp4 )
+     else UNCHANGED
+     endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:LumStatusForComp5
+  DATATYPE 
+    String
+  LONGFORM
+    LuminaireStatusForCompliance5
+  DESCRIPTION
+    "String to hold the status of the luminaire that will be used for compliance."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumRefPresent5 < 0.1 ) ) then UNDEFINED else
+    if( Proj:IsNewLtg ) then "New" else 
+    if( Proj:IsExistingLtg ) then "Existing" else
+    if( Proj:IsFutureLtg ) then "Future" else
+    if( IsValidLumStatus5 ) then LumStatus[5] else
+    DefaultLumStatus
+    endif endif endif endif endif
+  CHECKCODE
+	  if ( IfValidAnd( LumRefPresent5 < 0.1 ) )
+    then UNCHANGED
+    else if( IsValidLumStatus5 = 0 )
+    then
+      PostWarning( "For Interior Lighting Systems '%s': Luminaire 5 status '%s'
+                    is not valid for the selected compliance type: '%s'.  
+                    Luminaire 5 Status has been reset to '%s'.",
+                    Name, LumStatus[5], Proj:CompType, LumStatusForComp5 )
+     else UNCHANGED
+     endif endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+// Set IsNew, IsAlt, etc flags to aid in counting luminaires of each status
+RULE NEW IntLtgSys:IsNewLum1
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsNew1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp1 = "New" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsNewLum2
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsNew2
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp2 = "New" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsNewLum3
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsNew3
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp3 = "New" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsNewLum4
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsNew4
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp4 = "New" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsNewLum5
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsNew5
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp5 = "New" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:IsAltLum1
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsAltered1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Alterted."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp1 = "Altered" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsAltLum2
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsAltered1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Alterted."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp2 = "Altered" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsAltLum3
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsAltered1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Alterted."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp3 = "Altered" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsAltLum4
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsAltered1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Alterted."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp4 = "Altered" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsAltLum5
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsAltered1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Alterted."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp5 = "Altered" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:IsExsLum1
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsExisting1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp1 = "Existing" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsExsLum2
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsExisting2
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp2 = "Existing" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsExsLum3
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsExisting3
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp3 = "Existing" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsExsLum4
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsExisting4
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp4 = "Existing" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsExsLum5
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsExisting5
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp5 = "Existing" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:IsFutureLum1
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsFuture1
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp1 = "Future" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsFutureLum2
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsFuture2
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp2 = "Future" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsFutureLum3
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsFuture13
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp3 = "Future" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsFutureLum4
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsFuture4
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp4 = "Future" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:IsFutureLum5
+  DATATYPE 
+    Integer
+  LONGFORM
+    LuminaireIsFuture5
+  DESCRIPTION
+    "Flag to identify whether first referenced luminaire is to be treated as Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+	  if ( IfValidAnd( LumStatusForComp5 = "Future" ) )
+    then 1
+    else 0
+    endif
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:NewLumCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    NewLuminaireCount
+  DESCRIPTION
+    "Flag to identify whether InteriorLightingSystem is to be treated as New."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    ValidOr( LumCnt[1], 0 ) * ValidOr( IsNewLum1, 0 ) +
+    ValidOr( LumCnt[2], 0 ) * ValidOr( IsNewLum2, 0 ) +
+    ValidOr( LumCnt[3], 0 ) * ValidOr( IsNewLum3, 0 ) +
+    ValidOr( LumCnt[4], 0 ) * ValidOr( IsNewLum4, 0 ) +
+    ValidOr( LumCnt[5], 0 ) * ValidOr( IsNewLum5, 0 )
+ENDRULE
+
+RULE NEW IntLtgSys:AltLumCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    AlteredLuminaireCount
+  DESCRIPTION
+    "Flag to identify whether InteriorLightingSystem is to be treated as
+     Altered."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    ValidOr( LumCnt[1], 0 ) * ValidOr( IsAltLum1, 0 ) +
+    ValidOr( LumCnt[2], 0 ) * ValidOr( IsAltLum2, 0 ) +
+    ValidOr( LumCnt[3], 0 ) * ValidOr( IsAltLum3, 0 ) +
+    ValidOr( LumCnt[4], 0 ) * ValidOr( IsAltLum4, 0 ) +
+    ValidOr( LumCnt[5], 0 ) * ValidOr( IsAltLum5, 0 )
+ENDRULE
+
+RULE NEW IntLtgSys:ExistLumCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    ExistingLuminaireCount
+  DESCRIPTION
+    "Flag to identify whether InteriorLightingSystem is to be treated as 
+     Existing."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    ValidOr( LumCnt[1], 0 ) * ValidOr( IsExsLum1, 0 ) +
+    ValidOr( LumCnt[2], 0 ) * ValidOr( IsExsLum2, 0 ) +
+    ValidOr( LumCnt[3], 0 ) * ValidOr( IsExsLum3, 0 ) +
+    ValidOr( LumCnt[4], 0 ) * ValidOr( IsExsLum4, 0 ) +
+    ValidOr( LumCnt[5], 0 ) * ValidOr( IsExsLum5, 0 )
+ENDRULE
+
+RULE NEW IntLtgSys:FutureLumCnt
+  DATATYPE 
+    Integer
+  LONGFORM
+    ExistingLuminaireCount
+  DESCRIPTION
+    "Flag to identify whether InteriorLightingSystem is to be treated as 
+     Future."  
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    ValidOr( LumCnt[1], 0 ) * ValidOr( IsFutureLum1, 0 ) +
+    ValidOr( LumCnt[2], 0 ) * ValidOr( IsFutureLum2, 0 ) +
+    ValidOr( LumCnt[3], 0 ) * ValidOr( IsFutureLum3, 0 ) +
+    ValidOr( LumCnt[4], 0 ) * ValidOr( IsFutureLum4, 0 ) +
+    ValidOr( LumCnt[5], 0 ) * ValidOr( IsFutureLum5, 0 )
+ENDRULE
+
+
+// TO DO - Modify Rule Logic to reference the above OR Eliminate Entirely
+//RULE IntLtgSys:Status
+//  DESCRIPTION
+//    "Flag to identify whether an InteriorLightingSystem is to be treated as 
+//     New, Altered or Existing." 
+//  HELP
+//    "Used to determine whether user specified or standard design values for 
+//     lighting power are installed in the proposed and baseline models.
+//
+//      New:       Applies to new lighting systems and/or luminaire or wiring 
+//                 modifications where any of the following conditions are met:
+//                    a) Alteration increases space area.
+//                    b) Alteration increases total lighting power in a space.
+//
+//      Altered:   Applies to luminaire modifications in existing spaces, which
+//                 do not increase the total space lighting power.
+//                  
+//      Existing:  Applies to NewMechanical or NewMechanicalAndPartialLighting
+//                 Compliance, in which Lighting systems have been evaluated in 
+//                 in a previous compliance evaluation.  Also applies to 
+//                 Additions/Alterations Compliance where lighting systems are
+//                 not being modified as part the addition/alteration.
+//
+//      Future:    In NewEnvelope, NewEnvelopeAndPartialLighting, or
+//                 NewEnvelopeAndMechanical compliance, where Lighting Systems
+//                 are not part of the current compliance evaluation, Interior 
+//                 Lighting Systems with Status = Future will be ignored."
+//  INPUTCLASS
+//    Required
+//  OPTION
+//    New
+//    Altered
+//    Existing
+//    Future
+//  DEFAULT
+//    if( Proj:IsNewLtg .OR.
+//          // NewComplete
+//          // NewEnvelopeAndLighting
+//          // NewMechanicalAndLighitng
+//        Proj:IsPartLtg )
+//          // NewEnvelopeAndPartialLighting
+//          // NewMechanicalAndPartialLighting
+//    then "New"
+//    else if( Proj:IsFutureLtg )
+//          // NewEnvelope
+//          // NewEnvelopeAndMechanical
+//    then "Future"            //  Future Interior Lighting Systems will be ignored
+//    else if( Proj:IsNewMech = 1 .AND.
+//             Proj:IsAddOrAlt = 0 )
+//          // NewMechanical
+//    then "Existing"
+//    else if( Proj:IsAddOrAlt = 1 .AND. 
+//             Spc:EnvStatus <> "New" )
+//    then "Altered" 
+//    else "New"
+//    endif endif endif endif
+//  CHECKCODE
+//    if( ( Proj:IsNewLtg .AND. Status <> "New" ) .OR.
+//        ( Proj:IsFutureLtg .AND. Status <> "Future" ) .OR.
+//        ( Proj:IsExistingLtg .AND. Status <> "Existing") )
+//    then PostWarning( "For interior lighting system '%s', the lighting status 
+//                      '%s' is incompatible with Compliance Type '%s', and will
+//                       be ignored.  All interior lighting will be treated as 
+//                      '%s' for compliance purposes.",
+//                       Name, Status, Proj:CompType, StatusforComp )
+//    else if( ( Proj:IsAddOrAlt  .AND. Status  = "Future") .OR.
+//             ( Proj:IsAddOrAlt = 0 .AND. Status = "Altered" ) .OR.
+//             ( Proj:IsAdd .AND. Status = "Altered" ) .OR.
+//             ( Proj:CompType = "NewEnvelopeAndPartialLighting" .AND. 
+//                 Status = "Existing" ) .OR.
+//             ( Proj:CompType = "NewMechanicalAndPartialLighting" .AND. 
+//                 Status = "Future" ) )
+//    then PostWarning( "For interior lighting system '%s', the lighting status 
+//                      '%s' is incompatible with Compliance Type '%s', and will
+//                       be ignored.  All interior lighting will be treated as 
+//                      '%s' for compliance purposes.",
+//                       Name, Status, Proj:CompType, StatusforComp )
+//    else if( Proj:IsFutureLtg .OR. Status = Future )
+//    then 
+//      PostWarning( "Interior lighting system '%s' will ignored for NewEnvelope 
+//                    and NewEnvelopeAndMechanical compliance types, or when the
+//                    Interior Lighting System Status is 'Future'.",
+//                    u:Name )
+//    else UNCHANGED
+//    endif endif endif
+//  SIZING
+//    UNDEFINED
+//  ANNUAL
+//    UNDEFINED
+//ENDRULE
+//
+//RULE NEW IntLtgSys:StatusforComp
+//  DATATYPE
+//    String
+//  LONGFORM
+//    StatusforCompliance
+//  DESCRIPTION
+//    "A string to hold the true lighting status for the default/checkcode transform"  
+//  INPUTCLASS
+//    NotInput
+//  DEFAULT
+//    if( NewLumcnt > 0 ) then "New"  else 
+//    if( AltLumCnt > 0 ) then "Altered" else
+//    if( ExistLumCnt > 0 ) then "Existing" else
+//    if( FutureLumCnt > 0 ) then "Future" else "New"
+//    endif endif endif endif
+//ENDRULE
+
+
+
+// ********** Regulated Interior Lighting Power - IntLtgSys *******************
+RULE IntLtgSys:Pwr
+  DESCRIPTION
+    "Total connected lighting power for all luminaires in an interior lighting system. 
+     This includes the loads for lamps and ballasts."
+  UNITS
+    Watts ( W )
+  INPUTCLASS
+    NotInput
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  REPORTPRECISION
+    0
+  DEFAULT
+    ValidOr( LumPwr[1], 0 ) +
+    ValidOr( LumPwr[2], 0 ) +
+    ValidOr( LumPwr[3], 0 ) +
+    ValidOr( LumPwr[4], 0 ) +
+    ValidOr( LumPwr[5], 0 )
+
+  SIZING
+    ValidOr( LumPwr[1], 0 ) +
+    ValidOr( LumPwr[2], 0 ) +
+    ValidOr( LumPwr[3], 0 ) +
+    ValidOr( LumPwr[4], 0 ) +
+    ValidOr( LumPwr[5], 0 )
+  ANNUAL
+    z:Pwr
+ENDRULE
+
+RULE IntLtgSys:PwrReg  
+  DESCRIPTION
+     "Whether this lighting system's power is Regulated vs. Non-Regulated. 
+      Defaults to True ( regulated )." 
+  HELP
+    ""
+  INPUTCLASS
+    Default
+  OPTION
+    0
+    1
+  DEFAULT
+    1		; default to this IntLtgSys's power being regulated
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNDEFINED
+ENDRULE
+
+RULE IntLtgSys:RegInstLtgPwr
+  DESCRIPTION
+    "A container for the installed regulated lighting power specified at the
+     interior lighting system level"
+  HELP
+    "Primarily for reporting purposes, this value does not include any Power
+     Adjustment Factors"
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( PwrReg = 1 )
+    then IntLtgSys:Pwr
+    else 0
+    endif
+  SIZING   
+    u:RegInstLtgPwr
+  ANNUAL
+    z:RegInstLtgPwr
+ENDRULE
+
+// ********** Power Adjustment Factors ( PAF ) ********************************
+RULE NEW IntLtgSys:DaylitLum
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    DaylitLuminaire
+  DESCRIPTION
+    "A flag to determine whether luminaires associated with an interior
+     lighting system are located within a daylit zone."
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( IfValidAnd( DaylitAreaType = "SkylitDaylit" ) .OR.
+        IfValidAnd( DaylitAreaType = "PrimarySidelit" ) .OR.
+        IfValidAnd( DaylitAreaType = "Secondaryidelit" ) )
+    then 1
+    else 0
+    endif
+  ENDRULE
+RULE NEW IntLtgSys:SkyOrPriSideDaylitLum
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    SkylitOrPrimarySidelitDaylitLuminaire
+  DESCRIPTION
+    "A flag to determine whether luminaires associated with an interior
+     lighting system are located within a primary sidelit or skylit daylit
+     zone."
+  INPUTCLASS
+    NotInput
+  DEFAULT 
+    if( IfValidAnd( DaylitAreaType = "SkylitDaylit" ) .OR.
+        IfValidAnd( DaylitAreaType = "PrimarySidelit" ) )
+    then 1
+    else 0
+    endif
+  ENDRULE
+
+RULE IntLtgSys:PAFCredType
+  DESCRIPTION
+    "Selection of PAF Credit Type allows the software to apply the power
+     adjustment factors ( PAF ) which represents the percent reduction in 
+     lighting power that will approximate the effect of the control.
+     Models account for such controls by multiplying the controlled watts 
+     by ( 1-PAF )."
+  HELP : T24N
+    "PAFCreditTypes are identified in the 2013 T24 Part 6,
+     Table 140.6-A" 
+  REFERENCE : T24N
+    "NACM 5.4.3"
+  INPUTCLASS 
+    Default
+  OPTION : T24N_2013
+    - none specified -
+    PartialOnOccupantSensingControl
+    OccupantSensingControls-1to125SF
+    OccupantSensingControls-126to250SF
+    OccupantSensingControls-251to500SF
+    ManualDimming
+    MultisceneProgrammableControls
+    DemandResponsiveControl
+    CombinedManualDimmingPlusPartialOnOccupantSensingControl
+  OPTION : T24N_2016
+    - none specified -
+    DaylightDimmingPlusOff
+    OccupantSensingControls-1to125SF
+    OccupantSensingControls-126to250SF
+    OccupantSensingControls-251to500SF
+    DemandResponsiveControl
+    InstitutionalTuning
+  OPTION : S901G ECBC
+    - none specified -
+    OccupancySensor
+  DEFAULT 
+     "- none specified -" 
+  SIZING  
+    u:PAFCredType
+  ANNUAL
+    z:PAFCredType
+ENDRULE		
+RULE NEW IntLtgSys:PAFPermitted
+  DATATYPE
+    Integer
+  LONGFORM
+    PowerAdjustmentFactorPermitted
+  DESCRIPTION
+    "A flag to determine whether a selected PAF is permitted for the parent
+     space function."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N_2013
+    if ( IfValidAnd( PAFCredType = "DemandResponsiveControl" ) )
+    then if( IfValidAnd( Bldg:TotFlrArea < 10000 ) )
+      then 1
+      else 0
+      endif
+    else if( ParentStatus( SpcFunc ) > 0 .AND.
+             IfValidAnd ( PAFCredType <> "- none specified -" ) )
+    then LtgInputRestrictions:PAFCredType( "AllowanceType",PAFCredType, 
+                                           "SpaceFunction",Spc:SpcFunc )
+    else 0
+    endif endif
+  DEFAULT : T24N_2016
+    if ( IfValidAnd( PAFCredType = "DemandResponsiveControl" ) )
+    then if( IfValidAnd( Bldg:TotFlrArea < 10000 ) )
+      then 1
+      else 0
+      endif
+    else if ( IfValidAnd( PAFCredType = "DaylightDimmingPlusOff" ) )
+    then if ( Proj:IsDetailedGeometry = 0 .AND.
+              IfValidAnd( Spc:OccClass != "Residential" ) )
+      then 1
+      else 0
+      endif
+    else if( ParentStatus( SpcFunc ) > 0 .AND.
+             IfValidAnd ( PAFCredType <> "- none specified -" ) )
+    then LtgInputRestrictions:PAFCredType( "AllowanceType",PAFCredType, 
+                                           "SpaceFunction",Spc:SpcFunc )
+    else 0
+    endif endif endif
+  DEFAULT : S901G
+    if( ParentStatus( SpcFunc ) > 0 .AND.
+             IfValidAnd ( PAFCredType <> "- none specified -" ) )
+    then LtgInputRestrictions:PAFCredType( "CreditType",PAFCredType, 
+                                           "SpaceFunction",Spc:SpcFunc )
+    else 0
+    endif
+  CHECKCODE : T24N
+    if( IfValidAnd ( PAFCredType <> "- none specified -" ) .AND.
+        PAFPermitted = 0 )
+    then PostError( "The selected PAF Credit '%s' is not permitted for the 
+                     space '%s'. Refer to Title 24, Part 6, Table 140.6-A.",
+                     u:PAFCredType, Parent( Name ) )
+    else UNCHANGED
+    endif
+  CHECKCODE : S901G
+    if( IfValidAnd ( PAFCredType <> "- none specified -" ) .AND.
+        PAFPermitted = 0 )
+    then PostError( "The selected PAF Credit '%s' is not permitted for the 
+                     space '%s'. Refer to ASHRAE 90.1-2010 Section 9.4.1.2.",
+                     u:PAFCredType, Parent( Name ) )
+    else UNCHANGED
+    endif
+  SIZING   
+    u:PAFPermitted
+  ANNUAL
+    z:PAFPermitted
+ENDRULE
+RULE NEW IntLtgSys:PAFMsg1
+  DATATYPE
+    String
+  LONGFORM
+    PowerAdjustmentFactorMessage
+  DESCRIPTION
+    "A string to provide additional detail regarding PAF restrictions in the
+     user interface."
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( IfValidAnd( PAFPermitted = 1 ) )
+    then UNCHANGED
+    else "PAF PROHIBITED"
+    endif
+  SIZING   
+    UNDEFINED
+ENDRULE
+RULE NEW IntLtgSys:PAFMsg2
+  DATATYPE
+    String
+  LONGFORM
+    PowerAdjustmentFactorMessage
+  DESCRIPTION
+    "A string to provide additional detail regarding PAF restrictions in the
+     user interface."
+  INPUTCLASS
+    NotInput
+  DEFAULT : T24N
+    if( IfValidAnd( PAFPermitted = 1 ) )
+    then UNCHANGED
+    else if( Proj:IsDetailedGeometry .AND.
+             SkyOrPriSideDaylitLum = 1 .AND.
+             IfValidAnd( PAFCredType = "DaylightDimmingPlusOff" ) )
+    then "Use Space:DaylightingControlType"
+    else "Per Standards Table 140.6-A"
+    endif endif
+  DEFAULT : S901G
+    if( IfValidAnd( PAFPermitted = 1 ) )
+    then UNCHANGED
+    else "Per ASHRAE 90.1 Section 9.4.1.2"
+    endif
+  SIZING   
+    UNDEFINED
+ENDRULE
+
+RULE NEW IntLtgSys:PAFCreditFlag
+  RULESETS
+    T24N
+  DATATYPE
+    Integer
+  LONGFORM
+    PowerAdjustmentFactorCreditFlag
+  DESCRIPTION
+    "A flag to indicate that one or more lighting systems is claiming credit via
+     a power adjustment Factor"
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentStatus( SpcFunc ) > 0 .AND.
+        IfValidAnd ( PAFCredType <> "- none specified -" ) .AND.
+        IfValidAnd ( PAFPermitted == 1 ) )
+    then 1
+    else 0
+    endif
+  SIZING   
+    u:PAFCreditFlag
+  ANNUAL
+    z:PAFCreditFlag
+ENDRULE
+
+RULE IntLtgSys:PAF
+  DESCRIPTION
+    "Power adjustment factors ( PAFs ) represent the percent reduction in lighting power
+     that will approximate the effect of the control.  Models account for such
+     controls by multiplying the controlled watts by ( 1-PAF )."
+  INPUTCLASS 
+    NotInput
+  REPORTPRECISION
+    2
+  DEFAULT : T24N_2013
+    if( PAFCredType <> "- none specified -" )
+    then PAFs:PAF( "PAFCredType",PAFCredType )
+    else 0
+    endif
+  DEFAULT : T24N_2016
+    if( PAFCredType <> "- none specified -" )
+    then PAFs:PAF( "DaylitLum", DaylitLum,
+                                     "PAFCredType",PAFCredType )
+    else 0
+    endif
+  DEFAULT : S901G ECBC
+    if( PAFCredType <> "- none specified -" )
+    then PAFs:PAF( "PAFCat","AllOther","PAFCredType",PAFCredType)
+    else 0
+    endif
+  SIZING
+    u:PAF
+  ANNUAL
+    z:PAF
+ENDRULE
+RULE IntLtgSys:PAFCtrlCred
+  DESCRIPTION
+    "A container for the value ( Watts ) of the control credit ( PAF ) for an
+     Interior Lighting System"
+  HELP
+    "Primarily for reporting purposes"
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS 
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    if( PwrReg = 1 )
+    then RegInstLtgPwr*u:PAF
+    else 0
+    endif
+  SIZING   
+    u:PAFCtrlCred
+  ANNUAL
+    z:PAFCtrlCred
+ENDRULE
+
+RULE IntLtgSys:RegLtgPwr
+  DESCRIPTION
+    "A container for the regulated lighting power specified at the
+     interior lighting system level after adjustment by PAFs"
+  HELP
+    "This value includes the impact of any Power Adjustment Factors
+     claimed for instalation of advanced controls"
+  MINIMUM 
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    MAX ( RegInstLtgPwr - PAFCtrlCred,0 )
+  SIZING
+    u:RegLtgPwr
+  ANNUAL
+    z:RegLtgPwr
+ENDRULE
+
+
+// ********** Non-Regulated Interior Lighting Power - IntLtgSys ***************
+RULE IntLtgSys:NonRegLtgPwr
+  DESCRIPTION
+    "A container for the Non Regulated Lighting Power"
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  MINIMUM 
+    0
+  REPORTPRECISION
+    0
+  DEFAULT
+    if ( PwrReg = 0 )
+    then Pwr
+    else 0
+    endif
+   SIZING
+    u:NonRegLtgPwr
+  ANNUAL
+    UNCHANGED
+ENDRULE
+RULE IntLtgSys:NonRegExclusion
+  DESCRIPTION
+    "The category to which the non-regulated lighting belongs."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    CondRequired
+  MINIMUM 
+    0
+  DEFAULT
+    UNDEFINED
+  CHECKCODE
+    if( IfValidAnd( NonRegLtgPwr > 0 ) .AND.
+      ( LocalStatus( NonRegExclusion ) < 1 .OR.
+        NonRegExclusion = "- specify -" ) )
+    then
+      PostError( "In Spc '%s', A Non-Regulated Exclusion must be specified for
+                  non-regulated lighting power > 0 Watts.",
+                  Spc:Name )
+    else
+      UNCHANGED
+    endif    
+  SIZING
+    UNDEFINED
+  ANNUAL
+    UNCHANGED
+ENDRULE
+
+// ********** Interior Lighting System Relevant Heights ***********************
+RULE IntLtgSys:LumMntgHgt
+  DESCRIPTION
+    "The Luminaire Height of a IntLtgSys. Assumed by default to be the same as 
+     the space floor to ceiling height."
+  HELP
+    ""
+  UNITS
+    ft
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    Default
+  REPORTPRECISION
+    1
+  DEFAULT
+    if ( Parent( FlrToCeilingHgt ) >= 0 )
+    then Parent( FlrToCeilingHgt )
+    else 0
+    endif
+  MINIMUM 
+    0
+  MAXIMUM 
+    100
+  SIZING
+    u:LumMntgHgt
+  ANNUAL
+    z:LumMntgHgt
+ENDRULE
+RULE NEW IntLtgSys:LumMntgHgtXPwr
+  DATATYPE
+    Float
+  LONGFORM
+    LuminaireMountingHeightXPower 
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  UNITS
+    ft
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    LumMntgHgt * Pwr
+  SIZING
+    u:LumMntgHgtXPwr
+  ANNUAL
+    z:LumMntgHgtXPwr
+ENDRULE
+RULE IntLtgSys:WorkPlaneHgt
+  DESCRIPTION
+    "The Workplane Height of an IntLtgSys, only necessary for Tailored Method
+     Baseline General and Additional Lighting Power Allowances."
+  HELP
+    ""
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    Default
+  MINIMUM 
+    0
+  MAXIMUM 
+    10
+  UNITS 
+    ft
+  REPORTPRECISION
+    1
+  DEFAULT
+    3
+  SIZING
+    u:WorkPlaneHgt
+  ANNUAL
+    z:WorkPlaneHgt
+ENDRULE
+RULE NEW IntLtgSys:WorkPlaneHgtXPwr
+  DATATYPE
+    Float
+  LONGFORM
+    WorkPlaneHeightXPower
+  DESCRIPTION
+    ""
+  HELP
+    ""
+  UNITS
+    ft
+  REFERENCE 
+     NACM-5.4.3 
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    WorkPlaneHgt * Pwr
+  SIZING
+    u:WorkPlaneHeightXPower
+  ANNUAL
+    z:WorkPlaneHgtXPwr
+ENDRULE
+
+// ********** Reporting *******************************************************
+RULE IntLtgSys:ParentSpcName
+  DESCRIPTION
+    "The Space Name of the IntLtgSys Parent Space"  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Space:Name
+ENDRULE
+RULE IntLtgSys:ParentSpcIsCond
+  DESCRIPTION
+    "The Conditioning Status of the IntLtgSys Parent Space"  
+  HELP
+    ""  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Space:IsCond
+ENDRULE
+
+RULE NEW IntLtgSys:CondLumCnt_1
+  DATATYPE 
+    Integer
+  LONGFORM
+    ConditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Conditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[1] >= 0 ) ) 
+    then LumCnt[1]
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[1] >= 0 ) )  
+      then LumCnt[1]
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    CondLumCnt_1
+ENDRULE
+RULE NEW IntLtgSys:CondLumCnt_2
+  DATATYPE 
+    Integer
+  LONGFORM
+    ConditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Conditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[2] >= 0 ) ) 
+    then LumCnt[2]
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[2] >= 0 ) ) 
+      then LumCnt[2]
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    CondLumCnt_2
+ENDRULE
+RULE NEW IntLtgSys:CondLumCnt_3
+  DATATYPE 
+    Integer
+  LONGFORM
+    ConditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Conditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[3] >= 0 ) ) 
+    then LumCnt[3]
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[3] >= 0 ) ) 
+      then LumCnt[3]
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    CondLumCnt_3
+ENDRULE
+RULE NEW IntLtgSys:CondLumCnt_4
+  DATATYPE 
+    Integer
+  LONGFORM
+    ConditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Conditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[4] >= 0 ) ) 
+    then LumCnt[4]
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[4] >= 0 ) ) 
+      then LumCnt[4]
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    CondLumCnt_4
+ENDRULE
+RULE NEW IntLtgSys:CondLumCnt_5
+  DATATYPE 
+    Integer
+  LONGFORM
+    ConditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Conditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[5] >= 0 ) )  
+    then LumCnt[5]
+    else 0
+    endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+    if( ParentSpcIsCond .AND.
+        IfValidAnd( LumCnt[5] >= 0 ) )  
+      then LumCnt[5]
+      else 0
+      endif
+    endswitch
+  ANNUAL
+    CondLumCnt_5
+ENDRULE
+
+RULE NEW IntLtgSys:UncondLumCnt_1
+  DATATYPE 
+    Integer
+  LONGFORM
+    UnconditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Unconditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond ) 
+    then 0
+    else if( IfValidAnd( LumCnt[5] >= 0 ) )
+    then LumCnt[1]
+    else 0
+    endif endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+      if( ParentSpcIsCond ) 
+      then 0
+      else if( IfValidAnd( LumCnt[5] >= 0 ) )
+      then LumCnt[1]
+      else 0
+      endif endif
+    endswitch
+  ANNUAL
+    UncondLumCnt_1
+ENDRULE
+RULE NEW IntLtgSys:UncondLumCnt_2
+  DATATYPE 
+    Integer
+  LONGFORM
+    UnconditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Unconditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond ) 
+    then 0
+    else if( IfValidAnd( LumCnt[5] >= 0 ) )
+    then LumCnt[2]
+    else 0
+    endif endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+      if( ParentSpcIsCond ) 
+      then 0
+      else if( IfValidAnd( LumCnt[5] >= 0 ) )
+      then LumCnt[2]
+      else 0
+      endif endif
+    endswitch
+  ANNUAL
+    UncondLumCnt_2
+ENDRULE
+RULE NEW IntLtgSys:UncondLumCnt_3
+  DATATYPE 
+    Integer
+  LONGFORM
+    UnconditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Unconditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond ) 
+    then 0
+    else if( IfValidAnd( LumCnt[5] >= 0 ) )
+    then LumCnt[3]
+    else 0
+    endif endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+      if( ParentSpcIsCond ) 
+      then 0
+      else if( IfValidAnd( LumCnt[5] >= 0 ) )
+      then LumCnt[3]
+      else 0
+      endif endif
+    endswitch
+  ANNUAL
+    UncondLumCnt_3
+ENDRULE
+RULE NEW IntLtgSys:UncondLumCnt_4
+  DATATYPE 
+    Integer
+  LONGFORM
+    UnconditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Unconditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond ) 
+    then 0
+    else if( IfValidAnd( LumCnt[5] >= 0 ) )
+    then LumCnt[4]
+    else 0
+    endif endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+      if( ParentSpcIsCond ) 
+      then 0
+      else if( IfValidAnd( LumCnt[5] >= 0 ) )
+      then LumCnt[4]
+      else 0
+      endif endif
+    endswitch
+  ANNUAL
+    UncondLumCnt_4
+ENDRULE
+RULE NEW IntLtgSys:UncondLumCnt_5
+  DATATYPE 
+    Integer
+  LONGFORM
+    UnconditionedLuminaireCount
+  DESCRIPTION
+    "Container for Quantitiy of Luminaires in Unconditioned Space."  
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    if( ParentSpcIsCond ) 
+    then 0
+    else if( IfValidAnd( LumCnt[5] >= 0 ) )
+    then LumCnt[5]
+    else 0
+    endif endif
+  SIZING
+    switch ( ApplyStdLtg )
+    case  1: UNDEFINED   ; IntLtgSys do not apply to standard design
+    default:             ; proposed design
+      if( ParentSpcIsCond ) 
+      then 0
+      else if( IfValidAnd( LumCnt[5] >= 0 ) )
+      then LumCnt[5]
+      else 0
+      endif endif
+    endswitch
+  ANNUAL
+    UncondLumCnt_5
+ENDRULE
+
+RULE Lum:CondCnt
+  DESCRIPTION
+    "The total quantity of the Luminaire in conditioned spaces" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumRevRef( IntLtgSys:LumRef[1], IntLtgSys:CondLumCnt_1 ) + 
+    SumRevRef( IntLtgSys:LumRef[2], IntLtgSys:CondLumCnt_2 ) + 
+    SumRevRef( IntLtgSys:LumRef[3], IntLtgSys:CondLumCnt_3 ) + 
+    SumRevRef( IntLtgSys:LumRef[4], IntLtgSys:CondLumCnt_4 ) + 
+    SumRevRef( IntLtgSys:LumRef[5], IntLtgSys:CondLumCnt_5 )
+ENDRULE
+RULE Lum:UncondCnt
+  DESCRIPTION
+    "The total quantity of the Luminaire in unconditioned spaces" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    SumRevRef( IntLtgSys:LumRef[1], IntLtgSys:UncondLumCnt_1 ) + 
+    SumRevRef( IntLtgSys:LumRef[2], IntLtgSys:UncondLumCnt_2 ) + 
+    SumRevRef( IntLtgSys:LumRef[3], IntLtgSys:UncondLumCnt_3 ) + 
+    SumRevRef( IntLtgSys:LumRef[4], IntLtgSys:UncondLumCnt_4 ) + 
+    SumRevRef( IntLtgSys:LumRef[5], IntLtgSys:UncondLumCnt_5 )
+ENDRULE
+RULE Lum:TotCnt
+  DESCRIPTION
+    "The total quantity of the Luminaire in the project" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    CondCnt + UncondCnt
+ENDRULE
+
+RULE Lum:TotPwr
+  DESCRIPTION
+    "The total power of the Luminaires of this type in the project" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    Lum:Pwr*Lum:TotCnt
+ENDRULE
+RULE Lum:CondPwr
+  DESCRIPTION
+    "The total Power of the Luminaire in conditioned spaces" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    Lum:Pwr*Lum:CondCnt
+ENDRULE
+RULE Lum:UncondPwr
+  DESCRIPTION
+    "The total Power of the Luminaire in unconditioned spaces" 
+  REFERENCE 
+
+  INPUTCLASS
+    NotInput
+  REPORTPRECISION
+    0
+  DEFAULT
+    Lum:Pwr*Lum:UncondCnt
+ENDRULE
+
+RULE Lum:PwrNA8Default
+  DESCRIPTION
+    "Check box for lamp power determined from NA8 defaults." 
+  REFERENCE 
+    5.4.4
+  INPUTCLASS
+    Default 
+  DEFAULT
+    0  
+ENDRULE
+RULE Lum:LumDescRpt
+  DESCRIPTION
+    "A string containing a short description of the luminaire" 
+  REFERENCE 
+  
+  INPUTCLASS
+    Optional
+  DEFAULT
+    UNDEFINED
+ENDRULE
+
+RULE IntLtgSys:IsAcceptanceTestReqdRpt
+  RULESETS T24N
+  DESCRIPTION
+    "Primarily for reporting purposes; a boolean flag to represent whether
+     acceptance testing is required as per Standards, Section 130.4 (b)"
+  INPUTCLASS
+    Default
+  HELP
+    "" 
+  REFERENCE
+    "Standards, Section 130.4 (b)"
+  DEFAULT 
+     0
+  SIZING  
+    u:IsAcceptanceTestReqdRpt
+  ANNUAL
+    z:IsAcceptanceTestReqdRpt
+ENDRULE	
+RULE IntLtgSys:LtgCtrlCntRpt
+  RULESETS T24N
+  DESCRIPTION
+    "Primarily for reporting purposes; identifies the number of lighting controls
+     associated with a particular interior lighting system"
+  INPUTCLASS
+    Default
+  HELP
+    "" 
+  REFERENCE
+    "Standards, Section 130.4 (b)"
+  DEFAULT 
+     1
+  SIZING  
+    u:LtgCtrlCntRpt
+  ANNUAL
+    z:LtgCtrlCntRpt
+ENDRULE	
+
+// ********** UI Support ******************************************************
+RULE IntLtgSys:ParentSpcFunc
+  DESCRIPTION
+    "The Space Function of the IntLtgSys Parent Space"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM 5.4.3
+  INPUTCLASS
+    NotInput
+  DEFAULT
+    Spc:SpcFunc
+  SIZING
+    u:ParentSpcFunc
+  ANNUAL
+    u:ParentSpcFunc
+ENDRULE
+RULE IntLtgSys:IntLtgSpecMthd
+  DESCRIPTION
+    "The method for selecting baseline lighting and other loads for a space"  
+  HELP
+    ""  
+  REFERENCE 
+    ACM 5.4.3
+  DEFAULT
+    if( ParentStatus( IntLtgSpecMthd ) > 0 )
+    then Spc:IntLtgSpecMthd
+    else UNDEFINED
+    endif
+  SIZING
+    u:IntLtgSpecMthd
+  ANNUAL
+    z:IntLtgSpecMthd
+ENDRULE
+
+
+

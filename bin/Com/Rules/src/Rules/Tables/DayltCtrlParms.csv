@@ -1,0 +1,31 @@
+;,CEC 2013 Nonresdiential ACM Ruleset,,,
+;,,,,
+;,TABLE NAME:,,,
+;,,DayltgCtrlParms,,
+;,,,,
+;,MODIFICATION HISTORY:,,,
+;,,Date,Name,Purpose
+;,,8/5/2014,L. Hovee,Daylighting Control Setpoints by fixture type
+;,,,,
+;,,,,
+;,Standards/ACM Reference:,,,
+;,,5.4.5 - Minimum Dimming Power/Light Fractions ,,
+;,,,,
+;,Notes:,,,
+;,,,,
+;,,,,
+;,Syntax Examples:,,,
+;,,DayltgCtrlParms:MinDimPwrFrac(LampType=u:XXX),,
+;,,,,
+;,,,,
+; ####################################  Start of Table ####################################,,,,
+,TABLE DayltCtrlParms,,,
+,,LampType,MinDimPwrFrac,MinDimLtgFrac
+,,LED,0.1,0.1
+,,LinearFluorescent,0.2,0.2
+,,MercuryVapor,0.3,0.2
+,,MetalHalide,0.45,0.2
+,,HighPressureSodium,0.4,0.2
+,,CFL,0.4,0.2
+,,Incandescent,0.5,0.2
+,ENDTABLE,,,
