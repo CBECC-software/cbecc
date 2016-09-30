@@ -4,10 +4,10 @@ The most recent thanks go out to the California Energy Commission, and in partic
 Other CEC staff instrumental in bringing this project to fruition are Todd Ferris, Larry Froess, DeeAnne Ross, Jeff Miller, Michael Shewmaker, Thao Chau, RJ Wichert and Joe Loyer.
 
 Also in terms of the most recent efforts - the CBECC-Com & CBECC-Res teams -  
-CBECC-Res prime contractor Bruce Wilcox and his team including Ken Nittler (EnerComp), Jennifer Roberts and Peter Wilcox.  
+CBECC-Res prime contractor Bruce Wilcox and his team including Ken Nittler (Enercomp), Jennifer Roberts and Peter Wilcox.  
 CBECC-Com prime contractor NORESCO: Dimitri Contoyannis, Nikhil Kapur, Roger Hedrick and Chitra Nambiar  
 NREL / OpenStudio team: Kyle Benne and Dan Macumber  
-And those that were instrumental in both CBECC-Com & -Res -  
+And those that were instrumental in both CBECC-Com & -Res -   
 Data model design and rule development by 360 Analytics: David Reddy, Lukas Hovee, Chuangye Guan and Ivan Jose  
 CEC Title-24 compliance report generator by RASENT Solutions LLC: Robert Scott  
 Wrightsoft developers Chip Barnaby and Ethan Croteau with support from Bill Wright and Jane Schuler.  
