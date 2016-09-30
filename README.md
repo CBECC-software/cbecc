@@ -1,5 +1,5 @@
 # CBECC
-Building energy code compliance analysis tools - developed for and supported by the California Energy Commission (CEC). This series of program modules enable energy code authorities to easily define and maintain a building data model and rules database that ensure accurate energy code compliance analysis. Perofrmance compliance tools based on this open source project use both EnergyPlus (via OpenStudio) and CSE (California Simulation Engine) building energy simulation tools in comparing proposed and standard/baseline model energy use to determine code compliance.  
+Building energy code compliance analysis tools - developed for and supported by the California Energy Commission (CEC). This series of program modules enable energy code authorities to easily define and maintain a building data model and rules database that ensure accurate energy code compliance analysis. Performance compliance tools based on this open source project use both EnergyPlus (via OpenStudio) and CSE (California Simulation Engine) building energy simulation tools in comparing proposed and standard/baseline model energy use to determine code compliance.  
 For more information about each program module, refer to the src\README.md file.  
 
 # Supporting Files
