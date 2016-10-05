@@ -54,9 +54,7 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCmpMgrCom.h"
 #include "BEMCM_I.h"
 #include "OpenStudioInterface.h"
-// TO DO?  #include "..\BEMProc\BEMRulPrcX.h"
-// TO DO  #include "copyfile.h"
-// TO DO  #include "..\BEMProc\RulPrc\textio.h"
+#include "memLkRpt.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2308,20 +2306,23 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 // QT Progress Dialog stuff
 #ifdef CM_QTGUI
+	QVBoxLayout* pqt_layout = NULL;
+	QWidget* pqt_win = NULL;
+	QProgressDialog* pqt_progress = NULL;
 	if (bDisplayProgress)
 	{
 		//static QWidget* sqt_win = NULL;
 		//static QProgressDialog* sqt_progress = NULL;
 	
-		QVBoxLayout* pqt_layout = new QVBoxLayout;
+		pqt_layout = new QVBoxLayout;
 	//	QVBoxLayout qt_layout();
 		//QWidget*  win = new QWidget;
 		//QProgressDialog* progress = new QProgressDialog("Fetching data...", "Cancel", 0, 100);
 		assert( sqt_win == NULL && sqt_progress == NULL );
-		QWidget* pqt_win = new QWidget;
+		pqt_win = new QWidget;
 		siNumProgressErrors = 0;
 		SetProgressMessage( " Initializing", (iProgressType == BCM_NRP_Type_Batch) );
-		QProgressDialog* pqt_progress = new QProgressDialog( sqProgressMsg, "Abort Analysis", 0, 100 );
+		pqt_progress = new QProgressDialog( sqProgressMsg, "Abort Analysis", 0, 100 );
 		// functions setLabelText() and setCancelButtonText() set the texts shown.
 	 
 	// QProgressBar {
@@ -5070,17 +5071,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	delete sq_app;
 		sq_app = NULL;
 	}
-// TESTING
-	//if (pqt_progress)
-	//{	delete pqt_progress;
-	//	pqt_progress = NULL;
+
+	if (pqt_progress)
+	{	delete pqt_progress;
+		pqt_progress = NULL;
+	}
+	if (pqt_win)
+	{	delete pqt_win;
+		pqt_win = NULL;
+	}
+	//if (pqt_layout)  - deallocated by above routines(?)
+	//{	delete pqt_layout;
+		pqt_layout = NULL;
 	//}
-	//if (sqt_win)
-	//{	delete sqt_win;
-	//	sqt_win = NULL;
-	//}
-	//if (qt_layout)
-	//	delete qt_layout;
 
 //bool QWidget::close () [slot]
 //Closes this widget. Returns true if the widget was closed; otherwise returns false.
@@ -5656,7 +5659,15 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 				iRunsGood++;
 			else
 				iRunsBad++;
-		}
+
+		// clean up BEMProc & ruleset memory (SAC 10/4/16)
+			BEMPX_CloseBEMProc( true /*bShuttingDown*/, false /*bCloseLogFile*/ );
+			// BEMPX_DeleteAllObjects( -1 /*iOnlyTypeToDelete*/, FALSE /*bReInitSymbols*/ );  - doesn't free up ruleset data...
+			// BEMPX_CloseBEMProc();  - would also close log file, which I don't think we want
+			// CMX_ExitBEMCmpMgrDLL();  - no need to free QApp ??
+
+		}	// end of loop over batch of runs
+
 						si1ProgressRunNum = 1;		// SAC 5/28/15
 						siNumProgressRuns = 1;
 	}

@@ -32,5 +32,4 @@
 #include <QtCore/QVector>
 #pragma warning(default : 4127)
 
-
 // TODO: reference additional headers your program requires here

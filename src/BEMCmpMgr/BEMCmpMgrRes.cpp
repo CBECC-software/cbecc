@@ -52,9 +52,8 @@ static char THIS_FILE[] = __FILE__;
 #include "CSERunMgr.h"
 #include "BEMCmpMgrRes.h"
 #include "BEMCM_I.h"
-// TO DO?  #include "..\BEMProc\BEMRulPrcX.h"
-// TO DO  #include "copyfile.h"
-// TO DO  #include "..\BEMProc\RulPrc\textio.h"
+#include <fstream>      // fstream
+#include "memLkRpt.h"
 
 #define CSE_MULTI_RUN
 
@@ -349,6 +348,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 //	BEMPX_GetRulesetErrorCount();  // SAC 1/9/13
 	BEMPX_ClearRulesetErrors();  // SAC 1/9/13
+
+// debugging
+sLogMsg = QString( "File paths being checked:\n   EXE: %1\n   CSE EXE: %2" ).arg( ssEXEPath, sCSEEXEPath );
+BEMMessageBox( sLogMsg , "Res File Path check");
 
    if (!DirectoryExists( sCSEEXEPath ))
 	{	if (sCSEEXEPath.isEmpty())
@@ -1785,7 +1788,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ), sResTemp3, TRUE, 0, -1, 0 ))
 		sAnalResLogMsg = "Analysis result unknown";
 	else
-	{	sAnalResLogMsg = QString( "Analysis result:  %1  (TDV margin: %2 (%3%%))" ).arg( sResTemp1, sResTemp2, sResTemp3 );
+	{	sAnalResLogMsg = QString( "Analysis result:  %1  (TDV margin: %2 (%3%))" ).arg( sResTemp1, sResTemp2, sResTemp3 );
 		// SAC 4/6/15 - append design rating onto main result string (if design rating run performed and design rating >= 0)
 		double fDesignRating;
 		if (lDesignRatingRunID > 0 && BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:DesignRating" ), fDesignRating, 0, -1,  0 /*iOccur*/ ) && fDesignRating >= 0)
@@ -2733,8 +2736,6 @@ const char* GetResultsCSVHeader_Res( int i1HdrIdx )
 
 
 /////////////////////////////////////////////////////////////////////////////
-
-#include <fstream>      // fstream
 
 #define  CM_MAX_RESBATCH_VER  1
 

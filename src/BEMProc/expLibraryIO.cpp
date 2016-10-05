@@ -52,6 +52,7 @@
 #include "BEMProcI.h"
 #include "expCrypFile.h"
 #include "expLibraryIO.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

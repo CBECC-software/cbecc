@@ -63,10 +63,7 @@
 #include "DlgRangeError.h"
 #include "DlgErrorList.h"
 #include "ViewErrorList.h"
-
-#ifdef _INC_SPREAD
-#include "FPSpread\BEMProcCtrlSpread.h"
-#endif
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -200,11 +197,6 @@ BEGIN_MESSAGE_MAP(CSACDlg, CDialog)
    ON_MESSAGE( WM_SETCONTEXTHELPID, OnSetContextHelpID )
    ON_MESSAGE( WM_COMMANDHELP, OnCommandHelp )
 
-#ifdef _INC_SPREAD
-   ON_MESSAGE( SSM_TEXTTIPFETCH, OnSpreadTextTipFetch )   // SAC 6/7/00 - Spreadsheet control tooltip message processing
-   ON_MESSAGE( WM_QM_DELETE_ROW, OnQMDeleteRow)
-#endif
-
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -262,7 +254,7 @@ BOOL CSACDlg::OnInitDialog()
       if (m_bGraphicalButtons)
       {
          m_btnHelp.SubclassDlgItem( IDC_WIZHELP, this );
-         m_btnHelp.SetBitmaps(      IDB_EQ_HELP32, RGB(0,0,0), IDB_EQ_HELP32G, RGB(0,0,0) );
+         m_btnHelp.SetBitmaps(      IDB_BPUI_HELP32, RGB(0,0,0), IDB_BPUI_HELP32G, RGB(0,0,0) );
 			BYTE bHlpAlign;
 			if (m_bShowPrevNextButtons)
 				bHlpAlign = CBEMProcCtrlBtnST::ST_ALIGN_HORIZ;
@@ -271,23 +263,23 @@ BOOL CSACDlg::OnInitDialog()
          m_btnHelp.SetAlign(        bHlpAlign );
 
          m_btnPrev.SubclassDlgItem( IDC_PREVSCREEN, this );
-         m_btnPrev.SetBitmaps(      IDB_EQ_PREV32, RGB(0,0,0), IDB_EQ_PREV32G, RGB(0,0,0) );
+         m_btnPrev.SetBitmaps(      IDB_BPUI_PREV32, RGB(0,0,0), IDB_BPUI_PREV32G, RGB(0,0,0) );
          m_btnPrev.SetAlign(        CBEMProcCtrlBtnST::ST_ALIGN_HORIZ );
          m_btnPrev.SetWindowText(   "&Previous\nScreen" );
 
          m_btnNext.SubclassDlgItem( IDC_NEXTTOPIC, this );
-         m_btnNext.SetBitmaps(      IDB_EQ_NEXT32, RGB(0,0,0), IDB_EQ_NEXT32G, RGB(0,0,0) );
+         m_btnNext.SetBitmaps(      IDB_BPUI_NEXT32, RGB(0,0,0), IDB_BPUI_NEXT32G, RGB(0,0,0) );
          m_btnNext.SetAlign(        CBEMProcCtrlBtnST::ST_ALIGN_HORIZ_RIGHT );
          m_btnNext.SetWindowText(   "&Next\nScreen" );
 
          m_btnOK.SubclassDlgItem(   IDOK, this );
-         m_btnOK.SetBitmaps(        IDB_EQ_STAR32, RGB(0,0,0), IDB_EQ_STAR32G, RGB(0,0,0) );
+         m_btnOK.SetBitmaps(        IDB_BPUI_STAR32, RGB(0,0,0), IDB_BPUI_STAR32G, RGB(0,0,0) );
          m_btnOK.SetAlign(          CBEMProcCtrlBtnST::ST_ALIGN_HORIZ_RIGHT );
 
          if (m_bEnableCancelBtn)
          {
             m_btnCancel.SubclassDlgItem( IDCANCELBTN, this );
-            m_btnCancel.SetBitmaps(      IDB_EQ_CANC32, RGB(0,0,0), IDB_EQ_CANC32G, RGB(0,0,0) );
+            m_btnCancel.SetBitmaps(      IDB_BPUI_CANC32, RGB(0,0,0), IDB_BPUI_CANC32G, RGB(0,0,0) );
             m_btnCancel.SetAlign(        CBEMProcCtrlBtnST::ST_ALIGN_HORIZ_RIGHT );
          }
       }
@@ -614,16 +606,8 @@ void CSACDlg::CreateUIControls( BOOL bResetEntireScreen, long lFocusDBID )
                }
                else if (pCtrl->m_uiCtrlType == TDCT_Spread)
                {
-#ifdef _INC_SPREAD
-                  CBEMProcCtrlSpread* pSpread = new CBEMProcCtrlSpread();
-                  if (pSpread)
-                     pSpread->Create( this, pCtrl, m_bIncludeCompParamStrInToolTip, m_bIncludeStatusStrInToolTip,
-                                      0, 0, (m_bUsePageIDForTopicHelp ? (m_pTDPage->m_iPageId + m_iHelpIDOffset) : 0) );
-//                   BOOL Create( CWnd* pParentWnd, CBEMPUIControl* pControl, int iDX = 0, int iDY = 0, UINT uiTopicHelpID = 0 );
-#else
                   MessageBox( "CSACDlg Error:  Spreadsheet control not available." );
                   pCtrl->m_bActive = FALSE;
-#endif
                }
                else if (pCtrl->m_uiCtrlType == TDCT_List)
                {
@@ -669,9 +653,6 @@ void CSACDlg::CreateUIControls( BOOL bResetEntireScreen, long lFocusDBID )
                           pCtrl->m_uiCtrlType == TDCT_Combo  ||
                           pCtrl->m_uiCtrlType == TDCT_ExtCmb ||   // SAC 6/4/01
                           pCtrl->m_uiCtrlType == TDCT_Button ||
-#ifdef _INC_SPREAD
-                          pCtrl->m_uiCtrlType == TDCT_Spread ||
-#endif
                           pCtrl->m_uiCtrlType == TDCT_List   ||
                           pCtrl->m_uiCtrlType == TDCT_ChkLst ||
                           pCtrl->m_uiCtrlType == TDCT_Check  || 
@@ -898,9 +879,6 @@ void CSACDlg::DeleteUIControls()
            || (pWnd->IsKindOf(RUNTIME_CLASS(CComboBoxCtl )))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CExtendedComboBox)))  // SAC 6/4/01
            || (pWnd->IsKindOf(RUNTIME_CLASS(CButtonCtl   )))
-#ifdef _INC_SPREAD
-           || (pWnd->IsKindOf(RUNTIME_CLASS(CBEMProcCtrlSpread)))
-#endif
            || (pWnd->IsKindOf(RUNTIME_CLASS(CBEMProcCtrlList )))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CWMFCtl      )))
 //           || (pWnd->IsKindOf(RUNTIME_CLASS(CFloorPlanCtl)))
@@ -1858,29 +1836,6 @@ LRESULT CSACDlg::OnCommandHelp( WPARAM, LPARAM /*lParam*/ )
    return FALSE;
 }
 
-
-#ifdef _INC_SPREAD
-// SAC 6/7/00 - Spreadsheet control tooltip message processing
-LRESULT CSACDlg::OnSpreadTextTipFetch(WPARAM wParam, LPARAM lParam)
-{
-   CWnd* pSpread = GetDlgItem( wParam );
-   if (pSpread && lParam && pSpread->IsKindOf(RUNTIME_CLASS( CBEMProcCtrlSpread )))
-      ((CBEMProcCtrlSpread*)pSpread)->OnTextTipFetch( (LPSS_TEXTTIPFETCH) lParam );
-
-   return 1;
-}
-
-// SAC 6/7/00 - Spreadsheet control tooltip message processing
-LONG CSACDlg::OnQMDeleteRow(UINT uiCtrlID, LONG lDBID)
-{
-   CWnd* pSpread = GetDlgItem( (int)uiCtrlID );
-   if (pSpread && lDBID && pSpread->IsKindOf(RUNTIME_CLASS( CBEMProcCtrlSpread )))
-      ((CBEMProcCtrlSpread*)pSpread)->DeleteRow( lDBID );
-
-   return 1;
-}
-
-#endif
 
 BOOL CSACDlg::CheckData( CString& sMsg, CArray<long,long>* plErrDBIDs, CArray<long,long>* plWarnDBIDs )
 {

@@ -36,11 +36,9 @@
 #include "..\BEMProc\BEMClass.h"
 #include "resource.h"
 #include "BEMProcDlgCreate.h"
-
-//#include "MainFrm.h"
-//#include "COMcheckPlusDoc.h"
 #include "BEMProcDlgPrimData.h"
 #include "BEMProcUIX.h"
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -45,6 +45,7 @@
 #include "exec-stream.h"		// SAC 4/12/16 - added to facilitate execution of ReadVarsESO following E+ simulations
 #include <io.h>
 #include <sys/stat.h>
+#include "memLkRpt.h"
 
 using namespace OS_Wrap;
 
@@ -640,7 +641,7 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 									if (iEUIdx == IDX_T24_NRES_EU_CompTot)
 									{	sPassFail = (fCompMargin > -0.001 /*>=0*/ ? "PASS" : "FAIL");
 	
-											sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
+											sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 								}
@@ -781,7 +782,7 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveTDV", iCID_EnergyUse ), BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 										sPassFail = (fCompMargin > -0.001 /*>=0*/ ? "PASS" : "FAIL");
 	
-												sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
+												sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
 												BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								}	}
 							}

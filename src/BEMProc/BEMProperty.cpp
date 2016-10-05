@@ -36,6 +36,7 @@
 #include "BEMProcObject.h"
 #include "BEMPropertyType.h"
 #include "BEMProperty.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

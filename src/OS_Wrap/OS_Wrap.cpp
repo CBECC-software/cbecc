@@ -103,6 +103,7 @@
 //#include <algorithm>
 //#include <string>
 #pragma warning(default : 4100 4127 4512)
+#include "memLkRpt.h"
 
 
 using namespace OS_Wrap;

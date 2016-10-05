@@ -36,6 +36,7 @@
 #include "expRulePropTypeMod.h"
 #include "expRuleList.h"
 #include "BEMPropertyType.h"
+#include "memLkRpt.h"
 
 
 static int StringInArray( QStringList& saStrs, QString& sStr )  // SAC 8/25/03

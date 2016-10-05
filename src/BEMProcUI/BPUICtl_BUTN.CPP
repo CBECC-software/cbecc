@@ -52,7 +52,7 @@
 #include "BPUICtl_butn.h" 
 #include "BEMProcUIX.h"
 #include "BEMProcDlgCreate.h"
-
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -412,17 +412,13 @@ BOOL CButtonCtl::ButtonSelected()
       if (!m_bEditable)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrNotEditable, szErrorCaption, MB_ICONSTOP );
-#endif
          bRetVal = FALSE;
       }
       else if (!m_bAllowEdits)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
          bRetVal = FALSE;
       }
 //      else if (eiCurAnalysisStep != AS_None)
@@ -658,18 +654,14 @@ void CButtonCtl::OnKeyDown( UINT nChar, UINT nRepCnt, UINT nFlags )
                GetButtonStyle() == BS_AUTOCHECKBOX    ) )
    {
       MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
       MessageBox( szErrNotEditable, szErrorCaption, MB_ICONSTOP );
-#endif
    }
    else if ( !m_bAllowEdits && nChar == VK_SPACE &&
              ( GetButtonStyle() == BS_AUTORADIOBUTTON ||
                GetButtonStyle() == BS_AUTOCHECKBOX    ) )
    {
       MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
       MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
    }
 //   else if ( (nChar == VK_SPACE) &&
 //             ( (GetButtonStyle() == BS_AUTORADIOBUTTON) ||

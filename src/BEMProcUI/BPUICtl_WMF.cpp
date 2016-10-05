@@ -37,7 +37,7 @@
 #include "..\BEMProc\BEMProc.h"
 #include "Screens.h"
 #include "BPUICtl_WMF.h" 
-
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE

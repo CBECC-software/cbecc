@@ -588,6 +588,7 @@ inline void remove_spikes(Geometry& geometry)
 #include <boost/geometry/multi/geometries/concepts/check.hpp>
 
 //SAC #include <boost/geometry/algorithms/remove_spikes.hpp>
+#include "memLkRpt.h"
 
 
 namespace boost { namespace geometry
@@ -2576,11 +2577,11 @@ double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName
 			sDebug += "(data set directly to Spc:DaylitArea[2-4] by CalcDaylighting())";
 			sDebug += " -> ";
 			if (fDayltAreaExceeds > 0.1 && fSpcFlrArea > 0)
-				sDebug2 = QString( "Toplit: %1 (%2%%) / PrimSidelit: %3 (%4%%) / SecSidelit: %5 (%6%%) / Overall: %7 (%8%%) - ERROR: calced daylit areas exceeded Spc:FlrArea by %9" ).arg( QString::number(fDLAreaByType[0]),
+				sDebug2 = QString( "Toplit: %1 (%2%) / PrimSidelit: %3 (%4%) / SecSidelit: %5 (%6%) / Overall: %7 (%8%) - ERROR: calced daylit areas exceeded Spc:FlrArea by %9" ).arg( QString::number(fDLAreaByType[0]),
 										QString::number((fDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[1]), QString::number((fDLAreaByType[1] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[2]),
 										QString::number((fDLAreaByType[2] * 100 / fSpcFlrArea), 'f', 0), QString::number(fTotDaylitArea  ), QString::number((fTotDaylitArea   * 100 / fSpcFlrArea), 'f', 0), QString::number(fDayltAreaExceeds, 'f', 1) );
 			else if (fTotDaylitArea > 0.1 && fSpcFlrArea > 0)
-				sDebug2 = QString( "Toplit: %1 (%2%%) / PrimSidelit: %3 (%4%%) / SecSidelit: %5 (%6%%) / Overall: %7 (%8%%)" ).arg(   QString::number(fDLAreaByType[0]), QString::number((fDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0),
+				sDebug2 = QString( "Toplit: %1 (%2%) / PrimSidelit: %3 (%4%) / SecSidelit: %5 (%6%) / Overall: %7 (%8%)" ).arg(   QString::number(fDLAreaByType[0]), QString::number((fDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0),
 									QString::number(fDLAreaByType[1]), QString::number((fDLAreaByType[1] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[2]), QString::number((fDLAreaByType[2] * 100 / fSpcFlrArea), 'f', 0),
 									QString::number(fTotDaylitArea), QString::number((fTotDaylitArea     * 100 / fSpcFlrArea), 'f', 0) );
 			else

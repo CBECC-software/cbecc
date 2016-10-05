@@ -84,6 +84,7 @@ typedef union
  * used is : "pcyacc -Dparser.h parser.y"
  */
 #include <stdio.h>
+#include "memLkRpt.h"
 #ifdef _WINDLL
 /* SAC - 12/19/97 - removed in order to compile in VC++5.0 */
 /* static FILE* stderr = NULL; */

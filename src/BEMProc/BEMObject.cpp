@@ -35,6 +35,7 @@
 #include "BEMClass.h"
 #include "BEMPropertyType.h"
 #include "BEMProcObject.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,7 +114,7 @@
 /////////////////////////////////////////////////////////////////////////////
 void BEMObject::clear()
 {
-//	if (!sbShuttingDown)
+	if (!eShuttingDown)
 		// make sure that the currently selective (active) object of this type is not this one
 	   BEMPX_CountOrResetObjectRefs( this, FALSE );
 

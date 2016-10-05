@@ -52,6 +52,7 @@
 #include "BEMClass.h"
 #include "expDataType.h"
 #include "expLibraryIO.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

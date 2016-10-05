@@ -36,6 +36,7 @@
 #include "BEMProcObject.h"
 #include "expTextIO.h"
 #include "expCrypFile.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

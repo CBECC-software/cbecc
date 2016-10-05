@@ -50,12 +50,7 @@ static char THIS_FILE[] = __FILE__;
 #include "CSERunMgr.h"
 #include "BEMCmpMgr.h"
 #include "BEMCM_I.h"
-// TO DO?  #include "..\BEMProc\BEMRulPrcX.h"
-// TO DO  #include "copyfile.h"
-// TO DO  #include "..\BEMProc\RulPrc\textio.h"
-// TO DO  #ifdef OSWRAPPER
-// TO DO  #include "OpenStudioInterface.h"
-// TO DO  #endif
+#include "memLkRpt.h"
 
 
 

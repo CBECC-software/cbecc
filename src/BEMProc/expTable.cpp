@@ -46,7 +46,7 @@
 #include "stdafx.h"
 #include "expTable.h"
 #include "expRuleList.h"
-//#include "RulPrc.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

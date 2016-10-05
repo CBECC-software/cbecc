@@ -38,6 +38,8 @@
 #include "..\BEMProc\BEMProc.h"
 #include "BEMCmpMgr.h"
 #include "BEMCM_I.h"
+#include <fstream>      // fstream
+#include "memLkRpt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -150,8 +152,6 @@ int ComputeSHA256_Compare( const char* pszPathFile, const char* pBufferToCompare
 	return iRetVal;
 }
 
-
-#include <fstream>      // fstream
 
 int CMX_GenerateFileHashesFromCSV( const char* pszHashFileListCSVPathFile, const char* pszHashOutputPathFile, const char* pszDefaultPath /*=NULL*/ )  // SAC 9/2/13
 {	int iRetVal = 0;

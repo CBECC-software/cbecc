@@ -49,6 +49,7 @@
 #include "expDataType.h"
 #include "expRuleList.h"
 //#include "RulPrc.h"
+#include "memLkRpt.h"
 
 // DataTypeStrings must be in the same order as the DataType enum
 static char* dataTypeStrings[] = 

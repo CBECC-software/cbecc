@@ -52,7 +52,7 @@
 #include "Screens.h"
 #include "BPUICtl_Edit.h" 
 #include "BEMProcUIX.h"
-
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -369,16 +369,12 @@ void CEditCtl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
    else if (!m_bEditable)
    {
       MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
       MessageBox( szErrNotEditable, szErrorCaption, MB_ICONSTOP );
-#endif
    }
    else if (!m_bAllowEdits)
    {
       MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
       MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
    }
 //   else if (eiCurAnalysisStep != AS_None)
 //   {

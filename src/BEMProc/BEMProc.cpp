@@ -47,6 +47,10 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QMessageBox>
 
+#include "expRuleList.h"
+#include "expFormula.h"
+#include "memLkRpt.h"
+
 
 // This is an example of an exported variable
 BEMPROC_API int nBEMProc=0;
@@ -67,11 +71,7 @@ BEMPROC_API int fnBEMProc(void)
 //	return;
 //}
 
-
-
-#include "expFormula.h"
 static ExpNode sNode;
-
 
 /////////////////////////////////////////////////////////////////////////////
 // 
@@ -114,6 +114,54 @@ BOOL BEMPX_LoadDataModel( const char* psBEMProcFileName, int iBEMType, const cha
 //	blastSecondaryBEMProcs();  - already done inside BEMPX_DeleteAllObjects()
 
    return bRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Exported Function:  void BEMPX_CloseBEMProc()
+//
+// Purpose ------------------------------------------------------------------
+//   To delete all instances of CBEMDataTypes, CBEMRangeChecks, and CBEMObjects
+//   which would not get cleaned up automatically when DLL terminated.
+//   
+// Arguments ----------------------------------------------------------------
+//   None
+//   
+// Return Value -------------------------------------------------------------
+//   None
+//   
+// Notes --------------------------------------------------------------------
+//   None
+//   
+/////////////////////////////////////////////////////////////////////////////
+void BEMPX_CloseBEMProc( bool bShuttingDown /*=true*/, bool bCloseLogFile /*=true*/ )
+{
+	if (bCloseLogFile)
+		BEMPX_CloseLogFile();		// SAC 5/19/14
+
+	bool bInitShuttingDown = eShuttingDown;
+	eShuttingDown = bShuttingDown;
+	bool bInitDeletingAllObjects = eDeletingAllObjects;
+	eDeletingAllObjects = true;
+
+//	// delete any existing user-defined defaults
+//   BEMPX_DeleteUserDefaults();
+
+//   // Delete all symbol definitions
+//   DeleteAllSymbolLists();
+
+	BEMPX_DeleteModels( true /*bIncludingUserModel*/ );   // SAC 3/24/13
+
+//   sbBothBEMsActive = FALSE;
+//	blastSecondaryBEMProcs();  - done inside BEMPX_DeleteModels()
+
+   // blast any current ruleset data
+   ruleSet.clear();
+
+	eActiveBEMProcIdx = 0;
+	eDeletingAllObjects = bInitDeletingAllObjects;
+	eShuttingDown = bInitShuttingDown;
 }
 
 
@@ -1804,19 +1852,19 @@ void BEMPX_DBIDToDBCompParamString( long lDBID, QString& sCompParam, bool bLongN
       else if (iProp == 0)
          switch (iArray)
          {
-            case BEM_PARAM0_ACTIVE  : {  sCompParam += "Active";      break;  }
-            case BEM_PARAM0_NAME    : {  sCompParam += "Name";        break;  }
-            case BEM_PARAM0_PARENT  : {  sCompParam += "Parent";      break;  }
-            case BEM_PARAM0_NEWPAR  : {  sCompParam += "NewParent";   break;  }
-            case BEM_PARAM0_NEWCOPY : {  sCompParam += "NewCopy";     break;  }
-            case BEM_PARAM0_PARCLAS : {  sCompParam += "PClass";      break;  }
-            case BEM_PARAM0_ACTION  : {  sCompParam += "Action";      break;  }
-            case BEM_PARAM0_CREATE  : {  sCompParam += "Create";      break;  }  // SAC 6/13/00
-            case BEM_PARAM0_DELETE  : {  sCompParam += "Delete";      break;  }  // SAC 6/13/00
-            case BEM_PARAM0_CR8OPT  : {  sCompParam += "Cr8Option";   break;  }  // SAC 9/18/13
-            case BEM_PARAM0_USERLIB : {  sCompParam += "UserLib";     break;  }  // SAC 9/18/13
-            case BEM_PARAM0_RULELIB : {  sCompParam += "RuleLib";     break;  }  // SAC 9/18/13
-            default                 : {  sCompParam += "UnknownParam";   break;  }
+            case BEM_PARAM0_ACTIVE  :   sCompParam += "Active";      break;  
+            case BEM_PARAM0_NAME    :   sCompParam += "Name";        break;  
+            case BEM_PARAM0_PARENT  :   sCompParam += "Parent";      break;  
+            case BEM_PARAM0_NEWPAR  :   sCompParam += "NewParent";   break;  
+            case BEM_PARAM0_NEWCOPY :   sCompParam += "NewCopy";     break;  
+            case BEM_PARAM0_PARCLAS :   sCompParam += "PClass";      break;  
+            case BEM_PARAM0_ACTION  :   sCompParam += "Action";      break;  
+            case BEM_PARAM0_CREATE  :   sCompParam += "Create";      break;    // SAC 6/13/00
+            case BEM_PARAM0_DELETE  :   sCompParam += "Delete";      break;    // SAC 6/13/00
+            case BEM_PARAM0_CR8OPT  :   sCompParam += "Cr8Option";   break;    // SAC 9/18/13
+            case BEM_PARAM0_USERLIB :   sCompParam += "UserLib";     break;    // SAC 9/18/13
+            case BEM_PARAM0_RULELIB :   sCompParam += "RuleLib";     break;    // SAC 9/18/13
+            default                 :   sCompParam += "UnknownParam";   break;  
          }
       else
          sCompParam += "UnknownParam";
@@ -4262,32 +4310,35 @@ bool BEMPX_DeleteModels( bool bIncludingUserModel /*false*/ )
    for (i=eNumBEMProcsLoaded-1; i >= iMinModel; i--)  // SAC 3/13/13 - added multi-model support  3/24/13 - reverse order to blast main model LAST
    {
       BEMProcObject* pBEMProc = getBEMProcPointer( i );
-   	for (int bdPropType = 0; bdPropType < pBEMProc->getNumPropertyTypes(); bdPropType++)
-   	{
-			pBEMProc->getPropertyType( bdPropType )->clearRangeChecks();
-			pBEMProc->getPropertyType( bdPropType )->clearPropTypeDetails();
-      //	// Delete all Compliance DataType objects
-   	//	while (pBEMProc->getPropertyType( bdPropType )->getNumPropTypeDetails())
-   	//	{
-      //      BEMDataType* pDT = (BEMDataType*)pBEMProc->getPropertyType( bdPropType )->m_olDataTypes.RemoveTail();
-   	//		delete pDT;
-   	//	}
-      //   // Delete all Range Check objects
-   	//	while (pBEMProc->getPropertyType( bdPropType )->m_olRanges.GetCount())
-   	//	{
-      //      BEMRangeCheck* pRC = (BEMRangeCheck*)pBEMProc->getPropertyType( bdPropType )->m_olRanges.RemoveTail();
-   	//		delete pRC;
-   	//	}
-      //   // Delete all Compliance Reset objects
-   	//	while (pBEMProc->getPropertyType( bdPropType )->m_olResetData.GetCount())
-   	//	{
-      //      BEMReset* pR = (BEMReset*)pBEMProc->getPropertyType( bdPropType )->m_olResetData.RemoveTail();
-   	//		delete pR;
-   	//	}
-      }
-
-   	for (int bdClass = pBEMProc->getNumClasses()-1; bdClass >= 0; bdClass--)
-   		pBEMProc->getClass( bdClass )->clear();
+		if (pBEMProc)
+			pBEMProc->clear();
+// SAC 10/4/16 - below replaced w/ above, allowing BEMProcObject::clear() to handle clean-up
+//   	for (int bdPropType = 0; bdPropType < pBEMProc->getNumPropertyTypes(); bdPropType++)
+//   	{
+//			pBEMProc->getPropertyType( bdPropType )->clearRangeChecks();
+//			pBEMProc->getPropertyType( bdPropType )->clearPropTypeDetails();
+//      //	// Delete all Compliance DataType objects
+//   	//	while (pBEMProc->getPropertyType( bdPropType )->getNumPropTypeDetails())
+//   	//	{
+//      //      BEMDataType* pDT = (BEMDataType*)pBEMProc->getPropertyType( bdPropType )->m_olDataTypes.RemoveTail();
+//   	//		delete pDT;
+//   	//	}
+//      //   // Delete all Range Check objects
+//   	//	while (pBEMProc->getPropertyType( bdPropType )->m_olRanges.GetCount())
+//   	//	{
+//      //      BEMRangeCheck* pRC = (BEMRangeCheck*)pBEMProc->getPropertyType( bdPropType )->m_olRanges.RemoveTail();
+//   	//		delete pRC;
+//   	//	}
+//      //   // Delete all Compliance Reset objects
+//   	//	while (pBEMProc->getPropertyType( bdPropType )->m_olResetData.GetCount())
+//   	//	{
+//      //      BEMReset* pR = (BEMReset*)pBEMProc->getPropertyType( bdPropType )->m_olResetData.RemoveTail();
+//   	//		delete pR;
+//   	//	}
+//      }
+//
+//   	for (int bdClass = pBEMProc->getNumClasses()-1; bdClass >= 0; bdClass--)
+//   		pBEMProc->getClass( bdClass )->clear();
    }
 
 	if (!bIncludingUserModel)
@@ -5128,12 +5179,12 @@ BOOL BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue,
    {
       switch (iCondition)
       {
-         case BEMC_Equal       : {  bRetVal = (fLtValue == fRtValue);   break;  }
-         case BEMC_LessOrEqual : {  bRetVal = (fLtValue <= fRtValue);   break;  }
-         case BEMC_GrtrOrEqual : {  bRetVal = (fLtValue >= fRtValue);   break;  }
-         case BEMC_Less        : {  bRetVal = (fLtValue <  fRtValue);   break;  }
-         case BEMC_Greater     : {  bRetVal = (fLtValue >  fRtValue);   break;  }
-         case BEMC_NotEqual    : {  bRetVal = (fLtValue != fRtValue);   break;  }
+         case BEMC_Equal       :   bRetVal = (fLtValue == fRtValue);   break; 
+         case BEMC_LessOrEqual :   bRetVal = (fLtValue <= fRtValue);   break; 
+         case BEMC_GrtrOrEqual :   bRetVal = (fLtValue >= fRtValue);   break; 
+         case BEMC_Less        :   bRetVal = (fLtValue <  fRtValue);   break; 
+         case BEMC_Greater     :   bRetVal = (fLtValue >  fRtValue);   break; 
+         case BEMC_NotEqual    :   bRetVal = (fLtValue != fRtValue);   break; 
       }
    }
 

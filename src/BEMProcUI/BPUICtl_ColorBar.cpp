@@ -45,13 +45,13 @@
 #include "Screens.h"
 #include "BPUICtl_ColorBar.h" 
 #include "BEMProcUIX.h"
-
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
+#define new DEBUG_NEW
 #undef THIS_FILE
-static char BASED_CODE THIS_FILE[] = __FILE__;
+static char THIS_FILE[] = __FILE__;
 #endif
-
 
 
 IMPLEMENT_DYNAMIC( CColorBarCtl, CWnd )

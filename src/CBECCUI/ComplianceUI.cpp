@@ -50,6 +50,8 @@
 //#include "FileVersion.h"
 #include "CUIVersionString.h"
 
+#include "memRptHook.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -448,11 +450,15 @@ int CComplianceUIApp::ExitInstance()
 //   if (hWndCUIRpt)
 //      ::PostMessage( hWndCUIRpt, WM_CLOSE, 0, 0L );
 
-	// Clear out building database
-	BEMPX_DeleteModels( true /*bIncludingUserModel*/ );	// was: BEMPX_CloseBEMProc()
+	// Clear out building database & ruleset
+	BEMPX_CloseBEMProc();
 
 	// Closes down Qt app (if created via CBECC-* analysis)
 	CMX_ExitBEMCmpMgrDLL();
+
+#if defined(WIN32) && defined(_DEBUG)
+	setFilterDebugHook();
+#endif
 
 //	return CBEMApp::ExitInstance();
 	return CWinApp::ExitInstance();

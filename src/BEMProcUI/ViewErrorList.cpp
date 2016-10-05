@@ -41,6 +41,7 @@
 #include "BPUICtl_edit.h"
 
 #include "BEMProcUIX.h"
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

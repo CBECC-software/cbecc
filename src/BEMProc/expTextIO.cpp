@@ -45,6 +45,7 @@
 
 #include "stdafx.h"
 #include "expTextIO.h"
+#include "memLkRpt.h"
 
 
 // Special characters

@@ -41,16 +41,16 @@
 #include "BEMProcCtrlBtnST.h"  // SAC 12/18/02
 
 // resource definitions corresponding to bitmaps for graphical help/prev/next/done buttons
-#define IDB_EQ_HELP32     580
-#define IDB_EQ_HELP32G    581
-#define IDB_EQ_PREV32     582
-#define IDB_EQ_PREV32G    583
-#define IDB_EQ_NEXT32     584
-#define IDB_EQ_NEXT32G    585
-#define IDB_EQ_STAR32     586
-#define IDB_EQ_STAR32G    587
-#define IDB_EQ_CANC32     588
-#define IDB_EQ_CANC32G    589
+#define IDB_BPUI_HELP32     580
+#define IDB_BPUI_HELP32G    581
+#define IDB_BPUI_PREV32     582
+#define IDB_BPUI_PREV32G    583
+#define IDB_BPUI_NEXT32     584
+#define IDB_BPUI_NEXT32G    585
+#define IDB_BPUI_STAR32     586
+#define IDB_BPUI_STAR32G    587
+#define IDB_BPUI_CANC32     588
+#define IDB_BPUI_CANC32G    589
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -226,12 +226,6 @@ protected:
    // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
    afx_msg LONG OnSetContextHelpID( WPARAM wHelpID, LPARAM );
    afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
-
-#ifdef _INC_SPREAD
-	afx_msg LRESULT OnSpreadTextTipFetch(WPARAM wParam, LPARAM lParam);
-   afx_msg LONG OnQMDeleteRow( UINT uiDBInstP1, LONG lDBID );
-#endif
-
 };
 
 //{{AFX_INSERT_LOCATION}}

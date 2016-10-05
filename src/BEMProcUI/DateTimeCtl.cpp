@@ -38,9 +38,10 @@
 #include "Screens.h"
 #include "DateTimeCtl.h"
 #include "BEMProcUIX.h"
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
@@ -340,9 +341,7 @@ LONG CDateTimeCtl::OnUpdateData( UINT, LONG )
    if (!m_bAllowEdits)
    {
       MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
       MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
       OnDisplayData(0,0);
    }
    else

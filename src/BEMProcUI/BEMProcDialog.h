@@ -169,10 +169,6 @@ protected:
    afx_msg LONG OnSetContextHelpID( WPARAM wHelpID, LPARAM );
 	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 
-#ifdef _INC_SPREAD
-	afx_msg LRESULT OnSpreadTextTipFetch(WPARAM wParam, LPARAM lParam);
-#endif
-
 	DECLARE_MESSAGE_MAP()
 };
 

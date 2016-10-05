@@ -34,9 +34,10 @@
 #include "stdafx.h"
 #include "BEMProcTabCtrl.h"
 #include "BEMProcUI_Globals.h"
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif

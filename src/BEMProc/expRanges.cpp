@@ -50,7 +50,7 @@
 #include "expRanges.h"
 #include "expRuleList.h"
 #include "BEMProcObject.h"
-//#include "RulPrc.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

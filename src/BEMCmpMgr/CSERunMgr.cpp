@@ -35,6 +35,7 @@
 #include "..\BEMProc\BEMProc.h"
 #include "exec-stream.h"
 #include "CSERunMgr.h"
+#include "memLkRpt.h"
 
 int StringInArray( QVector<QString>& saStrs, QString& sStr )
 {	int iSize = (int) saStrs.size();

@@ -77,6 +77,7 @@
 #include "BEMCompiler.h"
 #include "../BEMProc/BEMProc.h"
 #include "../BEMProc/BEMProcCompile.h"
+#include "memLkRpt.h"
 
 int main(int argc, char *argv[])
 {
@@ -182,39 +183,39 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 
 #ifdef CBECC_RES16
 
-// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
-	dmDefsTextEdit->setPlainText(     "../Res/Rules/src/CAR13 BEMBase.txt" );
-	dmEnumsTextEdit->setPlainText(    "../Res/Rules/src/CAR16 BEMEnums.txt" );
-	dmCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016/CAR16 BEMBase.bin" );
-	rlPrimTextEdit->setPlainText(     "../Res/Rules/src/Rules/Rules-2016.txt" );
-	rlCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016.bin" );
-	rlLogTextEdit->setPlainText(      "../Res/Rules/src/Rules/Rules Log.out" );
+//// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
+//	dmDefsTextEdit->setPlainText(     "../Res/Rules/src/CAR13 BEMBase.txt" );
+//	dmEnumsTextEdit->setPlainText(    "../Res/Rules/src/CAR16 BEMEnums.txt" );
+//	dmCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016/CAR16 BEMBase.bin" );
+//	rlPrimTextEdit->setPlainText(     "../Res/Rules/src/Rules/Rules-2016.txt" );
+//	rlCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016.bin" );
+//	rlLogTextEdit->setPlainText(      "../Res/Rules/src/Rules/Rules Log.out" );
 
-//// to compile rules relative to SVN exe->rule source locations
-//	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
-//	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
-//	dmCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
-//	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
-//	rlCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016.bin" );
-//	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
+// to compile rules relative to SVN exe->rule source locations
+	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
+	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
+	dmCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
+	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
+	rlCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016.bin" );
+	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
 
 #else		// CBECC-Com
 
-// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
-	dmDefsTextEdit->setPlainText(     "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
-	dmEnumsTextEdit->setPlainText(    "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
-	dmCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-	rlPrimTextEdit->setPlainText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
-	rlCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes.bin" );
-	rlLogTextEdit->setPlainText(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
+//// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
+//	dmDefsTextEdit->setPlainText(     "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
+//	dmEnumsTextEdit->setPlainText(    "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
+//	dmCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+//	rlPrimTextEdit->setPlainText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
+//	rlCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes.bin" );
+//	rlLogTextEdit->setPlainText(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
 
-//// to compile rules relative to SVN exe->rule source locations
-//	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
-//	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
-//	dmCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-//	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
-//	rlCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes.bin" );
-//	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
+// to compile rules relative to SVN exe->rule source locations
+	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
+	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
+	dmCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
+	rlCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes.bin" );
+	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
 
 #endif
 

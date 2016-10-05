@@ -41,6 +41,7 @@
 #include <QtNetwork/QHttpMultiPart>
 #include <QtNetwork/QSslConfiguration>
 #pragma warning(default : 4100 4127 4512)
+#include "memLkRpt.h"
 
 Qt_FileDownloader::Qt_FileDownloader(QUrl imageUrl, QObject *parent, const char* /*pszCACertPath*/,
 													const char* pszProxyAddress, const char* pszProxyCredentials, const char* pszProxyType,

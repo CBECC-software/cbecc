@@ -42,6 +42,7 @@
 #ifdef OSWRAPPER
 #include "OpenStudioInterface.h"
 #endif
+#include "memLkRpt.h"
 
 
 #ifdef _DEBUG

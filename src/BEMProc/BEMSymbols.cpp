@@ -33,6 +33,7 @@
 #include <iostream>
 #include "BEMProcObject.h"
 #include "BEMSymbols.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

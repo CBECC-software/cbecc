@@ -77,6 +77,7 @@
 #include "BEMTest.h"
 #include "../BEMProc/BEMProc.h"
 #include "../BEMCmpMgr/BEMCmpMgrCom.h"
+#include "memLkRpt.h"
 
 int main(int argc, char *argv[])
 {

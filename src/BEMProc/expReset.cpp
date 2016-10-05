@@ -49,6 +49,7 @@
 #include "BEMProcI.h"
 #include "expReset.h"
 #include "expRuleList.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

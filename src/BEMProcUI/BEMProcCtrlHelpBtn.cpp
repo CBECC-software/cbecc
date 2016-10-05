@@ -36,21 +36,22 @@
 #include "Screens.h"
 #include "BEMProcCtrlHelpBtn.h"
 #include "BEMProcUIX.h"
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
 
-// #define IDI_EQ_HELP32      574
-// #define IDI_EQ_HELP32G     575
-// #define IDI_EQ_HELP16      576
-// #define IDI_EQ_HELP16G     577
-#define IDB_EQ_HELP20      578
-#define IDB_EQ_HELP20G     579
-#define IDB_EQ_HELP24      590
-#define IDB_EQ_HELP24G     591
+// #define IDI_BPUI_HELP32      574
+// #define IDI_BPUI_HELP32G     575
+// #define IDI_BPUI_HELP16      576
+// #define IDI_BPUI_HELP16G     577
+#define IDB_BPUI_HELP20      578
+#define IDB_BPUI_HELP20G     579
+#define IDB_BPUI_HELP24      590
+#define IDB_BPUI_HELP24G     591
 
 IMPLEMENT_DYNAMIC( CBEMProcCtrlHelpBtn, CButtonST )
 
@@ -117,7 +118,7 @@ BOOL CBEMProcCtrlHelpBtn::Create( CWnd* pParentWnd, CBEMPUIControl* pControl, BO
 
 //      SetFont( GetWizFont(m_iFont), TRUE );
 
-      int iBmpID = (FontY(20) > 22 ? IDB_EQ_HELP24 : IDB_EQ_HELP20);  // SAC 10/27/02
+      int iBmpID = (FontY(20) > 22 ? IDB_BPUI_HELP24 : IDB_BPUI_HELP20);  // SAC 10/27/02
       SetBitmaps( iBmpID, RGB(255,0,0), iBmpID+1, RGB(255,0,0) );
       SizeToContent();
       DrawBorder( FALSE );

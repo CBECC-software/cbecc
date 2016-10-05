@@ -66,6 +66,8 @@ using namespace boost::assign;
 #include "boost/date_time/posix_time/posix_time.hpp" // include all types plus i/o (ptime...)
 using namespace boost::posix_time;
 
+#include "memLkRpt.h"
+
 
 static inline void ExpSetErr( ExpError* pError, ExpErrorCode code, const char* text )
 {

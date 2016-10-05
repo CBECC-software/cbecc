@@ -45,6 +45,7 @@
 
 #include "BEMProcUIX.h"
 #include "Screens.h"
+#include "memLkRpt.h"
 
 
 int appCXFullScreen;

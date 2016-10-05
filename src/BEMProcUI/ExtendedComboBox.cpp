@@ -47,9 +47,10 @@
 //#include "DlgErrorList.h"  // SAC 2/6/03
 
 #include <afxtempl.h>
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
@@ -1428,17 +1429,13 @@ LONG CExtendedComboBox::OnUpdateData( UINT, LONG )
       if (!m_bEditable)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrNotEditable, szErrorCaption, MB_ICONSTOP );
-#endif
          OnDisplayData(0,0);
       }
       else if (!m_bAllowEdits && m_iComboMode != CM_ACTIVE)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
          OnDisplayData(0,0);
       }
       else if ( m_iComboMode != CM_ACTIVE && iArrID != BEM_PARAM0_NEWPAR && iArrID != BEM_PARAM0_NEWCOPY &&

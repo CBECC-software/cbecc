@@ -48,6 +48,17 @@
 #include "boost/date_time/posix_time/posix_time.hpp" //include all types plus i/o
 using namespace boost::posix_time;
 
+#include "expFormula.h"
+
+#pragma warning(disable : 4127)
+#include <QtXml/qdom.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qiodevice.h>
+#include <QtCore/qtextstream.h>
+#include <QtCore/QXmlStreamWriter>
+#include <QtCore/QXmlStreamReader>
+#pragma warning(default : 4127)
+
 #define  MAX_COLUMN  78
 
 
@@ -3299,6 +3310,8 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
 //  END  OF  CProjectFile  CLASS  FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////
 
+#include "memLkRpt.h"
+
 static QString ssRulesetFilename;
 
 static bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long lDBIDVersion, int iBEMProcIdx,
@@ -3781,13 +3794,6 @@ int BEMPX_SetPropertiesToUserDefined( int iBEMProcIdx /*=-1*/ )
 /////////////////////////////////////////////////////////////////////////////
 // Qt XML Writing mechanism
 /////////////////////////////////////////////////////////////////////////////
-#pragma warning(disable : 4127)
-#include <QtXml/qdom.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qiodevice.h>
-#include <QtCore/qtextstream.h>
-#include <QtCore/QXmlStreamWriter>
-#pragma warning(default : 4127)
 
 // SAC 2/28/13 - added to prevent writing of Sim objects w/ NO properties
 static bool MustWriteProperties_XML( BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, bool bWritePropertiesDefinedByRuleset );
@@ -4395,9 +4401,6 @@ bool BEMXMLWriter::WriteModel(	bool bWriteAllProperties, BOOL /*bSupressAllMessa
 /////////////////////////////////////////////////////////////////////////////
 // Qt XML READING mechanism
 /////////////////////////////////////////////////////////////////////////////
-#pragma warning(disable : 4127)
-#include <QtCore/QXmlStreamReader>
-#pragma warning(default : 4127)
 
 static int siLastIndent = -1;
 static QString ssLastIndentChars;

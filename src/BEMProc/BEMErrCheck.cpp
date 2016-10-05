@@ -38,6 +38,7 @@
 #include "BEMPropertyType.h"
 #include "BEMProperty.h"
 //#include "BEMP_Sym.h"
+#include "memLkRpt.h"
 
 
 // SAC 8/22/11 - removed application-specific component existence checks

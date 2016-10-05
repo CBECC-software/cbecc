@@ -54,6 +54,7 @@
 #include "BEMProcUIX.h"
 
 #include <afxtempl.h>
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -1368,17 +1369,13 @@ LONG CComboBoxCtl::OnUpdateData( UINT, LONG )
       if (!m_bEditable)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrNotEditable, szErrorCaption, MB_ICONSTOP );
-#endif
          OnDisplayData(0,0);
       }
       else if (!m_bAllowEdits && m_iComboMode != CM_ACTIVE)
       {
          MessageBeep( MB_OK );
-#ifndef _INC_SPREAD      // SAC 6/17/01
          MessageBox( szErrEditsNotAllowed, szErrorCaption, MB_ICONSTOP );
-#endif
          OnDisplayData(0,0);
       }
       else if ( m_iComboMode != CM_ACTIVE && iArrID != BEM_PARAM0_NEWPAR && iArrID != BEM_PARAM0_NEWCOPY &&

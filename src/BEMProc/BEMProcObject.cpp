@@ -40,6 +40,7 @@
 #include "expRuleList.h"
 #include "expRuleFile.h"
 #include "expLibraryIO.h"
+#include "memLkRpt.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -853,19 +854,19 @@ static void CA_DBIDToDBCompParamString( long lDBID, QString& sCompParam )
          {
             switch (iArray)
             {
-               case BEM_PARAM0_ACTIVE  : {  sCompParam += "Active";      break;  }
-               case BEM_PARAM0_NAME    : {  sCompParam += "Name";        break;  }
-               case BEM_PARAM0_PARENT  : {  sCompParam += "Parent";      break;  }
-               case BEM_PARAM0_NEWPAR  : {  sCompParam += "NewParent";   break;  }
-               case BEM_PARAM0_NEWCOPY : {  sCompParam += "NewCopy";     break;  }
-               case BEM_PARAM0_PARCLAS : {  sCompParam += "PClass";      break;  }
-               case BEM_PARAM0_ACTION  : {  sCompParam += "Action";      break;  }
-               case BEM_PARAM0_CREATE  : {  sCompParam += "Create";      break;  }
-               case BEM_PARAM0_DELETE  : {  sCompParam += "Delete";      break;  }
-               case BEM_PARAM0_CR8OPT  : {  sCompParam += "Cr8Option";   break;  }
-               case BEM_PARAM0_USERLIB : {  sCompParam += "UserLib";     break;  }
-               case BEM_PARAM0_RULELIB : {  sCompParam += "RuleLib";     break;  }
-               default                 : {  sCompParam += "UnknownParam";   break;  }
+               case BEM_PARAM0_ACTIVE  :   sCompParam += "Active";      break;  
+               case BEM_PARAM0_NAME    :   sCompParam += "Name";        break;  
+               case BEM_PARAM0_PARENT  :   sCompParam += "Parent";      break;  
+               case BEM_PARAM0_NEWPAR  :   sCompParam += "NewParent";   break;  
+               case BEM_PARAM0_NEWCOPY :   sCompParam += "NewCopy";     break;  
+               case BEM_PARAM0_PARCLAS :   sCompParam += "PClass";      break;  
+               case BEM_PARAM0_ACTION  :   sCompParam += "Action";      break;  
+               case BEM_PARAM0_CREATE  :   sCompParam += "Create";      break;  
+               case BEM_PARAM0_DELETE  :   sCompParam += "Delete";      break;  
+               case BEM_PARAM0_CR8OPT  :   sCompParam += "Cr8Option";   break;  
+               case BEM_PARAM0_USERLIB :   sCompParam += "UserLib";     break;  
+               case BEM_PARAM0_RULELIB :   sCompParam += "RuleLib";     break;  
+               default                 :   sCompParam += "UnknownParam";   break;  
             }
          }
          else

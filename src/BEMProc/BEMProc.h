@@ -235,6 +235,7 @@ void BEMPROC_API __cdecl BEMPX_OpenLogFile( const char* pszLogPathFile, bool bBl
 void BEMPROC_API __cdecl BEMPX_RefreshLogFile( bool bReOpenLog=true );	// SAC 5/19/14
 void BEMPROC_API __cdecl BEMPX_CloseLogFile();		// SAC 5/19/14
 
+void BEMPROC_API __cdecl BEMPX_CloseBEMProc( bool bShuttingDown=true, bool bCloseLogFile=true );
 
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
 																const char* psInitLogFileName = NULL );

@@ -62,6 +62,7 @@
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/assert.hpp> 
 #include <map>
+#include "memLkRpt.h"
 using namespace std;
 using namespace boost::assign;
 

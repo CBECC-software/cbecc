@@ -38,12 +38,9 @@
 #include "Screens.h"
 #include "ToolTips.h"
 #include "BEMProcUIX.h"
-
 #include "..\BEMProc\BEMProc.h"
-//#include "..\BEMProc\BEMRulPrcX.h"
-
 #include "BPUICtl_WMF.h" 
-
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

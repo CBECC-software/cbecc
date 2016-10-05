@@ -60,8 +60,8 @@
 #pragma warning(disable:4996)
 #include <openssl/applink.c>
 #pragma warning(default:4996)
-
 //CURL #include <curl/curl.h>
+#include "memLkRpt.h"
 
 #define ChunkSize 65536
 

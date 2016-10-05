@@ -51,6 +51,7 @@
 #include <stdlib.h>     /* strtod */
 
 #include "expFormula.h"
+#include "memLkRpt.h"
 
 #define ISFLOATCHAR(c) (isdigit(c)||(c)=='.')
 #define ISNAMECHAR(c)  (isalnum(c)||(c)=='_'||(c)=='#')

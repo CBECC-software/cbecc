@@ -50,6 +50,7 @@
 #include "BEMProcI.h"
 #include "expSymbols.h"
 #include "expRuleList.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////

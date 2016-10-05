@@ -40,11 +40,12 @@
 #include "BEMProcUI_Globals.h"
 #include "..\BEMProc\BEMProc.h"
 #include "..\BEMProc\expRanges.h"
+#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[]=__FILE__;
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #endif
 
 //IMPLEMENT_DYNAMIC( CDlgErrorList, CResizableDialog )

@@ -1,17 +1,53 @@
 // ResizableDialog.cpp : implementation file
 //
+/**********************************************************************
+ *  Copyright (c) 2012-2016, California Energy Commission
+ *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  All rights reserved.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  - Neither the name of the California Energy Commission nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *  DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ *  THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+ *  WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+ *  THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ *  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ *  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+ *  SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+ *  THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+ *  STRICT LIABILITY OR OTHERWISE.
+ **********************************************************************/
 /////////////////////////////////////////////////////////////////////////////
 //
 // Copyright (C) 2000 by Paolo Messina
 // (ppescher@yahoo.com)
 //
+// Free for non-commercial use.
+// You may change the code to your needs,
+// provided that credits to the original 
+// author is given in the modified files.
+//  
 /////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "ResizableDialog.h"
+#include "..\memLkRpt.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+//#define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
@@ -28,7 +64,7 @@ CResizableDialog::CResizableDialog()
 	m_bUseMaxRect = FALSE;
 
 	m_bShowGrip = TRUE;
-
+	
 	m_bEnableSaveRestore = FALSE;
 
 	m_szGripSize = CSize(GetSystemMetrics(SM_CXVSCROLL),
@@ -81,10 +117,10 @@ END_MESSAGE_MAP()
 // CResizableDialog message handlers
 
 
-BOOL CResizableDialog::OnInitDialog()
+BOOL CResizableDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
-
+	
 	UpdateGripPos();
 
 	// gets the template size as the min track size
@@ -99,10 +135,10 @@ BOOL CResizableDialog::OnInitDialog()
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void CResizableDialog::OnDestroy()
+void CResizableDialog::OnDestroy() 
 {
 	CDialog::OnDestroy();
-
+	
 	if (m_bEnableSaveRestore)
 		SaveWindowRect();
 }
@@ -114,7 +150,7 @@ void CResizableDialog::AddAnchor(HWND wnd, CSize tl_type, CSize br_type, BOOL bF
 	ASSERT(tl_type != NOANCHOR);
 
 	// get control's window class
-
+	
 	CString st;
 	GetClassName(wnd, st.GetBufferSetLength(MAX_PATH), MAX_PATH);
 	st.ReleaseBuffer();
@@ -168,17 +204,17 @@ void CResizableDialog::AddAnchor(HWND wnd, CSize tl_type, CSize br_type, BOOL bF
 	GetClientRect(&wndrc);
 	::GetWindowRect(wnd, &objrc);
 	ScreenToClient(&objrc);
-
+	
 	CSize tl_margin, br_margin;
 
 	if (br_type == NOANCHOR)
 		br_type = tl_type;
-
+	
 	// calculate margin for the top-left corner
 
 	tl_margin.cx = objrc.left - wndrc.Width() * tl_type.cx / 100;
 	tl_margin.cy = objrc.top - wndrc.Height() * tl_type.cy / 100;
-
+	
 	// calculate margin for the bottom-right corner
 
 	br_margin.cx = objrc.right - wndrc.Width() * br_type.cx / 100;
@@ -203,18 +239,18 @@ void CResizableDialog::ArrangeLayout()
 	while (pos != NULL)
 	{
 		pl = (Layout*)m_plLayoutList.GetNext(pos);
-
+	
 		CRect objrc, newrc;
 		CWnd* wnd = CWnd::FromHandle(pl->hwnd); // temporary solution
 
 		wnd->GetWindowRect(&objrc);
 		ScreenToClient(&objrc);
-
+		
 		// calculate new top-left corner
 
 		newrc.left = pl->tl_margin.cx + wndrc.Width() * pl->tl_type.cx / 100;
 		newrc.top = pl->tl_margin.cy + wndrc.Height() * pl->tl_type.cy / 100;
-
+		
 		// calculate new bottom-right corner
 
 		newrc.right = pl->br_margin.cx + wndrc.Width() * pl->br_type.cx / 100;
@@ -229,13 +265,13 @@ void CResizableDialog::ArrangeLayout()
 				// needs repainting, due to horiz scrolling
 				int diff = newrc.Width() - objrc.Width();
 				int max = wnd->GetScrollLimit(SB_HORZ);
-
+			
 				if (max > 0 && wnd->GetScrollPos(SB_HORZ) > max - diff)
 				{
 					wnd->MoveWindow(&newrc);
 					wnd->Invalidate();
 					wnd->UpdateWindow();
-
+					
 					add = FALSE;
 				}
 			}
@@ -245,7 +281,7 @@ void CResizableDialog::ArrangeLayout()
 				wnd->MoveWindow(&newrc);
 				wnd->Invalidate();
 				wnd->UpdateWindow();
-
+				
 				add = FALSE;
 			}
 
@@ -264,17 +300,17 @@ void CResizableDialog::ArrangeLayout()
 	EndDeferWindowPos(hdwp);
 }
 
-void CResizableDialog::OnSize(UINT nType, int cx, int cy)
+void CResizableDialog::OnSize(UINT nType, int cx, int cy) 
 {
 	CWnd::OnSize(nType, cx, cy);
-
+	
 	if (nType == SIZE_MAXHIDE || nType == SIZE_MAXSHOW)
 		return;		// arrangement not needed
 
 	ArrangeLayout();
 }
 
-void CResizableDialog::OnPaint()
+void CResizableDialog::OnPaint() 
 {
 	CPaintDC dc(this);
 
@@ -290,14 +326,14 @@ void CResizableDialog::PaintGrip( CDC* pDC )
 	}
 }
 
-LRESULT CResizableDialog::OnNcHitTest(CPoint point)
+LRESULT CResizableDialog::OnNcHitTest(CPoint point) 
 {
 	CPoint pt = point;
 	ScreenToClient(&pt);
 
 	if (m_bShowGrip && m_rcGripRect.PtInRect(pt))
 		return HTBOTTOMRIGHT;
-
+	
 	return CDialog::OnNcHitTest(point);
 }
 
@@ -311,7 +347,7 @@ void CResizableDialog::UpdateGripPos()
 	m_rcGripRect.top = m_rcGripRect.bottom - m_szGripSize.cy;
 }
 
-void CResizableDialog::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI)
+void CResizableDialog::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
 {
 	if (!m_bInitDone)
 		return;
@@ -333,7 +369,7 @@ void CResizableDialog::SetMaximizedRect(const CRect& rc)
 {
 	m_bUseMaxRect = TRUE;
 	m_ptMaxPos = rc.TopLeft();
-
+	
 	CSize sz = rc.Size();
 	m_ptMaxSize.x = sz.cx;
 	m_ptMaxSize.y = sz.cy;
@@ -406,7 +442,7 @@ void CResizableDialog::SaveWindowRect()
 	ZeroMemory(&wp, sizeof(WINDOWPLACEMENT));
 	wp.length = sizeof(WINDOWPLACEMENT);
 	GetWindowPlacement(&wp);
-
+	
 	RECT& rc = wp.rcNormalPosition;	// alias
 
 	data.Format(PROFILE_FMT, rc.left, rc.top,
@@ -421,10 +457,10 @@ void CResizableDialog::LoadWindowRect()
 	WINDOWPLACEMENT wp;
 
 	data = AfxGetApp()->GetProfileString(m_sSection, m_sEntry);
-
+	
 	if (data.IsEmpty())	// never saved before
 		return;
-
+	
 	ZeroMemory(&wp, sizeof(WINDOWPLACEMENT));
 	wp.length = sizeof(WINDOWPLACEMENT);
 

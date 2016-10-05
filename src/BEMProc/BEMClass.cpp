@@ -36,6 +36,7 @@
 #include "BEMProcObject.h"
 #include "expTextIO.h"
 #include "expCrypFile.h"
+#include "memLkRpt.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -112,9 +113,9 @@ void BEMClass::clear()
 	for (int iOT=0; iOT<3; iOT++)		// delete all objects of each type
 	{	std::vector<BEMObject*>* pObjs = NULL;
 		switch (iOT)
-		{	case  0 :	pObjs = &m_bdObjects;
-			case  1 :	pObjs = &m_rlObjects;
-			case  2 :	pObjs = &m_ulObjects;
+		{	case  0 :	pObjs = &m_bdObjects;	break;
+			case  1 :	pObjs = &m_rlObjects;	break;
+			case  2 :	pObjs = &m_ulObjects;	break;
 		}					assert( pObjs );
 		if (pObjs)
 		{	for (int i = (int) pObjs->size()-1; i >= 0; i--)

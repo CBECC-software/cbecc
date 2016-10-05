@@ -49,13 +49,8 @@
 #include "BEMProcCtrlList.h"
 #include "BEMProcCtrlCheckListBox.h"
 #include "BEMProcCtrlRTF.h"
-
-//#include "..\BEMProc\BEMRulPrcX.h"
 #include "DlgRangeError.h"
-
-#ifdef _INC_SPREAD      // SAC 6/17/01
-#include "FPSpread\BEMProcCtrlSpread.h"
-#endif
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -217,10 +212,6 @@ BEGIN_MESSAGE_MAP(CSACBEMProcDialog, CDialog)
 
    ON_MESSAGE( WM_SETCONTEXTHELPID, OnSetContextHelpID )
    ON_MESSAGE( WM_COMMANDHELP, OnCommandHelp )
-
-#ifdef _INC_SPREAD    // SAC 6/17/01
-   ON_MESSAGE( SSM_TEXTTIPFETCH, OnSpreadTextTipFetch )   // SAC 6/7/00 - Spreadsheet control tooltip message processing
-#endif
 
 END_MESSAGE_MAP()
 
@@ -541,9 +532,6 @@ void CSACBEMProcDialog::DeleteControls()
       if (    (pWnd->IsKindOf(RUNTIME_CLASS(CEditCtl     )))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CComboBoxCtl )))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CButtonCtl   )))
-#ifdef _INC_SPREAD  // SAC 6/17/01
-           || (pWnd->IsKindOf(RUNTIME_CLASS(CBEMProcCtrlSpread)))
-#endif
            || (pWnd->IsKindOf(RUNTIME_CLASS(CWMFCtl      )))
 //           || (pWnd->IsKindOf(RUNTIME_CLASS(CFloorPlanCtl)))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CDateTimeCtl )))
@@ -635,15 +623,8 @@ BOOL CSACBEMProcDialog::InitControls()
             }
             else if (pCtrl->m_uiCtrlType == TDCT_Spread)  // SAC 6/17/01
             {
-#ifdef _INC_SPREAD
-               CBEMProcCtrlSpread* pSpread = new CBEMProcCtrlSpread();
-               if (pSpread)
-                  pSpread->Create( this, pCtrl, bIncludeCompParamStrInToolTip, bIncludeStatusStrInToolTip,
-                                   0, 0, 0 /*(m_bUsePageIDForTopicHelp ? (m_pTDPage->m_iPageId + m_iHelpIDOffset) : 0)*/, TRUE );
-#else
                MessageBox( "CSACDlg Error:  Spreadsheet control not available." );
                pCtrl->m_bActive = FALSE;
-#endif
             }
             else if (pCtrl->m_uiCtrlType == TDCT_List)   // SAC 1/19/12
             {
@@ -696,9 +677,6 @@ BOOL CSACBEMProcDialog::InitControls()
                        ( pCtrl->m_uiCtrlType == TDCT_Edit   ||
                          pCtrl->m_uiCtrlType == TDCT_Combo  ||
                          pCtrl->m_uiCtrlType == TDCT_Button ||
-#ifdef _INC_SPREAD  // SAC 6/17/01
-                          pCtrl->m_uiCtrlType == TDCT_Spread ||
-#endif
                          pCtrl->m_uiCtrlType == TDCT_Check  || 
                          pCtrl->m_uiCtrlType == TDCT_RadioG ||
                          pCtrl->m_uiCtrlType == TDCT_Radio  ||
@@ -1234,19 +1212,6 @@ void CSACBEMProcDialog::OnCancel()
    CDialog::OnCancel();
 }
 
-
-
-#ifdef _INC_SPREAD
-// SAC 6/7/00 - Spreadsheet control tooltip message processing
-LRESULT CSACBEMProcDialog::OnSpreadTextTipFetch(WPARAM wParam, LPARAM lParam)
-{
-   CWnd* pSpread = GetDlgItem( wParam );
-   if (pSpread && lParam && pSpread->IsKindOf(RUNTIME_CLASS( CBEMProcCtrlSpread )))
-      ((CBEMProcCtrlSpread*)pSpread)->OnTextTipFetch( (LPSS_TEXTTIPFETCH) lParam );
-
-   return 1;
-}
-#endif
 
 BOOL CSACBEMProcDialog::CheckData( CString& sMsg, CArray<long,long>* plErrDBIDs, CArray<long,long>* plWarnDBIDs )
 {

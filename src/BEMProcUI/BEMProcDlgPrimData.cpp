@@ -37,11 +37,8 @@
 #include "..\BEMProc\BEMPropertyType.h"
 #include "resource.h"
 #include "BEMProcDlgPrimData.h"
-
-//#include "MainFrm.h"
-//#include "COMcheckPlusDoc.h"
-
 #include "BEMProcUIX.h"
+//#include "memLkRpt.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
