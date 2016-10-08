@@ -4028,7 +4028,8 @@ int BEMPX_GetParentComponentTypeForProperty( int i1Class, const char* pszPropNam
 			iaCompTypes[iAddTo].clear();
 			for (iCT=0; iCT < (int) iaCompTypes[iReadFrom].size(); iCT++)
    	   	for (int iPT=0; iPT < BEM_MAX_PARENT_TYPES; iPT++)
-					if (pBEMProc->getClass(iaCompTypes[iReadFrom].at(iCT)-1)->getParentType(iPT) >= 0 &&
+					if (iaCompTypes[iReadFrom].at(iCT) > 0 && pBEMProc->getClass(iaCompTypes[iReadFrom].at(iCT)-1) && 
+						 pBEMProc->getClass(iaCompTypes[iReadFrom].at(iCT)-1)->getParentType(iPT) >= 0 &&
 						 IndexInArray( iaCompTypes[iAddTo], pBEMProc->getClass(iaCompTypes[iReadFrom].at(iCT)-1)->getParentType(iPT)+1 ) < 0)
 						iaCompTypes[iAddTo].push_back( pBEMProc->getClass(iaCompTypes[iReadFrom].at(iCT)-1)->getParentType(iPT)+1 );
    	}

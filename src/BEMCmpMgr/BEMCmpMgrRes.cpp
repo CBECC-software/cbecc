@@ -350,8 +350,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	BEMPX_ClearRulesetErrors();  // SAC 1/9/13
 
 // debugging
-sLogMsg = QString( "File paths being checked:\n   EXE: %1\n   CSE EXE: %2" ).arg( ssEXEPath, sCSEEXEPath );
-BEMMessageBox( sLogMsg , "Res File Path check");
+//sLogMsg = QString( "File paths being checked:\n   EXE: %1\n   CSE EXE: %2" ).arg( ssEXEPath, sCSEEXEPath );
+//BEMMessageBox( sLogMsg , "Res File Path check");
 
    if (!DirectoryExists( sCSEEXEPath ))
 	{	if (sCSEEXEPath.isEmpty())
@@ -1845,7 +1845,7 @@ BEMMessageBox( sLogMsg , "Res File Path check");
 //											 9 : Error: Unrecognized results format version argument (-1 => current, else 1-N)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  7		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6
+#define  CSVFmtVer_CECRes  8		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -1882,6 +1882,10 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 			sProjPathFile.sprintf( "\"%s\",", pszProjectPathFileName );
 		else
 			sProjPathFile = ",";
+
+		long lEnergyCodeYear;	// SAC 10/6/16
+		if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYear ))
+			lEnergyCodeYear = 0;
 
 		if (iRetVal==0 && lAnalysisType == 13)
 		{	if (lAllOrientations > 0)  // SAC 8/6/13
@@ -1934,10 +1938,11 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 		int iEU;
 		double  faStdTDV[11],  faStdKWH[10],  faStdTherms[10],  faStdOther[10],  faStdKW[11];
-		double faPropTDV[11], faPropKWH[10], faPropTherms[10], faPropOther[10], faPropKW[11], fPropPVCredit[2]={0,0};
+		double faPropTDV[13], faPropKWH[13], faPropTherms[10], faPropOther[10], faPropKW[13], fPropPVCredit[2]={0,0};	// SAC 10/7/16 - expanded TDV, KWH & KW arrays to 13 to handle PV @ [12]
 		double faDRtgTDV[11], faDRtgKWH[10], faDRtgTherms[10], faDRtgOther[10], faDRtgKW[11], fDRtgPctSavTDV, fDesignRating=0;		// TDV & KW arrays sized to include CompTotal to simplify retrieval, but those NOT written to record
 		double faDRPropTDV[11], faDRPropKWH[10], faDRPropTherms[10], faDRPropOther[10], faDRPropKW[11];		// SAC 5/1/15 - separate DRtg proposed results (for now only lighting elec may vary)
 		double fDRPropKWH_PV=0, fDRPropKW_PV=0, fDRtg_NoPV=0, fDRtg_PVOnly=0, fDRtg_Std=0;		// SAC 2/1/16 - added DR Prop PV elec use & demand and design rating minus PV  - SAC 3/16/16 - added additional EDR variables
+		double fPropKWH_PV=0, fPropKW_PV=0;		// SAC 10/7/16 - added in proposed PV KWH & KW w/ format 8 mods to support 2019 analysis
 		long lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResults" );			assert( lDBID_Proj_RunResults > 0 );
       long lDBID_EnergyUse_CompMarginTDV    = BEMPX_GetDatabaseID( "EnergyUse:CompMarginTDV"    );
       long lDBID_EnergyUse_PropElecEnergy   = BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy"   );
@@ -2069,12 +2074,22 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 			//					fDesignRating = 100 - fDRtgPctSavTDV;
 						}	}
 						else		// iEU == 12 => PV - SAC 2/1/16
-						{	if (iResultsFormatVersion >= 6 && bExpectStdDesResults)		// SAC 2/1/16 - added DR Prop PV elec use & demand and design rating minus PV
-							{	BEMPX_GetFloat(		lDBID_EnergyUse_PropElecEnergy+1,   fDRPropKWH_PV, 0, BEMP_Flt, iObjIdx );		     fDRPropKWH_PV = fDRPropKWH_PV * fCondFloorArea / 3.413;
+						{
+							faPropKWH[iEU] = 0.0;	faPropKW[ iEU] = 0.0;	faPropTDV[iEU] = 0.0;
+							if (iResultsFormatVersion >= 8 && lEnergyCodeYear >= 2019)		// SAC 10/7/16 - 2019 proposed PV
+							{
+								BEMPX_GetFloat(		lDBID_EnergyUse_PropElecEnergy  ,  faPropKWH[iEU], 0, BEMP_Flt, iObjIdx );		  faPropKWH[iEU] = faPropKWH[iEU] * fCondFloorArea / 3.413;
+								BEMPX_GetFloat( 		lDBID_EnergyUse_PropElecDemand  ,  faPropKW[ iEU], 0, BEMP_Flt, iObjIdx );
+								BEMPX_GetFloat( 		lDBID_EnergyUse_ProposedTDV     ,  faPropTDV[iEU], 0, BEMP_Flt, iObjIdx );
+								if (bExpectStdDesResults)
+								{	fDRPropKWH_PV = faPropKWH[iEU];	// DsgnRtg PV same as Proposed PV in 2019+ analysis
+									fDRPropKW_PV  = faPropKW[ iEU];
+							}	}
+							else if (iResultsFormatVersion >= 6 && bExpectStdDesResults)		// SAC 2/1/16 - added DR Prop PV elec use & demand and design rating minus PV
+							{	BEMPX_GetFloat(		lDBID_EnergyUse_PropElecEnergy+1,   fDRPropKWH_PV, 0, BEMP_Flt, iObjIdx );		  fDRPropKWH_PV = fDRPropKWH_PV * fCondFloorArea / 3.413;
 								BEMPX_GetFloat( 		lDBID_EnergyUse_PropElecDemand+1,    fDRPropKW_PV, 0, BEMP_Flt, iObjIdx );
-			// SAC 3/16/16 - moved down below to grab value directly our of summary results (to INCLUDE a fuel-equalizing TDV adjustment not present in TDV results alone)
-			//					fDesignRating_NoPV = (faDRPropTDV[9] - fPropPVCredit[1]) * 100 / faDRtgTDV[9];
-						}	}
+							}
+						}
 					}
 					else
 						iRetVal = 6;
@@ -2125,7 +2140,14 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 					sBeginFields.sprintf( "\"%s\",\"%s\",\"%s\",\"%s\",%g,"     , timeStamp.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), 
 																										sAnalysisType.toLocal8Bit().constData(), sPassFail.toLocal8Bit().constData(), fCompMargin );
 
-				if (iResultsFormatVersion >= 2)
+				if (iResultsFormatVersion >= 8)	// SAC 10/7/16 - added Proposed PV kWh & kW reporting 
+					sPropEnergy.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",	// 43 doubles
+										faPropKWH[0], faPropKWH[1], faPropKWH[2], faPropKWH[3], faPropKWH[4], faPropKWH[12/*PV*/], faPropKWH[5], faPropKWH[6], faPropKWH[7], faPropKWH[8], faPropKWH[9], 
+										faPropTherms[0], faPropTherms[1], faPropTherms[2], faPropTherms[3], faPropTherms[4], faPropTherms[5], faPropTherms[6], faPropTherms[7], faPropTherms[8], faPropTherms[9], 
+										faPropOther[0], faPropOther[1], faPropOther[2], faPropOther[3], faPropOther[4], faPropOther[5], faPropOther[6], faPropOther[7], faPropOther[8], faPropOther[9], 
+										faPropTDV[0], faPropTDV[1], faPropTDV[2], faPropTDV[3], faPropTDV[4], (lEnergyCodeYear >= 2019 ? faPropTDV[12/*PV*/] : fPropPVCredit[0]),  // SAC 11/15/13 - added fPropPVCredit  // SAC 10/7/16
+										faPropTDV[5], faPropTDV[6], faPropTDV[7], faPropTDV[8], faPropTDV[9], faPropTDV[10] );
+				else if (iResultsFormatVersion >= 2)
 					sPropEnergy.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",	// 42 doubles
 										faPropKWH[0], faPropKWH[1], faPropKWH[2], faPropKWH[3], faPropKWH[4], faPropKWH[5], faPropKWH[6], faPropKWH[7], faPropKWH[8], faPropKWH[9], 
 										faPropTherms[0], faPropTherms[1], faPropTherms[2], faPropTherms[3], faPropTherms[4], faPropTherms[5], faPropTherms[6], faPropTherms[7], faPropTherms[8], faPropTherms[9], 
@@ -2152,7 +2174,16 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				sVersionFields.sprintf( "\"%s\",\"%s\",\"%s\",\"%s\",", sRuleVer.toLocal8Bit().constData(), sPrimVer.toLocal8Bit().constData(), 
 																							sSecVer.toLocal8Bit().constData(), sUIVer.toLocal8Bit().constData() );
 
-				if (iResultsFormatVersion >= 3)
+				if (iResultsFormatVersion >= 8)	// SAC 10/7/16 - added Proposed PV kW reporting 
+				{	if (bExpectStdDesResults)
+						sPropStdDemand.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+													faPropKW[0], faPropKW[1], faPropKW[2], faPropKW[3], faPropKW[4], faPropKW[12/*PV*/], faPropKW[5], faPropKW[6], faPropKW[7], faPropKW[8], faPropKW[9], faPropKW[10], 
+													faStdKW[ 0], faStdKW[ 1], faStdKW[ 2], faStdKW[ 3], faStdKW[ 4], faStdKW[ 5], faStdKW[ 6], faStdKW[ 7], faStdKW[ 8], faStdKW[ 9], faStdKW[ 10] );
+					else
+						sPropStdDemand.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,,,,,,,,,,,,",
+													faPropKW[0], faPropKW[1], faPropKW[2], faPropKW[3], faPropKW[4], faPropKW[12/*PV*/], faPropKW[5], faPropKW[6], faPropKW[7], faPropKW[8], faPropKW[9], faPropKW[10] );
+				}
+				else if (iResultsFormatVersion >= 3)
 				{	if (bExpectStdDesResults)
 						sPropStdDemand.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
 													faPropKW[0], faPropKW[1], faPropKW[2], faPropKW[3], faPropKW[4], faPropKW[5], faPropKW[6], faPropKW[7], faPropKW[8], faPropKW[9], faPropKW[10], 
@@ -2663,21 +2694,22 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 
 /////////////////////////////////////////////////////////////////////////////
 
-static char szCECResCSV1[]	=	",,,,,,,Proposed Model Site Electric Use,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site Other Fuel Use,,,,,,,,,"
+// SAC 10/7/16 - updated col titles to include new 2019 proposed model PV reporting
+static char szCECResCSV1[]	=	",,,,,,,Proposed Model Site Electric Use,,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site Other Fuel Use,,,,,,,,,"
 										",Proposed Model TDV,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,,,,Standard Model Site Natural Gas Use,,,,,,,,,,Standard Model Site"
-										" Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Software Versions,,,,Proposed Model Electric Demand,,,,,,,,,,,Standard Model Electr"
+										" Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Software Versions,,,,Proposed Model Electric Demand,,,,,,,,,,,,Standard Model Electr"
 										"ic Demand,,,,,,,,,,,Savings Results,,,,CAHP-SF / CAHP-MF / CMFNH Results,,,,,,,,,Proposed Design Rating Model Site Electric Use,,,,,,,,,,"
 										",Proposed  Design Rating Model Site Natural Gas Use,,,,,,,,,,Proposed  Design Rating Model Site Other Fuel Use,,,,,,,,,,Proposed  Design "
 										"Rating Model TDV,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,Reference Design Rating Model Site Electric Use,,,,,,,,"
 										",,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,,,,,,,,Reference Design"
 										" Rating Model TDV,,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings\n";
-static char szCECResCSV2[]  =  ",Project,,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat"
+static char szCECResCSV2[]  =  ",Project,,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat"
 										",Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins L"
-										"ight,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV Credit,Ins Light,Appl & Cook,Plug Lds,Exterior"
+										"ight,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior"
 										",TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent"
 										",Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,P"
 										"lug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Compliance"
-										",,,End User,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ"
+										",,,End User,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ"
 										" Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Total Demand,Compliance Demand,Total TDV,Compliance TD"
 										"V,Zero Energy Ready Kicker,Future Code Kicker,High Efficacy Licker,Low Use Kicker,Ultra Low Use Kicker,Initial Score,Initial Incentive,Fi"
 										"nal Score,Final Incentive,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Co"
@@ -2687,13 +2719,13 @@ static char szCECResCSV2[]  =  ",Project,,,Pass /,Compliance,Design,Spc Heat,Spc
 										" Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterio"
 										"r,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVA"
 										"C,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Excluding,Only,Standard\n";
-static char szCECResCSV3[]  =  "Run Date/Time,Path/File,Run Title,Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),("
+static char szCECResCSV3[]  =  "Run Date/Time,Path/File,Run Title,Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),("
 										"Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),("
 										"MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(k"
 										"TDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Ther"
 										"ms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu"
 										"),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),("
-										"kTDV/ft2-yr),(kTDV/ft2-yr),Ruleset,CSE,CEC DHW,Application,(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW"
+										"kTDV/ft2-yr),(kTDV/ft2-yr),Ruleset,CSE,CEC DHW,Application,(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW"
 										"),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(%),(%),(0 or 5),(0 or 3),(0 or 5),(0 or 5),(0 or 5),(int),($),(int),($),(kWh),(kWh),(kWh),(kWh"
 										"),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MM"
 										"Btu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTD"

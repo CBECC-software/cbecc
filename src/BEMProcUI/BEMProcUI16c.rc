@@ -65,8 +65,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    16,1,0,800
- PRODUCTVERSION 16,1,0,800
+ FILEVERSION    16,2,2,870
+ PRODUCTVERSION 16,2,2,870
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -82,15 +82,15 @@ BEGIN
         BLOCK "040904B0"
         BEGIN
             VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "BEM Processor User Interface DLL\0"
-            VALUE "FileVersion", "2016.1.0 (800)\0"
+            VALUE "FileDescription", "BEM Processor User Interface DLL (T-24 Com)\0"
+            VALUE "FileVersion", "2016.2.2 (870)\0"
             VALUE "InternalName", "BEMProcUI16c\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2016, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "BEMProcUI16c.dll\0"
-            VALUE "ProductName", "BEM Processor UI DLL\0"
-            VALUE "ProductVersion", "2016.1.0\0"
-            VALUE "SpecialBuild", "build 800\0"
+            VALUE "ProductName", "BEM Processor UI DLL (T-24 Com)\0"
+            VALUE "ProductVersion", "2016.2.2\0"
+            VALUE "SpecialBuild", "build 870\0"
         END
     END
     BLOCK "VarFileInfo"

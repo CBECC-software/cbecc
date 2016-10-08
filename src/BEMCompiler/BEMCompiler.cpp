@@ -82,9 +82,135 @@
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
+#ifdef CBECC_RES16
+	QApplication::setApplicationName("BEMCompiler - Residential 2016");
+	QApplication::setApplicationVersion("1.0");
+#else		// CBECC-Com
+	QApplication::setApplicationName("BEMCompiler - Commercial 2016");
+	QApplication::setApplicationVersion("1.0");
+#endif
+
+	QCommandLineParser parser;
+	parser.setApplicationDescription("Test helper");
+	parser.addHelpOption();
+	parser.addVersionOption();
+
+	// add command line options
+	QCommandLineOption bemBaseTxtOption( "bemBaseTxt",
+				QCoreApplication::translate("main", "Set data model definitions file <bembasetxt>."),
+				QCoreApplication::translate("main", "bembasetxt"));
+		parser.addOption(bemBaseTxtOption);
+	QCommandLineOption bemEnumsTxtOption( "bemEnumsTxt",
+				QCoreApplication::translate("main", "Set data model enumerations file <bemenumstxt>."),
+				QCoreApplication::translate("main", "bemenumstxt"));
+		parser.addOption(bemEnumsTxtOption);
+	QCommandLineOption bemBaseBinOption( "bemBaseBin",
+				QCoreApplication::translate("main", "Set compiled data model file <bembasebin>."),
+				QCoreApplication::translate("main", "bembasebin"));
+		parser.addOption(bemBaseBinOption);
+
+	QCommandLineOption rulesTxtOption( "rulesTxt",
+				QCoreApplication::translate("main", "Set primary ruleset source file <rulestxt>."),
+				QCoreApplication::translate("main", "rulestxt"));
+		parser.addOption(rulesTxtOption);
+	QCommandLineOption rulesBinOption( "rulesBin",
+				QCoreApplication::translate("main", "Set compiled ruleset file <rulesbin>."),
+				QCoreApplication::translate("main", "rulesbin"));
+		parser.addOption(rulesBinOption);
+	QCommandLineOption rulesLogOption( "rulesLog",
+				QCoreApplication::translate("main", "Set ruleset log/error file <ruleslog>."),
+				QCoreApplication::translate("main", "ruleslog"));
+		parser.addOption(rulesLogOption);
+
+	QCommandLineOption compileDMOption("compileDM", QCoreApplication::translate("main", "Compile data model source"));
+	parser.addOption(compileDMOption);
+	QCommandLineOption compileRulesOption("compileRules", QCoreApplication::translate("main", "Compile BEM ruleset source"));
+	parser.addOption(compileRulesOption);
+	// Process the actual command line arguments given by the user
+	parser.process(app);
+
+//BEMCompiler16c.exe --bemBaseTxt="../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" --bemEnumsTxt="../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" --bemBaseBin="../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin"
+//   --rulesTxt="../Com/Rules/src/Rules/CEC 2016 NonRes.txt" --rulesBin="../Com/Rules/CEC 2016 NonRes.bin" --rulesLog="../Com/Rules/src/Rules/Rules-2016 Log.out" --compileDM --compileRules
+
+//BEMCompiler16c.exe --bemBaseTxt="../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" --bemEnumsTxt="../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" --bemBaseBin="Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin"
+//   --rulesTxt="../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" --rulesBin="Data-os/Rulesets/CEC 2016 NonRes.bin" --rulesLog="../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" --compileDM --compileRules
+
+// create main UI dialog
 	BEMCompiler bemCmplr;
+
+// before applying command line path/file settings, default all
+#ifdef CBECC_RES16
+//// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
+//	bemCmplr.SetBEMBaseText(  "../Res/Rules/src/CAR13 BEMBase.txt" );
+//	bemCmplr.SetBEMEnumsText( "../Res/Rules/src/CAR16 BEMEnums.txt" );
+//	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2016/CAR16 BEMBase.bin" );
+//	bemCmplr.SetRuleText(     "../Res/Rules/src/Rules/Rules-2016.txt" );
+//	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2016.bin" );
+//	bemCmplr.SetRuleLog(      "../Res/Rules/src/Rules/Rules Log.out" );
+
+// to compile rules relative to SVN exe->rule source locations
+	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
+	bemCmplr.SetRuleBin(      "Data/Rulesets/CA Res 2016.bin" );
+	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
+#else		// CBECC-Com
+//// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
+//	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
+//	bemCmplr.SetBEMEnumsText( "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
+//	bemCmplr.SetBEMBaseBin(   "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+//	bemCmplr.SetRuleText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
+//	bemCmplr.SetRuleBin(      "../Com/Rules/CEC 2016 NonRes.bin" );
+//	bemCmplr.SetRuleLog(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
+
+// to compile rules relative to SVN exe->rule source locations
+	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
+	bemCmplr.SetRuleBin(      "Data-os/Rulesets/CEC 2016 NonRes.bin" );
+	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
+#endif
+
+// now apply command line path/file arguments
+	QString qsBT = parser.value(bemBaseTxtOption);
+	if (!qsBT.isEmpty())
+		bemCmplr.SetBEMBaseText( qsBT );
+	QString qsBET = parser.value(bemEnumsTxtOption);
+	if (!qsBET.isEmpty())
+		bemCmplr.SetBEMEnumsText( qsBET );
+	QString qsBB = parser.value(bemBaseBinOption);
+	if (!qsBB.isEmpty())
+		bemCmplr.SetBEMBaseBin( qsBB );
+
+	QString qsRT = parser.value(rulesTxtOption);
+	if (!qsRT.isEmpty())
+		bemCmplr.SetRuleText( qsRT );
+	QString qsRB = parser.value(rulesBinOption);
+	if (!qsRB.isEmpty())
+		bemCmplr.SetRuleBin( qsRB );
+	QString qsRL = parser.value(rulesLogOption);
+	if (!qsRL.isEmpty())
+		bemCmplr.SetRuleLog( qsRL );
+
+	bool compileDM = parser.isSet(compileDMOption);
+	bool compileRules = parser.isSet(compileRulesOption);
+
 	bemCmplr.show();
-	return app.exec();
+
+//	if (compileDM || compileRules)
+//		app.exit( bemCmplr.compileAll( compileDM, compileRules, true /*bCommandLine*/ ) );
+//	return app.exec();
+
+	int iRetVal = 0;
+	if (compileDM || compileRules)
+		iRetVal = bemCmplr.compileAll( compileDM, compileRules, true /*bCommandLine*/ );
+	else
+		iRetVal = app.exec();
+
+	return iRetVal;
+//	return app.exec();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,43 +307,13 @@ BEMCompiler::BEMCompiler(QWidget *parent)
 	rlCompiledLabel->setFixedWidth( iFileLabelWd );
 	rlLogLabel->setFixedWidth( iFileLabelWd );
 
-#ifdef CBECC_RES16
-
-//// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
-//	dmDefsTextEdit->setPlainText(     "../Res/Rules/src/CAR13 BEMBase.txt" );
-//	dmEnumsTextEdit->setPlainText(    "../Res/Rules/src/CAR16 BEMEnums.txt" );
-//	dmCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016/CAR16 BEMBase.bin" );
-//	rlPrimTextEdit->setPlainText(     "../Res/Rules/src/Rules/Rules-2016.txt" );
-//	rlCompiledTextEdit->setPlainText( "../Res/Rules/CA Res 2016.bin" );
-//	rlLogTextEdit->setPlainText(      "../Res/Rules/src/Rules/Rules Log.out" );
-
-// to compile rules relative to SVN exe->rule source locations
-	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
-	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
-	dmCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
-	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
-	rlCompiledTextEdit->setPlainText( "Data/Rulesets/CA Res 2016.bin" );
-	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
-
-#else		// CBECC-Com
-
-//// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
-//	dmDefsTextEdit->setPlainText(     "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
-//	dmEnumsTextEdit->setPlainText(    "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
-//	dmCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-//	rlPrimTextEdit->setPlainText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
-//	rlCompiledTextEdit->setPlainText( "../Com/Rules/CEC 2016 NonRes.bin" );
-//	rlLogTextEdit->setPlainText(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
-
-// to compile rules relative to SVN exe->rule source locations
-	dmDefsTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
-	dmEnumsTextEdit->setPlainText(    "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
-	dmCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-	rlPrimTextEdit->setPlainText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
-	rlCompiledTextEdit->setPlainText( "Data-os/Rulesets/CEC 2016 NonRes.bin" );
-	rlLogTextEdit->setPlainText(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
-
-#endif
+//// populate strings from default and/or command line arguments to text fields
+//	dmDefsTextEdit->setPlainText(     sBEMBaseText );
+//	dmEnumsTextEdit->setPlainText(    sBEMEnumsText );
+//	dmCompiledTextEdit->setPlainText( sBEMBaseBin );
+//	rlPrimTextEdit->setPlainText(     sRuleText );
+//	rlCompiledTextEdit->setPlainText( sRuleBin );
+//	rlLogTextEdit->setPlainText(      sRuleLog );
 
 //! [1]
 	QGridLayout *mainLayout = new QGridLayout;
@@ -291,60 +387,7 @@ void BEMCompiler::browseDMCompiled()
 //! [5]
 void BEMCompiler::compileDataModel()
 {
-	QString fileDefs  = dmDefsTextEdit->toPlainText();
-	QString fileEnums = dmEnumsTextEdit->toPlainText();
-	QString fileCmpld = dmCompiledTextEdit->toPlainText();
-
-	QString qAppDir = QCoreApplication::applicationDirPath();
-	qAppDir = QDir::cleanPath(qAppDir);
-	GetFullPath( fileDefs, qAppDir );
-	GetFullPath( fileEnums, qAppDir );
-	GetFullPath( fileEnums, qAppDir );
-
-	QString sMsg, sDetails;
-	if (fileDefs.isEmpty() || fileEnums.isEmpty() || fileCmpld.isEmpty())
-		sMsg = "All Data Model fields above must be provided before the data model can be compiled.";
-	else if (!QFile::exists(fileDefs))
-		sMsg = QString( "Data Model Definitions file not found:\n%1" ).arg( fileDefs );
-	else if (!QFile::exists(fileEnums))
-		sMsg = QString( "Data Model Enumerations file not found:\n%1" ).arg( fileEnums );
-//	else if (!CFile::exists(fileDefs))
-//		sErrMsg = QString( "Data Model Definitions file not found:\n%1" ).arg( fileDefs );
-	else
-	{	//CBEMPCmplApp *pApp = (CBEMPCmplApp*)AfxGetApp();
-		//BOOL bReportBEMStats = pApp && pApp->IsUIActive();
-		//BOOL bReportBEMStats = TRUE;
-		BOOL bCompOK = BEMPX_CompileDataModel(	fileDefs.toLocal8Bit().constData(), fileEnums.toLocal8Bit().constData(),
-															fileCmpld.toLocal8Bit().constData(), &sDetails );
-		sMsg = QString( "Data Model compilation:  %1" ).arg( (bCompOK ? "Succeeded" : "Failed") );
-	}
-	if (!sMsg.isEmpty())
-	{
-			QMessageBox msgBox;
-			msgBox.setWindowTitle( "Data Model Compilation" );
-	//		msgBox.setIcon( QMessageBox::Warning ); 
-	//		msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-			msgBox.setText( sMsg );
-			msgBox.setDetailedText( sDetails );
-	//		msgBox.setStandardButtons( QMessageBox::Ok );
-	//		msgBox.addButton( QMessageBox::Abort );
-	//		msgBox.setDefaultButton( QMessageBox::Ok );
-	//		bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
-
-		// adding spacer item enables some manual MessageBox re-sizing (larger)
-			QSpacerItem* horizontalSpacer = new QSpacerItem( 400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding );
-			QGridLayout* layout = (QGridLayout*) msgBox.layout();
-			layout->addItem( horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount() );
-		// adjusting the 'details' text edit control further enables size customization
-			QTextEdit *textEdit = msgBox.findChild<QTextEdit *>();
-			if (textEdit)
-			{	textEdit->setMinimumHeight( 320 );
-				textEdit->setMaximumHeight( QWIDGETSIZE_MAX );
-				textEdit->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-			}
-
-			msgBox.exec();
-	}
+	compileAll( true /*bDataModel*/, false /*bRuleset*/, false /*bCommandLine*/ );
 }
 //! [5]
 
@@ -381,79 +424,7 @@ void BEMCompiler::browseRLLog()
 //! [9]
 void BEMCompiler::compileRuleset()
 {
-	QString filePrim  = rlPrimTextEdit->toPlainText();
-	QString fileCmpld = rlCompiledTextEdit->toPlainText();
-	QString fileLog = rlLogTextEdit->toPlainText();
-	QString fileDMCmpld = dmCompiledTextEdit->toPlainText();
-
-	QString qAppDir = QCoreApplication::applicationDirPath();
-	qAppDir = QDir::cleanPath(qAppDir);
-	GetFullPath( filePrim, qAppDir );
-	GetFullPath( fileCmpld, qAppDir );
-	GetFullPath( fileLog, qAppDir );
-	GetFullPath( fileDMCmpld, qAppDir );
-
-	//		QMessageBox msg2Box;
-	//		msg2Box.setWindowTitle( "BEM Ruleset Compilation" );
-	//		msg2Box.setText( QString("Primary ruleset file:  %1\nCompiled ruleset:  %2\nRule log file:  %3\nData model binary:  %4").arg( filePrim, fileCmpld, fileLog, fileDMCmpld ) );
-	//	//	msg2Box.setDetailedText( sDetails );
-	//		msg2Box.exec();
-
-	QString sMsg, sDetails;
-	if (filePrim.isEmpty() || fileCmpld.isEmpty() || fileLog.isEmpty())
-		sMsg = "All Ruleset File fields above must be provided before the ruleset can be compiled.";
-	else if (!QFile::exists(filePrim))
-		sMsg = QString( "Primary Ruleset (source) file not found:\n%1" ).arg( filePrim );
-	else if (!QFile::exists(fileDMCmpld))
-		sMsg = QString( "Binary data model file not found:\n%1" ).arg( fileDMCmpld );
-	else
-	{
-		QApplication::setOverrideCursor(Qt::BusyCursor);
-		QApplication::processEvents();
-
-		BOOL bCompOK = BEMPX_CompileRuleset( fileDMCmpld.toLocal8Bit().constData(), filePrim.toLocal8Bit().constData(),
-														 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(), &sDetails );
-
-		QApplication::restoreOverrideCursor();
-		QApplication::processEvents();
-
-//			bRet = RuleProcReadAscii( m_sRuleFile, m_sErrorFile );
-//			if (bRet)
-//				bRet = RuleProcWrite( m_sOutFile, m_sErrorFile );
-//
-//		BOOL bCompOK = BEMPX_CompileAscii(	filePrim.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(),
-//														fileCmpld.toLocal8Bit().constData(), &sDetails );
-
-		sMsg = QString( "BEM Ruleset compilation:  %1" ).arg( (bCompOK ? "Succeeded" : "Failed") );
-	}
-
-	if (!sMsg.isEmpty())
-	{
-			QMessageBox msgBox;
-			msgBox.setWindowTitle( "BEM Ruleset Compilation" );
-	//		msgBox.setIcon( QMessageBox::Warning ); 
-	//		msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-			msgBox.setText( sMsg );
-			msgBox.setDetailedText( sDetails );
-	//		msgBox.setStandardButtons( QMessageBox::Ok );
-	//		msgBox.addButton( QMessageBox::Abort );
-	//		msgBox.setDefaultButton( QMessageBox::Ok );
-	//		bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
-
-		// adding spacer item enables some manual MessageBox re-sizing (larger)
-			QSpacerItem* horizontalSpacer = new QSpacerItem( 400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding );
-			QGridLayout* layout = (QGridLayout*) msgBox.layout();
-			layout->addItem( horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount() );
-		// adjusting the 'details' text edit control further enables size customization
-			QTextEdit *textEdit = msgBox.findChild<QTextEdit *>();
-			if (textEdit)
-			{	textEdit->setMinimumHeight( 320 );
-				textEdit->setMaximumHeight( QWIDGETSIZE_MAX );
-				textEdit->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-			}
-
-			msgBox.exec();
-	}
+	compileAll( false /*bDataModel*/, true /*bRuleset*/, false /*bCommandLine*/ );
 }
 //! [9]
 
@@ -477,3 +448,145 @@ QPushButton *BEMCompiler::createButton(const QString &text, const char *member)
 }
 //! [11]
 
+
+// main data model & ruleset compilation routine
+// return values:
+//		 0 - success
+//		 1 - one or more data model fields left unspecified
+//		 2 - Data Model Definitions file not found
+//		 3 - Data Model Enumerations file not found
+//		 4 - Data model compilation failed, see details
+//		11 - one or more ruleset fields left unspecified
+//		12 - Primary Ruleset (source) file not found
+//		13 - Binary data model file not found
+//		14 - Ruleset compilation failed, see log file for details
+int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool bCommandLine )
+{	int iRetVal = 0;
+	QString sMsg, sDetails, sCaption;
+
+	if (bDataModel && bRuleset)
+		sCaption = "Data Model and Ruleset Compilation";
+	else if (bDataModel)
+		sCaption = "Data Model Compilation";
+	else
+		sCaption = "BEM Ruleset Compilation";
+
+	QString qAppDir = QCoreApplication::applicationDirPath();
+	qAppDir = QDir::cleanPath(qAppDir);
+	// data model binary needed for BOTH compilation options
+	QString fileDMCmpld = dmCompiledTextEdit->toPlainText();
+	GetFullPath( fileDMCmpld, qAppDir );
+
+	if (bDataModel)
+	{	QString fileDefs  = dmDefsTextEdit->toPlainText();
+		QString fileEnums = dmEnumsTextEdit->toPlainText();
+		GetFullPath( fileDefs, qAppDir );
+		GetFullPath( fileEnums, qAppDir );
+		if (fileDefs.isEmpty() || fileEnums.isEmpty() || fileDMCmpld.isEmpty())
+		{	iRetVal = 1;
+			sMsg = "All Data Model fields above must be provided before the data model can be compiled.";
+		}
+		else if (!QFile::exists(fileDefs))
+		{	iRetVal = 2;
+			sMsg = QString( "Data Model Definitions file not found:\n%1" ).arg( fileDefs );
+		}
+		else if (!QFile::exists(fileEnums))
+		{	iRetVal = 3;
+			sMsg = QString( "Data Model Enumerations file not found:\n%1" ).arg( fileEnums );
+		}
+	//	else if (!CFile::exists(fileDefs))
+	//		sErrMsg = QString( "Data Model Definitions file not found:\n%1" ).arg( fileDefs );
+		else
+		{	//CBEMPCmplApp *pApp = (CBEMPCmplApp*)AfxGetApp();
+			//BOOL bReportBEMStats = pApp && pApp->IsUIActive();
+			//BOOL bReportBEMStats = TRUE;
+			QApplication::setOverrideCursor(Qt::BusyCursor);
+			QApplication::processEvents();
+
+			BOOL bCompOK = BEMPX_CompileDataModel(	fileDefs.toLocal8Bit().constData(), fileEnums.toLocal8Bit().constData(),
+																fileDMCmpld.toLocal8Bit().constData(), &sDetails );
+
+			QApplication::restoreOverrideCursor();
+			QApplication::processEvents();
+
+			sMsg = QString( "Data Model compilation:  %1" ).arg( (bCompOK ? "Succeeded" : "Failed") );
+			if (!bCompOK)
+				iRetVal = 4;
+		}
+	}	// end of data model compilation
+
+
+	if (iRetVal==0 && bRuleset)
+	{	bool bDataModelCompiled = (!sMsg.isEmpty());
+		QString filePrim  = rlPrimTextEdit->toPlainText();
+		QString fileCmpld = rlCompiledTextEdit->toPlainText();
+		QString fileLog = rlLogTextEdit->toPlainText();
+		GetFullPath( filePrim, qAppDir );
+		GetFullPath( fileCmpld, qAppDir );
+		GetFullPath( fileLog, qAppDir );
+		if (bDataModelCompiled)
+			sMsg += "\n\n";
+		if (filePrim.isEmpty() || fileCmpld.isEmpty() || fileLog.isEmpty())
+		{	iRetVal = 11;
+			sMsg += "All Ruleset File fields above must be provided before the ruleset can be compiled.";
+		}
+		else if (!QFile::exists(filePrim))
+		{	iRetVal = 12;
+			sMsg += QString( "Primary Ruleset (source) file not found:\n%1" ).arg( filePrim );
+		}
+		else if (!QFile::exists(fileDMCmpld))
+		{	iRetVal = 13;
+			sMsg += QString( "Binary data model file not found:\n%1" ).arg( fileDMCmpld );
+		}
+		else
+		{
+			QApplication::setOverrideCursor(Qt::BusyCursor);
+			QApplication::processEvents();
+
+			QString sRuleDetails;
+			BOOL bCompOK = BEMPX_CompileRuleset( fileDMCmpld.toLocal8Bit().constData(), filePrim.toLocal8Bit().constData(),
+															 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(), &sRuleDetails );
+
+			QApplication::restoreOverrideCursor();
+			QApplication::processEvents();
+
+			if (!sRuleDetails.isEmpty())
+			{	if (bDataModelCompiled)
+					sDetails += "\n\nRuleset Compilation Details:\n";
+				sDetails += sRuleDetails;
+			}
+			sMsg += QString( "BEM Ruleset compilation:  %1" ).arg( (bCompOK ? "Succeeded" : "Failed") );
+			if (!bCompOK)
+				iRetVal = 14;
+		}
+	}	// end of ruleset compilation
+
+	if (!sMsg.isEmpty())
+	{
+			QMessageBox msgBox;
+			msgBox.setWindowTitle( sCaption );
+	//		msgBox.setIcon( QMessageBox::Warning ); 
+	//		msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+			msgBox.setText( sMsg );
+			msgBox.setDetailedText( sDetails );
+	//		msgBox.setStandardButtons( QMessageBox::Ok );
+	//		msgBox.addButton( QMessageBox::Abort );
+	//		msgBox.setDefaultButton( QMessageBox::Ok );
+	//		bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
+
+		// adding spacer item enables some manual MessageBox re-sizing (larger)
+			QSpacerItem* horizontalSpacer = new QSpacerItem( 400, 0, QSizePolicy::Minimum, QSizePolicy::Expanding );
+			QGridLayout* layout = (QGridLayout*) msgBox.layout();
+			layout->addItem( horizontalSpacer, layout->rowCount(), 0, 1, layout->columnCount() );
+		// adjusting the 'details' text edit control further enables size customization
+			QTextEdit *textEdit = msgBox.findChild<QTextEdit *>();
+			if (textEdit)
+			{	textEdit->setMinimumHeight( 320 );
+				textEdit->setMaximumHeight( QWIDGETSIZE_MAX );
+				textEdit->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+			}
+
+			msgBox.exec();
+	}
+	return iRetVal;
+}

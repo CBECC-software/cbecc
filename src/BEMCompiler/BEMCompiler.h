@@ -74,6 +74,7 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCore/QDir>
+#include <QtWidgets/QtWidgets>
 
 QT_BEGIN_NAMESPACE
 class QTextEdit;
@@ -89,6 +90,21 @@ class BEMCompiler : public QWidget
 public:
 	BEMCompiler(QWidget *parent = 0);
 
+//	void SetBEMBaseText(  QString sBT ) 	{	sBEMBaseText  = sBT ;  }
+//	void SetBEMEnumsText( QString sBET )	{	sBEMEnumsText = sBET;  }
+//	void SetBEMBaseBin(   QString sBB ) 	{	sBEMBaseBin   = sBB ;  }
+//	void SetRuleText(     QString sRT ) 	{	sRuleText     = sRT ;  }
+//	void SetRuleBin(      QString sRB ) 	{	sRuleBin      = sRB ;  }
+//	void SetRuleLog(      QString sRL ) 	{	sRuleLog      = sRL ;  }
+	void SetBEMBaseText(  QString sBT ) 	{	dmDefsTextEdit->setPlainText(     sBT  );  }
+	void SetBEMEnumsText( QString sBET )	{	dmEnumsTextEdit->setPlainText(    sBET );  }
+	void SetBEMBaseBin(   QString sBB ) 	{	dmCompiledTextEdit->setPlainText( sBB  );  }
+	void SetRuleText(     QString sRT ) 	{	rlPrimTextEdit->setPlainText(     sRT  );  }
+	void SetRuleBin(      QString sRB ) 	{	rlCompiledTextEdit->setPlainText( sRB  );  }
+	void SetRuleLog(      QString sRL ) 	{	rlLogTextEdit->setPlainText(      sRL  );  }
+
+	int  compileAll( bool bDataModel=false, bool bRuleset=false, bool bCommandLine=false );
+
 private slots:
 	void browseDMDefs();
 	void browseDMEnums();
@@ -100,6 +116,13 @@ private slots:
 	void compileRuleset();
 
 private:
+//	QString sBEMBaseText;
+//	QString sBEMEnumsText;
+//	QString sBEMBaseBin;
+//	QString sRuleText;
+//	QString sRuleBin;
+//	QString sRuleLog;
+
 	QTextEdit *createTextEdit(const QString &text = QString());
 	QPushButton *createButton(const QString &text, const char *member);
 
