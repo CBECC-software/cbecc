@@ -460,7 +460,7 @@ QPushButton *BEMCompiler::createButton(const QString &text, const char *member)
 //		12 - Primary Ruleset (source) file not found
 //		13 - Binary data model file not found
 //		14 - Ruleset compilation failed, see log file for details
-int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool bCommandLine )
+int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine*/ )
 {	int iRetVal = 0;
 	QString sMsg, sDetails, sCaption;
 

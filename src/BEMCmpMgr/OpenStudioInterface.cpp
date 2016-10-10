@@ -103,6 +103,7 @@ static int siEndUsesToReport[] = { 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, -1 };
 //    int         iSumIntoCompliance;
 // 	double      daEnduseTotal[3];
 // 	double      daTDVTotal[3];
+// 	double      dElecDemand;		// SAC 10/8/16
 // } EndUseMap;
 //#define  NUM_T24_NRES_EndUses     12
 //#define  IDX_T24_NRES_EU_CompTot   7
@@ -433,6 +434,9 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 		long lDBID_EUseSummary_ZoneUMLHsLoaded  = BEMPX_GetDatabaseID( "ZoneUMLHsLoaded", iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHsLoaded > 0 );
 		long lDBID_EUseSummary_ZoneUMLHs        = BEMPX_GetDatabaseID( "ZoneUMLHs"      , iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHs > 0 );
 
+		QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
+		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
 		int iOrientNum = 0;
 		if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
 		{	QString sRunID = osRunInfo.RunID();
@@ -457,6 +461,8 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 					else
 						esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] = 0.0;
 					esEUMap_CECNonRes[iEUIdx].daTDVTotal[   iFl] = 0.0;
+					if (iFl==0)  // SAC 10/8/16
+						esEUMap_CECNonRes[iEUIdx].dElecDemand = 0.0;
 				}
 			}
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
@@ -521,6 +527,18 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 							if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 						}
+
+					// SAC 10/8/16 - elec demand calc
+						if (iFl==0 && !sHrlyElecDemMultTblCol.isEmpty() && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
+						{
+							double dEDem = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sHrlyElecDemMultTblCol.toLocal8Bit().constData(), -1, (bVerbose != FALSE) );
+							if (dEDem != 0.0)
+							{		esEUMap_CECNonRes[iEUIdx].dElecDemand = dEDem;
+
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].dElecDemand += dEDem;
+								if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].dElecDemand += dEDem;
+						}	}
 					}
 
 				// store annual energy use & TDV sums by fuel and enduse
@@ -551,6 +569,15 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 							{	fEnergy = esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 								sPropName = QString( "%1%2TDV" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
 								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
+						// SAC 10/8/16 - post elec demand to database
+							if (iFl==0 && !sHrlyElecDemMultTblCol.isEmpty() && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
+							{	double dEDem = esEUMap_CECNonRes[iEUIdx].dElecDemand;
+								if (iOrientNum < 1)
+									sPropName = QString( "%1ElecDemand" ).arg( sEUPropNameBase );
+								else
+									sPropName = QString( "%1ElecDemandByOrient[%2]" ).arg( sEUPropNameBase, QString::number(iOrientNum) );	// S901G
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &dEDem, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							}
 						}
 					}
@@ -1126,6 +1153,33 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									sResultVal = BEMPX_FloatToString( dValToDisplay, iDecPrec /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							}
+
+							// SAC 10/9/16 - store demand results
+								sPropName = QString( "%1ElecDemand" ).arg( sEUPropNameBase );
+								double dEDem = 0.0;
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), dEDem, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+									dEDem = 0.0;
+								sPropName = QString( "Enduse%1[%2]" ).arg( QString::number(iEUIdx+1), QString::number((osRunInfo.IsStdRun() ? 10 : 9)) );
+								if (WithinMargin( dEDem, 0.0, 0.001 ))
+									sResultVal = "--";
+								else
+									sResultVal = BEMPX_FloatToString( dEDem, 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								if (iEUIdx == IDX_T24_NRES_EU_Total && osRunInfo.IsStdRun())
+								{	// calculate and store kW difference
+									sPropName = QString( "PropElecDemand" );
+									double dPropEDem = 0.0;
+									if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), dPropEDem, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+										dPropEDem = 0.0;
+									sPropName = QString( "MarginkW" );
+									dEDem = RoundVal( dEDem, 2 ) - RoundVal( dPropEDem, 2 );
+									//if (WithinMargin( dEDem, 0.0, 0.001 ))
+									//	sResultVal = "--";
+									//else
+									//	sResultVal = BEMPX_FloatToString( dEDem, 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+									//BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_Flt, (void*) &dEDem, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
 	
 						// lastly, populate Compliance Margin column
 							if (osRunInfo.CodeType() == CT_T24N && osRunInfo.IsStdRun() && iEUIdx <= IDX_T24_NRES_EU_CompTot)

@@ -1104,26 +1104,38 @@ double BEMPX_RuleTableLookupFloat( const char* pszTableAndColumnName, vector<str
 
 /////////////////////////////////////////////////////////////////////////////
 
+// sTableName & iTableColumn arguments:
+//		either valid table name alone w/ column index,
+//		OR sTableName = "TableName:ColumnName" and iTableColumn = -1
 double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableName, int iTableColumn, bool /*bVerbose*/ )
 {
 	double dRetVal = 0.0;
-	BEMTable* pTable = ruleSet.getTablePtr( sTableName );
+	QString qsColName, qsTableNameOnly = sTableName;	// SAC 10/8/16 - modified code to enable sTableName to include both table and column names
+	int iColonIdx = qsTableNameOnly.indexOf(':');
+	if (iColonIdx > 0 && iColonIdx < qsTableNameOnly.length()-1)
+	{	qsColName = qsTableNameOnly.right( qsTableNameOnly.length()-iColonIdx-1 );
+		qsTableNameOnly = qsTableNameOnly.left( iColonIdx );
+	}
+	BEMTable* pTable = ruleSet.getTablePtr( qsTableNameOnly.toLocal8Bit().constData() );
 	if (pTable == NULL)
 		dRetVal = -1;  // ExpSetErr( error, EXP_RuleProc, "Table referenced by ApplyHourlyResultMultipliers() function argument not found." );
-	else if (iTableColumn > pTable->getNCols())
-		dRetVal = -2;  // ExpSetErr( error, EXP_RuleProc, "Table column specified in ApplyHourlyResultMultipliers() function argument too high." );
 	else
-	{	double dTblVal;
-		for (int iHr=0; (dRetVal > -1 && iHr < 8760); iHr++)
-		{	if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal, true /*bIgnoreIndepCols*/ ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
-				dRetVal += (dHrlyVals[iHr] * dTblVal);  // APPLY hourly multiplier factors
-			else
-			{	dRetVal = -3;
-				//ExpSetErr( error, EXP_RuleProc, "Error retrieving hourly table multiplier in ApplyHourlyResultMultipliers() function." );
-				break;
+	{	if (!qsColName.isEmpty() && iTableColumn < 0)
+			iTableColumn = pTable->GetColumnIndex( qsColName.toLocal8Bit().constData() );
+		if (iTableColumn < 0 || iTableColumn > pTable->getNCols())
+			dRetVal = -2;  // ExpSetErr( error, EXP_RuleProc, "Table column specified in ApplyHourlyResultMultipliers() function argument too high." );
+		else
+		{	double dTblVal;
+			for (int iHr=0; (dRetVal > -1 && iHr < 8760); iHr++)
+			{	if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal, true /*bIgnoreIndepCols*/ ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
+					dRetVal += (dHrlyVals[iHr] * dTblVal);  // APPLY hourly multiplier factors
+				else
+				{	dRetVal = -3;
+					//ExpSetErr( error, EXP_RuleProc, "Error retrieving hourly table multiplier in ApplyHourlyResultMultipliers() function." );
+					break;
+				}
 			}
-		}
-	}
+	}	}
 	return dRetVal;
 }
 
