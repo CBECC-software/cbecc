@@ -3504,6 +3504,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	double dEPlusVer=0.0;	// SAC 5/16/14
 	char pszEPlusVerStr[60] = "\0";
 	char pszOpenStudioVerStr[60] = "\0";
+	QString sCSEVersion;  // SAC 10/10/16
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps)
 	{
 
@@ -3983,7 +3984,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
 						//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
 											iDHWSimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
-																										sRunIDLong.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData() );
+																							sRunIDLong.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), &sCSEVersion );
 						//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 						//				}
 
@@ -4845,39 +4846,48 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		QString sOSVer = "???";
 		if (pszOpenStudioVerStr && strlen( pszOpenStudioVerStr ) > 0)
 			sOSVer = pszOpenStudioVerStr;
+		if (sCSEVersion.isEmpty())
+			sCSEVersion = "-";
 
 		if (!CMX_GetRulesetID( sRulesetID, sRuleVer ))
 		{	assert( FALSE );
 			sRuleVer = "???";
 		}
 
-		double fEnergyResults[2][4][12];		// Prop/Std -- Elec/NGas/Othr/TDV -- SpcHtg/SpcClg...ProcLtg/TOTAL
+		double fEnergyResults[2][5][12];		// Prop/Std -- Elec/NGas/Othr/TDV/ElecKW -- SpcHtg/SpcClg...ProcLtg/TOTAL		- SAC 10/10/16 - added elec demand
 		double fEnergyCosts[2][4] = { {0,0,0,0}, {0,0,0,0} };	// Prop/Std -- Elec/NGas/Othr/TOTAL
-		long lDBID_Res[2][4]		= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedTDV" ) },
-											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardTDV" ) } };
+		long lDBID_Res[2][5]		= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropElecDemand" ) },
+											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardTDV" ), BEMPX_GetDatabaseID( "EnergyUse:StdElecDemand"  ) } };
 		long lDBID_Costs[2][4]	= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherCost" ), BEMPX_GetDatabaseID( "EnergyUse:PropTotalCost" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherCost"  ), BEMPX_GetDatabaseID( "EnergyUse:StdTotalCost"  ) } };
-		int iNumBadResults=0, iNumResAttempts=0;
+		int iNumBadResults=0, iNumResAttempts=0,  iNumBadEDResults=0, iNumEDResAttempts=0;
 		for (int iRR=0; iRR<2; iRR++)
-			for (int iRF=0; iRF<4; iRF++)
+			for (int iRF=0; iRF<5; iRF++)
 			{	int iMaxREU = (iRF==3 ? 7 : 11);
 				for (int iREU=0; iREU<=iMaxREU; iREU++)
-				{	if (iCodeType == CT_T24N || iRF < 3)	// SAC 10/7/14 - store TDV results only for T24 runs
-					{	iNumResAttempts++;
+				{	if (iCodeType == CT_T24N || iRF != 3)	// SAC 10/7/14 - store TDV results only for T24 runs
+					{	if (iRF==4)	// elec demand
+							iNumEDResAttempts++;
+						else
+							iNumResAttempts++;
 						if (!BEMPX_GetFloat(  lDBID_Res[iRR][iRF], fEnergyResults[iRR][iRF][iREU], 0, -1,  iREU ))
-						{	iNumBadResults++;
+						{	if (iRF==4)	// elec demand
+								iNumBadEDResults++;
+							else
+								iNumBadResults++;
 							fEnergyResults[iRR][iRF][iREU] = 0;
 					}	}
 					else
 						fEnergyResults[iRR][iRF][iREU] = 0;
 				}
 			// storage of energy COST results
-				if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
+				if (iRF<4 && (iCodeType == CT_S901G || iCodeType == CT_ECBC))
 					BEMPX_GetFloat(  lDBID_Costs[iRR][iRF], fEnergyCosts[iRR][iRF], 0, -1, 11 /*index of Total enduse*/ );
 			}
 			if (bExpectValidResults && iNumBadResults >= iNumResAttempts)
 			{	assert( FALSE );	// was expecting valid results, but NONE were retrievable
 			}
+		bool bHaveElecDemandResults = (iNumBadEDResults < iNumEDResAttempts);	// SAC 10/11/16
 
 	  // UMLH reporting
 		double fPropMaxClgUMLHs, fPropMaxHtgUMLHs, fStdMaxClgUMLHs, fStdMaxHtgUMLHs;
@@ -4938,6 +4948,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				sStdHtgUMLHData = ",,";
 		}
 
+		QString sElecDemandResults;
+		if (bHaveElecDemandResults && iCodeType == CT_T24N)	// SAC 10/11/16
+		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+				// Proposed model electric demand
+						fEnergyResults[0][4][ 0], fEnergyResults[0][4][ 1], fEnergyResults[0][4][ 2], fEnergyResults[0][4][ 3], fEnergyResults[0][4][ 4], fEnergyResults[0][4][ 5],
+						fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7], fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11],
+				// Standard model electric demand
+						fEnergyResults[1][4][ 0], fEnergyResults[1][4][ 1], fEnergyResults[1][4][ 2], fEnergyResults[1][4][ 3], fEnergyResults[1][4][ 4], fEnergyResults[1][4][ 5],
+						fEnergyResults[1][4][ 6], fEnergyResults[1][4][ 7], fEnergyResults[1][4][ 8], fEnergyResults[1][4][ 9], fEnergyResults[1][4][10], fEnergyResults[1][4][11]  );
+		}
+		else
+			sElecDemandResults = ",,,,,,,,,,,,,,,,,,,,,,,,";
+
 // SAC 5/5/15 - ResultSummary Logging
 	sLogMsg.sprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(),
@@ -4945,7 +4968,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	sLogMsg.sprintf( "      ResultsSummary components2:  %s / %s / %s / %s / %s / %s / %s / %s", 
 						sAppVer.toLocal8Bit().constData(), sCmpMgrVer.toLocal8Bit().constData(), sRuleVer.toLocal8Bit().constData(), sOSVer.toLocal8Bit().constData(), 
-						sEPlusVer.toLocal8Bit().constData(), "-", sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
+						sEPlusVer.toLocal8Bit().constData(), sCSEVersion.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
 	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 #pragma warning(disable:4996)
@@ -4955,6 +4978,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                               // prop
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
 							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                               // std
+							"%s"                                                                                               // prop & std kW
 							"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\n",
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(),
 						sAnalType.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)), sResTemp1.toLocal8Bit().constData() /*PassFail*/, sResTemp2.toLocal8Bit().constData() /*CompMargin*/,
@@ -4978,10 +5002,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						fEnergyResults[1][2][ 6], fEnergyResults[1][2][ 7], fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11],
 						fEnergyResults[1][3][ 0], fEnergyResults[1][3][ 1], fEnergyResults[1][3][ 2], fEnergyResults[1][3][ 3], fEnergyResults[1][3][ 4], fEnergyResults[1][3][ 5], fEnergyResults[1][3][ 6], fEnergyResults[1][3][ 7],
 						sStdClgUMLHData.toLocal8Bit().constData(), sStdHtgUMLHData.toLocal8Bit().constData(),				// UMLHs
+				// Proposed & Standard model electric demand
+						sElecDemandResults.toLocal8Bit().constData(),
 				// final version labels & paths
 						//sAppVer, sCmpMgrVer, sRuleVer, sOSVer, sEPlusVer, "-", sAnnWthrFile, pszModelPathFile );
 						sAppVer.toLocal8Bit().constData(), sCmpMgrVer.toLocal8Bit().constData(), sRuleVer.toLocal8Bit().constData(), sOSVer.toLocal8Bit().constData(), 
-						sEPlusVer.toLocal8Bit().constData(), "-", sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
+						sEPlusVer.toLocal8Bit().constData(), sCSEVersion.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
 
 		else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14 - export of Energy Cost results needed only for 90.1 analysis
 			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",\"%s\",%d:%.2d,%s,%s,"
@@ -5013,7 +5039,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				// final version labels & paths
 						//sAppVer, sCmpMgrVer, sRuleVer, sOSVer, sEPlusVer, "-", sAnnWthrFile, pszModelPathFile );
 						sAppVer.toLocal8Bit().constData(), sCmpMgrVer.toLocal8Bit().constData(), sRuleVer.toLocal8Bit().constData(), sOSVer.toLocal8Bit().constData(), 
-						sEPlusVer.toLocal8Bit().constData(), "-", sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
+						sEPlusVer.toLocal8Bit().constData(), sCSEVersion.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(), sModelPathOnly.toLocal8Bit().constData() );
 		else
 		{	assert( FALSE );
 		}
@@ -6132,29 +6158,31 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 
 /////////////////////////////////////////////////////////////////////////////
 
-//static const char* /* 512*/ pszNonResResultsHdr1 = ",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,Proposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
-//static const char* /*1024*/ pszNonResResultsHdr2 = ",,,,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
-//static const char* /*1536*/ pszNonResResultsHdr3 = "Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Receptacle,Process,Process Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic HW,Lighting,Comp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
+//static const char* /* 379*/ pszNonResResultsHdr1 = ",,,,Analysis:,,,,Proposed ...
+//static const char* /* 683*/ pszNonResResultsHdr2 = ",,,,,,Pass /,Compliance,...
+//static const char* /*1745*/ pszNonResResultsHdr3 = "Start Date & Time,Filename ...
 
-static char szT24NCSV1[]	 =	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,P"
-										"roposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,"
-										",Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szT24NCSV2[]    =  ",,,,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane "	// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
-										"Energy Consumption (MBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hour"			// SAC 10/28/15 - 'MMBtu' -> 'MBtu'
-										"s,,,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane Energy Consumpt"
-										"ion (MBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Application,Mana"
-										"ger,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
-// SAC 10/13/15 - switched 'Process Ltg' to 'Other Ltg'
-static char szT24NCSV3[]    =  "Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation "
-										"Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,S"
-										"pc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heati"
-										"ng,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc C"
-										"ooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num"
-										" Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Lightin"
-										"g,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp T"
-										"otal,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Rec"
-										"eptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Zone Max,Zo"
-										"ne Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
+// SAC 10/10/16 - updated T24N CSV summary results header strings to include prop & std model electric demand
+static char szT24NCSV1[]	 =	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,Proposed "
+										"Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,Standard Model,"
+										",,,,,Proposed Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Calling,Compliance,,,,Secondary,,\n";
+static char szT24NCSV2[]	 =	",,,,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane Energy"
+										" Consumption (MBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electr"
+										"ic Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,Time Depe"
+										"ndent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,Genera"
+										"tion Coincident Peak Demand (kW),,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,S"
+										"pc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc H"
+										"eating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heati"
+										"ng,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,S"
+										"pc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zon"
+										"e Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Wate"
+										"r,Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Li"
+										"ghting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighti"
+										"ng,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,C"
+										"omp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & "
+										"Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc"
+										",Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
 
 static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,Proposed Model,,,,,,,,,,,Proposed Model,,,,,,,,,,,Proposed"
 										" Model,,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,Standard Model,,,,,,,,,,,Standard Model,,,,,,,,,,,Standard Mode"

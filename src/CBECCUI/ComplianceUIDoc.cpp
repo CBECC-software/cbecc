@@ -358,30 +358,49 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData )	// SAC 10/29
 {	CString sBaseExt, sCodeYr;
 	BaseFileExt( sBaseExt );
 	CString sFileDescrip;
+
+	int iProgYear = 2013;
+#ifdef UI_PROGYEAR2016
+	iProgYear = 2016;
+#elif UI_PROGYEAR2019	// SAC 10/10/16
+	iProgYear = 2019;
+#endif
 	if (bUseProjectData)
 		CodeYearAbbrev( sCodeYr );	
-	else
-	{
-#ifdef UI_PROGYEAR2016
+	else if (iProgYear == 2016)
 		sCodeYr = "16";
-#endif
-	}
+	else if (iProgYear == 2019)
+		sCodeYr = "19";
+
 #ifdef UI_CANRES
-		sFileDescrip = "SDD ";
+	sFileDescrip = "SDD ";
 #elif UI_CARES
-		sFileDescrip = "Res ";
+	sFileDescrip = "Res ";
 #endif
 
 	CString sInsertFileType;
 	if (!bUseProjectData)  // SAC 11/17/15 - allow selection of other types even when ruleset switching toggled OFF - was:  && ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0)	// SAC 10/30/15 - enable selection of other recognized and selectable file types
-	{
+	{	CString sFTTemp;
 		LoadRulesetListIfNotLoaded();
-		if ((sCodeYr.IsEmpty() || !sCodeYr.Compare("13")) && CodeYearRulesetAvailable( "2016" ))
-			sInsertFileType.Format( "2016 %sProject Files (*.%s16)|*.%s16|2016 %sXML Project Files (*.%s16x)|*.%s16x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
-		else if (!sCodeYr.Compare("16") && CodeYearRulesetAvailable( "2013" ))
-			sInsertFileType.Format( "2013 %sProject Files (*.%s)|*.%s|2013 %sXML Project Files (*.%sx)|*.%sx|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+// SAC 10/10/16 - revised logic to:
+//			- Include past year file extensions regardless of existence of that year's ruleset (since pulling them in allowed if user chooses to use default program ruleset)
+//			- Include future year file extensions if those rulesets ARE present AND ruleset switching is enabled
+		bool bRuleSwitchingAllowed = (ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0);
+		//if (!sCodeYr.Compare("16") && CodeYearRulesetAvailable( "2013" ))
+		if (iProgYear > 2013)
+		{	sFTTemp.Format( "2013 %sProject Files (*.%s)|*.%s|2013 %sXML Project Files (*.%sx)|*.%sx|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+			sInsertFileType += sFTTemp;
+		}
+		//if ((sCodeYr.IsEmpty() || !sCodeYr.Compare("13")) && CodeYearRulesetAvailable( "2016" ))
+		if (iProgYear > 2016 || (iProgYear < 2016 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2016" )))
+		{	sFTTemp.Format( "2016 %sProject Files (*.%s16)|*.%s16|2016 %sXML Project Files (*.%s16x)|*.%s16x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+			sInsertFileType += sFTTemp;
+		}
+		if (iProgYear > 2019 || (iProgYear < 2019 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2019" )))	// SAC 10/10/16
+		{	sFTTemp.Format( "2019 %sProject Files (*.%s19)|*.%s19|2019 %sXML Project Files (*.%s19x)|*.%s19x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+			sInsertFileType += sFTTemp;
+		}
 	}
-
 	sSaveAs.Format( "%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
 							sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sInsertFileType );
 }
@@ -732,6 +751,10 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 		{	if (!CheckAndDefaultModel( sRdProjErr.IsEmpty(), bWriteToLog ))		// SAC 9/5/14 - MOVED code that performs model checking & defaulting to separate routine to ensure consistent operation for models that are opened via command line specification
 				bRetVal = FALSE;
 		}
+
+	// SAC 10/10/16 - added same notice to user about performing Save As... following ruleset switch as that presented following a manual ruleset switch
+	if (bRulesetBeingSwitched)
+		AfxMessageBox( eszPostRulesetSwitch );  //, "Ruleset Switch Completed" );
 
 	return bRetVal;
 }

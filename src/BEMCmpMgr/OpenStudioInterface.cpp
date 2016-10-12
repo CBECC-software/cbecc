@@ -435,7 +435,8 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 		long lDBID_EUseSummary_ZoneUMLHs        = BEMPX_GetDatabaseID( "ZoneUMLHs"      , iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHs > 0 );
 
 		QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+		if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 
 		int iOrientNum = 0;
 		if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
@@ -1163,7 +1164,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 								if (WithinMargin( dEDem, 0.0, 0.001 ))
 									sResultVal = "--";
 								else
-									sResultVal = BEMPX_FloatToString( dEDem, 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+									sResultVal = BEMPX_FloatToString( dEDem, 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								if (iEUIdx == IDX_T24_NRES_EU_Total && osRunInfo.IsStdRun())
 								{	// calculate and store kW difference
@@ -1172,7 +1173,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), dPropEDem, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
 										dPropEDem = 0.0;
 									sPropName = QString( "MarginkW" );
-									dEDem = RoundVal( dEDem, 2 ) - RoundVal( dPropEDem, 2 );
+									dEDem = RoundVal( dEDem, 1 ) - RoundVal( dPropEDem, 1 );
 									//if (WithinMargin( dEDem, 0.0, 0.001 ))
 									//	sResultVal = "--";
 									//else

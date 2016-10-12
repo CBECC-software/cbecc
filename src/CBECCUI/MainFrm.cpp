@@ -3695,8 +3695,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
 			CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
 
-			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[1536];
-			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 1536, iCodeType ) == 0 );	// SAC 12/3/14
+			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[2048];
+			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 2048, iCodeType ) == 0 );	// SAC 12/3/14
 			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 			if (!sCSVLogFN.IsEmpty())
 			{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
@@ -3707,7 +3707,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
 			}
 
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC.csv" : "AnalysisResults.csv"));
+			// SAC 10/10/16 - updated default T24N CSVResultsLog filename adding '-v2' for new CSV format that includes electric demand results
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC.csv" : "AnalysisResults-v2.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 		}

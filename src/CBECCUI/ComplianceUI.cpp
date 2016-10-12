@@ -70,9 +70,9 @@ static char BASED_CODE szPath1[] = "ProjectsPath";
 static const char* pszPaths[] = { szPath1, /*szPath2, szPath3, szPath4, szPath5, szPath6,*/ NULL };
 
 static char BASED_CODE szFile1[] = "BEMFile";
-static char BASED_CODE szFile2[] = "Defaults";
+//static char BASED_CODE szFile2[] = "Defaults";
 //static char BASED_CODE szFile3[] = "ScreenDefinitions";
-static const char* pszFiles[] = { szFile1, szFile2, /*szFile3,*/ NULL };
+static const char* pszFiles[] = { szFile1, /*szFile2,*/ /*szFile3,*/ NULL };
 
 static char BASED_CODE szPFErr1[] = "The following entry in the [";
 static char BASED_CODE szPFErr2[] = "] section of the ";

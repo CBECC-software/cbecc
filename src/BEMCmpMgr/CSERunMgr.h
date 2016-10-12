@@ -104,7 +104,7 @@ public:
 	~CSERunMgr();
 	int SetupRun(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
-								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL );
+								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	int GetNumRuns() const { return m_iNumRuns; }
 	void DoRuns();

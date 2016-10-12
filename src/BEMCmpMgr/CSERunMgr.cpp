@@ -437,7 +437,7 @@ int CSERunMgr::SetupRun(
 }		// CSERunMgr::SetupRun
 
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
-											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/ )
+											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/ )
 {
 	int iRetVal = 0;
 	CSERun* pCSERun = new CSERun;
@@ -540,6 +540,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 
+		if (iRetVal == 0 && psCSEVer)
+		{
 //		if (iRetVal == 0 && iRunIdx == 0)  // Store various software & ruleset versions prior to first run - SAC 12/19/12
 //		{	QString sVerTemp, sVerStr;
 //			BEMPX_GetRulesetID( sVerTemp, sVerStr );
@@ -548,16 +550,17 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //			else
 //				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:RulesetVersion" ), m_iError );
 //
-//			QString sCSEVersion = GetVersionInfo();
-//			if (!sCSEVersion.isEmpty())
+			QString sCSEVersion = GetVersionInfo();
+			if (!sCSEVersion.isEmpty())
+				*psCSEVer = sCSEVersion;
 //				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:PrimSimEngingVer" ), BEMP_QStr, (void*) &sCSEVersion );
 //			else
 //				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:PrimSimEngingVer" ), m_iError );
 //
 //			// SAC 1/8/13 - DHW engine version stored to BEMBase DURING DHW simulation (immediately following the ...Init() call)
 //			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:SecSimEngingVer" ), m_iError );
-//		}
-//
+		}
+
 //		// Purge user-defined non-parent/child components which are not referenced  - SAC 1/20/13 - added to prevent simulation of objects that are not referenced in the building model
 //		// Purge performed HERE, before objects are cross-referenced (Cons <-> cseCONS & Mat <-> cseMATERIAL), w/ those cross-references preventing any useful purging
 //		BEMPX_PurgeUnreferencedComponents();
