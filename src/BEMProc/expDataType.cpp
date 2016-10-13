@@ -481,7 +481,8 @@ void BEMP_InitializeDataTypes( int eCompDT, bool bPrim, bool bEdit, bool bUserDe
 			{	int iNumPTDetails = pPT->getNumPropTypeDetails();				assert( iNumPTDetails > 0 );
 				for (int j=0; j<iNumPTDetails; j++)
 				{	BEMPropTypeDetails* pPTD = pPT->getPropTypeDetails( j );		assert( pPTD );
-					if (pPTD)
+			//		if (pPTD)
+					if (pPTD && pPTD->getCompDataType() == BEMD_NDataTypes)	// SAC 10/12/16 - added logic to prevent initialization of data type settings ALREADY initialized (via BEMBase text data)
 						pPTD->setData( eCompDT, bPrim, bEdit, bUserDef, bDispInp,
 											bDispProp, bDispBudg, iNotInputMode, sNotInputMsg );
 		}	}	}

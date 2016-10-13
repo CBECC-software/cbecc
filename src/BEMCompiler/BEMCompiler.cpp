@@ -547,6 +547,22 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 			BOOL bCompOK = BEMPX_CompileRuleset( fileDMCmpld.toLocal8Bit().constData(), filePrim.toLocal8Bit().constData(),
 															 fileCmpld.toLocal8Bit().constData(), fileLog.toLocal8Bit().constData(), &sRuleDetails );
 
+		// SAC 10/12/16 - added code to create and store data model documentaiton files
+			if (bCompOK)
+			{	QString sSimDataModelOutFile = fileCmpld.left( fileCmpld.lastIndexOf('.') );
+				QString sInpDataModelOutFile = sSimDataModelOutFile + " - Input Data Model.txt";
+				sSimDataModelOutFile += " - Sim Data Model.txt";
+				if (!BEMPX_LoadDataModel( fileDMCmpld.toLocal8Bit().constData(), BEMT_CBECC ))
+				{	assert( false );	// initialization of BEM failed
+				}
+				else if (!BEMPX_LoadRuleset( fileCmpld.toLocal8Bit().constData(), TRUE /*bDeleteAllObjects*/ ))
+				{	assert( false );	// error loading (newly compiled) ruleset binary file
+				}
+				else
+				{	BEMPX_WriteDataModelExport( BEMDMX_INPMP, sInpDataModelOutFile.toLocal8Bit().constData() );
+					BEMPX_WriteDataModelExport( BEMDMX_SIM  , sSimDataModelOutFile.toLocal8Bit().constData() );
+			}	}
+
 			QApplication::restoreOverrideCursor();
 			QApplication::processEvents();
 

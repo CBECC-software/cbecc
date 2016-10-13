@@ -3152,7 +3152,7 @@ void CTreeBDB::ChildMove( bool bMoveUp /*=true*/ )
 			BEMObject* pObj = BEMPX_GetObjectByClass( iBDBClass, iError, iBDBIndex, eBDBCompType );
 			if (iError >= 0 && pObj)
 			{	VERIFY( pObj->ChangeChildIndex( bMoveUp ) );
-//		CString sDbgMsg;	sDbgMsg.Format( "Move %s '%s' UP", pObj->getClass()->getShortName(), pObj->getName() );		MessageBox( sDbgMsg );
+//		CString sDbgMsg;	sDbgMsg.Format( "Move %s '%s' UP", pObj->getClass()->getShortName().toLatin1().constData(), pObj->getName().toLatin1().constData() );		MessageBox( sDbgMsg );
 
 				// Set modified flag and evaluate proposed ruleset (?)
 				SetDataModifiedFlag( TRUE );

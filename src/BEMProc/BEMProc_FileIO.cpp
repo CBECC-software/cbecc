@@ -3733,15 +3733,254 @@ BEMObject* BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, in
 
 /////////////////////////////////////////////////////////////////////////////
 
+const char* pszPropTypeTypes[] = {	"Integer    "		// BEMP_Int  0
+											 , "Float      "		// BEMP_Flt  1
+											 , "Enumeration"		// BEMP_Sym  2
+											 , "String     "		// BEMP_Str  3
+											 , "ObjectRef  "		// BEMP_Obj  4
+											 };
+
 //#define  BEMDMX_SIM    0  // SAC 8/23/12 - added export of simulation data model to facilitate synchronization of data model w/ other program modules
 //#define  BEMDMX_INP    1  // SAC 2/26/13 - added input version of DM export
 //#define  BEMDMX_INPMP  2  // SAC 10/31/13 - added input version of DM export that EXCLUDES Prescribed properties (MP-minus precribed)
 bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFile )
-{
-	bool bRetVal = false;
-									assert( false );
+{	bool bRetVal = true;
+   QFile file;		file.setFileName( pszDataModelOutFile );
+   try
+   {  // open file
+      //if (file.Open( pszDataModelOutFile, CFile::modeCreate | CFile::modeWrite ) != 0)
+      if (file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ))
+      {
+			//CTime time = CTime::GetCurrentTime();
+			//CString sTimeStamp = time.Format("%Y-%b-%d %H:%M:%S\n");
+			QDateTime locTime = QDateTime::currentDateTime();
+			QString sTimeStamp = locTime.toString("yyyy-MMM-dd HH:mm:ss\n");
+			file.write( sTimeStamp.toLocal8Bit().constData() );
 
+         QString sLine, sTemp, sTemp2;
+			int iError;
+			int iNumPropsWritten = 0;
+   	   for (int iC1=0; iC1 < eBEMProc.getNumClasses(); iC1++)
+			{	int iNumPropsWrittenThisClass = 0;
+				int iNumPropsOfClassToBeWritten = 0, iP1=0;
+            for (; iP1 < eBEMProc.getClass(iC1)->getNumProps(); iP1++)
+   	      {  int iProp1 = eBEMProc.getClass(iC1)->getFirstPropID() + iP1;
+					int iPropDataType = BEMPX_GetCompDataType( BEMPX_GetDBID( (iC1+1), (iP1+1), 1 /*i1Array*/ ) );
+					if ( (iExportType == BEMDMX_INP   && iPropDataType < BEMD_NotInput  ) ||	// SAC 4/4/13 - modified to allow Prescribed data to be modified/read/written.  Was:  Prescribed) ||
+						  (iExportType == BEMDMX_INPMP && iPropDataType < BEMD_Prescribed) ||	// SAC 10/31/13
+						  (iExportType == BEMDMX_SIM   && eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag() > 0) )
+						iNumPropsOfClassToBeWritten++;
+				}
 
+				if (iNumPropsOfClassToBeWritten > 0 || eBEMProc.getClass(iC1)->getNumProps() < 1 || eBEMProc.getClass(iC1)->getXMLIgnoreName())	// SAC 1/28/14 - don't write object at all if we have no properties to write (unless this obj has no props at all)
+				{
+						if (iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP)
+							sLine.sprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d\n", 
+								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), eBEMProc.getClass(iC1)->getLongName().toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
+								, eBEMProc.getClass(iC1)->getMaxDefinable()	);
+						else
+							sLine.sprintf( "\n--------------------\n%-16s  %-32s  #Props:%3d/%3d  MaxDefinable:%5d  SingleRecord: %c  XMLIgnoreName: %c\n", 
+								  /*eBEMProc.getClass(iC1)->m_i1BEMClassIdx,*/ eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), eBEMProc.getClass(iC1)->getLongName().toLocal8Bit().constData(), iNumPropsOfClassToBeWritten, eBEMProc.getClass(iC1)->getNumProps()
+								, eBEMProc.getClass(iC1)->getMaxDefinable(), (eBEMProc.getClass(iC1)->getWriteAsSingleRecord() ? 'T':'F')
+								, (eBEMProc.getClass(iC1)->getXMLIgnoreName() ? 'T':'F')
+							//	, eBEMProc.getClass(iC1)->, eBEMProc.getClass(iC1)->, eBEMProc.getClass(iC1)->
+								);
+						file.write( sLine.toLocal8Bit().constData() );
+						if (eBEMProc.getClass(iC1)->getParentType(0) > 0)
+						{  sTemp = "                               Parent(s):  ";
+							for (int iPar=0; (iPar < BEM_MAX_PARENT_TYPES && eBEMProc.getClass(iC1)->getParentType( iPar ) > -1); iPar++)
+							{	if (iPar > 0)
+									sTemp += "  /  ";
+								sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getParentType( iPar ) )->getShortName();
+							}
+							sTemp += "\n";
+							file.write( sTemp.toLocal8Bit().constData() );
+						}
+						if (eBEMProc.getClass(iC1)->getChildType(0) > 0)
+						{  sTemp = "                               Children:  ";
+							for (int iChld=0; (iChld < BEM_MAX_CHILD_TYPES && eBEMProc.getClass(iC1)->getChildType( iChld ) > -1); iChld++)
+							{	if (iChld > 0)
+									sTemp += "  /  ";
+								sTemp += eBEMProc.getClass( eBEMProc.getClass(iC1)->getChildType( iChld ) )->getShortName();
+							}
+							sTemp += "\n";
+							file.write( sTemp.toLocal8Bit().constData() );
+						}
+						file.write( "\n" );
+
+            	for (iP1=0; iP1 < eBEMProc.getClass(iC1)->getNumProps(); iP1++)
+   	      	{  int iProp1 = eBEMProc.getClass(iC1)->getFirstPropID() + iP1;
+						long lDBID = BEMPX_GetDBID( (iC1+1), (iP1+1), 1 /*i1Array*/ );
+						int iPropDataType = BEMPX_GetCompDataType( lDBID );
+						if ( (iExportType == BEMDMX_INP   && iPropDataType < BEMD_NotInput  ) ||	// SAC 4/4/13 - modified to allow Prescribed data to tbe modified/read/written.  Was:  Prescribed) ||
+							  (iExportType == BEMDMX_INPMP && iPropDataType < BEMD_Prescribed) ||	// SAC 10/31/13
+							  (iExportType == BEMDMX_SIM   && eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag() > 0) )
+						{
+							// now write PropertyType
+							QString sLongName = eBEMProc.getPropertyType(iProp1)->getDescription();  // mods to prevent overrun of property long name / description
+							if (sLongName.length() > 60)
+							{	sLongName = sLongName.left(57);
+								sLongName += "...";
+							}
+					      if (iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP)
+							{	QString sDataType, sNumVals, sUnits;
+								if (!eBEMProc.getPropertyType(iProp1)->getInputClassInfo().isEmpty())
+									sDataType = "(see next line)";
+								else
+									switch (iPropDataType)
+									{	case BEMD_Compulsory   :	sDataType = "Compulsory input";			break;
+										case BEMD_Required     :	sDataType = "Required input";				break;
+										case BEMD_CondRequired :	sDataType = "CondRequired input";		break;	// SAC 2/11/15
+										case BEMD_Optional     :	sDataType = "Optional input";				break;
+										case BEMD_Default      :	sDataType = "Defaulted input";			break;
+										case BEMD_CriticalDef  :	sDataType = "CriticalDef input";			break;
+										case BEMD_Prescribed   :	sDataType = "Prescribed";					break;
+										case BEMD_NotInput     :	sDataType = "NotInput";						break;
+										default                :	sDataType = "unknown input type";		break; 
+									}
+								if (eBEMProc.getPropertyType(iProp1)->getNumValues() > 1)
+									sNumVals.sprintf( "#Vals:%3d", eBEMProc.getPropertyType(iProp1)->getNumValues() );
+								else
+									sNumVals = " -  -  - ";
+								if (!eBEMProc.getPropertyType(iProp1)->getUnitsLabel().isEmpty())
+								//	sUnits.sprintf( "Units: %-17s", eBEMProc.getPropertyType(iProp1)->getUnitsLabel().toLatin1().constData() );
+									sUnits = QString( "Units: %1" ).arg( eBEMProc.getPropertyType(iProp1)->getUnitsLabel(), -17 );
+								else
+									sUnits = " -  -  -  -  -  -  -  - ";
+								QString sRangeMsg;
+								BEMPX_GenerateRangeMessage( lDBID, &sRangeMsg, -1, FALSE /*bIncludeUnits*/ );
+					         sLine = QString( "      %1  %2  %3  %4  %5  %6 %7\n" ).arg( eBEMProc.getPropertyType(iProp1)->getShortName(), -24 ).arg( sLongName, -60 ).arg(
+										  pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], sNumVals, sUnits ).arg( sDataType, -18 ).arg( sRangeMsg );
+							// avoid sprintf() to preserve special characters in units strings
+					      //   sLine.sprintf( "      %-24s  %-60s  %s  %s  %s  %-18s %s\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
+							//			  eBEMProc.getPropertyType(iProp1)->getShortName().toLocal8Bit().constData(), sLongName.toLocal8Bit().constData()  //, eBEMProc.getPropertyType(iProp1)->m_i1PropTypeIdx
+							//			, pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], sNumVals.toLocal8Bit().constData()
+							//			, sUnits.toLatin1().constData(), sDataType.toLocal8Bit().constData(), sRangeMsg.toLocal8Bit().constData()	);
+						// SAC 3/3/14 - added subsequent record to write more descriptive info re: input class (when dependent on other BEMBase data)
+								if (!eBEMProc.getPropertyType(iProp1)->getInputClassInfo().isEmpty())
+								{	file.write( sLine.toLatin1() );
+									sLine.sprintf( "      %-24s  %-60s  %-11s  %-9s  %-24s  %s\n", " ", " ", " ", " ", " ", eBEMProc.getPropertyType(iProp1)->getInputClassInfo().toLocal8Bit().constData() );
+								}
+							}
+							else
+					         sLine = QString( "      %1  %2  Type: %3  #Vals:%4  Units: %5 WriteSimFlag:%6  WriteXMLArrayIndices: %7\n" ).arg(
+										  eBEMProc.getPropertyType(iProp1)->getShortName(), -24 ).arg( sLongName, -60 ).arg(  //, eBEMProc.getPropertyType(iProp1)->m_i1PropTypeIdx
+										  pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ] ).arg( QString::number( eBEMProc.getPropertyType(iProp1)->getNumValues() ), 3 ).arg(
+										  eBEMProc.getPropertyType(iProp1)->getUnitsLabel(), -17 ).arg( QString::number( eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag() ), 2 ).arg(
+										  (eBEMProc.getPropertyType(iProp1)->getXMLWriteArrayIndices() ? 'T':'F') );
+							// avoid sprintf() to preserve special characters in units strings
+					      //   sLine.sprintf( "      %-24s  %-60s  Type: %s  #Vals:%3d  Units: %-17s WriteSimFlag:%2d  WriteXMLArrayIndices: %c\n",    // MaxDefinable:%5d  MaxRefs:%3d", 
+							//			  eBEMProc.getPropertyType(iProp1)->getShortName().toLocal8Bit().constData(), sLongName.toLocal8Bit().constData()  //, eBEMProc.getPropertyType(iProp1)->m_i1PropTypeIdx
+							//			, pszPropTypeTypes[ eBEMProc.getPropertyType(iProp1)->getPropType() ], eBEMProc.getPropertyType(iProp1)->getNumValues()
+							//			, eBEMProc.getPropertyType(iProp1)->getUnitsLabel().toLatin1().constData(), eBEMProc.getPropertyType(iProp1)->getWriteSimulationFlag()
+							//			, (eBEMProc.getPropertyType(iProp1)->getXMLWriteArrayIndices() ? 'T':'F')
+							//		//	, eBEMProc.getPropertyType(iProp1)->, eBEMProc.getPropertyType(iProp1)->, eBEMProc.getPropertyType(iProp1)->
+							//			);
+							//file.write( sLine.toLocal8Bit().constData() );
+							// use toLatin1() to preserve special characters in units strings
+							file.write( sLine.toLatin1() );
+							if (eBEMProc.getPropertyType(iProp1)->getPropType() == BEMP_Obj)
+							{	for (int iO=0; iO < BEM_MAX_PROPTYPE_OBJREFCLASSES; iO++)
+								{	if (eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO) > 0)
+									{	if (eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO) > 0)
+										{	BEMPX_DBIDToDBCompParamString( eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO), sTemp2 );
+											QString sSymStr;
+											if (eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) == -99)
+											{	// special case where the object dependency is based on the Type of both the referencing and referenced objects being the same
+												BEMPropertyType* pObjTypePropType = BEMPX_GetPropertyTypeFromDBID( eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO), iError );
+												long lLocTypeDBID = ((pObjTypePropType && !pObjTypePropType->getShortName().isEmpty()) ? 
+																					BEMPX_GetDatabaseID( pObjTypePropType->getShortName(), BEMPX_GetClassID( lDBID ) ) : 0);
+												BEMPropertyType* pLocObjTypePropType = (lLocTypeDBID > 0 ? BEMPX_GetPropertyTypeFromDBID( lLocTypeDBID, iError ) : NULL);
+												if (pLocObjTypePropType && !pLocObjTypePropType->getShortName().isEmpty())
+												//	sSymStr.sprintf( "%s:%s", eBEMProc.getClass(iC1)->getShortName().toLocal8Bit().constData(), pLocObjTypePropType->getShortName().toLocal8Bit().constData() );
+													sSymStr = QString( "%1:%2" ).arg( eBEMProc.getClass(iC1)->getShortName(), pLocObjTypePropType->getShortName() );
+											}
+											else
+												sSymStr = BEMPX_GetSymbolString( eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO), eBEMProc.getPropertyType(iProp1)->getObjTypeDBID(iO),
+																							-1 /*iOccur*/, BEMO_User /*eObjType*/, -1 /*iBEMProcIdx*/, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// SAC 1/15/14 - added final argument to ensure char string reporting
+									      if ((iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP) && !sSymStr.isEmpty())
+											{	if (eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) == -99)
+												//	sTemp.sprintf( "                               %s  (%s = %s)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+													sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
+																		sTemp2, sSymStr );
+												else
+												//	sTemp.sprintf( "                               %s  (%s = \"%s\")\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+													sTemp = QString( "                               %1  (%2 = \"%3\")\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
+																		sTemp2, sSymStr );
+											}
+											else
+											//	sTemp.sprintf( "                               %s  (%s = %ld)\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData(),
+												sTemp = QString( "                               %1  (%2 = %3)\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName(),
+																	sTemp2, QString::number( eBEMProc.getPropertyType(iProp1)->getObjTypeValue(iO) ) );
+										}
+										else
+										//	sTemp.sprintf( "                               %s\n", eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName().toLocal8Bit().constData() );
+											sTemp = QString( "                               %1\n" ).arg( eBEMProc.getClass(eBEMProc.getPropertyType(iProp1)->getObj1ClassIdx(iO)-1)->getShortName() );
+										file.write( sTemp.toLatin1() );
+									}
+								}
+							}
+							else if (eBEMProc.getPropertyType(iProp1)->getPropType() == BEMP_Sym)
+							{	int iNumSymListsWritten = 0;
+								for (int iSDS=0; iSDS < eBEMProc.getPropertyType(iProp1)->getSymbolList()->getNumSymDependencySets(); iSDS++)
+								{	BEMSymDependencySet* pSDS = eBEMProc.getPropertyType(iProp1)->getSymbolList()->getSymDependencySet(iSDS);			assert( pSDS );
+									if (pSDS && pSDS->getDepValue(0) > -1001)   // dep values < -1000 assumed to be backward compatibility-related, and we don't want to echo those symbol lists here
+									{	if (pSDS->getCompParam(0) > 0 && pSDS->getDepValue(0) != -999)
+										{	for (int i=0; i<MAX_DEP_DBIDS_PER_SYMBOL_LIST; i++)
+   										   if (pSDS->getCompParam(i) > 0 && pSDS->getDepValue(i) != -999)
+												{	QString sDepSymStr;
+													BEMPropertyType* pDepPropType = BEMPX_GetPropertyTypeFromDBID( pSDS->getCompParam(i), iError );
+													if (pDepPropType && pDepPropType->getPropType() == BEMP_Sym)
+															sDepSymStr = BEMPX_GetSymbolString( (long) pSDS->getDepValue(i), pSDS->getCompParam(i) );
+													BEMPX_DBIDToDBCompParamString( pSDS->getCompParam(i), sTemp2 );
+											      if ((iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP) && !sDepSymStr.isEmpty())
+													//	sTemp.sprintf( "                               %s  %s = \"%s\"\n", (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), sDepSymStr.toLocal8Bit().constData() );
+														sTemp = QString( "                               %1  %2 = \"%3\"\n" ).arg( (i==0 ? "When:" : " and:"), sTemp2, sDepSymStr );
+													else
+													//	sTemp.sprintf( "                               %s  %s = %g\n"  , (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), pSDS->getDepValue(i) );
+														sTemp = QString( "                               %1  %2 = %3\n" ).arg( (i==0 ? "When:" : " and:"), sTemp2, QString::number( pSDS->getDepValue(i) ) );
+													file.write( sTemp.toLatin1() );
+												}
+										}
+										else if (iSDS > 0 && iNumSymListsWritten > 0)
+											file.write( "                               else:\n" );
+
+										sTemp.sprintf( "                                      default:  %ld\n", pSDS->getDefaultValue() );
+										file.write( sTemp.toLatin1() );
+										for (int i=0; i < pSDS->getNumSymbols(); i++)
+										{	BEMSymbol* pSym = pSDS->getSymbol(i);						assert( pSym );
+											if (pSym)
+											//{	sTemp.sprintf( "                                       %6ld:  \"%s\"\n", pSym->getValue(), pSym->getString().toLocal8Bit().constData() );
+											{	sTemp = QString( "                                       %1:  \"%2\"\n" ).arg( QString::number( pSym->getValue() ), 6 ).arg( pSym->getString() );
+												file.write( sTemp.toLatin1() );
+											}
+										}
+										iNumSymListsWritten++;
+									}
+								}
+							}
+
+							iNumPropsWrittenThisClass++;
+						}
+            	}
+				}  // end of new if statement preventing ANY writing when no properties to write
+				iNumPropsWritten += iNumPropsWrittenThisClass;
+			}	// end of loop over classes
+
+			file.flush();
+			file.close();
+      }
+      else
+      {		assert( false );	// error opening file
+      }
+   }
+	catch (...)
+	{
+      BEMMessageBox( QString( "Error writing data model text file: %1" ).arg( pszDataModelOutFile ), NULL, MB_ICONEXCLAMATION );
+      bRetVal = false;
+		//throw std::runtime_error( "Error writing data model text file" );
+	}
+   									assert( bRetVal );
 	return bRetVal;
 }
 

@@ -119,6 +119,31 @@ public:
    QString  GetSymbolString( long iSymVal );
 	BEMSymbol*  CreateBEMSymbol( long iSymValue, LPCSTR lpszSymString );
 
+   long   getCompParam( int i )		{	if (i < 0 || i >= MAX_DEP_DBIDS_PER_SYMBOL_LIST)		// Identifier of component type (Class) AND parameter (PropertyType)
+   												{	assert( false );
+   													return -1;
+   												}
+   												return m_compParam[ i ];
+   											}
+   long   getComp( int i )				{	if (i < 0 || i >= MAX_DEP_DBIDS_PER_SYMBOL_LIST)		// Identifier of component type (Class)
+   												{	assert( false );
+   													return -1;
+   												}
+   												return m_comp[ i ];
+   											}
+   long   getDataType( int i )		{	if (i < 0 || i >= MAX_DEP_DBIDS_PER_SYMBOL_LIST)		// Type of data which describes the above component/parameter
+   												{	assert( false );
+   													return -1;
+   												}
+   												return m_dataType[ i ];
+   											}
+   double getDepValue( int i )		{	if (i < 0 || i >= MAX_DEP_DBIDS_PER_SYMBOL_LIST)   	// Dependent value
+   												{	assert( false );
+   													return -99999;
+   												}
+   												return m_depValue[ i ];
+   											}
+
    BOOL Copy( BEMSymDependencySet* pSymDepSet );
 };
 

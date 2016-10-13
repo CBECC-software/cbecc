@@ -979,13 +979,13 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 						{	CString sBtnObjID = "<unknown>";
 							BEMObject* pBtnObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( lDBID ), iError, iDBInst );
 							if (pBtnObj && pBtnObj->getClass())
-								sBtnObjID.Format( "%s '%s'", pBtnObj->getClass()->getShortName(), pBtnObj->getName() );
+								sBtnObjID.Format( "%s '%s'", pBtnObj->getClass()->getShortName().toLatin1().constData(), pBtnObj->getName().toLatin1().constData() );
 							BEMObject* pObj = NULL;
 							if (!BEMPX_SetDataObject( lDBID, pObj, BEMP_Obj, iDBInst ) || pObj == NULL || pObj->getClass() == NULL)
 								sBtnErr.Format( "Unable to access object referenced by the %s property of %s.", sObjProp.toLatin1().constData(), sBtnObjID );	// not really an error - expected if/when the property is unassigned
 							else
 							{	i1ClassToEdit = pObj->getClass()->get1BEMClassIdx();
-								CString sObjID;	sObjID.Format( "%s '%s'", pObj->getClass()->getShortName(), pObj->getName() );
+								CString sObjID;	sObjID.Format( "%s '%s'", pObj->getClass()->getShortName().toLatin1().constData(), pObj->getName().toLatin1().constData() );
 								int iObjIdx = BEMPX_GetObjectIndex( pObj->getClass(), pObj );		ASSERT( iObjIdx );
 								if (iObjIdx < 0 || iObjIdx >= BEMPX_GetNumObjects( i1ClassToEdit ))
 									sBtnErr.Format( "%s button processing error:  Unable to retrieve index of %s referenced by the %s property of %s.", esProgramName, sObjID, sObjProp.toLatin1().constData(), sBtnObjID );

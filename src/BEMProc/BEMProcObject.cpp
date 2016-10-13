@@ -1302,8 +1302,10 @@ BOOL BEMProcObject::decompileBinBEMProc( const char* pszBinFileName, BOOL bOnlyS
             if (!bOnlySymbols)
             {	pPropType->initPropTypeDetails();
 					if (lUserSpecification >= 0)  // SAC 2/25/12
-						for (int idx=0; idx < pPropType->getNumValues(); idx++)
-						{	BEMPropTypeDetails* pDT = pPropType->getPropTypeDetails(idx);			assert( pDT );
+				//		for (int idx=0; idx < pPropType->getNumValues(); idx++)
+				//		{	BEMPropTypeDetails* pDT = pPropType->getPropTypeDetails(idx);			assert( pDT );
+				// SAC 10/12/16 - modify init to set only FIRST of array to the BEMBase-defined data type (consistent w/ old version)
+						{	BEMPropTypeDetails* pDT = pPropType->getPropTypeDetails(0);			assert( pDT );
 							if (pDT)
 							{	switch (lUserSpecification)              //      compDataType        primary  editable  userDefault  displayInput/Prop/Budg  notInputMode      notInputMsg
 								{	case BEMD_Compulsory   :  pDT->setData( (int) lUserSpecification, TRUE ,   TRUE ,    TRUE ,             TRUE, TRUE, TRUE, DTNotInp_AllowUIReset, "" );  break;

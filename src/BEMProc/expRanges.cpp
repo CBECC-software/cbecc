@@ -870,7 +870,7 @@ int BEMPX_GenerateRangeMessage( long lDBID, QString* psMsg, int iOccur /*=-1*/, 
                   if( fMinErrValue != -999 && fMaxErrValue != -999)
                   {
                      *psMsg += QString::number( fMinErrValue );
-                     *psMsg += (bMinErrEqualSet ? " <= " : " < Value");
+                     *psMsg += (bMinErrEqualSet ? " <= Value" : " < Value");
 
                      *psMsg += (bMaxErrEqualSet ? " <= " : " < ");
                      *psMsg += QString::number( fMaxErrValue );
