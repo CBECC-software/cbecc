@@ -1605,8 +1605,10 @@ BOOL MenuRulesetSelectionAllowed( int idx, CString& sRuleSwitchDisallowedMsg )
 															ssaRulesetSymString[siCheckedRulesetIdx], ssaRulesetSymString[idx] );
 #endif   // UI_CANRES
 #ifdef UI_CARES
-		if (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Residential" ) == 0 &&
-			 !ssaRulesetSymString[siCheckedRulesetIdx].IsEmpty() && ssaRulesetSymString[siCheckedRulesetIdx].Find( "CA Residential" ) == 0)
+	//	if (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Residential" ) == 0 &&
+	//		 !ssaRulesetSymString[siCheckedRulesetIdx].IsEmpty() && ssaRulesetSymString[siCheckedRulesetIdx].Find( "CA Residential" ) == 0)
+		if (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Res" ) == 0 &&
+			 !ssaRulesetSymString[siCheckedRulesetIdx].IsEmpty() && ssaRulesetSymString[siCheckedRulesetIdx].Find( "CA Res" ) == 0)
 			bRetVal = TRUE;
 		else
 			sRuleSwitchDisallowedMsg.Format( "Ruleset switch from '%s' to '%s' is not allowed.\nCBECC-Res only allows for switching between 'CA Residential' rulesets.",
@@ -1627,7 +1629,8 @@ BOOL CodeYearRulesetAvailable( CString sCodeYear )		// SAC 10/30/15
 #ifdef UI_CANRES
 			bRetVal = (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA " ) == 0 && ssaRulesetSymString[idx].Find( "Nonresidential" ) > 0);
 #elif UI_CARES
-			bRetVal = (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Residential" ) == 0);
+		//	bRetVal = (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Residential" ) == 0);
+			bRetVal = (!ssaRulesetSymString[idx].IsEmpty() && ssaRulesetSymString[idx].Find( "CA Res" ) == 0);
 #endif
 		}
 	return bRetVal;

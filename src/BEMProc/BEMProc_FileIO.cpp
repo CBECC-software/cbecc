@@ -3976,7 +3976,7 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
    }
 	catch (...)
 	{
-      BEMMessageBox( QString( "Error writing data model text file: %1" ).arg( pszDataModelOutFile ), NULL, MB_ICONEXCLAMATION );
+      BEMMessageBox( QString( "Error writing data model text file: %1" ).arg( pszDataModelOutFile ), "", 3 /*error*/ );
       bRetVal = false;
 		//throw std::runtime_error( "Error writing data model text file" );
 	}

@@ -541,6 +541,24 @@ bool BEMPROC_API __cdecl BEMPX_GetCompDisplay(           long lDBID, int iDispMo
 int  BEMPROC_API __cdecl BEMPX_GetNumberOfPrimaryProperties( int i1BEMClass );
 long BEMPROC_API __cdecl BEMPX_GetPrimaryPropertyDBID(       int i1BEMClass, int iPrimPropIdx );
 
+////////////////////////////////////////////////////////////////
+// Key to arguments of BEMMessageBox():
+//		nIcon options include:
+//				0 - no icon (default)
+//				1 - Information icon
+//				2 - Warning icon
+//				3 - Error icon
+//				4 - Question icon
+//		nType = sum of values below for each button desired:
+//			    1,024 - OK	    (0x00000400) (the default)
+//			4,194,304 - Cancel (0x00400000)
+//			   16,384 - Yes    (0x00004000)
+//			   65,536 - No     (0x00010000)
+//			  262,144 - Abort  (0x00040000)
+//			  524,288 - Retry  (0x00080000)
+//			1,048,576 - Ignore (0x00100000)
+//			- for other options search:  QMessageBox::StandardButtons
+//		nDefault = single value corresponding to the default button (from above list)
 int  BEMPROC_API __cdecl BEMMessageBox(const TCHAR* msg, const TCHAR* caption = NULL, UINT nIcon = 0, UINT nType = 1024, UINT nDefault = 0);
 int  BEMPROC_API __cdecl BEMMessageBox( QString msg, QString caption = "", UINT nIcon = 0, UINT nType = 1024, UINT nDefault = 0 );
 

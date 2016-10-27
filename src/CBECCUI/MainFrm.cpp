@@ -2438,7 +2438,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	// only specify FullComplianceAnalysis option if NOT in batch mode
 			long lAnalysisType;
 			VERIFY( BEMPX_SetDataInteger( elDBID_Proj_AnalysisType, lAnalysisType ) );   // SAC 9/12/11
-			ASSERT( lAnalysisType == 0 || lAnalysisType == 12 || lAnalysisType == 13 );  // 0-Research, 12-ProposedOnly, 13-PropAndStd
+			ASSERT( lAnalysisType == 0 || lAnalysisType == 12 || lAnalysisType == 13 ||  // 0-Research, 12-ProposedOnly, 13-PropAndStd
+					  lAnalysisType == 2 );	// SAC 10/26/16 - 2-Existing Building EDR
 			BOOL bFullComplianceAnalysis = (lAnalysisType == 13);
 			if (!bFullComplianceAnalysis)		// default in ...Analysis...() routine switched to TRUE
 				sOptionsCSVString += "FullComplianceAnalysis,0,";
@@ -2563,6 +2564,9 @@ int CMainFrame::CheckWhichReportsToGenerate( CString& sRptList )	// SAC 2/19/15	
 			(BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompReportStd" ), lRptStd ) && lRptStd > 0))
 	{	lRptStd  = 1;	iRetVal++;	}
 #elif UI_CARES
+	long lAnalType=0;
+	if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType" ), lAnalType ) && lAnalType != 13)
+		return 0;		// SAC 10/27/16 - ignore report gen check if analysis NOT full compliance
 	if (ReadProgInt( "options", "ComplianceReportPDF", 0 /*default*/ ) > 0 ||
 			(BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:ComplianceReportPDF" ), lRptPDF ) && lRptPDF > 0))
 	{	lRptPDF  = 1;	iRetVal++;	}
@@ -3379,7 +3383,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				sNoRptGenMsg += " is";
 			sNoRptGenMsg += " selected for generation following analysis, but report generation is currently offline.\n\nWould you like to continue performing analysis?";
 	//		if (BEMMessageBox( sNoRptGenMsg, "Compliance Analysis", MB_YESNO ) == IDNO)
-			if (BEMMessageBox( sNoRptGenMsg, "Compliance Analysis", (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
+			if (BEMMessageBox( sNoRptGenMsg, "Compliance Analysis", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
 		   	bContinue = FALSE;
 		   else
 		   	bRptGenOfflineConfirmed = true;
@@ -3409,7 +3413,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 
 		long lAnalysisType;
 		VERIFY( BEMPX_SetDataInteger( elDBID_Proj_AnalysisType, lAnalysisType ) );   // SAC 9/12/11
-		ASSERT( lAnalysisType == 0 || lAnalysisType == 12 || lAnalysisType == 13 );  // 0-Research, 12-ProposedOnly, 13-PropAndStd
+		ASSERT( lAnalysisType == 0 || lAnalysisType == 12 || lAnalysisType == 13 ||  // 0-Research, 12-ProposedOnly, 13-PropAndStd
+				  lAnalysisType == 2 );	// SAC 10/26/16 - 2-Existing Building EDR
 	//		BOOL bFullComplianceAnalysis = (lAnalysisType == 13);
 
 	// SAC 1/13/16 - code to append trailing '13', '16', ... to processing directory name in case there are both 2013 & 2016 project files w/ the same name in the same directory
@@ -3427,6 +3432,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		{	sProcessingPath += " - CSE\\";
 //			sRunName = "User";			sRunIDProcFile = " - User";		sRunAbbrev = "u";
 		}
+		else if (lAnalysisType == 2)	// SAC 10/26/16 - Existing Building EDR
+			sProcessingPath += " - ExEDR\\";
 		else
 		{	sProcessingPath += " - Comp";
 			sProcessingPath += sAppendEnergyCodeYrAbbrev;	// SAC 1/13/16
@@ -4453,7 +4460,7 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 					// check whether user still wishes to generate a report even if report gen not available...
 					sNoRptGenMsg.Format( "The report generator is currently offline.\n\nWould you still like to generate a %s report?", sRptType );
 			//		if (BEMMessageBox( sNoRptGenMsg, "Report Generation", MB_YESNO | MB_DEFBUTTON2 ) == IDNO)
-					if (BEMMessageBox( sNoRptGenMsg, "Report Generation", (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::No)
+					if (BEMMessageBox( sNoRptGenMsg, "Report Generation", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::No)
 				   	bContinue = false;
 				}
 

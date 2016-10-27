@@ -417,6 +417,8 @@ void CodeYearAbbrev( CString& sCodeYearAbbrev, bool bForFileExtension /*=true*/ 
 		sCodeYearAbbrev.Empty();
 	else if (bForFileExtension && !sCodeYearAbbrev.Compare("2010"))	// S901G
 		sCodeYearAbbrev.Empty();
+	else if (bForFileExtension && !sCodeYearAbbrev.Compare("0"))	// ExEDR (and perhaps others)
+		sCodeYearAbbrev.Empty();
 	else if (sCodeYearAbbrev.GetLength() == 4)
 		sCodeYearAbbrev = sCodeYearAbbrev.Right(2);
 	return;
