@@ -2559,7 +2559,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (iRetVal == 0)
 		{	int  iBypassOS_all			=	 GetCSVOptionValue( "BypassOpenStudio_all"       ,   0,  saCSVOptions ); 	// SAC 5/20/14
 			if (iCodeType == CT_T24N)
-			{	pbBypassOpenStudio[0]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zp"        ,   0,  saCSVOptions ) > 0);
+			{	iNumBypassItems = 4;
+				pbBypassOpenStudio[0]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zp"        ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[1]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zb"        ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[2]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_ap"        ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[3]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_ab"        ,   0,  saCSVOptions ) > 0);
@@ -2571,7 +2572,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												!pbBypassOpenStudio[3] && iAnalysisThruStep >= 7);
 			}
 			else
-			{	pbBypassOpenStudio[0]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zp"        ,   0,  saCSVOptions ) > 0);
+			{	iNumBypassItems = 10;	// SAC 11/2/16 - fix to ensure that Bypass flags beyond [3] are referenced
+				pbBypassOpenStudio[0]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zp"        ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[1]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zb1"       ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[2]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zb2"       ,   0,  saCSVOptions ) > 0);
 				pbBypassOpenStudio[3]	=	(iBypassOS_all > 0 || GetCSVOptionValue( "BypassOpenStudio_zb3"       ,   0,  saCSVOptions ) > 0);

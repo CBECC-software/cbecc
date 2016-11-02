@@ -769,6 +769,7 @@ public:
 	BEMPoint		m_pntDayltgRefPnts[2];		//	daylighting reference points (one for each m_polyFinalDaylit[])
 	double		m_dRefPntToSpcCenterDist[2];	// distance from daylighting reference point to the center of the (grandparent) space
 	double		m_fRelativeDayltPotential[2];	// [Prim,Sec]
+	double		m_dAdjRefPtWinAngle;				// SAC 11/1/16 - new member needed to facilitate latest SecDaylitAreaRefPnt mods
 
 public:
 	BEMDaylitArea( BEMSpaceDaylitArea* pParentSpc=NULL, GeomDBIDs* pGeomDBIDs=NULL, int i1ObjClass=0, int i0ObjIdx=-1, double dParentZ=0.0 )
@@ -842,7 +843,8 @@ public:
 	bool InitSideDaylitAreas(	double dParentZ );
 	bool InitTopDaylitArea(		double dParentZ );
 
-	bool AdjustReferencePoint( int idx, double dPerpWinAngle = 0.0 );
+	bool AdjustReferencePoint( int idx, BEMSpaceDaylitArea* pSpcDLAs=NULL );
+	bool AdjustSecondarySideDaylitRefPnt( BEMSpaceDaylitArea& spcDLAs );		// SAC 11/1/16
 
 	bool IsSidelitArea()	{	return (m_pGeomDBIDs && m_i1ObjClass == m_pGeomDBIDs->m_iOID_Win  );	};
 	bool IsToplitArea()	{	return (m_pGeomDBIDs && m_i1ObjClass == m_pGeomDBIDs->m_iOID_Skylt);	};
@@ -1076,9 +1078,20 @@ bool BEMDaylitArea::InitPolyLp()
 //		return iRetVal;
 //	}
 
+// SAC 11/1/16 - mods to ensure that SecSideDaylitRefPnts are NOT located inside Primary side daylit areas (of other glazings)
+bool PointInPrimSideDaylitArea( BEMPoint& pt, BEMSpaceDaylitArea* pSpcDLAs )
+{	bool bRetVal = false;
+	for (std::vector<BEMDaylitArea>::iterator chk1=pSpcDLAs->m_daylitAreas.begin(); (!bRetVal && chk1!=pSpcDLAs->m_daylitAreas.end()); ++chk1)
+	{	BEMDaylitArea* pChk1 = &(*chk1);
+		if (pChk1 && pChk1->IsSidelitArea() && pChk1->m_dFinalArea[0] >= 0.1)
+			bRetVal = boost::geometry::within( pt, pChk1->m_polyOrigDaylitArea[0] );
+	}
+	return bRetVal;
+}
+
 typedef boost::geometry::model::linestring<BEMPoint> BEMLine;
 
-bool BEMDaylitArea::AdjustReferencePoint( int idx, double dPerpWinAngle )
+bool BEMDaylitArea::AdjustReferencePoint( int idx, BEMSpaceDaylitArea* pSpcDLAs )
 {	bool bRetVal = false;
 	double dRefPtX = boost::geometry::get<0>( m_pntDayltgRefPnts[idx] );
 	double dRefPtY = boost::geometry::get<1>( m_pntDayltgRefPnts[idx] );
@@ -1087,9 +1100,10 @@ bool BEMDaylitArea::AdjustReferencePoint( int idx, double dPerpWinAngle )
 		try		// SAC 6/10/15 - catch bugs in boost::geometry
 		{
 	// first attempt - simply move the point 3" toward window, which should help if the ref pt is right on the border of the space
-		m_pntDayltgRefPnts[idx].set<0>( (dRefPtX + (0.25 * cos( dPerpWinAngle ))) );
-		m_pntDayltgRefPnts[idx].set<1>( (dRefPtY + (0.25 * sin( dPerpWinAngle ))) );
-		if (boost::geometry::within( m_pntDayltgRefPnts[idx], m_pParentSpace->m_polySpace ))
+		m_pntDayltgRefPnts[idx].set<0>( (dRefPtX + (0.25 * cos( m_dAdjRefPtWinAngle ))) );
+		m_pntDayltgRefPnts[idx].set<1>( (dRefPtY + (0.25 * sin( m_dAdjRefPtWinAngle ))) );
+		if (boost::geometry::within( m_pntDayltgRefPnts[idx], m_pParentSpace->m_polySpace ) &&
+			 (idx==0 || !PointInPrimSideDaylitArea( m_pntDayltgRefPnts[idx], pSpcDLAs )))	// SAC 11/1/16
 			bRetVal = true;
 		else
 		{	BEMPoint ptOrigDaylitAreaCenter;
@@ -1112,9 +1126,10 @@ bool BEMDaylitArea::AdjustReferencePoint( int idx, double dPerpWinAngle )
 					dMaxDistFromGlz = boost::geometry::distance( p, m_ptGlazingCentroid );
 			}	}
 			if (dMaxDistFromGlz > 0.3)
-			{	m_pntDayltgRefPnts[idx].set<0>( (boost::geometry::get<0>( ptNewRefPt ) + (0.25 * cos( dPerpWinAngle ))) );
-				m_pntDayltgRefPnts[idx].set<1>( (boost::geometry::get<1>( ptNewRefPt ) + (0.25 * sin( dPerpWinAngle ))) );
-				if (boost::geometry::within( m_pntDayltgRefPnts[idx], m_pParentSpace->m_polySpace ))
+			{	m_pntDayltgRefPnts[idx].set<0>( (boost::geometry::get<0>( ptNewRefPt ) + (0.25 * cos( m_dAdjRefPtWinAngle ))) );
+				m_pntDayltgRefPnts[idx].set<1>( (boost::geometry::get<1>( ptNewRefPt ) + (0.25 * sin( m_dAdjRefPtWinAngle ))) );
+				if (boost::geometry::within( m_pntDayltgRefPnts[idx], m_pParentSpace->m_polySpace ) &&
+					 (idx==0 || !PointInPrimSideDaylitArea( m_pntDayltgRefPnts[idx], pSpcDLAs )))	// SAC 11/1/16
 					bRetVal = true;
 			}
 
@@ -1133,13 +1148,14 @@ bool BEMDaylitArea::AdjustReferencePoint( int idx, double dPerpWinAngle )
 						ptTemp.set<0>( (boost::geometry::get<0>( *it ) + (0.5 * cos( dAngVertToCtr ))) );  // move point 6" toward centroid of daylit area
 						ptTemp.set<1>( (boost::geometry::get<1>( *it ) + (0.5 * sin( dAngVertToCtr ))) );
 						dTemp = boost::geometry::distance( ptTemp, m_ptGlazingCentroid );
-						if (dTemp > dFurthestDist && boost::geometry::within( ptTemp, m_pParentSpace->m_polySpace ))
+						if (dTemp > dFurthestDist && boost::geometry::within( ptTemp, m_pParentSpace->m_polySpace ) &&
+							 (idx==0 || !PointInPrimSideDaylitArea( ptTemp, pSpcDLAs )))	// SAC 11/1/16
 						{	dFurthestDist = dTemp;
 							m_pntDayltgRefPnts[idx] = ptTemp;
 							bRetVal = true;
 				}	}	}
 			}
-			assert( bRetVal );		// other re-positioning required ??
+			assert( (bRetVal || idx > 0) );		// other re-positioning required ??   - this CAN happen for an individual glazing Sec daylit area that overlaps w/ Prim daylit area of other glazings
 		}
 
 
@@ -1178,6 +1194,21 @@ bool BEMDaylitArea::AdjustReferencePoint( int idx, double dPerpWinAngle )
 	}
 
 	return bRetVal;
+}
+
+bool BEMDaylitArea::AdjustSecondarySideDaylitRefPnt( BEMSpaceDaylitArea& spcDLAs )		// SAC 11/1/16
+{
+		// SAC 11/1/16 - moved following code into AdjustSecondarySideDaylitRefPnt() in order to ensure SecSideDaylitRefPnts are NOT located inside Primary side daylit areas (of other glazings)
+					if (boost::geometry::within( m_pntDayltgRefPnts[1], m_pParentSpace->m_polySpace ) &&
+						 !PointInPrimSideDaylitArea( m_pntDayltgRefPnts[1], &spcDLAs ))	// SAC 11/1/16
+					{	m_bDLRefPntValid[1]		= true;					// whether or not the dayltg ref point was successfully positioned
+						m_bDLRefPntInStdLoc[1]	= true;					// whether or not the dayltg ref point is positioned in its generic location or required special re-positioning
+					}
+					else
+						AdjustReferencePoint( 1, &spcDLAs );
+					if (m_bDLRefPntValid[1])
+						m_dRefPntToSpcCenterDist[1] = boost::geometry::distance( m_pntDayltgRefPnts[1], m_pParentSpace->m_ptSpcCenter );
+	return m_bDLRefPntValid[1];
 }
 
 bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
@@ -1326,9 +1357,9 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 				boost::geometry::clear( m_pntDayltgRefPnts[1] );
 			}
 			else
-			{	double dAdjRefPtWinAngle = dWinAnglePerp1;
+			{	m_dAdjRefPtWinAngle = dWinAnglePerp1;
 				if (dInOutMult > 0)
-					dAdjRefPtWinAngle += (sdPi * (dAdjRefPtWinAngle >= sdPi ? -1.0 : 1.0));
+					m_dAdjRefPtWinAngle += (sdPi * (m_dAdjRefPtWinAngle >= sdPi ? -1.0 : 1.0));
 			//	daylighting reference points (one for each m_polyFinalDaylit[])
 		//		BEMPoint	ptRef1, ptRef2;
 		//		ptRef1.set<0>( (dPrimX3 + dPrimX4) / 2.0 );
@@ -1351,7 +1382,7 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 					m_bDLRefPntInStdLoc[0]	= true;					// whether or not the dayltg ref point is positioned in its generic location or required special re-positioning
 				}
 				else
-					AdjustReferencePoint( 0, dAdjRefPtWinAngle );
+					AdjustReferencePoint( 0 );
 				if (m_bDLRefPntValid[0])
 					m_dRefPntToSpcCenterDist[0] = boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter );
 
@@ -1441,14 +1472,16 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 		//			m_bDLRefPntInStdLoc[1]	= (iLRPRet != 3);							// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
 					m_pntDayltgRefPnts[1].set<0>( (dSecX1 + dSecX2) / 2.0 );
 					m_pntDayltgRefPnts[1].set<1>( (dSecY1 + dSecY2) / 2.0 );
-					if (boost::geometry::within( m_pntDayltgRefPnts[1], m_pParentSpace->m_polySpace ))
-					{	m_bDLRefPntValid[1]		= true;					// whether or not the dayltg ref point was successfully positioned
-						m_bDLRefPntInStdLoc[1]	= true;					// whether or not the dayltg ref point is positioned in its generic location or required special re-positioning
-					}
-					else
-						AdjustReferencePoint( 1, dAdjRefPtWinAngle );
-					if (m_bDLRefPntValid[1])
-						m_dRefPntToSpcCenterDist[1] = boost::geometry::distance( m_pntDayltgRefPnts[1], m_pParentSpace->m_ptSpcCenter );
+
+		// SAC 11/1/16 - moved following code into AdjustSecondarySideDaylitRefPnt() in order to ensure SecSideDaylitRefPnts are NOT located inside Primary side daylit areas (of other glazings)
+		//			if (boost::geometry::within( m_pntDayltgRefPnts[1], m_pParentSpace->m_polySpace ))
+		//			{	m_bDLRefPntValid[1]		= true;					// whether or not the dayltg ref point was successfully positioned
+		//				m_bDLRefPntInStdLoc[1]	= true;					// whether or not the dayltg ref point is positioned in its generic location or required special re-positioning
+		//			}
+		//			else
+		//				AdjustReferencePoint( 1 );
+		//			if (m_bDLRefPntValid[1])
+		//				m_dRefPntToSpcCenterDist[1] = boost::geometry::distance( m_pntDayltgRefPnts[1], m_pParentSpace->m_ptSpcCenter );
 				}
 
 				bRetVal = true;
@@ -2105,9 +2138,7 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 						if (iSkyltObjIdx >= 0)
 						{	BEMDaylitArea skyltDaylitArea( &spcDLAs, pGeomIDs, pGeomIDs->m_iOID_Skylt, iSkyltObjIdx, dSpcAvgZ );
 							if (skyltDaylitArea.IsValid())
-							{	spcDLAs.m_daylitAreas.push_back( skyltDaylitArea );
-
-							}	
+								spcDLAs.m_daylitAreas.push_back( skyltDaylitArea );
 					}	}
 			}	}
 		}
@@ -2124,7 +2155,15 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 #endif
 
 		if (dDaylitArea >= 0 && spcDLAs.m_daylitAreas.size() > 0)
-		{	if (spcDLAs.m_daylitAreas.size() > 1)
+		{
+		// Mods to ensure secondary side daylit area reference points are not inside any primary sidelit areas (of different glazings)
+			for (std::vector<BEMDaylitArea>::iterator chk1=spcDLAs.m_daylitAreas.begin(); chk1!=spcDLAs.m_daylitAreas.end(); ++chk1)
+			{	BEMDaylitArea* pChk1 = &(*chk1);
+				if (pChk1 && pChk1->IsSidelitArea() && pChk1->m_dFinalArea[1] >= 0.1)
+					pChk1->AdjustSecondarySideDaylitRefPnt( spcDLAs );
+			}
+
+			if (spcDLAs.m_daylitAreas.size() > 1)
 			{	QString sDbgDayltTemp, sDbgSVGPathFile;
 				sDbgDayltTemp = BEMPX_GetLogFilename( false /*bCSVLog*/ );
 				sDbgDayltTemp = sDbgDayltTemp.left( sDbgDayltTemp.lastIndexOf('.') );
