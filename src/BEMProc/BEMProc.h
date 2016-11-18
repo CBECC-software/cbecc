@@ -229,7 +229,8 @@ bool BEMPROC_API __cdecl BEMPX_WriteLogFile(   QString& output, const char* psNe
                                                           bool bBlankFile=false, BOOL bSupressAllMessageBoxes=FALSE,    // SAC 4/27/03 - added to prevent MessageBoxes during processing
 																			 bool bAllowCopyOfPreviousLog=true,     // SAC 9/18/12 - new arg to allow/prevent log file copying
 																			 const char** ppCSVColumnLabels=NULL );   // SAC 12/19/12 - new array of const char* ptrs (ending in a NULL) to facilitate project-based CSV analysis result archival
-const char*      __cdecl BEMPX_GetLogFilename( bool bCSVLog=false );  // SAC 12/19/12
+QString BEMPROC_API __cdecl BEMPX_GetLogFilename( bool bCSVLog=false );  // SAC 12/19/12
+//const char*      __cdecl BEMPX_GetLogFilename( bool bCSVLog=false );  // SAC 12/19/12
 
 void BEMPROC_API __cdecl BEMPX_OpenLogFile( const char* pszLogPathFile, bool bBlankFile=false );		// SAC 5/19/14
 void BEMPROC_API __cdecl BEMPX_RefreshLogFile( bool bReOpenLog=true );	// SAC 5/19/14

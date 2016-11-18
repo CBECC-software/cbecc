@@ -156,21 +156,21 @@ int main(int argc, char *argv[])
 	bemCmplr.SetRuleBin(      "Data/Rulesets/CA Res 2016.bin" );
 	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
 #else		// CBECC-Com
-//// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
-//	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
-//	bemCmplr.SetBEMEnumsText( "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
-//	bemCmplr.SetBEMBaseBin(   "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-//	bemCmplr.SetRuleText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
-//	bemCmplr.SetRuleBin(      "../Com/Rules/CEC 2016 NonRes.bin" );
-//	bemCmplr.SetRuleLog(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
+// to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
+	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../Com/Rules/src/CEC 2013 NonRes BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "../Com/Rules/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../Com/Rules/src/Rules/CEC 2016 NonRes.txt" );
+	bemCmplr.SetRuleBin(      "../Com/Rules/CEC 2016 NonRes.bin" );
+	bemCmplr.SetRuleLog(      "../Com/Rules/src/Rules/Rules-2016 Log.out" );
 
-// to compile rules relative to SVN exe->rule source locations
-	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
-	bemCmplr.SetBEMBaseBin(   "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
-	bemCmplr.SetRuleBin(      "Data-os/Rulesets/CEC 2016 NonRes.bin" );
-	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
+//// to compile rules relative to SVN exe->rule source locations
+//	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMBase.txt" );
+//	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CEC 2013 Nonres/CEC 2013 NonRes BEMEnums.txt" );
+//	bemCmplr.SetBEMBaseBin(   "Data-os/Rulesets/CEC 2016 NonRes/CEC 2016 NonRes BEMBase.bin" );
+//	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/CEC 2016 NonRes.txt" );
+//	bemCmplr.SetRuleBin(      "Data-os/Rulesets/CEC 2016 NonRes.bin" );
+//	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CEC 2013 Nonres/Rules/Rules-2016 Log.out" );
 #endif
 
 // now apply command line path/file arguments

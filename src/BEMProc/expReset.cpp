@@ -353,6 +353,28 @@ bool RuleSet::readResetsText( QString sFileName, QFile& errorFile )
 
 /////////////////////////////////////////////////////////////////////////////
 
+void RuleSet::addReset( std::vector<long>& modDBIDs, std::vector<long>& resetDBIDs )	// SAC 11/3/16
+{
+	try
+	{	BEMResetData* pReset = new BEMResetData;
+		if (pReset)
+		{	pReset->m_modDBIDs   = modDBIDs;
+			pReset->m_resetDBIDs = resetDBIDs;
+			addReset( pReset );
+		}
+	}
+//	catch (std::exception& e)
+//	{	assert( false );
+//		//QString sErrMsg = QString( "Error creating BEMResetData - cause: %1\n\n" ).arg( e.what() );
+//		//errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+//	}
+ 	catch (...)
+  	{	assert( false );
+		//QString sErrMsg = QString( "Error creating BEMResetData\n\n" );
+		//errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+  	}
+}
+
 void RuleSet::postResetsToDatabase()
 {
 //	// First reset all existing BEMProc reset data

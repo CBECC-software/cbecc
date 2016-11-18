@@ -761,6 +761,7 @@ public:
 	void  clearSymbols();
 
 	void  addReset(BEMResetData* pR)						{	m_resets.push_back(pR);  return;  }
+	void	addReset( std::vector<long>& modDBIDs, std::vector<long>& resetDBIDs );
 	int   getNumResets()										{	return (int) m_resets.size();  }
 	void  postResetsToDatabase();
 	bool  readResetsText( QString sFileName, QFile& errorFile );

@@ -434,6 +434,8 @@
 #define IDM_TOOLS_T24STDRPT             33022
 #define IDM_TOOLS_VIEWT24STDRPT         33023
 #define IDM_EXPORTHPXML_SGL             33024
+#define IDM_TOOLS_VIEWCSEERR            33025
+#define IDM_TOOLS_VIEWCSERPT            33026
 
 // Next default values for new objects
 // 
@@ -441,7 +443,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        322
-#define _APS_NEXT_COMMAND_VALUE         33025
+#define _APS_NEXT_COMMAND_VALUE         33027
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

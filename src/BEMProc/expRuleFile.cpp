@@ -81,7 +81,8 @@
 #define  DMRuleReserved_SecurityKeys	20		// SAC 9/14/13
 #define  DMRuleReserved_PrevNames		21		// SAC 8/6/15
 #define  DMRuleReserved_Report			22
-#define  DMRuleReserved_MAX_NUM			22
+#define  DMRuleReserved_Resets			23		// SAC 11/2/16
+#define  DMRuleReserved_MAX_NUM			23
 
 static bool SetAllDataForDMRuleReserved( int iDMRuleRsrvd )		// SAC 8/8/13 - added to enable variation in bSetAllData rulelist property for "reserved" lists
 {	return  ( (iDMRuleRsrvd == DMRuleReserved_Default) ? false : true );
@@ -109,7 +110,8 @@ const char* pszDMRuleReserved[] = {	"DATATYPE",
 												"FILEHASHES",
 												"SECURITYKEYS",
 												"PREVIOUSNAMES",
-												"REPORT" };
+												"REPORT",
+												"RESETS" };
 
 const char* pszDMRuleDataTypes[] = {	"String",
 													"Integer",
@@ -948,7 +950,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 																									{	// nothing here
 																									}
 																									else
-																									{	sErr = QString( "\n\tERROR:  Unrecognized NotInput type '%1' found on line: %2  (expecting 'AllowUIReset', 'IgnoreUserInput' or 'ErrorIfInput')\n" ).arg( sNotInpType, iNILineCnt );
+																									{	sErr = QString( "\n\tERROR:  Unrecognized NotInput type '%1' found on line: %2  (expecting 'AllowUIReset', 'IgnoreUserInput' or 'ErrorIfInput')\n" ).arg( sNotInpType, QString::number(iNILineCnt) );
 																										errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
 																										bRetVal = FALSE;
 																									}
@@ -1011,6 +1013,58 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 																						pNewRuleProp->setPropType( BEMP_Sym );
 																					}
 																				}	break;
+
+											case DMRuleReserved_Resets :		// token == "RESETS")  - SAC 11/3/16
+																				{	bool bResetForward = true;
+																					std::vector<long> locDBID, listDBIDs;
+																					locDBID.push_back( lDatabaseID[iNumIndirections-1] );
+																					int iCompID = BEMPX_GetClassID( lDatabaseID[iNumIndirections-1] );			assert( iCompID > 0 );
+																					int iResetLineCnt = file.GetLineCount();
+																					token2 = file.ReadToNextToken( saReservedStrs, FALSE /*bReadPastEOL*/ );
+																					while (!token2.isEmpty())
+																					{
+																						sErr.clear();
+																						if (!token2.compare("ResetTheFollowingWhenThisIsModified", Qt::CaseInsensitive) ||
+																							 !token2.compare("ResetThisWhenTheFollowingIsModified", Qt::CaseInsensitive))
+																						{	if (listDBIDs.size() > 0)
+																							{	if (bResetForward)
+																									ruleSet.addReset( locDBID, listDBIDs );
+																								else
+																									ruleSet.addReset( listDBIDs, locDBID );
+																								listDBIDs.clear();
+																							}
+																							bResetForward = (!token2.compare("ResetTheFollowingWhenThisIsModified", Qt::CaseInsensitive));
+																						}
+																						else
+																						{	int iColon = token2.indexOf( QChar(':') );
+																							long lDBID = BEMPX_GetDatabaseID( token2, (iColon > 0 ? 0 : iCompID) );		assert( lDBID > 0 );
+																							assert( (iColon < 1 || iCompID == BEMPX_GetClassID( lDBID )) );
+																							if (lDBID < 1)
+																								sErr = QString( "\n\tERROR:  Unrecognized RESETS property '%1' found on line: %2\n" ).arg( token2, QString::number(iResetLineCnt) );
+																							else if (iColon > 0 && iCompID != BEMPX_GetClassID( lDBID ))
+																							{	BEMClass* pCls = BEMPX_GetClass( iCompID, iError );
+																								sErr = QString( "\n\tERROR:  Invalid RESETS component type '%1' (expecting %2 property) found on line: %3\n" ).arg(
+																														token2, (pCls ? pCls->getShortName() : "<unknown>"), QString::number(iResetLineCnt) );
+																							}
+																							else
+																								listDBIDs.push_back( lDBID );
+																						}
+																						if (!sErr.isEmpty())
+																						{	errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+																							bRetVal = FALSE;
+																						}
+																						iResetLineCnt = file.GetLineCount();
+																						token2 = file.ReadToNextToken( saReservedStrs, FALSE /*bReadPastEOL*/ );
+																					}
+																					if (listDBIDs.size() > 0)
+																					{	if (bResetForward)
+																							ruleSet.addReset( locDBID, listDBIDs );
+																						else
+																							ruleSet.addReset( listDBIDs, locDBID );
+																						listDBIDs.clear();
+																					}
+																				}	break;
+
 											case DMRuleReserved_PrevNames	:	// token == "PREVIOUSNAMES")  - SAC 8/6/15
 																				{	token2 = file.ReadToNextToken( saReservedStrs );
 																					if (pNewRuleProp)

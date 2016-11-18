@@ -295,6 +295,8 @@ BEGIN
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
+        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
+        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
         MENUITEM "&Check Building Database",    IDM_CHECKDBASE
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
 //        MENUITEM SEPARATOR
@@ -374,6 +376,8 @@ BEGIN
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
+        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
+        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
         MENUITEM "&Check Building Database",    IDM_CHECKDBASE
         MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
 //        MENUITEM SEPARATOR
@@ -665,8 +669,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2016,301,0,879		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
- PRODUCTVERSION 2016,301,0,879	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
+ FILEVERSION 2016,301,0,882		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
+ PRODUCTVERSION 2016,301,0,882	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -684,7 +688,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "FileVersion", "2016.3-alpha (879)\0"
+            VALUE "FileVersion", "2016.3-alpha (882)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2016, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
@@ -692,7 +696,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2016)\0"
             VALUE "ProductVersion", "2016.3-alpha\0"
-            VALUE "SpecialBuild", "build 879\0"
+            VALUE "SpecialBuild", "build 882\0"
         END
     END
     BLOCK "VarFileInfo"

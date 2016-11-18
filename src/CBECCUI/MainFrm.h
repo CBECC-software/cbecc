@@ -194,6 +194,10 @@ protected:
 	afx_msg void OnToolsReviewResults();
 	afx_msg void OnUpdateToolsUMLHViolations(CCmdUI* pCmdUI);
 	afx_msg void OnToolsUMLHViolations();
+	afx_msg void OnUpdateToolsViewCSEErrors(CCmdUI* pCmdUI);
+	afx_msg void OnToolsViewCSEErrors();
+	afx_msg void OnUpdateToolsViewCSEReports(CCmdUI* pCmdUI);
+	afx_msg void OnToolsViewCSEReports();
 	afx_msg void OnUpdateToolsViewT24ComplianceReport(CCmdUI* pCmdUI);
 	afx_msg void OnToolsViewT24ComplianceReport();
 	afx_msg void OnUpdateToolsViewT24StandardModelReport(CCmdUI* pCmdUI);
@@ -520,7 +524,8 @@ protected:
 	BOOL GetLogPathFile( CString& sLPF );
 	BOOL LogFileExists();
 	void PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,
-										CString sBtn3File, CString sBtn3Label, CString sAllLabel );
+										CString sBtn3File, CString sBtn3Label, CString sBtn4File, CString sBtn4Label,
+										CString sAllLabel, UINT uiIcon = MB_DEFBUTTON1 | MB_ICONQUESTION );
 
 	DECLARE_MESSAGE_MAP()
 };

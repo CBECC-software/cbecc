@@ -1607,11 +1607,13 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 		case BF_MinChildC :    // SAC 10/18/14
 		case BF_ListRevRef   :  // SAC 1/26/15 - ListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_ListRevRefIf :  // SAC 1/26/15 - ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+      case BF_CompIdx      :  // SAC 11/14/16 - moved here since "ComponentIndex" can now include an object reference property argument
+      case BF_AddCSERptCol :  // SAC 11/14/16 - added "AddCSEReportCol" w/ second argument that may be object cseReportCol reference property
          {
             int iCompType = 0;  // SAC 1/4/01 - added to facilitate parsing of new BF_CountNoRefs func
             if (crntFunc == BF_CountNoRefs)
                iCompType = iCompID;
-            else if (crntFunc == BF_BitMatchCmp || crntFunc == BF_BitMatchCnt || crntFunc == BF_SumToArray)  // SAC 4/2/02  // SAC 7/20/06
+            else if (crntFunc == BF_BitMatchCmp || crntFunc == BF_BitMatchCnt || crntFunc == BF_SumToArray || crntFunc == BF_CompIdx)  // SAC 4/2/02  // SAC 7/20/06  // SAC 11/15/16
             {
                if (temp.indexOf(':') < 0)
                   iCompType = iCompID;  // only set iCompID when no component type is specified (enables both local and referenced properties)
@@ -1976,7 +1978,6 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_SplitPath : // SAC 11/5/04 - 1 string & 1 integer arguments => should never get here
          break;
 
-      case BF_CompIdx  : // SAC 2/27/01 - "ComponentIndex", 0 arguments => should never get here
       case BF_ChildIdx : // SAC 2/27/01 - "ChildIndex",     0 (or 1 integer) arguments => should never get here
          break;
 
@@ -2111,6 +2112,7 @@ static int    CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpEr
 static int    CreateDwellUnitHVACSysObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error );		// SAC 6/27/14
 static int    CreateDwellUnitRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error );		// SAC 11/15/14
 static int    CreateDwellUnitDHWHeaters( QString& sErrMsg, int iDUDHWObjIdx, BEM_ObjType eDUDHWObjType, const QString& sDUDHWName, ExpEvalStruct* pEval, ExpError* error );	// SAC 5/30/16
+static int    AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error );		// SAC 11/14/16
 
 static long YrMoDaToSerial( int iYr, int iMo, int iDa );     // based on CalUtils -> Serial MakeSerial( int year, int month, int date, BOOL calcLeap );
 static int SerialDateToDayOfMonth( long lSerial );           // based on CalUtils -> int Date(    Serial serialDate, BOOL calcLeap );   // Date of month.
@@ -2958,17 +2960,18 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_Cr8IAQRpt :   // SAC 3/26/14 - added CreateIAQRptObjects()
    	case BF_Cr8DUHVAC :   // SAC 6/27/14 - added CreateDwellUnitHVACSysObjects()
    	case BF_Cr8DURpt  :   // SAC 11/15/14 - added CreateDwellUnitRptObjects()
+      case BF_AddCSERptCol  :  // SAC 11/14/16 - added "AddCSEReportCol" w/ second argument that may be object cseReportCol reference property
 									{	ExpNode* pNode = NULL;
 										QString sErrMsg;
-										int iNumObjsCreated = (	 op == BF_Cr8SCSysRpt ? CreateSCSysRptObjects(				sErrMsg, pEval, error ) :
-																		(op == BF_Cr8DHWRpt   ? CreateDHWRptObjects( 				sErrMsg, pEval, error ) : 
-																		(op == BF_Cr8IAQRpt   ? CreateIAQRptObjects( 				sErrMsg, pEval, error ) :
-																		(op == BF_Cr8DUHVAC   ? CreateDwellUnitHVACSysObjects(	sErrMsg, pEval, error ) :
-																										CreateDwellUnitRptObjects(			sErrMsg, pEval, error ) ))));
+										int iNumObjsCreated = (	 op == BF_Cr8SCSysRpt  ? CreateSCSysRptObjects(				sErrMsg, pEval, error ) :
+																		(op == BF_Cr8DHWRpt    ? CreateDHWRptObjects( 				sErrMsg, pEval, error ) : 
+																		(op == BF_Cr8IAQRpt    ? CreateIAQRptObjects( 				sErrMsg, pEval, error ) :
+																		(op == BF_Cr8DUHVAC    ? CreateDwellUnitHVACSysObjects(	sErrMsg, pEval, error ) :
+																		(op == BF_AddCSERptCol ? AddCSEReportColumn( nArgs, stack, sErrMsg, pEval, error ) :
+																										 CreateDwellUnitRptObjects(		sErrMsg, pEval, error ) )))));
 										if (pEval->bVerboseOutput && !sErrMsg.isEmpty())
 											//BEMMessageBox( sErrMsg, NULL, 3 /*error*/ );
    									   BEMPX_WriteLogFile( sErrMsg );
-
 										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
 										if (sErrMsg.isEmpty())
 										{	pNode->type = EXP_Value;
@@ -3875,9 +3878,41 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            break; }
 
       case BF_CompIdx  : { // "ComponentIndex" - SAC 2/27/01
+                           int i0ObjIdx = pEval->iPrimObjIdx;
+                           if (nArgs > 1)
+                           {  i0ObjIdx = -1;
+                           	ExpSetErr( error, EXP_RuleProc, "Invalid number of ComponentIndex() arguments (must be 0-1)" );
+                           }
+                           else if (nArgs == 1)  // SAC 11/14/16 - revisions to accommodate a single object reference property
+                           {
+	                           ExpNode* pNode = ExpxStackPop( stack );
+	                           if (pNode->type != EXP_Value || pNode->info.fValue < BEM_COMP_MULT)
+	                           {  i0ObjIdx = -1;
+                           	   ExpSetErr( error, EXP_RuleProc, "Invalid ComponentIndex() argument type (expecting DBID)" );
+                           	}
+	                           else
+	                           {	int iCIObjIdx = -1;		BEM_ObjType eCIObjTyp = BEMO_User;		int iCISpVal, iCIErr;
+	                           	int iCIClsID = BEMPX_GetClassID( (long) pNode->info.fValue );
+	                           	if (iCIClsID == BEMPX_GetClassID( pEval->lPrimDBID ))
+	                           	{	iCIObjIdx = pEval->iPrimObjIdx;		eCIObjTyp = pEval->ePrimObjType;
+	                           	}
+	                           	else if (iCIClsID == BEMPX_GetClassID( pEval->lLocDBID ))
+	                           	{	iCIObjIdx = pEval->iLocObjIdx;		eCIObjTyp = pEval->eLocObjType;
+	                           	}
+											BEMObject* pCIObj = BEMPX_GetObjectPtr( (long) pNode->info.fValue, iCISpVal, iCIErr, iCIObjIdx, eCIObjTyp );
+											if (pCIObj == NULL)
+		                           {  i0ObjIdx = -1;
+   	                        	   ExpSetErr( error, EXP_RuleProc, "Unable to retrieve object referenced by ComponentIndex() argument" );
+      	                     	}
+      	                     	else
+      	                     		i0ObjIdx = BEMPX_GetObjectIndex( pCIObj->getClass(), pCIObj );
+	                           }
+	                           // delete argument node
+	                           ExpxNodeDelete( pNode );
+                           }
                            ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
                            pNode->type = EXP_Value;
-                           pNode->info.fValue = (double) pEval->iPrimObjIdx + 1;
+                           pNode->info.fValue = (double) i0ObjIdx + 1;
                            ExpxStackPush( stack, pNode );
                            break; }
 
@@ -5597,6 +5632,258 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
 
    // Push result node onto stack
    ExpxStackPush( stack, pNode );
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+// SAC 11/14/16 - first argument string indicating special processing 
+int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error )
+{
+	int iRetVal = 0;
+	ExpNode* pNode2 = ExpxStackPop( stack );				assert( pNode2 );
+	ExpNode* pNode1 = ExpxStackPop( stack );				assert( pNode1 );
+	QString sProcOption, sRptColData;
+	long lDBID_RptColRef=0;
+	if (pNode1->type != EXP_String)
+		sErrMsg = QString( "Invalid AddCSEReportColumn() argument #1 (processing option) - should be character string." );
+	else
+	{	sProcOption = (char*) pNode1->info.pValue;
+		if (pNode2->type == EXP_Value)
+			lDBID_RptColRef = (long) pNode2->info.fValue;	// DBID of cseREPORTCOL property that will store a reference to the adjacent object
+		else
+			sRptColData = (char*) pNode2->info.pValue;
+	}
+	ExpxNodeDelete( pNode1 );
+	ExpxNodeDelete( pNode2 );
+
+	long lDBID_RptColVal = BEMPX_GetDatabaseID( "cseREPORTCOL:colVal_x" );		assert( lDBID_RptColVal > BEM_COMP_MULT );
+	if (lDBID_RptColVal < BEM_COMP_MULT)
+		sErrMsg = QString( "Database ID of cseREPORTCOL:colVal_x invalid." );
+
+	BEMObject* pRptColObj;
+	int iError, iSpecVal, iRptColClass = BEMPX_GetClassID( lDBID_RptColVal );
+	if (!sErrMsg.isEmpty())
+	{	// do nothing
+	}
+	else if (!sProcOption.compare( "none", Qt::CaseInsensitive ))
+	{	QString sRColName = QString( "rcol %1" ).arg( BEMPX_GetNumObjects( iRptColClass )+1 );
+		pRptColObj = BEMPX_CreateObject( iRptColClass, sRColName.toLocal8Bit().constData(), NULL /*parent*/ );
+		if (pRptColObj == NULL)
+			sErrMsg = QString( "Unable to create cseREPORTCOL object." );
+		else
+		{	iRetVal++;
+			if (sRptColData.isEmpty() || BEMPX_SetBEMData( lDBID_RptColVal, BEMP_QStr, (void*) &sRptColData, BEMO_User, -1 /*iOccur*/ ) < 0)
+				sErrMsg = QString( "Unable to set cseREPORTCOL:colVal_x = '%1'." ).arg( sRptColData );
+		}
+	}
+	else if (!sProcOption.compare( "AdjacentAttics",  Qt::CaseInsensitive ))
+	{	// only connection between Zone and Attic can be via CeilingBelowAttic or IntWall objects - and both must be children of the Zone
+		int iZnClsID    = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
+		int iAtticClsID = BEMPX_GetDBComponentID( "Attic" );						assert( iAtticClsID > 0 );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentAttics' option for rule where primary object type not 'Zone'." );
+		else if (lDBID_RptColRef < BEM_COMP_MULT)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentAttics' option due to invalid attic reference database ID (2nd argument)." );
+		else if (BEMPX_GetNumObjects( iAtticClsID ) < 1)
+		{	// do nothing - no need to do any processing here if no Attic objects exist
+		}
+		else
+		{	std::vector<int> ivAtticIdxs;
+			int iChldClsID[]     = {  BEMPX_GetDBComponentID( "CeilingBelowAttic" ),      BEMPX_GetDBComponentID( "IntWall" )  };					assert( iChldClsID[   0] > 0 && iChldClsID[   1] > 0 );
+			long lChldAreaDBID[] = {  BEMPX_GetDatabaseID( "Area"     , iChldClsID[0] ),  BEMPX_GetDatabaseID( "Area"   , iChldClsID[1] )  };	assert( lChldAreaDBID[0] > 0 && lChldAreaDBID[1] > 0 );
+			long lChldAdjDBID[]  = {  BEMPX_GetDatabaseID( "AtticZone", iChldClsID[0] ),  BEMPX_GetDatabaseID( "Outside", iChldClsID[1] )  };	assert( lChldAdjDBID[ 0] > 0 && lChldAdjDBID[ 1] > 0 );
+			double dSurfArea;
+			for (int iChldTyp=0; (sErrMsg.isEmpty() && iChldTyp < 2); iChldTyp++)
+			{	int iNumChldren = (int) BEMPX_GetNumChildren( iZnClsID, pEval->iPrimObjIdx, BEMO_User, iChldClsID[iChldTyp] );
+				BEM_ObjType eChildObjType = BEMO_User;
+				for (int iChldIdx=0; (sErrMsg.isEmpty() && iChldIdx < iNumChldren); iChldIdx++)
+				{	int iChldObjIdx = BEMPX_GetChildObjectIndex( iZnClsID, iChldClsID[iChldTyp], iError,
+                                                            eChildObjType, iChldIdx+1, pEval->iPrimObjIdx );		assert( iChldObjIdx >= 0 );
+            	if (iChldObjIdx >= 0 && BEMPX_GetFloat( lChldAreaDBID[iChldTyp], dSurfArea, 0, -1, iChldObjIdx ) &&
+            			dSurfArea > 0.1)
+            	{	// we have a Zone child surface w/ non-zero Area that MAY be adjacent to an Attic
+            		bool bChkSurface = true;
+            		if (iChldTyp == 1)
+            		{	// ADDITIONAL checking needed for IntWall objects, to confirm that this surface is to be simulated between two modeled zones
+							long lIsPartySurf, lOtherSideMod;
+							if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "IsPartySurface"  , iChldClsID[iChldTyp] ), lIsPartySurf , 0, -1,	iChldObjIdx ) && lIsPartySurf  < 0.5) ||
+								  (BEMPX_GetInteger( BEMPX_GetDatabaseID( "OtherSideModeled", iChldClsID[iChldTyp] ), lOtherSideMod, 0, -1,	iChldObjIdx ) && lOtherSideMod > 0.5) )
+							{ }	// this surface SHOULD be checked...
+							else
+								bChkSurface = false;
+						}
+						if (bChkSurface)
+						{	BEMObject* pAdjObj = BEMPX_GetObjectPtr( lChldAdjDBID[iChldTyp], iSpecVal, iError, iChldObjIdx );
+							if (pAdjObj && pAdjObj->getClass() && pAdjObj->getClass()->get1BEMClassIdx() == iAtticClsID)
+							{	int iAtticObjIdx = BEMPX_GetObjectIndex( pAdjObj->getClass(), pAdjObj );
+								if (std::find( ivAtticIdxs.begin(), ivAtticIdxs.end(), iAtticObjIdx ) == ivAtticIdxs.end())
+									// this object index NOT yet included in vector of 
+									ivAtticIdxs.push_back( iAtticObjIdx );
+						}	}
+					}
+				}	// end of for each child of type iChldTyp
+			}	// end of for each iChldTyp
+
+			long lAtticCSEZnRefDBID = BEMPX_GetDatabaseID( "CSE_ZONE", iAtticClsID );												assert( lAtticCSEZnRefDBID > 0 );
+			long lAtticNameDBID     = BEMPX_GetDatabaseID( "Name"    , iAtticClsID );												assert( lAtticNameDBID > 0 );
+			for (int iAdjObj=0; (sErrMsg.isEmpty() && iAdjObj < (int) ivAtticIdxs.size()); iAdjObj++)
+			{	QString sAdjZnName = BEMPX_GetString( lAtticCSEZnRefDBID, iSpecVal, iError, ivAtticIdxs[iAdjObj] );		assert( !sAdjZnName.isEmpty() );
+				QString sAtticName = BEMPX_GetString( lAtticNameDBID    , iSpecVal, iError, ivAtticIdxs[iAdjObj] );		assert( !sAtticName.isEmpty() );
+				if (!sAdjZnName.isEmpty() && !sAtticName.isEmpty())
+				{
+				// create and setup cseREPORTCOL object
+					QString sRColName = QString( "rcol %1" ).arg( BEMPX_GetNumObjects( iRptColClass )+1 );
+					pRptColObj = BEMPX_CreateObject( iRptColClass, sRColName.toLocal8Bit().constData(), NULL /*parent*/ );
+					if (pRptColObj == NULL)
+						sErrMsg = QString( "Unable to create cseREPORTCOL object (to report Attic '%1' data)." ).arg( sAdjZnName );
+					else
+					{	iRetVal++;
+						if (BEMPX_SetBEMData( lDBID_RptColRef, BEMP_QStr, (void*) &sAtticName, BEMO_User, -1 /*iOccur*/ ) < 0)
+							sErrMsg = QString( "Unable to set cseREPORTCOL:<AtticObjRef> = '%1' (DBID = %2)." ).arg( sAtticName, QString::number( lDBID_RptColRef ) );
+					}
+			}	}
+		}
+	}
+	else if (!sProcOption.compare( "AdjacentGarages", Qt::CaseInsensitive ))
+	{	// connections between Zone and Garage can be via IntWall, InteriorFloor & InteriorCeiling objects - and most can be children of EITHER the Zone or Garage
+		int iZnClsID = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
+		int iGarageClsID = BEMPX_GetDBComponentID( "Garage" );				assert( iGarageClsID > 0 );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentGarages' option for rule where primary object type not 'Zone'." );
+		else if (lDBID_RptColRef < BEM_COMP_MULT)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentGarages' option due to invalid garage reference database ID (2nd argument)." );
+		else if (BEMPX_GetNumObjects( iGarageClsID ) < 1)
+		{	// do nothing - no need to do any processing here if no Garage objects exist
+		}
+		else
+		{	std::vector<int> ivGarageIdxs;
+			int iParentClsID[]   = {  iZnClsID,  iGarageClsID  };
+			int iChldClsID[]     = {  BEMPX_GetDBComponentID( "IntWall" )            ,  BEMPX_GetDBComponentID( "InteriorFloor" )      ,  BEMPX_GetDBComponentID( "InteriorCeiling" )      };	assert( iChldClsID[   0] > 0 && iChldClsID[   1] > 0 && iChldClsID[   2] > 0 );
+			long lChldAreaDBID[] = {  BEMPX_GetDatabaseID( "Area"   , iChldClsID[0] ),  BEMPX_GetDatabaseID( "Area"   , iChldClsID[1] ),  BEMPX_GetDatabaseID( "Area"   , iChldClsID[2] )  };	assert( lChldAreaDBID[0] > 0 && lChldAreaDBID[1] > 0 && lChldAreaDBID[2] > 0 );
+			long lChldAdjDBID[]  = {  BEMPX_GetDatabaseID( "Outside", iChldClsID[0] ),  BEMPX_GetDatabaseID( "Outside", iChldClsID[1] ),  BEMPX_GetDatabaseID( "Outside", iChldClsID[2] )  };	assert( lChldAdjDBID[ 0] > 0 && lChldAdjDBID[ 1] > 0 && lChldAdjDBID[ 2] > 0 );
+			double dSurfArea;
+			for (int iParTyp=0; (sErrMsg.isEmpty() && iParTyp < 2); iParTyp++)
+			{	int iFirstParObj = (iParTyp==0 ? pEval->iPrimObjIdx : 0 );
+				int iLastParObj  = (iParTyp==0 ? pEval->iPrimObjIdx : BEMPX_GetNumObjects( iGarageClsID )-1 );
+				for (int iParObjIdx = iFirstParObj; (sErrMsg.isEmpty() && iParObjIdx <= iLastParObj); iParObjIdx++)
+				{
+					for (int iChldTyp=0; (sErrMsg.isEmpty() && iChldTyp < 3); iChldTyp++)
+					{	int iNumChldren = (int) BEMPX_GetNumChildren( iParentClsID[iParTyp], iParObjIdx, BEMO_User, iChldClsID[iChldTyp] );
+						BEM_ObjType eChildObjType = BEMO_User;
+						for (int iChldIdx=0; (sErrMsg.isEmpty() && iChldIdx < iNumChldren); iChldIdx++)
+						{	int iChldObjIdx = BEMPX_GetChildObjectIndex( iParentClsID[iParTyp], iChldClsID[iChldTyp], iError,
+		                                                            eChildObjType, iChldIdx+1, iParObjIdx );													assert( iChldObjIdx >= 0 );
+		            	if (iChldObjIdx >= 0 && BEMPX_GetFloat( lChldAreaDBID[iChldTyp], dSurfArea, 0, -1, iChldObjIdx ) && dSurfArea > 0.1)
+		            	{	// we have a child surface w/ non-zero Area that MAY be fall between a Zone & Garage
+		            		bool bChkSurface = true;
+		            		if (iChldTyp >= 0) // check applies to ALL of these child types...
+		            		{	// ADDITIONAL checking needed for IntWall objects, to confirm that this surface is to be simulated between two modeled zones
+									long lIsPartySurf, lOtherSideMod;
+									if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "IsPartySurface"  , iChldClsID[iChldTyp] ), lIsPartySurf , 0, -1,	iChldObjIdx ) && lIsPartySurf  < 0.5) ||
+										  (BEMPX_GetInteger( BEMPX_GetDatabaseID( "OtherSideModeled", iChldClsID[iChldTyp] ), lOtherSideMod, 0, -1,	iChldObjIdx ) && lOtherSideMod > 0.5) )
+									{ }	// this surface SHOULD be checked...
+									else
+										bChkSurface = false;
+								}
+								if (bChkSurface)
+								{	BEMObject* pAdjObj = BEMPX_GetObjectPtr( lChldAdjDBID[iChldTyp], iSpecVal, iError, iChldObjIdx );
+									int iAdjObjIdx = (pAdjObj && pAdjObj->getClass()) ? BEMPX_GetObjectIndex( pAdjObj->getClass(), pAdjObj ) : -1;
+									if (pAdjObj && pAdjObj->getClass() && ( (iParTyp == 0 && pAdjObj->getClass()->get1BEMClassIdx() == iGarageClsID) ||
+																						 (iParTyp == 1 && pAdjObj->getClass()->get1BEMClassIdx() == iGarageClsID &&
+																						                  iAdjObjIdx == pEval->iPrimObjIdx) ))
+									{	int iGarageObjIdx = (iParTyp == 0 ? iAdjObjIdx : iChldObjIdx);
+										if (std::find( ivGarageIdxs.begin(), ivGarageIdxs.end(), iGarageObjIdx ) == ivGarageIdxs.end())
+											// this object index NOT yet included in vector of 
+											ivGarageIdxs.push_back( iGarageObjIdx );
+								}	}
+							}
+						}	// end of for each child of type iChldTyp
+					}	// end of for each iChldTyp
+				}	// end of for each parent object of type iParTyp
+			}	// end of for each iParTyp
+
+			long lGarageCSEZnRefDBID = BEMPX_GetDatabaseID( "CSE_ZONE", iGarageClsID );												assert( lGarageCSEZnRefDBID > 0 );
+			long lGarageNameDBID     = BEMPX_GetDatabaseID( "Name"    , iGarageClsID );												assert( lGarageNameDBID > 0 );
+			for (int iAdjObj=0; (sErrMsg.isEmpty() && iAdjObj < (int) ivGarageIdxs.size()); iAdjObj++)
+			{	QString sAdjZnName  = BEMPX_GetString( lGarageCSEZnRefDBID, iSpecVal, iError, ivGarageIdxs[iAdjObj] );		assert( !sAdjZnName.isEmpty() );
+				QString sGarageName = BEMPX_GetString( lGarageNameDBID    , iSpecVal, iError, ivGarageIdxs[iAdjObj] );		assert( !sGarageName.isEmpty() );
+				if (!sAdjZnName.isEmpty() && !sGarageName.isEmpty())
+				{
+				// create and setup cseREPORTCOL object
+					QString sRColName = QString( "rcol %1" ).arg( BEMPX_GetNumObjects( iRptColClass )+1 );
+					pRptColObj = BEMPX_CreateObject( iRptColClass, sRColName.toLocal8Bit().constData(), NULL /*parent*/ );
+					if (pRptColObj == NULL)
+						sErrMsg = QString( "Unable to create cseREPORTCOL object (to report Garage '%1' data)." ).arg( sAdjZnName );
+					else
+					{	iRetVal++;
+						if (BEMPX_SetBEMData( lDBID_RptColRef, BEMP_QStr, (void*) &sGarageName, BEMO_User, -1 /*iOccur*/ ) < 0)
+							sErrMsg = QString( "Unable to set cseREPORTCOL:<GarageObjRef> = '%1' (DBID = %2)." ).arg( sGarageName, QString::number( lDBID_RptColRef ) );
+					}
+			}	}
+		}
+	}
+	else if (!sProcOption.compare( "AdjacentCrlSpcs", Qt::CaseInsensitive ))
+	{	// only connection between Zone and CrawlSpace can be via FloorOverCrawl objects - and they must be children of the Zone
+		int iZnClsID    = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
+		int iCrlSpcClsID = BEMPX_GetDBComponentID( "CrawlSpace" );						assert( iCrlSpcClsID > 0 );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentCrlSpcs' option for rule where primary object type not 'Zone'." );
+		else if (lDBID_RptColRef < BEM_COMP_MULT)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentCrlSpcs' option due to invalid crawl space reference database ID (2nd argument)." );
+		else if (BEMPX_GetNumObjects( iCrlSpcClsID ) < 1)
+		{	// do nothing - no need to do any processing here if no CrawlSpace objects exist
+		}
+		else
+		{	std::vector<int> ivCrlSpcIdxs;
+			int iChldClsID[]     = {  BEMPX_GetDBComponentID( "FloorOverCrawl" )         };		assert( iChldClsID[   0] > 0 );
+			long lChldAreaDBID[] = {  BEMPX_GetDatabaseID( "Area"     , iChldClsID[0] )  };		assert( lChldAreaDBID[0] > 0 );
+		//	long lChldAdjDBID[]  = {  BEMPX_GetDatabaseID( "AtticZone", iChldClsID[0] )  };		assert( lChldAdjDBID[ 0] > 0 );
+			double dSurfArea;
+			for (int iChldTyp=0; (sErrMsg.isEmpty() && iChldTyp < 1); iChldTyp++)
+			{	int iNumChldren = (int) BEMPX_GetNumChildren( iZnClsID, pEval->iPrimObjIdx, BEMO_User, iChldClsID[iChldTyp] );
+				BEM_ObjType eChildObjType = BEMO_User;
+				for (int iChldIdx=0; (sErrMsg.isEmpty() && iChldIdx < iNumChldren); iChldIdx++)
+				{	int iChldObjIdx = BEMPX_GetChildObjectIndex( iZnClsID, iChldClsID[iChldTyp], iError,
+                                                            eChildObjType, iChldIdx+1, pEval->iPrimObjIdx );				assert( iChldObjIdx >= 0 );
+            	if (iChldObjIdx >= 0 && BEMPX_GetFloat( lChldAreaDBID[iChldTyp], dSurfArea, 0, -1, iChldObjIdx ) && dSurfArea > 0.1)
+            	{	// we have a Zone child surface w/ non-zero Area that MAY be adjacent to a CrawlSpace
+            					assert( BEMPX_GetClassMaxDefinable( iCrlSpcClsID ) < 2 );
+            		int iCrlSpcObjIdx = 0;
+						if (std::find( ivCrlSpcIdxs.begin(), ivCrlSpcIdxs.end(), iCrlSpcObjIdx ) == ivCrlSpcIdxs.end())
+							// this object index NOT yet included in vector of 
+							ivCrlSpcIdxs.push_back( iCrlSpcObjIdx );
+					}
+				}	// end of for each child of type iChldTyp
+			}	// end of for each iChldTyp
+
+			long lCrlSpcCSEZnRefDBID = BEMPX_GetDatabaseID( "CSE_ZONE", iCrlSpcClsID );												assert( lCrlSpcCSEZnRefDBID > 0 );
+			long lCrlSpcNameDBID     = BEMPX_GetDatabaseID( "Name"    , iCrlSpcClsID );												assert( lCrlSpcNameDBID > 0 );
+			for (int iAdjObj=0; (sErrMsg.isEmpty() && iAdjObj < (int) ivCrlSpcIdxs.size()); iAdjObj++)
+			{	QString sAdjZnName  = BEMPX_GetString( lCrlSpcCSEZnRefDBID, iSpecVal, iError, ivCrlSpcIdxs[iAdjObj] );		assert( !sAdjZnName.isEmpty() );
+				QString sCrlSpcName = BEMPX_GetString( lCrlSpcNameDBID    , iSpecVal, iError, ivCrlSpcIdxs[iAdjObj] );		assert( !sCrlSpcName.isEmpty() );
+				if (!sAdjZnName.isEmpty() && !sCrlSpcName.isEmpty())
+				{
+				// create and setup cseREPORTCOL object
+					QString sRColName = QString( "rcol %1" ).arg( BEMPX_GetNumObjects( iRptColClass )+1 );
+					pRptColObj = BEMPX_CreateObject( iRptColClass, sRColName.toLocal8Bit().constData(), NULL /*parent*/ );
+					if (pRptColObj == NULL)
+						sErrMsg = QString( "Unable to create cseREPORTCOL object (to report CrawlSpace '%1' data)." ).arg( sAdjZnName );
+					else
+					{	iRetVal++;
+						if (BEMPX_SetBEMData( lDBID_RptColRef, BEMP_QStr, (void*) &sCrlSpcName, BEMO_User, -1 /*iOccur*/ ) < 0)
+							sErrMsg = QString( "Unable to set cseREPORTCOL:<CrawlSpaceObjRef> = '%1' (DBID = %2)." ).arg( sCrlSpcName, QString::number( lDBID_RptColRef ) );
+					}
+			}	}
+		}
+	}
+	else
+		sErrMsg = QString( "Invalid AddCSEReportColumn() argument #1: processing option '%1' unrecognized." ).arg( sProcOption );
+
+	if (!sErrMsg.isEmpty())
+	{	assert( FALSE );
+		ExpSetErr( error, EXP_RuleProc, sErrMsg );
+	}
+	return iRetVal;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -52,7 +52,7 @@ enum CRM_RunType	// SAC 3/26/15
 class CSERun
 {
 public:
-	enum OutFile { OutFileCSV, OutFileREP, OutFileCOUNT};
+	enum OutFile { OutFileCSV, OutFileREP, OutFileERR, OutFileCOUNT};
 
 public:
 	CSERun();
@@ -100,14 +100,16 @@ class CSERunMgr
 public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
-		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString);
+		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1 );
 	~CSERunMgr();
-	int SetupRun(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
+	int SetupRun(	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	int GetNumRuns() const { return m_iNumRuns; }
 	void DoRuns();
+	bool ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int iOutFileType );		// SAC 11/7/16 - process CSE errors and/or reports into file for user review
+
 private:
 	bool ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstException);
 	void StartRun(CSERun& cseRun);
@@ -134,6 +136,8 @@ private:
 	const char* m_pszUIVersionString;
 	int m_iError;
 	int m_iNumRuns;
+	int m_iSimReportOpt;		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
+	int m_iSimErrorOpt;		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
 	std::vector<CSERun*> m_vCSERun;
 	std::vector<CSERun*> m_vCSEActiveRun;
 

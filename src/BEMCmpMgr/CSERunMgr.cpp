@@ -78,7 +78,9 @@ CSERunMgr::CSERunMgr(
 	bool bBypassCSE,
 	bool bSilent,
 	void* pCompRuleDebugInfo,
-	const char* pszUIVersionString) :
+	const char* pszUIVersionString,
+	int iSimReportOpt,
+	int iSimErrorOpt) :
 
 	m_sCSEexe( sCSEexe),
 	m_sCSEWthr( sCSEWthr),
@@ -98,7 +100,9 @@ CSERunMgr::CSERunMgr(
 	m_bSilent( bSilent),
 	m_pCompRuleDebugInfo( pCompRuleDebugInfo),
 	m_pszUIVersionString( pszUIVersionString),
-	m_iError( 0)
+	m_iError( 0),
+	m_iSimReportOpt(iSimReportOpt),
+	m_iSimErrorOpt(iSimErrorOpt)
 {
 	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
 	if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
@@ -245,10 +249,12 @@ int CSERunMgr::SetupRun(
 		if (iRetVal == 0)
 		{	sOutFiles[CSERun::OutFileCSV] = m_sProcessPath + sProjFileAlone + ".csv";
 			sOutFiles[CSERun::OutFileREP] = m_sProcessPath + sProjFileAlone + ".rep";
+			sOutFiles[CSERun::OutFileERR] = m_sProcessPath + sProjFileAlone + ".err";
 			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileCSV], CSERun::OutFileCSV);
 			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileREP], CSERun::OutFileREP);
+			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileERR], CSERun::OutFileERR);
 
-			static const char* pszOutFileDescs[] = { "CSV output", "REP output" };
+			static const char* pszOutFileDescs[] = { "CSV output", "REP output", "Error output" };
 			int i=0;
 			for (; (i<CSERun::OutFileCOUNT && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
@@ -569,10 +575,12 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 		if (iRetVal == 0)
 		{	sOutFiles[CSERun::OutFileCSV] = m_sProcessPath + sProjFileAlone + ".csv";
 			sOutFiles[CSERun::OutFileREP] = m_sProcessPath + sProjFileAlone + ".rep";
+			sOutFiles[CSERun::OutFileERR] = m_sProcessPath + sProjFileAlone + ".err";
 			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileCSV], CSERun::OutFileCSV);
 			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileREP], CSERun::OutFileREP);
+			pCSERun->SetOutFile( sOutFiles[CSERun::OutFileERR], CSERun::OutFileERR);
 
-			static const char* pszOutFileDescs[] = { "CSV output", "REP output" };
+			static const char* pszOutFileDescs[] = { "CSV output", "REP output", "Error output" };
 			int i=0;
 			for (; (i<CSERun::OutFileCOUNT && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
@@ -880,4 +888,127 @@ QString CSERunMgr::GetVersionInfo()
 		delete[] verData;
 	}
 	return sVersion;
+}
+
+
+static const char pszDashes[] = "--------------------------------------------------------------------------------\n";
+
+// process CSE errors and/or reports into file for user review - SAC 11/7/16
+bool CSERunMgr::ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int iOutFileType )
+{	bool bRetVal = true;
+
+	const CSERun& cseRun = GetRun(iRunIdx);
+	QString sTemp, sCSEOutFile = cseRun.GetOutFile( (CSERun::OutFile) iOutFileType );		assert( !sCSEOutFile.isEmpty() );
+	QStringList slErrors;
+	if (iOutFileType == CSERun::OutFileERR && m_iSimErrorOpt == 1)
+	{	// make sure Errors exist in the error output file BEFORE 
+		QFile errFile( sCSEOutFile );
+		if (errFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+		{
+         char buff[ 300 ];
+         // read each line from the prev file into the log file
+         int iReadRetVal;   bool bSavingErr = false;   int iErrIdx = -1;
+         while (iReadRetVal = errFile.readLine( buff, 299 ) > 0)
+         {	sTemp = buff;
+         	if (bSavingErr)
+         	{	if (sTemp.left(4).compare("----"))
+         			slErrors[iErrIdx] += sTemp;
+        			else  // end of error
+        				bSavingErr = false;
+         	}
+         	else if (!sTemp.right(8).compare("Error: \n"))
+         	{	// start of new error message
+         		int iStartParen = sTemp.lastIndexOf('('), iEndParen = sTemp.lastIndexOf(')');		assert( iEndParen > (iStartParen+1) && iStartParen > 0 );
+         		if (iEndParen > (iStartParen+1) && iStartParen > 0)
+         		{	slErrors.push_back( QString("\nError on line %1: ").arg( sTemp.mid( iStartParen+1, (iEndParen-iStartParen-1) ) ) );
+         			iErrIdx++;
+        				bSavingErr = true;
+         		}
+         	}	
+         }
+         assert( iReadRetVal==0 );	// if -1, then error reading
+			if (iReadRetVal < 0)
+				bRetVal = false;
+//---------------
+// Error: C:\WSF\DEVLIBS\COMPMGR\SRC\BEM-OPEN\BIN\RES\PROJECTS\SAMPLES-2016\1STORYEXAMPLE3-SMATTIC2 - COMP16\1STORYEXAMPLE3-SMATTIC2 - PROP.CSE(1935): Error: 
+//  RSYS 'rsys-HVAC System 1': 
+//    S0497: 'rsSEER' missing: required when rsType=ACFurnace (cooling is available)
+//---------------
+// Error: C:\WSF\DEVLIBS\COMPMGR\SRC\BEM-OPEN\BIN\RES\PROJECTS\SAMPLES-2016\1STORYEXAMPLE3-SMATTIC2 - COMP16\1STORYEXAMPLE3-SMATTIC2 - PROP.CSE(1935): Error: 
+//  RSYS 'rsys-HVAC System 1': rsSEER (0) must be > rsEER (0.34)
+//---------------
+// Info: C:\WSF\DEVLIBS\COMPMGR\SRC\BEM-OPEN\BIN\RES\PROJECTS\SAMPLES-2016\1STORYEXAMPLE3-SMATTIC2 - COMP16\1STORYEXAMPLE3-SMATTIC2 - PROP.CSE(1983): Info: 
+//  S0214: No run due to error(s) above
+//---------------
+	}	}
+
+	if (bRetVal && (iOutFileType != CSERun::OutFileERR || slErrors.size() > 0) &&
+						(iOutFileType != CSERun::OutFileREP || FileExists( sCSEOutFile )))
+	{
+	try
+	{	bool bOutFileAlreadyExists = FileExists( sSimOutputPathFile );
+		QFile outFile( sSimOutputPathFile );
+		if (!bOutFileAlreadyExists)
+			bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate );
+		else
+			bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );
+																																		assert( bRetVal );
+		if (bRetVal)
+		{
+			if (bOutFileAlreadyExists)
+				outFile.write( "\n\n" );
+
+			QString sCSEInpFile = cseRun.GetArgs();
+			sCSEInpFile = sCSEInpFile.left( sCSEInpFile.length()-1 );
+			int iLastSlash    = std::max( sCSEInpFile.lastIndexOf('\\'),               sCSEInpFile.lastIndexOf('/') );
+			int i2ndLastSlash = std::max( sCSEInpFile.lastIndexOf('\\', iLastSlash-1), sCSEInpFile.lastIndexOf('/', iLastSlash-1) );
+
+//--------------------------------------------------------------------------------
+//--  PROPOSED model:  Dir\File.cse
+//--------------------------------------------------------------------------------
+			outFile.write( pszDashes );
+			outFile.write( QString("--  %1 model:  %2\n").arg( cseRun.GetRunID().toUpper(), sCSEInpFile.right( (sCSEInpFile.length()-i2ndLastSlash-1) ) ).toLocal8Bit().constData() );
+			outFile.write( pszDashes );
+
+			if (iOutFileType == CSERun::OutFileERR)
+				for (int i=0; i<slErrors.size(); i++)
+				{	outFile.write( slErrors[i].toLocal8Bit().constData() );
+					//outFile.write( "\n" );
+				}
+			else	// report (not error) file
+			{
+				QFile repFile( sCSEOutFile );
+				if (repFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+				{
+		         char buff[ 300 ];
+		         // read each line from the prev file into the log file
+		         int iReadRetVal;
+		         while (iReadRetVal = repFile.readLine( buff, 299 ) > 0)
+		// at some point 
+					{	outFile.write( buff );
+						//outFile.write( "\n" );
+					}
+		         assert( iReadRetVal==0 );	// if -1, then error reading
+					if (iReadRetVal < 0)
+						bRetVal = false;
+				}
+				else
+					bRetVal = false;
+			}
+
+//	int m_iSimReportOpt;		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
+//	int m_iSimErrorOpt;		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
+//	int  iSimReportDetailsOption	=	GetCSVOptionValue( "SimReportDetailsOption",   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
+//	int  iSimErrorDetailsOption	=	GetCSVOptionValue( "SimErrorDetailsOption" ,   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
+
+			outFile.close();
+		}
+	}
+	catch( ... )
+	{	assert( false );
+		bRetVal = false;
+	}
+	}	// end of if (bRetVal)
+
+	return bRetVal;
 }

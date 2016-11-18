@@ -3005,8 +3005,10 @@ void InitUntitledLogFile( const char* psInitLogFileName )
    }
 }
 
-const char* BEMPX_GetLogFilename( bool bCSVLog /*=false*/ )  // SAC 12/19/12
-{	return (bCSVLog ? (const char*) esCSVLogFileName.toLocal8Bit().constData() : (const char*) esLogFileName.toLocal8Bit().constData());
+QString BEMPX_GetLogFilename( bool bCSVLog /*=false*/ )  // SAC 12/19/12
+{	return (bCSVLog ? esCSVLogFileName : esLogFileName);
+//const char* BEMPX_GetLogFilename( bool bCSVLog /*=false*/ )  // SAC 12/19/12
+//{	return (bCSVLog ? (const char*) esCSVLogFileName.toLocal8Bit().constData() : (const char*) esLogFileName.toLocal8Bit().constData());
 }
 
 

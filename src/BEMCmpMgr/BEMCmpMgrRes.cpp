@@ -189,6 +189,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	sbLogCSECallbacks = (iSimLoggingOption == 1 || iSimLoggingOption == 3 || bVerbose);
 	bool bLogDHWSim	= (iSimLoggingOption > 1 || bVerbose);
 	bool bLogEachFileHashError = (bVerbose || sbLogCSECallbacks || bLogDHWSim);
+	int  iSimReportDetailsOption	=	GetCSVOptionValue( "SimReportDetailsOption",   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
+	int  iSimErrorDetailsOption	=	GetCSVOptionValue( "SimErrorDetailsOption" ,   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
 
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 
@@ -268,11 +270,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 // QT Progress Dialog stuff
 #ifdef CM_QTGUI
 	bool bQtAppInitHere = false;	// SAC 11/11/15
+	QVBoxLayout* pqt_layout = NULL;
+	QWidget* pqt_win = NULL;
+	QProgressDialog* pqt_progress = NULL;
 	if (bDisplayProgress)
 	{
 		sfPctDoneFollowingSimulations = 98;  // SAC 8/19/13 - re-initialize value added to enable slower progress reporting when generating reports
 
-		QVBoxLayout* pqt_layout = new QVBoxLayout;
+		pqt_layout = new QVBoxLayout;
 	//	QVBoxLayout qt_layout();
 		//QWidget*  win = new QWidget;
 		//QProgressDialog* progress = new QProgressDialog("Fetching data...", "Cancel", 0, 100);
@@ -284,10 +289,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			if (sq_app)
 				ssEXEPath = sq_app->applicationDirPath();
 		}
-		QWidget* pqt_win = new QWidget;
+		pqt_win = new QWidget;
 		siNumProgressErrors = 0;
 		SetProgressMessage( " Initializing", false /*bBatchMode*/ );
-		QProgressDialog* pqt_progress = new QProgressDialog( sqProgressMsg, "Abort Analysis", 0, 100 );
+		pqt_progress = new QProgressDialog( sqProgressMsg, "Abort Analysis", 0, 100 );
 		// functions setLabelText() and setCancelButtonText() set the texts shown.
 	 
 	// QProgressBar {
@@ -344,6 +349,42 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	{	sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
 		//sXMLResultsFileName += " - following analysis.xml";
 		sXMLResultsFileName += " - AnalysisResults.xml";
+	}
+
+	QString sCSESimRptOutputFileName, sCSESimErrOutputFileName;	// SAC 11/7/16
+	if (iSimReportDetailsOption > 0)
+	{	sCSESimRptOutputFileName = sModelPathFile;
+		if (sCSESimRptOutputFileName.lastIndexOf('.'))
+		{	sCSESimRptOutputFileName  = sCSESimRptOutputFileName.left( sCSESimRptOutputFileName.lastIndexOf('.') );
+			sCSESimRptOutputFileName += " - CSE Reports.txt";
+		}
+		// make sure file writeable, and if it is and present, delete it before continuing analysis
+		sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+						 "(once the file is closed), or \n'Cancel' to ignore this file." ).arg( "CSE report output", sCSESimRptOutputFileName );
+		if ( !OKToWriteOrDeleteFile( sCSESimRptOutputFileName.toLocal8Bit().constData(), sLogMsg, bSilent ) ||
+			  (FileExists( sCSESimRptOutputFileName ) && !DeleteFile( sCSESimRptOutputFileName.toLocal8Bit().constData() )) )
+		{	sLogMsg = QString( "Warning:  CSE report output cannot be overwritten and will not be updated for this analysis:  %1" ).arg( sCSESimRptOutputFileName );
+			BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
+			sCSESimRptOutputFileName.clear();
+		}
+	}
+	if (iSimErrorDetailsOption > 0)
+	{	sCSESimErrOutputFileName = sModelPathFile;
+		if (sCSESimErrOutputFileName.lastIndexOf('.'))
+		{	sCSESimErrOutputFileName  = sCSESimErrOutputFileName.left( sCSESimErrOutputFileName.lastIndexOf('.') );
+			sCSESimErrOutputFileName += " - CSE Errors.txt";
+		}
+		// make sure file writeable, and if it is and present, delete it before continuing analysis
+		sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+						 "(once the file is closed), or \n'Cancel' to ignore this file." ).arg( "CSE error output", sCSESimErrOutputFileName );
+		if ( !OKToWriteOrDeleteFile( sCSESimErrOutputFileName.toLocal8Bit().constData(), sLogMsg, bSilent ) ||
+			  (FileExists( sCSESimErrOutputFileName ) && !DeleteFile( sCSESimErrOutputFileName.toLocal8Bit().constData() )) )
+		{	sLogMsg = QString( "Warning:  CSE error output cannot be overwritten and will not be updated for this analysis:  %1" ).arg( sCSESimErrOutputFileName );
+			BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
+			sCSESimErrOutputFileName.clear();
+		}
 	}
 
 //	BEMPX_GetRulesetErrorCount();  // SAC 1/9/13
@@ -1179,7 +1220,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		CSERunMgr cseRunMgr(
 			sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, bFullComplianceAnalysis,
 			bInitHourlyResults, lAllOrientations, lAnalysisType, lStdDesignBaseID, lDesignRatingRunID, bVerbose,
-			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString);
+			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
+			iSimReportDetailsOption, iSimErrorDetailsOption	);		// SAC 11/7/16 - added sim report/error option arguments
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
@@ -1221,236 +1263,230 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			cseRunMgr.DoRuns();
 						dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-		for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+		if (iRetVal == 0)
+		for (iRunIdx = 0; iRunIdx < iNumRuns; iRunIdx++)
 		{
-// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
-			BEMPX_SetActiveModel( iRunIdx+1 );
-
 			const CSERun& cseRun = cseRunMgr.GetRun(iRunIdx);
 			const QString& sRunID = cseRun.GetRunID();
 			const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
 			const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 			long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
-		//	BOOL bLastRun = cseRun.GetLastRun();
-			BOOL bIsStdDesign = cseRun.GetIsStdDesign();
-			BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
+
+		// process CSE errors and/or reports into file for user review - SAC 11/7/16
+			if (bPerformSimulations && !bBypassCSE && !sCSESimRptOutputFileName.isEmpty())
+				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimRptOutputFileName, CSERun::OutFileREP );
+			if (bPerformSimulations && !bBypassCSE && !sCSESimErrOutputFileName.isEmpty())
+				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimErrOutputFileName, CSERun::OutFileERR );
+
+			if (iRetVal == 0) // SAC 11/7/16 - moved iRetVal == 0 condition out of for() loop and down here to process output of simulated runs (above) even after errors encountered
+			{
+// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
+				BEMPX_SetActiveModel( iRunIdx+1 );
+
+			//	BOOL bLastRun = cseRun.GetLastRun();
+				BOOL bIsStdDesign = cseRun.GetIsStdDesign();
+				BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
 
 // SAC 6/19/14 - add models to BEMBase for each run being performed so that the state of each model can be retained for use the second time through the run loop
-			if (iRunIdx > 0)
-			{
-			// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
-				int iResCopyRetVal = 0;
-				if (iRetVal == 0)
-				{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-					QString sResCopyErrMsg;
-					iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iRunIdx, iRunIdx+1 );
-					assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-					if (iResCopyRetVal > 0)
-					{	if (sErrorMsg.isEmpty())
-							sErrorMsg = sResCopyErrMsg;
-						switch (iResCopyRetVal)
-						{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-							case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-							default :	assert( FALSE );	break;
-						}
-				}	}
-			// now results objects from previous run are in place, now ensure that references to those objects are also valid
-				char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-				int iRORPIdx = -1;
-				while (pszaResObjRefProps[++iRORPIdx] != NULL)
-				{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-					int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-					QString sROR;
-					for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-					{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-						{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-				}	}	}
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-			}
+				if (iRunIdx > 0)
+				{
+				// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
+					int iResCopyRetVal = 0;
+					if (iRetVal == 0)
+					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+						QString sResCopyErrMsg;
+						iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iRunIdx, iRunIdx+1 );
+						assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+						if (iResCopyRetVal > 0)
+						{	if (sErrorMsg.isEmpty())
+								sErrorMsg = sResCopyErrMsg;
+							switch (iResCopyRetVal)
+							{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+								case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+								default :	assert( FALSE );	break;
+							}
+					}	}
+				// now results objects from previous run are in place, now ensure that references to those objects are also valid
+					char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+					int iRORPIdx = -1;
+					while (pszaResObjRefProps[++iRORPIdx] != NULL)
+					{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+						int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+						QString sROR;
+						for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+						{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+							{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+	                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+					}	}	}
+							dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+				}
 
-			if (iRetVal == 0 && bPerformSimulations && !bBypassCSE)
-			{
-				int iCSERetVal = cseRun.GetExitCode();
-				if (bVerbose)  // SAC 1/31/13
-				{	sLogMsg = QString( "      CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				if (iRetVal == 0 && bPerformSimulations && !bBypassCSE)
+				{
+					int iCSERetVal = cseRun.GetExitCode();
+					if (bVerbose)  // SAC 1/31/13
+					{	sLogMsg = QString( "      CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+					BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+					if (iCSERetVal != 0)
+					{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
+						iRetVal = BEMAnal_CECRes_CSESimError;
+					}
+					if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+						iRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+					// Retrieve CSE simulation results
+					if (iRetVal == 0)
+					{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
+						int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, 
+																													sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData() );
+						if (bVerbose)  // SAC 1/31/13
+						{	sLogMsg = QString( "      Hourly CSE results retrieval returned %1" ).arg( QString::number(iHrlyResRetVal) );
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
+					// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
+						if (BEMPX_AddHourlyResultArray(	NULL, sRunID.toLocal8Bit().constData(), "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ ) != 0.0)
+						{	assert( false );
+						}
+					}
+				}
+				else if (iRetVal == 0 && (!bPerformSimulations || bBypassCSE))  // SAC 6/10/13
+				{
+					if (bVerbose)
+						BEMPX_WriteLogFile( "      Skipping CSE simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					si1ProgressRunNum = iRunIdx+1;
+					siNumProgressErrors = 0;
+					CSE_MsgCallback( 0 /*level*/, "Skipping CSE simulation" );
 				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
+						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+	
+				if (iRetVal == 0 && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
+				{	// DHW SIMULATION
+						assert( false );
+						BOOL bDHWSimOK = FALSE;
+					QString sDHWErrMsg;
+				// T24DHW simulation code removed - not ported to open source
+					if (!bDHWSimOK)
+					{	assert( FALSE );
+						// write error mesage to analysis log file ??
+						sErrorMsg = sDHWErrMsg;
+						iRetVal = BEMAnal_CECRes_DHWSimError;
+					}
+				}
+				else if (iRetVal == 0 && (!bPerformSimulations || bBypassDHW))  // SAC 6/19/13
+				{
+					if (bVerbose)
+						BEMPX_WriteLogFile( "      Skipping DHW simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					CSE_MsgCallback( 0 /*level*/, "Skipping DHW simulation" );
+				}
+				BEMPX_RefreshLogFile();	// SAC 5/19/14
+						dTimeDHWSim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-				if (iCSERetVal != 0)
-				{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
-					iRetVal = BEMAnal_CECRes_CSESimError;
+			// SAC 7/13/15 - code to export CSV files to facilitate comparison of T24DHW & CSE simulation results
+				if (iRetVal == 0 && bPerformSimulations && lDHWCalcMethod == 2)		// DHWCalcMethod == "CSE (T24 match)"
+				{	QString sHrlyDHWPathFile = pszModelPathFile;
+					if (sHrlyDHWPathFile.lastIndexOf('.') > 0)
+						sHrlyDHWPathFile = sHrlyDHWPathFile.left( sHrlyDHWPathFile.lastIndexOf('.') );
+					sHrlyDHWPathFile += sRunIDProcFile;
+
+				// combined CSE & T-24 DHW results
+					QString sHrlyDHWPathFile_CSE = sHrlyDHWPathFile + QString( " - Hourly DHW Compare.csv" );
+					const char* pszDHWEnduses_CSE[3] =  {  "DHW",  "DHWPmp",  NULL  };
+					const char* pszDHWEnduses_T24[3] =  {  "T24DHW",  "T24DHWPmp",  NULL  };
+					const char* pszDHWCompares[   3] =  {  "CSE",  "T24"  };
+					int iHrlyDHWExportRetVal_CSE = ExportCSVHourlyResultsComparison( sHrlyDHWPathFile_CSE.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), "DHW", 
+																						pszDHWCompares, pszDHWEnduses_CSE, pszDHWEnduses_T24, NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );		assert( iHrlyDHWExportRetVal_CSE == 0 );
+				}
+
+				if (iRetVal == 0 && bPerformSimulations)
+				{
+					// Process & summarize results
+					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
+					if (bVerbose)
+					{	sLogMsg = "      done calling 'ProcessResults' rules";
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+				}
+				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+					iRetVal = BEMAnal_CECRes_RuleProcAbort;
+						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+			// call to generate ruleset-defined report on model following simulation & results retrieval/processing
+			// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
+				if (iRetVal == 0 && !sAnalysisReport.isEmpty())
+				{	if (bVerbose)  // SAC 1/31/13
+					{	sLogMsg = QString( "      about to generate '%1' model report" ).arg( sAnalysisReport );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+					// SAC 2/10/14 - replace (possibly relative) pszModelPathFile w/ a full path version
+					QString sGenRptPathFile = sFullModelPathFile;
+					if (sGenRptPathFile.lastIndexOf('.') > 0)
+						sGenRptPathFile  = sGenRptPathFile.left( sGenRptPathFile.lastIndexOf('.') );
+					sGenRptPathFile += sRunIDProcFile;
+
+					int iRptRetVal = CMX_GenerateRulesetModelReport( sGenRptPathFile.toLocal8Bit().constData(), sAnalysisReport.toLocal8Bit().constData(),	
+																						NULL /*pszRptPathFile*/, 0 /*iRptPathFileLen*/, (bVerbose), bSilent );
+					if (iRptRetVal > 0)
+					{	sErrorMsg = QString( "Error:  Model report generation failed w/ error code %1 - report: '%2' - file: '%3'" ).arg( QString::number(iRptRetVal), sAnalysisReport, sGenRptPathFile );
+						iRetVal = BEMAnal_CECRes_ModelRptError;
+					}
 				}
 				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
-				// Retrieve CSE simulation results
-				if (iRetVal == 0)
-				{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
-					int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, 
-																												sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData() );
-					if (bVerbose)  // SAC 1/31/13
-					{	sLogMsg = QString( "      Hourly CSE results retrieval returned %1" ).arg( QString::number(iHrlyResRetVal) );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				if (iRetVal == 0 && bPerformSimulations)
+				{
+					// Individual run hourly results CSV export - SAC 8/5/13
+					QString sHrlyResExportPathFile, sHrlyResExportOption, sHrlyResExportOptionAll;
+					QString sRunAbbrevMod = sRunAbbrev;			sRunAbbrevMod.replace( '-', '_' );		// SAC 11/4/16 - changed INI setting name to conform w/ property name conventions
+					sHrlyResExportOption = QString( "ExportHourlyResults_%1" ).arg( sRunAbbrevMod );
+					sHrlyResExportOptionAll = "ExportHourlyResults_All";
+					if (GetCSVOptionValue( sHrlyResExportOption.toLocal8Bit().constData(), 0, saCSVOptions ) > 0 ||
+						 GetCSVOptionValue( sHrlyResExportOptionAll.toLocal8Bit().constData(), 0, saCSVOptions ) > 0)
+					{	sHrlyResExportPathFile = pszModelPathFile;
+						if (sHrlyResExportPathFile.lastIndexOf('.') > 0)
+							sHrlyResExportPathFile = sHrlyResExportPathFile.left( sHrlyResExportPathFile.lastIndexOf('.') );
+						sHrlyResExportPathFile += sRunIDProcFile;
+						sHrlyResExportPathFile += " - HourlyResults.csv";
+						int iHrlyResExportRetVal = CMX_ExportCSVHourlyResults_CECRes( sHrlyResExportPathFile.toLocal8Bit().constData(), pszModelPathFile, 
+																						sRunID.toLocal8Bit().constData(), NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );				assert( iHrlyResExportRetVal == 0 );
 					}
-				// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
-					if (BEMPX_AddHourlyResultArray(	NULL, sRunID.toLocal8Bit().constData(), "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ ) != 0.0)
-					{	assert( false );
-					}
 				}
-			}
-			else if (iRetVal == 0 && (!bPerformSimulations || bBypassCSE))  // SAC 6/10/13
-			{
-				if (bVerbose)
-					BEMPX_WriteLogFile( "      Skipping CSE simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				si1ProgressRunNum = iRunIdx+1;
-				siNumProgressErrors = 0;
-				CSE_MsgCallback( 0 /*level*/, "Skipping CSE simulation" );
-			}
-			BEMPX_RefreshLogFile();	// SAC 5/19/14
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-	
-			if (iRetVal == 0 && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
-			{	// DHW SIMULATION
-					assert( false );
-					BOOL bDHWSimOK = FALSE;
-				QString sDHWErrMsg;
-	// T24DHW not ported to open source
-	//			// SAC 6/19/12 - after reading CSE results but before applying TDV multipliers to those results,
-	//			//						perform DHW simulation and add those results into the hourly results already stored in BEMProc
-	//			QString sElecMtrName, sNatGasMtrName, sOtherFuelMtrName;
-   //      		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSE_ElecMETER"      ), sElecMtrName      );
-   //      		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSE_NatGasMETER"    ), sNatGasMtrName    );
-   //      		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSE_OtherFuelMETER" ), sOtherFuelMtrName );
-	//			QString sNonElecMtrName = (!sNatGasMtrName.isEmpty() ? sNatGasMtrName : sOtherFuelMtrName);
-	//			QString sProjFileBase = sModelFileOnly;
-	//			if (sProjFileBase.lastIndexOf('.') > 0)
-	//				sProjFileBase = sProjFileBase.left( sProjFileBase.lastIndexOf('.') );
-	//			BOOL bDHWSimOK = CMX_PerformSimulation_T24DHW(	sDHWErrMsg, sDHWDLLPath, sProcessPath, sProjFileBase, sRunID,
-	//							sNonElecMtrName, sElecMtrName, sT24DHWEnduse, sT24DHWPumpEnduse, (iRunType[iRunIdx] >= CRM_StdDesign) /*bIsStdDesign*//*(iRunIdx == 1)*/, bLogDHWSim );
-	//		// ??? - what setting to use for DesignRating simulation ???
-	//			if (bVerbose)  // SAC 1/31/13
-	//			{	sLogMsg = QString( "      CEC DHW simulation successful: %1" ).arg( (bDHWSimOK ? "True" : "False") );
-	//				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	//			}
-				if (!bDHWSimOK)
-				{	assert( FALSE );
-					// write error mesage to analysis log file ??
-					sErrorMsg = sDHWErrMsg;
-					iRetVal = BEMAnal_CECRes_DHWSimError;
-				}
-			}
-			else if (iRetVal == 0 && (!bPerformSimulations || bBypassDHW))  // SAC 6/19/13
-			{
-				if (bVerbose)
-					BEMPX_WriteLogFile( "      Skipping DHW simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				CSE_MsgCallback( 0 /*level*/, "Skipping DHW simulation" );
-			}
-			BEMPX_RefreshLogFile();	// SAC 5/19/14
-						dTimeDHWSim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-		// SAC 7/13/15 - code to export CSV files to facilitate comparison of T24DHW & CSE simulation results
-			if (iRetVal == 0 && bPerformSimulations && lDHWCalcMethod == 2)		// DHWCalcMethod == "CSE (T24 match)"
-			{	QString sHrlyDHWPathFile = pszModelPathFile;
-				if (sHrlyDHWPathFile.lastIndexOf('.') > 0)
-					sHrlyDHWPathFile = sHrlyDHWPathFile.left( sHrlyDHWPathFile.lastIndexOf('.') );
-				sHrlyDHWPathFile += sRunIDProcFile;
-
-			// combined CSE & T-24 DHW results
-				QString sHrlyDHWPathFile_CSE = sHrlyDHWPathFile + QString( " - Hourly DHW Compare.csv" );
-				const char* pszDHWEnduses_CSE[3] =  {  "DHW",  "DHWPmp",  NULL  };
-				const char* pszDHWEnduses_T24[3] =  {  "T24DHW",  "T24DHWPmp",  NULL  };
-				const char* pszDHWCompares[   3] =  {  "CSE",  "T24"  };
-				int iHrlyDHWExportRetVal_CSE = ExportCSVHourlyResultsComparison( sHrlyDHWPathFile_CSE.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), "DHW", 
-																					pszDHWCompares, pszDHWEnduses_CSE, pszDHWEnduses_T24, NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );		assert( iHrlyDHWExportRetVal_CSE == 0 );
-			}
-
-			if (iRetVal == 0 && bPerformSimulations)
-			{
-				// Process & summarize results
-				iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
-				if (bVerbose)
-				{	sLogMsg = "      done calling 'ProcessResults' rules";
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-			}
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-				iRetVal = BEMAnal_CECRes_RuleProcAbort;
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-		// call to generate ruleset-defined report on model following simulation & results retrieval/processing
-		// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
-			if (iRetVal == 0 && !sAnalysisReport.isEmpty())
-			{	if (bVerbose)  // SAC 1/31/13
-				{	sLogMsg = QString( "      about to generate '%1' model report" ).arg( sAnalysisReport );
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-				// SAC 2/10/14 - replace (possibly relative) pszModelPathFile w/ a full path version
-				QString sGenRptPathFile = sFullModelPathFile;
-				if (sGenRptPathFile.lastIndexOf('.') > 0)
-					sGenRptPathFile  = sGenRptPathFile.left( sGenRptPathFile.lastIndexOf('.') );
-				sGenRptPathFile += sRunIDProcFile;
-
-				int iRptRetVal = CMX_GenerateRulesetModelReport( sGenRptPathFile.toLocal8Bit().constData(), sAnalysisReport.toLocal8Bit().constData(),	
-																					NULL /*pszRptPathFile*/, 0 /*iRptPathFileLen*/, (bVerbose), bSilent );
-				if (iRptRetVal > 0)
-				{	sErrorMsg = QString( "Error:  Model report generation failed w/ error code %1 - report: '%2' - file: '%3'" ).arg( QString::number(iRptRetVal), sAnalysisReport, sGenRptPathFile );
-					iRetVal = BEMAnal_CECRes_ModelRptError;
-				}
-			}
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-				iRetVal = BEMAnal_CECRes_RuleProcAbort;
-
-			if (iRetVal == 0 && bPerformSimulations)
-			{
-				// Individual run hourly results CSV export - SAC 8/5/13
-				QString sHrlyResExportPathFile, sHrlyResExportOption, sHrlyResExportOptionAll;
-				sHrlyResExportOption = QString( "ExportHourlyResults_%1" ).arg( sRunAbbrev );
-				sHrlyResExportOptionAll = "ExportHourlyResults_All";
-				if (GetCSVOptionValue( sHrlyResExportOption.toLocal8Bit().constData(), 0, saCSVOptions ) > 0 ||
-					 GetCSVOptionValue( sHrlyResExportOptionAll.toLocal8Bit().constData(), 0, saCSVOptions ) > 0)
-				{	sHrlyResExportPathFile = pszModelPathFile;
-					if (sHrlyResExportPathFile.lastIndexOf('.') > 0)
-						sHrlyResExportPathFile = sHrlyResExportPathFile.left( sHrlyResExportPathFile.lastIndexOf('.') );
-					sHrlyResExportPathFile += sRunIDProcFile;
-					sHrlyResExportPathFile += " - HourlyResults.csv";
-					int iHrlyResExportRetVal = CMX_ExportCSVHourlyResults_CECRes( sHrlyResExportPathFile.toLocal8Bit().constData(), pszModelPathFile, 
-																					sRunID.toLocal8Bit().constData(), NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );				assert( iHrlyResExportRetVal == 0 );
-				}
-			}
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-				iRetVal = BEMAnal_CECRes_RuleProcAbort;
+				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 						dTimeToWriteModelAndHrlyCSVs += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-			if (iRetVal == 0)
-			{
-				// Simulation clean-up + write final (detailed) XML file of inputs & results
-				iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
+				if (iRetVal == 0)
+				{
+					// Simulation clean-up + write final (detailed) XML file of inputs & results
+					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
 
-				if (bVerbose)  // SAC 1/31/13
-				{	sLogMsg = "      done calling 'CSE_SimulationCleanUp' rules";
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-				// write XML results file if not performing simulation ???
-				// SAC 6/25/12 - added code to export detailed XML file following analysis
-			// SAC 10/24/14 - modified if statement to not write Proposed model - now written above
-				if (!sXMLResultsFileName.isEmpty() && (bIsStdDesign || bIsDesignRtg))  // SAC 3/27/15 - mods to export StdDesign & DesignRtg runs
-				{	BOOL bXMLWriteOK = xmlResultsFile.WriteModel( TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, sRunID.toLocal8Bit().constData() /*pszModelName*/ );
-																assert( bXMLWriteOK );
 					if (bVerbose)  // SAC 1/31/13
-					{	sLogMsg = QString( "      Writing of XML project %1 model data successful: %2" ).arg( sRunID, (bXMLWriteOK ? "True" : "False") );
+					{	sLogMsg = "      done calling 'CSE_SimulationCleanUp' rules";
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
-				}
+						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+					// write XML results file if not performing simulation ???
+					// SAC 6/25/12 - added code to export detailed XML file following analysis
+				// SAC 10/24/14 - modified if statement to not write Proposed model - now written above
+					if (!sXMLResultsFileName.isEmpty() && (bIsStdDesign || bIsDesignRtg))  // SAC 3/27/15 - mods to export StdDesign & DesignRtg runs
+					{	BOOL bXMLWriteOK = xmlResultsFile.WriteModel( TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, sRunID.toLocal8Bit().constData() /*pszModelName*/ );
+																	assert( bXMLWriteOK );
+						if (bVerbose)  // SAC 1/31/13
+						{	sLogMsg = QString( "      Writing of XML project %1 model data successful: %2" ).arg( sRunID, (bXMLWriteOK ? "True" : "False") );
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
+					}
 						dTimeToWriteResultsXML += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-			}
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
-				iRetVal = BEMAnal_CECRes_RuleProcAbort;
-			BEMPX_RefreshLogFile();	// SAC 5/19/14
-		}	// end of:  for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+				}
+				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+					iRetVal = BEMAnal_CECRes_RuleProcAbort;
+				BEMPX_RefreshLogFile();	// SAC 5/19/14
+		}	}	// end of:  for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
 
 						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
@@ -1742,39 +1778,6 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 	sbAllowCallbackAbort = bStoreAllowCallbackAbort;	// SAC 4/5/15
 
-// QT Progress Dialog stuff
-#ifdef CM_QTGUI
-// TESTING
-	if (bDisplayProgress && sqt_win)
-	{	if (bVerbose)  // SAC 1/31/13
-			BEMPX_WriteLogFile( "      about to clean up QT progress dialog", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		sqt_win->close();
-	}
-	if (bQtAppInitHere)	// SAC 11/11/15
-	{	delete sq_app;
-		sq_app = NULL;
-	}
-// TESTING
-	//if (pqt_progress)
-	//{	delete pqt_progress;
-	//	pqt_progress = NULL;
-	//}
-	//if (sqt_win)
-	//{	delete sqt_win;
-	//	sqt_win = NULL;
-	//}
-	//if (qt_layout)
-	//	delete qt_layout;
-
-//bool QWidget::close () [slot]
-//Closes this widget. Returns true if the widget was closed; otherwise returns false.
-//First it sends the widget a QCloseEvent. The widget is hidden if it accepts the close event. If it ignores the event, nothing happens. The default implementation of QWidget::closeEvent() accepts the close event.
-//If the widget has the Qt::WA_DeleteOnClose flag, the widget is also deleted. A close events is delivered to the widget no matter if the widget is visible or not.
-
-	sqt_progress = NULL;
-	sqt_win = NULL;
-#endif
-
 // SAC 1/12/15 - added code to setup FINAL result log message (including analysis duration stats)
 	QString sAnalResLogMsg, sAnalTimeStats, sResTemp1, sResTemp2, sResTemp3, sResTemp4;
 	if (iRetVal == BEMAnal_CECRes_RuleProcAbort)
@@ -1825,6 +1828,37 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	if (bRestoreBEMProcLogTimeStampSetting)		// SAC 11/17/13 - restore BEMProc log timestamp setting (if it was toggled during analysis)
 		BEMPX_EnableLogTimeStamps( bInitialBEMProcLogTimeStamp );
 	BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+// QT Progress Dialog stuff
+#ifdef CM_QTGUI
+// TESTING
+	if (bDisplayProgress && sqt_win)
+	{	if (bVerbose)  // SAC 1/31/13
+			BEMPX_WriteLogFile( "      about to clean up QT progress dialog", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		sqt_win->close();
+	}
+	// SAC 11/17/16 - cleanup minor memory leak
+	if (bDisplayProgress)
+	{	if (pqt_progress)
+			delete pqt_progress;
+		if (pqt_win)
+			delete pqt_win;
+		//if (pqt_layout)  - deallocated by above routines(?)
+		//	delete pqt_layout;
+	}
+	if (bQtAppInitHere)	// SAC 11/11/15
+	{	delete sq_app;
+		sq_app = NULL;
+	}
+
+//bool QWidget::close () [slot]
+//Closes this widget. Returns true if the widget was closed; otherwise returns false.
+//First it sends the widget a QCloseEvent. The widget is hidden if it accepts the close event. If it ignores the event, nothing happens. The default implementation of QWidget::closeEvent() accepts the close event.
+//If the widget has the Qt::WA_DeleteOnClose flag, the widget is also deleted. A close events is delivered to the widget no matter if the widget is visible or not.
+
+	sqt_progress = NULL;
+	sqt_win = NULL;
+#endif
 
 	return iRetVal;
 }

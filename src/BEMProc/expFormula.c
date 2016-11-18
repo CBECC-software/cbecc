@@ -289,8 +289,8 @@ static FuncTable functable[] =
    {                "#F2S",        EXP_BEMPFunc, BF_FltToStr,    VAR_ARGS },  /* SAC  2/ 8/01 - Added new function */ 
    { "LocalSymbolString",          EXP_BEMPFunc, BF_LocSymStr,   VAR_ARGS },  /* SAC  2/ 8/01 - Added new function */ 
    {                "#LSS",        EXP_BEMPFunc, BF_LocSymStr,   VAR_ARGS },  /* SAC  2/ 8/01 - Added new function */ 
-   { "ComponentIndex",             EXP_BEMPFunc, BF_CompIdx,     0 },         /* SAC  2/27/01 - Added new function */
-   {                "#COI",        EXP_BEMPFunc, BF_CompIdx,     0 },         /* SAC  2/27/01 - Added new function */
+   { "ComponentIndex",             EXP_BEMPFunc, BF_CompIdx,     VAR_ARGS },  /* SAC  2/27/01 - Added new function -- 11/14/16 - switched to VAR_ARGS */
+   {                "#COI",        EXP_BEMPFunc, BF_CompIdx,     VAR_ARGS },  /* SAC  2/27/01 - Added new function -- 11/14/16 - switched to VAR_ARGS */
    { "ChildIndex",                 EXP_BEMPFunc, BF_ChildIdx,    VAR_ARGS },  /* SAC  2/27/01 - Added new function -- 11/26/02 - switched to VAR_ARGS */
    {                "#CHI",        EXP_BEMPFunc, BF_ChildIdx,    VAR_ARGS },  /* SAC  2/27/01 - Added new function -- 11/26/02 - switched to VAR_ARGS */
    { "Format",                     EXP_BEMPFunc, BF_Format,      VAR_ARGS },  /* SAC  5/11/01 - added */
@@ -472,6 +472,8 @@ static FuncTable functable[] =
    {                "#S2F",        EXP_BEMPFunc, BF_StrToFlt,      1       },   /* SAC 2/23/16 - added */ 
    { "CreateDwellUnitDHWHeaters",  EXP_BEMPFunc, BF_Cr8DUWHtr,     0 },         /* SAC 5/29/16 - added */
    {                "#CDUWH",      EXP_BEMPFunc, BF_Cr8DUWHtr,     0 },         /* SAC 5/29/16 - added */
+   { "AddCSEReportCol",            EXP_BEMPFunc, BF_AddCSERptCol,  2 },         /* SAC 11/14/16 - added */
+   {                "#ACRC",       EXP_BEMPFunc, BF_AddCSERptCol,  2 },         /* SAC 11/14/16 - added */
    { NULL,                         0,           0,              0 }
 };
 

@@ -689,7 +689,8 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 				sRdProjErr += sLoadModelErr;
 			}
 
-		CString sLogFN = BEMPX_GetLogFilename();
+	//	CString sLogFN = BEMPX_GetLogFilename();
+		QString qsLogFN = BEMPX_GetLogFilename();		CString sLogFN = qsLogFN.toLatin1().constData();
 		if (!sLogFN.IsEmpty())
 		{	sRdProjErr += "\n\nFor more information, refer to the project log file";
 			if (iNumErrsInclInRdProjErr > 0)

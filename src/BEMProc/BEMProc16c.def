@@ -24,7 +24,6 @@ EXPORTS
     BEMPX_GetSymbolString
     BEMPX_OverwriteSymbolList
     BEMPX_AddSymbolDepList
-    BEMPX_GetLogFilename
     BEMPX_GetErrorPtr
     BEMPX_GetBEMUnitsLabel
     BEMPX_CopyComponentWithAssignments

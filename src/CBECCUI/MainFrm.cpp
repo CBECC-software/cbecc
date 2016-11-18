@@ -162,6 +162,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_REVIEWRESULTS, OnToolsReviewResults)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_REVIEWUMLH, OnUpdateToolsUMLHViolations)
 	ON_COMMAND(IDM_TOOLS_REVIEWUMLH, OnToolsUMLHViolations)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWCSEERR, OnUpdateToolsViewCSEErrors)
+	ON_COMMAND(IDM_TOOLS_VIEWCSEERR, OnToolsViewCSEErrors)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWCSERPT, OnUpdateToolsViewCSEReports)
+	ON_COMMAND(IDM_TOOLS_VIEWCSERPT, OnToolsViewCSEReports)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWT24COMPRPT, OnUpdateToolsViewT24ComplianceReport)
 	ON_COMMAND(IDM_TOOLS_VIEWT24COMPRPT, OnToolsViewT24ComplianceReport)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWT24STDRPT, OnUpdateToolsViewT24StandardModelReport)
@@ -2474,14 +2478,14 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
          sOptionsCSVString +=       "ExportHourlyResults_u,1,";
       if (ReadProgInt( "options",   "ExportHourlyResults_p",   0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p-N", 0 /*default*/ ) > 0)
-         sOptionsCSVString +=       "ExportHourlyResults_p-N,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p-E", 0 /*default*/ ) > 0)
-         sOptionsCSVString +=       "ExportHourlyResults_p-E,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p-S", 0 /*default*/ ) > 0)
-         sOptionsCSVString +=       "ExportHourlyResults_p-S,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p-W", 0 /*default*/ ) > 0)
-         sOptionsCSVString +=       "ExportHourlyResults_p-W,1,";
+      if (ReadProgInt( "options",   "ExportHourlyResults_p_N", 0 /*default*/ ) > 0)
+         sOptionsCSVString +=       "ExportHourlyResults_p_N,1,";
+      if (ReadProgInt( "options",   "ExportHourlyResults_p_E", 0 /*default*/ ) > 0)
+         sOptionsCSVString +=       "ExportHourlyResults_p_E,1,";
+      if (ReadProgInt( "options",   "ExportHourlyResults_p_S", 0 /*default*/ ) > 0)
+         sOptionsCSVString +=       "ExportHourlyResults_p_S,1,";
+      if (ReadProgInt( "options",   "ExportHourlyResults_p_W", 0 /*default*/ ) > 0)
+         sOptionsCSVString +=       "ExportHourlyResults_p_W,1,";
       if (ReadProgInt( "options",   "ExportHourlyResults_s",   0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_s,1,";
       if (ReadProgInt( "options",   "ComplianceReportPDF",     0 /*default*/ ) > 0)		// SAC 8/14/13
@@ -2525,6 +2529,16 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iSimLoggingOption = ReadProgInt( "options", "SimLoggingOption", 0 /*default*/ );	// SAC 1/12/15
 		if (iSimLoggingOption > 0)
 		{	sOptTemp.Format( "SimLoggingOption,%d,", iSimLoggingOption );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iSimReportDetailsOption = ReadProgInt( "options", "SimReportDetailsOption", 1 /*default*/ );	// SAC 1/12/15
+		if (iSimReportDetailsOption != 1)
+		{	sOptTemp.Format( "SimReportDetailsOption,%d,", iSimReportDetailsOption );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iSimErrorDetailsOption = ReadProgInt( "options", "SimErrorDetailsOption", 1 /*default*/ );	// SAC 1/12/15
+		if (iSimErrorDetailsOption != 1)
+		{	sOptTemp.Format( "SimErrorDetailsOption,%d,", iSimErrorDetailsOption );
 			sOptionsCSVString += sOptTemp;
 		}
       int iEnableRptGenStatusChecks = ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ );	// SAC 2/20/15
@@ -3304,14 +3318,18 @@ long CALLBACK NonResAnalysisProgressCallbackFunc( long lProgressID, long lPercen
 /////////////////////////////////////////////////////////////////////////////
 
 void CMainFrame::PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,
-													CString sBtn3File, CString sBtn3Label, CString sAllLabel )
+													CString sBtn3File, CString sBtn3Label, CString sBtn4File, CString sBtn4Label,
+													CString sAllLabel, UINT uiIcon /*=MB_DEFBUTTON1 | MB_ICONQUESTION*/ )
 {	// prompt user to view one or more PDF report(s)
 			XMSGBOXPARAMS xmbp;
-			if (sBtn3File.IsEmpty() || sBtn3Label.IsEmpty())
+			if ((sBtn3File.IsEmpty() || sBtn3Label.IsEmpty()) && (sBtn4File.IsEmpty() || sBtn4Label.IsEmpty()))
 				sprintf( xmbp.szCustomButtons, "Continue\nView %s", (const char*) sBtn2Label );
-			else
+			else if (sBtn4File.IsEmpty() || sBtn4Label.IsEmpty())
 				sprintf( xmbp.szCustomButtons, "Continue\nView %s\nView %s\nView %s", (const char*) sBtn2Label, (const char*) sBtn3Label, (const char*) sAllLabel );
-			int iUserChoice = XMessageBox( GetSafeHwnd(), sMsg, sCaption, MB_DEFBUTTON1 | MB_ICONQUESTION, &xmbp );
+			else
+				sprintf( xmbp.szCustomButtons, "Continue\nView %s\nView %s\nView %s", (const char*) sBtn2Label, (const char*) sBtn3Label, (const char*) sBtn4Label );
+		//	xmbp.nIdIcon = uiIcon;
+			int iUserChoice = XMessageBox( GetSafeHwnd(), sMsg, sCaption, /*MB_DEFBUTTON1 | MB_ICONEXCLAMATION*/ /*MB_ICONQUESTION*/ uiIcon, &xmbp );
 			switch (iUserChoice)
 			{	case IDCUSTOM1 :	{	// do nothing - this is always 'Continue' button
 										}	break;
@@ -3319,7 +3337,11 @@ void CMainFrame::PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sB
 										}	break;
 				case IDCUSTOM3 :	{	OpenFileViaShellExecute( sBtn3File, sBtn3Label /*FileDescrip*/ );
 										}	break;
-				case IDCUSTOM4 :	{	OpenFileViaShellExecute( sBtn3File, sBtn3Label /*FileDescrip*/ );
+				case IDCUSTOM4 :	if (!sBtn4File.IsEmpty() && !sBtn4Label.IsEmpty())
+										{	OpenFileViaShellExecute( sBtn4File, sBtn4Label /*FileDescrip*/ );
+										}
+										else
+										{	OpenFileViaShellExecute( sBtn3File, sBtn3Label /*FileDescrip*/ );
 											OpenFileViaShellExecute( sBtn2File, sBtn2Label /*FileDescrip*/ );
 										}	break;
 				default			:	ASSERT( FALSE );		break;
@@ -3486,7 +3508,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				CString sCSVResultSummary = pszCSVResultSummary;
 //				sCSVResultSummary += CString("\"") + sOriginalFileName + CString("\"");  // append full project path/file to CSV record
 				// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
-				CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
+			//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
+				QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 				if (!sCSVLogFN.IsEmpty())
 				{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
 					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
@@ -3510,12 +3533,39 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			}
 		}
 
+	// check for existence of CSE sim output for possible access by user
+		CString sCSERptPathFile, sCSEErrPathFile;
+		if (bPerformSimulations && BEMPX_GetUIActiveFlag())
+		{	long lCSERpt_HaveReports, lEnableResearchMode, lEnableRptIncFile;
+			QString qsReportIncludeFile;
+			sCSERptPathFile = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
+			sCSEErrPathFile = sCSERptPathFile;
+			sCSERptPathFile += " - CSE Reports.txt";
+			if (!FileExists( sCSERptPathFile ))
+				sCSERptPathFile.Empty();
+			else if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSERpt_HaveReports" ), lCSERpt_HaveReports ) && lCSERpt_HaveReports > 0) ||
+						 ( ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode ) && lEnableResearchMode > 0) ||
+						     (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableRptIncFile"   ), lEnableRptIncFile   ) && lEnableRptIncFile   > 0) ) &&
+						 	(BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" ), qsReportIncludeFile ) && !qsReportIncludeFile.isEmpty()) ) )
+			{	}	// User SHOULD be prompted to review CSE Reports output
+			else
+				sCSERptPathFile.Empty();	// don't prompt user to review Reports if 
+
+			sCSEErrPathFile += " - CSE Errors.txt";
+			if (!FileExists( sCSEErrPathFile ))
+				sCSEErrPathFile.Empty();
+		}
+
 	// Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
 		if (iSimResult == 0 && bPerformSimulations)
 		{	long lCompRptPDFWritten=0;
 			if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), lCompRptPDFWritten ) && lCompRptPDFWritten > 0 &&
 					BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent report review prompt when GUI deactivated
 			{
+			// SAC 11/8/16 - revisions to accommodate review of compliance report(s) OR CSE output
+				CString sPTDMsg, sBtnFile[3], sBtnLabel[3];
+				int iNumViewBtns=0;
+
 				CString sPDFRptFN = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
 				sPDFRptFN += " - AnalysisResults-BEES.pdf";
 				if (!FileExists( sPDFRptFN ))
@@ -3524,7 +3574,33 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 				}
 				else
-				{	// prompt user to view PDf report
+				{	sPTDMsg = "PDF compliance report successfully generated during analysis.";
+					sBtnFile[iNumViewBtns] = sPDFRptFN;   sBtnLabel[iNumViewBtns++] = "Compliance Report";
+				}
+				if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
+				{	if (!sPTDMsg.IsEmpty())
+						sPTDMsg += "\n\n";
+					sPTDMsg += "CSE simulation report and error outputs are available for review.";
+				}
+				else if (!sCSERptPathFile.IsEmpty())
+				{	if (!sPTDMsg.IsEmpty())
+						sPTDMsg += "\n\n";
+					sPTDMsg += "CSE simulation report output is available for review.";
+				}
+				else if (!sCSEErrPathFile.IsEmpty())
+				{	if (!sPTDMsg.IsEmpty())
+						sPTDMsg += "\n\n";
+					sPTDMsg += "CSE simulation error output is available for review.";
+				}
+				if (!sCSERptPathFile.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
+				}
+				if (!sCSEErrPathFile.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
+				}
+
+				if (!sPTDMsg.IsEmpty())
+				{	// prompt user to view PDF report (and/or other files)
 			//		//if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", MB_YESNO ) == IDYES)
 			//		if (BEMMessageBox( "PDF compliance report successfully generated.\n\nWould you like to view the report?", "Compliance Report", (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::Yes)
 			//		{	OpenFileViaShellExecute( sPDFRptFN, "Compliance Report" /*FileDescrip*/ );
@@ -3532,9 +3608,32 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			//			//	CString sPDFPath = (idx > 0 ? sPDFRptFN.Left( idx ) : "");
 			//			//	HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", sPDFRptFN, NULL, sPDFPath, SW_SHOWNORMAL );		hinstShellExec;
 			//		}
-					// prompt user to view one or more PDF report(s)
-					PromptToDisplayPDFs( "Analysis Report(s)", "PDF compliance report successfully generated during analysis.", sPDFRptFN, "Compliance Report", "", "", "" );
+					// prompt user to view one or more PDF report(s) (or other files)
+					PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], sBtnFile[2], sBtnLabel[2], "All Files" );
 				}
+			}
+		// SAC 11/17/16 - prompt user of CSE Reports access if they specified report output and they are present
+			else if (BEMPX_GetUIActiveFlag())
+			{
+				CString sPTDMsg, sBtnFile[2], sBtnLabel[2];
+				int iNumViewBtns=0;
+
+				if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
+					sPTDMsg += "CSE simulation report and error outputs are available for review.";
+				else if (!sCSERptPathFile.IsEmpty())
+					sPTDMsg += "CSE simulation report output is available for review.";
+				else if (!sCSEErrPathFile.IsEmpty())
+					sPTDMsg += "CSE simulation error output is available for review.";
+
+				if (!sCSERptPathFile.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
+				}
+				if (!sCSEErrPathFile.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
+				}
+
+				if (!sPTDMsg.IsEmpty())
+					PromptToDisplayPDFs( "Analysis Output", sPTDMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], "", "", "All Files" );
 			}
 		}
 
@@ -3610,7 +3709,28 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			}
 			if (!sErrResultMsg.IsEmpty())
 			{	if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
-					AfxMessageBox( sErrResultMsg );
+				{
+					if (sCSERptPathFile.IsEmpty() && sCSEErrPathFile.IsEmpty())
+						AfxMessageBox( sErrResultMsg );
+					else
+					{	int iNumViewBtns=0;
+						CString sBtnFile[2], sBtnLabel[2];
+						if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
+							sErrResultMsg += "\n\nCSE simulation error and report outputs are available for review.";
+						else if (!sCSEErrPathFile.IsEmpty())
+							sErrResultMsg += "\n\nCSE simulation error output is available for review.";
+						else if (!sCSERptPathFile.IsEmpty())
+							sErrResultMsg += "\n\nCSE simulation report output is available for review.";
+						if (!sCSEErrPathFile.IsEmpty())
+						{	sBtnFile[iNumViewBtns] = sCSEErrPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Errors";
+						}
+						if (!sCSERptPathFile.IsEmpty())
+						{	sBtnFile[iNumViewBtns] = sCSERptPathFile;   sBtnLabel[iNumViewBtns++] = "CSE Reports";
+						}
+						// prompt user to view one or more PDF report(s) (or other files)
+						PromptToDisplayPDFs( "Analysis Error", sErrResultMsg, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], "", "", "Both Files", MB_DEFBUTTON1 | MB_ICONEXCLAMATION );  // MB_ICONEXCLAMATION );
+//			case MB_ICONEXCLAMATION: lpIcon = (LPTSTR)IDI_EXCLAMATION; break;
+				}	}
 				else
 					VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 		}	}
@@ -3700,7 +3820,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			//CString sCSVResultSummary = pszResultsRecord;
 			//sCSVResultSummary += CString("\"") + sOriginalFileName + CString("\"");  // append full project path/file to CSV record
 			// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
-			CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
+		//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
+			QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 
 			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[2048];
 			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 2048, iCodeType ) == 0 );	// SAC 12/3/14
@@ -3759,7 +3880,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 						sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
 						sBtn3File = sStdRptFN;		sBtn3Label = "Standard Model Report";		sAllLabel = "Both Reports";
 					}
-					PromptToDisplayPDFs( "Analysis Report(s)", sMsg, sBtn2File, sBtn2Label, sBtn3File, sBtn3Label, sAllLabel );
+					PromptToDisplayPDFs( "Analysis Report(s)", sMsg, sBtn2File, sBtn2Label, sBtn3File, sBtn3Label, "", "", sAllLabel );
 				}
 		}	}
 
@@ -4117,6 +4238,79 @@ void CMainFrame::OnToolsUMLHViolations()		// SAC 3/18/15
 	}	}
 	if (!sErrMsg.IsEmpty())
 		AfxMessageBox( sErrMsg );
+}
+
+
+void CMainFrame::OnUpdateToolsViewCSEErrors(CCmdUI* pCmdUI)
+{
+	BOOL bFileExists = FALSE;
+	CString sRptFileName;
+	CDocument* pDoc = GetActiveDocument();
+	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+	{  CString sProjFileName = pDoc->GetPathName();
+		if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
+		{	sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+			sRptFileName += " - CSE Errors.txt";
+			bFileExists = FileExists( sRptFileName );
+	}	}
+
+#ifdef UI_CARES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && bFileExists) );
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && bFileExists) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnUpdateToolsViewCSEReports(CCmdUI* pCmdUI)
+{
+	BOOL bFileExists = FALSE;
+	CString sRptFileName;
+	CDocument* pDoc = GetActiveDocument();
+	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+	{  CString sProjFileName = pDoc->GetPathName();
+		if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
+		{	sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+			sRptFileName += " - CSE Reports.txt";
+			bFileExists = FileExists( sRptFileName );
+	}	}
+
+#ifdef UI_CARES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && bFileExists) );
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && bFileExists) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnToolsViewCSEErrors()
+{
+	CString sRptFileName;
+	CDocument* pDoc = GetActiveDocument();
+	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+	{  CString sProjFileName = pDoc->GetPathName();
+		if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
+		{	sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+			sRptFileName += " - CSE Errors.txt";
+			if (FileExists( sRptFileName ))
+				OpenFileViaShellExecute( sRptFileName, "CSE Errors output" );
+	}	}
+}
+
+void CMainFrame::OnToolsViewCSEReports()
+{
+	CString sRptFileName;
+	CDocument* pDoc = GetActiveDocument();
+	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+	{  CString sProjFileName = pDoc->GetPathName();
+		if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
+		{	sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+			sRptFileName += " - CSE Reports.txt";
+			if (FileExists( sRptFileName ))
+				OpenFileViaShellExecute( sRptFileName, "CSE Reports output" );
+	}	}
 }
 
 
@@ -6216,7 +6410,8 @@ void CMainFrame::OnExportHPXML_Single()
 		BOOL bMarkRuleDataUserDefined = (ReadProgInt( "options", "MarkRuleDataUserDefined", 0 /*default*/ ) > 0);  // SAC 3/17/13
 	   BOOL bEvalSuccessful = CMX_EvaluateRuleset( "HPXML", bLogRuleEvaluation, bMarkRuleDataUserDefined /*bTagDataAsUserDefined*/, bLogRuleEvaluation /*bVerboseOutput*/ );  // , NULL, NULL, NULL, epInpRuleDebugInfo );
 		if (!bEvalSuccessful)
-		{	CString sLogFN = BEMPX_GetLogFilename();				ASSERT( !sLogFN.IsEmpty() );
+	//	{	CString sLogFN = BEMPX_GetLogFilename();				ASSERT( !sLogFN.IsEmpty() );
+		{	QString qsLogFN = BEMPX_GetLogFilename();		CString sLogFN = qsLogFN.toLatin1().constData();		ASSERT( !sLogFN.IsEmpty() );
 			if (sLogFN.IsEmpty())
 				sMsg = "HPXML translation rule evaluation failed.";
 			else

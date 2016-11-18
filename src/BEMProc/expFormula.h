@@ -233,6 +233,7 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_CloseExpFile,  /* 160 */  /* SAC 9/15/15 - added */
    BF_StrToFlt,      /* 161 */  /* SAC 2/23/16 - added */
    BF_Cr8DUWHtr,     /* 162 */  /* SAC 5/29/16 - added */
+   BF_AddCSERptCol,  /* 163 */  /* SAC 11/14/16 - added */
 } OpTypes;
 
 typedef enum fmerrorcode_
