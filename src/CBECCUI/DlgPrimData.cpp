@@ -69,7 +69,7 @@ static char THIS_FILE[] = __FILE__;
 #define  IDC_PRIM_15  1024
 
 // misc. dialog and control dimensions & locations
-#define  PRIMDLG_WD  475
+#define  PRIMDLG_WD  550		// SAC 11/21/16 - increased from 475 to accommodate units labels
 #define  PRIMDLG_HT   90
 
 #define  PRIMDLG_CTRL_L  255
@@ -154,10 +154,14 @@ BOOL CDlgPrimData::OnInitDialog()
       else
          m_sLongClassName = "Component";
 
+//      int iDlgHt = PRIMDLG_HT + (m_iNumPrimProps * 30);
+//      siDlgWidth  = FontX( PRIMDLG_WD );
+//      siDlgHeight = FontY( iDlgHt );
+		// Calc and set dialog dimensions  - SAC 11/21/16 - adjust more effectively to varying Windows versions
       int iDlgHt = PRIMDLG_HT + (m_iNumPrimProps * 30);
-
-      siDlgWidth  = FontX( PRIMDLG_WD );
-      siDlgHeight = FontY( iDlgHt );
+		int iPaddedBorderWd = GetSystemMetrics(SM_CXPADDEDBORDER);	// added to adjust for wider Win8 borders
+	   siDlgWidth  = FontX( PRIMDLG_WD ) + (iPaddedBorderWd * 2);
+	   siDlgHeight = FontY(   iDlgHt   ) + (iPaddedBorderWd * 2) + GetSystemMetrics(SM_CYCAPTION) - FontY( 30 );
       MoveWindow( (appCXFullScreen/2) - (siDlgWidth/2), (appCYFullScreen/2) + FontY(20) - (siDlgHeight/2),
                   siDlgWidth, siDlgHeight, FALSE );
 
@@ -194,7 +198,7 @@ BOOL CDlgPrimData::OnInitDialog()
                DWORD dwStyle = WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL|ES_MULTILINE|ES_RIGHT;
                int   iExt    = 0;
                if (m_iaPropType[ iCtrlIdx ] == BEMP_Flt)
-                  iExt = 2;  // default decimal precision for floating point values = 2
+                  iExt = 11;  // SAC 11/21/16 - switched from fixed default of 2 to variable (11 -> decimal precision based on entered value)
                else if (m_iaPropType[ iCtrlIdx ] == BEMP_Str)
                {
                   dwStyle = WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL;
@@ -217,10 +221,12 @@ BOOL CDlgPrimData::OnInitDialog()
       m_pCancel = new CButtonCtl();
 
       m_pOK->Create( "OK", BS_DEFPUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-                         CRect( PRIMDLG_WD-190, iDlgHt-61, PRIMDLG_WD-110, iDlgHt-38 ),
+                     //    CRect( PRIMDLG_WD-190, iDlgHt-61, PRIMDLG_WD-110, iDlgHt-38 ),
+                         CRect( PRIMDLG_WD-185, iDlgHt-66, PRIMDLG_WD-105, iDlgHt-43 ),
                          this, IDOK, TDCT_Button, FNT_STD, szOKMsg, 0, TRUE, TRUE, FALSE, 0 );
       m_pCancel->Create( "Cancel", BS_PUSHBUTTON|WS_CHILD|WS_VISIBLE|WS_TABSTOP,
-                         CRect( PRIMDLG_WD-100, iDlgHt-61, PRIMDLG_WD- 20, iDlgHt-38 ),
+                     //    CRect( PRIMDLG_WD-100, iDlgHt-61, PRIMDLG_WD- 20, iDlgHt-38 ),
+                         CRect( PRIMDLG_WD-95, iDlgHt-66, PRIMDLG_WD- 15, iDlgHt-43 ),
                          this, IDCANCEL, TDCT_Button, FNT_STD, szCanMsg, 0, TRUE, TRUE, FALSE, 0 );
 
       m_bCreateControls = FALSE;
@@ -246,7 +252,6 @@ void CDlgPrimData::OnPaint()
    CDC* pDC = &dc;
 
    pDC->SetBkMode( TRANSPARENT );
-   pDC->SetTextAlign( TA_RIGHT | TA_TOP );
    pDC->SelectObject( GetCUIFont(FNT_STD) );
 
    // Draw label for each primary value control
@@ -266,6 +271,12 @@ void CDlgPrimData::OnPaint()
             BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( lDBID, iError );
             if ((iError >= 0) && (pPropType != NULL))
             {
+//               CWinRect ctrlRect( m_paCtrl[i], CWinRect::WINDOW );
+//               ScreenToClient( &ctrlRect );
+               CRect ctrlRect;
+               m_paCtrl[i]->GetWindowRect( ctrlRect );
+               ScreenToClient( &ctrlRect );
+
                CString sLabel = pPropType->getDescription().toLatin1().constData();
                if (sLabel.GetLength() > 0)
                {
@@ -277,14 +288,16 @@ void CDlgPrimData::OnPaint()
                      sLabel += sIdx;
                   }
                   sLabel += ':';
-
-//                  CWinRect ctrlRect( m_paCtrl[i], CWinRect::WINDOW );
-//                  ScreenToClient( &ctrlRect );
-                  CRect ctrlRect;
-                  m_paCtrl[i]->GetWindowRect( ctrlRect );
-                  ScreenToClient( &ctrlRect );
-                  pDC->TextOut( ctrlRect.left-FontX(5), ctrlRect.top+FontY(4), sLabel );
+					   pDC->SetTextAlign( TA_RIGHT | TA_TOP );
+                  pDC->TextOut( ctrlRect.left-FontX(5), ctrlRect.top+FontY(5), sLabel );
                }
+				// SAC 11/21/16 - added units labels
+               CString sUnitsLabel = pPropType->getUnitsLabel().toLatin1().constData();
+               if (sUnitsLabel.GetLength() > 0)
+               {
+					   pDC->SetTextAlign( TA_LEFT | TA_TOP );
+                  pDC->TextOut( ctrlRect.right+FontX(5), ctrlRect.top+FontY(5), sUnitsLabel );
+					}
             }
          }
       }

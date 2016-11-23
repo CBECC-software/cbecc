@@ -1720,7 +1720,7 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 			else
 			{	buff[20] = '\0';
 				QString sHdrText = buff;
-				sHdrText.toLower();
+				sHdrText = sHdrText.toLower();
 															if (bVerbose)
 																qsVerbose += QString("file starts '%1' >> ").arg(sHdrText);
 				if (sHdrText.indexOf("true") >= 0)

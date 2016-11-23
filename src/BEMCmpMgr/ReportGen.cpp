@@ -1076,7 +1076,7 @@ if (TRUE)  //bVerbose)
 					else
 					{	buff[20] = '\0';
 						QString sHdrText = buff;
-						sHdrText.toLower();
+						sHdrText = sHdrText.toLower();
 						if (sHdrText.indexOf("xml") >= 0)
 							iRetVal = 21;		//	21 : PDF report contains XML data - likely error messages from web server
 					}

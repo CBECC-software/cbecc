@@ -3069,7 +3069,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	QString sAT, sATcopy;
 			BEMPX_GetString( lDBID_Proj_AnalysisType, sAT );
 			sATcopy = sAT;
-			sAT.toLower();
+			sAT = sAT.toLower();
 			bResearchMode = (sAT.indexOf("research") >= 0);
 			bChkCode = !bResearchMode;
 			bProposedOnly = (sAT.indexOf("proposedonly") >= 0);      // SAC 9/6/13
@@ -3518,19 +3518,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (bResearchMode)
 			iNumRuns = 1;
 		else if (iCodeType == CT_T24N)
-		{	if (bProposedOnly)
-				iNumRuns = 2;
+	// SAC 11/22/16 - revised logic to NOT limit iNumRuns but rather toggle off individual runs below for bProposedOnly analysis
+		{	//if (bProposedOnly)
+			//	iNumRuns = 2;
 		}
 		else	// S901G or ECBC		- SAC 8/21/15
-		{	if (bProposedOnly)
-				iNumRuns = 2;
-			else
+		{	//if (bProposedOnly)
+			//	iNumRuns = 2;
+			//else
 				iNumRuns = 10;
 		}
 
 		assert( BEMPX_GetActiveModel() == 0 );
 
-		if (iNumRuns < 4)
+		if (bResearchMode || bProposedOnly)  // SAC 11/22/16 - was: iNumRuns < 4)
 		{	// second round of progress dialog setting initialization
 			if (iCodeType == CT_T24N)
 			{	if (bParallelSimulations)
@@ -3598,6 +3599,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BOOL bModelInitialized[]   = { FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE };				assert( iNumRuns <= 10 );
 		BOOL bSizingRunSimulated[] = { FALSE, FALSE, FALSE, FALSE, FALSE };
 		bool bModelToBeSimulated[] = { true, (iNumRuns > 1), (iNumRuns > 2), (iNumRuns > 3), (iNumRuns > 4), (iNumRuns > 5), (iNumRuns > 6), (iNumRuns > 7), (iNumRuns > 8), (iNumRuns > 9) };
+		if (bProposedOnly)  // SAC 11/22/16 - new logic to handle bProposedOnly analysis
+		{	if (iCodeType == CT_T24N)
+			{	assert( iNumRuns == 4 );
+				bModelToBeSimulated[1] = false;  bModelToBeSimulated[3] = false;  // toggle OFF baseline sizing and annunal runs
+			}
+			else	// S901G or ECBC		- SAC 8/21/15
+			{	bModelToBeSimulated[1] = false;  bModelToBeSimulated[2] = false;  bModelToBeSimulated[3] = false;  bModelToBeSimulated[4] = false;	// toggle OFF baseline runs by orientation
+				bModelToBeSimulated[6] = false;  bModelToBeSimulated[7] = false;  bModelToBeSimulated[8] = false;  bModelToBeSimulated[9] = false;
+		}	}
 
 		int iLastHrlyStorModelIdx = -1;
 //		bool bThisOSSimSkipped = false, bLastOSSimSkipped = false;	// SAC 4/18/14
@@ -3613,33 +3623,33 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //			bThisOSSimSkipped = false;
 			QString sProjFileAlone = sModelFileOnly;
 			BOOL bCallOpenStudio = TRUE;
-			BOOL bSimulateModel = TRUE;
+			BOOL bSimulateModel = bModelToBeSimulated[iRun];  // SAC 11/22/16 - was: TRUE;
 			bool bStoreHourlyResults = false;
 			QString sRunID, sRunIDLong;
 			int iProgressModel=0, iSizingRunIdx=-1, iAnalStep=-1, iModelGenErr=0, iResultRunIdx=0, iSimErrID=0, iResErrID=0;		//, iProgressModel2=0;
 			if (iCodeType == CT_T24N)
 			{	switch (iRun)
-				{	case  1 :				sRunID = "zb";			sRunIDLong = "Standard Sizing";		bSimRunsNow = true;								iProgressModel = BCM_NRP_Model_zb;									iAnalStep = 3;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	/*siOSWrapProgressIndex = CNRP_StdSizSim;*/		break;
-					case  2 :				sRunID = "ap";			sRunIDLong = "Proposed";				bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRP_Model_ap;		iSizingRunIdx = 0;	iAnalStep = 4;		iResultRunIdx = 0;	iModelGenErr = 17;	iSimErrID = 25;		iResErrID = 28;	/*siOSWrapProgressIndex = CNRP_PropSim;*/			break;
-					case  3 :				sRunID = "ab";			sRunIDLong = "Standard";				bSimRunsNow = true;								iProgressModel = BCM_NRP_Model_ab;		iSizingRunIdx = 1;	iAnalStep = 6;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	/*siOSWrapProgressIndex = CNRP_StdAnnSim;*/		break;
+				{	case  1 :				sRunID = "zb";			sRunIDLong = "Standard Sizing";		bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_zb;									iAnalStep = 3;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	/*siOSWrapProgressIndex = CNRP_StdSizSim;*/		break;
+					case  2 :				sRunID = "ap";			sRunIDLong = "Proposed";				bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[3]);		iProgressModel = BCM_NRP_Model_ap;		iSizingRunIdx = 0;	iAnalStep = 4;		iResultRunIdx = 0;	iModelGenErr = 17;	iSimErrID = 25;		iResErrID = 28;	/*siOSWrapProgressIndex = CNRP_PropSim;*/			break;
+					case  3 :				sRunID = "ab";			sRunIDLong = "Standard";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_ab;		iSizingRunIdx = 1;	iAnalStep = 6;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	/*siOSWrapProgressIndex = CNRP_StdAnnSim;*/		break;
 					default :	if (bResearchMode)
-											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = true;								iProgressModel = BCM_NRP_Model_u;																							/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}
-									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRP_Model_zp;									iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}	break;
+											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u;																																										/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}
+									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRP_Model_zp;									iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}	break;
 			}	}
 			else
 			{	switch (iRun)
-				{	case  1 :				sRunID = "zb1";		sRunIDLong = "Baseline Sizing1";		bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_zb1;								iAnalStep = 2;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
-					case  2 :				sRunID = "zb2";		sRunIDLong = "Baseline Sizing2";		bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_zb2;								iAnalStep = 2;		iResultRunIdx = 2;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
-					case  3 :				sRunID = "zb3";		sRunIDLong = "Baseline Sizing3";		bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_zb3;								iAnalStep = 2;		iResultRunIdx = 3;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
-					case  4 :				sRunID = "zb4";		sRunIDLong = "Baseline Sizing4";		bSimRunsNow = true;								iProgressModel = BCM_NRAP_Model_zb4;								iAnalStep = 3;		iResultRunIdx = 4;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
-					case  5 :				sRunID = "ap";			sRunIDLong = "Proposed";				bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_ap ;	iSizingRunIdx = 0;	iAnalStep = 4;		iResultRunIdx = 0;	iModelGenErr = 17;	iSimErrID = 25;		iResErrID = 28;	break;
-					case  6 :				sRunID = "ab1";		sRunIDLong = "Baseline1";				bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_ab1;	iSizingRunIdx = 1;	iAnalStep = 4;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
-					case  7 :				sRunID = "ab2";		sRunIDLong = "Baseline2";				bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_ab2;	iSizingRunIdx = 2;	iAnalStep = 4;		iResultRunIdx = 2;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
-					case  8 :				sRunID = "ab3";		sRunIDLong = "Baseline3";				bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_ab3;	iSizingRunIdx = 3;	iAnalStep = 4;		iResultRunIdx = 3;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
-					case  9 :				sRunID = "ab4";		sRunIDLong = "Baseline4";				bSimRunsNow = true;								iProgressModel = BCM_NRAP_Model_ab4;	iSizingRunIdx = 4;	iAnalStep = 6;		iResultRunIdx = 4;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
+				{	case  1 :				sRunID = "zb1";		sRunIDLong = "Baseline Sizing1";		bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_zb1;								iAnalStep = 2;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
+					case  2 :				sRunID = "zb2";		sRunIDLong = "Baseline Sizing2";		bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_zb2;								iAnalStep = 2;		iResultRunIdx = 2;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
+					case  3 :				sRunID = "zb3";		sRunIDLong = "Baseline Sizing3";		bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_zb3;								iAnalStep = 2;		iResultRunIdx = 3;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
+					case  4 :				sRunID = "zb4";		sRunIDLong = "Baseline Sizing4";		bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRAP_Model_zb4;								iAnalStep = 3;		iResultRunIdx = 4;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	break;
+					case  5 :				sRunID = "ap";			sRunIDLong = "Proposed";				bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[6]);		iProgressModel = BCM_NRAP_Model_ap ;	iSizingRunIdx = 0;	iAnalStep = 4;		iResultRunIdx = 0;	iModelGenErr = 17;	iSimErrID = 25;		iResErrID = 28;	break;
+					case  6 :				sRunID = "ab1";		sRunIDLong = "Baseline1";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab1;	iSizingRunIdx = 1;	iAnalStep = 4;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
+					case  7 :				sRunID = "ab2";		sRunIDLong = "Baseline2";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab2;	iSizingRunIdx = 2;	iAnalStep = 4;		iResultRunIdx = 2;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
+					case  8 :				sRunID = "ab3";		sRunIDLong = "Baseline3";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab3;	iSizingRunIdx = 3;	iAnalStep = 4;		iResultRunIdx = 3;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
+					case  9 :				sRunID = "ab4";		sRunIDLong = "Baseline4";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRAP_Model_ab4;	iSizingRunIdx = 4;	iAnalStep = 6;		iResultRunIdx = 4;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
 					default :	if (bResearchMode)
-											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = true;								iProgressModel = BCM_NRP_Model_u   ;														}
-									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = (!bParallelSimulations);		iProgressModel = BCM_NRAP_Model_zp ;								iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	}	break;
+											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u   ;														}
+									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRAP_Model_zp ;								iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	}	break;
 			}	}
 							assert( iSizingRunIdx < 5 );	// otherwise above bSizingRunSimulated array requires re-sizing
 
@@ -3720,6 +3730,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							}
 				}
+				else if (bCallOpenStudio && !bSimulateModel)
+					bCallOpenStudio = FALSE;	// SAC 11/22/16 - ensure no sim of models when in ProposedOnly mode
 
 			// check for any SUBSEQUENT transforms that initialize to this one and init them (w/out rule evaluation) PRIOR to performing simulation & retrieving results
 								if (bVerbose)
