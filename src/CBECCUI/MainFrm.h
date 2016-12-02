@@ -242,6 +242,8 @@ protected:
 	afx_msg void OnFileImportModel();
    afx_msg void OnHelpMandatoryRequirementsForAssemblies();
    afx_msg void OnUpdateHelpMandatoryRequirementsForAssemblies(CCmdUI* pCmdUI);
+   afx_msg void OnHelpCSEDocumentation();
+   afx_msg void OnUpdateHelpCSEDocumentation(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateHelpCompFormChecklist_New(CCmdUI* pCmdUI);
 	afx_msg void OnHelpCompFormChecklist_New();
 	afx_msg void OnUpdateHelpCompFormChecklist_Alterations(CCmdUI* pCmdUI);

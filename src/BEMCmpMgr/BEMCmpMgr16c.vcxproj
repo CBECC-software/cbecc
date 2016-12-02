@@ -140,6 +140,7 @@
       </PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="OpenStudioInterface.cpp" />
+    <ClCompile Include="ParseT24ReportXML.cpp" />
     <ClCompile Include="Qt_FileDownloader.cpp" />
     <ClCompile Include="ReportGen.cpp" />
     <ClCompile Include="stdafx.cpp">

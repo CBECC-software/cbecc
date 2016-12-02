@@ -554,8 +554,12 @@ void CDlgCreate::OnOK()
 	      }
 	
 	      if (m_lObjTypeDBID > 0)
-	         // INSTALL Object Type value (if necessary)
-	         BEMPX_SetBEMData( m_lObjTypeDBID, BEMP_Int, (void*) &m_lObjTypeValue );
+	      {	// SAC 12/1/16 - PREVENT setting object type if the property is not classified as a user input
+				int iPropDataType = BEMPX_GetCompDataType( m_lObjTypeDBID );
+				if (iPropDataType < BEMD_Prescribed)
+		         // INSTALL Object Type value (if necessary)
+		         BEMPX_SetBEMData( m_lObjTypeDBID, BEMP_Int, (void*) &m_lObjTypeValue );
+			}
 		}
 
 #ifdef UI_CANRES

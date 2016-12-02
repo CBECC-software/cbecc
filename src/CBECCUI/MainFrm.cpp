@@ -214,6 +214,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_USERMANUAL, OnUpdateHelpUserManual)
 	ON_COMMAND(IDM_HELP_MANDREQASSEM, OnHelpMandatoryRequirementsForAssemblies)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_MANDREQASSEM, OnUpdateHelpMandatoryRequirementsForAssemblies)
+	ON_COMMAND(IDM_HELP_CSEDOCU, OnHelpCSEDocumentation)
+	ON_UPDATE_COMMAND_UI(IDM_HELP_CSEDOCU, OnUpdateHelpCSEDocumentation)
 	ON_WM_PAINT()
 	ON_WM_SETCURSOR()
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
@@ -4409,15 +4411,17 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 	CString sReportLabel  = "Compliance Report";
 	CString sRptDBIDName  = "Proj:CompReportPDF";
 	CString sAppendForPDF = " - AnalysisResults-BEES.pdf";
+	CString sAppendForXML = " - AnalysisResults-BEES.xml";  // SAC 11/29/16
 #elif UI_CANRES
 	CString sReportLabel  = (iReportID == 3 ? "Standard Model Report"					: "Compliance Report" );
 	CString sRptDBIDName  = (iReportID == 3 ? "Proj:CompReportStd"						: "Proj:CompReportPDF" );
 	CString sAppendForPDF = (iReportID == 3 ? " - AnalysisResults-BEES-Std.pdf"	: " - AnalysisResults-BEES.pdf" );
+	CString sAppendForXML = (iReportID == 3 ? ""                               	: " - AnalysisResults-BEES.xml" );
 #else
 	AfxMessageBox( "Report viewing only available in California Title-24 CBECC-* programs." );
 	return;
 #endif
-	CString sProjFileName, sRptFileName, sResXMLFileName, sUserPrompt;
+	CString sProjFileName, sRptFileName, sResXMLFileName, sUserPrompt, sRptXMLFileName;
 	int iActionToPerform = 0;
 	CDocument* pDoc = GetActiveDocument();
 	CString sErrMsg = "Project data must be stored to a valid file and analysis performed before viewing a compliance report.";
@@ -4426,8 +4430,13 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 		if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
 		{	sErrMsg.Empty();
 			sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+			if (!sAppendForXML.IsEmpty())  // SAC 11/29/16
+				sRptXMLFileName = sRptFileName + sAppendForXML;
 			sRptFileName += sAppendForPDF;
 			if (FileExists( sRptFileName ))
+				iActionToPerform = 1;
+			else if (!sRptXMLFileName.IsEmpty() && FileExists( sRptXMLFileName ) &&		// SAC 11/29/16 - added to extract PDF from report XML file (if XML present but PDF not)
+						CMX_ExtractTitle24ReportFromXML( sRptXMLFileName, sRptFileName ))  //, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
 				iActionToPerform = 1;
 			else
 			{	sResXMLFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
@@ -6191,6 +6200,19 @@ void CMainFrame::OnHelpMandatoryRequirementsForAssemblies()
 }
 
 void CMainFrame::OnUpdateHelpMandatoryRequirementsForAssemblies(CCmdUI* pCmdUI) 
+{
+   pCmdUI->Enable( TRUE );
+}
+
+
+void CMainFrame::OnHelpCSEDocumentation()		// SAC 11/30/16
+{
+//	OpenFileViaShellExecute( "https://cse-sim.github.io/cse/index.html", "CSE Simulation Engine Documentation" /*FileDescrip*/ );
+	HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", "https://cse-sim.github.io/cse/index.html", NULL, "" /*sFilePath*/, SW_SHOWNORMAL );
+	hinstShellExec;
+}
+
+void CMainFrame::OnUpdateHelpCSEDocumentation(CCmdUI* pCmdUI)
 {
    pCmdUI->Enable( TRUE );
 }

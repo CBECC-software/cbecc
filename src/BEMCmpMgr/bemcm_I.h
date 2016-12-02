@@ -124,6 +124,8 @@ extern int ComputeSHA256_File( const char* pszPathFile, char* pResultBuffer, int
 extern int ComputeSHA256_File_Raw( const char* pszPathFile, unsigned char* hash, int iHashLen );
 extern int ComputeSHA256_Compare( const char* pszPathFile, const char* pBufferToCompare );
 
+extern bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE );
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // CSE & Analysis progress tracking callback stuff

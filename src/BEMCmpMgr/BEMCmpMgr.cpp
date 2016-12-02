@@ -1803,6 +1803,22 @@ int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const c
 	return iRetVal;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef CECRPTGEN
+
+bool CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
+{	return ParseTitle24ReportXML( xmlFileName, pdfFileName, rptElemName, bSupressAllMessageBoxes );
+}
+
+#endif // CECRPTGEN
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
 

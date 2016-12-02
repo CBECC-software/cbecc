@@ -138,6 +138,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="ParseT24ReportXML.cpp" />
     <ClCompile Include="Qt_FileDownloader.cpp" />
     <ClCompile Include="ReportGen.cpp" />
     <ClCompile Include="stdafx.cpp">

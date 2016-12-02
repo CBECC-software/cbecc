@@ -201,6 +201,8 @@ int  BEMCMPMGR_API __cdecl CMX_CheckSiteAccess(	const char* pszSite, const char*
 int  BEMCMPMGR_API __cdecl CMX_GenerateFileHashesFromCSV( const char* pszHashFileListCSVPathFile, const char* pszHashOutputPathFile, const char* pszDefaultPath=NULL );  // SAC 9/2/13
 
 bool BEMCMPMGR_API __cdecl CMX_RetrievePublicKey( QString sSecKeyRulelistName, bool bConvertBinHex, QString& sRptPubKey, QString& sErrMsg );
+
+bool BEMCMPMGR_API __cdecl CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE );
 #endif // CECRPTGEN
 
 // SAC 6/10/13 - routine to generate a report summarizing/describing a building model that is heavily ruleset-defined

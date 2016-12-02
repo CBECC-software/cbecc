@@ -1271,7 +1271,8 @@ void CTreeBDB::AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParOb
 	//	int iError = 0;
 	//   pChildObj = BEMPX_GetObject( lDBID, iSpecialVal, iError, iParObjIdx, (BEM_ObjType) iParSrc );
    //   if ( iError >= 0  &&  pChildObj  &&  pChildObj->getClass()  &&
-      if ( BEMPX_GetObject( lDBID, pChildObj, iParObjIdx, (BEM_ObjType) iParSrc ) && pChildObj  &&  pChildObj->getClass()  &&
+		// SAC 12/2/16 - fixed bug in call to BEMPX_GetObject() where third (iDispDataType) argument was left off, causing iParObjIdx passed to always = 0
+      if ( BEMPX_GetObject( lDBID, pChildObj, -1, iParObjIdx, (BEM_ObjType) iParSrc ) && pChildObj  &&  pChildObj->getClass()  &&
            // SAC 7/6/00 - added following check for compatibility with current tree mode
            ClassIsCompatibleWithMode( pChildObj->getClass()->get1BEMClassIdx() ) )
       {	if (DBIDAssignmentCompatible( lDBID, iParClass, iParObjIdx, (BEM_ObjType) iParSrc ))	// SAC 12/9/13

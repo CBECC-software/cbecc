@@ -1239,7 +1239,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 			if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
 				iRunType[iNumRuns++] = CRM_StdDesign;
-			if (lDesignRatingRunID > 0)
+			if (lDesignRatingRunID > 0 && lAnalysisType >= 13)		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly
 				iRunType[iNumRuns++] = CRM_DesignRating;
 		}
 
