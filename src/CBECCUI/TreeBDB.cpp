@@ -712,6 +712,20 @@ bool DBIDAssignmentCompatible( long lAssignmentDBID, int iBEMClass, int iObjIdx,
 				bRetVal = false;
 		}
 	}
+	// SAC 12/6/16 - fix bug reported by Ken where user can create HVACHeat or HVACCool children for HtPump HVACSys objects (and vice-versa)
+	else if (iBEMClass == eiBDBCID_HVACSys)
+	{	long lHVACSysType = 0;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Type", eiBDBCID_HVACSys ), lHVACSysType, 0, -1, iObjIdx, (int) eBEMObjType );
+		if (lAssignmentDBID >= elDBID_HVAC_HeatSystem1 && lAssignmentDBID <= elDBID_HVAC_HeatSystem10 && lHVACSysType == 2)
+			// cannot assign HVACHeat to HVACSys of Type = HtPump
+			bRetVal = false;
+		else if (lAssignmentDBID >= elDBID_HVAC_CoolSystem1 && lAssignmentDBID <= elDBID_HVAC_CoolSystem10 && lHVACSysType == 2)
+			// cannot assign HVACCool to HVACSys of Type = HtPump
+			bRetVal = false;
+		else if (lAssignmentDBID >= elDBID_HVAC_HtPumpSystem1 && lAssignmentDBID <= elDBID_HVAC_HtPumpSystem10 && (lHVACSysType == 1 || lHVACSysType == 3))
+			// cannot assign HVACHtPump to HVACSys of Type = Other... or Var OAV...
+			bRetVal = false;
+	}
 
 	return bRetVal;
 }
@@ -1246,6 +1260,15 @@ BOOL CTreeBDB::DBIDInList( long lCheckDBID, long** plDBID )
    return FALSE;
 }
 
+int IndexOfDBIDInList( long lCheckDBID, long** plDBID )
+{  int i=0;
+   while (plDBID[i] != NULL)
+   {  if (*plDBID[i++] == lCheckDBID)
+         return i-1;
+   }
+   return -1;
+}
+
 static BOOL ValueInArrayLong( CArray<long,long>* piArray, long iVal )   // SAC 8/20/13
 {  ASSERT( piArray );
    if (piArray != NULL)
@@ -1256,6 +1279,17 @@ static BOOL ValueInArrayLong( CArray<long,long>* piArray, long iVal )   // SAC 8
             return TRUE;
    }
    return FALSE;
+}
+
+static int IndexOfValueInArrayLong( CArray<long,long>* piArray, long iVal )   // SAC 8/20/13
+{  ASSERT( piArray );
+   if (piArray != NULL)
+   {  int iSize = piArray->GetSize();
+      for (int i=0; i<iSize; i++)
+         if (iVal == piArray->GetAt(i))
+            return i;
+   }
+   return -1;
 }
 
 void CTreeBDB::AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParObjIdx, int iParSrc, long** plDBID )
@@ -2622,7 +2656,7 @@ void CTreeBDB::PresentQuickMenu( HTREEITEM htiSelItem )
                      	
                      	// Add additional create entries for assigned components
 								siaCr8DBIDAssignmentListIndex.RemoveAll();   // SAC 9/13/13
-								CArray<long,long> laCr8EnabledCompPropIDs, laCr8DisabledCompPropIDs;   // SAC 9/13/13
+								CArray<long,long> laCr8EnabledCompPropIDs, laCr8DisabledCompPropIDs, laCr8EnabledCompPropIDsActual;   // SAC 9/13/13
                      	long** plDBIDList = ClassToDBIDAssignmentList( iBDBClass );
                      	int iDBIDListIdx = 0;
                      	while (plDBIDList[ iDBIDListIdx ] != NULL)
@@ -2662,20 +2696,47 @@ void CTreeBDB::PresentQuickMenu( HTREEITEM htiSelItem )
 										long lAssignCompPropDBID = BEMPX_GetDBID( BEMPX_GetClassID( lAssignmentDBID ), BEMPX_GetPropertyID( lAssignmentDBID ), 1 );  // SAC 9/13/13
 										if (	( bEnableCr8Item && !ValueInArrayLong( &laCr8EnabledCompPropIDs , lAssignCompPropDBID )) ||
 												(!bEnableCr8Item && !ValueInArrayLong( &laCr8DisabledCompPropIDs, lAssignCompPropDBID )) )
-                     	      {	if (!menuCr8.AppendMenu( MF_STRING, uiCreateID++, pPropType->getDescription().toLatin1().constData() ))
-                     	      	   MessageBox( "AppendCr8Menu( ... ) Failed." );
-                     	      	else
-											{	siaCr8DBIDAssignmentListIndex.Add( iDBIDListIdx-1 );   // SAC 9/13/13
+                     	      {	//if (!menuCr8.AppendMenu( MF_STRING, uiCreateID++, pPropType->getDescription().toLatin1().constData() ))
+                     	      	//   MessageBox( "AppendCr8Menu( ... ) Failed." );
+                     	      	//else
+											//{
+											//	siaCr8DBIDAssignmentListIndex.Add( iDBIDListIdx-1 );   // SAC 9/13/13
 												if (!bEnableCr8Item)
-                     	      	   {	menuCr8.EnableMenuItem( uiCreateID-1, MF_GRAYED );
+                     	      	   {	//menuCr8.EnableMenuItem( uiCreateID-1, MF_GRAYED );
 													laCr8DisabledCompPropIDs.Add( lAssignCompPropDBID );   // SAC 9/13/13
 												}
 												else
-													laCr8EnabledCompPropIDs.Add( lAssignCompPropDBID );   // SAC 9/13/13
-											}
+												{	laCr8EnabledCompPropIDs.Add( lAssignCompPropDBID );   // SAC 9/13/13
+													laCr8EnabledCompPropIDsActual.Add( lAssignmentDBID );
+												}
+											//}
                      	      }
                      	   }
                      	}
+                  	// SAC 12/6/16 - new separate loop to add menu items so to avoid getting combination of disabled and enabled items for some object types
+                  		for (int iCr8Lp=0; iCr8Lp<2; iCr8Lp++)
+                  		{	CArray<long,long>* plaCr8CompPropIDs     = (iCr8Lp==0 ? &laCr8EnabledCompPropIDsActual : &laCr8DisabledCompPropIDs);
+                  			//CArray<long,long>* plaPrevCr8CompPropIDs = (iCr8Lp==0 ? NULL : &laCr8EnabledCompPropIDs);
+	                  		for (int iCr8Item=0; iCr8Item < (int) plaCr8CompPropIDs->GetSize(); iCr8Item++)
+									{	BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( plaCr8CompPropIDs->GetAt(iCr8Item), iError );
+										if (pPropType)
+										{	if (iCr8Lp==0)
+											{	long lAssignCompPropDBID = BEMPX_GetDBID( BEMPX_GetClassID( plaCr8CompPropIDs->GetAt(iCr8Item) ), BEMPX_GetPropertyID( plaCr8CompPropIDs->GetAt(iCr8Item) ), 1 );
+												int idxAssignCompPropDBID = IndexOfValueInArrayLong( &laCr8DisabledCompPropIDs, lAssignCompPropDBID );
+												if (idxAssignCompPropDBID >= 0)
+													laCr8DisabledCompPropIDs[idxAssignCompPropDBID] = 0;
+											}
+                     	      	if (!menuCr8.AppendMenu( MF_STRING, uiCreateID++, pPropType->getDescription().toLatin1().constData() ))
+                     	      	{  MessageBox( "AppendCr8Menu( ... ) Failed." );
+                     	      		uiCreateID--;
+                     	      	}
+                     	      	else
+											{	//siaCr8DBIDAssignmentListIndex.Add( iDBIDListIdx-1 );   // SAC 9/13/13
+												siaCr8DBIDAssignmentListIndex.Add( IndexOfDBIDInList( plaCr8CompPropIDs->GetAt(iCr8Item), &plDBIDList[0] ) );
+												if (iCr8Lp>0)
+                     	      	   	menuCr8.EnableMenuItem( uiCreateID-1, MF_GRAYED );
+									}	}	}
+                  		}
 							}
 
                   }

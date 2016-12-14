@@ -3670,9 +3670,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				if (iNumErrors > 0)
 				{	char pszRuleErr[1024];
 					CString sErrTmp;
+					CStringArray saErrors;
 					//sErrResultMsg.Format( "%d Error(s) encountered performing analysis (error code %d).", iNumErrors, iSimResult );
-					int iErrCount = 0;
-					for (int iErr=1; iErr<=iNumErrors; iErr++)
+					int iErr, iErrCount = 0;
+					for (iErr=1; iErr<=iNumErrors; iErr++)
 					{	if (BEMPX_GetRulesetErrorMessage( iErr, pszRuleErr, 1024 ))
 						{	// filter out generic messages that indicate certain rulelists failing
 							if (	_strnicmp( pszRuleErr, "ERROR:  Error encountered evaluating rulelist 'ProposedModel", 60 ) == 0 )		// ProposedModelCodeCheck / SimulationCheck / CodeAdditions
@@ -3680,25 +3681,35 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 							}
 							else if (iVerbose > 0 || _strnicmp( pszRuleErr, "ERROR:  Error encountered evaluating rule", 41 ) != 0)
 							{	iErrCount += 1;
-								if (iNumErrors < 2)
-									sErrTmp.Format( "\n\n%s", pszRuleErr );
-								else
-									sErrTmp.Format( "\n\n(%d) %s", iErrCount, pszRuleErr );
+								sErrTmp = pszRuleErr;
 								if (iVerbose == 0)
 								{	// if verbose flag NOT set, then strip off details of rule where error occurred
 									int iRuleDetailIdx = sErrTmp.Find( "evaluating rule: Rule" );
 									if (iRuleDetailIdx > 0)
 										sErrTmp = sErrTmp.Left( iRuleDetailIdx );
 								}
-								sErrResultMsg += sErrTmp;
+								saErrors.Add( sErrTmp );
 							}
 						}
 						else
 						{	ASSERT( FALSE );
 						}
-					}	ASSERT( (iErrCount > 0 || sErrResultMsg.IsEmpty()) );
+					}	ASSERT( (iErrCount > 0 || saErrors.GetSize()==0) );
+					for (iErr=1; iErr<=iErrCount; iErr++)
+					{	if (iErrCount < 2)
+							sErrTmp.Format( "\n\n%s", saErrors[iErr-1] );
+						else
+							sErrTmp.Format( "\n\n(%d) %s", iErr, saErrors[iErr-1] );
+						sErrResultMsg += sErrTmp;
+					}
+
 					if (sErrResultMsg.IsEmpty())
 						sErrResultMsg.Format( "%d Error(s) encountered performing analysis (error code %d).", iNumErrors, iSimResult );
+					else if (iErrCount == 1)
+					{	sErrTmp.Format( "\n\nAnalysis returned error code %d.", iSimResult );
+						sErrResultMsg = sErrResultMsg.Right( sErrResultMsg.GetLength()-2 );  // strip off leading newlines
+						sErrResultMsg += sErrTmp;
+					}
 					else
 					{	sErrTmp.Format( "%d Error(s) encountered performing analysis (error code %d):", iErrCount, iSimResult );
 						sErrResultMsg = sErrTmp + sErrResultMsg;
@@ -4405,6 +4416,30 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 
 void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 {
+
+// TESTING
+	char *toEncode = "String_To-Encode!?";
+
+	char  strEncrypted[50];		strEncrypted[0]=0;
+	long lEncRetVal = CMX_Encrypt( (const unsigned char*) toEncode, strlen(toEncode), strEncrypted, 50 );		lEncRetVal;
+
+	char  strEncoded[30];	strEncoded[0]=0;
+	char  strDecoded[30];	strDecoded[0]=0;
+	char  strScrEncoded[30];	strScrEncoded[0]=0;
+	char  strScrDecoded[30];	strScrDecoded[0]=0;
+	long lEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strEncoded, 30 );
+	int  iDecdRet = CMX_DecodeBase64( strDecoded, strEncoded );
+	long lScrEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strScrEncoded, 30, true );
+	int  iScrDecdRet = CMX_DecodeBase64( strScrDecoded, strScrEncoded, true );
+	CString sBEMExeSecure = (BEMPX_SecureExecutable() ? "Secure" : "NOT Secure" );
+	CString sCMExeSecure  = (  CMX_SecureExecutable() ? "Secure" : "NOT Secure" );
+	CString sTestMsg;
+	sTestMsg.Format( "Executable Security:\n   BEMProc:  %s\n   BEMCmpMgr:  %s\n\nEncoding '%s'\nNOT Secure --\n   Encode returned %d:  %s\n   Decode returned %d:  %s\n"
+																																	"SECURE --\n   Encode returned %d:  %s\n   Decode returned %d:  %s",
+							sBEMExeSecure, sCMExeSecure, toEncode, lEncdRet, strEncoded, iDecdRet, strDecoded, lScrEncdRet, strScrEncoded, iScrDecdRet, strScrDecoded );
+	AfxMessageBox( sTestMsg );
+
+
 	CString sAppendForResults = " - AnalysisResults.xml";
 #ifdef UI_CARES
 	ASSERT( iReportID == 0 );
