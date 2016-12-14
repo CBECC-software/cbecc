@@ -238,6 +238,8 @@ void BEMPROC_API __cdecl BEMPX_CloseLogFile();		// SAC 5/19/14
 
 void BEMPROC_API __cdecl BEMPX_CloseBEMProc( bool bShuttingDown=true, bool bCloseLogFile=true );
 
+bool BEMPROC_API __cdecl BEMPX_SecureExecutable();
+
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
 																const char* psInitLogFileName = NULL );
 
@@ -295,7 +297,8 @@ bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFile
 																			 int iFileType = 0,    // SAC 8/30/11 - added iFileType argument
 																			 bool bAppend = false, const char* pszModelName = NULL, bool bWriteTerminator = true,	// SAC 2/19/13 - added 3 args
 																			 int iBEMProcIdx=-1, long lModDate=-1, bool bOnlyValidInputs=false,  // SAC 3/18/13  // SAC 6/26/13  // SAC 4/16/14
-																			 bool bAllowCreateDateReset=true );		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
+																			 bool bAllowCreateDateReset=true,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
+																			 int iPropertyCommentOption=0 );			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 
 BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1 );
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,

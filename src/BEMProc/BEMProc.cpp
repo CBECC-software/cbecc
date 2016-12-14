@@ -87,6 +87,14 @@ void BEMPX_SetUIActiveFlag( bool bActiveUI )
 
 
 /////////////////////////////////////////////////////////////////////////////
+bool BEMPX_SecureExecutable()
+{	char test[] = "Check String";
+	QString qsTest = test;
+	ExpCryptEncode( test, strlen( test ) );
+	return (qsTest.compare(test)!=0);
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // 
 /////////////////////////////////////////////////////////////////////////////
 BOOL BEMPX_LoadDataModel( const char* psBEMProcFileName, int iBEMType, const char* psInitLogFileName )

@@ -126,6 +126,12 @@ UINT CryptoFile::Read( void* lpBuf, UINT nCount )
    return nRead;
 }
 
+void ExpCryptDecode( char* lpBuf, int length )
+{
+   for (int i = 0; i < length; i++)
+      lpBuf[i] = lpBuf[i];
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -164,6 +170,12 @@ void CryptoFile::Write( const void* lpBuf, UINT nCount )
       m_lByteCount += end;
       start += MAX_CRYPTOFILE_BUFSIZE;
    }
+}
+
+void ExpCryptEncode( char* lpBuf, int length )
+{
+   for (int i = 0; i < length; i++)
+      lpBuf[i] = lpBuf[i];
 }
 
 

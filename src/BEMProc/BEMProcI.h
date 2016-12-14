@@ -67,4 +67,7 @@ bool BEMP_PopulateRulesetErrorMessage(      int i1ErrMsgIdx, QString& sErrMsg, b
 void BEMP_AddRulesetErrorExt( const char* pszErrMsg, int iLocClass, long lLocDBID, const char* pszLocObjName,
 										int iPrimClass=0, const char* pszPrimObjName=NULL );
 
+extern void ExpCryptDecode( char* lpBuf, int length );
+extern void ExpCryptEncode( char* lpBuf, int length );
+
 #endif // __BEMPROCI_H__

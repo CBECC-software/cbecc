@@ -167,7 +167,8 @@ public:
    CProjectFile( const char* fileName, int iFileMode = BEMFM_INPUT /*bool bIsInputMode = TRUE*/, long lDBIDVersion = 0,
                  long lVersion = 0, int fileMode = BEMTextIO::load, bool bWriteAllProperties = FALSE,  // SAC 1/15/03
                  BOOL bSupressAllMessageBoxes = FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
-					  int iFileType = 0, bool bOnlyValidInputs = false );   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14 - added bOnlyValidInputs arg
+					  int iFileType = 0, bool bOnlyValidInputs = false,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14 - added bOnlyValidInputs arg
+					  int iPropertyCommentOption = 0 );		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
    ~CProjectFile();
 
 // SAC 4/27/03 - Modified function to return BOOL
@@ -199,13 +200,14 @@ public:
    bool UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int iProp );  // SAC 1/22/02 - final argument POSITION pos -> int iProp
    void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx );
    void WriteProperties( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false,		// SAC 6/8/15 - CBECC issue 1061
-   								bool bSkipWritingComponentName=false );	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
-   void WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, bool bWritePrimaryDefaultData=false );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp	// SAC 6/10/15 - CBECC issue 1061
-   void WriteParenPropertyArray(   BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
+   								bool bSkipWritingComponentName=false, int iIndentSpcs=0 );	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+   void WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, bool bWritePrimaryDefaultData=false, int iIndentSpcs=0 );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp	// SAC 6/10/15 - CBECC issue 1061
+   void WriteParenPropertyArray(   BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, int iIndentSpcs=0 );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
    void WriteCritDefComment( const char* szComment );
-   void WriteAssignedComponents( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false );		// SAC 6/8/15 - CBECC issue 1061
-   void WriteComponent( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false );		// SAC 6/8/15 - CBECC issue 1061
+   void WriteAssignedComponents( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false, int iIndentSpcs=0 );		// SAC 6/8/15 - CBECC issue 1061
+   void WriteComponent( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false, int iIndentSpcs=0 );		// SAC 6/8/15 - CBECC issue 1061
    void WriteProjectFile( int iBEMProcIdx=-1 );  // SAC 3/18/13
+	void WriteComment( QString sDescrip, QString sUnits, int iStartChr, int iWhiteSpc );	// SAC 12/5/16
 
    void       SkipToEndOfComponent();
    BOOL       NameIsUnique( QString& sObjName, BOOL bCheckLibsOnly, int iBEMProcIdx=-1 );
@@ -287,6 +289,8 @@ private:
 	QStringList m_saSpecificPropNames;
 	QVector<BEMObject*> m_povSpecificPropObjects;
 	BOOL m_bWriteOnlySpecificProps;
+	int m_iPropertyCommentOption;		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+	int m_iChildIndent;					// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
 };
 
 
@@ -312,7 +316,8 @@ private:
 CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputMode*/, long lDBIDVersion,
                             long lVersion, int fileMode, bool bWriteAllProperties,
                             BOOL bSupressAllMessageBoxes /*=FALSE*/,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
-									 int iFileType /*=0*/, bool bOnlyValidInputs /*=false*/ )   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14
+									 int iFileType /*=0*/, bool bOnlyValidInputs /*=false*/,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14
+									 int iPropertyCommentOption /*=0*/ )		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 {
    // set some member flags
    m_bIsUserInputMode = (iFileMode == BEMFM_INPUT)/*bIsInputMode*/;
@@ -333,6 +338,9 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
 
 	m_bSpecificPropertiesActive = FALSE;		// SAC 3/22/16 - added to write certain CSE objects w/out certain properties for pre-run, then altered following pre-run
 	m_bWriteOnlySpecificProps = FALSE;
+	m_iPropertyCommentOption = iPropertyCommentOption;
+
+	m_iChildIndent = (m_iFileType == BEMFT_CSE ? 3 : 0);		// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
 
    try
    {
@@ -2083,7 +2091,7 @@ void ReportInvalidEnumerationWrite( BEMObject* pObj, BEMProperty* pProp, int iBE
 //   
 /////////////////////////////////////////////////////////////////////////////
 void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx /*=-1*/,
-																bool bWritePrimaryDefaultData /*=false*/ )  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp		// SAC 6/8/15 - CBECC issue 1061
+																bool bWritePrimaryDefaultData /*=false*/, int iIndentSpcs /*=0*/ )  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp		// SAC 6/8/15 - CBECC issue 1061
 {
    // Write array as list of the format "PROP[n] = VALUE" with comments as required
    QString sPropType = pProp->getType()->getShortName();
@@ -2111,9 +2119,9 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
             QString sCount, sLine;
             sCount = QString( "%1" ).arg( QString::number(iCount) );
 				if (bIsCSECommandProperty)  // SAC 1/3/13 - for commands within CSE objects, don't write array index OR '=' sign
-            	sLine = "   " + sPropType + " "; 
+            	sLine = QString( "%1%2 " ).arg( " ", 3+iIndentSpcs ).arg( sPropType ); 
 				else
-            	sLine = "   " + sPropType + "[" + sCount + "] = "; 
+            	sLine = QString( "%1%2[%3] = " ).arg( " ", 3+iIndentSpcs ).arg( sPropType, sCount ); 
 
             if ( !m_bIsUserInputMode )
             {  // if we're not in user input mode, then we must write the status string prior to the property's value
@@ -2163,13 +2171,13 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx )  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
+void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, int iIndentSpcs )  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp
 {
    // Write array as list of the format "PROP = ( VALUE1, VALUE2, ... )" with no comments
    int iCount = 0;
    m_file.WriteToken( "( ", 2 );
    QString sPropType = pProp->getType()->getShortName();
-   int iColStart = 3 + sPropType.length() + 6;
+   int iColStart = 3 + sPropType.length() + 6 + iIndentSpcs;
    QString sLine;
 
    // loop over all properties in array   
@@ -2220,6 +2228,25 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
 }
 
 
+void CProjectFile::WriteComment( QString sDescrip, QString sUnits, int iStartChr, int iWhiteSpc )
+{
+	QString sPropComment;
+	if (!sUnits.isEmpty() && !sDescrip.isEmpty())
+		sPropComment = QString( "%1, %2" ).arg( sDescrip, sUnits );
+	else if (!sUnits.isEmpty())
+		sPropComment = sUnits;
+	else if (!sDescrip.isEmpty())
+		sPropComment = sDescrip;
+	if (!sPropComment.isEmpty())
+	{	int iAddSpaces = iWhiteSpc;
+		if (m_file.GetCharacterIndex() < (iStartChr - iWhiteSpc))
+			iAddSpaces += iStartChr - iWhiteSpc - m_file.GetCharacterIndex();
+		QString sComChrs = (m_iFileType == BEMFT_CSE ? "//" : ";");
+		QString sPropComment2 = QString( "%1%2 %3" ).arg( " ", iAddSpaces ).arg( sComChrs, sPropComment );
+		m_file.WriteToken( sPropComment2.toLocal8Bit().constData(), sPropComment2.length() );
+}	}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // CProjectFile Class Function:  WriteProperties()
@@ -2238,7 +2265,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
 //   
 /////////////////////////////////////////////////////////////////////////////
 void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/, 		// SAC 6/8/15 - CBECC issue 1061
-   								bool bSkipWritingComponentName /*=false*/ )	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
+   								bool bSkipWritingComponentName /*=false*/, int iIndentSpcs /*=0*/ )	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
 {
    int length;
 	BOOL bAbortObjectWrite = FALSE;  // SAC 1/19/13
@@ -2252,6 +2279,8 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 			length-=3;
 			sObjType = sObjType.right( length );
 		}
+		if (iIndentSpcs > 0)
+			sObjType = QString( "%1%2" ).arg( " ", iIndentSpcs ).arg( sObjType );
 		sObjType += "   ";  // SAC 1/19/13 - don't write anything to file until we are certain we have a valid object name
 	   //m_file.WriteToken( sObjType, length );
 	   //m_file.WriteToken( "   ", 3 );
@@ -2312,9 +2341,11 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 		}
 
    	// Write UI tree state as the first property (if it is not the default value)
+   	QString sIndent = QString( "%1" ).arg( " ", 3+iIndentSpcs );
    	if (pObj->getTreeState() != DEFAULT_TREE_STATE && m_iFileType != BEMFT_CSE)   // SAC 8/30/11
    	{
-   	   m_file.WriteToken( "   ", 3 );
+   	   m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
+   	   //m_file.WriteToken( "   ", 3 );
    	   m_file.WriteToken( szTreeState, strlen(szTreeState) );
    	   m_file.WriteToken( " = ", 3 );
    	   QString sTemp;
@@ -2342,7 +2373,8 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	         PropertyToString( pObj, pProp, sData, iBEMProcIdx );
    	         if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// prevent writing enums = "(null)"
    	         {
-	   	         m_file.WriteToken( "   ", 3 );
+   	   			m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
+	   	         //m_file.WriteToken( "   ", 3 );
    		         m_file.WriteToken( sPropType.toLocal8Bit().constData(), sPropType.length() );
 						if (m_iFileType == BEMFT_CSE && sPropType.compare("like", Qt::CaseInsensitive)==0)  // SAC 4/20/12 - special case for CSE "like" property - can't use '='
 	   	         	m_file.WriteToken( " ", 1 );
@@ -2359,6 +2391,15 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	            }
    	
    	            m_file.WriteToken( sData.toLocal8Bit().constData(), sData.length() );
+
+					// SAC 12/5/16 - include comments for output properties
+						if (m_iPropertyCommentOption == 1)
+						{	bool bWrtDescrip = (!pProp->getType()->getDescription().isEmpty() &&
+														pProp->getType()->getDescription().compare( pProp->getType()->getShortName(), Qt::CaseInsensitive )!=0);
+							if (!pProp->getType()->getUnitsLabel().isEmpty() || bWrtDescrip)
+								WriteComment( (bWrtDescrip ? pProp->getType()->getDescription() : ""), pProp->getType()->getUnitsLabel(), 40, 4 );
+						}
+
    	            m_file.NewLine();
    	            //if ( pProp->m_iCritDefIdx > 0 )
    	            //   WriteCritDefComment( BEMPX_GetCriticalDefaultCommentFromIndex( pProp->m_iCritDefIdx, iBEMProcIdx ) );
@@ -2375,17 +2416,19 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	         if ( m_bIsUserInputMode && UseParenArrayFormat( pObj, pProp, iProp/*pos*/ ) )  // SAC 1/22/02
    	         {
    	            //QString sPropType = pProp->getType()->getShortName();
-   	            m_file.WriteToken( "   ", 3 );
+   	            m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
+   	   			//m_file.WriteToken( "   ", 3 );
    	            m_file.WriteToken( sPropType.toLocal8Bit().constData(), sPropType.length() );
    	            m_file.WriteToken( " = ", 3 );
-   	            WriteParenPropertyArray( pObj, pProp, iProp/*pos*/, iBEMProcIdx );  // SAC 1/22/02
+   	            WriteParenPropertyArray( pObj, pProp, iProp/*pos*/, iBEMProcIdx, iIndentSpcs );  // SAC 1/22/02
    	         }
    	         else if (m_iFileType == BEMFT_CSE && pProp->getType()->getNumValues() == 24 &&   // SAC 8/9/12 - special case for CSE hourly profiles that can be written as just a single value
 					         pProp->getDataStatus() > BEMS_Undefined)
 					{	BEMProperty* pPropNext = pObj->getProperty(iProp+1);
 						if (pPropNext->getDataStatus() == BEMS_Undefined)
 						{  // write this property as if it is a single property 
-   	         		m_file.WriteToken( "   ", 3 );
+   	         		m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
+   	   				//m_file.WriteToken( "   ", 3 );
    	         		m_file.WriteToken( sPropType.toLocal8Bit().constData(), sPropType.length() );
    	         		m_file.WriteToken( " = ", 3 );
    	         		QString sData;
@@ -2405,7 +2448,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 			         iProp += (pProp->getType()->getNumValues()-1);
    	   		}
    	         else  
-   	            WriteBracketPropertyArray( pObj, pProp, iProp/*pos*/, iBEMProcIdx, bWritePrimaryDefaultData );  // SAC 1/22/02
+   	            WriteBracketPropertyArray( pObj, pProp, iProp/*pos*/, iBEMProcIdx, bWritePrimaryDefaultData, iIndentSpcs );  // SAC 1/22/02
    	      }
    	   }
    	   else if (pProp == NULL)
@@ -2420,8 +2463,9 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 
    	// End of writing properties
 		if (m_iFileType != BEMFT_CSE)  // SAC 8/30/11
-		{
-		   m_file.WriteToken( "   ..", 5 );
+		{	QString sEnd = QString( "%1.." ).arg( " ", 3+iIndentSpcs );
+		   m_file.WriteToken( sEnd.toLocal8Bit().constData(), sEnd.length() );
+		   //m_file.WriteToken( "   ..", 5 );
    		m_file.NewLine();
 		}
    	
@@ -2435,7 +2479,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 // CProjectFile Class Function:  WriteAssignedComponents()
 //
 /////////////////////////////////////////////////////////////////////////////
-void CProjectFile::WriteAssignedComponents( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/ )		// SAC 6/8/15 - CBECC issue 1061
+void CProjectFile::WriteAssignedComponents( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/, int iIndentSpcs /*=0*/ )		// SAC 6/8/15 - CBECC issue 1061
 {
    // Search through all properties for each assigned component
    for (int iProp=0; iProp < pObj->getPropertiesSize(); iProp++)
@@ -2454,7 +2498,7 @@ void CProjectFile::WriteAssignedComponents( BEMObject* pObj, int iBEMProcIdx /*=
          // if this property assigns another object, that assignment requires to be written
          // and the assigned object has not already been written, then write it
 			if (!bClassInParList)
-         	WriteComponent( pProp->getObj(), iBEMProcIdx, bWritePrimaryDefaultData );
+         	WriteComponent( pProp->getObj(), iBEMProcIdx, bWritePrimaryDefaultData, iIndentSpcs );
 		}
    }
 }
@@ -2488,7 +2532,7 @@ static inline BOOL StringAllUpper( const char* str )   // SAC 8/30/11
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/ )		// SAC 6/8/15 - CBECC issue 1061
+void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bool bWritePrimaryDefaultData /*=false*/, int iIndentSpcs /*=0*/ )		// SAC 6/8/15 - CBECC issue 1061
 {
 	// SAC 8/30/11 - added code to abort writing of this object if we are in CSE writing mode and component type has any lower case letters
 //   if (m_iFileType == BEMFT_CSE && !StringAllUpper( pObj->getClass()->getShortName() ))
@@ -2499,11 +2543,11 @@ void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, boo
    if (m_bWriteAssignedComponents)
    {	// add this component to the list of written components only if m_bWriteAssignedComponents==TRUE
    	AddToComponentNameList( pObj->getName() );	// SAC 3/25/16 - moved here from inside WriteProperties() to ensure that this object name is logged BEFORE writing assigned objects (Com tic #628)
-		WriteAssignedComponents( pObj, iBEMProcIdx, bWritePrimaryDefaultData );
+		WriteAssignedComponents( pObj, iBEMProcIdx, bWritePrimaryDefaultData, iIndentSpcs );
 	}
 
    // first write this component's properties
-   WriteProperties( pObj, iBEMProcIdx, bWritePrimaryDefaultData );
+   WriteProperties( pObj, iBEMProcIdx, bWritePrimaryDefaultData, false, iIndentSpcs );
 
    // then write each of this component's children (recursively)
    if (pObj->getChildCount() > 0)
@@ -2524,7 +2568,7 @@ void CProjectFile::WriteComponent( BEMObject* pObj, int iBEMProcIdx /*=-1*/, boo
       	   if (pChild != NULL && (iChildCID < 0 || pChild->getClass()->get1BEMClassIdx() == iChildCID   ) &&	// SAC 2/19/14
 																	 pChild->getClass()->get1BEMClassIdx() != iNotChildCID )
       	   {
-      	      WriteComponent( pChild, iBEMProcIdx, bWritePrimaryDefaultData );
+      	      WriteComponent( pChild, iBEMProcIdx, bWritePrimaryDefaultData, iIndentSpcs+m_iChildIndent );
       	   }
       }	}
    }
@@ -2702,7 +2746,7 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
          	      // course of its parent being written.
          	      if (pObj->getParent() == NULL)
          	      {
-         	         WriteComponent( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/ );
+         	         WriteComponent( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, 0 /*IndentSpcs*/ );
          	      }
          	   }
          	   else
@@ -2738,7 +2782,7 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
       		   	   	{	sCSERec = "ALTER ";
 									WriteObjectName( sCSERec, pObj );
 								   bMainObjWritten = TRUE;
-								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/ );
+								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/ );
 								}
 
 							   // then write each of this component's children (recursively)
@@ -2761,7 +2805,7 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 
 			      		   	   		sCSERec = " ALTER ";
 												WriteObjectName( sCSERec, pChild );
-											   WriteProperties( pChild, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/ );
+											   WriteProperties( pChild, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/ );
 											}
 						      	   }
 						      }	}
@@ -3597,7 +3641,8 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 								   int iFileType /*=0*/,    // SAC 8/30/11 - added iFileType argument
 									bool bAppend /*=false*/, const char* pszModelName /*=NULL*/, bool bWriteTerminator /*=true*/, 		// SAC 2/19/13 - added trailing arguments to facilitate writing of multiple models into a single XML file
 									int iBEMProcIdx /*=-1*/, long lModDate /*=-1*/, bool bOnlyValidInputs /*=false*/,    // SAC 3/18/13  // SAC 6/26/13
-									bool bAllowCreateDateReset /*=true*/ )		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
+									bool bAllowCreateDateReset /*=true*/,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
+									int iPropertyCommentOption /*=0*/ )			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 {
 	bool bRetVal = true;
 
@@ -3650,7 +3695,7 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 	else
 	{
    	CProjectFile* file = new CProjectFile( sFileName.toLocal8Bit().constData(), iFileMode /*bIsInputMode*/, 0, 0, BEMTextIO::store, bWriteAllProperties,  // SAC 1/15/03
-   	                                       bSupressAllMessageBoxes, iFileType, bOnlyValidInputs );  // SAC 4/27/03
+   	                                       bSupressAllMessageBoxes, iFileType, bOnlyValidInputs, iPropertyCommentOption );  // SAC 4/27/03  // SAC 12/5/16
    	if ( file->IsOpen() )
    	   file->WriteProjectFile( iBEMProcIdx );
    	
