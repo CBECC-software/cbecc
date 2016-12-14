@@ -404,7 +404,9 @@ int CSERunMgr::SetupRun(
 				iRetVal = BEMAnal_CECRes_SimInputOpenError;
 			}
 			else if (!BEMPX_WriteProjectFile( sProjCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
-										FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/ ))
+										FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+										NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+										true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/ ))			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 			{	sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
 				iRetVal = BEMAnal_CECRes_SimInputWriteError;
 			}
@@ -743,7 +745,9 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				iRetVal = 58;		//	58 : Unable to open/delete/write simulation input (.cse) file
 			}
 			else if (!BEMPX_WriteProjectFile( sProjCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/,
-										FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/ ))
+										FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+										NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+										true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/ ))			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 			{	sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
 				iRetVal = 59;		//	59 : Error writing simulation input (.cse) file
 			}

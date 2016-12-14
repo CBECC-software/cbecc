@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="BEMCmpMgr.cpp" />
     <ClCompile Include="BEMCmpMgrRes.cpp" />
+    <ClCompile Include="BEMCmpMgrSecure.cpp" />
     <ClCompile Include="bemcm_LoadModel.cpp" />
     <ClCompile Include="CSERunMgr.cpp" />
     <ClCompile Include="dllmain.cpp">

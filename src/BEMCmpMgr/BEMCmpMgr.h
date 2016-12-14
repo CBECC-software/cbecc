@@ -222,6 +222,11 @@ int  BEMCMPMGR_API __cdecl CMX_GetDataInteger( long* pReturnInt, const char* psz
 int  BEMCMPMGR_API __cdecl CMX_GetDataFloat(   double* pReturnFlt, const char* pszCompParam,
 							 											 const char* pszCompName=NULL, float fDefault=0 );
 
+bool BEMCMPMGR_API __cdecl CMX_SecureExecutable();
+long BEMCMPMGR_API __cdecl CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure=false );
+int  BEMCMPMGR_API __cdecl CMX_DecodeBase64( char* outData, const char* inData, bool bSecure=false );
+long BEMCMPMGR_API __cdecl CMX_Encrypt( const unsigned char *input, int length, char* output, int outLength );
+
 #ifdef __cplusplus
 }
 #endif

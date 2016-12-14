@@ -49,6 +49,7 @@
 // OpenSSL includes:
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#include <openssl/buffer.h>
 
 // sample code from OpenSSL docu:
 //		Read Base64 encoded data from standard input and write the decoded data to standard output:
@@ -66,9 +67,98 @@
 //			BIO_flush(bio_out);
 //			BIO_free_all(b64);
 
-bool DecodeBase64( const char* outFileName, const char* data )
-{	bool bRetVal = true;
+long CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure )
+{
+	char* inpCrypt = (char*) malloc( length );
+	memcpy( inpCrypt, input, length );
+	if (bSecure)
+		CM_CryptEncode( inpCrypt, length );
 
+	BIO *bmem,*b64 = NULL;
+	BUF_MEM *bptr;
+	b64 = BIO_new(BIO_f_base64());
+	bmem = BIO_new(BIO_s_mem());
+	b64 = BIO_push(b64,bmem);
+	BIO_write(b64,inpCrypt,length);
+	BIO_flush(b64);
+	BIO_get_mem_ptr(b64,&bptr);
+
+	long iRetVal = (long) bptr->length;
+	if (outLength < iRetVal)
+		iRetVal = -1;  // output buffer too small
+	else
+	{	memcpy(output,bptr->data,bptr->length-1);
+		output[bptr->length-1] = 0;
+	}
+//	char *buff = (char *)malloc(bptr->length);
+//	memcpy(buff,bptr->data,bptr->length-1);
+//	buff[bptr->length-1] = 0;
+
+	BIO_free_all(b64);
+	free( inpCrypt );
+//	return buff;
+	return iRetVal;
+}
+
+int CMX_DecodeBase64( char* outData, const char* inData, bool bSecure )
+{	int iRetVal = 0;
+	int length = strlen(inData);
+
+	BIO *bmem = BIO_new_mem_buf( (void*)inData, length );
+	BIO *b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+	bmem = BIO_push(b64, bmem);
+	long n = BIO_read(bmem, outData, length);
+	if (n > 0 && n <= length)
+		iRetVal = n;
+	else
+		outData[0] = 0; // note: this is an error state.
+	BIO_free_all(bmem);
+
+	if (iRetVal > 0 && iRetVal <= length)
+	{	if (bSecure)
+			CM_CryptDecode( outData, iRetVal );
+		outData[iRetVal] = 0;
+	}
+
+	return iRetVal;
+}
+
+bool DecodeBase64ToFile( const char* outFileName, const char* inData )
+{	int length = strlen(inData);
+	char *outData = (char*) malloc(length+1);
+
+//	int iDecodeRetVal = (length > 0 && DecodeBase64( res, inData ));
+	BIO *bmem = BIO_new_mem_buf( (void*)inData, length );
+	BIO *b64 = BIO_new(BIO_f_base64());
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+	bmem = BIO_push(b64, bmem);
+	long n = BIO_read(bmem, outData, length);
+	if (n > 0 && n <= length)
+#pragma warning(disable:4996)
+	{	FILE* pOutFile = fopen( outFileName, "wb" );
+		if (pOutFile == NULL)
+			n = -1;
+		else
+		{
+			fwrite( outData, sizeof(char), n, pOutFile );
+			fflush( pOutFile );
+			fclose( pOutFile );
+	}	}
+#pragma warning(default:4996)
+	else
+	{	outData[0] = 0; // note: this is an error state.
+		n = -2;
+	}
+
+	BIO_free_all(bmem);
+	free(outData);
+	return (n > 0);
+}
+
+
+bool DecodeBase64_ORIGINAL_VERSION( const char* outFileName, const char* data )
+{	bool bRetVal = true;
 	int length = strlen(data);
 	char *res = (char*) malloc(length+1);
 	BIO *bmem = BIO_new_mem_buf( (void*)data, length );
@@ -331,7 +421,7 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 
 //  <Report id="Sign2">JVBERi0xL
 																						if (!sPDFEncodedData.isEmpty())
-																							bRetVal = DecodeBase64( pdfFileName, sPDFEncodedData.toLocal8Bit().constData() );
+																							bRetVal = DecodeBase64ToFile( pdfFileName, sPDFEncodedData.toLocal8Bit().constData() );
 
 																						bFoundReport = false;
 																						bDoneProcessingFile = true;  // once we have found & saved the PDF report, bail

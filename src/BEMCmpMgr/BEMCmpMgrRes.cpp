@@ -66,6 +66,9 @@ static int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFil
 											const char** apszCompareLabels, const char** apszResEnduses1, const char** apszResEnduses2,
 											char* pszErrMsgBuffer/*=NULL*/, int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/ );
 
+static inline bool ResRetVal_ContinueProcessing( int iRetVal )		// SAC 12/12/16 - ensure processing not terminated when errors occur that should not jeopardize analysis
+{	return (iRetVal == 0 || iRetVal >= BEMAnal_CECRes_MinErrorWithResults);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // SAC 9/18/12 - created
@@ -138,7 +141,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
 												bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* /*pszErrorMsg=NULL*/, int /*iErrorMsgLen=0*/,
 												bool bDisplayProgress /*=false*/, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )
-{	int iRetVal = 0;
+{	int iRetVal = 0, iRV2=0;
 	QString sErrorMsg, sLogMsg;
 	char pszAnalErrMsg[512];	// SAC 2/23/15
 
@@ -458,14 +461,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 
 //#ifndef CSE_MULTI_RUN
-//	if (iRetVal == 0 && !LoadCSEDLLs( sCSEexe, sCSEashwat ))
+//	if (ResRetVal_ContinueProcessing( iRetVal ) && !LoadCSEDLLs( sCSEexe, sCSEashwat ))
 //	{	sErrorMsg = QString( "ERROR:  Unable to load CSE DLL: %1" ).arg( sCSEexe );
 //		iRetVal = BEMAnal_CECRes_ErrorLoadingCSE;
 //	}
 //#endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-	if (iRetVal == 0 && !sBEMBasePathFile.isEmpty())
+	if (ResRetVal_ContinueProcessing( iRetVal ) && !sBEMBasePathFile.isEmpty())
 	{	assert( !sRulesetPathFile.isEmpty() );  // if (re)loading BEMBase, we must also reload ruleset
 		if (!FileExists( sBEMBasePathFile.toLocal8Bit().constData() ))
 		{	sErrorMsg = QString( "ERROR:  BEMBase (building data model) definitions file not found:  %1" ).arg( sBEMBasePathFile );
@@ -481,7 +484,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	}
 
-	if (iRetVal == 0 && !sRulesetPathFile.isEmpty())
+	if (ResRetVal_ContinueProcessing( iRetVal ) && !sRulesetPathFile.isEmpty())
 	{	if (!FileExists( sRulesetPathFile.toLocal8Bit().constData() ))
 		{	sErrorMsg = QString( "ERROR:  BEM ruleset file not found:  %1" ).arg( sRulesetPathFile );
 			iRetVal = BEMAnal_CECRes_RulesetNotFound;
@@ -501,7 +504,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
 	bool bDHWCalcMethodUserSpecified = false;
 	int iRulesetCodeYear = 0;
-	if (iRetVal == 0)
+	if (ResRetVal_ContinueProcessing( iRetVal ))
 	{
 	//
 	//	-----  BEMBase & ruleset loaded/initialized  -----
@@ -519,10 +522,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 	// SAC 3/11/16 - moved declaration of xmlResultsFile up here before model loading in order to be able to write User model to the file BEFORE modifying the project w/ analysis settings
-		BEMXMLWriter xmlResultsFile( ((iRetVal == 0 && !sXMLResultsFileName.isEmpty()) ? sXMLResultsFileName.toLocal8Bit().constData() : NULL) );
+		BEMXMLWriter xmlResultsFile( ((ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty()) ? sXMLResultsFileName.toLocal8Bit().constData() : NULL) );
 		bool bFirstModelCopyCreated = false;
 
-		if (iRetVal == 0 && bLoadModelFile)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bLoadModelFile)
 		{	// assumes BEMBase cleared out and ruleset re-loaded
 			if (sModelPathFile.isEmpty() || !FileExists( sModelPathFile.toLocal8Bit().constData() ))
 			{	sErrorMsg = QString( "ERROR:  Building model (project) file not found:  %1" ).arg( (!sModelPathFile.isEmpty() ? sModelPathFile : "(not specified)") );
@@ -573,13 +576,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 
 // ??? evaluate FileOpen rulelist to address backward compatibility issues ???
-				if (iRetVal == 0)
+				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{	bBEMLogFileSet = TRUE;
-					iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
+					iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
+					if (iRV2 > 0)
+						iRetVal = iRV2;
 				}
 
 		   // write user model to XML results file		- SAC 3/11/16 - moved up from below to better handle bLoadModelFile scenario
-				if (iRetVal == 0 && !sXMLResultsFileName.isEmpty())  // SAC 2/19/13 - added to export the USER INPUT model to XML results file
+				if (ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty())  // SAC 2/19/13 - added to export the USER INPUT model to XML results file
 				{
 								dTimeToLoadModel += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 					// SAC 4/16/14 - modified call to WriteModel() to cause only valid INPUTs to be written to user input model
@@ -589,7 +594,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 
 			// create first COPY of user input model, so that the first model loaded into memory doesn't include any data that we would not want written to an updated User Input written @ end of analysis (SAC 5/12/15)
-				if (iRetVal == 0)		// SAC 3/11/16 - moved up from below to better handle bLoadModelFile scenario
+				if (ResRetVal_ContinueProcessing( iRetVal ))		// SAC 3/11/16 - moved up from below to better handle bLoadModelFile scenario
 				{	BEMPX_AddModel( 0 /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
 					bFirstModelCopyCreated = true;
 				}
@@ -610,12 +615,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				if (lEnableResearchMode > 0)	
 				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), BEMP_Int, (void*) &lEnableResearchMode );
 
-				if (iRetVal == 0)
-					iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
+				if (ResRetVal_ContinueProcessing( iRetVal ))
+				{	iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
+					if (iRV2 > 0)
+						iRetVal = iRV2;
+				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 			// store certain data only required when project file loaded during analysis
-				if (iRetVal == 0)
+				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{
 				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProjFileName" ), BEMP_QStr, (void*) &sModelFileOnly, BEMO_User, 0, BEMS_ProgDefault );
 				}
@@ -624,7 +632,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToLoadModel += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 	// SAC 8/20/14 - added to ensure valid object names prior to performing analysis
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	QString sObjNameViolationMsg;
 			int iNumObjNameViolations = BEMPX_CheckObjectNames( (char*) pcCharsNotAllowedInObjNames_CECRes, sObjNameViolationMsg, -1 /*iBEMProcIdx*/ );			iNumObjNameViolations;
 																// BOOL bAllowTrailingSpaces=TRUE, BOOL bPerformRenames=TRUE, BOOL bLogRenames=TRUE );
@@ -648,7 +656,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// Check fairly wide variety of file hashes for supporting files - some required, some not - if inconcistencies found, log them and turn OFF report signature use
 		int iError;
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	if (bBypassValidFileChecks)
 				BEMPX_WriteLogFile( "  PerfAnal_CECRes - Bypassing file validity checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/,
 												TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -656,7 +664,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	QString sFHPathFile, sFHErrMsg; 
 				int iNumFileHashErrs = 0;
 				bool bRequiredForCodeYear = true;	// SAC 11/19/15
-				for (long iFHID=101; (iRetVal == 0 && iFHID <= 117); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering
+				for (long iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 117); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering
 				{	bRequiredForCodeYear = true;
 					switch (iFHID)
 					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
@@ -771,7 +779,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			   BEMPX_SetBEMData( BEMPX_GetDatabaseID( sBatchProps[iBIdx].c_str(), BEMPX_GetDBComponentID( "Proj" ) ), iBatchDT, pBatchInp );
 		}
 
-		if (iRetVal == 0 && !bLoadModelFile && !sXMLResultsFileName.isEmpty())  // SAC 2/19/13 - added to export the USER INPUT model to XML results file
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && !sXMLResultsFileName.isEmpty())  // SAC 2/19/13 - added to export the USER INPUT model to XML results file
 		{
 	   // write user model to XML results file
 			// SAC 4/16/14 - modified call to WriteModel() to cause only valid INPUTs to be written to user input model
@@ -783,28 +791,28 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMPX_SetAbortRuleEvaluationFlag( false );		// SAC 8/6/13 - set flag indicating that rule processing should be aborted
 
 	// create first COPY of user input model, so that the first model loaded into memory doesn't include any data that we would not want written to an updated User Input written @ end of analysis (SAC 5/12/15)
-		if (iRetVal == 0 && !bFirstModelCopyCreated)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bFirstModelCopyCreated)
 		{	BEMPX_AddModel( 0 /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
 			bFirstModelCopyCreated = true;
 		}
 
 	// SAC 3/11/14 - added handling of new BypassRuleLimits option - when =1 should cause certain rule-based compliance checks/limits to be bypassed
-		if (iRetVal == 0 && !bLoadModelFile && lBypassRuleLimits > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lBypassRuleLimits > 0)
 		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BypassRuleLimits" ), BEMP_Int, (void*) &lBypassRuleLimits );
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:BypassRuleLimits" ), lBypassRuleLimits, 0 );
 
 	// SAC 5/14/16 - 
-		if (iRetVal == 0 && !bLoadModelFile && lEnableResearchMode > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lEnableResearchMode > 0)
 		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), BEMP_Int, (void*) &lEnableResearchMode );
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode, 0 );
 
 	// SAC 1/14/15 - added handling of new SimSpeedOption property/option - when >= 0 should force use of the specified selection
-		if (iRetVal == 0 && !bLoadModelFile && iSimSpeedOption > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && iSimSpeedOption > 0)
 	      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SimSpeedOption" ), BEMP_Int, (void*) &iSimSpeedOption );
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:SimSpeedOption" ), iSimSpeedOption );
 
 	// SAC 7/15/15 - added handling of new DHWCalcMethod analysis option
-		if (iRetVal == 0 && !bLoadModelFile && iDHWCalcMethodAnalOpt >= 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && iDHWCalcMethodAnalOpt >= 0)
 	      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:DHWCalcMethod" ), BEMP_Int, (void*) &iDHWCalcMethodAnalOpt );
 	   long lDHWCalcMethod = -1;
 	   long lDBID_ProjDHWCalcMethod = BEMPX_GetDatabaseID( "Proj:DHWCalcMethod" );		assert( lDBID_ProjDHWCalcMethod > 1 );
@@ -812,7 +820,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		bDHWCalcMethodUserSpecified = (BEMPX_GetDataStatus( lDBID_ProjDHWCalcMethod ) == BEMS_UserDefined);		//, -1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 
 // SAC 9/15/15 - store certain path and filenames to BEMBase for reference during analysis
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	QString sBatchPath, sBatchFile, sModelFile;
 			if (sModelFileOnly.lastIndexOf('.') > 0)
 				sModelFile = sModelFileOnly.left( sModelFileOnly.lastIndexOf('.') );
@@ -833,14 +841,20 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 // SAC 6/28/14 - added code to check for IsMultiFamily flag and evaluate rules designed specifically to prepare those models for analysis
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	long lIsMultiFamily = 0;
 			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:IsMultiFamily" ), lIsMultiFamily );
 			if (lIsMultiFamily > 0)
-			{	if (iRetVal == 0)
-					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "MultiFamilyAnalysisPrep",	bVerbose, pCompRuleDebugInfo );	// sets up MFam HVACSys objects based on DwellUnitType equipment assignments
-				if (iRetVal == 0)
-					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "ProposedInput",	bVerbose, pCompRuleDebugInfo );		// generic project defaulting
+			{	if (ResRetVal_ContinueProcessing( iRetVal ))
+				{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "MultiFamilyAnalysisPrep",	bVerbose, pCompRuleDebugInfo );	// sets up MFam HVACSys objects based on DwellUnitType equipment assignments
+					if (iRV2 > 0)
+						iRetVal = iRV2;
+				}
+				if (ResRetVal_ContinueProcessing( iRetVal ))
+				{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "ProposedInput",	bVerbose, pCompRuleDebugInfo );		// generic project defaulting
+					if (iRV2 > 0)
+						iRetVal = iRV2;
+				}
 		}	}
 						dTimeToPrepModel[0] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
@@ -849,7 +863,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		long lAllOrientations = 0;  // SAC 6/22/13
 		lDesignRatingRunID = 0;  // SAC 3/27/15
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{
 			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), lAnalysisType    );  // 0-Research / 12-Proposed Only / 13-Proposed and Standard
 			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations );  // 0/1 (boolean)
@@ -902,7 +916,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			sModelFileOnlyNoExt = sModelFileOnlyNoExt.left( sModelFileOnlyNoExt.lastIndexOf('.') );
 
 		// check for/create processing path   - SAC 9/25/14 - moved up from below to create path prior to writing Report model ibd
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	if (!DirectoryExists( sProcessPath ))
 				CreateAndChangeDirectory( sProcessPath.toLocal8Bit().constData(), FALSE );
 		   if (!DirectoryExists( sProcessPath ))
@@ -913,7 +927,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 // SAC 2/23/15 - added new check for duplicate object names
-		if (iRetVal == 0 && bPerformDupObjNameCheck)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformDupObjNameCheck)
 		{	if (BEMPX_CheckForDuplicateObjectNames( pszAnalErrMsg, 512, TRUE /*bWriteErrorsToLog*/, TRUE /*bSupressAllMessageBoxes*/ ) > 0)
 			{	sErrorMsg = pszAnalErrMsg;
 				iRetVal = BEMAnal_CECRes_DuplicateObjNames;
@@ -922,28 +936,30 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 // SAC 10/22/14 - moved up HERE from below so that NotInput objects/properties don't get flagged as analysis errors
 // ??? - perform range checks only ONCE prior to simulating first model ???
-		if (iRetVal == 0 && bPerformRangeChecks)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformRangeChecks)
 		{
 			if (!BEMPX_PerformErrorCheck( (lAnalysisType > 0) /*bRequireRequiredData=TRUE*/, FALSE /*bReportSimDefaultErrors=TRUE*/, FALSE /*bPerformReqdClassCheck=TRUE*/,
 													FALSE /*bPostRangeWarnings=FALSE*/, (bIgnoreFileReadErrors ? 0 : BEM_UserInpChk_DisallowNotInput) /**/, bPerformRangeChecks ))
 				iRetVal = BEMAnal_CECRes_RangeOrOtherError;  // error messages should already be logged...
 			BEMPX_RefreshLogFile();	// SAC 5/19/14
 		}
-		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 			iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
 						dTimeToModelAndSecurityChecks += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// SAC 10/22/14 - added new rulelsit call to ensure generic model summarization PLUS HERS/SpecialFeatures are all present for the Proposed model written to analysis results
-		if (iRetVal == 0)
-		{	iRetVal = LocalEvaluateRuleset(		sErrorMsg, BEMAnal_CECRes_EvalAnalPrepError, "OneTimeAnalysisPrep",		bVerbose, pCompRuleDebugInfo );		// one-time only analysis prep rules
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		if (ResRetVal_ContinueProcessing( iRetVal ))
+		{	iRV2 = LocalEvaluateRuleset(		sErrorMsg, BEMAnal_CECRes_EvalAnalPrepError, "OneTimeAnalysisPrep",		bVerbose, pCompRuleDebugInfo );		// one-time only analysis prep rules
+			if (iRV2 > 0)
+				iRetVal = iRV2;
+			if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 				iRetVal = BEMAnal_CECRes_RuleProcAbort;
 		}
 						dTimeToPrepModel[0] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 	// Set last run date parameter   - SAC 10/22/14 - moved UP from below to get it set properly prior to exporting the Proposed model for reporting purposes
-		if (iRetVal == 0)  // SAC 8/27/13 - ported rundate setting code from CBECC into BEMCmpMgr
+		if (ResRetVal_ContinueProcessing( iRetVal ))  // SAC 8/27/13 - ported rundate setting code from CBECC into BEMCmpMgr
 		{	//CTime time = CTime::GetCurrentTime();
 			//long lTime = (long) time.GetTime();
 			QDateTime current = QDateTime::currentDateTime();
@@ -957,7 +973,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// Retrieve report info designed to export summaries of each building model during analysis  - SAC 6/10/13
 		QString sAnalysisReport;
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	long lAnalysisReport = 0;
 			if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AnalysisReport" ), lAnalysisReport ) && lAnalysisReport > 0)
 				BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:AnalysisReport" ), sAnalysisReport );
@@ -966,7 +982,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	// ADDED FOR NEW 'REPORT' CSV export
 		// call to generate ruleset-defined report on model following simulation & results retrieval/processing
 		// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
-			if (iRetVal == 0 && !sAnalysisReport.isEmpty())
+			if (ResRetVal_ContinueProcessing( iRetVal ) && !sAnalysisReport.isEmpty())
 			{	if (bVerbose)  // SAC 1/31/13
 				{	sLogMsg = QString( "      about to generate '%1' model report" ).arg( sAnalysisReport );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -987,7 +1003,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToWriteModelAndHrlyCSVs += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// SAC 4/24/15 - added new log message to help document exactly WHAT ruleset and software performing this analysis
-		if (iRetVal == 0 && lAnalysisType > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && lAnalysisType > 0)
 		{	QString sAnalSoftwareVer, sAnalCompMgrVer;
 			if (pszUIVersionString && strlen( pszUIVersionString ) > 0)
 				sAnalSoftwareVer = pszUIVersionString;
@@ -999,7 +1015,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 		// SAC 4/24/15 - moved up from below so that it is done PRIOR to exporting the Proposed (report) model
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	if (pszUIVersionString && strlen( pszUIVersionString ) > 0)
 		      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SoftwareVersion" ), BEMP_Str, (void*) pszUIVersionString );
 			else
@@ -1007,7 +1023,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 	// SAC 9/23/14 - added code to export detailed 'Report' model to analysis results XML file
-		if (iRetVal == 0 && !sXMLResultsFileName.isEmpty() && lAnalysisType > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty() && lAnalysisType > 0)
 		{	BOOL bXMLWriteOK = xmlResultsFile.WriteModel( TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, "Proposed" /*pszModelName*/ );			assert( bXMLWriteOK );		// was initially 'Report' model
 			if (bVerbose)
 			{	sLogMsg = QString( "      Writing of XML project %1 model data successful: %2" ).arg( "Report", (bXMLWriteOK ? "True" : "False") );
@@ -1020,27 +1036,35 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToWriteResultsXML += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// SAC 1/9/13 - added calls to rulelists that CHECK user input model prior to further analysis to catch mandatory minimum (code) & error/omission user errors
-		if (iRetVal == 0 /*&& iRunIdx == 0*/ && lAnalysisType > 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ) /*&& iRunIdx == 0*/ && lAnalysisType > 0)
 		{
-			iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalCodeChkError, "ProposedModelCodeCheck",	bVerbose, pCompRuleDebugInfo );		// check user input model for CODE-related errors
+			iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalCodeChkError, "ProposedModelCodeCheck",	bVerbose, pCompRuleDebugInfo );		// check user input model for CODE-related errors
+			if (iRV2 > 0)
+				iRetVal = iRV2;
 						dTimeToModelAndSecurityChecks += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 // ??? perform simulation check before or after (or both) evaluation of 'ProposedModelCodeAdditions' rulelist ???
 
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+			if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 				iRetVal = BEMAnal_CECRes_RuleProcAbort;
-			if (iRetVal == 0)
-				iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalCodeAddError, "ProposedModelCodeAdditions",	bVerbose, pCompRuleDebugInfo );		// make code-specified additions to user model prior to Proposed simulation
+			if (ResRetVal_ContinueProcessing( iRetVal ))
+			{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalCodeAddError, "ProposedModelCodeAdditions",	bVerbose, pCompRuleDebugInfo );		// make code-specified additions to user model prior to Proposed simulation
+				if (iRV2 > 0)
+					iRetVal = iRV2;
+			}
 
 	// SAC 1/28/13 - RE-evaluate ProposedINput rules following initial proposed model checks & additions (& deletions)
-			if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+			if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 				iRetVal = BEMAnal_CECRes_RuleProcAbort;
-			if (iRetVal == 0)
-				iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "ProposedInput",	bVerbose, pCompRuleDebugInfo );		// generic project defaulting
+			if (ResRetVal_ContinueProcessing( iRetVal ))
+			{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPropInp2Error, "ProposedInput",	bVerbose, pCompRuleDebugInfo );		// generic project defaulting
+				if (iRV2 > 0)
+					iRetVal = iRV2;
+			}
 			BEMPX_RefreshLogFile();	// SAC 5/19/14
 						dTimeToPrepModel[0] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 		}
-		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 			iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
 	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
@@ -1048,7 +1072,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		if (lProjDHWUseIncludeFileDBID < 1)	// SAC 5/17/16 - backward compat
 			lProjDHWUseIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:DHWUseIncludeFile" );
 		QString sDHWUseIncFile;
-		if (iRetVal == 0 && lProjDHWUseIncludeFileDBID > 0 && BEMPX_GetString( lProjDHWUseIncludeFileDBID, sDHWUseIncFile ) && !sDHWUseIncFile.isEmpty())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && lProjDHWUseIncludeFileDBID > 0 && BEMPX_GetString( lProjDHWUseIncludeFileDBID, sDHWUseIncFile ) && !sDHWUseIncFile.isEmpty())
 		{
 			QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
 			if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
@@ -1063,7 +1087,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 				assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
 			}
-			if (iRetVal == 0)
+			if (ResRetVal_ContinueProcessing( iRetVal ))
 			{	sDHWUseIncFile = sDHWUseTo;
 				long lDHWUseIncFileHashID = 0;
 				long lDBID_DHWUseIncFileHashID = BEMPX_GetDatabaseID( "Proj:CSE_DHWUseIncFileHashID" );
@@ -1084,6 +1108,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						BOOL bFHStatusRetVal = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:FileHashStatus" ), lDHWUseFileHashStatus );
 						if (iFHRetVal > 0 || (iFHRetVal == 0 && !bFHStatusRetVal) || (iFHRetVal == 0 && lDHWUseFileHashStatus != 0))
 						{	bSendRptSignature	= false;
+							iRetVal = BEMAnal_CECRes_DHWUseHashChkFail;		//		206	// DHW use/profile file hash failed consistency check
 							if (bLogEachFileHashError)
 							{	if (iFHRetVal > 0)
 									sLogMsg = QString( "Error evaluating file hash checking rules (analysis continuing w/ report signature disabled) - for file:  %1" ).arg( sDHWUseIncFile );
@@ -1102,7 +1127,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			}	}
 		}
 
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:WeatherFileName" ), sCSEWthr );
 			int iOrigWFNameLen = sCSEWthr.length();
@@ -1133,12 +1158,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					else
 					{  BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:FileHashID"      ), BEMP_Int, (void*) &lClimateZone, BEMO_User, 0, BEMS_ProgDefault );
 				      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:FileHashToCheck" ), BEMP_Str, (void*) pHashBuffer  , BEMO_User, 0, BEMS_ProgDefault );
-						iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalChkFileHashError, "CheckFileHash",	bVerbose, pCompRuleDebugInfo );		// file hash checking
-						if (iRetVal == 0 && !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:FileHashStatus" ), lWthrFileHashStatus ))
+						iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalChkFileHashError, "CheckFileHash",	bVerbose, pCompRuleDebugInfo );		// file hash checking
+						if (iRV2 > 0)
+							iRetVal = iRV2;
+						if (ResRetVal_ContinueProcessing( iRetVal ) && !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:FileHashStatus" ), lWthrFileHashStatus ))
 						{	sErrorMsg = QString( "ERROR:  Error setting up check of weather file hash - Invalid Proj:FileHashStatus (%1)" ).arg( QString::number(lWthrFileHashStatus) );
 							iRetVal = BEMAnal_CECRes_SetupWthrHashError;
 						}
-						else if (iRetVal == 0 && lWthrFileHashStatus != 0)
+						else if (ResRetVal_ContinueProcessing( iRetVal ) && lWthrFileHashStatus != 0)
 						{	sErrorMsg = QString( "ERROR:  Weather file hash failed consistency check (%1)" ).arg( QString::number(lWthrFileHashStatus) );
 							iRetVal = BEMAnal_CECRes_WthrHashChkFail;
 						}
@@ -1149,10 +1176,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			BEMPX_RefreshLogFile();	// SAC 5/19/14
 						dTimeToModelAndSecurityChecks += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 		}
-		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 			iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
-		if (iRetVal == 0 && !sDHWWeatherPath.isEmpty())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !sDHWWeatherPath.isEmpty())
 		{
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:DHWWthrFileName" ), sDHWWthr );
 			int iOrigWFNameLen = sDHWWthr.length();
@@ -1168,11 +1195,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			else
 				bDHWSimViaWthrFile = TRUE;
 		}
-		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+		if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 			iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
 		long lProjRunScope = 1;		// 1 => "Newly Constructed" / 2 => "Addition and/or Alteration"		// SAC 12/2/13
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lProjRunScope ))
 				lProjRunScope = 1;
 		}
@@ -1192,7 +1219,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// SAC 4/29/15 - DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
 		bool bAllowReportIncludeFile = true;
-		if (iRetVal == 0 && bCSEIncludeFileUsed && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML) &&
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bCSEIncludeFileUsed && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML) &&
 				bFullComplianceAnalysis && bInitHourlyResults && bPerformDupObjNameCheck && bPerformRangeChecks && bPerformSimulations &&
 				!bBypassCSE && !bBypassDHW && !bIgnoreFileReadErrors && lBypassRuleLimits < 1 && iSimSpeedOption < 1 && !bDHWCalcMethodUserSpecified)
 		{	bAllowReportIncludeFile = false;
@@ -1205,7 +1232,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 // SAC 9/10/15 - NOTE - the following enduse names for storing DHWPump elec use are INCORRECT (should be "*DHWPmp"), but are being retained in order to maintain consistency w/ results from the previous public release version
 // SAC 10/8/15 - fixed bug reported above to bring this enduse name inline with other source code and ruleset 
 		QString sT24DHWEnduse = "DHW", sT24DHWPumpEnduse = "DHWPmp";
-		if (iRetVal == 0 && lDHWCalcMethod > 0)	// DHWCalcMethod == CSE*
+		if (ResRetVal_ContinueProcessing( iRetVal ) && lDHWCalcMethod > 0)	// DHWCalcMethod == CSE*
 		{	// rename T24DHW enduses so that they are NOT included in compliance results
 			sT24DHWEnduse = "T24DHW";		sT24DHWPumpEnduse = "T24DHWPmp";
 		}
@@ -1250,20 +1277,22 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 #endif
 
 		int iRunIdx = 0;
-		for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+		for (; (ResRetVal_ContinueProcessing( iRetVal ) && iRunIdx < iNumRuns); iRunIdx++)
 		{
 #if defined( CSE_MULTI_RUN)
 			if (iRunIdx > 0 || !bFirstModelCopyCreated)
 				BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
-			iRetVal = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowReportIncludeFile );
+			iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowReportIncludeFile );
+			if (iRV2 > 0)
+				iRetVal = iRV2;
 						dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 		}
 
-		if (iRetVal == 0 && bPerformSimulations && !bBypassCSE)
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
 			cseRunMgr.DoRuns();
 						dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 		for (iRunIdx = 0; iRunIdx < iNumRuns; iRunIdx++)
 		{
 			const CSERun& cseRun = cseRunMgr.GetRun(iRunIdx);
@@ -1278,7 +1307,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			if (bPerformSimulations && !bBypassCSE && !sCSESimErrOutputFileName.isEmpty())
 				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimErrOutputFileName, CSERun::OutFileERR );
 
-			if (iRetVal == 0) // SAC 11/7/16 - moved iRetVal == 0 condition out of for() loop and down here to process output of simulated runs (above) even after errors encountered
+			if (ResRetVal_ContinueProcessing( iRetVal )) // SAC 11/7/16 - moved iRetVal == 0 condition out of for() loop and down here to process output of simulated runs (above) even after errors encountered
 			{
 // SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
 				BEMPX_SetActiveModel( iRunIdx+1 );
@@ -1292,7 +1321,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				{
 				// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
 					int iResCopyRetVal = 0;
-					if (iRetVal == 0)
+					if (ResRetVal_ContinueProcessing( iRetVal ))
 					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
 						QString sResCopyErrMsg;
 						iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iRunIdx, iRunIdx+1 );
@@ -1321,7 +1350,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 				}
 
-				if (iRetVal == 0 && bPerformSimulations && !bBypassCSE)
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
 				{
 					int iCSERetVal = cseRun.GetExitCode();
 					if (bVerbose)  // SAC 1/31/13
@@ -1334,11 +1363,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
 						iRetVal = BEMAnal_CECRes_CSESimError;
 					}
-					if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
 					// Retrieve CSE simulation results
-					if (iRetVal == 0)
+					if (ResRetVal_ContinueProcessing( iRetVal ))
 					{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 						int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, 
 																													sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData() );
@@ -1352,7 +1381,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						}
 					}
 				}
-				else if (iRetVal == 0 && (!bPerformSimulations || bBypassCSE))  // SAC 6/10/13
+				else if (ResRetVal_ContinueProcessing( iRetVal ) && (!bPerformSimulations || bBypassCSE))  // SAC 6/10/13
 				{
 					if (bVerbose)
 						BEMPX_WriteLogFile( "      Skipping CSE simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -1363,7 +1392,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 	
-				if (iRetVal == 0 && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
 				{	// DHW SIMULATION
 						assert( false );
 						BOOL bDHWSimOK = FALSE;
@@ -1376,7 +1405,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						iRetVal = BEMAnal_CECRes_DHWSimError;
 					}
 				}
-				else if (iRetVal == 0 && (!bPerformSimulations || bBypassDHW))  // SAC 6/19/13
+				else if (ResRetVal_ContinueProcessing( iRetVal ) && (!bPerformSimulations || bBypassDHW))  // SAC 6/19/13
 				{
 					if (bVerbose)
 						BEMPX_WriteLogFile( "      Skipping DHW simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -1386,7 +1415,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeDHWSim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 			// SAC 7/13/15 - code to export CSV files to facilitate comparison of T24DHW & CSE simulation results
-				if (iRetVal == 0 && bPerformSimulations && lDHWCalcMethod == 2)		// DHWCalcMethod == "CSE (T24 match)"
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && lDHWCalcMethod == 2)		// DHWCalcMethod == "CSE (T24 match)"
 				{	QString sHrlyDHWPathFile = pszModelPathFile;
 					if (sHrlyDHWPathFile.lastIndexOf('.') > 0)
 						sHrlyDHWPathFile = sHrlyDHWPathFile.left( sHrlyDHWPathFile.lastIndexOf('.') );
@@ -1401,22 +1430,24 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 																						pszDHWCompares, pszDHWEnduses_CSE, pszDHWEnduses_T24, NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );		assert( iHrlyDHWExportRetVal_CSE == 0 );
 				}
 
-				if (iRetVal == 0 && bPerformSimulations)
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
 				{
 					// Process & summarize results
-					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
+					iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
+					if (iRV2 > 0)
+						iRetVal = iRV2;
 					if (bVerbose)
 					{	sLogMsg = "      done calling 'ProcessResults' rules";
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 				}
-				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 			// call to generate ruleset-defined report on model following simulation & results retrieval/processing
 			// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
-				if (iRetVal == 0 && !sAnalysisReport.isEmpty())
+				if (ResRetVal_ContinueProcessing( iRetVal ) && !sAnalysisReport.isEmpty())
 				{	if (bVerbose)  // SAC 1/31/13
 					{	sLogMsg = QString( "      about to generate '%1' model report" ).arg( sAnalysisReport );
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -1434,10 +1465,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						iRetVal = BEMAnal_CECRes_ModelRptError;
 					}
 				}
-				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
-				if (iRetVal == 0 && bPerformSimulations)
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
 				{
 					// Individual run hourly results CSV export - SAC 8/5/13
 					QString sHrlyResExportPathFile, sHrlyResExportOption, sHrlyResExportOptionAll;
@@ -1455,14 +1486,16 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 																						sRunID.toLocal8Bit().constData(), NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );				assert( iHrlyResExportRetVal == 0 );
 					}
 				}
-				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 						dTimeToWriteModelAndHrlyCSVs += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-				if (iRetVal == 0)
+				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{
 					// Simulation clean-up + write final (detailed) XML file of inputs & results
-					iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
+					iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
+					if (iRV2 > 0)
+						iRetVal = iRV2;
 
 					if (bVerbose)  // SAC 1/31/13
 					{	sLogMsg = "      done calling 'CSE_SimulationCleanUp' rules";
@@ -1483,7 +1516,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					}
 						dTimeToWriteResultsXML += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 				}
-				if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 		}	}	// end of:  for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
@@ -1495,14 +1528,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 #endif		// IF/NOT CSE_MULTI_RUN
 
-		if (iRetVal == 0)
+		if (ResRetVal_ContinueProcessing( iRetVal ))
 			xmlResultsFile.Close();
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 	// ----------
 	// COMPLIANCE REPORT GENERATION   - SAC 8/14/13
-		bAnalysisPriorToRptGenOK = (iRetVal == 0);
-		if (iRetVal == 0 && (bComplianceReportPDF || bComplianceReportXML))
+		bAnalysisPriorToRptGenOK = (ResRetVal_ContinueProcessing( iRetVal ));
+		if (ResRetVal_ContinueProcessing( iRetVal ) && (bComplianceReportPDF || bComplianceReportXML))
 		{	if (sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ))  // || !bFullComplianceAnalysis || !bPerformSimulations || bBypassCSE || bBypassDHW)
 			{	if (sXMLResultsFileName.isEmpty())
 					sLogMsg = "      Skipping compliance report generation due to no XML results file specified/available";
@@ -1542,7 +1575,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						iRpt = 1;	iMaxRpt = 0;
 				}	}
 
-				for (; (iRetVal == 0 && iRpt <= iMaxRpt); iRpt++)
+				for (; (ResRetVal_ContinueProcessing( iRetVal ) && iRpt <= iMaxRpt); iRpt++)
 				{
 					//	QString sMsg, sOutRptFN = (sProjFileName.lastIndexOf('.') > 0 ? sProjFileName.left( sProjFileName.lastIndexOf('.') ) : sProjFileName);
 					QString sRptFileExt = (iRpt==0 ? "PDF" : "XML"), sOutRptFN = sModelPathOnly + sModelFileOnlyNoExt;
@@ -1603,6 +1636,18 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 								sNoSignMsg = "Compliance report will be generated without security measures due to Proj:ReportIncludeFile being specified in the project data";
  							else if (bDHWCalcMethodUserSpecified)			// SAC 7/15/15
 								sNoSignMsg = "Compliance report will be generated without security measures due to Proj:DHWCalcMethod being specified in the project data (via user input or analysis option)";
+							else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)		// SAC 12/12/16
+							{	switch (iRetVal)
+								{	case  BEMAnal_CECRes_ModelRptError			:	sNoSignMsg = "Compliance report will be generated without security measures due to error generating model report";		break;
+								//	case  BEMAnal_CECRes_CompRptWriteError		:  sNoSignMsg = "Compliance report will be generated without security measures due to inability to write compliance report file (.pdf or .xml)";		break;
+								//	case  BEMAnal_CECRes_CompRptGenError		:  sNoSignMsg = "Compliance report will be generated without security measures due to error(s) encountered generating compliance report file (.pdf or .xml)";		break;
+									case  BEMAnal_CECRes_EvalChkFileHashError	:  sNoSignMsg = "Compliance report will be generated without security measures due to error(s) evaluating CheckFileHash rules";		break;
+									case  BEMAnal_CECRes_WthrHashChkFail		:  sNoSignMsg = "Compliance report will be generated without security measures due to weather file hash failing consistency check";		break;
+									case  BEMAnal_CECRes_InputSaveFailed		:  sNoSignMsg = "Compliance report will be generated without security measures due to inability to save project inputs (including results) following analysis";		break;
+									case  BEMAnal_CECRes_DHWUseHashChkFail		:  sNoSignMsg = "Compliance report will be generated without security measures due to DHW use/profile file hash failing consistency check";		break;
+									default  :	sNoSignMsg = QString( "Compliance report will be generated without security measures due to error encountered during analysis (%1 >= BEMAnal_CECRes_MinErrorWithResults)" ).arg( QString::number(iRetVal) );		break;
+								}
+							}
 
 							if (!sNoSignMsg.isEmpty())
 							{	bSendRptSignature = false;
@@ -1669,7 +1714,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToReport += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 	// SAC 5/11/15 - new code to store analysis results back to oringal project file, which is much more efficient than doing it after analysis completes abd 
-		if (iRetVal == 0 && (bStoreResultsToModelInput || bStoreDetailedResultsToModelInput))
+		if (ResRetVal_ContinueProcessing( iRetVal ) && (bStoreResultsToModelInput || bStoreDetailedResultsToModelInput))
 		{	// copy EUseSummary & EnergyUse objects from final run into the initial user model
 			QString sResCopyErrMsg;
 			int iResCopyRetVal = CopyAnalysisResultsObjects( sResCopyErrMsg, "final" /*runID*/, iNumRuns /*iBEMProcIdxSrc*/, 0 /*iBEMProcIdxDest*/, bStoreDetailedResultsToModelInput );
