@@ -49,6 +49,10 @@
 
 #define SEGMENT_SIZE 4096
 
+extern bool IsPasswordRequiringMasking( long lDBID, int iOccur );
+extern int  GetNumPasswordMaskingDBIDs();
+extern long DBIDOfCorrespondingPassword( long lShowDBID );
+
 /////////////////////////////////////////////////////////////////////////////
 // CEditCtl
 

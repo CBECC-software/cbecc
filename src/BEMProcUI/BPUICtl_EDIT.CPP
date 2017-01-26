@@ -98,6 +98,64 @@ static BOOL EditCtlCharacterNotAllowedInObjectname( char c )
 	return FALSE;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// data and routines related to masking passwords in UI  - SAC 1/9/17
+
+static CArray<long, long> slaDBID_Passwords;
+static CArray<long, long> slaDBID_ShowPasswords;
+
+bool IsPasswordRequiringMasking( long lDBID, int iOccur )
+{	bool bMaskPassword = false;
+   int iSize = slaDBID_Passwords.GetSize();
+   for (int i=0; i<iSize; i++)
+      if (lDBID == slaDBID_Passwords[i])
+      {	int iStatus, iSpecialVal, iError=0;
+         // retrieve value from database
+			long lShow = BEMPX_GetIntegerAndStatus( slaDBID_ShowPasswords[i], iStatus, iSpecialVal, iError, iOccur );
+			if (iError >= 0 && iStatus > 0 && lShow > 0)
+      		bMaskPassword = false;
+      	else
+      		bMaskPassword = true;
+		}
+   return bMaskPassword;
+}
+
+int GetNumPasswordMaskingDBIDs()
+{	return slaDBID_Passwords.GetSize();
+}
+
+long DBIDOfCorrespondingPassword( long lShowDBID )
+{	int iSize = slaDBID_ShowPasswords.GetSize();
+   for (int i=0; i<iSize; i++)
+	{	if (lShowDBID == slaDBID_ShowPasswords[i])
+      	return slaDBID_Passwords[i];
+   }
+	return -1;
+}
+
+bool IsPasswordDBID( long lDBID )
+{	int iSize = slaDBID_Passwords.GetSize();
+   for (int i=0; i<iSize; i++)
+	{	if (lDBID == slaDBID_Passwords[i])
+      	return true;
+   }
+	return false;
+}
+
+BOOL BEMPUIX_AddPasswordDBIDPair( long lDBID_Password, long lDBID_ShowPassword, BOOL bResetArrays )   // SAC 1/9/17
+{	BOOL bRetVal = FALSE;
+	if (bResetArrays)
+	{	slaDBID_Passwords.RemoveAll();
+		slaDBID_ShowPasswords.RemoveAll();
+	}
+	if (lDBID_Password > 0 && lDBID_ShowPassword > 0)
+	{	slaDBID_Passwords.Add(     lDBID_Password );
+		slaDBID_ShowPasswords.Add( lDBID_ShowPassword );
+		bRetVal = TRUE;
+	}
+	return bRetVal;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -213,6 +271,10 @@ BOOL CEditCtl::Create( CWnd* pParentWnd, CBEMPUIControl* pControl, BOOL bAllowEd
 //      winStyle = WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL|ES_MULTILINE;
       winStyle = WS_CHILD|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL|ES_MULTILINE;
 
+	BOOL bMaskPassword = (IsPasswordDBID( m_lUseDBID ) && IsPasswordRequiringMasking( m_lUseDBID, m_iUseDBInstance ));  // SAC 1/9/17
+	if (bMaskPassword)
+		winStyle |= ES_PASSWORD;
+
    // SAC - 1/6/98 - Call CreateEx() in order to specify extended style "WS_EX_CLIENTEDGE" which
    //                draws the border as 3D (rather than boring 2D black line)
    //         was -> temp = CEdit::Create( winStyle, CRect(pos, size), pParentWnd, pControl->m_uiCtrlID );
@@ -246,6 +308,9 @@ BOOL CEditCtl::Create( CWnd* pParentWnd, CBEMPUIControl* pControl, BOOL bAllowEd
                                                 (BEMPX_GetPropertyID(m_lUseDBID) == 0 && BEMPX_GetArrayID(m_lUseDBID) == BEM_PARAM0_NAME) ) );
       m_bValidPath = (!bDataIsNumber && pControl->m_lValue == -1);	// SAC 12/19/14
 
+		if (bMaskPassword)  // SAC 1/9/17
+			SetPasswordChar(_T('*'));
+
 // SAC - 8/25/98
 //      BOOL dispOK = (OnDisplayData(0,0)!=0);
    }
@@ -268,6 +333,7 @@ BOOL CEditCtl::Create( DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT n
       m_iPrecOrLen     	= iPrecOrLen;
       m_lDBID        	= lDBID;
       m_iDBInstance     = iDBInstance;  // SAC 3/3/99
+			ASSERT( !IsPasswordDBID( m_lDBID ) );  // SAC 1/9/17
 
       m_lDBID2         = 0;  // SAC 8/4/02
 		m_i1ChildIdx = -1;	// SAC 5/29/14

@@ -59,6 +59,7 @@ BOOL __declspec(dllexport) __cdecl BEMPUIX_ResetScreenData( const char* psScreen
 int  __declspec(dllexport) __cdecl BEMPUIX_GetMainScreenInfo();
 
 int  __declspec(dllexport) __cdecl BEMPUIX_GetNumConsecutiveDialogTabIDs( int iBEMClass, int iUIMode );
+int  __declspec(dllexport) __cdecl BEMPUIX_GetFirstDialogTabID( int iBEMClass, int iUIMode );	// SAC 1/5/17
 
 //void __declspec(dllexport) __cdecl BEMPUIX_SetWMFDatabaseIDs( long lDBID_FootprintWMF, long lDBID_FPOrientXFrac,
 //                                                           long lDBID_FPOrientYFrac, long lDBID_Orientation );
@@ -77,6 +78,8 @@ void __declspec(dllexport) __cdecl BEMPUIX_SetExtCmbDatabaseIDs( int iNumDBIDPai
 void __declspec(dllexport) __cdecl BEMPUIX_SetAutoCompleteComboboxDBIDs( int iNumDBIDs, long* laAutoCompleteDBIDs );
 
 BOOL __declspec(dllexport) __cdecl BEMPUIX_SetCharsNotAllowedInObjectNames( char* pcNotAllowedInObjNames );		// SAC 8/20/14 - last char in pcNotAllowedInObjNames array must be 0/NULL
+
+BOOL __declspec(dllexport) __cdecl BEMPUIX_AddPasswordDBIDPair( long lDBID_Password, long lDBID_ShowPassword, BOOL bResetArrays=FALSE );   // SAC 1/9/17
 
 // SAC 7/30/02 - Added in the process of implementing new EEM run mechansim - causes resetting of BEMProc symbol list upon each refresh of combobox
 void __declspec(dllexport) __cdecl BEMPUIX_AddAutoSymbolListRefreshDBIDs( long lDBID_Prop, long lDBID_NumItems, long lDBID_Strings,

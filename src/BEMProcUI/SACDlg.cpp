@@ -810,8 +810,24 @@ LONG CSACDlg::OnDataModified( UINT wEval, LONG lDBID )
       CreateUIControls( TRUE, m_lDBID_ScreenIdx );
    }
    else
+   {
+		// Loop over controls to toggle password masking (if necessary) - SAC 1/9/17
+		if (GetNumPasswordMaskingDBIDs() > 0 && m_pTDPage)
+		{	long lPWDBID = DBIDOfCorrespondingPassword( lDBID );
+			if (lPWDBID > 0)
+			{  for (int i=m_pTDPage->m_iFirstCtrlIdx; i<=m_pTDPage->m_iLastCtrlIdx; i++)
+	         {  CBEMPUIControl* pCtrl = eScreenData.GetControlByIndex( i );
+	            if (pCtrl != NULL && pCtrl->m_uiCtrlID > 0)
+					{	CWnd* pWnd = GetDlgItem( pCtrl->m_uiCtrlID );
+						if (pWnd && pWnd->IsKindOf(RUNTIME_CLASS( CEditCtl )))
+						{	if (((CEditCtl*)pWnd)->m_lUseDBID == lPWDBID)
+							{	int iPWChar = (IsPasswordRequiringMasking( lPWDBID, ((CEditCtl*)pWnd)->m_iUseDBInstance ) ? 42 : 0);
+								pWnd->SendMessage( EM_SETPASSWORDCHAR, iPWChar, 0 );
+		}	}	}	}	}	}
+
       // redisplay all currently displayed database data
       DisplayMods(0,0);
+   }
 
 // SAC 9/25/01 - Capture retrun value and use to enable re-evaluation and display for special cases like custom footprint & zoning
    // pass message on to MainFrame in order to tag Doc data as modified
