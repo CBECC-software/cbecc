@@ -55,19 +55,21 @@ int BEMCMPMGR_API __cdecl CMX_PerformSimulation_CECRes(	const char* pszBEMBasePa
 int BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 														const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
-														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL );
+														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL,
+														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL );		// SAC 1/10/17
 
 // -----------------------------------------------------------------------------
 int BEMCMPMGR_API __cdecl CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 												const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
 												bool bLoadModelFile=true, const char* pszOptionsCSV=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0,
-												bool bDisplayProgress=false, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc=NULL );
+												bool bDisplayProgress=false, int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL,		// SAC 1/10/17
+												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc=NULL );
 int BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 												const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
 												bool bLoadModelFile=true, const char* pszOptionsCSV=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0,
-												bool bDisplayProgress=false, HWND hWnd=NULL );
+												bool bDisplayProgress=false, HWND hWnd=NULL, int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL );		// SAC 1/10/17
 //		Return Values:		0 =>	SUCCESS
 //							 > 0 =>	Error Codes listed below...
 

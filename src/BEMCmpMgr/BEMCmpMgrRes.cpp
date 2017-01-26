@@ -114,7 +114,7 @@ int CMX_PerformSimulation_CECRes(	const char* pszBEMBasePathFile,
 	int iRetVal = CMX_PerformAnalysis_CECRes(	pszBEMBasePathFile, pszRulesetPathFile, pszCSEEXEPath, pszCSEWeatherPath, pszDHWDLLPath, pszDHWWeatherPath,
 												pszProcessPath, pszModelPathFile, pszLogPathFile, pszUIVersionString, (bLoadModelFile), 
 												(!sAnalysisOptions.isEmpty() ? sAnalysisOptions.toLocal8Bit().constData() : NULL),
-												NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, (bDisplayProgress), hWnd );
+												NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, (bDisplayProgress), hWnd, 0 /*iSecurityKeyIndex*/, NULL /*pszSecurityKey*/ );
 	return iRetVal;
 }
 
@@ -127,9 +127,10 @@ int CMX_PerformAnalysis_CECRes(		const char* pszBEMBasePathFile, const char* psz
 												const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
 												bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/,
-												bool bDisplayProgress /*=false*/, HWND /*hWnd=NULL*/ )
+												bool bDisplayProgress /*=false*/, HWND /*hWnd=NULL*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )		// SAC 1/10/17
 {	return CMX_PerformAnalysisCB_CECRes(	pszBEMBasePathFile, pszRulesetPathFile, pszCSEEXEPath, pszCSEWeatherPath, pszDHWDLLPath, pszDHWWeatherPath, pszProcessingPath,
-												pszModelPathFile, pszLogPathFile, pszUIVersionString, bLoadModelFile, pszOptionsCSV, pszErrorMsg, iErrorMsgLen, bDisplayProgress );
+												pszModelPathFile, pszLogPathFile, pszUIVersionString, bLoadModelFile, pszOptionsCSV, pszErrorMsg, iErrorMsgLen, bDisplayProgress,
+												iSecurityKeyIndex, pszSecurityKey );		// SAC 1/10/17
 }
 
 const char pcCharsNotAllowedInObjNames_CECRes[] = { '"', NULL };	// SAC 8/20/14
@@ -140,7 +141,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 												const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 												const char* pszProcessingPath, const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString,
 												bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/, char* /*pszErrorMsg=NULL*/, int /*iErrorMsgLen=0*/,
-												bool bDisplayProgress /*=false*/, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )
+												bool bDisplayProgress /*=false*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/,		// SAC 1/10/17
+												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )
 {	int iRetVal = 0, iRV2=0;
 	QString sErrorMsg, sLogMsg;
 	char pszAnalErrMsg[512];	// SAC 2/23/15
@@ -664,31 +666,36 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	QString sFHPathFile, sFHErrMsg; 
 				int iNumFileHashErrs = 0;
 				bool bRequiredForCodeYear = true;	// SAC 11/19/15
-				for (long iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 117); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering
+				for (long iFHID=101; (ResRetVal_ContinueProcessing( iRetVal ) && iFHID <= 126); iFHID++)		// SAC 3/17/16 - removed T24DHW DLLs and revised numbering
 				{	bRequiredForCodeYear = true;
+				// SAC 1/15/17 - updated hash table for 2016/19 analysis files
 					switch (iFHID)
-					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
-						case 102 :	sFHPathFile = ssEXEPath + "BEMCmpMgr13r.dll";     bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
-						case 103 :	sFHPathFile = ssEXEPath + "BEMCmpMgr_noui.dll";   bRequiredForCodeYear = false;							break;		// ignore this file from here on out
-						case 104 :	sFHPathFile = ssEXEPath + "BEMProc13r.dll";       bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
+					{	case 101 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2016);	break;
+						case 102 :	sFHPathFile = ssEXEPath + "BEMCmpMgr16r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2016);	break;
+						case 103 :	sFHPathFile = ssEXEPath + "BEMProc16r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2016);	break;
+						case 104 :	sFHPathFile = ssEXEPath + "BEMProcUI16r.dll";     bRequiredForCodeYear = false;							break;		// ignore this file from here on out
 						case 105 :	sFHPathFile = ssEXEPath + "libeay32.dll";         bRequiredForCodeYear = false;  						break;		// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
 						case 106 :	sFHPathFile = ssEXEPath + "ssleay32.dll";         bRequiredForCodeYear = false;						   break;		// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
 						case 107 :	sFHPathFile = ssEXEPath + "Qt5Cored.dll";         break;
 						case 108 :	sFHPathFile = ssEXEPath + "Qt5Guid.dll";          break;
-						case 109 :	sFHPathFile = ssEXEPath + "Qt5Xmld.dll";          break;
-						case 110 :	sFHPathFile = ssEXEPath + "Qt5Core.dll";          break;
-						case 111 :	sFHPathFile = ssEXEPath + "Qt5Gui.dll";           break;
-						case 112 :	sFHPathFile = ssEXEPath + "Qt5Xml.dll";           break;
-						case 113 :  sFHPathFile = sCSEexe;                            break;
-						case 114 :  /*sFHPathFile = sCSEashwat;*/                         bRequiredForCodeYear = false;						   break;
-					//	case 31 :   sFHPathFile = sT24WTHRdll;                        break;
-					//	case 32 :   sFHPathFile = sT24DHWdll;                         break;
-					//	case 33 :   sFHPathFile = sT24ASM32dll;                       break;
-					//	case 34 :   sFHPathFile = sT24TDVdll;                         break;
-					//	case 35 :   sFHPathFile = sT24UNZIPdll;                       break;
-						case 115 :	sFHPathFile = ssEXEPath + "BEMCmpMgr16r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-						case 116 :	sFHPathFile = ssEXEPath + "BEMProc16r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-						case 117 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
+						case 109 :	sFHPathFile = ssEXEPath + "Qt5Networkd.dll";      break;
+						case 110 :	sFHPathFile = ssEXEPath + "Qt5Sqld.dll";          break;
+						case 111 :	sFHPathFile = ssEXEPath + "Qt5WebKitd.dll";       break;
+						case 112 :	sFHPathFile = ssEXEPath + "Qt5Widgetsd.dll";      break;
+						case 113 :	sFHPathFile = ssEXEPath + "Qt5Xmld.dll";          break;
+						case 114 :	sFHPathFile = ssEXEPath + "Qt5Core.dll";          break;
+						case 115 :	sFHPathFile = ssEXEPath + "Qt5Gui.dll";           break;
+						case 116 :	sFHPathFile = ssEXEPath + "Qt5Network.dll";       break;
+						case 117 :	sFHPathFile = ssEXEPath + "Qt5Sql.dll";           break;
+						case 118 :	sFHPathFile = ssEXEPath + "Qt5WebKit.dll";        break;
+						case 119 :	sFHPathFile = ssEXEPath + "Qt5Widgets.dll";       break;
+						case 120 :	sFHPathFile = ssEXEPath + "Qt5Xml.dll";           break;
+						case 121 :  sFHPathFile = sCSEEXEPath+"csed.exe";             break;
+						case 122 :  sFHPathFile = sCSEEXEPath+"cse.exe";              break;
+						case 123 :  sFHPathFile = sCSEEXEPath+"calc_bt_control.exe";  break;
+						case 124 :	sFHPathFile = ssEXEPath + "BEMCmpMgr19r.dll";     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+						case 125 :	sFHPathFile = ssEXEPath + "BEMProc19r.dll";       bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+						case 126 :	BEMPX_GetBEMBaseFile( sFHPathFile );              bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 						default :						assert( FALSE );                   break;
 					}
 					if (!bRequiredForCodeYear)
@@ -698,7 +705,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					{	// DO NOTHING - some files expected to be missing - others will prevent success when missing...
 					}
 					else
-					{   char pHashBuffer[65];
+					{  char pHashBuffer[65];
 				// check weather file hash - SAC 9/2/13
 						int iSHA256_RetVal = ComputeSHA256_File( sFHPathFile.toLocal8Bit().constData(), pHashBuffer, 65 );
 						if (iSHA256_RetVal != 0)
@@ -1366,6 +1373,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
+
+// SAC 12/14/16 - code to run Battery model
+					// Perform secondary CSE run to simulate Battery use
+					if (ResRetVal_ContinueProcessing( iRetVal ))
+					{
+					}
+
+
 					// Retrieve CSE simulation results
 					if (ResRetVal_ContinueProcessing( iRetVal ))
 					{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
@@ -1668,15 +1683,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 						int iRptGenRetVal = GenerateReport_CEC( sXMLResultsFileName.toLocal8Bit().constData() /*sProjPath, sResFN*/, sCACertPath.toLocal8Bit().constData(),
 																sRptGenCompReport.toLocal8Bit().constData(), sRptGenUIApp.toLocal8Bit().constData(), sRptGenUIVer.toLocal8Bit().constData(), "none" /*Signature*/,
-																"none" /*PublicKey*/, NULL /*PrivateKey*/, 
+																"none" /*PublicKey*/, (pszSecurityKey ? pszSecurityKey : NULL) /*PrivateKey*/, 
 																(sProxyServerAddress.isEmpty()     ? NULL : sProxyServerAddress.toLocal8Bit().constData()), 
 																(sProxyServerCredentials.isEmpty() ? NULL : sProxyServerCredentials.toLocal8Bit().constData()),
 																sPDFOnly.toLocal8Bit().constData(), sDebugRpt.toLocal8Bit().constData(), bVerbose, bSilent, bSendRptSignature, 
 																sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																sProxyServerType.toLocal8Bit().constData(), 
-																(sNetComLibrary.isEmpty() ? NULL : sNetComLibrary.toLocal8Bit().constData()) );		// SAC 11/5/15
-
+																(sNetComLibrary.isEmpty() ? NULL : sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex );		// SAC 11/5/15   // SAC 1/10/17
 // GOOD - from UI
 // - GenerateReport_CEC( 'C:\WSF\devLibs\CompMgr\src\BEM-open\bin\Res\Projects\Samples-2016\1storyExample3-sv - AnalysisResults.xml', 
 // 								'C:\WSF\devLibs\CompMgr\src\BEM-open\bin\Release_VC12', 
@@ -2347,15 +2361,15 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 /////////////////////////////////////////////////////////////////////////////
 
 #define  HrlyExport_NumMeters    3
-#define  HrlyExport_NumEnduses  11		// SAC 1/29/16 - increased for PV export
+#define  HrlyExport_NumEnduses  12		// SAC 1/29/16 - increased for PV export  - SAC 12/15/16 - inc for BT
 #define  HrlyExport_NumEUGroups  5
 static const char* pszMeters[HrlyExport_NumMeters+1]			= { "MtrElec",     "MtrNatGas",  "MtrOther",  NULL };
 static const char* pszEnduses[HrlyExport_NumEUGroups][HrlyExport_NumEnduses] =
-												{	{ "Htg" ,  "Clg" , "FanV",  NULL , "Dhw" , "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV"  },		// SAC 7/7/15 - SHW -> DHW   	- SAC 1/29/16 - added PV
-													{ "HPHtg", "FanC",  NULL ,  NULL , "DhwBU", NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
-													{ "FanH",   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Dry" ,  NULL ,  NULL,  NULL },
-													{ "Aux" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Wash",  NULL ,  NULL,  NULL },
-													{ "Fan" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Cook",  NULL ,  NULL,  NULL }  };
+												{	{ "Htg" ,  "Clg" , "FanV",  NULL , "Dhw" , "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV" , "BT"  },		// SAC 7/7/15 - SHW -> DHW  - SAC 1/29/16 - added PV  - SAC 12/15/16 - added BT (battery)
+													{ "HPHtg", "FanC",  NULL ,  NULL , "DhwBU", NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
+													{ "FanH",   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Dry" ,  NULL ,  NULL,  NULL,  NULL },
+													{ "Aux" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Wash",  NULL ,  NULL,  NULL,  NULL },
+													{ "Fan" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Cook",  NULL ,  NULL,  NULL,  NULL }  };
 // SAC 7/14/16 - replaced following w/ above (moving Other HVAC into Spc Htg) to be consistent w/ reporting of summary results - based on changes to rules back on 10/16/13 by MJB
 //												{	{ "Htg" ,  "Clg" , "FanV", "Aux" , "Dhw" , "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV"  },		// SAC 7/7/15 - SHW -> DHW   	- SAC 1/29/16 - added PV
 //													{ "HPHtg", "FanC",  NULL , "Fan" , "DhwBU", NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
@@ -2384,7 +2398,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 	if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), lAnalysisType    ) ||
 		//	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType    ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations ) ||
-			!BEMPX_GetFloat(	  BEMPX_GetDatabaseID( "Proj:CondFloorArea"   ), fCondFloorArea   ) ||
+			!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Proj:CondFloorArea"   ), fCondFloorArea   ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone"     ), lClimateZone     ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvailable" ), lNatGasAvailable ) )
 	{	iRetVal = 1;
@@ -2441,8 +2455,15 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:PrimSimEngingVer" ),	sPrimVer );
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SecSimEngingVer"  ),	sSecVer  );
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RulesetVersion"   ),	sRuleVer );
+
 		bool bExportPV = (sRuleVer.indexOf( "2013" ) < 1);	// SAC 1/29/16 - prevent export of PV for 2013 ruleset
 		QString sPV = "PV";
+
+		long lEnergyCodeYearNum;
+		if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ))
+			lEnergyCodeYearNum = 2013;
+		bool bExportBT = (lEnergyCodeYearNum >= 2019);	// SAC 12/15/16 - prevent export of BT for 2013-16 analysis
+		QString sBT = "BT";
 
 		FILE *fp_CSV;
 		int iErrorCode;
@@ -2471,7 +2492,16 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 				fprintf( fp_CSV, "\n" );
 
 					// SAC 8/23/14 - updated to include electric demand multipliers
-				if (bExportPV)		// SAC 1/29/16 - include PV 
+				if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT 
+            {	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,TDV Multipliers,,Elec Demand,\n" );		// INCLUDING PV
+	            fprintf( fp_CSV,  ",,,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,Battery,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Electric,Fuel,Multipliers\n" );
+         	   fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
+														"(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(TDV/Btu),(TDV/Btu),(frac)\n" );
+				}
+				else if (bExportPV)		// SAC 1/29/16 - include PV 
             {	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,TDV Multipliers,,Elec Demand,\n" );		// INCLUDING PV
 	            fprintf( fp_CSV,  ",,,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,TOTAL,"
 												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
@@ -2504,7 +2534,8 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 					for (iEU=0; iEU < HrlyExport_NumEnduses; iEU++)
 						for (iEU2=0; iEU2 < HrlyExport_NumEUGroups; iEU2++)
 						{	if (pszEnduses[iEU2][iEU] == NULL ||
-									(!bExportPV && sPV.compare( pszEnduses[iEU2][iEU] )==0))		// SAC 1/29/16
+									(!bExportPV && sPV.compare( pszEnduses[iEU2][iEU] )==0) ||		// SAC 1/29/16
+									(!bExportBT && sBT.compare( pszEnduses[iEU2][iEU] )==0)) 		// SAC 12/15/16
 								daMtrEUData[iMtr][iEU][iEU2] = &daZero[0];   // no enduse to retrieve results for
 							else if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUData[iMtr][iEU][iEU2], NULL, 0, pszModelName,
 	 																			 pszMeters[iMtr], pszEnduses[iEU2][iEU], iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU][iEU2] != NULL)
@@ -2551,7 +2582,44 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 					for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
 						for (iHr=1; iHr<25; iHr++)
 						{	iYrHr++;
-							if (bExportPV)
+							if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT
+			    		        fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+					(daMtrEUData[0][0][0][iYrHr] + daMtrEUData[0][0][1][iYrHr] + daMtrEUData[0][0][2][iYrHr] + daMtrEUData[0][0][3][iYrHr] + daMtrEUData[0][0][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][1][0][iYrHr] + daMtrEUData[0][1][1][iYrHr] + daMtrEUData[0][1][2][iYrHr] + daMtrEUData[0][1][3][iYrHr] + daMtrEUData[0][1][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][2][0][iYrHr] + daMtrEUData[0][2][1][iYrHr] + daMtrEUData[0][2][2][iYrHr] + daMtrEUData[0][2][3][iYrHr] + daMtrEUData[0][2][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][3][0][iYrHr] + daMtrEUData[0][3][1][iYrHr] + daMtrEUData[0][3][2][iYrHr] + daMtrEUData[0][3][3][iYrHr] + daMtrEUData[0][3][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][4][0][iYrHr] + daMtrEUData[0][4][1][iYrHr] + daMtrEUData[0][4][2][iYrHr] + daMtrEUData[0][4][3][iYrHr] + daMtrEUData[0][4][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][5][0][iYrHr] + daMtrEUData[0][5][1][iYrHr] + daMtrEUData[0][5][2][iYrHr] + daMtrEUData[0][5][3][iYrHr] + daMtrEUData[0][5][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][6][0][iYrHr] + daMtrEUData[0][6][1][iYrHr] + daMtrEUData[0][6][2][iYrHr] + daMtrEUData[0][6][3][iYrHr] + daMtrEUData[0][6][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][7][0][iYrHr] + daMtrEUData[0][7][1][iYrHr] + daMtrEUData[0][7][2][iYrHr] + daMtrEUData[0][7][3][iYrHr] + daMtrEUData[0][7][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][8][0][iYrHr] + daMtrEUData[0][8][1][iYrHr] + daMtrEUData[0][8][2][iYrHr] + daMtrEUData[0][8][3][iYrHr] + daMtrEUData[0][8][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][9][0][iYrHr] + daMtrEUData[0][9][1][iYrHr] + daMtrEUData[0][9][2][iYrHr] + daMtrEUData[0][9][3][iYrHr] + daMtrEUData[0][9][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][10][0][iYrHr] + daMtrEUData[0][10][1][iYrHr] + daMtrEUData[0][10][2][iYrHr] + daMtrEUData[0][10][3][iYrHr] + daMtrEUData[0][10][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][11][0][iYrHr] + daMtrEUData[0][11][1][iYrHr] + daMtrEUData[0][11][2][iYrHr] + daMtrEUData[0][11][3][iYrHr] + daMtrEUData[0][11][4][iYrHr]) / 3.412, daMtrTotals[0][iYrHr] / 3.412,
+					(daMtrEUData[1][0][0][iYrHr] + daMtrEUData[1][0][1][iYrHr] + daMtrEUData[1][0][2][iYrHr] + daMtrEUData[1][0][3][iYrHr] + daMtrEUData[1][0][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][1][0][iYrHr] + daMtrEUData[1][1][1][iYrHr] + daMtrEUData[1][1][2][iYrHr] + daMtrEUData[1][1][3][iYrHr] + daMtrEUData[1][1][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][2][0][iYrHr] + daMtrEUData[1][2][1][iYrHr] + daMtrEUData[1][2][2][iYrHr] + daMtrEUData[1][2][3][iYrHr] + daMtrEUData[1][2][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][3][0][iYrHr] + daMtrEUData[1][3][1][iYrHr] + daMtrEUData[1][3][2][iYrHr] + daMtrEUData[1][3][3][iYrHr] + daMtrEUData[1][3][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][4][0][iYrHr] + daMtrEUData[1][4][1][iYrHr] + daMtrEUData[1][4][2][iYrHr] + daMtrEUData[1][4][3][iYrHr] + daMtrEUData[1][4][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][5][0][iYrHr] + daMtrEUData[1][5][1][iYrHr] + daMtrEUData[1][5][2][iYrHr] + daMtrEUData[1][5][3][iYrHr] + daMtrEUData[1][5][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][6][0][iYrHr] + daMtrEUData[1][6][1][iYrHr] + daMtrEUData[1][6][2][iYrHr] + daMtrEUData[1][6][3][iYrHr] + daMtrEUData[1][6][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][7][0][iYrHr] + daMtrEUData[1][7][1][iYrHr] + daMtrEUData[1][7][2][iYrHr] + daMtrEUData[1][7][3][iYrHr] + daMtrEUData[1][7][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][8][0][iYrHr] + daMtrEUData[1][8][1][iYrHr] + daMtrEUData[1][8][2][iYrHr] + daMtrEUData[1][8][3][iYrHr] + daMtrEUData[1][8][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][9][0][iYrHr] + daMtrEUData[1][9][1][iYrHr] + daMtrEUData[1][9][2][iYrHr] + daMtrEUData[1][9][3][iYrHr] + daMtrEUData[1][9][4][iYrHr]) / 100.0, daMtrTotals[1][iYrHr] / 100.0,
+					(daMtrEUData[2][0][0][iYrHr] + daMtrEUData[2][0][1][iYrHr] + daMtrEUData[2][0][2][iYrHr] + daMtrEUData[2][0][3][iYrHr] + daMtrEUData[2][0][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][1][0][iYrHr] + daMtrEUData[2][1][1][iYrHr] + daMtrEUData[2][1][2][iYrHr] + daMtrEUData[2][1][3][iYrHr] + daMtrEUData[2][1][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][2][0][iYrHr] + daMtrEUData[2][2][1][iYrHr] + daMtrEUData[2][2][2][iYrHr] + daMtrEUData[2][2][3][iYrHr] + daMtrEUData[2][2][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][3][0][iYrHr] + daMtrEUData[2][3][1][iYrHr] + daMtrEUData[2][3][2][iYrHr] + daMtrEUData[2][3][3][iYrHr] + daMtrEUData[2][3][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][4][0][iYrHr] + daMtrEUData[2][4][1][iYrHr] + daMtrEUData[2][4][2][iYrHr] + daMtrEUData[2][4][3][iYrHr] + daMtrEUData[2][4][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][5][0][iYrHr] + daMtrEUData[2][5][1][iYrHr] + daMtrEUData[2][5][2][iYrHr] + daMtrEUData[2][5][3][iYrHr] + daMtrEUData[2][5][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][6][0][iYrHr] + daMtrEUData[2][6][1][iYrHr] + daMtrEUData[2][6][2][iYrHr] + daMtrEUData[2][6][3][iYrHr] + daMtrEUData[2][6][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][7][0][iYrHr] + daMtrEUData[2][7][1][iYrHr] + daMtrEUData[2][7][2][iYrHr] + daMtrEUData[2][7][3][iYrHr] + daMtrEUData[2][7][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][8][0][iYrHr] + daMtrEUData[2][8][1][iYrHr] + daMtrEUData[2][8][2][iYrHr] + daMtrEUData[2][8][3][iYrHr] + daMtrEUData[2][8][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][9][0][iYrHr] + daMtrEUData[2][9][1][iYrHr] + daMtrEUData[2][9][2][iYrHr] + daMtrEUData[2][9][3][iYrHr] + daMtrEUData[2][9][4][iYrHr]) / 1000.0, daMtrTotals[2][iYrHr] / 1000.0,
+					daTDVData[0][iYrHr], daTDVData[1][iYrHr], daElDmndData[iYrHr] );
+							else if (bExportPV)
 			    		        fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
@@ -2864,7 +2932,8 @@ const char* GetResultsCSVHeader_Res( int i1HdrIdx )
 int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 													const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 													const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
-													char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/ )
+													char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/,
+													int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )		// SAC 1/10/17
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -3185,7 +3254,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 																			pszDHWDLLPath, pszDHWWeatherPath, sProcessingPath.c_str(), sProjPathFile.c_str(),
 																			sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
 																			pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
-																			bDisplayProgress, /*GetSafeHwnd() HWND hWnd,*/ NULL /*callback func ptr*/ );
+																			bDisplayProgress, /*GetSafeHwnd() HWND hWnd,*/ iSecurityKeyIndex, pszSecurityKey, NULL /*callback func ptr*/ );
 	// Populate string w/ summary results of analysis
 
 				bool bStoreResults = false;

@@ -69,17 +69,40 @@
 
 long CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure )
 {
-	char* inpCrypt = (char*) malloc( length );
-	memcpy( inpCrypt, input, length );
-	if (bSecure)
-		CM_CryptEncode( inpCrypt, length );
+//	char* inpCrypt = NULL;
+//	if (!bSecure)
+//	{	inpCrypt = (char*) malloc( length );
+//		memcpy( inpCrypt, input, length );
+//	}
+//	else
+//	{	inpCrypt = (char*) malloc( 2048 );		memset( inpCrypt, 0, sizeof(char)*2048 );
+//		int iEncLen = CMX_Encrypt( (unsigned char*) input, length+1, (unsigned char*) inpCrypt );
+//		assert( iEncLen >= length && iEncLen < 2048 );
+//
+//					FILE *fp_dbg;
+//					try
+//					{	if (fopen_s( &fp_dbg, "dbgsecure_encrypt.txt", "wb" ) == 0 && fp_dbg)
+//						{	fprintf( fp_dbg, "Ecrypted characters:\n" );
+//							for (int idbg=0; idbg<iEncLen; idbg++)
+//								fprintf( fp_dbg, "%4d,%4d\n", idbg+1, (int) inpCrypt[idbg] );
+//							fflush( fp_dbg );
+//							fclose( fp_dbg );
+//					}	}
+//					catch( ... )
+//					{	assert( false );
+//					}
+//
+//		length = iEncLen;
+//	}
 
 	BIO *bmem,*b64 = NULL;
 	BUF_MEM *bptr;
 	b64 = BIO_new(BIO_f_base64());
 	bmem = BIO_new(BIO_s_mem());
 	b64 = BIO_push(b64,bmem);
-	BIO_write(b64,inpCrypt,length);
+//	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);  // new - Ignore newlines - write everything in one line
+	BIO_write(b64,input,length);
+//	BIO_write(b64,inpCrypt,length);
 	BIO_flush(b64);
 	BIO_get_mem_ptr(b64,&bptr);
 
@@ -89,37 +112,81 @@ long CMX_EncodeBase64( const unsigned char *input, int length, char* output, int
 	else
 	{	memcpy(output,bptr->data,bptr->length-1);
 		output[bptr->length-1] = 0;
+	//{	memcpy(output,bptr->data,bptr->length); - leaves trailing newline char...
+	//	output[bptr->length] = 0;
+
+		if (bSecure)
+			CM_CharSwap( output, bptr->length );
 	}
 //	char *buff = (char *)malloc(bptr->length);
 //	memcpy(buff,bptr->data,bptr->length-1);
 //	buff[bptr->length-1] = 0;
 
 	BIO_free_all(b64);
-	free( inpCrypt );
-//	return buff;
+//	free( inpCrypt );
 	return iRetVal;
 }
 
-int CMX_DecodeBase64( char* outData, const char* inData, bool bSecure )
-{	int iRetVal = 0;
-	int length = strlen(inData);
+size_t calcDecodeLength(const char* b64input)
+{ //Calculates the length of a decoded string
+	size_t len = strlen(b64input), padding = 0;
+	if (b64input[len-1] == '=' && b64input[len-2] == '=') //last two chars are =
+		padding = 2;
+	else if (b64input[len-1] == '=') //last char is =
+		padding = 1;
+	return (len*3)/4 - padding;
+}
 
-	BIO *bmem = BIO_new_mem_buf( (void*)inData, length );
+int CMX_DecodeBase64( char* outData, const char* inData2, bool bSecure )
+{	int iRetVal = 0;
+
+	int inLen = strlen(inData2);
+	char* inData = (char*) malloc( inLen+1 );
+	memcpy( inData, inData2, inLen );		inData[inLen]=0;
+	if (bSecure)
+		CM_CharSwap( inData, inLen );
+
+//	int length = strlen(inData);
+	size_t length = calcDecodeLength(inData);
+
+	BIO *bmem = BIO_new_mem_buf( (void*)inData, -1 );  //length );
 	BIO *b64 = BIO_new(BIO_f_base64());
-	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+//	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);  - moved down
 	bmem = BIO_push(b64, bmem);
-	long n = BIO_read(bmem, outData, length);
-	if (n > 0 && n <= length)
+	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); // do not use newlines to flush buffer
+	long n = BIO_read(bmem, outData, strlen(inData));  //length);
+	if (n > 0 && n <= (int) length)
 		iRetVal = n;
 	else
 		outData[0] = 0; // note: this is an error state.
 	BIO_free_all(bmem);
 
-	if (iRetVal > 0 && iRetVal <= length)
-	{	if (bSecure)
-			CM_CryptDecode( outData, iRetVal );
+	if (iRetVal > 0 && iRetVal <= (int) length)
+	{
+//		if (bSecure)
+//		{
+//					FILE *fp_dbg;
+//					try
+//					{	if (fopen_s( &fp_dbg, "dbgsecure_decrypt.txt", "wb" ) == 0 && fp_dbg)
+//						{	fprintf( fp_dbg, "Ecrypted characters (before base64 decoding):\n" );
+//							for (int idbg=0; idbg<=iRetVal; idbg++)
+//								fprintf( fp_dbg, "%4d,%4d\n", idbg+1, (int) outData[idbg] );
+//							fflush( fp_dbg );
+//							fclose( fp_dbg );
+//					}	}
+//					catch( ... )
+//					{	assert( false );
+//					}
+//
+//			char* outCrypt = (char*) malloc( iRetVal );
+//			memcpy( outCrypt, outData, iRetVal );
+//			int iDecRetVal = CMX_Decrypt( (unsigned char*) outCrypt, iRetVal+1, (unsigned char*) outData );
+//			assert( iDecRetVal > 0 && iDecRetVal <= iRetVal );
+//			iRetVal = iDecRetVal;
+//		}
 		outData[iRetVal] = 0;
 	}
+	free( inData );
 
 	return iRetVal;
 }

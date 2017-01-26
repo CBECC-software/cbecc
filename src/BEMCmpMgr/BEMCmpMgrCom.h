@@ -52,7 +52,8 @@ int  BEMCMPMGR_API __cdecl CMX_SetupAnalysisWeatherPaths( const char* pszWthrPat
 int  BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile,
 														const char* pszRulesetPathFile, const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
-														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL, bool bOLDRules=false );
+														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL, bool bOLDRules=false,
+														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL );		// SAC 1/10/17
 
 //	int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes_OLD(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 //													const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,
@@ -63,13 +64,14 @@ int  BEMCMPMGR_API __cdecl CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBaseP
 												const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,
 												const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile=true,
 												const char* pszOptionsCSV=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false,
-												char* pszResultsSummary=NULL, int iResultsSummaryLen=0, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc=NULL );		// SAC 5/16/14		// SAC 5/28/15
+												char* pszResultsSummary=NULL, int iResultsSummaryLen=0, int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL,		// SAC 5/16/14   // SAC 1/10/17
+												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc=NULL );		// SAC 5/28/15
 
 int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 												const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,
 												const char* pszModelPathFile, const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile=true,
 												const char* pszOptionsCSV=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL,
-												char* pszResultsSummary=NULL, int iResultsSummaryLen=0 );		// SAC 5/16/14
+												char* pszResultsSummary=NULL, int iResultsSummaryLen=0, int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL );		// SAC 5/16/14   // SAC 1/10/17
 											//	int iMaxNumErrsReportedPerType=5, 
 		                    			//	bool bStoreBEMDetails=false, bool bVerbose=false, int iAnalysisThruStep=100, bool bBypassInputChecks=false, bool bBypassUMLHChecks=false,
 											//	bool* pbBypassOpenStudio=NULL, bool* pbBypassSimulation=NULL, int iNumBypassItems=0, bool bDurationStats=false );

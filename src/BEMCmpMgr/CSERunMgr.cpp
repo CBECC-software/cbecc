@@ -33,6 +33,7 @@
 #include "BEMCmpMgr.h"
 #include "BEMCM_I.h"
 #include "..\BEMProc\BEMProc.h"
+#include "..\BEMProc\BEMClass.h"
 #include "exec-stream.h"
 #include "CSERunMgr.h"
 #include "memLkRpt.h"
@@ -118,6 +119,55 @@ CSERunMgr::~CSERunMgr()
 		delete pCSERun;
 	}
 }
+
+
+static int ExecuteNow( QString sEXEFN, QString sEXEParams )
+{
+			int iExitCode = -99;
+			bool bRunOK = true;
+			exec_stream_t* pES=NULL;
+			try
+			{	
+				pES = new exec_stream_t( sEXEFN.toLocal8Bit().constData(), sEXEParams.toLocal8Bit().constData(), CREATE_NO_WINDOW );
+				//cseRun.SetExecStream( pES);
+			}
+			catch(exec_stream_t::error_t &e)
+			{	std::string sLogMsg=e.what();
+				BEMPX_WriteLogFile( sLogMsg.c_str(), NULL, FALSE, TRUE, FALSE );
+				bRunOK = false;
+			}
+			if (pES && bRunOK)
+			{
+				bool bEXEDone=false, bFirstException=true;
+				while (!bEXEDone)
+				{	try
+					{	if (pES->running())
+						{	//ProcessRunOutput( pES, iRun, bFirstException);
+							Sleep(100);
+						}
+						else
+						{	bEXEDone = true;
+							//while( ProcessRunOutput( pES, iRun, bFirstExceptionX));
+							pES->close();
+							iExitCode = pES->exit_code();
+						}
+					}
+					catch(exec_stream_t::error_t &e2)
+					{	if (bFirstException)
+						{	std::string sLogMsg=e2.what();
+							BEMPX_WriteLogFile( sLogMsg.c_str(), NULL, FALSE, TRUE, FALSE );
+							bFirstException = false;
+						}
+				}	}
+			}
+			if (pES)
+				delete pES;
+					//      QString sMsg = QString( "BTPreRun CSE exit code: %1" ).arg( QString::number(iExitCode) );
+					//      BEMMessageBox( sMsg );
+
+	return iExitCode;
+}
+
 
 int CSERunMgr::SetupRun(
 	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/ )	// SAC 4/29/15 - add argument to DISABLE report include files
@@ -389,36 +439,196 @@ int CSERunMgr::SetupRun(
 			}
 		}
 
+// SAC 12/14/16 - code to confirm need for CSE Battery PRE-RUN
+		QString sProjCSEBattFile, sCSEBattCtrlCSVFile;
+		BEMObject* pBattCtrlImpFileObj = NULL;
+		if (iRetVal == 0)
+		{	long lSecondBattSimReqd;
+			if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:SecondBattSimReqd" ), lSecondBattSimReqd ) && lSecondBattSimReqd > 0)
+			{	// modify name of CSV file referenced by Proj:BattCtrlImportFile
+				if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:BattCtrlImportFile" ), pBattCtrlImpFileObj ) && pBattCtrlImpFileObj && pBattCtrlImpFileObj->getClass())
+				{	int iBCIFObjIdx = BEMPX_GetObjectIndex( pBattCtrlImpFileObj->getClass(), pBattCtrlImpFileObj );		assert( iBCIFObjIdx >= 0 );
+					sCSEBattCtrlCSVFile = sProjFileAlone + "-BTCtrl.csv";
+					if (iBCIFObjIdx < 0)
+					{	assert( false );	// Proj:BattCtrlImportFile object not found 
+					}
+					else if (BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseIMPORTFILE:imFileName" ), BEMP_QStr, (void*) &sCSEBattCtrlCSVFile, BEMO_User, iBCIFObjIdx ) < 0)
+					{	assert( false );	// error setting Proj:BattCtrlImportFile:imFileName string
+					}
+					else
+						sProjCSEBattFile = m_sProcessPath + sProjFileAlone + "-BTPreRun.cse";
+			}	}
+		}
+
+		double btMaxCap, btMaxChgPwr, btMaxDschgPwr, btChgEff, btDschgEff;	// SAC 1/23/17 - moved up from below to ensure BATTERY inputs retrieved from BEMBase BEFORE battery is blasted for pre-run CSE writing
+		if (!sProjCSEBattFile.isEmpty())
+		{	// then need to feed BTPreRun results & TDV data into calc_bt_control.exe to produce ...BTCtrl.csv battery control CSV which the second/final simulation will read
+			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxCap"      ), btMaxCap ))
+				btMaxCap      = 16;	// CSE default
+			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxChgPwr"   ), btMaxChgPwr ))
+				btMaxChgPwr   = 4;	// CSE default
+			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxDschgPwr" ), btMaxDschgPwr ))
+				btMaxDschgPwr = 4;	// CSE default
+			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btChgEff"      ), btChgEff ))
+				btChgEff      = 0.975;	// CSE default
+			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btDschgEff"    ), btDschgEff ))
+				btDschgEff    = 0.975;	// CSE default
+		}
+
 		QString sProjCSEFile;
 		if (iRetVal == 0)
-		{	// Write CSE input file  (and store BEM details file)
-			sProjCSEFile = m_sProcessPath + sProjFileAlone + ".cse";
-			sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
-						 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-							 "(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( "CSE input", sProjCSEFile );
-			if (!OKToWriteOrDeleteFile( sProjCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
-			{	if (m_bSilent)
-					sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
+		{	sProjCSEFile = m_sProcessPath + sProjFileAlone + ".cse";
+			int iLastCSEIdx = (sProjCSEBattFile.isEmpty() ? 0 : 1);	// SAC 12/15/16
+			for (int iFLp=0; (iRetVal == 0 && iFLp <= iLastCSEIdx); iFLp++)
+			{
+				if (iFLp==1)	// SAC 12/15/16
+				{	// Have already written the FINAL CSE input (including Battery) - now we are writing the Battery PRE-RUN CSE input, so delete the battery stuff before continuing
+					if (pBattCtrlImpFileObj)
+						BEMPX_DeleteObject( pBattCtrlImpFileObj );
+         		int iBattObjErr;
+            	BEMObject* pBattObj = BEMPX_GetObjectByClass( BEMPX_GetDBComponentID( "cseBATTERY" ), iBattObjErr, 0 );
+            	if (pBattObj)
+						BEMPX_DeleteObject( pBattObj );
+				}
+
+				QString sLpCSEFile = (iFLp==0 ? sProjCSEFile : sProjCSEBattFile);
+				// Write CSE input file  (and store BEM details file)
+				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+							 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+								 "(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( "CSE input", sLpCSEFile );
+				if (!OKToWriteOrDeleteFile( sLpCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+				{	if (m_bSilent)
+						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "CSE input", sLpCSEFile );
+					else
+						sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "CSE input", sLpCSEFile );
+					iRetVal = BEMAnal_CECRes_SimInputOpenError;
+				}
+				else if (!BEMPX_WriteProjectFile( sLpCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
+											FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+											NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+											true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/ ))			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+				{	sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "CSE input", sLpCSEFile );
+					iRetVal = BEMAnal_CECRes_SimInputWriteError;
+				}
 				else
-					sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
-				iRetVal = BEMAnal_CECRes_SimInputOpenError;
-			}
-			else if (!BEMPX_WriteProjectFile( sProjCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
-										FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
-										NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
-										true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/ ))			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
-			{	sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
-				iRetVal = BEMAnal_CECRes_SimInputWriteError;
+				{	SetCurrentDirectory( m_sProcessPath.toLocal8Bit().constData() );
+					if (m_bStoreBEMProcDetails)
+					{	QString sDbgFileName = sLpCSEFile.left( sLpCSEFile.length()-3 );
+						sDbgFileName += "ibd-Detail";
+						BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+					}
+				}
+				BEMPX_RefreshLogFile();	// SAC 5/19/14
+			}	// end of iFLp loop
+		}
+
+	// Perform TDV export and Battery simulation PRE-RUN
+		if (iRetVal == 0 && m_bPerformSimulations && !m_bBypassCSE && !sProjCSEBattFile.isEmpty())	// SAC 12/15/16
+		{	bool bBattCtrlSetup = false;
+#ifdef CM_QTGUI
+				if (sqt_win && sqt_progress)
+					sqt_win->repaint();
+#endif
+
+		// First need to simulate the BTPreRun CSE input...
+			QString sCSEParams, sProjCSEFileForArg = sProjCSEBattFile;
+			if (!sProjCSEFileForArg.right(4).compare(".CSE", Qt::CaseInsensitive))
+				sProjCSEFileForArg = sProjCSEFileForArg.left( sProjCSEFileForArg.length()-4 );
+			sCSEParams = QString( "-b \"%1\"" ).arg( sProjCSEFileForArg );
+			int iCSEExitCode = ExecuteNow( m_sCSEexe, sCSEParams );
+			if (iCSEExitCode != 0)
+			{	assert( false );
+// how to handle errant BTPreRun simulation ??
 			}
 			else
-			{	SetCurrentDirectory( m_sProcessPath.toLocal8Bit().constData() );
-				if (m_bStoreBEMProcDetails)
-				{	QString sDbgFileName = sProjCSEFile.left( sProjCSEFile.length()-3 );
-					sDbgFileName += "ibd-Detail";
-					BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+			{			
+		// then need to write CSV of selected TDV series
+				double daTDVData[8760];		long lClimateZone=0;
+				if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lClimateZone ) ||
+						BEMPX_GetTableColumn( &daTDVData[0], 8760, "TDVTable", ((lClimateZone-1) * 3) + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+				{	assert( false );
+// how to handle error retrieving climate zone or TDV data ??
+				}
+				else
+				{	bool bTDVDataOK = true;
+					QString sTDVCSVFile = m_sProcessPath + sProjFileAlone + "-tdv.csv";
+					FILE *fp_CSV;
+					int iErrorCode;
+					try
+					{	iErrorCode = fopen_s( &fp_CSV, sTDVCSVFile.toLocal8Bit().constData(), "wb" );
+						if (iErrorCode != 0 || fp_CSV == NULL)
+						{	assert( false );
+							bTDVDataOK = false;
+// how to handle error TDV CSV file ??
+						}
+						else
+						{	fprintf( fp_CSV, "\"TDV Data\",001\n" );
+							fprintf( fp_CSV, "\"Wed 14-Dec-16   9:39:00 am\",\n" );
+							fprintf( fp_CSV, "\"TDV [kBtu/kWh]\",\"Hour\"\n" );
+							fprintf( fp_CSV, "\"tdv\"\n" );
+							for (int hr=0; hr<8760; hr++)
+								fprintf( fp_CSV, "%g\n", daTDVData[hr] );
+							fflush( fp_CSV );
+							fclose( fp_CSV );
+						}
+					}
+					catch( ... )
+					{	assert( false );
+						bTDVDataOK = false;
+// how to handle error writing to TDV CSV file ??
+					}
+
+					if (bTDVDataOK)
+					{
+		// then need to feed BTPreRun results & TDV data into calc_bt_control.exe to produce ...BTCtrl.csv battery control CSV which the second/final simulation will read
+						// SAC 1/23/17 - now done above, since at this point cseBATTERY obejct has been deleted from BEMBase (to write the BTPreRun CSE input)
+						//double btMaxCap, btMaxChgPwr, btMaxDschgPwr, btChgEff, btDschgEff;
+						//if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxCap"      ), btMaxCap ))
+						//	btMaxCap      = 16;	// CSE default
+						//if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxChgPwr"   ), btMaxChgPwr ))
+						//	btMaxChgPwr   = 4;	// CSE default
+						//if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btMaxDschgPwr" ), btMaxDschgPwr ))
+						//	btMaxDschgPwr = 4;	// CSE default
+						//if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btChgEff"      ), btChgEff ))
+						//	btChgEff      = 0.975;	// CSE default
+						//if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseBATTERY:btDschgEff"    ), btDschgEff ))
+						//	btDschgEff    = 0.975;	// CSE default
+
+						QString sCBCexe = m_sCSEexe.left( std::max( m_sCSEexe.lastIndexOf('/'), m_sCSEexe.lastIndexOf('\\') )+1 );
+						sCBCexe += "calc_bt_control.exe";
+						QString sCBCParams = QString( "\"%1.csv\" \"%2\" \"%3\" %4 %5 %6 %7 %8" ).arg( sProjCSEBattFile.left( sProjCSEBattFile.length()-4 ), sCSEBattCtrlCSVFile, sTDVCSVFile,
+														QString::number( btMaxCap ), QString::number( btMaxChgPwr ), QString::number( btMaxDschgPwr ), QString::number( btChgEff ), QString::number( btDschgEff ) );
+											//  dist\calc_bt_control.exe test\1STORY.CSV test\BT_CONTROL.CSV test\tdv.csv 16.320 4.08 4.08 0.9747 0.9747
+											//  Arguments:
+											//  (1) path to input meter CSV file
+											//  (2) path to output control CSV file
+											//  (3) path to input TDV CSV file
+											//  (4) Battery maximum usable capacity (kWh)
+											//  (5) Battery maximum charging power (kW)
+											//  (6) Battery maximum discharging power (kW)
+											//  (7) Battery charge efficiency (0 < eff <= 1)
+											//  (8) Battery discharge efficiency (0 < eff <= 1)
+							// if verbose logging only ??
+									QString sCBCLogMsg = QString( "   Processing BTPreRun results (via calc_bt_control):  %1" ).arg( sCBCParams );
+									BEMPX_WriteLogFile( sCBCLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//	QString sDbgMsg = QString( "about to run calc_bt_control:\n%1" ).arg( sCBCParams );
+//	BEMMessageBox( sDbgMsg );
+
+						int iCBCExitCode = ExecuteNow( sCBCexe, sCBCParams );
+						if (iCBCExitCode != 0)
+						{	assert( false );
+// how to handle error running calc_bt_control ??
+						}
+						else
+							bBattCtrlSetup = true;
+//	sDbgMsg = QString( "calc_bt_control exit code: %1" ).arg( QString::number(iCBCExitCode) );
+//	BEMMessageBox( sDbgMsg );
+					}
 				}
 			}
-			BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+			if (!bBattCtrlSetup)
+				iRetVal = BEMAnal_CECRes_CSEBattCtrlSetupErr;
 		}
 
 		if (iRetVal == 0 && m_bPerformSimulations && !m_bBypassCSE)

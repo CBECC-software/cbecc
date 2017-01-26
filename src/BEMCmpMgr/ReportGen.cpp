@@ -191,18 +191,25 @@ bool RetrievePublicPrivateKeys( QString sSecKeyRulelistName, QString& sRptPubKey
 							}
 				}	}	}
 
+				int prvKeyLen = sRptPrvKey.length();				assert( prvKeyLen == 64 );
+				char* prvKey = (char*) malloc( prvKeyLen+1 );
+				memcpy( prvKey, sRptPrvKey.toLocal8Bit().constData(), prvKeyLen );		prvKey[prvKeyLen]=0;
+				CM_CharSwap( prvKey, prvKeyLen );
+				sRptPrvKey = prvKey + QString("\n");
+				free( prvKey );
+
 						if (CMX_EvaluateRuleset( sSecKeyRulelistName.toLocal8Bit().constData(), FALSE /*never log evaluation of these rules ?? / bVerbose / bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*never verbose evaluation of these rules ?? / bVerboseOutput*/ ))
 						{	long lDBID_RptPrvKey = BEMPX_GetDatabaseID( "Proj:RptPrvKey" );		assert( lDBID_RptPrvKey > 0 );
 							long lDBID_RptPubKey = BEMPX_GetDatabaseID( "Proj:RptPubKey" );		assert( lDBID_RptPubKey > 0 );
-							if (pPrvKeyFile)
-								fprintf( pPrvKeyFile, "-----BEGIN RSA PRIVATE KEY-----\n" );
+		//					if (pPrvKeyFile)
+		//						fprintf( pPrvKeyFile, "-----BEGIN RSA PRIVATE KEY-----\n" );
 							if (lDBID_RptPrvKey > 0 && lDBID_RptPubKey > 0)
 							{	QString sKeyTemp;
 								int i, iPrvKeyStrIdx = 0;
 								while (BEMPX_GetString(  lDBID_RptPrvKey + iPrvKeyStrIdx++, sKeyTemp ) && !sKeyTemp.isEmpty())
 								{	sRptPrvKey += (sKeyTemp + QString("\n"));
-									if (pPrvKeyFile)
-										fprintf( pPrvKeyFile, "%s\n", sKeyTemp );
+		//							if (pPrvKeyFile)
+		//								fprintf( pPrvKeyFile, "%s\n", sKeyTemp.toLocal8Bit().constData() );
 								}
 								int iPubKeyStrIdx = 0;
 								while (BEMPX_GetString(  lDBID_RptPubKey + iPubKeyStrIdx++, sKeyTemp ) && !sKeyTemp.isEmpty())
@@ -212,7 +219,8 @@ bool RetrievePublicPrivateKeys( QString sSecKeyRulelistName, QString& sRptPubKey
 									sRptPrvKey  = "-----BEGIN RSA PRIVATE KEY-----\n" + sRptPrvKey;
 									sRptPrvKey += "-----END RSA PRIVATE KEY-----";
 									if (pPrvKeyFile)
-										fprintf( pPrvKeyFile, "-----END RSA PRIVATE KEY-----" );
+										fprintf( pPrvKeyFile, sRptPrvKey.toLocal8Bit().constData() );
+		//								fprintf( pPrvKeyFile, "-----END RSA PRIVATE KEY-----" );
 							//		sRptPubKey  = "-----BEGIN PUBLIC KEY-----\n" + sRptPubKey;
 							//		sRptPubKey += "-----END PUBLIC KEY-----";
 	// 9/16/13								sRptPubKey  = "\n-----BEGIN PUBLIC KEY-----\n" + sRptPubKey;
@@ -272,6 +280,9 @@ bool RetrievePublicPrivateKeys( QString sSecKeyRulelistName, QString& sRptPubKey
 
 bool CMX_RetrievePublicKey( QString sSecKeyRulelistName, bool bConvertBinHex, QString& sRptPubKey, QString& sErrMsg )
 {	QString sRptPrvKey, sRptPubHexKey;
+
+//  ??? SecurityKeyIdx already set ???
+
 	bool bRetVal = RetrievePublicPrivateKeys( sSecKeyRulelistName, sRptPubKey, sRptPrvKey, &sRptPubHexKey, NULL, sErrMsg, NULL );
 	if (bConvertBinHex)
 		sRptPubKey = sRptPubHexKey;
@@ -591,18 +602,18 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszPDFOnlyBool, const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSendSignature /*=false*/,
 										const char* pszCompRptID /*=NULL*/, const char* pszRptGetServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
-										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/ )	// SAC 11/5/15
+										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/ )	// SAC 11/5/15   // SAC 1/10/17
 { 
 //				sParams.sprintf( "\"%s\" \"%s\" pdf \"%s\"", sProjPath, sResFN.left( sResFN.length()-4 ), sCACertPath );
 	//	bVerbose = true;  
 				if (bVerbose)
 				{	QString sFuncArgMsg;
-					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s' )",
+					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s )",
 							(pszXMLResultsPathFile ? pszXMLResultsPathFile : "(null)"), (pszCACertPath ? pszCACertPath : "(null)"), (pszReportName ? pszReportName : "(null)"), (pszAuthToken1 ? pszAuthToken1 : "(null)"), (pszAuthToken2 ? pszAuthToken2 : "(null)"),
-							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? pszPublicKey : "(null)"), (pszPrivateKey ? pszPrivateKey : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
+							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? "<PubKey>"/*pszPublicKey*/ : "(null)"), (pszPrivateKey ? "<PrvKey>"/*pszPrivateKey*/ : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
 							(pszPDFOnlyBool ? pszPDFOnlyBool : "(null)"), (pszDebugBool ? pszDebugBool : "(null)"), (bVerbose ? "true" : "false"), (bSilent ? "true" : "false"), (bSendSignature ? "true" : "false"), (pszCompRptID ? pszCompRptID : "(null)"),
 							(pszRptGetServer ? pszRptGetServer : "(null)"), (pszRptGenApp ? pszRptGenApp : "(null)"), (pszRptGenService ? pszRptGenService : "(null)"), (pszSecKeyRLName ? pszSecKeyRLName : "(null)"),
-							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)") );
+							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)"), (iSecurityKeyIndex==0 ? "0" : ">0") );
 					BEMPX_WriteLogFile( sFuncArgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 	int iRetVal = 0;
@@ -698,7 +709,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 //			if (false)
 //			if (true)
 			if (bSendSignature && (pszSignature == NULL || strlen( pszSignature ) < 6))
-			{	if (!pszPublicKey || strlen( pszPublicKey ) < 6 || !pszPrivateKey || strlen( pszPrivateKey ) < 6)
+			{	if (!pszPrivateKey || strlen( pszPrivateKey ) < 70)
 			//	{	QString sRptName = pszReportName;
 			//		//int iError;
 			//		if (!sRptName.isEmpty() &&  (	sRptName.compare( "CF1R_NCB_PRF", Qt::CaseInsensitive ) == 0 || sRptName.compare( "CF1R_ALT_PRF", Qt::CaseInsensitive ) == 0 ||
@@ -707,7 +718,10 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 			//			bool bCARes = (sRptName.compare( "CF1R_NCB_PRF", Qt::CaseInsensitive ) == 0 || sRptName.compare( "CF1R_ALT_PRF", Qt::CaseInsensitive ) == 0);
 			//			QString sSecKeyRulelistName = (bCARes ? "SetReportKeys" : "rl_SECURITYKEYS");
 				{	if (!sSecKeyRLName.isEmpty())
-					{	QString sKeyErrMsg;
+					{
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SecurityKeyIdx" ), BEMP_Int, (void*) &iSecurityKeyIndex );   // SAC 1/11/17
+						QString sKeyErrMsg;
+						sRptPrvKey = pszPrivateKey;  // now expected as input - SAC 1/10/17
 						if (!RetrievePublicPrivateKeys( sSecKeyRLName, sRptPubKey, sRptPrvKey, &sRptPubHexKey, NULL, sKeyErrMsg, &sPrvKeyPathFile ))
 						{	if (!sKeyErrMsg.isEmpty())
 								sLogMsg.sprintf( "GenerateReport_CEC():  %s", sKeyErrMsg.toLocal8Bit().constData() );
@@ -894,28 +908,26 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
    					{	assert( FALSE );	// error deleting file
 					}
 				}
-						
-#ifdef _DEBUG
-if (TRUE)  //bVerbose)
-{			if (!sRptPubHexKey.isEmpty())
-				sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key:\n%s", sRptPubHexKey.toLocal8Bit().constData() );
-			else
-				sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key NOT COMPUTED" );
-			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			if (!sSignHex.isEmpty())
-				sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature:\n%s", sSignHex.toLocal8Bit().constData() );
-			else
-				sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature NOT COMPUTED" );
-			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			sLogMsg.clear();
-}
-#endif
+
+				//if (bVerbose)
+				//{	if (!sRptPubHexKey.isEmpty())
+				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key:\n%s", sRptPubHexKey.toLocal8Bit().constData() );
+				//	else
+				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key NOT COMPUTED" );
+				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				//	if (!sSignHex.isEmpty())
+				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature:\n%s", sSignHex.toLocal8Bit().constData() );
+				//	else
+				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature NOT COMPUTED" );
+				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				//	sLogMsg.clear();
+				//}
 
 				if (sSignHex.isEmpty())
 				{
 					if (pszSignature && strlen( pszSignature ) > 0 && pszPublicKey && strlen( pszPublicKey ) > 0)
 					{	sSignHex      = pszSignature;
-						sRptPubHexKey = pszPublicKey;
+						sRptPubHexKey = pszPublicKey;			assert( false );  // shouldn't be here ??
 					}
 					else
 					{	sSignHex      = "none";

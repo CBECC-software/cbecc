@@ -1976,17 +1976,18 @@ int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* p
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
 												const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/,
 												char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND /*hWnd=NULL*/,
-												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/ )		// SAC 5/16/14
+												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )		// SAC 5/16/14   // SAC 1/10/17
 {	return CMX_PerformAnalysisCB_NonRes(	pszBEMBasePathFile, pszRulesetPathFile, pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, pszProcessingPath, pszModelPathFile,
 														pszLogPathFile, pszUIVersionString, bLoadModelFile /*=true*/, pszOptionsCSV /*=NULL*/, pszErrorMsg /*=NULL*/, iErrorMsgLen /*=0*/,
-														bDisplayProgress /*=false*/, pszResultsSummary /*=NULL*/, iResultsSummaryLen /*=0*/, NULL /*pAnalProgCallbackFunc*/ );
+														bDisplayProgress /*=false*/, pszResultsSummary /*=NULL*/, iResultsSummaryLen /*=0*/, iSecurityKeyIndex, pszSecurityKey, NULL /*pAnalProgCallbackFunc*/ );
 }
 
 int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
 												const char* pszLogPathFile, const char* pszUIVersionString, bool bLoadModelFile /*=true*/, const char* pszOptionsCSV /*=NULL*/,
 												char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/,
-												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/, PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )		// SAC 5/16/14		// SAC 5/28/15
+												char* pszResultsSummary /*=NULL*/, int iResultsSummaryLen /*=0*/, int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/,		// SAC 5/16/14   // SAC 1/10/17
+												PAnalysisProgressCallbackFunc pAnalProgCallbackFunc /*=NULL*/ )		// SAC 5/28/15
 {	int iRetVal = 0;
 	bool bAbort = false;
 	QString sUIVersionString = pszUIVersionString;
@@ -2725,13 +2726,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	QString sFHPathFile, sFHErrMsg; 
 			bool bLogEachFileHashError = (bVerbose);
 			bool bRequiredForCodeYear = true;
-			for (long iFHID=1; (iRetVal == 0 && iFHID <= 55); iFHID++)
+			for (long iFHID=1; (iRetVal == 0 && iFHID <= 49); iFHID++)
 			{	bRequiredForCodeYear = true;
+			// SAC 1/14/17 - updated file hash table for 2016/19 analysis (using new open source exes)
 				switch (iFHID)
-				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
-					case  2 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr13c.dll";               bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
-					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMProc13c.dll";                 bRequiredForCodeYear = (iDLLCodeYear < 2016);		break;
-					case  4 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap16.dll";                  break;
+				{	case  1 :	BEMPX_GetBEMBaseFile( sFHPathFile );                              bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
+					case  2 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr16c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;   // SAC 3/6/14 - revised ALL to reference more specific paths
+					case  3 :	sFHPathFile = sCompMgrDLLPath + "BEMProc16c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
+					case  4 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap16.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
 					case  5 :	sFHPathFile = sCompMgrDLLPath + "libeay32.dll";   				      bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
 					case  6 :	sFHPathFile = sCompMgrDLLPath + "ssleay32.dll";     				   bRequiredForCodeYear = false;  							break;	// SAC 12/24/15 - remove check on SSL DLLs, as they may not be in same EXE directory as other EXE/DLLs
 					case  7 :	sFHPathFile = sCompMgrDLLPath + "openstudio_analysis.dll";        break;
@@ -2749,7 +2751,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 19 :   sFHPathFile = sCompMgrDLLPath + "openstudio_utilities.dll";       break;
 					case 20 :   sFHPathFile = sCompMgrDLLPath + "qtwinmigrate.dll";               break;
 					case 21 :   sFHPathFile = sCompMgrDLLPath + "zkexpat.dll";                    break;
-					case 22 :	sFHPathFile = sCompMgrDLLPath + "zkqwt.dll";                      break;
+					case 22 :	sFHPathFile = sCompMgrDLLPath + "qwt.dll";                        break;
 					case 23 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
 					case 24 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
 					case 25 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
@@ -2766,23 +2768,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 36 :   sFHPathFile = sCompMgrDLLPath + "Qt5Xml.dll";                     break;
 					case 37 :   sFHPathFile = sEPlusPath + "EnergyPlus.exe";          				break;
 					case 38 :   sFHPathFile = sEPlusPath + "Energy+.idd";             				break;
-					case 39 :   sFHPathFile = sEPlusPath + "bcvtb.dll";               				break;
-					case 40 :   sFHPathFile = sEPlusPath + "epexpat.dll";             				break;
-					case 41 :   sFHPathFile = sEPlusPath + "epfmiimport.dll";         				break;
-					case 42 :   sFHPathFile = sEPlusPath + "EPMacro.exe";             				break;
-					case 43 :   sFHPathFile = sEPlusPath + "ExpandObjects.exe";       				break;
-					case 44 :   sFHPathFile = sDHWDLLPath + "T24Wthr.dll";            				bRequiredForCodeYear = false;		break;
-					case 45 :   sFHPathFile = sDHWDLLPath + "T24DHW.dll";             				bRequiredForCodeYear = false;		break;
-					case 46 :   sFHPathFile = sDHWDLLPath + "T24Asm32.dll";           				bRequiredForCodeYear = false;		break;
-					case 47 :   sFHPathFile = sDHWDLLPath + "T24TDV.dll";             				bRequiredForCodeYear = false;		break;
-					case 48 :   sFHPathFile = sDHWDLLPath + "T24Unzip.dll";           				bRequiredForCodeYear = false;		break;
-					case 49 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr16c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case 50 :	sFHPathFile = sCompMgrDLLPath + "BEMProc16c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case 51 :	BEMPX_GetBEMBaseFile( sFHPathFile );			                     bRequiredForCodeYear = (iDLLCodeYear == 2016);		break;
-					case 52 :   sFHPathFile = sCSEEXEPath + "csed.exe";	             				break;	// SAC 5/24/16
-					case 53 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				break;
-					case 54 :   sFHPathFile = sCSEEXEPath + "ashwat.dll";	            				bRequiredForCodeYear = false;		break;
-					case 55 :   sFHPathFile = sCSEEXEPath + "DHWDUMF.txt";	           				break;
+					case 39 :   sFHPathFile = sEPlusPath + "energyplusapi.dll";        				break;
+					case 40 :   sFHPathFile = sEPlusPath + "EPMacro.exe";               				break;
+					case 41 :   sFHPathFile = sEPlusPath + "ExpandObjects.exe";        				break;
+					case 42 :   sFHPathFile = sEPlusPath + "ReadVarsESO.exe";	        				break;
+					case 43 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr19c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 44 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 45 :	BEMPX_GetBEMBaseFile( sFHPathFile );			                     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 46 :   sFHPathFile = sCSEEXEPath + "csed.exe";	             				break;	// SAC 5/24/16
+					case 47 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				break;
+					case 48 :   sFHPathFile = sCSEEXEPath + "calc_bt_control.exe";      				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
+					case 49 :   sFHPathFile = sCSEEXEPath + "DHWDUMF.txt";	           				break;
 					default :			assert( FALSE );                                      		break;
 				}
 				if (!bRequiredForCodeYear)
@@ -2792,9 +2788,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				{	// DO NOTHING - some files expected to be missing - others will prevent success when missing...
 										if (bVerbose &&	// SAC 3/6/14 - added verbose logging of this condition
 #ifdef _DEBUG
-												((iFHID < 30 || iFHID > 36) && iFHID != 53))
+												((iFHID < 30 || iFHID > 36) && iFHID != 47))
 #else
-												((iFHID < 23 || iFHID > 29) && iFHID != 52))
+												((iFHID < 23 || iFHID > 29) && iFHID != 46))
 #endif
 										{	if (sFHPathFile.isEmpty())
 												sLogMsg.sprintf( "    File to perform hash check on not specified (iFHID = %d)", iFHID );
@@ -4707,17 +4703,18 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 							dTimeToOther += DeltaTime( tmAnalOther );		// log time spent prior to this point to "other" bucket
 							tmMark = boost::posix_time::microsec_clock::local_time();		// set timer for Report bucket
+
 						//	int iRptGenRetVal = GenerateReport_CEC( sXMLResultsFileName /*sProjPath, sResFN*/, sCACertPath, "NRCC_PRF_01", "CBECC", "Com", "none" /*Signature*/,
 							int iRptGenRetVal = GenerateReport_CEC( sXMLResultsFileName.toLocal8Bit().constData() /*sProjPath, sResFN*/, sCACertPath.toLocal8Bit().constData(), 
 																	sRptGenCompReport.toLocal8Bit().constData(), sRptGenUIApp.toLocal8Bit().constData(), sRptGenUIVer.toLocal8Bit().constData(),
-																	"none" /*Signature*/, "none" /*PublicKey*/, NULL /*PrivateKey*/, 
+																	"none" /*Signature*/, "none" /*PublicKey*/, (pszSecurityKey ? pszSecurityKey : NULL) /*PrivateKey*/, 
 																	(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
 																	(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
 																	sPDFOnly.toLocal8Bit().constData(), sDebugRpt.toLocal8Bit().constData(), bVerbose, bSilent, bSendRptSignature,
 																	sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()) );		// SAC 11/5/15
+																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex );		// SAC 11/5/15   // SAC 1/10/17
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -5157,7 +5154,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* /*pszLogPathFile*/, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
-														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool /*bDisplayProgress=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/ )
+														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool /*bDisplayProgress=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/,
+														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )   // SAC 1/10/17
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -5465,7 +5463,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 												pszSimWeatherPath, pszCompMgrDLLPath, pszDHWWeatherPath, sProcessingPath.c_str(), sProjPathFile.c_str(),
 												sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
 												pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
-												true /*bDisplayProgress*/, hWnd, pszResultsRecord, 2056 );
+												true /*bDisplayProgress*/, hWnd, pszResultsRecord, 2056, iSecurityKeyIndex, pszSecurityKey );   // SAC 1/10/17
 				if (iAnalRetVal == 33)
 				{	// User aborted individual run, so ask if they want to abort ALL remaining runs
 									sErrMsg = boost::str( boost::format( "User aborted batch run %d (record %d)..." ) % (iRun+1) % iaBatchRecNums[iRun] );

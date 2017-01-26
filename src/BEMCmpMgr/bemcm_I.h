@@ -107,7 +107,7 @@ extern int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* ps
 										const char* pszPDFOnlyBool, const char* pszDebugBool, bool bVerbose=false, bool bSilent=false, bool bSendSignature=false,
 										const char* pszCompRptID=NULL, const char* pszRptGetServer=NULL, const char* pszRptGenApp=NULL,
 										const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
-										const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL );
+										const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL, long iSecurityKeyIndex=0 );		// SAC 1/10/17
 extern int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,
 											const char* pszProxyAddress=NULL, const char* pszProxyCredentials=NULL, const char* pszProxyType=NULL,		// pass NULLs for no proxy
 											char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false );
@@ -128,6 +128,7 @@ extern bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileN
 
 extern void CM_CryptDecode( char* lpBuf, int length );
 extern void CM_CryptEncode( char* lpBuf, int length );
+extern void CM_CharSwap(    char* lpBuf, int length );
 
 
 ////////////////////////////////////////////////////////////////////////////////

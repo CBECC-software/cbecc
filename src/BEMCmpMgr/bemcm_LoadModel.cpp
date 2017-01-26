@@ -900,8 +900,9 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 
 		if (!sBEMBinFile.isEmpty())
 		{
+			if (BEMPX_CheckDataModelBin( sBEMBinFile.toLocal8Bit().constData() ) != 0 ||		// SAC 1/3/17
 	// don't pass target log filename to BEMPX_LoadDataModel() or it will get overwritten (blasted) during the BEM initialization
-			if (!BEMPX_LoadDataModel( sBEMBinFile.toLocal8Bit().constData(), BEMT_CBECC ))
+			    !BEMPX_LoadDataModel( sBEMBinFile.toLocal8Bit().constData(), BEMT_CBECC ))
 				iRetVal = 4;	// initialization of BEM failed
 	}	}
 

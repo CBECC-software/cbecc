@@ -170,6 +170,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_DHWUseCSEIncMissing	55		//  DHW Use/Load Profile CSE include file missing
 #define  BEMAnal_CECRes_DHWUseCSEIncCopyErr	56		//  Error copying DHW Use/Load Profile CSE include file into processing directory
 #define  BEMAnal_CECRes_DHWUseHashError		57		//  Error setting up check of DHW use/profile file hash
+#define  BEMAnal_CECRes_CSEBattCtrlSetupErr	58		//  Error setting up CSE battery control data
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report
@@ -225,7 +226,8 @@ int  BEMCMPMGR_API __cdecl CMX_GetDataFloat(   double* pReturnFlt, const char* p
 bool BEMCMPMGR_API __cdecl CMX_SecureExecutable();
 long BEMCMPMGR_API __cdecl CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure=false );
 int  BEMCMPMGR_API __cdecl CMX_DecodeBase64( char* outData, const char* inData, bool bSecure=false );
-long BEMCMPMGR_API __cdecl CMX_Encrypt( const unsigned char *input, int length, char* output, int outLength );
+int  BEMCMPMGR_API __cdecl CMX_Encrypt( unsigned char * data, int dataLen, unsigned char *encrypted );
+int  BEMCMPMGR_API __cdecl CMX_Decrypt( unsigned char * enc_data, int dataLen, unsigned char *decrypted );
 
 #ifdef __cplusplus
 }
