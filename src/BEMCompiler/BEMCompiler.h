@@ -103,7 +103,7 @@ public:
 	void SetRuleBin(      QString sRB ) 	{	rlCompiledTextEdit->setPlainText( sRB  );  }
 	void SetRuleLog(      QString sRL ) 	{	rlLogTextEdit->setPlainText(      sRL  );  }
 
-	int  compileAll( bool bDataModel=false, bool bRuleset=false, bool bCommandLine=false );
+	int  compileAll( bool bDataModel=false, bool bRuleset=false, bool bCommandLine=false, int iGUIOption=2 );
 
 private slots:
 	void browseDMDefs();

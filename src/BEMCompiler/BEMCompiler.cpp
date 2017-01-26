@@ -126,6 +126,10 @@ int main(int argc, char *argv[])
 	parser.addOption(compileDMOption);
 	QCommandLineOption compileRulesOption("compileRules", QCoreApplication::translate("main", "Compile BEM ruleset source"));
 	parser.addOption(compileRulesOption);
+	QCommandLineOption guiOptionNoResult("noResultGUI", QCoreApplication::translate("main", "Prevent any display of processing result"));		// SAC 1/23/17
+	parser.addOption(guiOptionNoResult);
+	QCommandLineOption guiOptionNoSuccess("noSuccessGUI", QCoreApplication::translate("main", "Prevent display of processing result success message"));		// SAC 1/23/17
+	parser.addOption(guiOptionNoSuccess);
 	// Process the actual command line arguments given by the user
 	parser.process(app);
 
@@ -196,6 +200,7 @@ int main(int argc, char *argv[])
 
 	bool compileDM = parser.isSet(compileDMOption);
 	bool compileRules = parser.isSet(compileRulesOption);
+	int iGUIOption = (parser.isSet(guiOptionNoResult) ? 0 : (parser.isSet(guiOptionNoSuccess) ? 1 : 2));		// SAC 1/3/17
 
 	bemCmplr.show();
 
@@ -205,7 +210,7 @@ int main(int argc, char *argv[])
 
 	int iRetVal = 0;
 	if (compileDM || compileRules)
-		iRetVal = bemCmplr.compileAll( compileDM, compileRules, true /*bCommandLine*/ );
+		iRetVal = bemCmplr.compileAll( compileDM, compileRules, true /*bCommandLine*/, iGUIOption /*2*/ );
 	else
 		iRetVal = app.exec();
 
@@ -460,7 +465,7 @@ QPushButton *BEMCompiler::createButton(const QString &text, const char *member)
 //		12 - Primary Ruleset (source) file not found
 //		13 - Binary data model file not found
 //		14 - Ruleset compilation failed, see log file for details
-int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine*/ )
+int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine*/, int iGUIOption /*2*/ )
 {	int iRetVal = 0;
 	QString sMsg, sDetails, sCaption;
 
@@ -577,7 +582,7 @@ int BEMCompiler::compileAll( bool bDataModel, bool bRuleset, bool /*bCommandLine
 		}
 	}	// end of ruleset compilation
 
-	if (!sMsg.isEmpty())
+	if (!sMsg.isEmpty() && (iGUIOption >= 2 || (iGUIOption == 1 && iRetVal > 0)))		// SAC 1/3/17
 	{
 			QMessageBox msgBox;
 			msgBox.setWindowTitle( sCaption );
