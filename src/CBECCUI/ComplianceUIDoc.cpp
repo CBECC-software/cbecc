@@ -811,6 +811,7 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
 		long lEnableRptIncFile    = ReadProgInt( "options", "EnableRptIncFile"  , 0 ),	lDBID_Proj_EnableRptIncFile   = BEMPX_GetDatabaseID( "EnableRptIncFile"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRptIncFile   > 0 );
 		long lEnableVarFlowOAV    = ReadProgInt( "options", "EnableVarFlowOAV"  , 1 ),	lDBID_Proj_EnableVarFlowOAV   = BEMPX_GetDatabaseID( "EnableVarFlowOAV"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableVarFlowOAV   > 0 );
 		long lEnableFixedFlowOAV  = ReadProgInt( "options", "EnableFixedFlowOAV", 1 ),	lDBID_Proj_EnableFixedFlowOAV = BEMPX_GetDatabaseID( "EnableFixedFlowOAV", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableFixedFlowOAV > 0 );
+		long lEnableEDR           = ReadProgInt( "options", "EnableEDR"         , 0 ),	lDBID_Proj_EnableEDR          = BEMPX_GetDatabaseID( "EnableEDR"         , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableEDR          > 0 );  // SAC 12/17/16
 		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 6/2/14 - added
 		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
@@ -818,6 +819,8 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableVarFlowOAV  , BEMP_Int, (void*) &lEnableVarFlowOAV  , BEMO_User, -1, BEMS_ProgDefault );
 		if (lEnableFixedFlowOAV > 0 &&	lDBID_Proj_EnableFixedFlowOAV > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableFixedFlowOAV, BEMP_Int, (void*) &lEnableFixedFlowOAV, BEMO_User, -1, BEMS_ProgDefault );
+		if (lEnableEDR > 0 &&	lDBID_Proj_EnableEDR > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_EnableEDR         , BEMP_Int, (void*) &lEnableEDR         , BEMO_User, -1, BEMS_ProgDefault );
 		if (lBypassRuleLimits > 0 &&	   lDBID_Proj_BypassRuleLimits > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_BypassRuleLimits  , BEMP_Int, (void*) &lBypassRuleLimits  , BEMO_User, -1, BEMS_ProgDefault );
 

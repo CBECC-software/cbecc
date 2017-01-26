@@ -218,9 +218,11 @@ extern CString esProgramName;    // SAC 9/2/14
 extern CString iniFileName;
 extern CString esProgINIPathFile;
 extern CString esDataINIPathFile;
+extern CString esProxyINIPathFile;	// SAC 1/4/17
 extern CString esCUIVersion;
 extern CString esOverviewPDF;		// SAC 6/3/13
 extern CString esUserManualPDF;	// SAC 7/8/13
+extern CString esSecurityKey;		// SAC 1/10/17
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -233,6 +235,9 @@ extern UINT    ReadProgInt(    LPCSTR section, LPCSTR entry, int def);
 extern CString ReadProgString( LPCSTR section, LPCSTR entry, LPCSTR def, BOOL bGetPath=FALSE);
 extern BOOL 	WriteProgInt(   LPCSTR section, LPCSTR entry, int value);
 extern BOOL		WriteProgString(LPCSTR section, LPCSTR entry, LPCSTR string); 
+
+extern void TransferProxyINISettings();	// transfer Proxy settings from Data INI file into Proxy-specific file (w/ encryption) - SAC 1/4/17
+extern BOOL GetEncodedSetting( LPCSTR section, LPCSTR entry, CString& sOption );
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -352,6 +357,9 @@ extern char BASED_CODE eszWarning[];
 extern char BASED_CODE eszRulesetSwitch[];
 extern char BASED_CODE eszPostRulesetSwitch[];
 
+extern BOOL LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,
+									const char* psInitLogFileName = NULL, BOOL bMsgBox = TRUE );	// SAC 1/3/17
+
 extern int eiNumRulesetsAvailable;
 
 extern void UpdateRulesetMenu( CCmdUI* pCmdUI );
@@ -369,6 +377,8 @@ extern std::vector<std::string> saReportRulelistSelections;
 // Global Data and Routine to enable targeted rule evaluation logging when evaluating input/defaulting rules	- SAC 11/22/14
 extern void* epInpRuleDebugInfo;
 extern void LoadTargetedInputRuleDebugInfo();
+
+extern void TweakString( char* lpBuf, int length );
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -612,6 +622,9 @@ extern long elDBID_Chiller_EvapOutRef;      // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowInRef;   // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowOutRef;  // "FluidSeg"
 
+extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
+extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
+
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
@@ -741,6 +754,8 @@ extern long elDBID_DHWSys_DHWHeater3;
 extern long elDBID_DHWSys_DHWHeater4;
 extern long elDBID_DHWSys_DHWHeater5;
 extern long elDBID_DHWSys_DHWHeater6;
+extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
+extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
 #endif   // UI_CARES
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions

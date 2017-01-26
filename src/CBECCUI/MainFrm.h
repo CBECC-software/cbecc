@@ -224,8 +224,10 @@ protected:
 	afx_msg void OnToolsGenerateDHWEquipReportRecords();
 	afx_msg void OnUpdateToolsGenerateIAQVentReportRecords(CCmdUI* pCmdUI);
 	afx_msg void OnToolsGenerateIAQVentReportRecords();
-	afx_msg void OnUpdateToolsOpions(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateToolsOptions(CCmdUI* pCmdUI);
 	afx_msg void OnToolsOptions();
+	afx_msg void OnUpdateToolsProxy(CCmdUI* pCmdUI);
+	afx_msg void OnToolsProxy();
 	afx_msg void OnUpdateToolsViewFolder(CCmdUI* pCmdUI);
 	afx_msg void OnToolsViewFolder();
 	afx_msg void OnUpdateToolsViewLog(CCmdUI* pCmdUI);
@@ -238,6 +240,8 @@ protected:
 	afx_msg void OnToolsGenerateWindowShades();
 	afx_msg void OnUpdateToolsGeneratePublicKey(CCmdUI* pCmdUI);
 	afx_msg void OnToolsGeneratePublicKey();
+	afx_msg void OnUpdateToolsKeyPrep(CCmdUI* pCmdUI);
+	afx_msg void OnToolsKeyPrep();
 	afx_msg void OnUpdateFileImportModel(CCmdUI* pCmdUI);
 	afx_msg void OnFileImportModel();
    afx_msg void OnHelpMandatoryRequirementsForAssemblies();
@@ -528,6 +532,7 @@ protected:
 	void PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,
 										CString sBtn3File, CString sBtn3Label, CString sBtn4File, CString sBtn4Label,
 										CString sAllLabel, UINT uiIcon = MB_DEFBUTTON1 | MB_ICONQUESTION );
+	void OnINISettings( int iDlgIDOffset, int iDlgWd, int iDlgHt, CString sDlgCaption, CString sINISection );
 
 	DECLARE_MESSAGE_MAP()
 };

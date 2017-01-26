@@ -188,14 +188,18 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_TOOLS_FILEHASH, OnToolsGenerateFileHashes)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_PUBLICKEY, OnUpdateToolsGeneratePublicKey)
 	ON_COMMAND(IDM_TOOLS_PUBLICKEY, OnToolsGeneratePublicKey)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_KEYPREP, OnUpdateToolsKeyPrep)
+	ON_COMMAND(IDM_TOOLS_KEYPREP, OnToolsKeyPrep)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_GENMECH1RECS, OnUpdateToolsGenerateMECH1ReportRecords)
 	ON_COMMAND(IDM_TOOLS_GENMECH1RECS, OnToolsGenerateMECH1ReportRecords)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_GENDHWRECS, OnUpdateToolsGenerateDHWEquipReportRecords)
 	ON_COMMAND(IDM_TOOLS_GENDHWRECS, OnToolsGenerateDHWEquipReportRecords)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_GENIAQRECS, OnUpdateToolsGenerateIAQVentReportRecords)
 	ON_COMMAND(IDM_TOOLS_GENIAQRECS, OnToolsGenerateIAQVentReportRecords)
-	ON_UPDATE_COMMAND_UI(IDM_TOOLS_OPTIONS, OnUpdateToolsOpions)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_OPTIONS, OnUpdateToolsOptions)
 	ON_COMMAND(IDM_TOOLS_OPTIONS, OnToolsOptions)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_PROXY, OnUpdateToolsProxy)
+	ON_COMMAND(IDM_TOOLS_PROXY, OnToolsProxy)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWFOLDER, OnUpdateToolsViewFolder)
 	ON_COMMAND(IDM_TOOLS_VIEWFOLDER, OnToolsViewFolder)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWLOG, OnUpdateToolsViewLog)
@@ -2151,9 +2155,13 @@ void CMainFrame::OnFileSaveAs()
 
 // SAC - 3/9/98
 //    	        m_sCurrentFileName = sInputFile;
-         	
-      	      WriteToLogFile( WM_LOGUPDATED, "Project Saved", psLogFileName );
-         	
+
+//      	      WriteToLogFile( WM_LOGUPDATED, "Project Saved", psLogFileName );
+					WriteToLogFile( WM_LOGUPDATED, "-----------------------------------------------------------------------------", psLogFileName );  // SAC 1/14/17
+		   		int iLastSlashIdx = max( sInputFile.ReverseFind('\\'), sInputFile.ReverseFind('/') );			ASSERT( iLastSlashIdx > 0 );
+		   		CString sLogMsg;   sLogMsg.Format( "Project Saved as '%s'", sInputFile.Right( sInputFile.GetLength()-iLastSlashIdx-1 ) );
+      	      VERIFY( BEMPX_WriteLogFile( sLogMsg, NULL, false /*bBlankFile*/ ) );
+
       	      // TODO: Do we need to refresh the interface?
 //    	        AfxGetApp()->AddToRecentFileList( sInputFile );
       	      CDocument* pDoc = GetActiveDocument();
@@ -2181,14 +2189,16 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 	{	int iError;
 		BEMPropertyType* pINIPropType = BEMPX_GetPropertyTypeFromDBID( lDBID, iError /*, int iBEMProcIdx=-1*/ );		ASSERT( pINIPropType );
 		if (pINIPropType)
-		{	if (pINIPropType->getPropType() == BEMP_Int || pINIPropType->getPropType() == BEMP_Sym)
+		{	CStringA sINISection = (pINIPropType->getShortName().indexOf("Proxy") >= 0 ? "proxy" : "options");		// SAC 1/5/17
+			BOOL bEncodeString   = (pINIPropType->getShortName().indexOf("ProxyServerCred") >= 0);		// SAC 1/5/17
+			if (pINIPropType->getPropType() == BEMP_Int || pINIPropType->getPropType() == BEMP_Sym)
 			{	// for Int & Sym data - INI file settings assumed to be Integer values
 				long iINIVal = 0;
 				if (!BEMPX_SetDataInteger( lDBID, iINIVal, 9999 ) || iINIVal == 9999)
 				{	ASSERT( FALSE );	// error retrieving INIVal from BEMProc
 				}
 				else
-				{	VERIFY( WriteProgInt( "options", pINIPropType->getShortName().toLatin1().constData(), (int) iINIVal ) );
+				{	VERIFY( WriteProgInt( sINISection, pINIPropType->getShortName().toLatin1().constData(), (int) iINIVal ) );
 			}	}
 			else if (pINIPropType->getPropType() == BEMP_Str)
 			{	// for Str data - INI file settings assumed to be character strings
@@ -2197,7 +2207,21 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 				{	ASSERT( FALSE );	// error retrieving INIStr from BEMProc
 				}
 				else
-				{	VERIFY( WriteProgString( "options", pINIPropType->getShortName().toLatin1().constData(), sINIStr ) );
+				{	CString sNewINIOptName = pINIPropType->getShortName().toLatin1().constData();
+					if (bEncodeString)		// SAC 1/5/17 - string encoding for security
+					{	bool bCMSecure = CMX_SecureExecutable();
+						sNewINIOptName = (bCMSecure ? "Sec" : "Ins") + sNewINIOptName;  // secure vs. insecure (documenting encoding)
+						char strEncoded[1024];
+						memset( strEncoded, 0, sizeof(char)*1024 );
+						long lEncdRet = CMX_EncodeBase64( (const unsigned char*) ((const char*) sINIStr), sINIStr.GetLength(), strEncoded, 1024, true );
+						ASSERT( lEncdRet > 0 );
+						if (lEncdRet > 0)
+							sINIStr = strEncoded;
+						else
+							sINIStr.Empty();
+					}
+					if (!sINIStr.IsEmpty())
+						VERIFY( WriteProgString( sINISection, sNewINIOptName, sINIStr ) );
 			}	}
 			else
 			{	ASSERT( FALSE );	// unexpected INISettings property type (BEMP_Flt or BEMP_Obj) - unsure how to map to program INI settings...
@@ -2283,8 +2307,6 @@ typedef struct
    int         iDefaultVal;
 } AnalysisOption;
 
-
-
 BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool bBatchMode )		// SAC 1/29/14
 {	BOOL bRetVal = TRUE;
 	sOptionsCSVString.Empty();
@@ -2292,10 +2314,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 
 	// SAC 9/5/13 - added proxy server INI options (spanning both -Res & -Com versions
 		CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
-		if (ReadProgInt( "options", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
-		{	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
-			sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
-			sProxyServerType      	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+		if (ReadProgInt( "proxy", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
+		{	sProxyServerAddress		= ReadProgString( "proxy", "ProxyServerAddress"    , "", FALSE );
+			//sProxyServerCredentials	= ReadProgString( "proxy", "ProxyServerCredentials", "", FALSE );
+			GetEncodedSetting( "proxy", "ProxyServerCredentials", sProxyServerCredentials );
+			sProxyServerType      	= ReadProgString( "proxy", "ProxyServerType"       , "", FALSE );
 		}
 		CString sProxyINIOptions, sProxyTemp;
 		if (!sProxyServerAddress.IsEmpty())
@@ -2309,7 +2332,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sProxyINIOptions += sProxyTemp;
 		}
 		CString sNetComLibrary;		// SAC 11/5/15
-		sNetComLibrary = ReadProgString( "options", "NetComLibrary", "", FALSE );
+		sNetComLibrary = "";   // SAC 1/4/17 - no longer an option - ReadProgString( "proxy", "NetComLibrary", "", FALSE );
 		if (!sNetComLibrary.IsEmpty())
 		{	sProxyTemp.Format( "NetComLibrary,%s,", sNetComLibrary );
 			sProxyINIOptions += sProxyTemp;
@@ -2625,10 +2648,11 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 {
 	// proxy server INI options (spanning both -Res & -Com versions
 	CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
-	if (ReadProgInt( "options", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
-	{	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
-		sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
-		sProxyServerType      	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+	if (ReadProgInt( "proxy", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
+	{	sProxyServerAddress		= ReadProgString( "proxy", "ProxyServerAddress"    , "", FALSE );
+		//sProxyServerCredentials	= ReadProgString( "proxy", "ProxyServerCredentials", "", FALSE );
+		GetEncodedSetting( "proxy", "ProxyServerCredentials", sProxyServerCredentials );
+		sProxyServerType      	= ReadProgString( "proxy", "ProxyServerType"       , "", FALSE );
 	}
 	CString sProxyINIOptions, sProxyTemp;
 	if (!sProxyServerAddress.IsEmpty())
@@ -2642,7 +2666,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 		sProxyINIOptions += sProxyTemp;
 	}
 	CString sNetComLibrary;		// SAC 11/5/15
-	sNetComLibrary = ReadProgString( "options", "NetComLibrary", "", FALSE );
+	sNetComLibrary = "";   // SAC 1/4/17 - no longer an option - ReadProgString( "proxy", "NetComLibrary", "", FALSE );
 	if (!sNetComLibrary.IsEmpty())
 	{	sProxyTemp.Format( "NetComLibrary,\"%s\",", sNetComLibrary );
 		sProxyINIOptions += sProxyTemp;
@@ -2725,9 +2749,9 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 				pszAnalOpts = (const char*) sOptionsCSVString;
 
 			int iBatchResult = CMX_PerformBatchAnalysis_CECRes( sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
-														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/,
-														NULL /*pszLogPathFile*/, sUIVersionString, pszAnalOpts,
-														pszBatchErr, 1024, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/ );
+														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/, NULL /*pszLogPathFile*/,
+														sUIVersionString, pszAnalOpts, pszBatchErr, 1024, true /*bDisplayProgress*/,
+														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey );
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
 				sResult.Format( "CMX_PerformBatchAnalysis_CECRes() returned %d:\n\n%s", iBatchResult, pszBatchErr );
@@ -2866,6 +2890,51 @@ void CMainFrame::OnToolsGeneratePublicKey()		// SAC 9/27/13
 
 /////////////////////////////////////////////////////////////////////////////
 
+void CMainFrame::OnUpdateToolsKeyPrep(CCmdUI* pCmdUI)		// SAC 1/10/17
+{
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+}
+
+void CMainFrame::OnToolsKeyPrep()		// SAC 1/10/17
+{
+	CString sKPFN = esProgramPath, sKPOutFN = esProgramPath;
+	sKPFN += "KeyPrep.txt";
+	sKPOutFN += "KeyPrep-out.txt";
+	if (!FileExists( sKPFN ))
+		AfxMessageBox( "KeyPrep file missing" );
+	else
+	{	CString sMsg;
+		sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+						 "(once the file is closed), or \n'Cancel' to abort the %s.", "key prep output", sKPOutFN, "key prep action" );
+		if (OKToWriteOrDeleteFile( sKPOutFN, sMsg ))
+	   {	CStdioFile inFile, outFile;
+			if (inFile.Open( sKPFN, CFile::modeRead ) == 0)
+				AfxMessageBox( "Error opening KeyPrep input file" );
+			else if (outFile.Open( sKPOutFN, CFile::modeCreate | CFile::modeWrite ) == 0)
+				AfxMessageBox( "Error opening KeyPrep-out file" );
+			else
+			{	char strSwap[132];
+				CString str;
+				int len, i=0;
+				while (++i < 200)
+				{	inFile.ReadString( str );
+					len = str.GetLength();
+					if (len != 64)
+						break;
+					else
+					{
+						memcpy( strSwap, str, len );		strSwap[len]='\n';		strSwap[len+1]=0;
+						TweakString( strSwap, len );
+		         	outFile.WriteString( strSwap );
+				}	}
+				sMsg.Format( "%d keys processed", i-1 );
+				AfxMessageBox( sMsg );
+	}	}	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 void CMainFrame::OnUpdateToolsGenerateMECH1ReportRecords(CCmdUI* pCmdUI)
 {
 #ifdef UI_CARES
@@ -2992,12 +3061,27 @@ void CMainFrame::OnToolsGenerateIAQVentReportRecords()
 
 /////////////////////////////////////////////////////////////////////////////
 
-void CMainFrame::OnUpdateToolsOpions(CCmdUI* pCmdUI)
+void CMainFrame::OnUpdateToolsOptions(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable( (eiBDBCID_INISettings > 0) );
 }
-
 void CMainFrame::OnToolsOptions()
+{
+	int iTabCtrlWd, iTabCtrlHt;
+	VERIFY( GetDialogTabDimensions( eiBDBCID_INISettings, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
+	OnINISettings( 0, iTabCtrlWd, iTabCtrlHt, "Program INI Settings", "options" );
+}
+
+void CMainFrame::OnUpdateToolsProxy(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable( (eiBDBCID_INISettings > 0) );
+}
+void CMainFrame::OnToolsProxy()
+{
+	OnINISettings( 2, 410 /*DlgWd*/, 235 /*DlgHt*/, "Proxy Server Settings", "proxy" );
+}
+
+void CMainFrame::OnINISettings( int iDlgIDOffset, int iDlgWd, int iDlgHt, CString sDlgCaption, CString sINISection )
 {
 	CDocument* pDoc = GetActiveDocument();
 	if (eiBDBCID_INISettings > 0 && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
@@ -3024,13 +3108,21 @@ void CMainFrame::OnToolsOptions()
 					{	// grab INI setting corresponding to this property (if any is specified) and post it to the INISettings object
 						if (pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Sym)
 						{	// for Int & Sym data - INI file settings assumed to be Integer values
-							long iINIVal = (long) ReadProgInt( "options", pPropType->getShortName().toLatin1().constData(), 9999 );
+							long iINIVal = (long) ReadProgInt( sINISection, pPropType->getShortName().toLatin1().constData(), 9999 );
 							if (iINIVal != 9999)
 								VERIFY( BEMPX_SetBEMData( BEMPX_GetDBID( eiBDBCID_INISettings, i1PTIdx, 1 ), BEMP_Int, (void*) &iINIVal ) >= 0 );
 						}
 						else if (pPropType->getPropType() == BEMP_Str)
 						{	// for Str data - INI file settings assumed to be character strings
-							CString sINIStr = ReadProgString( "options", pPropType->getShortName().toLatin1().constData(), "default-string" );
+							CString sINIStr;
+							CString sNewINIOptName = pPropType->getShortName().toLatin1().constData();
+							BOOL bEncodeString    = (pPropType->getShortName().indexOf("ProxyServerCred") >= 0);		// SAC 1/5/17
+							if (bEncodeString)
+							{	if (!GetEncodedSetting( sINISection, sNewINIOptName, sINIStr ))
+									sINIStr = "default-string";
+							}
+							else
+								sINIStr = ReadProgString( sINISection, pPropType->getShortName().toLatin1().constData(), "default-string" );
 							if (sINIStr.Compare("default-string") != 0)
 								VERIFY( BEMPX_SetBEMData( BEMPX_GetDBID( eiBDBCID_INISettings, i1PTIdx, 1 ), BEMP_Str, (void*) ((const char*) sINIStr) ) >= 0 );
 						}
@@ -3041,16 +3133,26 @@ void CMainFrame::OnToolsOptions()
 
 				// INISettings object now reflects data in current INI file, so now preset the dialog
 				//if (TRUE)
-					int iTabCtrlWd, iTabCtrlHt;
-					VERIFY( GetDialogTabDimensions( eiBDBCID_INISettings, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
+//					int iTabCtrlWd, iTabCtrlHt;
+//					VERIFY( GetDialogTabDimensions( eiBDBCID_INISettings, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 					CWnd* pWnd = GetFocus();
-					CSACBEMProcDialog td( eiBDBCID_INISettings, 0 /*iCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-									0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_INISettings, 0 /*iUIMode*/ ) /*iMaxTabs*/,
-									"CBECC Program INI Settings" /*pszCaptionText*/, "OK", NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/,
-									NULL /*pszExitingRulelist*/, NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMsgToParent*/,
-									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
-					if (td.DoModal() == IDOK)
-					{}
+//					CSACBEMProcDialog td( eiBDBCID_INISettings, 0 /*iCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+//									0 /*iDlgMode*/, iDlgWd, iDlgHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_INISettings, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+//									"CBECC Program INI Settings" /*pszCaptionText*/, "OK", NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/,
+//									NULL /*pszExitingRulelist*/, NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMsgToParent*/,
+//									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+//					if (td.DoModal() == IDOK)
+//					{}
+
+					int iDlgID = BEMPUIX_GetFirstDialogTabID( eiBDBCID_INISettings, 0 /*iUIMode*/ ) + iDlgIDOffset;
+		         CSACDlg dlgNewObj( pWnd /*this*/, eiBDBCID_INISettings, 0 /* lDBID_ScreenIdx */, iDlgID, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDlgCaption,
+									iDlgHt, iDlgWd, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/, FALSE /*bBypassChecksOnCancel*/,
+                           FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
+      		   dlgNewObj.DoModal();
 
 				// no need to post process INISettings data - any data modified by user in the dialog should get psoted directly to the INI file after each edit
 				// finally, delete INISettings object we created to edit in the dialog
@@ -3401,11 +3503,11 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		if (iRptsToGen > 0 && !CheckReportGenAccess( false ))
 		{	// check whether user still wishes to perform analysis even if report gen not available...
 			sNoRptGenMsg += " compliance report";
-			if (iRptsToGen > 1)
-				sNoRptGenMsg += "s are";
-			else
-				sNoRptGenMsg += " is";
-			sNoRptGenMsg += " selected for generation following analysis, but report generation is currently offline.\n\nWould you like to continue performing analysis?";
+			sNoRptGenMsg += (iRptsToGen > 1 ? "s are" : " is");
+			sNoRptGenMsg += " selected for generation following analysis, but report generation is currently offline."
+									"\nIf your network provides web access via a proxy server, make sure the proxy address "
+									"and credentials are correct.  You can find these settings in:  "
+									"Tools > Proxy Server Settings.\n\nWould you like to continue performing analysis?";
 	//		if (BEMMessageBox( sNoRptGenMsg, "Compliance Analysis", MB_YESNO ) == IDNO)
 			if (BEMMessageBox( sNoRptGenMsg, "Compliance Analysis", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
 		   	bContinue = FALSE;
@@ -3490,7 +3592,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/,
 																	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/, NULL /*pszLogPathFile*/,
 																	sUIVersionString, false /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/,
-																	/*GetSafeHwnd() HWND hWnd,*/ NULL /*callback func ptr*/ );
+																	1 /*SecKeyIndex*/, esSecurityKey, NULL /*callback func ptr*/ );
 					//												/*GetSafeHwnd() HWND hWnd,*/ (PAnalysisProgressCallbackFunc) AnalysisProgressCallbackFunc );
 					EnableWindow( TRUE );
    	lRetVal = iSimResult;
@@ -3651,7 +3753,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 				CWnd* pWnd = GetFocus();
 				CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-				                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 420 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+				                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 440 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
 				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -3823,7 +3925,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 																		NULL /*pszCompMgrDLLPath -> WAS: sT24DHWPath*/, NULL /*pszDHWWeatherPath*/,
 																		sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
 																		NULL /*pszLogPathFile*/, sUIVersionString, false /*bLoadModelFile*/, sOptionsCSVString,
-																		pszAnalysisErr, 2056, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/, pszCSVResultSummary, CSV_RESULTSLENGTH );
+																		pszAnalysisErr, 2056, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
+																		pszCSVResultSummary, CSV_RESULTSLENGTH, 1 /*SecKeyIndex*/, esSecurityKey );   // SAC 1/12/17
 					EnableWindow( TRUE );
    	lRetVal = iSimResult;
 
@@ -4137,8 +4240,9 @@ void CMainFrame::OnPerformAPIAnalysis()
 
 					EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
 		iAnalysisResult = CMX_PerformAnalysisCB_CECRes( sBEMBasePathFile /*pszBEMBasePathFile*/, sRulePathFile /*pszRulesetPathFile*/,	sCSEPath /*pszCSEEXEPath*/, sCSEPath /*pszCSEWeatherPath*/,
-																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/, sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/, NULL /*pszLogPathFile*/,
-																	sUIVersionString, true /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/, NULL /*callback func ptr*/ );
+																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/, sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
+																	NULL /*pszLogPathFile*/, sUIVersionString, true /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/, 
+																	1 /*SecKeyIndex*/, esSecurityKey, NULL /*callback func ptr*/ );
 					EnableWindow( TRUE );
 #elif UI_CANRES
 
@@ -4178,6 +4282,7 @@ void CMainFrame::OnPerformAPIAnalysis()
 																	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
 																	NULL /*pszLogPathFile*/, sUIVersionString, true /*bLoadModelFile*/, sOptionsCSVString,
 																	pszAnalysisErr, 2056, true /*bDisplayProgress*/, /*GetSafeHwnd(),*/ pszCSVResultSummary, CSV_RESULTSLENGTH, 
+																	1 /*SecKeyIndex*/, esSecurityKey,   // SAC 1/10/17
 																	(PAnalysisProgressCallbackFunc) NonResAnalysisProgressCallbackFunc );
 					EnableWindow( TRUE );
 #endif
@@ -4366,7 +4471,7 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 420 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 440 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -4417,28 +4522,37 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 {
 
-// TESTING
-	char *toEncode = "String_To-Encode!?";
-
-	char  strEncrypted[50];		strEncrypted[0]=0;
-	long lEncRetVal = CMX_Encrypt( (const unsigned char*) toEncode, strlen(toEncode), strEncrypted, 50 );		lEncRetVal;
-
-	char  strEncoded[30];	strEncoded[0]=0;
-	char  strDecoded[30];	strDecoded[0]=0;
-	char  strScrEncoded[30];	strScrEncoded[0]=0;
-	char  strScrDecoded[30];	strScrDecoded[0]=0;
-	long lEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strEncoded, 30 );
-	int  iDecdRet = CMX_DecodeBase64( strDecoded, strEncoded );
-	long lScrEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strScrEncoded, 30, true );
-	int  iScrDecdRet = CMX_DecodeBase64( strScrDecoded, strScrEncoded, true );
-	CString sBEMExeSecure = (BEMPX_SecureExecutable() ? "Secure" : "NOT Secure" );
-	CString sCMExeSecure  = (  CMX_SecureExecutable() ? "Secure" : "NOT Secure" );
-	CString sTestMsg;
-	sTestMsg.Format( "Executable Security:\n   BEMProc:  %s\n   BEMCmpMgr:  %s\n\nEncoding '%s'\nNOT Secure --\n   Encode returned %d:  %s\n   Decode returned %d:  %s\n"
-																																	"SECURE --\n   Encode returned %d:  %s\n   Decode returned %d:  %s",
-							sBEMExeSecure, sCMExeSecure, toEncode, lEncdRet, strEncoded, iDecdRet, strDecoded, lScrEncdRet, strScrEncoded, iScrDecdRet, strScrDecoded );
-	AfxMessageBox( sTestMsg );
-
+//// TESTING
+//	char *toEncode = "String_To-Encode!?";
+//
+////	char  strEncrypted[50];		strEncrypted[0]=0;
+////	long lEncRetVal = CMX_Encrypt( (const unsigned char*) toEncode, strlen(toEncode), strEncrypted, 50 );		lEncRetVal;
+//
+//	char  strEncoded[30];	strEncoded[0]=0;
+//	char  strDecoded[30];	strDecoded[0]=0;
+//	char  strScrEncoded[2048];	strScrEncoded[0]=0;
+//	char  strScrDecoded[2048];	strScrDecoded[0]=0;
+//	long lEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strEncoded, 30 );
+//	int  iDecdRet = CMX_DecodeBase64( strDecoded, strEncoded );
+//	memset( strScrEncoded, 0, sizeof(char)*2048 );
+//	memset( strScrDecoded, 0, sizeof(char)*2048 );
+//	long lScrEncdRet = CMX_EncodeBase64( (const unsigned char*) toEncode, strlen(toEncode), strScrEncoded, 2048, true );
+//	int  iScrDecdRet = CMX_DecodeBase64( strScrDecoded, strScrEncoded, true );
+//	CString sBEMExeSecure = (BEMPX_SecureExecutable() ? "Secure" : "NOT Secure" );
+//	CString sCMExeSecure  = (  CMX_SecureExecutable() ? "Secure" : "NOT Secure" );
+//	CString sTestMsg;
+//	sTestMsg.Format( "Executable Security:\n   BEMProc:  %s\n   BEMCmpMgr:  %s\n\nEncoding '%s'\nNOT Secure --\n   Encode returned %d:  %s\n   Decode returned %d:  %s\n"
+//																																	"SECURE --\n   Encode returned %d:  %s\n   Decode returned %d:  %s",
+//							sBEMExeSecure, sCMExeSecure, toEncode, lEncdRet, strEncoded, iDecdRet, strDecoded, lScrEncdRet, strScrEncoded, iScrDecdRet, strScrDecoded );
+//	AfxMessageBox( sTestMsg );
+//
+//	memset( strScrEncoded, 0, sizeof(char)*2048 );
+//	memset( strScrDecoded, 0, sizeof(char)*2048 );
+//	int iEncrRet = CMX_Encrypt( (unsigned char*) toEncode, strlen(toEncode)+1, (unsigned char*) strScrEncoded );
+//	int iDecrRet = CMX_Decrypt( (unsigned char*) strScrEncoded, iEncrRet, (unsigned char*) strScrDecoded );
+//	sTestMsg.Format( "Encrypt/decrypt test:\n   Encoding '%s'\n   Encrypt returned %d:  %s\n   Decrypt returned %d:  %s",
+//							toEncode, iEncrRet, strScrEncoded, iDecrRet, strScrDecoded );
+//	AfxMessageBox( sTestMsg );
 
 	CString sAppendForResults = " - AnalysisResults.xml";
 #ifdef UI_CARES
@@ -4696,7 +4810,9 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 				if (bIsUIActive && ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ ) > 0 && !CheckReportGenAccess( false ))
 				{	CString sNoRptGenMsg;
 					// check whether user still wishes to generate a report even if report gen not available...
-					sNoRptGenMsg.Format( "The report generator is currently offline.\n\nWould you still like to generate a %s report?", sRptType );
+					sNoRptGenMsg.Format( "The report generator is currently offline.\nIf your network provides web access via a proxy server, "
+												"make sure the proxy address and credentials are correct.  You can find these settings in:  "
+												"Tools > Proxy Server Settings.\n\nWould you still like to generate a %s report?", sRptType );
 			//		if (BEMMessageBox( sNoRptGenMsg, "Report Generation", MB_YESNO | MB_DEFBUTTON2 ) == IDNO)
 					if (BEMMessageBox( sNoRptGenMsg, "Report Generation", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::No)
 				   	bContinue = false;
@@ -4725,16 +4841,17 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			//														"none" /*Signature*/, "none" /*PublicKey*/, "true" /*sDebugRpt*/, bVerbose, false /*bSilent*/ );
 			// SAC 9/4/13 - added proxy server settings
 						CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
-						if (ReadProgInt( "options", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
-						{	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
-							sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
-							sProxyServerType       	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+						if (ReadProgInt( "proxy", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
+						{	sProxyServerAddress		= ReadProgString( "proxy", "ProxyServerAddress"    , "", FALSE );
+							//sProxyServerCredentials	= ReadProgString( "proxy", "ProxyServerCredentials", "", FALSE );
+							GetEncodedSetting( "proxy", "ProxyServerCredentials", sProxyServerCredentials );
+							sProxyServerType       	= ReadProgString( "proxy", "ProxyServerType"       , "", FALSE );
 						}
 						const char* pszProxyServerAddress     = (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress    );
 						const char* pszProxyServerCredentials = (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials);
 						const char* pszProxyServerType        = (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType       );
 						CString sNetComLibrary;
-						sNetComLibrary = ReadProgString( "options", "NetComLibrary", "", FALSE );
+						sNetComLibrary = "";   // SAC 1/4/17 - no longer an option - ReadProgString( "proxy", "NetComLibrary", "", FALSE );
 						const char* pszNetComLibrary = (sNetComLibrary.IsEmpty() ? NULL : (const char*) sNetComLibrary );
 
 	//					CString sReportName = (iReportID==0 ? "CF1R_NCB_PRF" : "NRCC_PRF_01");
@@ -4768,7 +4885,7 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 					{	if (iRptGenRetVal == 10)
 							sErrMsg.Format( "An error occurred attempting to generate the %s report:\nUnable to establish a connection with the report generator website."
 										 "\n\nIf your network provides web access via a proxy server, make sure the proxy address and credentials are correct.  You can find these settings in: "
-										 "Tools > Program and Analysis Options.", sRptType );
+										 "Tools > Proxy Server Settings.", sRptType );
 						else
 							sErrMsg.Format( "CMX_GenerateReport_CEC() returned error code %d", iRptGenRetVal );
 	               MessageBox( sErrMsg );
@@ -4838,17 +4955,18 @@ bool CMainFrame::CheckReportGenAccess( bool bDisplayResult )
 	CWaitCursor wait;
 	bool bVerbose = (ReadProgInt( "options", "ReportGenVerbose", 0 /*default*/ ) > 0);		// SAC 11/30/15 - was: LogRuleEvaluation
 	CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
-	if (ReadProgInt( "options", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
-	{	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
-		sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
-		sProxyServerType       	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+	if (ReadProgInt( "proxy", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 8/12/14
+	{	sProxyServerAddress		= ReadProgString( "proxy", "ProxyServerAddress"    , "", FALSE );
+		//sProxyServerCredentials	= ReadProgString( "proxy", "ProxyServerCredentials", "", FALSE );
+		GetEncodedSetting( "proxy", "ProxyServerCredentials", sProxyServerCredentials );
+		sProxyServerType       	= ReadProgString( "proxy", "ProxyServerType"       , "", FALSE );
 	}
 	const char* pszProxyServerAddress     = (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress    );
 	const char* pszProxyServerCredentials = (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials);
 	const char* pszProxyServerType        = (sProxyServerType.IsEmpty()        ? NULL : (const char*) sProxyServerType       );
 
 	CString sNetComLibrary;		// SAC 11/5/15
-	sNetComLibrary = ReadProgString( "options", "NetComLibrary", "", FALSE );
+	sNetComLibrary = "";   // SAC 1/4/17 - no longer an option - ReadProgString( "proxy", "NetComLibrary", "", FALSE );
 	const char* pszNetComLibrary = (sNetComLibrary.IsEmpty() ? NULL : (const char*) sNetComLibrary );
 
 	char pszErrMsg[2056] = "\0";
@@ -4857,7 +4975,7 @@ bool CMainFrame::CheckReportGenAccess( bool bDisplayResult )
 	int iRptGenRetVal = CMX_CheckSiteAccess( sSiteObjProp, sCACertPath, pszProxyServerAddress, pszProxyServerCredentials, pszErrMsg, 2056, bVerbose, pszProxyServerType, pszNetComLibrary );
 
 	if (bDisplayResult)
-	{	CString sResultMsg;
+	{	CString sResultMsg;		BOOL bIncludeProxyInfo = FALSE;
 		if (iRptGenRetVal < 0)
 		{			//		Return Values:	  -1 =>	SUCCESS  (using no proxy server settings)
 					//							  -2 =>	SUCCESS  (using supplied proxy server settings)
@@ -4876,7 +4994,8 @@ bool CMainFrame::CheckReportGenAccess( bool bDisplayResult )
 				sResultMsg += ".";
 		}
 		else
-		{	sResultMsg = "Report generator website not accecssed.  ";			CString sTempMsg;
+		{	bIncludeProxyInfo = TRUE;
+			sResultMsg = "Report generator website not accecssed.  ";			CString sTempMsg;
 			switch (iRptGenRetVal)
 			{	case   1 : sTempMsg.Format( "Error initializing %s on first attempt.", (sNetComLibrary.IsEmpty() ? "QT" : sNetComLibrary) );
 																	sResultMsg += sTempMsg;		break;                                                          
@@ -4888,18 +5007,21 @@ bool CMainFrame::CheckReportGenAccess( bool bDisplayResult )
 				case   6 : sResultMsg += "Connection attempt using proxy server settings retrieved from the operating system failed.";		break;          
 				case   7 : 	break;	// sResultMsg += "Unable to connect either directly or via proxy server settings retrieved from the operating system.";		break; 
 				case   8 : sResultMsg += "Unable to connect via supplied proxy server settings.";		break;                                              
-				case   9 : sResultMsg += "Error initializing temporary file path to copy site status to.";		break;                                     
-				case  10 : sResultMsg += "Error initializing temporary file to copy site status to.";		break;                                           
-				case  11 : sResultMsg += "Error opening temporary file to copy site status to.";		break;                                                 
-				case  12 : sResultMsg += "CACertificate file not provided.";		break;                                                                   
-				case  13 : sResultMsg += "Path to CACertificate file not found.";		break;                                                                
-				case  14 : sResultMsg += "CACertificate file not found.";		break;
+				case   9 : sResultMsg += "Error initializing temporary file path to copy site status to.";		bIncludeProxyInfo = FALSE;		break;                                     
+				case  10 : sResultMsg += "Error initializing temporary file to copy site status to.";				bIncludeProxyInfo = FALSE;		break;                                           
+				case  11 : sResultMsg += "Error opening temporary file to copy site status to.";						bIncludeProxyInfo = FALSE;		break;                                                 
+				case  12 : sResultMsg += "CACertificate file not provided.";			bIncludeProxyInfo = FALSE;		break;                                                                   
+				case  13 : sResultMsg += "Path to CACertificate file not found.";		bIncludeProxyInfo = FALSE;		break;                                                                
+				case  14 : sResultMsg += "CACertificate file not found.";				bIncludeProxyInfo = FALSE;		break;
 				default  :	sResultMsg.Format( "Report generator website not accecssed - CMX_CheckSiteAccess() error code %d.", iRptGenRetVal );		break;
 		}	}
 		if (strlen( pszErrMsg ) > 0)	// SAC 11/30/15
 		{	sResultMsg += "\n\n";
 			sResultMsg += pszErrMsg;
 		}
+		if (bIncludeProxyInfo)
+			sResultMsg += "\n\nIf your network provides web access via a proxy server, make sure the proxy address and credentials are correct.  "
+								"You can find these settings in:  Tools > Proxy Server Settings.";
   		AfxMessageBox( sResultMsg );
 	}
 
@@ -5693,10 +5815,11 @@ void CMainFrame::WriteSimulationInput( SimulationType /*eSimType*/ )
 	else
 	{	// proxy server INI options (spanning both -Res & -Com versions
 		CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
-		if (ReadProgInt( "options", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 11/3/15
-		{	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
-			sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
-			sProxyServerType      	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+		if (ReadProgInt( "proxy", "UseProxyServerSettings", 1 /*default*/ ) > 0)		// SAC 11/3/15
+		{	sProxyServerAddress		= ReadProgString( "proxy", "ProxyServerAddress"    , "", FALSE );
+			//sProxyServerCredentials	= ReadProgString( "proxy", "ProxyServerCredentials", "", FALSE );
+			GetEncodedSetting( "proxy", "ProxyServerCredentials", sProxyServerCredentials );
+			sProxyServerType      	= ReadProgString( "proxy", "ProxyServerType"       , "", FALSE );
 		}
 		const char* pszProxyServerAddress     = (sProxyServerAddress.IsEmpty()     ? NULL : (const char*) sProxyServerAddress    );
 		const char* pszProxyServerCredentials = (sProxyServerCredentials.IsEmpty() ? NULL : (const char*) sProxyServerCredentials);

@@ -228,6 +228,7 @@ BOOL CComplianceUIApp::InitInstance()
 	esProgINIPathFile = esProgramPath + iniFileName;
 	esDataPath = ReadProgString( "paths", "DataPath", NULL, TRUE );  // this FIRST call to ReadProgString() will only work to get DataPath from the program dir's INI (since the data INI not yet defined)
 	esDataINIPathFile = esDataPath + iniFileName;
+	esProxyINIPathFile = esDataPath + "proxy.ini";
 	esProjectsPath = ReadProgString( "paths", "ProjectsPath", NULL, TRUE );
 
    // SAC 3/19/99 - added call to grab menu option from .INI file
@@ -346,12 +347,15 @@ BOOL CComplianceUIApp::InitInstance()
          return FALSE;
       }
    }
+   // transfer Proxy settings from Data INI file into Proxy-specific file (w/ encryption) - SAC 1/4/17
+   TransferProxyINISettings();
 
 	// Initialize building database & other DLLs
 	CString sInitBDBFileName = ReadProgString( szFiles, "BEMFile", "", TRUE );
 	CString sInitLogFileName = ReadProgString( szPaths, "ProjectsPath", "", TRUE );
 	sInitLogFileName += "untitled.log";
-	BEMPX_LoadDataModel( sInitBDBFileName, BEMT_CBECC, sInitLogFileName );
+	if (!LoadDataModel( sInitBDBFileName, BEMT_CBECC, sInitLogFileName ))	// SAC 1/3/17
+		return FALSE;
 // ??    InitBEMCmpMgrDLL( TRUE );
 
    // Load user default file

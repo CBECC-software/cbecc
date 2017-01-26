@@ -233,6 +233,7 @@ CString esProgramFName = "";   // SAC 8/19/11
 CString iniFileName = "";
 CString esProgINIPathFile = "";
 CString esDataINIPathFile = "";
+CString esProxyINIPathFile = "";		// SAC 1/4/17
 CString esCUIVersion = "";
 
 
@@ -628,8 +629,9 @@ BOOL ResolvePathIndirections( CString& sPath )  // SAC 10/23/12
 }
 
 inline const char* GetINIFilePtr( const char* szSection, const char* szKey )
-{  BOOL bProgINI = (strcmp( szSection, "paths" ) == 0 && strcmp( szKey, "DataPath" ) == 0);
-   return (const char*) (bProgINI ? esProgINIPathFile : esDataINIPathFile);
+{  BOOL bProgINI  = (strcmp( szSection, "paths" ) == 0 && strcmp( szKey, "DataPath" ) == 0);
+	BOOL bProxyINI = (strcmp( szSection, "proxy" ) == 0);		// SAC 1/4/17
+   return (const char*) (bProgINI ? esProgINIPathFile : (bProxyINI ? esProxyINIPathFile : esDataINIPathFile));
 }
 
 UINT ReadProgInt(LPCSTR section, LPCSTR entry, int def)
@@ -682,6 +684,103 @@ BOOL WriteProgString(LPCSTR section, LPCSTR entry, LPCSTR string)
 {
 //   CString fileName = esProgramPath + iniFileName;
 	return WritePrivateProfileString( section, entry, string, GetINIFilePtr( section, entry ) /*fileName*/ );
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+// transfer Proxy settings from Data INI file into Proxy-specific file (w/ encryption) - SAC 1/4/17
+void TransferProxyINISettings()
+{
+		// no longer used:
+		// ; NetComLibrary - network communications software library - options include:
+		// ;    QT      (new default)
+		// ;    CURL    (used in past releases)
+		// ;NetComLibrary=CURL
+	int iUseProxyServerSettings;
+	CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
+	iUseProxyServerSettings = ReadProgInt(    "options", "UseProxyServerSettings", -1 /*invalid setting*/ );
+	sProxyServerAddress		= ReadProgString( "options", "ProxyServerAddress"    , "", FALSE );
+	sProxyServerCredentials	= ReadProgString( "options", "ProxyServerCredentials", "", FALSE );
+	sProxyServerType      	= ReadProgString( "options", "ProxyServerType"       , "", FALSE );
+	if (iUseProxyServerSettings < 1 && sProxyServerAddress.IsEmpty() &&
+			sProxyServerCredentials.IsEmpty() && sProxyServerType.IsEmpty())
+	{	// OLD INI settings not present (or active) so IGNORE INI switch
+	}
+	else
+	{	// TRANSFER proxy settings from old INI to Proxy INI
+		if (iUseProxyServerSettings < 0)
+			iUseProxyServerSettings = 1;  // default in this case
+		VERIFY( WriteProgInt( "proxy"  , "UseProxyServerSettings", iUseProxyServerSettings ) );
+		WritePrivateProfileString( "options", "UseProxyServerSettings", NULL, GetINIFilePtr( "options", "UseProxyServerSettings" ) /*fileName*/ );  // REMOVES old INI item
+
+		if (!sProxyServerType.IsEmpty())
+		{	VERIFY( WriteProgString( "proxy", "ProxyServerType", sProxyServerType ) );
+			WritePrivateProfileString(  "options", "ProxyServerType", NULL, GetINIFilePtr( "options", "ProxyServerType" ) /*fileName*/ );  // REMOVES old INI item
+		}
+		if (!sProxyServerAddress.IsEmpty())
+		{	VERIFY( WriteProgString( "proxy", "ProxyServerAddress", sProxyServerAddress ) );
+			WritePrivateProfileString(  "options", "ProxyServerAddress", NULL, GetINIFilePtr( "options", "ProxyServerAddress" ) /*fileName*/ );  // REMOVES old INI item
+		}
+		if (!sProxyServerCredentials.IsEmpty())
+		{
+			bool bCMSecure = CMX_SecureExecutable();
+			CString sNewINIOptName = (bCMSecure ? "SecProxyServerCredentials" : "InsProxyServerCredentials");  // secure vs. insecure (documenting encoding)
+			char strEncoded[1024];
+			memset( strEncoded, 0, sizeof(char)*1024 );
+			long lEncdRet = CMX_EncodeBase64( (const unsigned char*) ((const char*) sProxyServerCredentials), sProxyServerCredentials.GetLength(), strEncoded, 1024, true );
+			ASSERT( lEncdRet > 0 );
+			if (lEncdRet > 0)
+			{	
+				VERIFY( WriteProgString( "proxy", sNewINIOptName, strEncoded ) );
+				WritePrivateProfileString( "options", "ProxyServerCredentials", NULL, GetINIFilePtr( "options", "ProxyServerCredentials" ) /*fileName*/ );  // REMOVES old INI item
+			}
+		}
+				// ; Proxy Server Settings
+				// ;UseProxyServerSettings=1
+				// ;ProxyServerAddress=site.site:port
+				// ;ProxyServerCredentials=username:password
+				// ; Proxy Server Type - options include:
+				// ;    Socks5     (Qt default)
+				// ;    Default
+				// ;    No
+				// ;    Http     (CBECC default)
+				// ;    HttpCaching
+				// ;    FtpCaching
+				// ProxyServerType=Http
+	}
+}
+
+
+BOOL GetEncodedSetting( LPCSTR section, LPCSTR entry, CString& sOption )
+{	sOption.Empty();
+	bool bCMSecure = CMX_SecureExecutable();
+	CString sSecININame = "Sec";		sSecININame += entry;
+	CString sInsININame = "Ins";		sInsININame += entry;
+	CString sSettingFromINI;
+	char strDecoded[1024];
+	if (bCMSecure)
+	{	sSettingFromINI = ReadProgString( section, sSecININame, "" /*default*/ /*, BOOL bGetPath*/ );
+		if (!sSettingFromINI.IsEmpty())
+		{	// secure EXEs and secure option present and retrieved - so return that
+			memset( strDecoded, 0, sizeof(char)*1024 );
+			int iDecdRet = CMX_DecodeBase64( strDecoded, sSettingFromINI, true );
+			ASSERT( iDecdRet > 0 );
+			if (iDecdRet > 0)
+				sOption = strDecoded;
+	}	}
+	if (sOption.IsEmpty())
+	{	// if sOption not defined above...
+		sSettingFromINI = ReadProgString( section, sInsININame, "" /*default*/ /*, BOOL bGetPath*/ );
+		if (!sSettingFromINI.IsEmpty())
+		{	// secure EXEs and secure option present and retrieved - so return that
+			memset( strDecoded, 0, sizeof(char)*1024 );
+			int iDecdRet = CMX_DecodeBase64( strDecoded, sSettingFromINI, false );
+			ASSERT( iDecdRet > 0 );
+			if (iDecdRet > 0)
+				sOption = strDecoded;
+	}	}
+	return (!sOption.IsEmpty());
 }
 
 
@@ -1793,6 +1892,34 @@ static BOOL ResetRulesetSymbols()
    return (iNumReset == eiNumRulesetsAvailable);
 }
 
+
+BOOL LoadDataModel(	const char* psBEMProcFileName /*=NULL*/, int iBEMType /*=BEMT_Other*/,
+							const char* psInitLogFileName /*=NULL*/, BOOL bMsgBox /*=TRUE*/ )
+{
+	int iChkDMBin = BEMPX_CheckDataModelBin( psBEMProcFileName );		// SAC 1/3/17
+	if (iChkDMBin > 0)
+	{	if (bMsgBox)
+		{	QString sErrMsg;
+			switch (iChkDMBin)
+			{	case  1 :  sErrMsg = "Data model binary filename not specified";   break;
+				case  2 :  sErrMsg = QString( "File not found:  '%1'" ).arg( psBEMProcFileName );   break;
+				case  3 :  sErrMsg = QString( "Unable to open file:  '%1'" ).arg( psBEMProcFileName );   break;
+				case  4 :  sErrMsg = QString( "Cannot open insecure data model binary file in secure program:  '%1'\n\nRecompile the data model with current executables." ).arg( psBEMProcFileName );   break;
+				case  5 :  sErrMsg = QString( "Cannot open secure data model binary in insecure program:  '%1'\n\nRecompile the data model with current executables." ).arg( psBEMProcFileName );   break;
+				case  6 :  sErrMsg = QString( "Data model binary compiled with prior software version:  '%1'" ).arg( psBEMProcFileName );   break;
+				case  7 :  sErrMsg = QString( "Data model binary compiled with newer software than this:  '%1'" ).arg( psBEMProcFileName );   break;
+				default :  sErrMsg = QString( "Unknown error (code: %1)" ).arg( QString::number(iChkDMBin) );   break;
+			}
+			sErrMsg = "Error loading data model binary file.\n\n" + sErrMsg;
+			AfxMessageBox( sErrMsg.toLatin1().constData() );
+		}
+	}
+	else
+		BEMPX_LoadDataModel( psBEMProcFileName, iBEMType, psInitLogFileName );
+	return (iChkDMBin==0);
+}
+
+
 static char BASED_CODE szDefErr[] = "Default ";
 static char BASED_CODE szErr[]    = "Compliance Ruleset File \n'";
 static char BASED_CODE szErr1[]   = "' Not Found.";
@@ -1849,9 +1976,10 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 
 			CString sInitLogFileName = ReadProgString( "paths", "ProjectsPath", "", TRUE );
 			sInitLogFileName += "untitled.log";
-			BEMPX_LoadDataModel( sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName );
-
-      	if (!CMX_LoadRuleset( sRuleName, bDeleteAllObjects ))  // ruleset file exists, so now try to load it
+			if (!LoadDataModel(	sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName ))
+//			BEMPX_LoadDataModel( sInitBDBFileName.toLatin1().constData(), BEMT_CBECC, sInitLogFileName );
+      	   iError = 4;
+      	else if (!CMX_LoadRuleset( sRuleName, bDeleteAllObjects ))  // ruleset file exists, so now try to load it
       	   iError = 2;
       	else
       	{  // Ruleset loaded OK, so now reset Ruleset symbols to reflect the ruleset
@@ -1879,7 +2007,7 @@ ASSERT( bDeleteAllObjects ); // BEMBase reinitialization now a part of ruleset l
 		}
    }
 
-   if (iError > 0)
+   if (iError > 0 && iError != 4)
    {  // Display error message
       CString sErr;
       if (iError == 3)
@@ -2187,6 +2315,8 @@ long elDBID_Chiller_EvapInRef = 0;          // "FluidSeg"
 long elDBID_Chiller_EvapOutRef = 0;         // "FluidSeg"
 long elDBID_Boiler_FluidFlowInRef = 0;      // "FluidSeg"
 long elDBID_Boiler_FluidFlowOutRef = 0;     // "FluidSeg"
+long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
+long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2393,6 +2523,8 @@ long elDBID_DHWSys_DHWHeater3 = 0;
 long elDBID_DHWSys_DHWHeater4 = 0;
 long elDBID_DHWSys_DHWHeater5 = 0;
 long elDBID_DHWSys_DHWHeater6 = 0;
+long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
+long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2705,12 +2837,17 @@ void InitBEMDBIDs()
 	elDBID_Boiler_FluidFlowInRef       = BEMPX_GetDatabaseID( "FluidFlowInRef",     eiBDBCID_Boiler   );
 	elDBID_Boiler_FluidFlowOutRef      = BEMPX_GetDatabaseID( "FluidFlowOutRef",    eiBDBCID_Boiler   );
 
+	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
+	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
+
 // SAC 5/13/14 - revised to keep this property characterized as Required (but still marked as Primary)
 	// make adjustments to the InputClass of certain properties to ensure proper UI functionality
 	BEMPX_SetPropertyTypeDetails( BEMPX_GetDatabaseID( "ConsAssm:CompatibleSurfType" ), BEMD_Required, true /*bPrimary*/, true /*bEditable*/, false /*bUserDefaultable*/, true /*bDispInp*/, true /*bDispProp*/,
 																															true /*bDispBudg*/, DTNotInp_AllowUIReset /*iNotInputMode*/, NULL /*pszNotInputMsg*/ );		// SAC 8/13/15
 
 	AdjustDataModelForGeometryInpType();	// SAC 2/27/14
+
+	BEMPUIX_AddPasswordDBIDPair( elDBID_INISettings_ProxyServerCredentials, elDBID_INISettings_ShowProxyServerCredentials, TRUE );	// SAC 1/9/17
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
@@ -2857,6 +2994,11 @@ void InitBEMDBIDs()
 	elDBID_DHWSys_DHWHeater4	= elDBID_DHWSys_DHWHeater3 + 1;
 	elDBID_DHWSys_DHWHeater5	= elDBID_DHWSys_DHWHeater4 + 1;
 	elDBID_DHWSys_DHWHeater6	= elDBID_DHWSys_DHWHeater5 + 1;
+
+	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
+	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
+
+	BEMPUIX_AddPasswordDBIDPair( elDBID_INISettings_ProxyServerCredentials, elDBID_INISettings_ShowProxyServerCredentials, TRUE );	// SAC 1/9/17
 #endif   // UI_CARES
 }
 

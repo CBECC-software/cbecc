@@ -291,6 +291,7 @@ BEGIN
     POPUP "&Tools"
     BEGIN
         MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
+        MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
@@ -373,6 +374,7 @@ BEGIN
     POPUP "&Tools"
     BEGIN
         MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
+        MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
@@ -408,7 +410,8 @@ BEGIN
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
         MENUITEM "&Generate CAHP/CMFNH Report", IDM_TOOLS_CAHPRPT
         MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
-        MENUITEM "&Generate Public Key", IDM_TOOLS_PUBLICKEY
+//        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
+        MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
         MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
     END
     POPUP "&Help"
@@ -671,8 +674,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2016,221,0,889		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
- PRODUCTVERSION 2016,221,0,889	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
+ FILEVERSION 2016,221,0,898		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
+ PRODUCTVERSION 2016,221,0,898	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -690,7 +693,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "FileVersion", "2016.2.2-alpha (889)\0"
+            VALUE "FileVersion", "2016.2.2-alpha (898)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2016, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
@@ -698,7 +701,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2016)\0"
             VALUE "ProductVersion", "2016.2.2-alpha\0"
-            VALUE "SpecialBuild", "build 889\0"
+            VALUE "SpecialBuild", "build 898\0"
         END
     END
     BLOCK "VarFileInfo"
