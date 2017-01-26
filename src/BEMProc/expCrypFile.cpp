@@ -249,3 +249,32 @@ void CryptoFile::ReadQString( QString& string )
 
 //   m_lByteCount += (iRdLen + sizeof(int));  - SAC 9/3/16 - removed since it double-counts string reading (m_lByteCount incremented inside CryptoFile::Read())
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+UINT CryptoFile::ReadDirect( void* lpBuf, UINT nCount )
+{
+   UINT nRead = (UINT) QIODevice::read( (char*) lpBuf, nCount );
+   m_lByteCount += nCount;
+   return nRead;
+}
+
+void CryptoFile::WriteDirect( const void* lpBuf, UINT nCount )
+{
+   static unsigned char buffer[ MAX_CRYPTOFILE_BUFSIZE ];
+   UINT start = 0;
+   // loop over all bytes in buffer to be written to file (in chunks of MAX_CRYPTOFILE_BUFSIZE)
+   while ( start < nCount )
+   {
+      const unsigned char* temp = &((const unsigned char*)lpBuf)[ start ];
+      UINT end = ( nCount - start ) < MAX_CRYPTOFILE_BUFSIZE ? 
+                   nCount - start : MAX_CRYPTOFILE_BUFSIZE;
+      for ( UINT i = 0; i < end; i++ )
+         buffer[ i ] = temp[ i ];
+      // write encrypted bytes to the file
+      QFile::write( (const char*) buffer, end );
+      m_lByteCount += end;
+      start += MAX_CRYPTOFILE_BUFSIZE;
+   }
+}

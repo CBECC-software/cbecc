@@ -474,6 +474,8 @@ static FuncTable functable[] =
    {                "#CDUWH",      EXP_BEMPFunc, BF_Cr8DUWHtr,     0 },         /* SAC 5/29/16 - added */
    { "AddCSEReportCol",            EXP_BEMPFunc, BF_AddCSERptCol,  2 },         /* SAC 11/14/16 - added */
    {                "#ACRC",       EXP_BEMPFunc, BF_AddCSERptCol,  2 },         /* SAC 11/14/16 - added */
+   { "ApplyHourlyResultMultipliers_NEM", EXP_BEMPFunc, BF_HrlyResMltNEM, VAR_ARGS },  /* SAC 1/23/17 - added */
+   {                "#HRMN",             EXP_BEMPFunc, BF_HrlyResMltNEM, VAR_ARGS },  /* SAC 1/23/17 - added */
    { NULL,                         0,           0,              0 }
 };
 

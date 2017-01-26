@@ -3085,11 +3085,14 @@ static void CopyOtherLogFile( QFile& logFile, const char* psLogFileName )
       // open the log file to copy from
 		if (prevFile.open( QIODevice::Text | QIODevice::ReadOnly ))
       {
-         char buff[ BEMDEF_MAXLOGFILELINE+1 ];
+#define  LogFileCopyBuffLen  1024
+         char buff[ LogFileCopyBuffLen ];
          // read each line from the prev file into the log file
-         int iReadRetVal;
-         while (iReadRetVal = prevFile.read( buff, BEMDEF_MAXLOGFILELINE ) > 0)
-            logFile.write( buff, iReadRetVal );
+         int iReadRetVal = (int) prevFile.read( buff, LogFileCopyBuffLen-1 );
+         while (iReadRetVal > 0)		// SAC 1/14/17 - fixed bug in log file copying
+			{	logFile.write( buff, iReadRetVal );
+				iReadRetVal = (int) prevFile.read( buff, LogFileCopyBuffLen-1 );
+			}
          assert( iReadRetVal==0 );	// if -1, then error reading
       }
       else

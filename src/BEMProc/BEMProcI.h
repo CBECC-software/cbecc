@@ -51,7 +51,8 @@ extern long ReadDBID( BEMTextIO& symFile );  //, CFile& errorFile );
 extern double PolygonArea( std::vector<double>& faX, std::vector<double>& faY, std::vector<double>& faZ );
 extern double PolygonArea_OrderDependent( std::vector<double>& faX, std::vector<double>& faY, std::vector<double>& faZ );
 
-extern bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QString& sRuleSetVersion, int& iStructVer );
+extern bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QString& sRuleSetVersion,
+														int& iStructVer, bool& bRulesetSecure );
 
 extern void BEMP_InitializeDataTypes( int eCompDT = 3, bool bPrim = false, bool bEdit = true, bool bUserDef = true,
 													bool bDispInp = true, bool bDispProp = true, bool bDispBudg = true,

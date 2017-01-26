@@ -68,6 +68,8 @@ public:
 	void Write( const void* lpBuf, UINT nCount );
    void WriteQString( const QString& string );
    void ReadQString( QString& string );
+	UINT ReadDirect( void* lpBuf, UINT nCount );
+	void WriteDirect( const void* lpBuf, UINT nCount );
 };
 
 

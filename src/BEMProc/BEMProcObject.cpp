@@ -32,6 +32,7 @@
 #include "stdafx.h"
 #include <iostream>
 #include "BEMProc.h"
+#include "BEMProcI.h"
 #include "BEMProcCompile.h"
 #include "BEMProcObject.h"
 #include "BEMProc_FileIO.h"
@@ -61,7 +62,8 @@ static char szBEMRulPrcVersion[]      = "BEMRulPrc-3.00";
 // SAC 8/12/15 - Struct Version 15 -> 16:  added new m_saPreviousNames member of CRuleSet::m_rulePropTypeModList - used to update BEMBase PropertyType
 // SAC 8/20/15 - Struct Version 16 -> 17:  switched CRuleSetTransformation long/short group names from single strings to arrays
 // SAC 8/5/16  - Struct Version 17 -> 18:  no structural change, just migration to open source dependent executables
-static int  siCurBEMRulPrcFileStructVersion = 18;  // this is what always gets written to newly created ruleset bin files
+// SAC 12/29/16- Struct Version 18 -> 19:  addition of flag near beginning of file documenting whether ruleset was compiled by a "secure" version of code
+static int  siCurBEMRulPrcFileStructVersion = 19;  // this is what always gets written to newly created ruleset bin files
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -815,7 +817,7 @@ static void CA_DBIDToDBCompParamString( long lDBID, QString& sCompParam )
    BEMProcObject* pBEMProc = getBEMProcPointer( -1 /*iBEMProcIdx*/ );
 //   if (iClass < 1 || iClass > soaClasses.GetSize())
    if (iClass < 1 || iClass > BEMPX_GetNumClasses())
-      sCompParam = QString( "DBID=%ld Not Found" ).arg( lDBID );
+      sCompParam = QString( "DBID %1 Not Found" ).arg( QString::number(lDBID) );
    else
    {
 //      CBEMAsciiClass* pClass = (CBEMAsciiClass*) soaClasses.GetAt( iClass-1 );
@@ -1156,6 +1158,52 @@ void CASymLst::WriteText( BEMTextIO& file )
 
 /////////////////////////////////////////////////////////////////////////////
 
+// 0 - OK
+// 1 - No filename specified
+// 2 - File doesn't exist
+// 3 - Error opening file
+// 4 - Secure EXE but insecure data model binary
+// 5 - Insecure EXE but secure data model binary
+// 6 - Inconsistent data model binary structure version (file old)
+// 7 - Inconsistent data model binary structure version (file newer than executable)
+int BEMPX_CheckDataModelBin( const char* pszBinFileName )	
+{	int iRetVal = 0;
+	QString sFileName = pszBinFileName;
+   if (sFileName.length() < 1)
+		//sErrMsg = "No BEMProc file name specified.";
+		iRetVal = 1;
+   else if (!FileExists( sFileName.toLocal8Bit().constData() ))
+		//sErrMsg = QString( "BEMProc file not found:  '%1'" ).arg( sFileName );
+		iRetVal = 2;
+   else
+   {
+      CryptoFile file( sFileName.toLocal8Bit().constData() );
+      if (!file.open( QIODevice::ReadOnly ))
+			//sErrMsg = QString( "Error opening BEMProc file:  '%1'" ).arg( sFileName );
+			iRetVal = 3;
+		else
+		{
+			int iVer, iSecureFile = 0;
+			// read the BEMProc version and number of class and proptype values
+			file.ReadDirect( &iVer, sizeof( int ) );
+			if (iVer > 28)
+				file.ReadDirect( &iSecureFile, sizeof( int ) );
+
+			bool bSecureEXE = BEMPX_SecureExecutable();
+			if (bSecureEXE && iSecureFile == 0)
+				iRetVal = 4;
+			else if (!bSecureEXE && iSecureFile > 0)
+				iRetVal = 5;
+			else if (iVer < BEMPROC_VERSION)
+				iRetVal = 6;
+			else if (iVer > BEMPROC_VERSION)
+				iRetVal = 7;
+
+			file.close();
+	}	}
+	return iRetVal;
+}
+
 BOOL BEMProcObject::decompileBinBEMProc( const char* pszBinFileName, BOOL bOnlySymbols )
 {
    BOOL bRetVal = FALSE;
@@ -1167,22 +1215,28 @@ BOOL BEMProcObject::decompileBinBEMProc( const char* pszBinFileName, BOOL bOnlyS
    if (m_binFileName.length() < 1)
 		sErrMsg = "No BEMProc file name specified.";
    else if (!FileExists( m_binFileName.toLocal8Bit().constData() ))
-		sErrMsg = QString( "BEMProc file not found:  '%s'" ).arg( m_binFileName );
+		sErrMsg = QString( "BEMProc file not found:  '%1'" ).arg( m_binFileName );
    else
    {
       CryptoFile file( m_binFileName.toLocal8Bit().constData() );
       if (!file.open( QIODevice::ReadOnly ))
-			sErrMsg = QString( "Error opening BEMProc file:  '%s'" ).arg( m_binFileName );
+			sErrMsg = QString( "Error opening BEMProc file:  '%1'" ).arg( m_binFileName );
 		else
 		{
       int iVer, iNumClasses, iNumPropTypes, iNumSymbolTables;
       // read the BEMProc version and number of class and proptype values
-      file.Read( &iVer, sizeof( int ) );
+      file.ReadDirect( &iVer, sizeof( int ) );
+
+		// SAC 1/3/17 - added security setting info
+		int iSecure = 0;
+		if (iVer > 28)
+	      file.ReadDirect( &iSecure, sizeof( int ) );
+
       file.Read( &iNumClasses, sizeof( int ) );
       file.Read( &iNumPropTypes, sizeof( int ) );
       file.Read( &iNumSymbolTables, sizeof( int ) );			assert( iNumSymbolTables < 1 );	// symbol tables NYI
       if (iVer != BEMPROC_VERSION)
-			sErrMsg = QString( "Incompatible BEMProc version:  %d expected vs. %d from file" ).arg( BEMPROC_VERSION, iVer );
+			sErrMsg = QString( "Incompatible BEMProc version:  %1 expected vs. %2 from file" ).arg( QString::number(BEMPROC_VERSION), QString::number(iVer) );
          //BEMMessageBox( "Incompatible BEMProc version.", "CBEMProcObject::DecompileBinBEMProc() Error", 3 /*error*/ );
       else if (!bOnlySymbols && !init( iNumClasses, iNumPropTypes ))  //, iNumSymbolTables ))
 			sErrMsg = "CBEMProcObject::Init() failed.";
@@ -1980,7 +2034,10 @@ BOOL WriteCompiledBEMProc( const char* pszBEMBinFileName, std::vector<CASymLst*>
 			int iClassCount = (int) eBEMProc.getNumClasses();
 			int iPropTypeCount = (int) eBEMProc.getNumPropertyTypes();
 			int iNumSymTables = 0;		// pSymbols->m_psaSymbolTables.GetSize();   // SAC 6/26/06
-			file.Write( &iVersion, sizeof( int ) );
+			file.WriteDirect( &iVersion, sizeof( int ) );
+			int iSecure = (BEMPX_SecureExecutable() ? 1 : 0);	// SAC 1/3/17
+			file.WriteDirect( &iSecure, sizeof( int ) );
+
 			file.Write( &iClassCount, sizeof( int ) );
 			file.Write( &iPropTypeCount, sizeof( int ) );
 			file.Write( &iNumSymTables, sizeof( int ) );   // SAC 6/26/06
@@ -2174,7 +2231,8 @@ void BEMPX_GetBEMBaseFile( QString& sBEMBaseFile, int iBEMProcIdx/*=-1*/ )		// w
 // Notes --------------------------------------------------------------------
 //   
 /////////////////////////////////////////////////////////////////////////////
-bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QString& sRuleSetVersion, int& iStructVer )
+bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QString& sRuleSetVersion, 
+												int& iStructVer, bool& bRulesetSecure )
 {
    // Read RulPrc file version info from file
    QString sFileVer;
@@ -2182,6 +2240,7 @@ bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QStrin
 
    // Compare file ver string from file to the current one, and return FALSE if different
    QString sRP32Ver = szBEMRulPrcVersion;
+   bRulesetSecure = false;
    if (sRP32Ver == sFileVer)
    {
       // read in RULESETID and RULESETVERSION
@@ -2191,7 +2250,11 @@ bool CheckRulesetFileVerAndReadID( CryptoFile& file, QString& sRuleSetID, QStrin
       file.ReadQString( sRuleSetVersion );
 
       if (sRP32Ver == sFileVer)
-         file.Read( &iStructVer, sizeof( int ) );
+      {  file.ReadDirect( &iStructVer, sizeof( int ) );
+      	if (iStructVer >= 19)
+      	{	int iScr;	file.ReadDirect( &iScr, sizeof( int ) );
+      		bRulesetSecure = (iScr > 0);
+      }	}
       else
          iStructVer = 1;
 
@@ -2227,7 +2290,10 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
          file.WriteQString( m_sRuleSetVersion );
 
          // SAC 6/12/00 - next write RULESET_STRUCT_VERSION
-         file.Write( &siCurBEMRulPrcFileStructVersion, sizeof( int ) );
+         file.WriteDirect( &siCurBEMRulPrcFileStructVersion, sizeof( int ) );
+
+			int iRulesSecure = (BEMPX_SecureExecutable() ? 1 : 0);		// SAC 12/29/16 - added to track whether encryption used when writing ruleset
+         file.WriteDirect( &iRulesSecure, sizeof( int ) );
 
 			file.WriteQString( m_sBEMBaseFile );		// SAC 8/15/14 - added
 

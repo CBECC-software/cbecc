@@ -222,14 +222,14 @@ void FormatMultilineString( QString& str )
 BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RuleProcRead()
 {	BOOL bRetVal = FALSE;
 	QString sRuleSetID, sRuleSetVersion, sRdStr;
-	int iStructVer, i, iRd;		long lRd;
+	int iStructVer, i, iRd;		long lRd;	bool bRulesSecure=false;
    // CryptoFile file( fileName, CFile::modeRead | CFile::shareDenyWrite );  // open file
    CryptoFile file( fileName );
    if (!file.open( QIODevice::ReadOnly ))
 	{	//sErrMsg = QString( "Error opening BEMProc ruleset file:  '%s'" ).arg( fileName );
 	}
    // confirm RulPrc version match and read in ruleset ID & version strings
-   else if (CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVersion, iStructVer ))
+   else if (CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVersion, iStructVer, bRulesSecure ))
    {	// first initialize ruleset data
 		ruleSet.clear();
 		// then blast either all or just rule library objects...
@@ -400,8 +400,8 @@ BOOL BEMPX_ReadRulesetID( LPCSTR fileName, QString& sRuleSetID, QString& sRuleSe
 	}
 
 	// confirm RulPrc version match and read in ruleset ID & version strings
-	int iFileStructVer;
-	return CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVer, iFileStructVer );
+	int iFileStructVer;		bool bRulesSecure=false;
+	return CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVer, iFileStructVer, bRulesSecure );
 }
 
 // SAC 8/15/14 - added to retrieve BEMBase filename PRIOR to loading ruleset
@@ -417,8 +417,8 @@ BOOL BEMPX_ReadBEMBaseFile( LPCSTR fileName, QString& sBEMBaseFile )			// was: R
 	else
 	{	// confirm RulPrc version match and read in ruleset ID & version strings
 		QString sRuleSetID, sRuleSetVer;
-		int iFileStructVer;
-		if (CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVer, iFileStructVer ) && iFileStructVer >= 13)
+		int iFileStructVer;		bool bRulesSecure=false;
+		if (CheckRulesetFileVerAndReadID( file, sRuleSetID, sRuleSetVer, iFileStructVer, bRulesSecure ) && iFileStructVer >= 13)
 		{	file.ReadQString( sBEMBaseFile );
 			bRetVal = (!sBEMBaseFile.isEmpty());
 	}	}

@@ -194,7 +194,8 @@ void BEMPROC_API __cdecl BEMPX_SetUIActiveFlag( bool bActiveUI );
 //  25 -> 26 : SAC 3/3/14  - (text file ver 6) Addition of character string m_sInputClassInfo member to CBEMPropertyType to document properties whose input class varies based on BEMBase property data
 //  26 -> 27 : SAC 2/4/15  - (no text file upd) Addition of integer m_iReportPrecision member to CBEMPropertyType to round values for output to compliance reports (export to analysis results XML files)
 //  27 -> 28 : SAC 8/6/15  - (no text file upd) Addition of CStringArray member m_saPreviousNames of CBEMPropertyType to facilitate data model backward compatibility by tracking previous property names
-#define  BEMPROC_VERSION  28
+//  28 -> 29 : SAC 12/29/16- (no text file upd) Addition of flag near beginning of file documenting whether BEMBroc was compiled by a "secure" version of code
+#define  BEMPROC_VERSION  29
 
 
 class  BEMClass;
@@ -240,6 +241,7 @@ void BEMPROC_API __cdecl BEMPX_CloseBEMProc( bool bShuttingDown=true, bool bClos
 
 bool BEMPROC_API __cdecl BEMPX_SecureExecutable();
 
+int  BEMPROC_API __cdecl BEMPX_CheckDataModelBin( const char* pszBinFileName );	// 0-OK, >0-error
 BOOL BEMPROC_API __cdecl BEMPX_LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = BEMT_Other,		// was: BEMPX_InitBEMProc()
 																const char* psInitLogFileName = NULL );
 
