@@ -69,6 +69,7 @@ void __declspec(dllexport) __cdecl BEMPUIX_SetFloorPlanDatabaseIDs( long lDBID_F
 
 void __declspec(dllexport) __cdecl BEMPUIX_SetEEMDatabaseIDs( long lDBID_Name, long lDBID_Measure, long lDBID_BaselineEEMName );   // SAC 7/29/02 - added baseline run DBID
 
+void __declspec(dllexport) __cdecl BEMPUIX_SetScreenScalePercent( int iScreenScalePercent );
 void __declspec(dllexport) __cdecl BEMPUIX_SetTextColors( COLORREF* craTextColors, int iNumColors=9 );
 
 void __declspec(dllexport) __cdecl BEMPUIX_GetToolTipMessage( CString& sMsg, long lDBID );

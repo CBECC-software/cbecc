@@ -61,6 +61,7 @@ int eiTabDlgCtrlMarg;
 
 int fntHtBase, fntWdBase, fntHtSys, fntWdSys;
 int sysFntSize;
+int eiFontScalePct = 100;
 
 static char BASED_CODE szNotEditable[] = "This data is not user editable.";
 const char* szErrNotEditable = szNotEditable;

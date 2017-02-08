@@ -290,3 +290,7 @@ int  BEMPUIX_GetHelpGroupItemInfo( CDWordArray& dwaHelpItemIDs, CStringArray& sa
 }
 
 
+void BEMPUIX_SetScreenScalePercent( int iScreenScalePercent )
+{	eiFontScalePct = iScreenScalePercent;
+}
+

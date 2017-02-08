@@ -68,9 +68,12 @@ extern float appXRatio, appYRatio;
 
 extern int fntHtBase, fntWdBase, fntHtSys, fntWdSys;  
 extern int sysFntSize;												// in tenths of a point.
+extern int eiFontScalePct;
 
-#define FontX(x) ( (x*fntWdSys)/fntWdBase )
-#define FontY(y) ( (y*fntHtSys)/fntHtBase )
+//#define FontX(x) ( (x*fntWdSys)/fntWdBase )
+//#define FontY(y) ( (y*fntHtSys)/fntHtBase )
+#define FontX(x)    ( (x*fntWdSys *eiFontScalePct)/(fntWdBase*100) )
+#define FontY(y)    ( (y*fntHtSys *eiFontScalePct)/(fntHtBase*100) )
 
 
 /////////////////////////////////////////////////////////////////////////////
