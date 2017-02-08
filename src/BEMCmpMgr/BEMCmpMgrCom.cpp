@@ -2270,6 +2270,24 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (bVerbose || !bVerbose)
 			//					if (bVerbose)
 								{	BEMPX_WriteLogFile( "  PerfAnal_NRes - starting, w/ arguments:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									QString sOptsCSV = pszOptionsCSV;
+								// prevent logging sensitive info contained in OptionsCSV string
+									int iOptCSVIdx = sOptsCSV.indexOf("ProxyServerAddress");
+									if (iOptCSVIdx >= 0)
+									{	int iCom1Idx = sOptsCSV.indexOf(",", iOptCSVIdx+1);
+										if (iCom1Idx)
+										{	int iCom2Idx = sOptsCSV.indexOf(",", iCom1Idx+1);
+											if (iCom1Idx < (iCom2Idx-1))
+												sOptsCSV = sOptsCSV.left( iCom1Idx+1 ) + "<PrxySrvrAdd>" + sOptsCSV.right( sOptsCSV.length()-iCom2Idx );
+									}	}
+									iOptCSVIdx = sOptsCSV.indexOf("ProxyServerCredentials");
+									if (iOptCSVIdx >= 0)
+									{	int iCom1Idx = sOptsCSV.indexOf(",", iOptCSVIdx+1);
+										if (iCom1Idx)
+										{	int iCom2Idx = sOptsCSV.indexOf(",", iCom1Idx+1);
+											if (iCom1Idx < (iCom2Idx-1))
+												sOptsCSV = sOptsCSV.left( iCom1Idx+1 ) + "<PrxySrvrCred>" + sOptsCSV.right( sOptsCSV.length()-iCom2Idx );
+									}	}
 									for (int iArg=0; iArg<17; iArg++)
 									{	switch (iArg)
 										{	case  0 :	sLogMsg.sprintf( "       BEMBasePathFile    = %s", (pszBEMBasePathFile == NULL ? "(null)" : (strlen( pszBEMBasePathFile ) < 1 ? "(empty)" : pszBEMBasePathFile)) );	  break;
@@ -2282,7 +2300,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											case  7 :	sLogMsg.sprintf( "       LogPathFile        = %s", (pszLogPathFile     == NULL ? "(null)" : (strlen( pszLogPathFile     ) < 1 ? "(empty)" : pszLogPathFile    )) );     break;
 											case  8 :	sLogMsg.sprintf( "       UIVersionString    = %s", (pszUIVersionString == NULL ? "(null)" : (strlen( pszUIVersionString ) < 1 ? "(empty)" : pszUIVersionString)) );     break;
 											case  9 :	sLogMsg.sprintf( "       LoadModelFile      = %s", (bLoadModelFile   ? "true" : "false") );		break;
-											case 10 :	sLogMsg.sprintf( "       OptionsCSV         = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : pszOptionsCSV     )) );     break;
+											case 10 :	sLogMsg.sprintf( "       OptionsCSV         = %s", (pszOptionsCSV      == NULL ? "(null)" : (strlen( pszOptionsCSV      ) < 1 ? "(empty)" : sOptsCSV.toLocal8Bit().constData() )) );     break;
 											case 11 :	sLogMsg.sprintf( "       ErrorMsg           = %s", (pszErrorMsg        == NULL ? "(null)" : (iErrorMsgLen > 0 ? "(assumed to be initialized)" : "(unused)"    )) );     break;
 											case 12 :	sLogMsg.sprintf( "       ErrorMsgLen        = %d", iErrorMsgLen );										break;
 											case 13 :	sLogMsg.sprintf( "       DisplayProgress    = %s", (bDisplayProgress ? "true" : "false") );     break;
@@ -3300,7 +3318,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 			else if (bOrigSendRptSignature)
 			{
-		#define  NumRptSecOff  14
+				long lDisableMandUFacChecks;
+				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandUFacChecks", iCID_Proj ), lDisableMandUFacChecks ))		// SAC 2/7/17 - new cause for disabling report security
+					lDisableMandUFacChecks = 0;
+		#define  NumRptSecOff  15
 				int iRptSecOffIdx[NumRptSecOff];
 				bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 												(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -3315,7 +3336,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												(!sDevOptsNotDefaultedAbbrev.isEmpty()),	// developer options being activated (as described in previous log message)";
 												(!sExcptDsgnModelFile.isEmpty()),			// user specification of alternative proposed simulation IDF file";
 												(!sCSEIncludeFileDBID.isEmpty()),			// user specification of CSE include file(s): %s", sCSEIncludeFileDBID );
-												(lNumSpaceWithDefaultedDwellingUnitArea > 0)  };	// # dwelling unit areas have not been entered by the user
+												(lNumSpaceWithDefaultedDwellingUnitArea > 0),  	// # dwelling unit areas have not been entered by the user
+												(lDisableMandUFacChecks > 0)  };			// mandatory U-factor checks disabled by the user - SAC 2/7/17
 				for (iRF=0; iRF < NumRptSecOff; iRF++)
 				{	if (bRptSecOff[iRF])
 						iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -3336,27 +3358,30 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							switch (iRF)
 							{	case  0 :	sLogMsg.sprintf( "      %d file hash check(s) failed on executable and/or analysis support files (see log file for details)", iNumFileHashErrs );		break;
 								case  1 :	sLogMsg.sprintf( "      inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );		break;
-								case  2 :	sLogMsg =       "      input checks being bypassed";		break;
-								case  3 :	sLogMsg =       "      unmet load hour checks being bypassed";		break;
-								case  4 :	sLogMsg =       "      simulation check rules being bypassed";		break;
-								case  5 :	sLogMsg =       "      energy code checking rules being bypassed";		break;
-								case  6 :	sLogMsg =       "      the override of equipment auto-sizing in one or more simulations";		break;
-								case  7 :	sLogMsg =       "      the QuickAnalysis option being activated";		break;
-								case  8 :	sLogMsg =       "      file read errors being ignored";		break;
-								case  9 :	sLogMsg =       "      file validity (hash) checks being bypassed";		break;
+								case  2 :	sLogMsg =        "      input checks being bypassed";		break;
+								case  3 :	sLogMsg =        "      unmet load hour checks being bypassed";		break;
+								case  4 :	sLogMsg =        "      simulation check rules being bypassed";		break;
+								case  5 :	sLogMsg =        "      energy code checking rules being bypassed";		break;
+								case  6 :	sLogMsg =        "      the override of equipment auto-sizing in one or more simulations";		break;
+								case  7 :	sLogMsg =        "      the QuickAnalysis option being activated";		break;
+								case  8 :	sLogMsg =        "      file read errors being ignored";		break;
+								case  9 :	sLogMsg =        "      file validity (hash) checks being bypassed";		break;
 								case 10 :	sLogMsg.sprintf( "      developer options being activated: %s (see log file for details)", sDevOptsNotDefaultedAbbrev.toLocal8Bit().constData() );		break;
 //	QString sDevOptsNotDefaulted;
 //	QString saDevOptsObjProps[] = {	"Proj:DisableDayltgCtrls", "Proj:DefaultDayltgCtrls", "Proj:AutoHardSize", "Proj:AutoEffInput", " " };		// SAC 8/12/14 - updated w/ latest dayltg flags
 //	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
-								case 11 :	sLogMsg =       "      user specification of alternative proposed simulation IDF file";		break;
+								case 11 :	sLogMsg =        "      user specification of alternative proposed simulation IDF file";		break;
 								case 12 :	sLogMsg.sprintf( "      user specification of CSE include file(s): %s", sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
 								case 13 :	sLogMsg.sprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
 						//		case 13 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 //	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
+								case 14 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
 								default :	sLogMsg.clear();		break;
 							}
 							if (!sLogMsg.isEmpty())
-							{	if (iRF > 0)	// hash check failures already reported to log above
+							{	if (iRF == 0)	// hash check failures already reported to log above
+									BEMPX_WriteLogFile( "      file hash check(s) failures listed above", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								else
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								sLogMsg = sLogMsg.trimmed();		// was: TrimLeft();
 								if (iNumRptSecOffTRUE == 1)
@@ -4195,10 +4220,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										if (sHrlyResExportPathFile.lastIndexOf('.') > 0)
 											sHrlyResExportPathFile = sHrlyResExportPathFile.left( sHrlyResExportPathFile.lastIndexOf('.') );
 										sHrlyResExportPathFile += " - HourlyResults.csv";
+										char pszHrlyResErrMsgBuffer[512];  pszHrlyResErrMsgBuffer[0]=0;
 										int iHrlyResExportRetVal = CMX_ExportCSVHourlyResults_Com( sHrlyResExportPathFile.toLocal8Bit().constData(), sModelPathFile.toLocal8Bit().constData(), 
-																									osRunInfo[iSimRun].LongRunID().toLocal8Bit().constData(), iCodeType, NULL, 0, bSilent,
+																									osRunInfo[iSimRun].LongRunID().toLocal8Bit().constData(), iCodeType, pszHrlyResErrMsgBuffer, 512, bSilent,
 																									osRunInfo[iSimRun].BEMProcIdx(), pszEPlusVerStr, pszOpenStudioVerStr );				assert( iHrlyResExportRetVal == 0 );
-													if (bVerbose)
+													if (iHrlyResExportRetVal != 0)
+													{	sLogMsg.sprintf( "  PerfAnal_NRes - hourly results CSV export Failed for run %s -> return code %d: %s  (exporting to file:  %s)",
+																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), iHrlyResExportRetVal, pszHrlyResErrMsgBuffer,
+																				sHrlyResExportPathFile.toLocal8Bit().constData() );
+														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+													}
+													else if (bVerbose)
 													{	sLogMsg.sprintf( "  PerfAnal_NRes - hourly results CSV export for run %s %s (return code %d):  %s",
 																				osRunInfo[iSimRun].RunID().toLocal8Bit().constData(), (iHrlyResExportRetVal==0 ? "successful" : "failed"), 
 																				iHrlyResExportRetVal, sHrlyResExportPathFile.toLocal8Bit().constData() );
@@ -4866,7 +4898,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			sRuleVer = "???";
 		}
 
-		double fEnergyResults[2][5][12];		// Prop/Std -- Elec/NGas/Othr/TDV/ElecKW -- SpcHtg/SpcClg...ProcLtg/TOTAL		- SAC 10/10/16 - added elec demand
+		double fEnergyResults[2][5][13];		// Prop/Std -- Elec/NGas/Othr/TDV/ElecKW -- SpcHtg/SpcClg...ProcLtg/ProcMtrs/TOTAL		- SAC 10/10/16 - added elec demand  - SAC 2/7/17 - added ProcMtrs
 		double fEnergyCosts[2][4] = { {0,0,0,0}, {0,0,0,0} };	// Prop/Std -- Elec/NGas/Othr/TOTAL
 		long lDBID_Res[2][5]		= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropElecDemand" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardTDV" ), BEMPX_GetDatabaseID( "EnergyUse:StdElecDemand"  ) } };
@@ -4875,7 +4907,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		int iNumBadResults=0, iNumResAttempts=0,  iNumBadEDResults=0, iNumEDResAttempts=0;
 		for (int iRR=0; iRR<2; iRR++)
 			for (int iRF=0; iRF<5; iRF++)
-			{	int iMaxREU = (iRF==3 ? 7 : 11);
+			{	int iMaxREU = (iRF==3 ? 7 : 12);
 				for (int iREU=0; iREU<=iMaxREU; iREU++)
 				{	if (iCodeType == CT_T24N || iRF != 3)	// SAC 10/7/14 - store TDV results only for T24 runs
 					{	if (iRF==4)	// elec demand
@@ -4962,16 +4994,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		QString sElecDemandResults;
 		if (bHaveElecDemandResults && iCodeType == CT_T24N)	// SAC 10/11/16
-		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
 				// Proposed model electric demand
 						fEnergyResults[0][4][ 0], fEnergyResults[0][4][ 1], fEnergyResults[0][4][ 2], fEnergyResults[0][4][ 3], fEnergyResults[0][4][ 4], fEnergyResults[0][4][ 5],
-						fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7], fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11],
+						fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7], fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11], fEnergyResults[0][4][12],
 				// Standard model electric demand
 						fEnergyResults[1][4][ 0], fEnergyResults[1][4][ 1], fEnergyResults[1][4][ 2], fEnergyResults[1][4][ 3], fEnergyResults[1][4][ 4], fEnergyResults[1][4][ 5],
-						fEnergyResults[1][4][ 6], fEnergyResults[1][4][ 7], fEnergyResults[1][4][ 8], fEnergyResults[1][4][ 9], fEnergyResults[1][4][10], fEnergyResults[1][4][11]  );
+						fEnergyResults[1][4][ 6], fEnergyResults[1][4][ 7], fEnergyResults[1][4][ 8], fEnergyResults[1][4][ 9], fEnergyResults[1][4][10], fEnergyResults[1][4][11], fEnergyResults[1][4][12]  );
 		}
 		else
-			sElecDemandResults = ",,,,,,,,,,,,,,,,,,,,,,,,";
+			sElecDemandResults = ",,,,,,,,,,,,,,,,,,,,,,,,,,";
 
 // SAC 5/5/15 - ResultSummary Logging
 	sLogMsg.sprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
@@ -4987,9 +5019,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (iCodeType == CT_T24N)		// SAC 10/7/14 - export of TDV results needed only for T24 analysis
 			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",\"%s\",%d:%.2d,%s,%s,"
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                               // prop
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                      // prop
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                               // std
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                      // std
 							"%s"                                                                                               // prop & std kW
 							"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\n",
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(),
@@ -4997,21 +5029,21 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				// Proposed model
 						"--", "--", sPropSimSummary.toLocal8Bit().constData(),
 						fEnergyResults[0][0][ 0], fEnergyResults[0][0][ 1], fEnergyResults[0][0][ 2], fEnergyResults[0][0][ 3], fEnergyResults[0][0][ 4], fEnergyResults[0][0][ 5],
-						fEnergyResults[0][0][ 6], fEnergyResults[0][0][ 7], fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11],
+						fEnergyResults[0][0][ 6], fEnergyResults[0][0][ 7], fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12],
 						fEnergyResults[0][1][ 0], fEnergyResults[0][1][ 1], fEnergyResults[0][1][ 2], fEnergyResults[0][1][ 3], fEnergyResults[0][1][ 4], fEnergyResults[0][1][ 5],
-						fEnergyResults[0][1][ 6], fEnergyResults[0][1][ 7], fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11],
+						fEnergyResults[0][1][ 6], fEnergyResults[0][1][ 7], fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][12],
 						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],
-						fEnergyResults[0][2][ 6], fEnergyResults[0][2][ 7], fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11],
+						fEnergyResults[0][2][ 6], fEnergyResults[0][2][ 7], fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][12],
 						fEnergyResults[0][3][ 0], fEnergyResults[0][3][ 1], fEnergyResults[0][3][ 2], fEnergyResults[0][3][ 3], fEnergyResults[0][3][ 4], fEnergyResults[0][3][ 5], fEnergyResults[0][3][ 6], fEnergyResults[0][3][ 7],
 						sPropClgUMLHData.toLocal8Bit().constData(), sPropHtgUMLHData.toLocal8Bit().constData(),			// UMLHs
 				// Standard model
 						"--", "--", sStdSimSummary.toLocal8Bit().constData(),
 						fEnergyResults[1][0][ 0], fEnergyResults[1][0][ 1], fEnergyResults[1][0][ 2], fEnergyResults[1][0][ 3], fEnergyResults[1][0][ 4], fEnergyResults[1][0][ 5],
-						fEnergyResults[1][0][ 6], fEnergyResults[1][0][ 7], fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11],
+						fEnergyResults[1][0][ 6], fEnergyResults[1][0][ 7], fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12],
 						fEnergyResults[1][1][ 0], fEnergyResults[1][1][ 1], fEnergyResults[1][1][ 2], fEnergyResults[1][1][ 3], fEnergyResults[1][1][ 4], fEnergyResults[1][1][ 5],
-						fEnergyResults[1][1][ 6], fEnergyResults[1][1][ 7], fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11],
+						fEnergyResults[1][1][ 6], fEnergyResults[1][1][ 7], fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][12],
 						fEnergyResults[1][2][ 0], fEnergyResults[1][2][ 1], fEnergyResults[1][2][ 2], fEnergyResults[1][2][ 3], fEnergyResults[1][2][ 4], fEnergyResults[1][2][ 5],
-						fEnergyResults[1][2][ 6], fEnergyResults[1][2][ 7], fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11],
+						fEnergyResults[1][2][ 6], fEnergyResults[1][2][ 7], fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][12],
 						fEnergyResults[1][3][ 0], fEnergyResults[1][3][ 1], fEnergyResults[1][3][ 2], fEnergyResults[1][3][ 3], fEnergyResults[1][3][ 4], fEnergyResults[1][3][ 5], fEnergyResults[1][3][ 6], fEnergyResults[1][3][ 7],
 						sStdClgUMLHData.toLocal8Bit().constData(), sStdHtgUMLHData.toLocal8Bit().constData(),				// UMLHs
 				// Proposed & Standard model electric demand
@@ -5024,29 +5056,29 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14 - export of Energy Cost results needed only for 90.1 analysis
 			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",\"%s\",%d:%.2d,%s,%s,"
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                          // prop
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                 // prop
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                          // std
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                 // std
 							"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\n",
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(), 
 						sAnalType.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)), sResTemp1.toLocal8Bit().constData() /*PassFail*/, sResTemp2.toLocal8Bit().constData() /*CompMargin*/,
 				// Proposed model
 						"--", "--", sPropSimSummary.toLocal8Bit().constData(),  fEnergyCosts[0][0], fEnergyCosts[0][1], fEnergyCosts[0][2], fEnergyCosts[0][3],
 						fEnergyResults[0][0][ 0], fEnergyResults[0][0][ 1], fEnergyResults[0][0][ 2], fEnergyResults[0][0][ 3], fEnergyResults[0][0][ 4], fEnergyResults[0][0][ 5],
-						fEnergyResults[0][0][ 6],                           fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11],
-						fEnergyResults[0][1][ 0], fEnergyResults[0][1][ 1], fEnergyResults[0][1][ 2], fEnergyResults[0][1][ 3], fEnergyResults[0][1][ 4], fEnergyResults[0][1][ 5],
-						fEnergyResults[0][1][ 6],                           fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11],
-						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],
-						fEnergyResults[0][2][ 6],                           fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11],
+						fEnergyResults[0][0][ 6],                           fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12],
+						fEnergyResults[0][1][ 0], fEnergyResults[0][1][ 1], fEnergyResults[0][1][ 2], fEnergyResults[0][1][ 3], fEnergyResults[0][1][ 4], fEnergyResults[0][1][ 5],                          
+						fEnergyResults[0][1][ 6],                           fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][12],
+						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],                          
+						fEnergyResults[0][2][ 6],                           fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][12],
 						sPropClgUMLHData.toLocal8Bit().constData(), sPropHtgUMLHData.toLocal8Bit().constData(),			// UMLHs
 				// Standard model
 						"--", "--", sStdSimSummary.toLocal8Bit().constData(),  fEnergyCosts[1][0], fEnergyCosts[1][1], fEnergyCosts[1][2], fEnergyCosts[1][3],
 						fEnergyResults[1][0][ 0], fEnergyResults[1][0][ 1], fEnergyResults[1][0][ 2], fEnergyResults[1][0][ 3], fEnergyResults[1][0][ 4], fEnergyResults[1][0][ 5],
-						fEnergyResults[1][0][ 6],                           fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11],
-						fEnergyResults[1][1][ 0], fEnergyResults[1][1][ 1], fEnergyResults[1][1][ 2], fEnergyResults[1][1][ 3], fEnergyResults[1][1][ 4], fEnergyResults[1][1][ 5],
-						fEnergyResults[1][1][ 6],                           fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11],
-						fEnergyResults[1][2][ 0], fEnergyResults[1][2][ 1], fEnergyResults[1][2][ 2], fEnergyResults[1][2][ 3], fEnergyResults[1][2][ 4], fEnergyResults[1][2][ 5],
-						fEnergyResults[1][2][ 6],                           fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11],
+						fEnergyResults[1][0][ 6],                           fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12],
+						fEnergyResults[1][1][ 0], fEnergyResults[1][1][ 1], fEnergyResults[1][1][ 2], fEnergyResults[1][1][ 3], fEnergyResults[1][1][ 4], fEnergyResults[1][1][ 5],                          
+						fEnergyResults[1][1][ 6],                           fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][12],
+						fEnergyResults[1][2][ 0], fEnergyResults[1][2][ 1], fEnergyResults[1][2][ 2], fEnergyResults[1][2][ 3], fEnergyResults[1][2][ 4], fEnergyResults[1][2][ 5],                          
+						fEnergyResults[1][2][ 6],                           fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][12],
 						sStdClgUMLHData.toLocal8Bit().constData(), sStdHtgUMLHData.toLocal8Bit().constData(),				// UMLHs
 				// final version labels & paths
 						//sAppVer, sCmpMgrVer, sRuleVer, sOSVer, sEPlusVer, "-", sAnnWthrFile, pszModelPathFile );
@@ -5937,7 +5969,7 @@ int CMX_ExportCSVHourlyResults_CECNonRes( const char* pszHourlyResultsPathFile, 
 //											 2 : Unable to open and/or write hourly CSV results file
 //											 3 : Error encountered opening hourly CSV results file
 //											 4 : Unknown error writing hourly CSV results file
-//											 5 : 
+//											 5 : Unexpected enduse count or index
 //											 6 : 
 int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, int iCodeType /*=0*/, char* pszErrMsgBuffer /*=NULL*/,
 														int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/, const char* pszEPlusVerStr /*=NULL*/,
@@ -5954,6 +5986,10 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) )
 	{	iRetVal = 1;
 		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea";
+	}
+	else if (NUM_T24_NRES_EndUses != 13 || IDX_T24_NRES_EU_Total != 12)	// SAC 2/1/17 - added error check to prevent bomb below
+	{	iRetVal = 5;
+		sErrMsg = QString("Unexpected enduse count (%1) or total index (%2) (expecting 13 and 12 respectively)").arg(QString::number(NUM_T24_NRES_EndUses), QString::number(IDX_T24_NRES_EU_Total));
 	}
 	else
 	{	bExpectStdDesResults = (sAnalysisType.indexOf( "Compl" ) >= 0);
@@ -6026,17 +6062,33 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				fprintf( fp_CSV,    "Model File:,,,\"%s\"\n", pszModelPathFile );
 				fprintf( fp_CSV, "\n" );
 
-	// ASSUMES:  NUM_T24_NRES_EndUses = 12  -AND-  IDX_T24_NRES_EU_CompTot = 7  -AND-  IDX_T24_NRES_EU_Total = 11
-		int iEUO[] = { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 7, 11 };
+	// ASSUMES:  NUM_T24_NRES_EndUses = 13  -AND-  IDX_T24_NRES_EU_CompTot = 7  -AND-  IDX_T24_NRES_EU_Total = 12
+		int iEUO[] = { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 7, 12 };		// SAC 2/1/17 - updated to include Process Motors
 		int iNumEUs = NUM_T24_NRES_EndUses;
 		if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
 		{	iNumEUs = NUM_T24_NRES_EndUses-1;
-			iEUO[10] = 11;		iEUO[11] = 0;		// bypass reporting of CompTotal enduse
+			iEUO[NUM_T24_NRES_EndUses-2] = IDX_T24_NRES_EU_Total;		iEUO[NUM_T24_NRES_EndUses-1] = 0;		// bypass reporting of CompTotal enduse
 		}
 
 				if (iCodeType == CT_T24N)		// SAC 10/7/14
-				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,TDV Multipliers,\n" );		// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
-   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel\n",
+				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,TDV Multipliers,\n" );		// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
+   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel\n",
+												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev );
+	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"		// SAC 10/28/15 - 'therms' -> 'kBtu'
+														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' and 'kTDV/thrm' -> 'kTDV/MBtu'
+				}
+				else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
+				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Other Fuel Use,\n" );
+   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
 												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
 												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev,
@@ -6047,24 +6099,8 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
 												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev );
 	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
-														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"		// SAC 10/28/15 - 'therms' -> 'kBtu'
-														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' and 'kTDV/thrm' -> 'kTDV/MBtu'
-				}
-				else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
-				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,Site Other Fuel Use,\n" );
-   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev );
-	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
-														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
-														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' for Other Fuel use
+														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
+														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' for Other Fuel use
 				}
 
 			// SETUP hourly results arrays for export...
@@ -6073,19 +6109,46 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				//double daMtrTotals[HrlyExport_CECNonRes_NumMeters][8760];
 				for (; iYrHr<8760; iYrHr++)
 					daZero[iYrHr] = 0.0;
+
 				double* daMtrEUData[NUM_T24_NRES_Fuels][NUM_T24_NRES_EndUses];
+				double  daMtrCTotData[NUM_T24_NRES_Fuels][8760], daMtrTotData[NUM_T24_NRES_Fuels][8760];
 				int iMtr=0, iEU;
 				for (; iMtr < NUM_T24_NRES_Fuels; iMtr++)
 				{	//	for (iYrHr=0; iYrHr<8760; iYrHr++)
 					//		daMtrTotals[iMtr][iYrHr] = 0.0;
+					int iEUCmpTot=-1, iEUTot=-1;	// SAC 2/1/17
 					for (iEU=0; iEU < iNumEUs; iEU++)
 					{	if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
 	 																esEUMap_CECNonRes[iEUO[iEU]].sEnduseName, iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU] != NULL)
 						{	// OK - do nothing
 						}
 						else
-							daMtrEUData[iMtr][iEU] = &daZero[0];   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
-				}	}
+						{	if (iEUO[iEU] == IDX_T24_NRES_EU_CompTot)		// SAC 2/1/17 - used to sum CompTot & Tot results, as they are NOT represented in the meter results retrieved above
+							{	iEUCmpTot = iEU;
+								daMtrEUData[iMtr][iEU] = &daMtrCTotData[iMtr][0];
+								for (iYrHr=0; iYrHr<8760; iYrHr++)
+									daMtrCTotData[iMtr][iYrHr] = 0.0;
+							}
+							else if (iEUO[iEU] == IDX_T24_NRES_EU_Total)
+							{	iEUTot = iEU;
+								daMtrEUData[iMtr][iEU] = &daMtrTotData[iMtr][0];
+								for (iYrHr=0; iYrHr<8760; iYrHr++)
+									daMtrTotData[iMtr][iYrHr] = 0.0;
+							}
+							else
+								daMtrEUData[iMtr][iEU] = &daZero[0];   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
+					}	}
+
+					// sum indiviudal enduse results into the CompTot & Tot enduses - SAC 2/1/17
+					for (iEU=0; iEU < iNumEUs; iEU++)
+						if (iEU != iEUCmpTot && iEU != iEUTot)
+						{	for (iYrHr=0; iYrHr<8760; iYrHr++)
+								daMtrEUData[iMtr][iEUTot][iYrHr] += daMtrEUData[iMtr][iEU][iYrHr];
+							if (esEUMap_CECNonRes[iEUO[iEU]].iSumIntoCompliance)
+							{	for (iYrHr=0; iYrHr<8760; iYrHr++)
+									daMtrEUData[iMtr][iEUCmpTot][iYrHr] += daMtrEUData[iMtr][iEU][iYrHr];
+						}	}
+				}
 
 				double dFUMlt = 100.0;		// SAC 10/28/15 - therms -> kBtu
 				double dFTMlt =  10.0;		// SAC 10/28/15 - kTDV/therm -> kTDV/MBtu
@@ -6117,13 +6180,13 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 							{	iYrHr++;
 				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
 						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr], daMtrEUData[0][ 5][iYrHr],
-						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr], daMtrEUData[0][11][iYrHr],
+						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr], daMtrEUData[0][11][iYrHr], daMtrEUData[0][12][iYrHr],
 						daMtrEUData[1][ 0][iYrHr]*dFUMlt, daMtrEUData[1][ 1][iYrHr]*dFUMlt, daMtrEUData[1][ 2][iYrHr]*dFUMlt, daMtrEUData[1][ 3][iYrHr]*dFUMlt, daMtrEUData[1][ 4][iYrHr]*dFUMlt, daMtrEUData[1][ 5][iYrHr]*dFUMlt,
-						daMtrEUData[1][ 6][iYrHr]*dFUMlt, daMtrEUData[1][ 7][iYrHr]*dFUMlt, daMtrEUData[1][ 8][iYrHr]*dFUMlt, daMtrEUData[1][ 9][iYrHr]*dFUMlt, daMtrEUData[1][10][iYrHr]*dFUMlt, daMtrEUData[1][11][iYrHr]*dFUMlt,
+						daMtrEUData[1][ 6][iYrHr]*dFUMlt, daMtrEUData[1][ 7][iYrHr]*dFUMlt, daMtrEUData[1][ 8][iYrHr]*dFUMlt, daMtrEUData[1][ 9][iYrHr]*dFUMlt, daMtrEUData[1][10][iYrHr]*dFUMlt, daMtrEUData[1][11][iYrHr]*dFUMlt, daMtrEUData[1][12][iYrHr]*dFUMlt,
 						daMtrEUData[2][ 0][iYrHr]*dFUMlt, daMtrEUData[2][ 1][iYrHr]*dFUMlt, daMtrEUData[2][ 2][iYrHr]*dFUMlt, daMtrEUData[2][ 3][iYrHr]*dFUMlt, daMtrEUData[2][ 4][iYrHr]*dFUMlt, daMtrEUData[2][ 5][iYrHr]*dFUMlt,
-						daMtrEUData[2][ 6][iYrHr]*dFUMlt, daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt, daMtrEUData[2][11][iYrHr]*dFUMlt,
+						daMtrEUData[2][ 6][iYrHr]*dFUMlt, daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt, daMtrEUData[2][11][iYrHr]*dFUMlt, daMtrEUData[2][12][iYrHr]*dFUMlt,
 						daTDVData[0][iYrHr], daTDVData[1][iYrHr]*dFTMlt, daTDVData[2][iYrHr]*dFTMlt );
 							}
 				}
@@ -6138,13 +6201,13 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 							{	iYrHr++;
 				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
-																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
 						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr], daMtrEUData[0][ 5][iYrHr],
-						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr],
+						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr], daMtrEUData[0][11][iYrHr],
 						daMtrEUData[1][ 0][iYrHr], daMtrEUData[1][ 1][iYrHr], daMtrEUData[1][ 2][iYrHr], daMtrEUData[1][ 3][iYrHr], daMtrEUData[1][ 4][iYrHr], daMtrEUData[1][ 5][iYrHr],
-						daMtrEUData[1][ 6][iYrHr], daMtrEUData[1][ 7][iYrHr], daMtrEUData[1][ 8][iYrHr], daMtrEUData[1][ 9][iYrHr], daMtrEUData[1][10][iYrHr],
+						daMtrEUData[1][ 6][iYrHr], daMtrEUData[1][ 7][iYrHr], daMtrEUData[1][ 8][iYrHr], daMtrEUData[1][ 9][iYrHr], daMtrEUData[1][10][iYrHr], daMtrEUData[1][11][iYrHr],
 						daMtrEUData[2][ 0][iYrHr]*dFUMlt, daMtrEUData[2][ 1][iYrHr]*dFUMlt, daMtrEUData[2][ 2][iYrHr]*dFUMlt, daMtrEUData[2][ 3][iYrHr]*dFUMlt, daMtrEUData[2][ 4][iYrHr]*dFUMlt, daMtrEUData[2][ 5][iYrHr]*dFUMlt,
-						daMtrEUData[2][ 6][iYrHr]*dFUMlt, daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt );
+						daMtrEUData[2][ 6][iYrHr]*dFUMlt, daMtrEUData[2][ 7][iYrHr]*dFUMlt, daMtrEUData[2][ 8][iYrHr]*dFUMlt, daMtrEUData[2][ 9][iYrHr]*dFUMlt, daMtrEUData[2][10][iYrHr]*dFUMlt, daMtrEUData[2][11][iYrHr]*dFUMlt );
 							}
 				}
 
@@ -6176,42 +6239,43 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 //static const char* /*1745*/ pszNonResResultsHdr3 = "Start Date & Time,Filename ...
 
 // SAC 10/10/16 - updated T24N CSV summary results header strings to include prop & std model electric demand
-static char szT24NCSV1[]	 =	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,Proposed "
-										"Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,Standard Model,"
-										",,,,,Proposed Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szT24NCSV2[]	 =	",,,,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane Energy"
-										" Consumption (MBtu),,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electr"
-										"ic Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,Time Depe"
-										"ndent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,Genera"
-										"tion Coincident Peak Demand (kW),,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+// SAC 2/7/17 - added Proc Mtrs enduse (tic #2033)
+static char szT24NCSV1[]	 =	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,Proposed "
+										"Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,Standard Model,"
+										",,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Calling,Compliance,,,,Secondary,,\n";
+static char szT24NCSV2[]	 =	",,,,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,,Propane Energy"
+										" Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electr"
+										"ic Energy Consumption (kWh),,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Depe"
+										"ndent Valuation (kTDV/ft2),,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,Genera"
+										"tion Coincident Peak Demand (kW),,,,,,,,,,,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
 static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,S"
-										"pc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc H"
-										"eating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heati"
-										"ng,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,S"
+										"pc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc H"
+										"eating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heati"
+										"ng,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,S"
 										"pc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zon"
 										"e Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Wate"
-										"r,Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Li"
-										"ghting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighti"
-										"ng,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,C"
+										"r,Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Li"
+										"ghting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighti"
+										"ng,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,C"
 										"omp Total,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & "
-										"Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc"
-										",Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,TOTAL,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
+										"Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc"
+										",Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
 
-static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,Proposed Model,,,,,,,,,,,Proposed Model,,,,,,,,,,,Proposed"
-										" Model,,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,Standard Model,,,,,,,,,,,Standard Model,,,,,,,,,,,Standard Mode"
+static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed"
+										" Model,,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Mode"
 										"l,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,Natural Gas Energy Consumption (therms"
-										"),,,,,,,,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs"		// SAC 10/28/15 - 'MMBtu' -> 'MBtu'
-										" ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,Other Fuel Energy Consumption (MMB"
-										"tu),,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms"
+										"),,,,,,,,,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs"		// SAC 10/28/15 - 'MMBtu' -> 'MBtu'
+										" ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMB"
+										"tu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
 static char szS901GCSV3[]	=	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation "
 										"Status,Electricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptac"
-										"le,Process,Other Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other "
-										"Ltg,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,TOTAL,Zone Max,"
+										"le,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other "
+										"Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Zone Max,"
 										"Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Electricity,Natural Gas,O"
-										"ther Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,TOTAL,Spc"
-										" Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,TOTAL,Spc Heating,Spc Coolin"
-										"g,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Z"
+										"ther Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc"
+										" Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Coolin"
+										"g,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Z"
 										"one Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
 
 int CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )	// SAC 5/16/14

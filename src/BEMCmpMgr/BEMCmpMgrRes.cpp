@@ -506,6 +506,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
 	bool bDHWCalcMethodUserSpecified = false;
 	int iRulesetCodeYear = 0;
+	QString sResTemp1, sResTemp2, sResTemp3;	// SAC 2/7/17
+	bool bHaveResult = false, bResultIsPass = false;
 	if (ResRetVal_ContinueProcessing( iRetVal ))
 	{
 	//
@@ -1547,6 +1549,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			xmlResultsFile.Close();
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
+		// SAC 2/7/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature (tic #803)
+		bHaveResult = (	iRetVal != BEMAnal_CECRes_RuleProcAbort && ResRetVal_ContinueProcessing( iRetVal ) &&
+								!sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName.toLocal8Bit().constData() ) &&
+								bFullComplianceAnalysis && bPerformSimulations && !bBypassCSE && !bBypassDHW &&
+								BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"        ), sResTemp1, TRUE, 0, -1, 0 )  &&
+								BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse11[8]"     ), sResTemp2, TRUE, 0, -1, 0 )  &&
+								BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ), sResTemp3, TRUE, 0, -1, 0 ) );
+		bResultIsPass = (bHaveResult && (sResTemp1.indexOf("PASS") >= 0 || sResTemp1.indexOf("Pass") >= 0 || sResTemp1.indexOf("pass") >= 0));
+
 	// ----------
 	// COMPLIANCE REPORT GENERATION   - SAC 8/14/13
 		bAnalysisPriorToRptGenOK = (ResRetVal_ContinueProcessing( iRetVal ));
@@ -1663,6 +1674,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 									default  :	sNoSignMsg = QString( "Compliance report will be generated without security measures due to error encountered during analysis (%1 >= BEMAnal_CECRes_MinErrorWithResults)" ).arg( QString::number(iRetVal) );		break;
 								}
 							}
+							// SAC 2/7/17 - prevent report signature if compliance result NOT PASS (tic #803)
+							else if (!bHaveResult)
+								sNoSignMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
+							else if (!bResultIsPass)
+								sNoSignMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
 
 							if (!sNoSignMsg.isEmpty())
 							{	bSendRptSignature = false;
@@ -1838,16 +1854,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	sbAllowCallbackAbort = bStoreAllowCallbackAbort;	// SAC 4/5/15
 
 // SAC 1/12/15 - added code to setup FINAL result log message (including analysis duration stats)
-	QString sAnalResLogMsg, sAnalTimeStats, sResTemp1, sResTemp2, sResTemp3, sResTemp4;
+	QString sAnalResLogMsg, sAnalTimeStats, sResTemp4;
 	if (iRetVal == BEMAnal_CECRes_RuleProcAbort)
 		sAnalResLogMsg = "Analysis aborted";
 	else if (!bAnalysisPriorToRptGenOK /*iRetVal != 0*/ || sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ))	// added logic to prevent "errant" report if only error occurred during/after report generation
 		sAnalResLogMsg = "Analysis errant";
 	else if (!bFullComplianceAnalysis || !bPerformSimulations || bBypassCSE || bBypassDHW)
 		sAnalResLogMsg = "Analysis incomplete";
-	else if (!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"        ), sResTemp1, TRUE, 0, -1, 0 )  ||
-				!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse11[8]"     ), sResTemp2, TRUE, 0, -1, 0 )  ||
-				!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PctSavCmpTDVLbl" ), sResTemp3, TRUE, 0, -1, 0 ))
+	else if (!bHaveResult)
 		sAnalResLogMsg = "Analysis result unknown";
 	else
 	{	sAnalResLogMsg = QString( "Analysis result:  %1  (TDV margin: %2 (%3%))" ).arg( sResTemp1, sResTemp2, sResTemp3 );

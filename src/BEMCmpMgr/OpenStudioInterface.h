@@ -46,9 +46,9 @@ typedef struct
 	double      daTDVTotal[3];
 	double      dElecDemand;		// SAC 10/8/16
 } EndUseMap;
-#define  NUM_T24_NRES_EndUses     12
+#define  NUM_T24_NRES_EndUses     13
 #define  IDX_T24_NRES_EU_CompTot   7
-#define  IDX_T24_NRES_EU_Total    11
+#define  IDX_T24_NRES_EU_Total    12
 extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 
 #define  NUM_T24_NRES_Fuels        3

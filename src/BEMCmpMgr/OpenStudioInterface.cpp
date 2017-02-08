@@ -124,6 +124,7 @@ EndUseMap esEUMap_CECNonRes[] =           // enduses...                         
 	{  "Receptacle"         ,  "Recept"    ,  OSEU_IntEquip_Recept,         -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
 	{  "Process"            ,  "Process"   ,  OSEU_IntEquip_Process,  OSEU_IntEquip_Refrig,  OSEU_Refrig,       OSEU_IntEquip_IntTrans,   -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 8/19/14 - added OSEU_IntEquip_IntTrans to capture elevator/escalator energy use
 	{  "Other Ltg"          ,  "Othr Ltg"  ,  OSEU_IntLights_NonComp,       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
+	{  "Process Motors"     ,  "Proc Mtrs" ,  OSEU_Fans_PrkgGar,            -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 2/1/17 - added Process Motors to capture parking garage exhaust fans (tic #2033)
 	{  "TOTAL"              ,  "TOTAL"     ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
 	{  NULL                 ,  NULL        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   }  };
                                                                                                 // FINAL enduse index must be '-1' for each record
@@ -1421,7 +1422,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 					BEMPX_SetBEMData( lDBID_Chlr_CapRtd, BEMP_Flt, &faResults[0], BEMO_User, iObj, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 				}
 			}
-	
+
 			long lDBID_HtRej_CapRtd = BEMPX_GetDatabaseID( "CapRtd", osRunInfo.ClassID( ROT_HtRej ) );							assert( lDBID_HtRej_CapRtd > 0 );
 			if (osRunInfo.NumObjects( ROT_HtRej ) > 0 && lDBID_HtRej_CapRtd > 0 && osRunInfo.PostEquipCapsToBEMBase())	// SAC 9/10/13 - only post equipment sizing results to BEMBase when specified
 			{	assert( osRunInfo.NumResultObjects( ROT_HtRej )==osRunInfo.NumObjects( ROT_HtRej ) );
@@ -1484,7 +1485,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 						sSimOutVarsFreq = " " + sSimOutVarsFreq;
 					else
 						sSimOutVarsFreq.clear();
-					sRVErviTo = "Si = QString(mOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
+					sRVErviTo = "SimOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
 					if (!sSimOutVarsFreq.isEmpty())
 						sRVErviTo += sSimOutVarsFreq.toLocal8Bit().constData();
 	            _chdir( sEPlusProcDir.c_str() );
@@ -1639,6 +1640,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				BEMPX_WriteLogFile( sFailMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 		}
+
 	return bRetVal;
 }
 
