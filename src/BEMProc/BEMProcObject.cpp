@@ -123,7 +123,7 @@ void BEMRunHourlyResultEnduse::init()
 }
 
 bool BEMRunHourlyResultEnduse::nameEqual( const char* pszChk )
-{	return (strcmp( m_enduseName, pszChk ) == 0);
+{	return (/*strcmp*/boost::iequals( m_enduseName, pszChk ) /*== 0*/);
 }
 
 
@@ -145,7 +145,7 @@ void BEMRunHourlyResultMeter::init()
 }
 
 bool BEMRunHourlyResultMeter::nameEqual( const char* pszChk )
-{	return (strcmp( m_meterName, pszChk ) == 0);
+{	return (/*strcmp*/boost::iequals( m_meterName, pszChk ) /*== 0*/);
 }
 
 BEMRunHourlyResultEnduse* BEMRunHourlyResultMeter::getHourlyResultEnduse( const char* pszEnduseName )
@@ -198,11 +198,11 @@ void BEMRun::init( const char* pszName /*=NULL*/, const char* pszAbbrev /*=NULL*
 }
 
 bool BEMRun::nameEqual( const char* pszChk )
-{	return (strcmp( m_runName, pszChk ) == 0);
+{	return (/*strcmp*/boost::iequals( m_runName, pszChk ) /*== 0*/);
 }
 
 bool BEMRun::abbrevEqual( const char* pszChk )
-{	return (strcmp( m_runAbbrev, pszChk ) == 0);
+{	return (/*strcmp*/boost::iequals( m_runAbbrev, pszChk ) /*== 0*/);
 }
 
 BEMRunHourlyResultMeter* BEMRun::getHourlyResultMeter( const char* pszMeterName )

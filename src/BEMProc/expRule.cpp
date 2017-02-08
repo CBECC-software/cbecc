@@ -5177,8 +5177,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = NULL;
 									BOOL bArgsOK = FALSE;
 									double dResult = -99999.0;
-                           if (nArgs < 7 || nArgs > 15)
-                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 7-15, all strings except #3 integer table column index & #8 NEM constant)" );
+                           if (nArgs < 8 || nArgs > 15)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 8-15, all strings except #3 integer table column index & #8 NEM constant)" );
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (arg > 1)  // don't delete last argument - used to store return value
@@ -5246,7 +5246,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 														else
 														{	int iHr;
 															if (WithinMargin( dResult, -99999.0, 0.1 ))
-															{	for (iHr=0; iHr<8760; iHr++)
+															{	dResult = 0.0;
+																for (iHr=0; iHr<8760; iHr++)
 																	dOthrHrlyRes[iHr] = 0.0;
 															}
 															double dTblVal, dHrlySum=0.0, dSell;
@@ -7070,7 +7071,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       long lMaxArrayDBID = 0;
       if ( (nArgs > 2 && bRevRefFunc && !bStoreArgsForProcessing) || (nArgs > 1 && bGetCount) )
       {
-         lMaxArrayDBID = plParams[nArgs-1];
+         lMaxArrayDBID = plParams[nArgs-1];  // SAC 1/27/17 - modified to be EITHER DBID or numeric constant (1-based max array index)
          nArgs--;
       }
 
@@ -7107,17 +7108,21 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
          int iArrLoopMax = iArrIdxLast;
          if (lMaxArrayDBID > 0)
          {
-      //      double fMaxArr;
-      //      if (BEMPX_SetDataFloat( lMaxArrayDBID, fMaxArr, 1000, -1, iObj, BEMO_User, i0Model )  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
-            double fMaxArr = BEMPX_GetFloatAndStatus( lMaxArrayDBID, iStatus, iSpecialVal, iError, iObj, BEMO_User, i0Model, true );
-				if (iStatus > 0  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
-               iArrLoopMax = (int) (fMaxArr+0.1) - 1;
-            else if ((fMaxArr-0.1) > (iArrLoopMax+1))	// SAC 9/13/13 - fixed bug where fMax which would cause iArrLoopMax to be unchanged was throwing error
-            {
-               ExpSetErr( error, EXP_RuleProc, "Unable to load array loop maximum index" );
-               bAbort = TRUE;
-               assert( FALSE );
-            }
+         	if (lMaxArrayDBID <= (iArrIdxLast+1))  // SAC 1/27/17 - enable second Count*Refs argument to be constant value representing max array element checked for references
+               iArrLoopMax = lMaxArrayDBID-1;
+         	else
+         	{
+	      //      double fMaxArr;
+	      //      if (BEMPX_SetDataFloat( lMaxArrayDBID, fMaxArr, 1000, -1, iObj, BEMO_User, i0Model )  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
+	            double fMaxArr = BEMPX_GetFloatAndStatus( lMaxArrayDBID, iStatus, iSpecialVal, iError, iObj, BEMO_User, i0Model, true );
+					if (iStatus > 0  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
+	               iArrLoopMax = (int) (fMaxArr+0.1) - 1;
+	            else if ((fMaxArr-0.1) > (iArrLoopMax+1))	// SAC 9/13/13 - fixed bug where fMax which would cause iArrLoopMax to be unchanged was throwing error
+	            {
+	               ExpSetErr( error, EXP_RuleProc, "Unable to load array loop maximum index" );
+	               bAbort = TRUE;
+	               assert( FALSE );
+            }	}
          }
 
 			// SAC 6/14/00 - added code to perform RevRef functions over entire array if both assignment and sum/min/max arguments are arrays of the same length
