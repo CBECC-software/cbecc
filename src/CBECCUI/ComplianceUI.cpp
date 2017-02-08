@@ -52,6 +52,8 @@
 
 #include "memRptHook.h"
 
+//#include <ShellScalingAPI.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -97,11 +99,14 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CComplianceUIApp construction
 
+//HRESULT WINAPI setDPIAwareRetVal;
+
 CComplianceUIApp::CComplianceUIApp() :
 	m_bPerformSimulations( TRUE), m_bPerformAnalsysis( FALSE), m_bPerformSave( FALSE)
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
+//	setDPIAwareRetVal = SetProcessDpiAwareness( PROCESS_DPI_UNAWARE );  // PROCESS_DPI_UNAWARE = 0, PROCESS_SYSTEM_DPI_AWARE = 1, PROCESS_PER_MONITOR_DPI_AWARE = 2
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -307,6 +312,9 @@ BOOL CComplianceUIApp::InitInstance()
 //sDbgPaths.Format( " iniFileName = %s\n esProgINIPathFile = %s\n esDataINIPathFile = %s\n esDataPath = %s\n esProjectsPath = %s\n", iniFileName, esProgINIPathFile, esDataINIPathFile, esDataPath, esProjectsPath );
 //AfxMessageBox( sDbgPaths );
 
+// TESTING/DEBUGGING
+//CString sDbgDPIMsg;		sDbgDPIMsg.Format( "SetProcessDpiAwareness() returned:  %s", (setDPIAwareRetVal==S_OK ? "OK" : (setDPIAwareRetVal==E_INVALIDARG ? "Invalid Arg" : (setDPIAwareRetVal==E_ACCESSDENIED ? "Access Denied" : "unrecognized"))) );
+//AfxMessageBox( sDbgDPIMsg );
 
 	// SAC 9/2/14 - added preliminary checks for program & data INI files - more fundamental then other required INI options
 	if (!FileExists( esProgINIPathFile ))

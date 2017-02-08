@@ -200,6 +200,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_TOOLS_OPTIONS, OnToolsOptions)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_PROXY, OnUpdateToolsProxy)
 	ON_COMMAND(IDM_TOOLS_PROXY, OnToolsProxy)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_GENMODEL, OnUpdateToolsGenerateModel)
+	ON_COMMAND(IDM_TOOLS_GENMODEL, OnToolsGenerateModel)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWFOLDER, OnUpdateToolsViewFolder)
 	ON_COMMAND(IDM_TOOLS_VIEWFOLDER, OnToolsViewFolder)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_VIEWLOG, OnUpdateToolsViewLog)
@@ -3167,6 +3169,72 @@ void CMainFrame::OnINISettings( int iDlgIDOffset, int iDlgWd, int iDlgHt, CStrin
 
 /////////////////////////////////////////////////////////////////////////////
 
+void CMainFrame::OnUpdateToolsGenerateModel(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable( (BEMPX_GetNumObjects( BEMPX_GetDBComponentID("Model") ) > 0) );
+}
+void CMainFrame::OnToolsGenerateModel()
+{
+	CDocument* pDoc = GetActiveDocument();
+	if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+	{
+		int iCID_Model = BEMPX_GetDBComponentID("Model");
+      CMX_EvaluateRuleset( "Default_Model", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
+
+		CWnd* pWnd = GetFocus();
+
+//		int iDlgID = BEMPUIX_GetFirstDialogTabID( iCID_Model, 0 /*iUIMode*/ );
+//		CSACDlg dlgNewObj( pWnd /*this*/, iCID_Model, 0 /* lDBID_ScreenIdx */, iDlgID, 0, 0, 0,
+//                  "Default_Model" /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Model Description",
+//						400 /*iDlgHt*/, 700 /*iDlgWd*/, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+//						0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+//						0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+//                  FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/, FALSE /*bBypassChecksOnCancel*/,
+//                  FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
+//      if (dlgNewObj.DoModal() == IDOK)
+
+		int iTabCtrlWd=750, iTabCtrlHt=450;
+		//VERIFY( GetDialogTabDimensions( iCID_Model, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
+		CString sDialogCaption = "Model Description";
+		//GetDialogCaption( iCID_Model, sDialogCaption );   // SAC 1/8/12
+	CString sSaveDataModRulelist = esDataModRulelist;
+	esDataModRulelist = "Default_Model";
+      CSACBEMProcDialog td( iCID_Model, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd /*this*/,
+                        0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( iCID_Model, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+                        (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Generate",
+								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
+								NULL /*pszDataModRulelist - no effect*/, FALSE /*bPostHelpMessageToParent*/,
+								ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+      bool bGenModel = (td.DoModal() == IDOK);
+	esDataModRulelist = sSaveDataModRulelist;
+
+		if (bGenModel)
+      {
+         CMX_EvaluateRuleset( "GenerateModel", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
+			SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+			SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+			pDoc->SetModifiedFlag( TRUE );
+
+			//SetStatusBarStrings( "", 2 );		// SAC 10/29/15 - display ruleset ID in third status bar pane
+
+         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
+         if (pMainView != NULL)            // update main view's tree control(s)
+         {
+#ifdef UI_CARES
+				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+#endif
+            pMainView->SendMessage( WM_DISPLAYDATA );
+
+            //CView* pLibView = (CView*) m_wndSplitter.GetPane(1,0);
+            //if (pLibView != NULL)            // update main view's tree control(s)
+            //   pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
+         }
+		}
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 void CMainFrame::OnUpdateToolsViewFolder(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable( DirectoryExists( esProjectsPath ) );
@@ -3952,7 +4020,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			}
 
 			// SAC 10/10/16 - updated default T24N CSVResultsLog filename adding '-v2' for new CSV format that includes electric demand results
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC.csv" : "AnalysisResults-v2.csv"));
+			// SAC 2/7/17 - updated default T24N CSVResultsLog filename adding '-v3' for new CSV format that includes process motors results
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC.csv" : "AnalysisResults-v3.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 		}
@@ -4015,7 +4084,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
       		CWnd* pWnd = GetFocus();
       		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-      		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 475 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+      		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 495 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
       		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -4505,7 +4574,7 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 475 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 495 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,

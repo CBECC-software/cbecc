@@ -228,6 +228,8 @@ protected:
 	afx_msg void OnToolsOptions();
 	afx_msg void OnUpdateToolsProxy(CCmdUI* pCmdUI);
 	afx_msg void OnToolsProxy();
+	afx_msg void OnUpdateToolsGenerateModel(CCmdUI* pCmdUI);
+	afx_msg void OnToolsGenerateModel();
 	afx_msg void OnUpdateToolsViewFolder(CCmdUI* pCmdUI);
 	afx_msg void OnToolsViewFolder();
 	afx_msg void OnUpdateToolsViewLog(CCmdUI* pCmdUI);

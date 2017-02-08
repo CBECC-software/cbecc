@@ -180,6 +180,7 @@
     <ClCompile Include="DlgRename.cpp" />
     <ClCompile Include="DlgStartLoad.cpp" />
     <ClCompile Include="FileVersion.cpp" />
+    <ClCompile Include="key.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MainView.cpp" />
     <ClCompile Include="memRptHook.cpp">

@@ -439,6 +439,7 @@
 #define IDM_HELP_CSEDOCU                33027
 #define IDM_TOOLS_PROXY                 33028
 #define IDM_TOOLS_KEYPREP               33029
+#define IDM_TOOLS_GENMODEL              33030
 
 // Next default values for new objects
 // 
@@ -446,7 +447,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        322
-#define _APS_NEXT_COMMAND_VALUE         33030
+#define _APS_NEXT_COMMAND_VALUE         33031
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

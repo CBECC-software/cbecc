@@ -106,6 +106,7 @@ int eiTabDlgCtrlMarg;
 
 int fntHtBase, fntWdBase, fntHtSys, fntWdSys;
 int sysFntSize;
+int eiFontScalePct = 100;
 
 BOOL ebOpeningCommandLineFile = FALSE;  // SAC 1/1/01
 CRecentFileList* epMRU = NULL;  // SAC 1/2/01
@@ -274,6 +275,8 @@ void SetExternals( CWnd* pWnd )
 
    fntHtBase = 16;
    fntWdBase =  7;
+	eiFontScalePct = ReadProgInt( "options", "ScreenScalePercent", 100 );
+	BEMPUIX_SetScreenScalePercent( eiFontScalePct );
 
 	CDC* pDC = pWnd->GetDC();
    
@@ -302,7 +305,7 @@ void SetExternals( CWnd* pWnd )
    stdFontHt        = (16*fntHtSys)/fntHtBase;
    boldFontHt       = (16*fntHtSys)/fntHtBase;
    menuFontHt       = int (36.0*appYRatio);
-   toolBarFontHt    = int (toolBtnHt*0.78);
+   toolBarFontHt    = int (toolBtnHt*0.78*eiFontScalePct/100);
    vSmallFontHt     = (15*fntHtSys)/fntHtBase;
    unitsFontHt      = (13*fntHtSys)/fntHtBase;
 //   unitsFontHt      = (15*fntHtSys)/fntHtBase;
