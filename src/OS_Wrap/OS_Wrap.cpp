@@ -137,6 +137,7 @@ const char* pszaEplusEnduses[][2] = {	{	"InteriorLights",          ""           
 													{	"InteriorEquipment",       "Process"            },	// 23
 													{	"InteriorEquipment",       "Refrig"             },	// 24
 													{	"InteriorEquipment",       "Internal Transport" },	// 25
+													{	"Fans",                    "ParkingGarageFans"  },	// 26		// SAC 1/30/17 - 'NonReg Fans' -> remove from straight Fans and add into Process
 													{	"<unknown enduse>",        ""                   }, };
 #define  HrlyEUs_LastUniqueEU  19
 // #define  OSWrap_NumEPlusEnduses  25
@@ -425,10 +426,24 @@ void OSWrapLib::AdjustAndSumHourlyResults( int iRunIdx, double* daFuelConvert )
 {	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
 	if (pRunData)
 	{	pRunData->bHourlyResultsCurrent = true;
-		for (int iFl=0; iFl<3; iFl++)
-			for (int iEU=0; iEU<OSWrap_NumEPlusEnduses; iEU++)
+		int iFl, iEU, hr;
+
+	// SAC 2/1/17 - hard-coded subtraction of OSEU_Fans_PrkgGar Elec from OSEU_Fans (tic #2033)
+		double dFans=0.0, dPGFans=0.0;
+		for (hr=0; hr<8760; hr++)
+		{	dFans   += pRunData->daHourlyResults[OSF_Elec][OSEU_Fans        ][hr];
+			dPGFans += pRunData->daHourlyResults[OSF_Elec][OSEU_Fans_PrkgGar][hr];
+		}
+		if (dPGFans > 0 && dFans > 0)
+		{	assert( dPGFans <= dFans );
+			for (hr=0; hr<8760; hr++)
+				pRunData->daHourlyResults[OSF_Elec][OSEU_Fans][hr] -= pRunData->daHourlyResults[OSF_Elec][OSEU_Fans_PrkgGar][hr];
+		}
+
+		for (iFl=0; iFl<3; iFl++)
+			for (iEU=0; iEU<OSWrap_NumEPlusEnduses; iEU++)
 			{	pRunData->daHourlyResultsSum[iFl][iEU] = 0.0;
-				for (int hr=0; hr<8760; hr++)
+				for (hr=0; hr<8760; hr++)
 				{	pRunData->daHourlyResults[   iFl][iEU][hr] *= daFuelConvert[iFl];
 					pRunData->daHourlyResultsSum[iFl][iEU]     += pRunData->daHourlyResults[iFl][iEU][hr];
 				}
@@ -1013,6 +1028,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+4][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+4;  }  // sEU = "InteriorEquipment",  "Process"              iEU =  6;  }
 											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+5][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+5;  }  // sEU = "InteriorEquipment",  "Refrig"               iEU =  6;  }
 											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+6][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+6;  }  // sEU = "InteriorEquipment",  "Internal Transport"   iEU =  6;  }
+											else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+7][1])==0)   {  iEU = HrlyEUs_LastUniqueEU+7;  }  // sEU = "Fans",               "ParkingGarageFans"    iEU = ;  }  // SAC 1/30/17
 											else  {	sEU = "not found";		}		//		ASSERT( FALSE );     }	//	sEU = "<unknown_EndUseType>";		ASSERT( FALSE );		}
 										}
 
@@ -2872,6 +2888,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 				else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+4][1])==0)   {  sEU = "InteriorEquipment-Process";  iEU = HrlyEUs_LastUniqueEU+4;  }  // sEU = "InteriorEquipment",  "Process"             iEU =  6;  }
 				else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+5][1])==0)   {  sEU = "InteriorEquipment-Refrig" ;  iEU = HrlyEUs_LastUniqueEU+5;  }  // sEU = "InteriorEquipment",  "Refrig"              iEU =  6;  }
 				else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+6][1])==0)   {  sEU = "InteriorEquipment-IntTrans"; iEU = HrlyEUs_LastUniqueEU+6;  }  // sEU = "InteriorEquipment",  "Internal Transport"  iEU =  6;  }
+				else if (*euType == openstudio::EndUseType::Fans                   && sSpecEnduse.compare(pszaEplusEnduses[HrlyEUs_LastUniqueEU+7][1])==0)   {  sEU = "Fans-ParkingGarageFans";     iEU = HrlyEUs_LastUniqueEU+7;  }  // sEU = "Fans",               "ParkingGarageFans"   iEU =  7;  }  // SAC 1/30/17
 				else  {	sEU = "<unknown_EndUseType>";		}  // ASSERT( FALSE );		}
 
 				boost::optional<openstudio::FuelType> fType = meter.fuelType();
@@ -3017,7 +3034,6 @@ std::vector<double>* OSWrapLib::GetHourlyResultArray( int iRunIdx, int iFuel, in
 	}
 	return NULL;
 }
-
 
 
 //model = OpenStudio::Model::Model.load( OpenStudio::Path.new('00100-SchoolPrimary-CustomStd-hrlyres - p.osm') ).get()

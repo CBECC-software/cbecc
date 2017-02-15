@@ -90,9 +90,10 @@ enum  OS_EndUseType        //OPENSTUDIO_ENUM(EndUseType,
 	OSEU_IntEquip_Process,  //  ((InteriorEquipment)) + "Process"             23
 	OSEU_IntEquip_Refrig,   //  ((InteriorEquipment)) + "Refrig"              24
 	OSEU_IntEquip_IntTrans, //  ((InteriorEquipment)) + "Internal Transport"  25   - SAC 8/19/14 - added for elevator/escalator power
+	OSEU_Fans_PrkgGar,      //  ((Fans)) + "ParkingGarageFans"                26	 - SAC 1/30/17 - to be removed from Comp Fans and add into NonComp Process
 	OSEU_NumEndUses
 };
-#define  OSWrap_NumEPlusEnduses  26
+#define  OSWrap_NumEPlusEnduses  27
 
 enum  OS_FuelType  // no direct mapping to OpenStudio, which includes wider array of fuels
 {  OSF_Elec,       //  ((Electricity)(Electricity))
