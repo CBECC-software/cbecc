@@ -1725,7 +1725,7 @@ void CMainFrame::OnFileOpen()
 //#endif
 		CString sOpenFileExt, sOpenFileOpt;
 		LoadFileExtensionString( sOpenFileExt, false /*bUseProjectData*/ );	// SAC 10/29/15
-		LoadFileOptionString( sOpenFileOpt, false /*bUseProjectData*/ );
+		LoadFileOptionString( sOpenFileOpt, false /*bUseProjectData*/, true /*bFileOpen*/ );
       CFileDialog dlg( TRUE, (LPCTSTR) sOpenFileExt, NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
                        (LPCTSTR) sOpenFileOpt, this );
 
@@ -3668,9 +3668,9 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
-			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7  - SAC 10/7/16 - fmt 7->8
+			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					8 /*iResFormatVer*/, sOriginalFileName );
+																					9 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
 				char pszCSVColLabel1[1280], pszCSVColLabel2[2560], pszCSVColLabel3[2560];
@@ -3691,8 +3691,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 																false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
 				}
 
-				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7  - SAC 10/7/16 - fmt 7->8
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v8.csv", TRUE /*bGetPath*/ );
+				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7  - SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v9.csv", TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else

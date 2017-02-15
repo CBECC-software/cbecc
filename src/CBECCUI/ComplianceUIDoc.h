@@ -44,7 +44,7 @@ extern bool IsRecognizedFileExt( CString sExt );	// SAC 10/29/15
 extern void BaseFileExt( CString& sExt );	// SAC 10/29/15
 extern void LoadFileExtensionString( CString& sSaveAsExt, bool bUseProjectData, bool bXML=false );	// SAC 10/29/15
 extern bool FileExtensionAllowsSave( CString sSaveAsExt );		// SAC 11/2/15
-extern void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData );	// SAC 10/29/15
+extern void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpen=false );	// SAC 10/29/15
 extern void CodeYearAbbrev( CString& sCodeYearAbbrev, bool bForFileExtension=true );	// SAC 10/29/15   // SAC 3/24/16
 
 class CComplianceUIDoc : public CDocument

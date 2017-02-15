@@ -354,7 +354,7 @@ bool FileExtensionAllowsSave( CString sSaveAsExt )
 	return bRetVal;
 }
 
-void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData )	// SAC 10/29/15
+void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpen )	// SAC 10/29/15
 {	CString sBaseExt, sCodeYr;
 	BaseFileExt( sBaseExt );
 	CString sFileDescrip;
@@ -378,7 +378,7 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData )	// SAC 10/29
 	sFileDescrip = "Res ";
 #endif
 
-	CString sInsertFileType;
+	CString sFirstFileType, sInsertFileType;
 	if (!bUseProjectData)  // SAC 11/17/15 - allow selection of other types even when ruleset switching toggled OFF - was:  && ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0)	// SAC 10/30/15 - enable selection of other recognized and selectable file types
 	{	CString sFTTemp;
 		LoadRulesetListIfNotLoaded();
@@ -386,6 +386,11 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData )	// SAC 10/29
 //			- Include past year file extensions regardless of existence of that year's ruleset (since pulling them in allowed if user chooses to use default program ruleset)
 //			- Include future year file extensions if those rulesets ARE present AND ruleset switching is enabled
 		bool bRuleSwitchingAllowed = (ReadProgInt( "options", "EnableRulesetSwitching", 0 ) > 0);
+
+		if (bFileOpen && bRuleSwitchingAllowed && eiNumRulesetsAvailable > 1)
+			// SAC 2/8/17 - code to cause *.ribd* to be initial file option when opening files and ruleset switching allowed
+			sFirstFileType.Format( "%sProject Files (*.%s*)|*.%s*|", sFileDescrip, sBaseExt, sBaseExt );
+		
 		//if (!sCodeYr.Compare("16") && CodeYearRulesetAvailable( "2013" ))
 		if (iProgYear > 2013)
 		{	sFTTemp.Format( "2013 %sProject Files (*.%s)|*.%s|2013 %sXML Project Files (*.%sx)|*.%sx|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
@@ -401,8 +406,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData )	// SAC 10/29
 			sInsertFileType += sFTTemp;
 		}
 	}
-	sSaveAs.Format( "%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
-							sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sInsertFileType );
+	sSaveAs.Format( "%s%sProject Files (*.%s%s)|*.%s%s|%sXML Project Files (*.%s%sx)|*.%s%sx|%sXML Files (*.xml)|*.xml|All Files (*.*)|*.*||",
+							sFirstFileType, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sFileDescrip, sBaseExt, sCodeYr, sBaseExt, sCodeYr, sInsertFileType );
 }
 
 void CodeYearAbbrev( CString& sCodeYearAbbrev, bool bForFileExtension /*=true*/ )		// SAC 10/29/15
