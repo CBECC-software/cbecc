@@ -3193,7 +3193,7 @@ void CMainFrame::OnToolsGenerateModel()
 //                  FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
 //      if (dlgNewObj.DoModal() == IDOK)
 
-		int iTabCtrlWd=750, iTabCtrlHt=450;
+		int iTabCtrlWd=750, iTabCtrlHt=550;
 		//VERIFY( GetDialogTabDimensions( iCID_Model, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 		CString sDialogCaption = "Model Description";
 		//GetDialogCaption( iCID_Model, sDialogCaption );   // SAC 1/8/12
