@@ -4021,7 +4021,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 
 			// SAC 10/10/16 - updated default T24N CSVResultsLog filename adding '-v2' for new CSV format that includes electric demand results
 			// SAC 2/7/17 - updated default T24N CSVResultsLog filename adding '-v3' for new CSV format that includes process motors results
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC.csv" : "AnalysisResults-v3.csv"));
+			// SAC 2/19/17 - updated default T24N CSVResultsLog filename adding '-v4' for new CSV format that includes total & cond flr areas, unregulated TDV results plus TDV by fuel type (for 2019.0.1 release)
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v4.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v4.csv" : "AnalysisResults-v4.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 		}
