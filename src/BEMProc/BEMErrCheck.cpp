@@ -172,14 +172,31 @@ BOOL BEMPX_PerformErrorCheck( BOOL bRequireRequiredData, BOOL bReportSimDefaultE
 					else if ( pProp->getDataStatus() == BEMS_UserDefined &&			// SAC 5/1/14 - added #defs to specify checks of data classified as user input but that shouldn't be
 									( (pDT->getCompDataType() == BEMD_NotInput   && iUserInpChk & BEM_UserInpChk_DisallowNotInput  ) ||
 									  (pDT->getCompDataType() == BEMD_Prescribed && iUserInpChk & BEM_UserInpChk_DisallowPrescribed) ) )
-               {  // Error - data classified as UserInput, but should not be
-						QString sParam;
-                  BEMPX_DBIDToDBCompParamString( lDBID, sParam );
-                  sMsg = QString( "Error:  Data classified by the compliance ruleset as %1 should not be user-specified: %2 '%3': %4." ).arg(
-																(pDT->getCompDataType() == BEMD_NotInput) ? "NotInput" : "Prescribed",
-																pObj->getClass()->getLongName(), pObj->getName(), sParam );
-                  BEMPX_LogError( sMsg.toLocal8Bit().constData(), ERR_SEVERITY_ERROR, ERR_CODE_REQDATA, ERR_MODULE_BEMPROC, lDBID, BEMO_User, i0Obj );
-					}
+					{	bool bPostErr = true;
+				// SAC 2/25/17 - special code to catch backward compat for CBECC-Com where Proj:ExcptCondWtrHtr Yes/No enum (values 1/2) needs to map to Proj:CompOptDHW 0/1 integer (boolean)
+						if (pProp->getType()->get1ClassIdx() == 1 && pProp->getType()->getShortName().compare( "ExcptCondWtrHtr", Qt::CaseInsensitive )==0)
+						{	// map old Proj:ExcptCondWtrHtr enum to Proj:CompOptDHW
+							long lCompOptDHW = pProp->getInt() - 1;										assert( lCompOptDHW >= 0 && lCompOptDHW <= 1 );
+							long lDBID_CompOptDHW = BEMPX_GetDatabaseID( "CompOptDHW", 1 );		assert( lDBID_CompOptDHW > 0 );
+							if (lDBID_CompOptDHW > 0 && lCompOptDHW >= 0 && lCompOptDHW <= 1)
+							{	int iSetCORetVal = BEMPX_SetBEMData( lDBID_CompOptDHW, BEMP_Int, &lCompOptDHW );		// set Proj:CompOptDHW
+								if (iSetCORetVal >= 0)
+								{	pProp->Default( BEMPX_GetDBID( 1, pProp->getType()->get1PropTypeIdx(), pProp->get1ArrayIdx() ) );  // reset Proj:ExcptCondWtrHtr property
+									bPostErr = false;
+								}
+								else
+								{	assert( FALSE );
+								}
+						}	}
+						if (bPostErr)
+	               {  // Error - data classified as UserInput, but should not be
+							QString sParam;
+	                  BEMPX_DBIDToDBCompParamString( lDBID, sParam );
+	                  sMsg = QString( "Error:  Data classified by the compliance ruleset as %1 should not be user-specified: %2 '%3': %4." ).arg(
+																	(pDT->getCompDataType() == BEMD_NotInput) ? "NotInput" : "Prescribed",
+																	pObj->getClass()->getLongName(), pObj->getName(), sParam );
+	                  BEMPX_LogError( sMsg.toLocal8Bit().constData(), ERR_SEVERITY_ERROR, ERR_CODE_REQDATA, ERR_MODULE_BEMPROC, lDBID, BEMO_User, i0Obj );
+					}	}
                else if ( (pProp->getType()->getPropType() == BEMP_Int ||
                           pProp->getType()->getPropType() == BEMP_Flt ||
                           pProp->getType()->getPropType() == BEMP_Obj)  &&   // SAC 8/7/00 - Added ability to range check BEMP_Obj data for > 0

@@ -2389,8 +2389,31 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	               m_file.WriteToken( sStatus, strlen(sStatus) );
    	               m_file.WriteToken( ": ", 2 );
    	            }
-   	
-   	            m_file.WriteToken( sData.toLocal8Bit().constData(), sData.length() );
+
+						// SAC 2/24/17 - special case for writing PolyLp vertices to CSE input when CSE property references a PolyLp object
+						if (pProp->getType()->getNumValues() == 1 && m_iFileType == BEMFT_CSE && pProp->getType()->getPropType() == BEMP_Obj &&
+							 pProp->getObj() && !pProp->getObj()->getClass()->getShortName().compare("PolyLp"))
+						{	// loop over PolyLp CartesianPt children and write them to file in special CSE Vertex format
+							int iPLObjIdx = BEMPX_GetObjectIndex( pProp->getObj()->getClass(), pProp->getObj() );  // int iBEMProcIdx=-1 );
+							int iCartPtClassID = BEMPX_GetDBComponentID( "CartesianPt" );					assert( iCartPtClassID > 0 );
+							long lCartPtCoordDBID = BEMPX_GetDatabaseID( "Coord", iCartPtClassID );		assert( lCartPtCoordDBID > 0 );
+							int iPLError;		BEM_ObjType ePLObjType = BEMO_User;		double fPLCoords[3];
+							int iNumCartPts = (int) BEMPX_GetNumChildren( pProp->getType()->getObj1ClassIdx(0), iPLObjIdx, BEMO_User, iCartPtClassID );
+							for (int iCPIdx=1; iCPIdx <= iNumCartPts; iCPIdx++)
+							{	int iCartPtObjIdx = BEMPX_GetChildObjectIndex( pProp->getType()->getObj1ClassIdx(0), iCartPtClassID, iPLError, ePLObjType, iCPIdx, iPLObjIdx );		assert( iCartPtObjIdx >= 0 );
+								if (iCartPtObjIdx >= 0)
+								{	int iNumCoords = BEMPX_GetFloatArray( lCartPtCoordDBID, fPLCoords, 3, 0, BEMP_Flt, iCartPtObjIdx );			assert( iNumCoords == 3 );
+									if (iNumCoords == 3)
+									{	QString sXYZ;
+										if (iCPIdx < iNumCartPts)
+											sXYZ = QString( "%1,%2,%3, " ).arg( QString::number(fPLCoords[0]), QString::number(fPLCoords[1]), QString::number(fPLCoords[2]) );
+										else
+											sXYZ = QString( "%1,%2,%3"   ).arg( QString::number(fPLCoords[0]), QString::number(fPLCoords[1]), QString::number(fPLCoords[2]) );
+				   	   			m_file.WriteToken( sXYZ.toLocal8Bit().constData(), sXYZ.length() );
+				   	   }	}	}
+						}
+						else
+   	            	m_file.WriteToken( sData.toLocal8Bit().constData(), sData.length() );
 
 					// SAC 12/5/16 - include comments for output properties
 						if (m_iPropertyCommentOption == 1)

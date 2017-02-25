@@ -509,6 +509,36 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
 	{	int iNumInitErrors = 0;
 		QString sFirstInitError;
 
+   	m_iOID_PolyLp			= GetObjectID_LogError( "PolyLp", iNumInitErrors, sFirstInitError );
+		if (m_iOID_PolyLp > 0)
+		{	m_lDBID_PolyLp_Area         = GetPropertyDBID_LogError( "PolyLp", "Area",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_NumOfPts     = GetPropertyDBID_LogError( "PolyLp", "NumOfPts",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_ParentInfrm  = GetPropertyDBID_LogError( "PolyLp", "ParentInfrm",  m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_XYLen        = GetPropertyDBID_LogError( "PolyLp", "XYLen",        m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_Perim        = GetPropertyDBID_LogError( "PolyLp", "Perim",        m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_ZBottom      = GetPropertyDBID_LogError( "PolyLp", "ZBottom",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_ZTop         = GetPropertyDBID_LogError( "PolyLp", "ZTop",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_ZHgt         = GetPropertyDBID_LogError( "PolyLp", "ZHgt",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_ZRngMessage  = GetPropertyDBID_LogError( "PolyLp", "ZRngMessage",  m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_XCenter      = GetPropertyDBID_LogError( "PolyLp", "XCenter",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_YCenter      = GetPropertyDBID_LogError( "PolyLp", "YCenter",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_VectorOi     = GetPropertyDBID_LogError( "PolyLp", "VectorOi",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_VectorOj     = GetPropertyDBID_LogError( "PolyLp", "VectorOj",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_VectorOk     = GetPropertyDBID_LogError( "PolyLp", "VectorOk",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_VectorOLen   = GetPropertyDBID_LogError( "PolyLp", "VectorOLen",   m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_UnitVectorOi = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOi", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_UnitVectorOj = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOj", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_UnitVectorOk = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOk", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_VectorPLen   = GetPropertyDBID_LogError( "PolyLp", "VectorPLen",   m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_UnitVectorPi = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPi", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_UnitVectorPj = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPj", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+		}
+
+   	m_iOID_CartesianPt	= GetObjectID_LogError( "CartesianPt", iNumInitErrors, sFirstInitError );
+		if (m_iOID_CartesianPt > 0)
+   		m_lDBID_CartesianPt_Coord = GetPropertyDBID_LogError( "CartesianPt", "Coord", m_iOID_CartesianPt, iNumInitErrors, sFirstInitError );
+
+#ifdef GEOM_NRES
 		m_iOID_Story	= GetObjectID_LogError( "Story", iNumInitErrors, sFirstInitError );
 
 		m_iOID_Spc		= GetObjectID_LogError( "Spc", iNumInitErrors, sFirstInitError );
@@ -589,53 +619,25 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
    		m_lDBID_Skylt_Area       = GetPropertyDBID_LogError( "Skylt", "Area",       m_iOID_Skylt, iNumInitErrors, sFirstInitError );
 		}
 
-   	m_iOID_PolyLp			= GetObjectID_LogError( "PolyLp", iNumInitErrors, sFirstInitError );
-		if (m_iOID_PolyLp > 0)
-		{	m_lDBID_PolyLp_Area         = GetPropertyDBID_LogError( "PolyLp", "Area",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_NumOfPts     = GetPropertyDBID_LogError( "PolyLp", "NumOfPts",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_ParentInfrm  = GetPropertyDBID_LogError( "PolyLp", "ParentInfrm",  m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_XYLen        = GetPropertyDBID_LogError( "PolyLp", "XYLen",        m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_Perim        = GetPropertyDBID_LogError( "PolyLp", "Perim",        m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_ZBottom      = GetPropertyDBID_LogError( "PolyLp", "ZBottom",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_ZTop         = GetPropertyDBID_LogError( "PolyLp", "ZTop",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_ZHgt         = GetPropertyDBID_LogError( "PolyLp", "ZHgt",         m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_ZRngMessage  = GetPropertyDBID_LogError( "PolyLp", "ZRngMessage",  m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_XCenter      = GetPropertyDBID_LogError( "PolyLp", "XCenter",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_YCenter      = GetPropertyDBID_LogError( "PolyLp", "YCenter",      m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_VectorOi     = GetPropertyDBID_LogError( "PolyLp", "VectorOi",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_VectorOj     = GetPropertyDBID_LogError( "PolyLp", "VectorOj",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_VectorOk     = GetPropertyDBID_LogError( "PolyLp", "VectorOk",     m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_VectorOLen   = GetPropertyDBID_LogError( "PolyLp", "VectorOLen",   m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_UnitVectorOi = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOi", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_UnitVectorOj = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOj", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_UnitVectorOk = GetPropertyDBID_LogError( "PolyLp", "UnitVectorOk", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_VectorPLen   = GetPropertyDBID_LogError( "PolyLp", "VectorPLen",   m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_UnitVectorPi = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPi", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-			m_lDBID_PolyLp_UnitVectorPj = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPj", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
-		}
-
-   	m_iOID_CartesianPt	= GetObjectID_LogError( "CartesianPt", iNumInitErrors, sFirstInitError );
-		if (m_iOID_CartesianPt > 0)
-   		m_lDBID_CartesianPt_Coord = GetPropertyDBID_LogError( "CartesianPt", "Coord", m_iOID_CartesianPt, iNumInitErrors, sFirstInitError );
-
    	m_iOID_FenCons	= GetObjectID_LogError( "FenCons", iNumInitErrors, sFirstInitError );
 		if (m_iOID_FenCons > 0)
    		m_lDBID_FenCons_VT = GetPropertyDBID_LogError( "FenCons", "VT", m_iOID_FenCons, iNumInitErrors, sFirstInitError );
 
-//   int   m_iOID_DayltgCtrl                     // Typ  NV   US     UL     NO    OC   CV   CP    LName                 
-//   long  m_lDBID_DayltgCtrlDayltgCtrlType      // Sym,  1,  Req,  "",      0,                  "DaylightingControlType"
-//   long  m_lDBID_DayltgCtrlDaylitAreaType      // Sym,  1,  Req,  "",      0,                  "DaylitAreaType"
-//   long  m_lDBID_DayltgCtrlDaylitArea          // Flt,  1,  Req,  "ft2",   0,                  "DaylitArea"
-//   long  m_lDBID_DayltgCtrlIllumRefPtCoord     // Flt,  3,  Req,  "ft",    0,                  "IlluminanceReferencePointCoordinate"
-//   long  m_lDBID_DayltgCtrlDayltgCtrlLtgFrac   // Flt,  1,  Req,  "",      0,                  "DaylightingControlLightingFraction"
-//   long  m_lDBID_DayltgCtrlMinDimLtgFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingLightFraction"
-//   long  m_lDBID_DayltgCtrlMinDimPwrFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingPowerFraction"
-//   long  m_lDBID_DayltgCtrlNumOfCtrlSteps      // Int,  1,  Opt,  "",      0,                  "NumberOfControlSteps"
-//   long  m_lDBID_DayltgCtrlIllumSetPt          // Flt,  1,  Req,  "lux",   0,                  "IlluminanceSetPoint"
-//   long  m_lDBID_DayltgCtrlIllumSetPtAdjFac    // Flt,  1,  NInp, "",      0,                  "IlluminanceSetPointAdjustmentFactor"
-//   long  m_lDBID_DayltgCtrlAdjIllumSetPt       // Flt,  1,  NInp, "lux",   0,                  "AdjustedIlluminanceSetPoint"
-//   long  m_lDBID_DayltgCtrlGlrAz               // Flt,  1,  Req,  "",      0,                  "GlareAzimuth"
-//   long  m_lDBID_DayltgCtrlMaxGlrIdx           // Flt,  1,  Req,  "",      0,                  "MaximumGlareIndex"
+				//   int   m_iOID_DayltgCtrl                     // Typ  NV   US     UL     NO    OC   CV   CP    LName                 
+				//   long  m_lDBID_DayltgCtrlDayltgCtrlType      // Sym,  1,  Req,  "",      0,                  "DaylightingControlType"
+				//   long  m_lDBID_DayltgCtrlDaylitAreaType      // Sym,  1,  Req,  "",      0,                  "DaylitAreaType"
+				//   long  m_lDBID_DayltgCtrlDaylitArea          // Flt,  1,  Req,  "ft2",   0,                  "DaylitArea"
+				//   long  m_lDBID_DayltgCtrlIllumRefPtCoord     // Flt,  3,  Req,  "ft",    0,                  "IlluminanceReferencePointCoordinate"
+				//   long  m_lDBID_DayltgCtrlDayltgCtrlLtgFrac   // Flt,  1,  Req,  "",      0,                  "DaylightingControlLightingFraction"
+				//   long  m_lDBID_DayltgCtrlMinDimLtgFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingLightFraction"
+				//   long  m_lDBID_DayltgCtrlMinDimPwrFrac       // Flt,  1,  Opt,  "",      0,                  "MinimumDimmingPowerFraction"
+				//   long  m_lDBID_DayltgCtrlNumOfCtrlSteps      // Int,  1,  Opt,  "",      0,                  "NumberOfControlSteps"
+				//   long  m_lDBID_DayltgCtrlIllumSetPt          // Flt,  1,  Req,  "lux",   0,                  "IlluminanceSetPoint"
+				//   long  m_lDBID_DayltgCtrlIllumSetPtAdjFac    // Flt,  1,  NInp, "",      0,                  "IlluminanceSetPointAdjustmentFactor"
+				//   long  m_lDBID_DayltgCtrlAdjIllumSetPt       // Flt,  1,  NInp, "lux",   0,                  "AdjustedIlluminanceSetPoint"
+				//   long  m_lDBID_DayltgCtrlGlrAz               // Flt,  1,  Req,  "",      0,                  "GlareAzimuth"
+				//   long  m_lDBID_DayltgCtrlMaxGlrIdx           // Flt,  1,  Req,  "",      0,                  "MaximumGlareIndex"
+#endif
 
 		m_bIDInitAttempted = true;
 		m_bIDsOK = (iNumInitErrors == 0);
