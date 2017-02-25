@@ -915,14 +915,14 @@ void WriteLabelToDC( CDC* pDC, CBEMPUIControl* pCtrl, long lCtrlDBIDOffset, int 
 void WriteOpaqueTextToDC( CDC* pDC, int iX, int iY, UINT uiJustify, CString& sLabel )
 {	CSize size = pDC->GetTextExtent( sLabel );
 	CRect rc;
-	rc.top    = max( 0, iY - 1 );
+	rc.top    = std::max( 0, iY - 1 );
 	rc.bottom = iY + size.cy + 1;
 	switch (uiJustify)
-	{	case TA_RIGHT  :	rc.left   = max( 0, iX - size.cx - 1 );
+	{	case TA_RIGHT  :	rc.left   = std::max( 0, iX - ((int)size.cx) - 1 );
 								rc.right  = iX + 1;																	break; 
-		case TA_CENTER :	rc.left   = max( 0, iX - ((int) ((double) size.cx / 2.0)) - 1 );
+		case TA_CENTER :	rc.left   = std::max( 0, iX - ((int) ((double) size.cx / 2.0)) - 1 );
 								rc.right  = iX + ((int) ((double) size.cx / 2.0)) + 2; 					break;
-		default        :	rc.left   = max( 0, iX - 1 );
+		default        :	rc.left   = std::max( 0, iX - 1 );
 								rc.right  = iX + size.cx + 2; 													break;
 	}
 			ASSERT( (rc.right - rc.left) > 5 );  // check to confirm that we have a reasonable width area to erase

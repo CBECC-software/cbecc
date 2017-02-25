@@ -550,8 +550,8 @@ void CExtendedComboBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		const RECT &rc=lpDrawItemStruct->rcItem;
 
 		pDC->ExtTextOut(rc.left + 2,
-//				  rc.top + 2,// + max(0, (cyItem - m_cyText) / 2),
-				  rc.top + 1,// + max(0, (cyItem - m_cyText) / 2),
+//				  rc.top + 2,// + std::max(0, (cyItem - m_cyText) / 2),
+				  rc.top + 1,// + std::max(0, (cyItem - m_cyText) / 2),
 				  ETO_OPAQUE, &rc,
 				  strText, strText.GetLength (), NULL);
 
@@ -580,8 +580,8 @@ void CExtendedComboBox::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 		const RECT &rc=lpDrawItemStruct->rcItem;
 
 		pDC->ExtTextOut(rc.left + 2,
-//				  rc.top + 2,// + max(0, (cyItem - m_cyText) / 2),
-				  rc.top + 1,// + max(0, (cyItem - m_cyText) / 2),
+//				  rc.top + 2,// + std::max(0, (cyItem - m_cyText) / 2),
+				  rc.top + 1,// + std::max(0, (cyItem - m_cyText) / 2),
 				  ETO_OPAQUE, &rc,
 				  strText, strText.GetLength (), NULL);
 
@@ -845,7 +845,7 @@ int CExtendedComboBox::CalcMaxStringWidth()
 		rectText.SetRectEmpty();
 		dc.DrawText(strLBText, rectText, DT_CALCRECT);
 	
-		nWidth = max(nWidth, rectText.Width() + (cxPadding * 2));
+		nWidth = std::max(nWidth, rectText.Width() + (cxPadding * 2));
 	}
 
 	// Add the scroll bar.
@@ -867,7 +867,7 @@ int CExtendedComboBox::ResizeToFitContent(int nDropDownHeight)
 	nDropDownHeight = (nDropDownHeight > 0) ? nDropDownHeight : rcDropDown.Height();
 
 	int nWidth = CalcMaxStringWidth();
-   nWidth = max( nWidth, m_iOriginalWidth );
+   nWidth = std::max( nWidth, m_iOriginalWidth );
 
    // Only resize if new width is WIDER than initial one
 //	if ((nWidth > 0) && (nDropDownHeight > 0) && (nWidth > rcDropDown.Width()))

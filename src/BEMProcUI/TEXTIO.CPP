@@ -1213,7 +1213,7 @@ void ProcessStringForQuoteAndComment( CString& string )
 		if (string.Find(' ') > 0 || string.Find('\t') > 0)
 		{	int iSpc = string.Find(' ');
 			int iTab = string.Find('\t');
-			int iPossibleFldEnd = ((iSpc > 0 && iTab > 0) ? min( iSpc, iTab) : (iSpc > 0 ? iSpc : iTab));
+			int iPossibleFldEnd = ((iSpc > 0 && iTab > 0) ? std::min( iSpc, iTab) : (iSpc > 0 ? iSpc : iTab));
 			int iCommentSemi = string.Find( CommentChr, iPossibleFldEnd+1 );
 			int iCommentDbl  = string.Find( "//", iPossibleFldEnd+1 );
 			int iCommentPart = string.Find( "/*", iPossibleFldEnd+1 );

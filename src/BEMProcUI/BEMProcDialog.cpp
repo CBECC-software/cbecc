@@ -79,7 +79,7 @@ static long slaRulesetDBIDs[ MAX_RULESET_DBIDS ] = {0,0,0,0,0,0,0,0,0,0};
 
 void BEMPUIX_SetRulesetDBIDs( long* plRulesetDBIDs, int iNumRulesetDBIDs )
 {
-   siNumRulesetDBIDs = min( iNumRulesetDBIDs, MAX_RULESET_DBIDS );
+   siNumRulesetDBIDs = std::min( iNumRulesetDBIDs, MAX_RULESET_DBIDS );
    for (int i=0; i<siNumRulesetDBIDs; i++)
       slaRulesetDBIDs[i] = plRulesetDBIDs[i];
 }
@@ -784,7 +784,7 @@ void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDis
                      rc.top    = FontY(pCtrl->m_iY) + eiTabDlgCtrlDY - 1;
 // SAC 6/20/03 - Add "max()" call to ensure bottom sliver of labels not left following refresh
 //                     rc.bottom = rc.top + FontY(GetWizFontHeight(pCtrl->m_iFont)) + eiTabDlgCtrlDY + 2;
-                     rc.bottom = rc.top + FontY( max( pCtrl->m_iHeight, GetWizFontHeight(pCtrl->m_iFont) ) ) + /*eiTabDlgCtrlDY +*/ 2;
+                     rc.bottom = rc.top + FontY( std::max( pCtrl->m_iHeight, GetWizFontHeight(pCtrl->m_iFont) ) ) + /*eiTabDlgCtrlDY +*/ 2;
                      if (pCtrl->m_uiLblJust == TA_LEFT)
                      {
                         rc.left  = FontX(pCtrl->m_iX) - 1;

@@ -414,7 +414,7 @@ BOOL CBEMPUIScreenData::ReadScreenControl( CTextIO& file, int iFileStructVersion
             if (!m_apControls[ m_iNumControls ]->m_sStatusMsg.IsEmpty())
             {
                int iTempRefCompID = 0;
-               lCompDBID = max( BEMPX_GetDatabaseID( m_apControls[ m_iNumControls ]->m_sStatusMsg, m_apPages[ m_iNumPages-1 ]->m_iClassId, FALSE, &iTempRefCompID ), 0 );
+               lCompDBID = (std::max)( BEMPX_GetDatabaseID( m_apControls[ m_iNumControls ]->m_sStatusMsg, m_apPages[ m_iNumPages-1 ]->m_iClassId, FALSE, &iTempRefCompID ), 0L );
 					// Note: when > 0, iTempRefCompID identifies only the first of possible several object types that this property can reference
                ASSERT( iTempRefCompID <= 0 );  // should NOT be a complex (multi-level indirection) Component:Property string
             }
