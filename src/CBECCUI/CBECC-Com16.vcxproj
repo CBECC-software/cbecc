@@ -356,6 +356,8 @@
     <Image Include="res\t_spc_2.bmp" />
     <Image Include="res\t_TermU_1.bmp" />
     <Image Include="res\t_TermU_2.bmp" />
+    <Image Include="res\t_tesc_1.bmp" />
+    <Image Include="res\t_tesc_2.bmp" />
     <Image Include="res\t_unkn_1.bmp" />
     <Image Include="res\t_unkn_2.bmp" />
     <Image Include="res\t_uwal_1.bmp" />

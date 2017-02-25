@@ -14,6 +14,7 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
+#define NOMINMAX                 // prevent:  warning C4003: not enough actual parameters for macro 'min'   w/ inclusion of QtCore\QDateTime.h  - SAC 2/20/17
 #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
 
 #include <afxwin.h>         // MFC core and standard components
@@ -47,9 +48,9 @@
 #pragma warning(disable : 4127)
 #include <QtCore/QString.h>
 #include <QtCore/QStringList.h>
-//#include <QtCore/QDateTime.h>
-//#include <QtCore/QFile>
-//#include <QtCore/QDir>
+#include <QtCore/QDateTime.h>
+#include <QtCore/QFile>
+#include <QtCore/QDir>
 #include <QtCore/QVector>
 #pragma warning(default : 4127)
 

@@ -421,7 +421,7 @@ int CComboBoxCtl::CalcMaxStringWidth()
 		rectText.SetRectEmpty();
 		dc.DrawText(strLBText, rectText, DT_CALCRECT);
 	
-		nWidth = max(nWidth, rectText.Width() + (cxPadding * 2));
+		nWidth = std::max(nWidth, rectText.Width() + (cxPadding * 2));
 	}
 
 	// Add the scroll bar.
@@ -443,7 +443,7 @@ int CComboBoxCtl::ResizeToFitContent(int nDropDownHeight)
 	nDropDownHeight = (nDropDownHeight > 0) ? nDropDownHeight : rcDropDown.Height();
 
 	int nWidth = CalcMaxStringWidth();
-   nWidth = max( nWidth, m_iOriginalWidth );
+   nWidth = std::max( nWidth, m_iOriginalWidth );
 
    // Only resize if new width is WIDER than initial one
 //	if ((nWidth > 0) && (nDropDownHeight > 0) && (nWidth > rcDropDown.Width()))

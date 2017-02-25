@@ -78,7 +78,7 @@ int CalcMaxStringWidth( CComboBox* pCMBB )
    		rectText.SetRectEmpty();
    		dc.DrawText(strLBText, rectText, DT_CALCRECT);
    	
-   		nWidth = max(nWidth, rectText.Width() + (cxPadding * 2));
+   		nWidth = std::max(nWidth, rectText.Width() + (cxPadding * 2));
    	}
 
    	// Add the scroll bar.

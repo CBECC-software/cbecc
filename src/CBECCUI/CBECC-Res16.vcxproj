@@ -85,7 +85,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC12\BEMProc16r.lib;..\..\bin\Release_VC12\BEMCmpMgr16r.lib;..\..\bin\Release_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5Xml.lib;..\..\bin\Release_VC12\BEMProc16r.lib;..\..\bin\Release_VC12\BEMCmpMgr16r.lib;..\..\bin\Release_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-Res16.pdb</ProgramDatabaseFile>
@@ -139,7 +139,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC12\BEMProc16r.lib;..\..\bin\Debug_VC12\BEMCmpMgr16r.lib;..\..\bin\Debug_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5Xmld.lib;..\..\bin\Debug_VC12\BEMProc16r.lib;..\..\bin\Debug_VC12\BEMCmpMgr16r.lib;..\..\bin\Debug_VC12\BEMProcUI16r.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -205,6 +205,7 @@
     <ClCompile Include="TextProgressCtrl.cpp" />
     <ClCompile Include="TreeBDB.cpp" />
     <ClCompile Include="XMessageBox.cpp" />
+    <ClCompile Include="XMLParse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CBECC-Res16.rc" />
@@ -236,6 +237,7 @@
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="TreeBDB.h" />
     <ClInclude Include="XMessageBox.h" />
+    <ClInclude Include="XMLParse.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="hlp\AppExit.bmp" />
@@ -356,6 +358,8 @@
     <Image Include="res\t_spc_2.bmp" />
     <Image Include="res\t_TermU_1.bmp" />
     <Image Include="res\t_TermU_2.bmp" />
+    <Image Include="res\t_tesc_1.bmp" />
+    <Image Include="res\t_tesc_2.bmp" />
     <Image Include="res\t_unkn_1.bmp" />
     <Image Include="res\t_unkn_2.bmp" />
     <Image Include="res\t_uwal_1.bmp" />

@@ -1,8 +1,8 @@
-// key.cpp : Defines the program's analysis/reporting security key
+// XMLParse.h : interface of the XML parsing functions (based on Qt)
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -31,14 +31,24 @@
  *  STRICT LIABILITY OR OTHERWISE.
  **********************************************************************/
 
-#include "stdafx.h"
-#include "CUIGlobl.h"
+#ifndef XMLPARSE_H
+#define XMLPARSE_H
 
-CString esSecurityKey = "MIIBOwIBAAJBAL5lFmZz1I2ZbDFId15RL3dyHnn2AIKW5LMy6Zh/Qq4Qwa+CBhHZ";
+//#include <QtCore/QAbstractItemModel>
+#include <QtXml/QDomDocument>
+//#include <QtCore/QModelIndex>
 
-void TweakString( char* /*lpBuf*/, int /*length*/ )
-{  AfxMessageBox( "Tweak" );
-}
+//#include <QtXml/QDomNode>
+//#include <QtCore/QHash>
+
+#include "..\BEMProc\BEMProc.h"
+#include "..\BEMProc\BEMClass.h"
+
+#define  Schema_GBXML  0
+
+extern int ProcessXMLElement( int iSchema, QDomElement& elem, int lvl, QString& qsXMLMsg );
+
+extern BEMObject* ParsePolyLpXML( int iSchema, QDomElement& elem );
 
 
-
+#endif // XMLPARSE_H

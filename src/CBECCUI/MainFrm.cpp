@@ -82,6 +82,10 @@
 
 #include <QtWidgets/QMessageBox>
 
+#ifdef UI_CARES
+#include "XMLParse.h"
+#endif
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -230,6 +234,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(IDM_POSTWIZHELP, OnPostHizHelpChecklist)
 	ON_UPDATE_COMMAND_UI(ID_FILE_IMPORTMODEL, OnUpdateFileImportModel)
 	ON_COMMAND(ID_FILE_IMPORTMODEL, OnFileImportModel)
+	ON_UPDATE_COMMAND_UI(ID_FILE_IMPORTRESGEOM, OnUpdateFileImportResGeometry)
+	ON_COMMAND(ID_FILE_IMPORTRESGEOM, OnFileImportResGeometry)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_COMPFORMS_NEW, OnUpdateHelpCompFormChecklist_New)
 	ON_COMMAND(IDM_HELP_COMPFORMS_NEW, OnHelpCompFormChecklist_New)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_COMPFORMS_ALTER, OnUpdateHelpCompFormChecklist_Alterations)
@@ -1027,6 +1033,109 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
          }
          lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff (?)
       }
+      else if (wAction >= 2000 && wAction <= 2300)
+		{	// CREATE NEW CartesianPt child of current PolyLp object
+			int iError;
+			int iPolyLpObjIdx = BEMPX_GetObjectIndex( BEMPX_GetClass( eiBDBCID_PolyLp, iError ) );			ASSERT( iPolyLpObjIdx >= 0 );
+			if (iPolyLpObjIdx >= 0)
+			{	BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPolyLpObjIdx );			ASSERT( pPolyLpObj );
+				if (pPolyLpObj)
+				{	if (!BEMPX_CanCreateAnotherChildObject( eiBDBCID_CartesianPt, pPolyLpObj, 1 /*iNumChildren*/ ))
+					{	CString sErrMsg;		sErrMsg.Format( "The BEM database manager will not allow creation of another CartesianPt child of PolyLp '%s'.", pPolyLpObj->getName() );
+						MessageBox( sErrMsg );
+					}
+					else
+					{	int iNewCartPtChildIdx = (int) wAction - 2000;
+						BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/,
+																					true /*bAutoCreate*/, -1 /*iBEMProcIdx*/, FALSE /*bIgnoreMaxDefinable*/, iNewCartPtChildIdx );		ASSERT( pCartPtObj );
+						if (pCartPtObj)
+						{	// RE-default the PolyLp's Area property to ensure that the next round of defaulting will re-calculate Area & other related properties
+							BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iPolyLpObjIdx );
+							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
+
+							int iNumCartPts = (int) BEMPX_GetNumChildren( eiBDBCID_PolyLp, iPolyLpObjIdx, BEMO_User /*eParObjType*/, eiBDBCID_CartesianPt );
+							if (iNumCartPts > 3)
+							{	// when we have MORE than three vertices, initialize the new vertex to the midpoint between the points on either side of it
+								BEM_ObjType eChildObjType=BEMO_User;
+								int iPtObjIdx[] = {	BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, (iNewCartPtChildIdx==0 ?     iNumCartPts : iNewCartPtChildIdx  ) ),
+															BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, (iNewCartPtChildIdx==(iNumCartPts-1) ? 1 : iNewCartPtChildIdx+2) ) };
+								double faPt1[3], faPt2[3];
+								long lCoordDBID = BEMPX_GetDatabaseID( "Coord", eiBDBCID_CartesianPt );
+								if (	BEMPX_SetDataFloatArray( lCoordDBID, faPt1, 3, -999 /*fDefault*/, -1, iPtObjIdx[0] ) != 3 ||
+										BEMPX_SetDataFloatArray( lCoordDBID, faPt2, 3, -999 /*fDefault*/, -1, iPtObjIdx[1] ) != 3 )
+								{	ASSERT( FALSE ); // error retrieving coordinates on either side
+								}
+								else
+								{	int iNewCartPtObjIdx = BEMPX_GetObjectIndex( pCartPtObj->getClass(), pCartPtObj );								ASSERT( iNewCartPtObjIdx >= 0 );
+									if (iNewCartPtObjIdx >= 0 )
+									{	faPt1[0] += faPt2[0];					faPt1[1] += faPt2[1];					faPt1[2] += faPt2[2];
+										faPt1[0] = (float) (faPt1[0]/2.0);	faPt1[1] = (float) (faPt1[1]/2.0);	faPt1[2] = (float) (faPt1[2]/2.0);
+										if (	BEMPX_SetBEMData( lCoordDBID  , BEMP_Flt, (void*) &faPt1[0], BEMO_User, iNewCartPtObjIdx ) < 0 ||
+												BEMPX_SetBEMData( lCoordDBID+1, BEMP_Flt, (void*) &faPt1[1], BEMO_User, iNewCartPtObjIdx ) < 0 ||
+												BEMPX_SetBEMData( lCoordDBID+2, BEMP_Flt, (void*) &faPt1[2], BEMO_User, iNewCartPtObjIdx ) < 0 )
+										{	ASSERT( FALSE );
+										}
+			}	}	}	}	}	}	}
+		}		
+		else if (wAction >= 3001 && wAction <= 3014)		// SAC 2/22/17 - added 3014 and moved out from within elif UI_CANRES to access in CARES
+		{	// Access PolyLp child of <various> object
+			CString sClassName;
+			switch (wAction)
+			{	case 3001 :	sClassName = "Spc"       ;		break;
+				case 3002 :	sClassName = "Ceiling"   ;		break;
+				case 3003 :	sClassName = "ExtFlr"    ;		break;
+				case 3004 :	sClassName = "ExtWall"   ;		break;
+				case 3005 :	sClassName = "IntFlr"    ;		break;
+				case 3006 :	sClassName = "IntWall"   ;		break;
+				case 3007 :	sClassName = "Roof"      ;		break;
+				case 3008 :	sClassName = "UndgrFlr"  ;		break;
+				case 3009 :	sClassName = "UndgrWall" ;		break;
+				case 3010 :	sClassName = "Window"    ;		break;
+				case 3011 :	sClassName = "Skylight"  ;		break;
+				case 3012 :	sClassName = "Door"      ;		break;
+				case 3013 :	sClassName = "ExtShdgObj";		break;
+				case 3014 :	sClassName = "Shade"     ;		break;
+			}
+			int iParClassID = (sClassName.IsEmpty() ? 0 : BEMPX_GetDBComponentID( sClassName ));
+			if (iParClassID > 0)
+			{	int iError;		BEM_ObjType eChildObjType;
+				CWnd* pWnd = GetFocus();
+				int iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );
+				if (iPLObjIdx < 0)
+				{	CString sCr8Msg;	sCr8Msg.Format( "No child PolyLp found for this %s.\nWould you like to create a new PolyLp to describe this %s's geometry?", sClassName, sClassName );
+			//		if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, MB_YESNO|MB_DEFBUTTON2 ) == IDYES)
+					if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::Yes)
+					{
+						CreateBuildingComponent( eiBDBCID_PolyLp, 0, FALSE /*bEditNewComponent*/, pWnd, 0, 0, -1, BEMPX_GetObjectByClass( iParClassID, iError, -1 /*iParObjIdx*/ ) );
+						iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );		ASSERT( iPLObjIdx >= 0 );
+						if (iPLObjIdx >= 0)
+						{	// check for at least one vertex in new PolyLp, and if not, create one
+							int iCartPtObjIdx = BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, 1 /*i1ChildIdx*/, iPLObjIdx /*iObjIdx*/ );
+							if (iCartPtObjIdx < 0)
+							{	// create a first CartesianPt child of the new PolyLp if one doesn't already exist
+								BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPLObjIdx );				ASSERT( pPolyLpObj );
+								BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/ );		ASSERT( pCartPtObj );
+								if (pCartPtObj)
+								{	long lNumOfPts = 1;
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumOfPts", eiBDBCID_PolyLp ), BEMP_Int, (void*) &lNumOfPts, BEMO_User, iPLObjIdx, BEMS_ProgDefault );
+					}	}	}	}
+				}
+				if (iPLObjIdx >= 0)
+				{	BEMPX_SetActiveObjectIndex( eiBDBCID_PolyLp, iPLObjIdx, eChildObjType );
+					int iTabCtrlWd, iTabCtrlHt;
+					VERIFY( GetDialogTabDimensions( eiBDBCID_PolyLp, iTabCtrlWd, iTabCtrlHt ) );
+					CString sDialogCaption;
+					GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption );
+					CSACBEMProcDialog td( eiBDBCID_PolyLp, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+											0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_PolyLp, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+											(sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
+											NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
+											NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
+											ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+					if (td.DoModal() == IDOK)
+					{}
+			}	}
+		}
 		else if (wAction == 3051)
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
@@ -1089,7 +1198,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgProj.DoModal();
       }
-      else if (wAction == 3008)
+      else if (wAction == 3030)	// SAC 2/22/17 - updated from 3008->3030 due to overlap in range used to present PolyLp dialog (now shared between NRes & Res)
       {
 			CString sDialogCaption;
 			GetDialogCaption( eiBDBCID_HVACSys, sDialogCaption );
@@ -1106,6 +1215,23 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgDwlgUnit.DoModal();
       }
+      else if (wAction >= 3031 && wAction <= 3035)		// SAC 2/22/17 - PV array orientation & location screen
+		{
+			int iDlgHt = 600, iDlgWd = 770;
+			CString sDialogCaption;
+			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
+         CSACDlg dlgProj( pDlg, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgProj.DoModal();
+		}
 
 #elif UI_CANRES
 	// SAC 5/29/14 - code to create & delete CartesianPt children of PolyLp objects
@@ -1127,108 +1253,6 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 							BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iPolyLpObjIdx );
 							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}	}
-		}
-      else if (wAction >= 2000 && wAction <= 2300)
-		{	// CREATE NEW CartesianPt child of current PolyLp object
-			int iError;
-			int iPolyLpObjIdx = BEMPX_GetObjectIndex( BEMPX_GetClass( eiBDBCID_PolyLp, iError ) );			ASSERT( iPolyLpObjIdx >= 0 );
-			if (iPolyLpObjIdx >= 0)
-			{	BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPolyLpObjIdx );			ASSERT( pPolyLpObj );
-				if (pPolyLpObj)
-				{	if (!BEMPX_CanCreateAnotherChildObject( eiBDBCID_CartesianPt, pPolyLpObj, 1 /*iNumChildren*/ ))
-					{	CString sErrMsg;		sErrMsg.Format( "The BEM database manager will not allow creation of another CartesianPt child of PolyLp '%s'.", pPolyLpObj->getName() );
-						MessageBox( sErrMsg );
-					}
-					else
-					{	int iNewCartPtChildIdx = (int) wAction - 2000;
-						BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/,
-																					true /*bAutoCreate*/, -1 /*iBEMProcIdx*/, FALSE /*bIgnoreMaxDefinable*/, iNewCartPtChildIdx );		ASSERT( pCartPtObj );
-						if (pCartPtObj)
-						{	// RE-default the PolyLp's Area property to ensure that the next round of defaulting will re-calculate Area & other related properties
-							BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iPolyLpObjIdx );
-							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
-
-							int iNumCartPts = (int) BEMPX_GetNumChildren( eiBDBCID_PolyLp, iPolyLpObjIdx, BEMO_User /*eParObjType*/, eiBDBCID_CartesianPt );
-							if (iNumCartPts > 3)
-							{	// when we have MORE than three vertices, initialize the new vertex to the midpoint between the points on either side of it
-								BEM_ObjType eChildObjType=BEMO_User;
-								int iPtObjIdx[] = {	BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, (iNewCartPtChildIdx==0 ?     iNumCartPts : iNewCartPtChildIdx  ) ),
-															BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, (iNewCartPtChildIdx==(iNumCartPts-1) ? 1 : iNewCartPtChildIdx+2) ) };
-								double faPt1[3], faPt2[3];
-								long lCoordDBID = BEMPX_GetDatabaseID( "Coord", eiBDBCID_CartesianPt );
-								if (	BEMPX_SetDataFloatArray( lCoordDBID, faPt1, 3, -999 /*fDefault*/, -1, iPtObjIdx[0] ) != 3 ||
-										BEMPX_SetDataFloatArray( lCoordDBID, faPt2, 3, -999 /*fDefault*/, -1, iPtObjIdx[1] ) != 3 )
-								{	ASSERT( FALSE ); // error retrieving coordinates on either side
-								}
-								else
-								{	int iNewCartPtObjIdx = BEMPX_GetObjectIndex( pCartPtObj->getClass(), pCartPtObj );								ASSERT( iNewCartPtObjIdx >= 0 );
-									if (iNewCartPtObjIdx >= 0 )
-									{	faPt1[0] += faPt2[0];					faPt1[1] += faPt2[1];					faPt1[2] += faPt2[2];
-										faPt1[0] = (float) (faPt1[0]/2.0);	faPt1[1] = (float) (faPt1[1]/2.0);	faPt1[2] = (float) (faPt1[2]/2.0);
-										if (	BEMPX_SetBEMData( lCoordDBID  , BEMP_Flt, (void*) &faPt1[0], BEMO_User, iNewCartPtObjIdx ) < 0 ||
-												BEMPX_SetBEMData( lCoordDBID+1, BEMP_Flt, (void*) &faPt1[1], BEMO_User, iNewCartPtObjIdx ) < 0 ||
-												BEMPX_SetBEMData( lCoordDBID+2, BEMP_Flt, (void*) &faPt1[2], BEMO_User, iNewCartPtObjIdx ) < 0 )
-										{	ASSERT( FALSE );
-										}
-			}	}	}	}	}	}	}
-		}		
-		else if (wAction >= 3001 && wAction <= 3013)
-		{	// Access PolyLp child of <various> object
-			CString sClassName;
-			switch (wAction)
-			{	case 3001 :	sClassName = "Spc"       ;		break;
-				case 3002 :	sClassName = "Ceiling"   ;		break;
-				case 3003 :	sClassName = "ExtFlr"    ;		break;
-				case 3004 :	sClassName = "ExtWall"   ;		break;
-				case 3005 :	sClassName = "IntFlr"    ;		break;
-				case 3006 :	sClassName = "IntWall"   ;		break;
-				case 3007 :	sClassName = "Roof"      ;		break;
-				case 3008 :	sClassName = "UndgrFlr"  ;		break;
-				case 3009 :	sClassName = "UndgrWall" ;		break;
-				case 3010 :	sClassName = "Window"    ;		break;
-				case 3011 :	sClassName = "Skylight"  ;		break;
-				case 3012 :	sClassName = "Door"      ;		break;
-				case 3013 :	sClassName = "ExtShdgObj";		break;
-			}
-			int iParClassID = (sClassName.IsEmpty() ? 0 : BEMPX_GetDBComponentID( sClassName ));
-			if (iParClassID > 0)
-			{	int iError;		BEM_ObjType eChildObjType;
-				CWnd* pWnd = GetFocus();
-				int iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );
-				if (iPLObjIdx < 0)
-				{	CString sCr8Msg;	sCr8Msg.Format( "No child PolyLp found for this %s.\nWould you like to create a new PolyLp to describe this %s's geometry?", sClassName, sClassName );
-			//		if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, MB_YESNO|MB_DEFBUTTON2 ) == IDYES)
-					if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::Yes)
-					{
-						CreateBuildingComponent( eiBDBCID_PolyLp, 0, FALSE /*bEditNewComponent*/, pWnd, 0, 0, -1, BEMPX_GetObjectByClass( iParClassID, iError, -1 /*iParObjIdx*/ ) );
-						iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );		ASSERT( iPLObjIdx >= 0 );
-						if (iPLObjIdx >= 0)
-						{	// check for at least one vertex in new PolyLp, and if not, create one
-							int iCartPtObjIdx = BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, 1 /*i1ChildIdx*/, iPLObjIdx /*iObjIdx*/ );
-							if (iCartPtObjIdx < 0)
-							{	// create a first CartesianPt child of the new PolyLp if one doesn't already exist
-								BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPLObjIdx );				ASSERT( pPolyLpObj );
-								BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/ );		ASSERT( pCartPtObj );
-								if (pCartPtObj)
-								{	long lNumOfPts = 1;
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumOfPts", eiBDBCID_PolyLp ), BEMP_Int, (void*) &lNumOfPts, BEMO_User, iPLObjIdx, BEMS_ProgDefault );
-					}	}	}	}
-				}
-				if (iPLObjIdx >= 0)
-				{	BEMPX_SetActiveObjectIndex( eiBDBCID_PolyLp, iPLObjIdx, eChildObjType );
-					int iTabCtrlWd, iTabCtrlHt;
-					VERIFY( GetDialogTabDimensions( eiBDBCID_PolyLp, iTabCtrlWd, iTabCtrlHt ) );
-					CString sDialogCaption;
-					GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption );
-					CSACBEMProcDialog td( eiBDBCID_PolyLp, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-											0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_PolyLp, 0 /*iUIMode*/ ) /*iMaxTabs*/,
-											(sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
-											NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
-											NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-											ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
-					if (td.DoModal() == IDOK)
-					{}
-			}	}
 		}
       else if (wAction == 3050)
       {
@@ -1859,7 +1883,7 @@ void CMainFrame::SaveFile( const char* /*psFileName*/, long lModDate /*=-1*/, bo
    {
       CString sCurrentFileName = pDoc->GetPathName();
 
-		int iLastSlash = max( sCurrentFileName.ReverseFind('/'), sCurrentFileName.ReverseFind('\\') );
+		int iLastSlash = std::max( sCurrentFileName.ReverseFind('/'), sCurrentFileName.ReverseFind('\\') );
 		int iLastDot   = 		 sCurrentFileName.ReverseFind('.');
 		CString sCurrExt = (iLastDot > iLastSlash ? sCurrentFileName.Right( (sCurrentFileName.GetLength() - iLastDot) ) : "");
 		CString sDfltExt;		LoadFileExtensionString( sDfltExt, true /*bUseProjectData*/, (!sCurrExt.IsEmpty() && IsXMLFileExt( sCurrExt )) /*bXML*/ );			ASSERT( !sDfltExt.IsEmpty() );
@@ -1954,7 +1978,7 @@ void CMainFrame::OnFileSave()
       		else
 				{	// SAC 11/2/15 - code to check for current filename having extension consistent w/ loaded ruleset, and if NOT then automatically update the extension (and inform the user)
 					CString sUserMessage;		bool bInitiateSaveAs = false;
-					int iLastSlash = max( sCurrentFileName.ReverseFind('/'), sCurrentFileName.ReverseFind('\\') );
+					int iLastSlash = std::max( sCurrentFileName.ReverseFind('/'), sCurrentFileName.ReverseFind('\\') );
 					int iLastDot   = 		 sCurrentFileName.ReverseFind('.');
 					CString sCurrExt = (iLastDot > iLastSlash ? sCurrentFileName.Right( (sCurrentFileName.GetLength() - iLastDot) ) : "");
 					CString sDfltExt;		LoadFileExtensionString( sDfltExt, true /*bUseProjectData*/, (!sCurrExt.IsEmpty() && IsXMLFileExt( sCurrExt )) /*bXML*/ );			ASSERT( !sDfltExt.IsEmpty() );
@@ -2039,7 +2063,7 @@ void CMainFrame::OnFileSaveAs()
       	   sProjFileName = pDoc->GetPathName();
 	      	if (sProjFileName.GetLength() > 1)
 				{	// SAC 11/2/15 - further mods to help ensure use of new ruleset-specific file extensions
-					int iLastSlash = max( sProjFileName.ReverseFind('/'), sProjFileName.ReverseFind('\\') );
+					int iLastSlash = std::max( sProjFileName.ReverseFind('/'), sProjFileName.ReverseFind('\\') );
 					int iLastDot   = 		 sProjFileName.ReverseFind('.');
 					CString sCurrExt = (iLastDot > iLastSlash ? sProjFileName.Right( (sProjFileName.GetLength() - iLastDot) ) : "");
 					LoadFileExtensionString( sDfltExt, true /*bUseProjectData*/, (!sCurrExt.IsEmpty() && IsXMLFileExt( sCurrExt )) /*bXML*/ );			ASSERT( !sDfltExt.IsEmpty() );
@@ -2160,7 +2184,7 @@ void CMainFrame::OnFileSaveAs()
 
 //      	      WriteToLogFile( WM_LOGUPDATED, "Project Saved", psLogFileName );
 					WriteToLogFile( WM_LOGUPDATED, "-----------------------------------------------------------------------------", psLogFileName );  // SAC 1/14/17
-		   		int iLastSlashIdx = max( sInputFile.ReverseFind('\\'), sInputFile.ReverseFind('/') );			ASSERT( iLastSlashIdx > 0 );
+		   		int iLastSlashIdx = std::max( sInputFile.ReverseFind('\\'), sInputFile.ReverseFind('/') );			ASSERT( iLastSlashIdx > 0 );
 		   		CString sLogMsg;   sLogMsg.Format( "Project Saved as '%s'", sInputFile.Right( sInputFile.GetLength()-iLastSlashIdx-1 ) );
       	      VERIFY( BEMPX_WriteLogFile( sLogMsg, NULL, false /*bBlankFile*/ ) );
 
@@ -2828,6 +2852,100 @@ void CMainFrame::OnFileImportModel()    // SAC 1/10/14
 				}
 			}
       }
+	}
+//#else
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+void CMainFrame::OnUpdateFileImportResGeometry(CCmdUI* pCmdUI)		// SAC 2/20/17
+{
+#ifdef UI_CARES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
+{
+#ifdef UI_CARES
+   CDocument* pDoc = GetActiveDocument();
+   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) && pDoc->SaveModified())
+   {
+//      ChangeProgDir( szPaths, szProjPath );
+
+      CFileDialog dlg( TRUE, _T("xml"), NULL, /*OFN_SHOWHELP |*/ OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+                       _T("Green Building XML Files (*.xml)|*.xml||"), this );
+      if (dlg.DoModal()==IDOK && dlg.m_pOFN)
+      {
+         CPathName sInputFile = dlg.GetPathName(); // Copy the filename into a CPathName so we can get the extension.
+			int iImpFileType = -1;
+			switch (dlg.m_pOFN->nFilterIndex)
+			{	case  1:	iImpFileType = 0;		break;
+			}
+			if (iImpFileType < 0)
+			{	ASSERT( FALSE );
+			}
+			else
+			{	CString sOutputPathFile = sInputFile;
+
+				QDomDocument doc("mydocument");
+				QFile file( (const char*) sOutputPathFile );
+				if (!file.open(QIODevice::ReadOnly))
+				    return;
+				if (!doc.setContent(&file)) {
+				    file.close();
+				    return;
+				}
+				file.close();
+
+				QDomElement docElem = doc.documentElement();
+
+//				int iInitPlaneObjs = BEMPX_GetNumObjects( eiBDBCID_Plane );
+				QString qsXMLMsg = "XML contents:\n";
+				int iNumCompsImported = ProcessXMLElement( Schema_GBXML, docElem, 0, qsXMLMsg );
+				QString sUsrMsg;
+				if (iNumCompsImported < 1)
+					sUsrMsg = QString( "No compatible geometric objects found in XML file:\n   %1" ).arg( (const char*) sOutputPathFile );
+				else
+				{	sUsrMsg = QString( "%1 geometric object(s) imported from XML file:\n   %2" ).arg( QString::number(iNumCompsImported), (const char*) sOutputPathFile );
+
+// TO DO - if PV arrays defined and any do not have specific locations then add to message -> "\n\nLocation details must be specified for all PV arrays in order to perform analysis on model containing Shade objects."
+
+#ifdef _DEBUG
+					sUsrMsg += "\n\n";	sUsrMsg += qsXMLMsg;
+#endif
+				}
+				BEMMessageBox( sUsrMsg );  // present dialog w/ summary of components read from gbXML file
+
+				SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+				pDoc->SetModifiedFlag( TRUE );
+	         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
+	         if (pMainView != NULL)            // update main view's tree control(s)
+	         {
+//#ifdef UI_CARES
+					pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+//#endif
+	            pMainView->SendMessage( WM_DISPLAYDATA );
+
+	            //CView* pLibView = (CView*) m_wndSplitter.GetPane(1,0);
+	            //if (pLibView != NULL)            // update main view's tree control(s)
+	            //   pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
+	         }
+
+//					long lEngyCdYr;
+//	"Set Proj:EnergyCodeYearNum"	Proj:EnergyCodeYearNum	= {	 0   }
+//			else if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSERpt_HaveReports" ), lEngyCdYr,  ) && lCSERpt_HaveReports > 0) ||
+//BOOL    BEMPROC_API __cdecl BEMPX_GetInteger( long lDBID, long& lData, long lDefault=0, int iDispDataType=-1,		// for backward compatibility with BEMPX_SetDataInteger
+//																	int iOccur=-1, int iObjType=BEMO_User, int iBEMProcIdx=-1 );
+//
+//					if (BEMPX_GetNumObjects( eiBDBCID_Plane ) > iInitPlaneObjs &&
+//						 ( > 2018 || ( > 2015 && AllowDesignRating > 0.5 And DesignRatingCalcs > 0)))
+
+			}
+		}
 	}
 //#else
 #endif
@@ -4113,7 +4231,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			{	if (!sErrResultMsg.IsEmpty())
 					sErrResultMsg += "\n\n";
 				sErrResultMsg += pszAnalysisErr;
-				iMaxErrCount -= min( 1, max( 6, (int) (strlen( pszAnalysisErr )/120) ) );
+				iMaxErrCount -= std::min( 1, std::max( 6, (int) (strlen( pszAnalysisErr )/120) ) );
 			}
 			if (iMaxErrCount > 0)
 			{	int iNumErrors = BEMPX_GetRulesetErrorCount();

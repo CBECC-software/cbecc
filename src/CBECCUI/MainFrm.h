@@ -246,6 +246,8 @@ protected:
 	afx_msg void OnToolsKeyPrep();
 	afx_msg void OnUpdateFileImportModel(CCmdUI* pCmdUI);
 	afx_msg void OnFileImportModel();
+	afx_msg void OnUpdateFileImportResGeometry(CCmdUI* pCmdUI);
+	afx_msg void OnFileImportResGeometry();
    afx_msg void OnHelpMandatoryRequirementsForAssemblies();
    afx_msg void OnUpdateHelpMandatoryRequirementsForAssemblies(CCmdUI* pCmdUI);
    afx_msg void OnHelpCSEDocumentation();

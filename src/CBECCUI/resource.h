@@ -132,7 +132,9 @@
 #define IDB_TREEHX2                     245
 #define IDB_TREEHXA                     246
 #define IDB_TREEHXA2                    247
-#define IDB_TREELAST                    247
+#define IDB_TREETESC                    248
+#define IDB_TREETESC2                   249
+#define IDB_TREELAST                    249
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303
@@ -440,6 +442,7 @@
 #define IDM_TOOLS_PROXY                 33028
 #define IDM_TOOLS_KEYPREP               33029
 #define IDM_TOOLS_GENMODEL              33030
+#define ID_FILE_IMPORTRESGEOM           33031
 
 // Next default values for new objects
 // 
@@ -447,7 +450,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        322
-#define _APS_NEXT_COMMAND_VALUE         33031
+#define _APS_NEXT_COMMAND_VALUE         33032
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif
