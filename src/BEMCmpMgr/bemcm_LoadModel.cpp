@@ -1140,7 +1140,7 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 				lCliZnNI  = BEMPX_GetIntegerAndStatus( lDBID_Proj_CliZnNum  , iStatusCZN, iSpecialVal, iError );
 				lWSI      = BEMPX_GetIntegerAndStatus( lDBID_Proj_WthrSta   , iStatusWS , iSpecialVal, iError );
 				lWSNI     = BEMPX_GetIntegerAndStatus( lDBID_Proj_WthrStaNum, iStatusWSN, iSpecialVal, iError );
-				if (iStatusZip >= BEMS_UserLibrary && lZipCodeI == 92133)
+				if (lBEMVersion < 13 && iStatusZip >= BEMS_UserLibrary && lZipCodeI == 92133)
 				{	// model included invalid ZipCode = 92133 - removed from ruleset Apr-2016 before release of ver 3d
 					long lZip = 92132;
 					BEMPX_SetBEMData( lDBID_Proj_ZipCode, BEMP_Int, (void*) &lZip, BEMO_User, -1, BEMS_UserDefined );
@@ -1148,6 +1148,37 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 					if (bCalledFromUI)
 						sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
 					psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+				}
+				else if (lBEMVersion < 13 && iStatusZip >= BEMS_UserLibrary && (lZipCodeI == 95321 || lZipCodeI == 92675))
+				{	// SAC 2/28/17 - certain zips switched from one CZ to another with release of 2016.3.0 ~Mar-2017 (tic #1972)
+					if ( (lZipCodeI == 95321 && lCliZnI == 12 && lWSI == 54 /*  MERCED_724815*/) ||
+						  (lZipCodeI == 92675 && lCliZnI ==  6 && lWSI == 24 /*TORRANCE_722955*/) )
+					{	// do nothing - user input already reflects new/corrected settings
+					}
+					else if ( (lZipCodeI == 95321 && lCliZnI != 16 && lWSI != 79 /*SOUTH-LAKE-TAHOE_725847*/) ||
+								 (lZipCodeI == 92675 && lCliZnI !=  8 && lWSI != 40 /*       SANTA-ANA_722977*/) ||
+								 ( iStatusCZ < BEMS_UserLibrary && iStatusCZN < BEMS_UserLibrary &&
+									iStatusWS < BEMS_UserLibrary && iStatusWSN < BEMS_UserLibrary ) )
+					{	// user has overridden past defaults -OR- all dependants will be defaulted, so simply inform the user of the change in CZ for the specified ZipCode
+						if (lZipCodeI == 95321)
+							sWarnMsg = "Mapping of ZipCode 95321 has switched from climate zone 16 to 12 (weather station South Lake Tahoe to Merced).";
+						else
+							sWarnMsg = "Mapping of ZipCode 92675 has switched from climate zone 8 to 6 (weather station Santa Ana to Torrance).";
+						if (bCalledFromUI)
+							sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
+						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+					}
+					else
+					{	// one or more Zip-dependencies are user-defined to the previous (incorrect) default, so re-default ALL
+						BEMPX_DefaultProperty( lDBID_Proj_CliZn     , iError );
+						BEMPX_DefaultProperty( lDBID_Proj_CliZnNum  , iError );
+						BEMPX_DefaultProperty( lDBID_Proj_WthrSta   , iError );
+						BEMPX_DefaultProperty( lDBID_Proj_WthrStaNum, iError );
+						sWarnMsg = QString( "Mapping of ZipCode %1 has switched climate zones and weather stations, so these data have been re-defaulted (based on ZipCode)." ).arg( QString::number( lZipCodeI ) );
+						if (bCalledFromUI)
+							sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
+						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+					}
 				}
 				else if (iStatusZip >= BEMS_UserLibrary && ((iStatusCZ >= BEMS_UserLibrary) || (iStatusCZN >= BEMS_UserLibrary)) &&
 							(iStatusWS < BEMS_UserLibrary) && (iStatusWSN < BEMS_UserLibrary))

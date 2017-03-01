@@ -1971,6 +1971,7 @@ static QString sDbgFileName;
 //											64 : Unable to open/delete/write CSE include file
 //											65 : Error copying simulation weather file to processing directory
 //											66 : Analysis aborted - user chose to abort due to compliance reporting issue(s)
+//											67 : Error evaluating ProposedModelPrep rules
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -3522,6 +3523,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 	}
+
+		// BEFORE writing SDD XML file, evaluate rulelist that does certain OSM-prep, incl. creating & assigning ThrmlEngyStor:DischrgSchRef, ChrgSchRef & ChlrOnlySchRef based on ModeSchRef
+			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation() && iRetVal == 0 &&
+				 BEMPX_RulelistExists( "ProposedModelPrep" ))
+			{
+				int iOSTPRetVal = LocalEvaluateRuleset( sErrMsg, 67, "ProposedModelPrep", bVerbose, pCompRuleDebugInfo );
+//											67 : Error evaluating ProposedModelPrep rules
+				if (iOSTPRetVal != 0 || BEMPX_AbortRuleEvaluation())
+//					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 67 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 67 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, 1 /*iStepCheck*/ );
+			}
 
 	QVector<QString> saSimulatedRunIDs;
 	double dEPlusVer=0.0;	// SAC 5/16/14
