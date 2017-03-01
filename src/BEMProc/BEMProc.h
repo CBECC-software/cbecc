@@ -609,6 +609,7 @@ double BEMPROC_API __cdecl BEMPX_GetDurationSinceMark( int i1SinceMarkIdx, bool 
 
 // SAC 5/27/00 - added to retrieve the names of each rulelist in the ruleset
 int    BEMPROC_API __cdecl BEMPX_GetRulelistNames( QVector<QString>& sRulelistNames );		// was: RuleProcGetRulelistNames()
+bool   BEMPROC_API __cdecl BEMPX_RulelistExists( LPCSTR listName );		// SAC 2/27/17
 
 /* called to evaluate rule lists */
 bool   BEMPROC_API __cdecl BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,		// was: RuleProcEvalList()

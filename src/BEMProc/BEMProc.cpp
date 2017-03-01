@@ -385,6 +385,21 @@ void BEMPX_DeleteObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/ )
       if (pObj->getObjectType() == BEMO_User)
          ResetCurrentParentPointers( pObj, 0, iBEMProcIdx );
 
+	// SAC 2/27/17 - test fix to remove this object from the ModelMappedObject lsits of OTHER loaded model copies
+		for (int iBP=0; iBP < eNumBEMProcsLoaded; iBP++)
+			if (iBP != iBEMProcIdx)
+			{	BEMProcObject* pChkBEMProc = getBEMProcPointer( iBP );			assert( pChkBEMProc );
+				if (pChkBEMProc)
+				{	int iChkNumObjs = pChkBEMProc->getClass( i1ClassIdx-1 )->ObjectCount( pObj->getObjectType() );
+					for (int iChkObj=0; iChkObj < iChkNumObjs; iChkObj++)
+					{	BEMObject* pChkObj = pChkBEMProc->getClass( i1ClassIdx-1 )->GetObject( pObj->getObjectType(), iChkObj );		assert( pChkObj );
+						if (pChkObj)
+						{	for (int iChkMdl=0; iChkMdl < eNumBEMProcsLoaded; iChkMdl++)
+							{	if (pChkObj->getModelMappedObject( iChkMdl ) == pObj)
+									pChkObj->setModelMappedObject( iChkMdl, NULL );  // REMOVE this object from ModelMapped lists of this object from other model copies
+						}	}
+			}	}	}
+
 	// added new call to ensure no other properties reference this deleted object (following its deletion)
 		CountObjectAssignments( pObj, false /*bCheckMaxRefs*/, false /*bStopAfterFirst*/, true /*bCheckUserRefLibObjs*/,
 										false /*bTreeCtrlCall*/, false /*bCopyDupRefs*/, iBEMProcIdx, true /*bResetAllRefs*/ );

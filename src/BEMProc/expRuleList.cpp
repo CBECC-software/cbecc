@@ -278,6 +278,10 @@ int BEMPX_GetRulelistNames( QVector<QString>& sRulelistNames )		// was: RuleProc
 {	return ruleSet.getRulelistNames( sRulelistNames );
 }
 
+bool BEMPX_RulelistExists( LPCSTR listName )		// SAC 2/27/17
+{	return (ruleSet.getRuleList( listName ) != NULL);
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined /*=FALSE*/, int iEvalOnlyClass /*=0*/,

@@ -167,37 +167,104 @@ void EnsureValidPath( QString sFileWithPath, QString& sFileToCheck )
 
 /////////////////////////////////////////////////////////////////////////////
 
-// SAC 5/10/14 - routine to replace CRLF followed by several spaces with a single space character - enabling strings
-//						to span multiple lines in ruleset source without impacting their use/display/logging during rule evaluation
-static const char* spszNLTab = "\n\t";
-static const char* spszNLSpc = "\n ";
-void FormatMultilineString( QString& str )
-{
-	int idxNLTab = str.indexOf( spszNLTab );
-	int idxNLSpc = str.indexOf( spszNLSpc );
-	int idxRemove = ( (idxNLTab >= 0 && idxNLSpc >= 0) ? std::min( idxNLTab, idxNLSpc ) : (idxNLTab >= 0 ? idxNLTab : (idxNLSpc >= 0 ? idxNLSpc : -1 )));
-	while (idxRemove >= 0)
-	{	int iRemoveBeforeNL = 0;		// SAC 2/12/15 - added code to remove spaces or tabs PRIOR TO portion of string being removed
-		while (idxRemove > 0 && (str[idxRemove-1] == ' ' || str[idxRemove-1] == '\t'))
-		{	iRemoveBeforeNL++;
-			idxRemove--;
+//// SAC 5/10/14 - routine to replace CRLF followed by several spaces with a single space character - enabling strings
+////						to span multiple lines in ruleset source without impacting their use/display/logging during rule evaluation
+//static const char* spszNLTab = "\n\t";
+//static const char* spszNLSpc = "\n ";
+//void FormatMultilineString( QString& str )
+//{
+//	int idxNLTab = str.indexOf( spszNLTab );
+//	int idxNLSpc = str.indexOf( spszNLSpc );
+//	int idxRemove = ( (idxNLTab >= 0 && idxNLSpc >= 0) ? std::min( idxNLTab, idxNLSpc ) : (idxNLTab >= 0 ? idxNLTab : (idxNLSpc >= 0 ? idxNLSpc : -1 )));
+//	while (idxRemove >= 0)
+//	{	int iRemoveBeforeNL = 0;		// SAC 2/12/15 - added code to remove spaces or tabs PRIOR TO portion of string being removed
+//		while (idxRemove > 0 && (str[idxRemove-1] == ' ' || str[idxRemove-1] == '\t'))
+//		{	iRemoveBeforeNL++;
+//			idxRemove--;
+//		}
+//		if (iRemoveBeforeNL > 0)
+//			str = str.left( idxRemove ) + str.right( str.length()-idxRemove-iRemoveBeforeNL );
+//
+//		int idxLastSpc = idxRemove+1;
+//		int iAdditionalChar = (idxRemove > 0 && str[idxRemove-1] == '\n' ? 0 : 1);  // if 2 newllines in a row, do not save last space or tab in spaced characters
+//		while (idxLastSpc < str.length() && (str[idxLastSpc] == ' ' || str[idxLastSpc] == '\t'))
+//			idxLastSpc++;
+//
+//		if (idxLastSpc >= str.length())
+//			str = str.left( idxRemove );
+//		else
+//			str = str.left( idxRemove ) + str.right( str.length()-idxLastSpc+iAdditionalChar );
+//
+//		idxNLTab = str.indexOf( spszNLTab );
+//		idxNLSpc = str.indexOf( spszNLSpc );
+//		idxRemove = ( (idxNLTab >= 0 && idxNLSpc >= 0) ? std::min( idxNLTab, idxNLSpc ) : (idxNLTab >= 0 ? idxNLTab : (idxNLSpc >= 0 ? idxNLSpc : -1 )));
+//	}
+//}
+// SAC 2/28/17 - replace above routine in response to Com ticket #1190 which highlighted inconsistencies in how messages are formatted based on white space present and absent from ruleset source
+static inline int IndexOfNextNewline( QString& str, int idx, int& iNLLen )
+{	int iRetVal = -1;
+	iNLLen = 1;
+	int idxNL  = str.indexOf( "\n",  idx );
+	int idxNL2 = str.indexOf( "\\n", idx );
+	if (idxNL >= 0 && idxNL2 >= 0)
+	{	if (idxNL2 < idxNL)
+		{	iRetVal = idxNL2;
+			iNLLen = 2;
 		}
-		if (iRemoveBeforeNL > 0)
-			str = str.left( idxRemove ) + str.right( str.length()-idxRemove-iRemoveBeforeNL );
-
-		int idxLastSpc = idxRemove+1;
-		int iAdditionalChar = (idxRemove > 0 && str[idxRemove-1] == '\n' ? 0 : 1);  // if 2 newllines in a row, do not save last space or tab in spaced characters
-		while (idxLastSpc < str.length() && (str[idxLastSpc] == ' ' || str[idxLastSpc] == '\t'))
-			idxLastSpc++;
-
-		if (idxLastSpc >= str.length())
-			str = str.left( idxRemove );
 		else
-			str = str.left( idxRemove ) + str.right( str.length()-idxLastSpc+iAdditionalChar );
+			iRetVal = idxNL;
+	}
+	else if (idxNL2 >= 0)
+	{	iRetVal = idxNL2;
+		iNLLen = 2;
+	}
+	else if (idxNL >= 0)
+		iRetVal = idxNL;
+	return iRetVal;
+}
 
-		idxNLTab = str.indexOf( spszNLTab );
-		idxNLSpc = str.indexOf( spszNLSpc );
-		idxRemove = ( (idxNLTab >= 0 && idxNLSpc >= 0) ? std::min( idxNLTab, idxNLSpc ) : (idxNLTab >= 0 ? idxNLTab : (idxNLSpc >= 0 ? idxNLSpc : -1 )));
+static inline bool InsertSpace( QString& str, int idx )
+{	bool bRetVal = true;
+	if (idx==0)
+		bRetVal = false;
+	else if (str[idx-1]=='-' || str[idx-1]==' ')
+		bRetVal = false;
+	else if (str[idx-1]=='\n' || (idx > 1 && str[idx-1]=='n' && str[idx-2]=='\\'))
+		bRetVal = false;
+	return bRetVal;
+}
+
+void FormatMultilineString( QString& str )
+{	int iNLLen;
+	int idxNL = IndexOfNextNewline( str, 0, iNLLen );
+	while (idxNL >= 0)
+	{	int iNumCharsToRemove = 0;
+		QString sInsert;
+		if (str.length() <= idxNL)
+		{ }	// doing nothing here will trim string to everything left of the newline
+		else if (str[idxNL+iNLLen] == '\n' || (str.length() > idxNL+iNLLen && str[idxNL+iNLLen] == '\\' && str[idxNL+iNLLen+1] == 'n'))
+			// swip over first of double newline and continue
+			idxNL += iNLLen;
+		else if (str[idxNL+iNLLen] == ' ' || str[idxNL+iNLLen] == '\t')
+		{	// when next char is a spc or tab, replace all subsequent spaces/tabs w/ a single space (or no space when preceeding char is '-')
+			iNumCharsToRemove += iNLLen;
+			while (str.length() > (idxNL+iNumCharsToRemove) && (str[idxNL+iNumCharsToRemove] == ' ' || str[idxNL+iNumCharsToRemove] == '\t'))
+				iNumCharsToRemove++;
+			sInsert = (InsertSpace( str, idxNL ) ? " " : "");
+		}
+		else
+		{	// replace the newline w/ a single space (or no space when preceeding char is '-')
+			iNumCharsToRemove = iNLLen;
+			sInsert = (InsertSpace( str, idxNL ) ? " " : "");
+		}
+
+		if (str.length() <= idxNL+iNumCharsToRemove)
+			str = str.left( idxNL );
+		else if (iNumCharsToRemove > 0)
+			str = str.left( idxNL ) + sInsert + str.right( str.length()-idxNL-iNumCharsToRemove );
+
+		//idxNL = str.indexOf( '\n', idxNL );
+		idxNL = IndexOfNextNewline( str, idxNL, iNLLen );
 	}
 }
 
