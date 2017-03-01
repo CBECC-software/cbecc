@@ -503,6 +503,7 @@ extern long	elDBID_Wiz_EnableFinishBtn;  // SAC 1/2/01
 #ifdef UI_CANRES
 extern int eiBDBCID_Project;
 extern int eiBDBCID_SchDay;
+extern int eiBDBCID_ThrmlEngyStorModeSchDay;  // SAC 2/27/17
 extern int eiBDBCID_SchWeek;
 extern int eiBDBCID_Schedule;
 extern int eiBDBCID_ConsAssm;

@@ -358,15 +358,15 @@ static int** ClassToConvertList( int iBDBClass )
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
 
 static int siZero = 0;
-static int  siNumArchComps = 27;
-static int  siaMode0[]  = { 1, siNumArchComps-9, siNumArchComps };
+static int  siNumArchComps = 28;
+static int  siaMode0[]  = { 1, siNumArchComps-10, siNumArchComps };
 static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
 									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
 									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
-									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay,
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum };
-static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay,
+static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, NULL };
 static int  siNumHVACComps = 28;
 static int  siaMode1[]  = { 3, siNumHVACComps-4, siNumHVACComps };
@@ -385,14 +385,14 @@ static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 
 // Same statics for LIBRARY TREE
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
-static int  siaLibMode0[]  = { 1, siNumArchComps-9, siNumArchComps };
+static int  siaLibMode0[]  = { 1, siNumArchComps-10, siNumArchComps };
 static int* siapLibMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
 									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
 									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
-									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay,
+									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum };
-static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay,
+static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, NULL };
 static int  siaLibMode1[]  = { 2, siNumHVACComps-4, siNumHVACComps };
 static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
@@ -475,6 +475,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
 {
    if      (iBDBClass == eiBDBCID_Project )              return  14;
    else if (iBDBClass == eiBDBCID_SchDay)                return  82;
+   else if (iBDBClass == eiBDBCID_ThrmlEngyStorModeSchDay) return  82;
    else if (iBDBClass == eiBDBCID_SchWeek)               return  80;
    else if (iBDBClass == eiBDBCID_Schedule)              return  78;
    else if (iBDBClass == eiBDBCID_ConsAssm)              return  68;

@@ -1992,7 +1992,7 @@ void CMainFrame::OnFileSave()
 					else if (!sCurrExt.IsEmpty() && !sDfltExt.IsEmpty() && !sDfltExt.CompareNoCase( sCurrExt ))
 					{	// do nothing - file extension correct as is, so move forward w/ Save action
 					}
-					else
+					else if (ReadProgInt( "options", "EnableStorageToCustomFileExtensions", 0 /*default*/ ) == 0)  // SAC 2/28/17 - prevent Save As when INI file allows for custom file extensions to be used (Com tic #1524)
 					{	sUserMessage.Format( "The project file extension is inconsistent with the selected compliance ruleset.  File extension should be '%s'.", sDfltExt );
    	   			bInitiateSaveAs = true;
 			//			CString sChkFN = sCurrentFileName.Left( iLastDot ) + sDfltExt;

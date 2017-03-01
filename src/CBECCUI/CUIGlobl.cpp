@@ -2219,6 +2219,7 @@ void GetObjectConversionInfo( int /*iBEMClassFrom*/, int /*iBEMClassTo*/, int& i
 #ifdef UI_CANRES
 int eiBDBCID_Project = 0;
 int eiBDBCID_SchDay = 0;
+int eiBDBCID_ThrmlEngyStorModeSchDay = 0;  // SAC 2/27/17
 int eiBDBCID_SchWeek = 0;
 int eiBDBCID_Schedule = 0;
 int eiBDBCID_ConsAssm = 0;
@@ -2333,6 +2334,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_Schedule)				{  iTabCtrlWd = 1010;    iTabCtrlHt = 690;   }	// SAC 3/4/14 - reduced ht for lower-res screens/projectors
 	else if (iBDBClass == eiBDBCID_SchWeek )				{  iTabCtrlWd =  550;    iTabCtrlHt = 620;   }
 	else if (iBDBClass == eiBDBCID_SchDay  )				{  iTabCtrlWd =  530;    iTabCtrlHt = 560;   }
+	else if (iBDBClass == eiBDBCID_ThrmlEngyStorModeSchDay )	{  iTabCtrlWd =  530;    iTabCtrlHt = 560;   }
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd =  730;    iTabCtrlHt = 535;   }
 	else if (iBDBClass == eiBDBCID_ThrmlZn )				{  iTabCtrlWd =  900;    iTabCtrlHt = 570;   }	// SAC 10/29/14
 //	else if (iBDBClass == eiBDBCID_CoilClg )				{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
@@ -2751,6 +2753,7 @@ void InitBEMDBIDs()
 
    eiBDBCID_Project            = BEMPX_GetDBComponentID( "Project" );
    eiBDBCID_SchDay             = BEMPX_GetDBComponentID( "SchDay" );
+   eiBDBCID_ThrmlEngyStorModeSchDay = BEMPX_GetDBComponentID( "ThrmlEngyStorModeSchDay" );
    eiBDBCID_SchWeek            = BEMPX_GetDBComponentID( "SchWeek" );
    eiBDBCID_Schedule           = BEMPX_GetDBComponentID( "Schedule" );
    eiBDBCID_ConsAssm           = BEMPX_GetDBComponentID( "ConsAssm" );
