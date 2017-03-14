@@ -1077,64 +1077,98 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 										}
 			}	}	}	}	}	}	}
 		}		
-		else if (wAction >= 3001 && wAction <= 3014)		// SAC 2/22/17 - added 3014 and moved out from within elif UI_CANRES to access in CARES
-		{	// Access PolyLp child of <various> object
-			CString sClassName;
-			switch (wAction)
-			{	case 3001 :	sClassName = "Spc"       ;		break;
-				case 3002 :	sClassName = "Ceiling"   ;		break;
-				case 3003 :	sClassName = "ExtFlr"    ;		break;
-				case 3004 :	sClassName = "ExtWall"   ;		break;
-				case 3005 :	sClassName = "IntFlr"    ;		break;
-				case 3006 :	sClassName = "IntWall"   ;		break;
-				case 3007 :	sClassName = "Roof"      ;		break;
-				case 3008 :	sClassName = "UndgrFlr"  ;		break;
-				case 3009 :	sClassName = "UndgrWall" ;		break;
-				case 3010 :	sClassName = "Window"    ;		break;
-				case 3011 :	sClassName = "Skylight"  ;		break;
-				case 3012 :	sClassName = "Door"      ;		break;
-				case 3013 :	sClassName = "ExtShdgObj";		break;
-				case 3014 :	sClassName = "Shade"     ;		break;
+		else if (wAction >= 3001 && wAction <= 3020)		// SAC 2/22/17 - added 3014 and moved out from within elif UI_CANRES to access in CARES
+		{	// Access PolyLp objects
+			CWnd* pWnd = GetFocus();
+			int iPLObjIdx = -1;   int iError;	BEM_ObjType eChildObjType = BEMO_User;
+			if (wAction >= 3016 && wAction <= 3020)	// SAC 3/1/17
+			{	// access to PolyLps describing Res PV arrays
+				int iPV0ArrIdx = (int) wAction - 3016;
+				CString sPVPolyErrMsg;
+				// evaluate rulelist to setup PolyLp first
+				long lPVWGeomSpecMethod;
+				if (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "PVWGeomSpecMethod", eiBDBCID_Proj )+iPV0ArrIdx, lPVWGeomSpecMethod ))
+					sPVPolyErrMsg.Format( "Error retrieving Proj:PVWGeomSpecMethod[%d].", iPV0ArrIdx+1 );
+				else
+				{	if (lPVWGeomSpecMethod == 0)    // "azimuth and tilt"
+					{	// need to first call rulelist to CREATE PolyLp
+						CString sPLRLName;	sPLRLName.Format( "Create_PVArrayPolyLp_%d", iPV0ArrIdx+1 );
+						BOOL bLogRuleEvaluation = (ReadProgInt( "options", "LogRuleEvaluation", 0 /*default*/ ) > 0);
+						if (!CMX_EvaluateRuleset( "Delete_Proj_PolyLp_Children", bLogRuleEvaluation, FALSE /*bTagDataAsUserDefined*/, bLogRuleEvaluation /*bVerboseOutput*/ ))
+							sPVPolyErrMsg.Format( "Error encountered evaluating '%s' rulelist.", "Delete_Proj_PolyLp_Children" );
+						else if (!CMX_EvaluateRuleset( sPLRLName, bLogRuleEvaluation, FALSE /*bTagDataAsUserDefined*/, bLogRuleEvaluation /*bVerboseOutput*/ ))
+							sPVPolyErrMsg.Format( "Error encountered evaluating '%s' rulelist.", sPLRLName );
+					}
+					if (sPVPolyErrMsg.IsEmpty())
+					{	BEMObject* pPolyLpObj = NULL;
+					   if (!BEMPX_GetObject( BEMPX_GetDatabaseID( "PVWGeomPolyLpRef", eiBDBCID_Proj )+iPV0ArrIdx, pPolyLpObj ) || pPolyLpObj==NULL)
+							sPVPolyErrMsg.Format( "Error retrieving Proj:PVWGeomPolyLpRef[%d].", iPV0ArrIdx+1 );
+						else
+						{	iPLObjIdx = BEMPX_GetObjectIndex( pPolyLpObj->getClass(), pPolyLpObj );
+							if (iPLObjIdx < 0)
+								sPVPolyErrMsg.Format( "Error retrieving object index of Proj:PVWGeomPolyLpRef[%d].", iPV0ArrIdx+1 );
+				}	}	}
+				if (!sPVPolyErrMsg.IsEmpty())
+               MessageBox( sPVPolyErrMsg );
 			}
-			int iParClassID = (sClassName.IsEmpty() ? 0 : BEMPX_GetDBComponentID( sClassName ));
-			if (iParClassID > 0)
-			{	int iError;		BEM_ObjType eChildObjType;
-				CWnd* pWnd = GetFocus();
-				int iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );
-				if (iPLObjIdx < 0)
-				{	CString sCr8Msg;	sCr8Msg.Format( "No child PolyLp found for this %s.\nWould you like to create a new PolyLp to describe this %s's geometry?", sClassName, sClassName );
-			//		if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, MB_YESNO|MB_DEFBUTTON2 ) == IDYES)
-					if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::Yes)
-					{
-						CreateBuildingComponent( eiBDBCID_PolyLp, 0, FALSE /*bEditNewComponent*/, pWnd, 0, 0, -1, BEMPX_GetObjectByClass( iParClassID, iError, -1 /*iParObjIdx*/ ) );
-						iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );		ASSERT( iPLObjIdx >= 0 );
-						if (iPLObjIdx >= 0)
-						{	// check for at least one vertex in new PolyLp, and if not, create one
-							int iCartPtObjIdx = BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, 1 /*i1ChildIdx*/, iPLObjIdx /*iObjIdx*/ );
-							if (iCartPtObjIdx < 0)
-							{	// create a first CartesianPt child of the new PolyLp if one doesn't already exist
-								BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPLObjIdx );				ASSERT( pPolyLpObj );
-								BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/ );		ASSERT( pCartPtObj );
-								if (pCartPtObj)
-								{	long lNumOfPts = 1;
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumOfPts", eiBDBCID_PolyLp ), BEMP_Int, (void*) &lNumOfPts, BEMO_User, iPLObjIdx, BEMS_ProgDefault );
-					}	}	}	}
+			else
+			{	// Access PolyLp child of <various> object
+				CString sClassName;
+				switch (wAction)
+				{	case 3001 :	sClassName = "Spc"       ;		break;
+					case 3002 :	sClassName = "Ceiling"   ;		break;
+					case 3003 :	sClassName = "ExtFlr"    ;		break;
+					case 3004 :	sClassName = "ExtWall"   ;		break;
+					case 3005 :	sClassName = "IntFlr"    ;		break;
+					case 3006 :	sClassName = "IntWall"   ;		break;
+					case 3007 :	sClassName = "Roof"      ;		break;
+					case 3008 :	sClassName = "UndgrFlr"  ;		break;
+					case 3009 :	sClassName = "UndgrWall" ;		break;
+					case 3010 :	sClassName = "Window"    ;		break;
+					case 3011 :	sClassName = "Skylight"  ;		break;
+					case 3012 :	sClassName = "Door"      ;		break;
+					case 3013 :	sClassName = "ExtShdgObj";		break;
+					case 3014 :	sClassName = "Shade"     ;		break;
+					case 3015 :	sClassName = "PVArrayGeom";	break;
 				}
-				if (iPLObjIdx >= 0)
-				{	BEMPX_SetActiveObjectIndex( eiBDBCID_PolyLp, iPLObjIdx, eChildObjType );
-					int iTabCtrlWd, iTabCtrlHt;
-					VERIFY( GetDialogTabDimensions( eiBDBCID_PolyLp, iTabCtrlWd, iTabCtrlHt ) );
-					CString sDialogCaption;
-					GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption );
-					CSACBEMProcDialog td( eiBDBCID_PolyLp, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-											0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_PolyLp, 0 /*iUIMode*/ ) /*iMaxTabs*/,
-											(sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
-											NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
-											NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-											ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
-					if (td.DoModal() == IDOK)
-					{}
+				int iParClassID = (sClassName.IsEmpty() ? 0 : BEMPX_GetDBComponentID( sClassName ));
+				if (iParClassID > 0)
+				{	iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );
+					if (iPLObjIdx < 0)
+					{	CString sCr8Msg;	sCr8Msg.Format( "No child PolyLp found for this %s.\nWould you like to create a new PolyLp to describe this %s's geometry?", sClassName, sClassName );
+				//		if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, MB_YESNO|MB_DEFBUTTON2 ) == IDYES)
+						if (BEMMessageBox( sCr8Msg, "Create New PolyLp?", 3 /*error*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::Yes)
+						{
+							CreateBuildingComponent( eiBDBCID_PolyLp, 0, FALSE /*bEditNewComponent*/, pWnd, 0, 0, -1, BEMPX_GetObjectByClass( iParClassID, iError, -1 /*iParObjIdx*/ ) );
+							iPLObjIdx = BEMPX_GetChildObjectIndex( iParClassID, eiBDBCID_PolyLp, iError, eChildObjType, 1 /*i1ChildIdx*/, -1 /*iObjIdx*/ );		ASSERT( iPLObjIdx >= 0 );
+							if (iPLObjIdx >= 0)
+							{	// check for at least one vertex in new PolyLp, and if not, create one
+								int iCartPtObjIdx = BEMPX_GetChildObjectIndex( eiBDBCID_PolyLp, eiBDBCID_CartesianPt, iError, eChildObjType, 1 /*i1ChildIdx*/, iPLObjIdx /*iObjIdx*/ );
+								if (iCartPtObjIdx < 0)
+								{	// create a first CartesianPt child of the new PolyLp if one doesn't already exist
+									BEMObject* pPolyLpObj = BEMPX_GetObjectByClass( eiBDBCID_PolyLp, iError, iPLObjIdx );				ASSERT( pPolyLpObj );
+									BEMObject* pCartPtObj = BEMPX_CreateObject( eiBDBCID_CartesianPt, NULL /*lpszName*/, pPolyLpObj, BEMO_User, FALSE /*bDefaultParent*/ );		ASSERT( pCartPtObj );
+									if (pCartPtObj)
+									{	long lNumOfPts = 1;
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "NumOfPts", eiBDBCID_PolyLp ), BEMP_Int, (void*) &lNumOfPts, BEMO_User, iPLObjIdx, BEMS_ProgDefault );
+						}	}	}	}
+					}
 			}	}
+			if (iPLObjIdx >= 0)
+			{	BEMPX_SetActiveObjectIndex( eiBDBCID_PolyLp, iPLObjIdx, eChildObjType );
+				int iTabCtrlWd, iTabCtrlHt;
+				VERIFY( GetDialogTabDimensions( eiBDBCID_PolyLp, iTabCtrlWd, iTabCtrlHt ) );
+				CString sDialogCaption;
+				GetDialogCaption( eiBDBCID_PolyLp, sDialogCaption );
+				CSACBEMProcDialog td( eiBDBCID_PolyLp, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+										0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( eiBDBCID_PolyLp, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+										(sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
+										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
+										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
+										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+				if (td.DoModal() == IDOK)
+				{}
+			}
 		}
 		else if (wAction == 3051)
 		{
@@ -2862,7 +2896,9 @@ void CMainFrame::OnFileImportModel()    // SAC 1/10/14
 void CMainFrame::OnUpdateFileImportResGeometry(CCmdUI* pCmdUI)		// SAC 2/20/17
 {
 #ifdef UI_CARES
-   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+		long lEnergyCodeYr;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && lEnergyCodeYr > 18) );
 #else
    pCmdUI->Enable( FALSE );
 #endif
@@ -2876,75 +2912,262 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
    {
 //      ChangeProgDir( szPaths, szProjPath );
 
-      CFileDialog dlg( TRUE, _T("xml"), NULL, /*OFN_SHOWHELP |*/ OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
-                       _T("Green Building XML Files (*.xml)|*.xml||"), this );
-      if (dlg.DoModal()==IDOK && dlg.m_pOFN)
-      {
-         CPathName sInputFile = dlg.GetPathName(); // Copy the filename into a CPathName so we can get the extension.
-			int iImpFileType = -1;
-			switch (dlg.m_pOFN->nFilterIndex)
-			{	case  1:	iImpFileType = 0;		break;
-			}
-			if (iImpFileType < 0)
-			{	ASSERT( FALSE );
-			}
+		int iNumPVArraysCr8 = 0, iNumInitPVArrays = BEMPX_GetNumObjects( eiBDBCID_PVArrayGeom );
+		int iNumShadesCr8   = 0, iNumInitShades   = BEMPX_GetNumObjects( eiBDBCID_Shade );
+		BOOL bContinue = TRUE;
+		long lEnergyCodeYr;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+		BOOL bPVWInputsActive = (lEnergyCodeYr >= 19);
+		if (lEnergyCodeYr == 16)
+		{	long lAllow, lDRCalcs;
+			bPVWInputsActive = ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllowDesignRating" ), lAllow   ) && lAllow > 0 &&
+				                  BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs" ), lDRCalcs ) && lDRCalcs > 0 );
+		}
+
+		if (iNumInitPVArrays > 0 || iNumInitShades > 0)
+		{	CString sUsrMsg;
+			if (iNumInitPVArrays > 0 && iNumInitShades > 0)
+				sUsrMsg.Format( "%d PVArrayGeom and %d Shade objects are present in the model.", iNumInitPVArrays, iNumInitShades );
+			else if (iNumInitPVArrays > 0)
+				sUsrMsg.Format( "%d PVArrayGeom object(s) are present in the model.", iNumInitPVArrays );
 			else
-			{	CString sOutputPathFile = sInputFile;
+				sUsrMsg.Format( "%d Shade object(s) are present in the model.", iNumInitShades );
+			sUsrMsg += "\n\nChoose 'Replace' to delete existing geometry objects before importing, or\n'Add' to add the geometry import to the existing model, or\n'Abort' to cancel the geometry import.";
 
-				QDomDocument doc("mydocument");
-				QFile file( (const char*) sOutputPathFile );
-				if (!file.open(QIODevice::ReadOnly))
-				    return;
-				if (!doc.setContent(&file)) {
-				    file.close();
-				    return;
+			XMSGBOXPARAMS xmbp;
+			sprintf( xmbp.szCustomButtons, "Replace Geometry\nAdd Geometry\nAbort Import" );
+		//	xmbp.nIdIcon = uiIcon;
+			int iUserChoice = XMessageBox( GetSafeHwnd(), sUsrMsg, "Add or Replace Geometry?", MB_DEFBUTTON1 | MB_ICONQUESTION, &xmbp );
+			switch (iUserChoice)
+			{	case IDCUSTOM1 :	{	// DELETE all existing geometry objects before importing new ones
+											int iError, idx=-1;
+											int* piNumObjs[] = {  &iNumInitPVArrays,     &iNumInitShades,  0  };
+											int  iObjCls[]   = {  eiBDBCID_PVArrayGeom,  eiBDBCID_Shade,   0  };
+											while (iObjCls[++idx] > 0)
+											{	if (*piNumObjs[idx] > 0)
+												{	for (int iDO = *piNumObjs[idx]-1; iDO >= 0; iDO--)
+													{	BEMObject* pDObj = BEMPX_GetObjectByClass( iObjCls[idx], iError, iDO );		ASSERT( pDObj );
+														if (pDObj)
+															BEMPX_DeleteObject( pDObj );
+													}
+													*piNumObjs[idx] = 0;
+											}	}
+										}	break;
+				case IDCUSTOM2 :	{	// do nothing - we will simply ADD new geometry to the existing model
+										}	break;
+				case IDCUSTOM3 :	{	bContinue = FALSE;
+										}	break;
+				default			:	ASSERT( FALSE );		break;
+			}
+		}
+
+		if (bContinue)
+		{
+	      CFileDialog dlg( TRUE, _T("xml"), NULL, /*OFN_SHOWHELP |*/ OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+	                       _T("Green Building XML Files (*.xml)|*.xml||"), this );
+	      if (dlg.DoModal()==IDOK && dlg.m_pOFN)
+	      {
+	         CPathName sInputFile = dlg.GetPathName(); // Copy the filename into a CPathName so we can get the extension.
+				int iImpFileType = -1;
+				switch (dlg.m_pOFN->nFilterIndex)
+				{	case  1:	iImpFileType = 0;		break;
 				}
-				file.close();
-
-				QDomElement docElem = doc.documentElement();
-
-//				int iInitPlaneObjs = BEMPX_GetNumObjects( eiBDBCID_Plane );
-				QString qsXMLMsg = "XML contents:\n";
-				int iNumCompsImported = ProcessXMLElement( Schema_GBXML, docElem, 0, qsXMLMsg );
-				QString sUsrMsg;
-				if (iNumCompsImported < 1)
-					sUsrMsg = QString( "No compatible geometric objects found in XML file:\n   %1" ).arg( (const char*) sOutputPathFile );
+				if (iImpFileType < 0)
+				{	ASSERT( FALSE );
+				}
 				else
-				{	sUsrMsg = QString( "%1 geometric object(s) imported from XML file:\n   %2" ).arg( QString::number(iNumCompsImported), (const char*) sOutputPathFile );
+				{	CString sOutputPathFile = sInputFile;
+
+					QDomDocument doc("mydocument");
+					QFile file( (const char*) sOutputPathFile );
+					if (!file.open(QIODevice::ReadOnly))
+					    return;
+					if (!doc.setContent(&file)) {
+					    file.close();
+					    return;
+					}
+					file.close();
+
+					QDomElement docElem = doc.documentElement();
+
+					QString qsXMLMsg = "XML contents:\n";
+					int iNumCompsImported = ProcessXMLElement( Schema_GBXML, docElem, 0, qsXMLMsg );
+					QString sUsrMsg;
+					if (iNumCompsImported < 1)
+						sUsrMsg = QString( "No compatible geometric objects found in XML file:\n   %1" ).arg( (const char*) sOutputPathFile );
+					else
+					{
+						iNumPVArraysCr8 = BEMPX_GetNumObjects( eiBDBCID_PVArrayGeom ) - iNumInitPVArrays;
+						iNumShadesCr8   = BEMPX_GetNumObjects( eiBDBCID_Shade )       - iNumInitShades;			ASSERT( iNumPVArraysCr8 > 0 || iNumShadesCr8 > 0 );
+						QString sPVA = (iNumPVArraysCr8 > 1 ? "PVArrayGeoms" : "PVArrayGeom");
+						QString sShd = (iNumShadesCr8   > 1 ? "Shades"       : "Shade");
+						if (iNumPVArraysCr8 > 0 && iNumShadesCr8 > 0)
+							sUsrMsg = QString( "%1 geometric objects (%2 %3 and %4 %5) imported from XML file:\n   %6" ).arg( QString::number(iNumCompsImported),
+																		QString::number( iNumPVArraysCr8 ), sPVA, QString::number( iNumShadesCr8 ), sShd, (const char*) sOutputPathFile );
+						else if (iNumPVArraysCr8 > 0)
+							sUsrMsg = QString( "%1 geometric (PVArrayGeom) object(s) imported from XML file:\n   %2" ).arg( QString::number(iNumPVArraysCr8), (const char*) sOutputPathFile );
+						else
+							sUsrMsg = QString( "%1 geometric (Shade) object(s) imported from XML file:\n   %2" ).arg( QString::number(iNumShadesCr8), (const char*) sOutputPathFile );
 
 // TO DO - if PV arrays defined and any do not have specific locations then add to message -> "\n\nLocation details must be specified for all PV arrays in order to perform analysis on model containing Shade objects."
 
 #ifdef _DEBUG
-					sUsrMsg += "\n\n";	sUsrMsg += qsXMLMsg;
+						sUsrMsg += "\n\n";	sUsrMsg += qsXMLMsg;
 #endif
-				}
-				BEMMessageBox( sUsrMsg );  // present dialog w/ summary of components read from gbXML file
+					}
 
-				SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
-				pDoc->SetModifiedFlag( TRUE );
-	         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
-	         if (pMainView != NULL)            // update main view's tree control(s)
-	         {
+					BOOL bInstallOverwrite = FALSE;
+					BOOL bInstallAppend = FALSE;
+					CArray<int,int> iaPVGeomAdds;
+					if (iNumPVArraysCr8 < 1 || !bPVWInputsActive)
+						BEMMessageBox( sUsrMsg );  // present dialog w/ summary of components read from gbXML file
+					else
+					{	CArray<int,int> iaCFI, iaDet, iaDetPVGeom;
+						long lPVWInps, lCFI, lGSM;  double dDCSz;
+						int iMaxIdx = (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVWInputs" ), lPVWInps ) && lPVWInps > 0) ? 4 : 0;
+						for (int idx=0; idx<=iMaxIdx; idx++)
+						{	if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:PVWDCSysSize" )+idx, dDCSz ) && dDCSz > 0)
+							{	if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVWCalFlexInstall" )+idx, lCFI ) && lCFI > 0)
+									iaCFI.Add(idx);
+								else if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVWGeomSpecMethod" )+idx, lGSM ) && lGSM > 0)
+									iaDetPVGeom.Add(idx);
+								else
+									iaDet.Add(idx);
+						}	}
+
+						if (lPVWInps == 0 || (iaCFI.GetSize() < 1 && iaDetPVGeom.GetSize() < 1 && iaDet.GetSize() < 1))
+						{	// PV inputs = 'Simplified' => no geometry present for any PV item
+							QString sPVItems = (iNumPVArraysCr8 > 5 ? "first 5 imported PVArrayGeom objects as PV systems" : 
+													 (iNumPVArraysCr8 == 1 ? "imported PVarrayGeom object as a PV system" : QString( "%1 imported PVArrayGeom objects as PV systems" ).arg( QString::number( iNumPVArraysCr8 ) ) ));
+							QString sPVMode = (lPVWInps == 0 ? " switch project into Detailed PV input mode and " : " ");
+							sUsrMsg += QString( "\n\nChoose 'Install' to%1add the %2, or\n"
+													  "'Skip Install' to return to the user interface." ).arg( sPVMode, sPVItems );
+							XMSGBOXPARAMS xmbp;
+							sprintf( xmbp.szCustomButtons, "Install PV Arrays\nSkip Install" );
+						//	xmbp.nIdIcon = uiIcon;
+							int iUserChoice = XMessageBox( GetSafeHwnd(), sUsrMsg.toLatin1().constData(), "Further Geometry Processing", MB_DEFBUTTON1 | MB_ICONQUESTION, &xmbp );
+							switch (iUserChoice)
+							{	case IDCUSTOM1 :	{	// Install new PV arrays to project PVW inputs...
+															bInstallOverwrite = TRUE;
+														}	break;
+								case IDCUSTOM2 :	{	// do nothing - return to the UI
+														}	break;
+								default			:	ASSERT( FALSE );		break;
+						}	}
+						else
+						{	// more complex options
+							int iPossibleToAppend = 5 - iaCFI.GetSize() - iaDetPVGeom.GetSize() - iaDet.GetSize();
+							sUsrMsg += "\n\nSummary of current PV array inputs:\n";
+							if (iaCFI.GetSize() > 0)
+								sUsrMsg += QString( "   %1 array(s) defined as CFI (w/ no geometry)\n" ).arg( QString::number( iaCFI.GetSize() ) );
+							if (iaDetPVGeom.GetSize() > 0)
+								sUsrMsg += QString( "   %1 array(s) that already reference PVArrayGeom geometry\n" ).arg( QString::number( iaDetPVGeom.GetSize() ) );
+							if (iaDet.GetSize() > 0)
+								sUsrMsg += QString( "   %1 array(s) that could be described using PVArrayGeom geometry\n" ).arg( QString::number( iaDet.GetSize() ) );
+
+							if (iNumInitShades > 0 || iNumShadesCr8 > 0)
+								sUsrMsg += "\nNote: All PV arrays must be defined with 3D geometry when Shade objects are defined (as is the case currently for this model).\n";
+
+							QString sPVItems = (iNumPVArraysCr8 > 5 ? "first 5 imported PVArrayGeom objects as PV systems" : 
+													 (iNumPVArraysCr8 == 1 ? "imported PVarrayGeom object as a PV system" : QString( "%1 imported PVArrayGeom objects as PV systems" ).arg( QString::number( iNumPVArraysCr8 ) ) ));
+							sUsrMsg += QString( "\nChoose 'Replace' to overwrite existing PV array inputs with the %1, or\n" ).arg( sPVItems );
+							if (iPossibleToAppend > 0)
+							{	QString sAppPVItems = (iNumPVArraysCr8 > iPossibleToAppend ? QString( "first %1 imported PVArrayGeom objects as PV systems" ).arg( QString::number( iPossibleToAppend ) ) : 
+															 (iNumPVArraysCr8 == 1 ? "imported PVarrayGeom object as a PV system" : QString( "%1 imported PVArrayGeom objects as PV systems" ).arg( QString::number( iNumPVArraysCr8 ) ) ));
+								sUsrMsg += QString( "'Append' to add the %1 (leaving existing PV inputs as is), or\n" ).arg( sAppPVItems );
+							}
+							sUsrMsg += "'Skip Install' to return to the user interface.";
+
+							XMSGBOXPARAMS xmbp;
+							if (iPossibleToAppend > 0)
+								sprintf( xmbp.szCustomButtons, "Replace PV Arrays\nAppend PV Arrays\nSkip Install" );
+							else
+								sprintf( xmbp.szCustomButtons, "Replace PV Arrays\nSkip Install" );
+						//	xmbp.nIdIcon = uiIcon;
+							int iUserChoice = XMessageBox( GetSafeHwnd(), sUsrMsg.toLatin1().constData(), "Further Geometry Processing", MB_DEFBUTTON1 | MB_ICONQUESTION, &xmbp );
+							switch (iUserChoice)
+							{	case IDCUSTOM1 :	{	// Install new PV arrays to project PVW inputs...
+															bInstallOverwrite = TRUE;
+														}	break;
+								case IDCUSTOM2 :	{	// Append or Skip
+															if (iPossibleToAppend > 0)
+																bInstallAppend = TRUE;
+														}	break;
+								case IDCUSTOM3 :	{	// do nothing - return to the UI
+														}	break;
+								default			:	ASSERT( FALSE );		break;
+						}	}
+
+						if (bInstallOverwrite || bInstallAppend)
+						{	SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );  // default model...
+							// first toggle PVWInputs to 'Detailed' (if necessary)
+							if (lPVWInps == 0)
+							{	lPVWInps = 1;
+								VERIFY( BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:PVWInputs" ), BEMP_Int, (void*) &lPVWInps ) >= 0 );
+							}
+							// then install PV array data
+							long lZero = 0, lGSMPV = 1;		double dZeroPt1 = 0.1;
+							int iError, iPVGeomIdx = iNumInitPVArrays;
+							BOOL bDoneInstallingPVs = FALSE;
+							for (int idx=0; (!bDoneInstallingPVs && idx < 5); idx++)
+							{	if (bInstallOverwrite || (BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:PVWDCSysSize" )+idx, dDCSz ) && dDCSz < 0.01))
+								{
+									BEMObject* pPVAGObj = BEMPX_GetObjectByClass( eiBDBCID_PVArrayGeom, iError, iPVGeomIdx++ );		ASSERT( pPVAGObj );
+									if (pPVAGObj)
+									{	// toggle ON this PV array by entering a very small PV DC SysSize
+										if (BEMPX_GetFloat(          BEMPX_GetDatabaseID( "Proj:PVWDCSysSize"      )+idx, dDCSz ) && dDCSz < 0.01)
+											VERIFY( BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:PVWDCSysSize"      )+idx, BEMP_Flt, (void*) &dZeroPt1 ) >= 0 );
+										// if this element is flagged as CFI, then remove that
+										if (BEMPX_SetDataInteger(    BEMPX_GetDatabaseID( "Proj:PVWCalFlexInstall" )+idx, lCFI ) && lCFI > 0)
+											VERIFY( BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:PVWCalFlexInstall" )+idx, BEMP_Int, (void*) &lZero ) >= 0 );
+										// then set GeomSpecMethod to "reference PVArrayGeom object" (1)
+										VERIFY( BEMPX_SetBEMData(    BEMPX_GetDatabaseID( "Proj:PVWGeomSpecMethod" )+idx, BEMP_Int, (void*) &lGSMPV ) >= 0 );
+										// and install reference to newly-imported PV array
+										VERIFY( BEMPX_SetBEMData(    BEMPX_GetDatabaseID( "Proj:PVWPVArrGeomRef"   )+idx, BEMP_Obj, (void*) pPVAGObj ) >= 0 );
+
+										iaPVGeomAdds.Add( idx+1 );
+										bDoneInstallingPVs = ((iPVGeomIdx - iNumInitPVArrays) == iNumPVArraysCr8);
+									}
+							}	}
+						}
+						if (iaPVGeomAdds.GetSize() > 0)
+						{	// inform user of PV installs and the need to enter additional PV system inputs
+							sUsrMsg = QString( "%1 PV array geometry object(s) have been installed as PV systems. Visit the PV tab of the Project Data tabbed dialog "
+													 "to specify other required data to ensure proper PV simulation." ).arg( QString::number( iaPVGeomAdds.GetSize() ) );
+							BEMMessageBox( sUsrMsg );  
+						}
+					}
+
+					SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+					pDoc->SetModifiedFlag( TRUE );
+		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
+		         if (pMainView != NULL)            // update main view's tree control(s)
+		         {
 //#ifdef UI_CARES
-					pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+						pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
 //#endif
-	            pMainView->SendMessage( WM_DISPLAYDATA );
+		            pMainView->SendMessage( WM_DISPLAYDATA );
 
-	            //CView* pLibView = (CView*) m_wndSplitter.GetPane(1,0);
-	            //if (pLibView != NULL)            // update main view's tree control(s)
-	            //   pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
-	         }
+						if (iaPVGeomAdds.GetSize() > 0)
+						{	int iTabCtrlWd, iTabCtrlHt, iBDBClass = eiBDBCID_Proj;
+							VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );
+							CString sDialogCaption;
+							GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
+			            CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
+			                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+			                              (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
+													NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
+													NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
+													ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );
+			            if (td.DoModal() == IDOK)
+			            {}
+						}
 
-//					long lEngyCdYr;
-//	"Set Proj:EnergyCodeYearNum"	Proj:EnergyCodeYearNum	= {	 0   }
-//			else if ( (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSERpt_HaveReports" ), lEngyCdYr,  ) && lCSERpt_HaveReports > 0) ||
-//BOOL    BEMPROC_API __cdecl BEMPX_GetInteger( long lDBID, long& lData, long lDefault=0, int iDispDataType=-1,		// for backward compatibility with BEMPX_SetDataInteger
-//																	int iOccur=-1, int iObjType=BEMO_User, int iBEMProcIdx=-1 );
-//
-//					if (BEMPX_GetNumObjects( eiBDBCID_Plane ) > iInitPlaneObjs &&
-//						 ( > 2018 || ( > 2015 && AllowDesignRating > 0.5 And DesignRatingCalcs > 0)))
-
-			}
+		            //CView* pLibView = (CView*) m_wndSplitter.GetPane(1,0);
+		            //if (pLibView != NULL)            // update main view's tree control(s)
+		            //   pLibView->SendMessage( WM_POPLIBTREE, eiCurrentTab );
+		         }
+			}	}
 		}
 	}
 //#else

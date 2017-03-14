@@ -2427,7 +2427,7 @@ int eiBDBCID_Door       = 0;
 int eiBDBCID_Cons       = 0;
 int eiBDBCID_Mat        = 0;
 int eiBDBCID_WindowType = 0;  // SAC 8/27/13
-int eiBDBCID_Plane      = 0;
+int eiBDBCID_PVArrayGeom = 0;
 int eiBDBCID_Shade      = 0;
 int eiBDBCID_PolyLp     = 0;
 int eiBDBCID_CartesianPt = 0;
@@ -2484,10 +2484,8 @@ long elDBID_ExteriorFloor_Construction = 0;
 long elDBID_FloorOverCrawl_Construction = 0;
 long elDBID_InteriorFloor_Construction = 0;
 long elDBID_InteriorCeiling_Construction = 0;
-long elDBID_Plane_Type = 0;            // BEMP_Sym ->  3:"PV Array"   - SAC 2/22/17
-//long elDBID_Plane_PolyLpRef = 0;       // BEMP_Obj -> PolyLp   - SAC 2/22/17
+long elDBID_PVArrayGeom_IsBldgAttached = 0;     // BEMP_Int   - SAC 3/2/17
 long elDBID_Shade_Type = 0;            // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
-//long elDBID_Shade_PolyLpRef = 0;       // BEMP_Obj -> PolyLp   - SAC 2/21/17
 long elDBID_PolyLp_Area = 0;
 long elDBID_CartesianPt_Coord = 0;       // BEMP_Flt,  3,  0,  1, "ft",  "X, Y, Z coordinates of polyloop vertex"   - SAC 2/21/17
 long elDBID_Cons_Materials1  = 0;
@@ -2558,6 +2556,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_WindowType)			{	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_Door   )	   		{  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
 	else if (iBDBClass == eiBDBCID_Cons   )	   		{  iTabCtrlWd = 670;    iTabCtrlHt = 610;   }
+	else if (iBDBClass == eiBDBCID_PVArrayGeom )			{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 3/2/17
 	else if (iBDBClass == eiBDBCID_Shade  )				{  iTabCtrlWd = 350;    iTabCtrlHt = 250;   }	// SAC 2/22/17
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17
 	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
@@ -2902,7 +2901,7 @@ void InitBEMDBIDs()
 	eiBDBCID_Cons       = BEMPX_GetDBComponentID( "Cons" );
 	eiBDBCID_Mat        = BEMPX_GetDBComponentID( "Mat" );
 	eiBDBCID_WindowType = BEMPX_GetDBComponentID( "WindowType" );  // SAC 8/27/13
-	eiBDBCID_Plane      = BEMPX_GetDBComponentID( "Plane" );				// SAC 2/21/17
+	eiBDBCID_PVArrayGeom = BEMPX_GetDBComponentID( "PVArrayGeom" );	// SAC 3/2/17
 	eiBDBCID_Shade      = BEMPX_GetDBComponentID( "Shade" );				// SAC 2/22/17
 	eiBDBCID_PolyLp     = BEMPX_GetDBComponentID( "PolyLp" );			// SAC 2/21/17
 	eiBDBCID_CartesianPt = BEMPX_GetDBComponentID( "CartesianPt" );	// SAC 2/21/17
@@ -2977,11 +2976,9 @@ void InitBEMDBIDs()
 	elDBID_Cons_Materials9  = BEMPX_GetDatabaseID( "Materials[9]",  eiBDBCID_Cons );
 	elDBID_Cons_Materials10 = BEMPX_GetDatabaseID( "Materials[10]", eiBDBCID_Cons );
 
-	elDBID_Plane_Type         = BEMPX_GetDatabaseID( "Type",       eiBDBCID_Plane );     // BEMP_Sym ->  3:"PV Array"   - SAC 2/22/17
-//	elDBID_Plane_PolyLpRef    = BEMPX_GetDatabaseID( "PolyLpRef",  eiBDBCID_Plane );     // BEMP_Obj -> PolyLp   - SAC 2/22/17
+	elDBID_PVArrayGeom_IsBldgAttached = BEMPX_GetDatabaseID( "IsBldgAttached", eiBDBCID_PVArrayGeom );     // BEMP_Int   - SAC 2/22/17
 
 	elDBID_Shade_Type         = BEMPX_GetDatabaseID( "Type",       eiBDBCID_Shade );     // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
-//	elDBID_Shade_PolyLpRef    = BEMPX_GetDatabaseID( "PolyLpRef",  eiBDBCID_Shade );     // BEMP_Obj -> PolyLp   - SAC 2/21/17
 
 	elDBID_PolyLp_Area        = BEMPX_GetDatabaseID( "Area",     eiBDBCID_PolyLp );			// SAC 2/24/17
 	elDBID_CartesianPt_Coord  = BEMPX_GetDatabaseID( "Coord",    eiBDBCID_CartesianPt );       // BEMP_Flt,  3,  0,  1, "ft",  "X, Y, Z coordinates of polyloop vertex"   - SAC 2/21/17

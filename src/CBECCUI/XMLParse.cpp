@@ -79,10 +79,11 @@ QString getSubElemString( QDomElement& elem, QString sSubElem )
 //int eiBDBCID_CartesianPt = 0;
 //	elDBID_CartesianPt_Coord  = BEMPX_GetDatabaseID( "Coord",    eiBDBCID_CartesianPt );       // BEMP_Flt,  3,  0,  1, "ft",  "X, Y, Z coordinates of polyloop vertex"   - SAC 2/21/17
 
-//extern long elDBID_Plane_Type;            // BEMP_Sym ->  3:"PV Array"   - SAC 2/21/17
-//extern long elDBID_Plane_PolyLpRef;       // BEMP_Obj -> PolyLp   - SAC 2/21/17
-//extern long elDBID_Shade_Type;            // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
-//extern long elDBID_Shade_PolyLpRef;       // BEMP_Obj -> PolyLp   - SAC 2/21/17
+// eiBDBCID_PVArrayGeom
+// extern long elDBID_PVArrayGeom_IsBldgAttached;     // BEMP_Int  - SAC 3/2/17
+
+// extern long elDBID_Shade_Type;            // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
+// extern long elDBID_Shade_PolyLpRef;       // BEMP_Obj -> PolyLp   - SAC 2/21/17
 
 int ProcessXMLElement_Shade( int /*iSchema*/, QDomElement& elem, int lvl, QString& qsXMLMsg )
 {
@@ -93,21 +94,21 @@ int ProcessXMLElement_Shade( int /*iSchema*/, QDomElement& elem, int lvl, QStrin
 
 	QString sFamNm = getSubElemString( elem, "FamilyName" );
 	bool bFamInclPV   = (!sFamNm.isEmpty() && sFamNm.indexOf("Photovoltaic") >= 0);
-	bool bFamInclBldg = (!sFamNm.isEmpty() && sFamNm.indexOf("Building") >= 0);
-	long iShadeType = (bFamInclBldg ? 2 : 1);
+	bool bFamInclSite = (!sFamNm.isEmpty() && sFamNm.indexOf("Site") >= 0);		// SAC 3/12/17 - switched default family from Site to Building
+	long iShadeType = (bFamInclSite ? 1 : 2) - (bFamInclPV ? 1 : 0);
 
 	int iNumPolyLpVerts = 0;
 	QDomElement elemPlanarGeom;
 	if (getSubElem( elem, elemPlanarGeom, "PlanarGeometry" ))
 	{
 		if (bFamInclPV)
-			sName += (bFamInclBldg ? " (bldg pv)" : (sFamNm.indexOf("Site") >= 0 ? " (site pv)" : " (pv)"));
+			sName += (bFamInclSite ? " (site pv)" : (sFamNm.indexOf("Building") >= 0 ? " (bldg pv)" : " (pv)"));
 
-		BEMObject* pShadeObj = BEMPX_CreateObject( eiBDBCID_Shade, sName.toLatin1().constData() );		assert( pShadeObj );
+		BEMObject* pShadeObj = BEMPX_CreateObject( (bFamInclPV ? eiBDBCID_PVArrayGeom : eiBDBCID_Shade), sName.toLatin1().constData() );		assert( pShadeObj );
 		if (pShadeObj)
 		{	sName = pShadeObj->getName();
 			int iShadeObjIdx = BEMPX_GetObjectIndex( pShadeObj->getClass(), pShadeObj );						assert( iShadeObjIdx >= 0 );
-			BEMPX_SetBEMData( elDBID_Shade_Type, BEMP_Int, &iShadeType, BEMO_User, iShadeObjIdx );
+			BEMPX_SetBEMData( (bFamInclPV ? elDBID_PVArrayGeom_IsBldgAttached : elDBID_Shade_Type), BEMP_Int, &iShadeType, BEMO_User, iShadeObjIdx );
 
 			int iCPIdx = -1;
 			BEMObject* pPLObj = NULL;
@@ -158,8 +159,8 @@ int ProcessXMLElement_Shade( int /*iSchema*/, QDomElement& elem, int lvl, QStrin
 	QString spc = "   ";
 	for (int i=0; i<lvl; i++)
 		spc += "   ";
-	QString sObjTyp = (bFamInclBldg ? "Bldg " : (sFamNm.indexOf("Site") >= 0 ? "Site " : ""));
-	sObjTyp += "Shade";
+	QString sObjTyp = (bFamInclSite ? "Site " : (sFamNm.indexOf("Building") >= 0 ? "Bldg " : ""));
+	sObjTyp += (bFamInclPV ? "PVArrayGeom" : "Shade");
 	qsXMLMsg += QString( "%1created %2 '%3' with %4 PolyLp vertices\n" ).arg( spc, sObjTyp, sName, QString::number(iNumPolyLpVerts) );
 	return (iNumPolyLpVerts > 0 ? 1 : 0);
 }

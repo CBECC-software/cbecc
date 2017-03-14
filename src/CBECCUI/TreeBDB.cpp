@@ -573,12 +573,12 @@ static int** ClassToConvertList( int iBDBClass )
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
 static int siZero = 0;
-static int  siNumArchComps = 25;
-static int  siaMode0[]  = { 4, siNumArchComps-6, siNumArchComps };
+static int  siNumArchComps = 26;
+static int  siaMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
 static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
-									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_Shade };
-static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_Shade, NULL };
+									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
+static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
 static int  siaMode1[]  = { 3, 3, 13 };
 static int* siapMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVentRpt, &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan,
 										&eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
@@ -593,11 +593,11 @@ static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
-static int  siaLibMode0[]  = { 4, siNumArchComps-6, siNumArchComps };
+static int  siaLibMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
 static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
-										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_Shade };
-static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_Shade, NULL };
+										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
+static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
 static int  siaLibMode1[]  = { 3, 3, 13 };
 static int* siapLibMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVentRpt, &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan,
 											&eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
@@ -782,6 +782,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int /*iObjOccur*/ )
    else if (iBDBClass == eiBDBCID_Cons     			)   return  68;
    else if (iBDBClass == eiBDBCID_Mat      			)   return  70;
    else if (iBDBClass == eiBDBCID_WindowType			)   return  98;  // SAC 8/27/13
+   else if (iBDBClass == eiBDBCID_PVArrayGeom		)   return  76;  // SAC 3/2/17
    else if (iBDBClass == eiBDBCID_Shade   			)   return  32;  // SAC 2/22/17
    else if (iBDBClass == eiBDBCID_PolyLp  			)   return  76;
    else if (iBDBClass == eiBDBCID_HVACSys  			)   return  36;

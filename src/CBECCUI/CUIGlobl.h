@@ -655,7 +655,7 @@ extern int eiBDBCID_Door;
 extern int eiBDBCID_Cons;
 extern int eiBDBCID_Mat;
 extern int eiBDBCID_WindowType;  // SAC 8/27/13
-extern int eiBDBCID_Plane;
+extern int eiBDBCID_PVArrayGeom;
 extern int eiBDBCID_Shade;
 extern int eiBDBCID_PolyLp;
 extern int eiBDBCID_CartesianPt;
@@ -712,10 +712,8 @@ extern long elDBID_ExteriorFloor_Construction;
 extern long elDBID_FloorOverCrawl_Construction;
 extern long elDBID_InteriorFloor_Construction;
 extern long elDBID_InteriorCeiling_Construction;
-extern long elDBID_Plane_Type;            // BEMP_Sym ->  3:"PV Array"   - SAC 2/22/17
-//extern long elDBID_Plane_PolyLpRef;       // BEMP_Obj -> PolyLp   - SAC 2/22/17
+extern long elDBID_PVArrayGeom_IsBldgAttached;     // BEMP_Int  - SAC 3/2/17
 extern long elDBID_Shade_Type;            // BEMP_Sym ->  0:"- select type -"  1:"Site Shade"  2:"Building Shade"   - SAC 2/21/17
-//extern long elDBID_Shade_PolyLpRef;       // BEMP_Obj -> PolyLp   - SAC 2/21/17
 extern long elDBID_PolyLp_Area;			   // SAC 2/24/17
 extern long elDBID_CartesianPt_Coord;     // BEMP_Flt,  3,  0,  1, "ft",  "X, Y, Z coordinates of polyloop vertex"   - SAC 2/21/17
 extern long elDBID_Cons_Materials1;
