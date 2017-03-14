@@ -2389,7 +2389,9 @@ static bool NumericFormatValid( QString& sFmtStr, int iChrIdx, ExpError* error )
 }
 
 // SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
-static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode** pNode, int iNumNodes, ExpError* error )	// SAC 4/25/16 - added 'error' arg to report errors
+// SAC 4/25/16 - added 'error' arg to report errors
+// SAC 3/8/17 - added bPreserveNewlines to avoid calling FormatMultilineString() in certain cases, such as during evaluation of WriteToExportFile() or WriteToFile()
+static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode** pNode, int iNumNodes, ExpError* error, bool bPreserveNewlines )
 {	bool bRetVal = true;
 
 		QString sFormatThis;
@@ -2397,7 +2399,8 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
 //		try	// SAC 4/25/16 - insert try/catch to catch rare instances where CString::Format() throws an exception
 //		{
                   sRetStr.clear();
-						FormatMultilineString( sFormat );	// SAC 5/11/14
+                  if (!bPreserveNewlines)  // SAC 3/8/17
+							FormatMultilineString( sFormat );	// SAC 5/11/14
                   for (int i=0; (bRetVal && sFormat.length() > 0 && i < iNumNodes); i++)
                   {
                      int iPctIdx = sFormat.indexOf( '%' );
@@ -3310,9 +3313,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										//																	0 => other )
 										//																	1 => Wall, WallHgt )
 										//																	2 => Window, WallHgt, WallArea )
-										ExpNode* pNode[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+										//																	3 => Door, WallHgt, WallArea )
+										//																	4 => Shade, Height, Shape (0-Rect,1-Oct) and Centroid X,Y,Z   - SAC 3/1/17
+										//																	5 => Shade, Height, Shape (0-Rect,1-Oct) and Lower-Left X,Y   - SAC 3/4/17
+										ExpNode* pNode[10] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 										QString sErrMsg;
-										bool bNumArgsOK = (nArgs > 4 && nArgs < 8);
+										bool bNumArgsOK = (nArgs > 4 && nArgs < 11);
 										if (!ruleSet.initGeomIDs( pEval, error ))
 										{	// do nothing here - error already posted
 										}
@@ -3335,9 +3341,17 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
 										int iPolyLpObjIdx = -1, iStatus=0, iSpecialVal, iError;
 										if (sErrMsg.isEmpty())
-										{	iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->info.fValue /*Area*/, pNode[1]->info.fValue /*Azimuth*/, pNode[2]->info.fValue /*Tilt*/,
-																		pNode[3]->info.fValue /*Z*/, (int) pNode[4]->info.fValue /*PolyType*/,
-																		(pNode[5] ? pNode[5]->info.fValue : -1) /*Arg6*/, (pNode[6] ? pNode[6]->info.fValue : -1) /*Arg7*/ );
+										{	if (pNode[4]->info.fValue == 5)  // different argument specification for Shade w/ lower-left X,Y vs. others where X,Y,Z is centroid
+												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->info.fValue /*Area*/, pNode[1]->info.fValue /*Azimuth*/, pNode[2]->info.fValue /*Tilt*/,
+																		pNode[3]->info.fValue /*Z*/, (int) pNode[4]->info.fValue /*PolyType*/, (pNode[5] ? pNode[5]->info.fValue : -1) /*Arg6*/,
+																		(pNode[6] ? pNode[6]->info.fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 
+																		(pNode[7] ? pNode[7]->info.fValue : -1) /*dDX*/, (pNode[8] ? pNode[8]->info.fValue : -1) /*dDY*/ );  //, (pNode[9] ? pNode[9]->info.fValue : -1) /*dDZ*/ );
+											else
+												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->info.fValue /*Area*/, pNode[1]->info.fValue /*Azimuth*/, pNode[2]->info.fValue /*Tilt*/,
+																		pNode[3]->info.fValue /*Z*/, (int) pNode[4]->info.fValue /*PolyType*/, (pNode[5] ? pNode[5]->info.fValue : -1) /*Arg6*/,
+																		(pNode[6] ? pNode[6]->info.fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 0 /*dDX*/,
+																		0 /*dDY*/, 0 /*dDZ*/, -1 /*dChldHgt*/, -1 /*dChldX*/, -1 /*dChldY*/, (pNode[7] ? pNode[7]->info.fValue : -1) /*CentX*/,
+																		(pNode[8] ? pNode[8]->info.fValue : -1) /*CentY*/, (pNode[9] ? pNode[9]->info.fValue : -1) /*CentZ*/ );
 											if (iPolyLpObjIdx < 0)
 												sErrMsg = QString( "Error encountered in CreatePolyLpChild() function - return code %1." ).arg( QString::number( iPolyLpObjIdx ) );
 											else
@@ -4286,10 +4300,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                // now assemble string from arguments
                QString sRetStr;
                bool bFmtOK = true;	// SAC 4/25/16 - added to handle unsuccessful string formatting
+               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile);  // SAC 3/8/17
                if (bArgsOK)
                {
                   QString sFormat = (char*) pNode[0]->info.pValue;
-						bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
+						bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error, bPreserveNewlines );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
 
                   // now perform the appropriate action with the resulting string
                   if (bFmtOK && sRetStr.length() > 0 && op != BF_Format)
@@ -4471,7 +4486,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            else
                               ExpSetErr( error, EXP_RuleProc, "First FindInString() function argument must be a string." );
 
-                           if (!sSubStr.isEmpty() && sMainStr.length() > sSubStr.length())
+                           if (!sSubStr.isEmpty() && sMainStr.length() >= sSubStr.length())
                            {  pNode->type = EXP_Value;
                               pNode->info.fValue = (double) sMainStr.indexOf( sSubStr );
                            }
@@ -7550,7 +7565,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							if (iProcObjIdx > 1)
 								iFmtNodeIdx += (iProcObjIdx == iNumProcObjs ? 2 : 1);
 
-							if (ProcessFormatStatement( sThisObj, (const char*) pOrigNodes[iFmtNodeIdx]->info.pValue, pFmtNodes, iNumFmtArgs, error ))
+							if (ProcessFormatStatement( sThisObj, (const char*) pOrigNodes[iFmtNodeIdx]->info.pValue, pFmtNodes, iNumFmtArgs, error, true /*bPreserveNewlines*/ ))
 								sResult += sThisObj;
 							else
 							{	ExpSetErr( error, EXP_RuleProc, "Error populating formatted string from function arguments in BEMProcSumChildrenAllOrRevRef()" );

@@ -374,7 +374,8 @@ BEMObject* __cdecl BEMPX_ImportLibraryObjectToUserModel( BEMObject* pLibObj, BOO
 		// routine to create a PolyLp based on various 2D geometry inputs		// SAC 1/7/15 - added pdFurthestFromXYOrig for window shade processing	// SAC 1/10/15 - child Hgt/X/Y also for window shades
 int  BEMPROC_API __cdecl BEMPX_CreatePolyLoop( double dArea, double dAzimuth, double dTilt, double dZ, int iPolyType=0,
 														double dArg6=-1, double dArg7=-1, int iBEMProcIdx=-1, double* pdFurthestFromXYOrig=NULL,
-														double dDX=0, double dDY=0, double dDZ=0, double dChldHgt=-1, double dChldX=-1, double dChldY=-1 );
+														double dDX=0, double dDY=0, double dDZ=0, double dChldHgt=-1, double dChldX=-1, double dChldY=-1,
+														double dCentX=-999, double dCentY=-999, double dCentZ=-999 );	// SAC 3/1/17 - added centroid args
 
 void BEMPROC_API __cdecl BEMPX_DeleteAllObjects( int iOnlyTypeToDelete=-1, BOOL bReInitSymbols=TRUE );
 void BEMPROC_API __cdecl BEMPX_DeleteObject( BEMObject* pObj, int iBEMProcIdx=-1 );

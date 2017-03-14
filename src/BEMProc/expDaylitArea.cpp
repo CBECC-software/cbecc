@@ -3267,6 +3267,8 @@ double InitPolyLoop( int iPolyLpObjIdx, ExpEvalStruct* /*pEval*/, ExpError* /*pE
 //									1 => Wall		=> 	WallHgt		Unused
 //									2 => Window		=>		WallHgt		WallArea
 //									3 => Door		=>		WallHgt		WallArea
+//									4 => Shade		=>		PolyHgt		Shape			also dCentX/Y/Z
+//									5 => Shade		=>		PolyHgt		Shape			also lower-left X/Y
 //
 //		return value:	>= 0 : 0-based object index of newly created PolyLp
 //							  -1 : Area not > 0
@@ -3281,10 +3283,12 @@ double InitPolyLoop( int iPolyLpObjIdx, ExpEvalStruct* /*pEval*/, ExpError* /*pE
 //							 -11 : Wall height (Arg6) <= 0
 //							 -12 : Wall height (Arg6) >= wall area
 //							 -13 : Wall area (Arg7) <= 0 or < window/door area
+//							 -14 : PolyLp shape (Arg7) < 0 or > 1 (0-Rectangle, 1-Octagon)
 //
 int BEMPX_CreatePolyLoop(	double dArea, double dAzimuth, double dTilt, double dZ, int iPolyType /*=0*/,
 									double dArg6 /*=-1*/, double dArg7 /*=-1*/, int iBEMProcIdx /*=-1*/, double* pdFurthestFromXYOrig /*=NULL*/,
-									double dDX /*=0*/, double dDY /*=0*/, double dDZ /*=0*/, double dChldHgt /*=-1*/, double dChldX /*=-1*/, double dChldY /*=-1*/ )
+									double dDX /*=0*/, double dDY /*=0*/, double dDZ /*=0*/, double dChldHgt /*=-1*/, double dChldX /*=-1*/, double dChldY /*=-1*/,
+									double dCentX /*=-999*/, double dCentY /*=-999*/, double dCentZ /*=-999*/ )
 {	int iPolyLpObjIdx = -999;
 	if (dArea <= 0)
 		iPolyLpObjIdx = -1;
@@ -3292,10 +3296,10 @@ int BEMPX_CreatePolyLoop(	double dArea, double dAzimuth, double dTilt, double dZ
 //		iPolyLpObjIdx = -2;
 	else if (dTilt < 0 || dTilt > 180)
 		iPolyLpObjIdx = -3;
-	else if (iPolyType < 0 || iPolyType > 3)
+	else if (iPolyType < 0 || iPolyType > 5)
 		iPolyLpObjIdx = -4;
 
-	else if ((iPolyType >= 1 && iPolyType <= 3) &&  dArg6 <= 0    )						// wall, window or door => Arg6 = Wall Ht <= 0
+	else if ((iPolyType >= 1 && iPolyType <= 5) &&  dArg6 <= 0    )						// wall, window or door => Arg6 = Wall Ht <= 0
 		iPolyLpObjIdx = -11;
 	else if ( iPolyType == 1                    &&  dArg6 >= dArea)						// wall, window or door => Arg6 = Wall Ht >= Wall Area
 		iPolyLpObjIdx = -12;
@@ -3305,6 +3309,9 @@ int BEMPX_CreatePolyLoop(	double dArea, double dAzimuth, double dTilt, double dZ
 	else if ((iPolyType >= 2 && iPolyType <= 3) &&  dArg7 <= dArg6)						// window or door => Arg7 = Parent Wall Ht > Wall Area
 		iPolyLpObjIdx = -12;  // same error as above
 
+	else if ((iPolyType == 4 || iPolyType == 5) && (dArg7 < 0 || dArg7 > 1))		// shape options:  0-Rectangle, 1-Octagon
+		iPolyLpObjIdx = -14;
+
 	else
 	{
 // ALLOW Azimuths to lie outside the range of 0-360 (as long as we are using the "fan" method to prevent exact object overlaps)
@@ -3313,13 +3320,16 @@ int BEMPX_CreatePolyLoop(	double dArea, double dAzimuth, double dTilt, double dZ
 		while (dAzimuth > 360)
 			dAzimuth -= 360.;
 
+		// apply default rounding to dDX/Y/Z to avoid resulting PolyLp containing higher than desired decimal precision
+		RoundDbl( dDX, 1000. );   RoundDbl( dDY, 1000. );   RoundDbl( dDZ, 1000. );
+
 		bool bPntsOK = false;
 		double daPnts[4][3] = { {	0., 0., dZ },
 										{	0., 0., dZ },
 										{	0., 0., dZ },
 										{	0., 0., dZ } };
 // note: following convention in SketchUp/OpenStudio where first vertex is TOP LEFT corner of wall
-		double dPolyHgt = (iPolyType == 1 ? dArg6 : sqrt(dArea));					assert( dPolyHgt > 0 );
+		double dPolyHgt = ((iPolyType == 1 || iPolyType == 4 || iPolyType == 5) ? dArg6 : sqrt(dArea));					assert( dPolyHgt > 0 );
 		if (iPolyType == 2 || iPolyType == 3)
 		{	double dWallHt   = dArg6;
 			double dWallArea = dArg7;
@@ -3393,6 +3403,22 @@ int BEMPX_CreatePolyLoop(	double dArea, double dAzimuth, double dTilt, double dZ
 		if (bPntsOK && pdFurthestFromXYOrig)	// SAC 1/7/15
 		{	for (int iPt=0; iPt<4; iPt++)
 				*pdFurthestFromXYOrig = std::max( *pdFurthestFromXYOrig, sqrt( ((daPnts[iPt][0]+dDX)*(daPnts[iPt][0]+dDX)) + ((daPnts[iPt][1]+dDY)*(daPnts[iPt][1]+dDY)) ) );
+		}
+
+		if (bPntsOK && dCentX != -999 && dCentY != -999 && dCentZ != -999)	// SAC 3/1/17
+		{	double dPtMin[3] = { 9999.0, 9999.0, 9999.0 };		double dPtMax[3] = { -9999.0, -9999.0, -9999.0 };
+			double dOrigCent[3] = { 0.0, 0.0, 0.0 };		int iPt;
+			// calculate current poly centroid
+			for (iPt=0; iPt<4; iPt++)
+			{	dPtMin[0] = std::min( dPtMin[0], daPnts[iPt][0] );		dPtMin[1] = std::min( dPtMin[1], daPnts[iPt][1] );		dPtMin[2] = std::min( dPtMin[2], daPnts[iPt][2] );
+				dPtMax[0] = std::max( dPtMax[0], daPnts[iPt][0] );		dPtMax[1] = std::max( dPtMax[1], daPnts[iPt][1] );		dPtMax[2] = std::max( dPtMax[2], daPnts[iPt][2] );
+			}
+			// set adjustment to poly points
+				dOrigCent[0] = dCentX - ((dPtMin[0]+dPtMax[0])/2.0);	dOrigCent[1] = dCentY - ((dPtMin[1]+dPtMax[1])/2.0);	dOrigCent[2] = dCentZ - ((dPtMin[2]+dPtMax[2])/2.0);
+			// adjust all points to shift poly to specified centroid
+			for (iPt=0; iPt<4; iPt++)
+			{	daPnts[iPt][0] += RoundDbl( dOrigCent[0], 1000. );		daPnts[iPt][1] += RoundDbl( dOrigCent[1], 1000. );		daPnts[iPt][2] += RoundDbl( dOrigCent[2], 1000. );
+			}
 		}
 
 		if (bPntsOK)
