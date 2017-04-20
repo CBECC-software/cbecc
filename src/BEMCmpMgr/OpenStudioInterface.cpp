@@ -196,10 +196,10 @@ bool CMX_CopySizingResults_CECNonRes( int iBEMProcIdxSrc, int iBEMProcIdxDest, b
 																					{	"FlowCapSim"       ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
 																					{	"CapTotGrossRtdSim", "CapSensGrossRtdSim",  NULL           ,  NULL           ,  NULL,  NULL  }, 
 																					{	"CapTotGrossRtdSim",  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
-																					{	"CapRtd"           ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
-																					{	"CapRtd"           ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
-																					{	"CapRtd"           ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
-																					{	"FlowCap"          ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  }  };
+																					{	"CapRtdSim"        ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
+																					{	"CapRtdSim"        ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
+																					{	"CapRtdSim"        ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  },
+																					{	"FlowCapSim"       ,  NULL               ,  NULL           ,  NULL           ,  NULL,  NULL  }  };
 		long laDBIDs[MAX_RESCOPY_DBIDSPEROBJ];
 		int iClsIdx=-1;
 		while (iClassIDs[++iClsIdx] > 0 && bRetVal)
@@ -1393,7 +1393,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			}
 	
 		// SAC 8/27/13 - added Blr, Chlr, HtRej & Pump results
-			long lDBID_Blr_CapRtd = BEMPX_GetDatabaseID( "CapRtd", osRunInfo.ClassID( ROT_Blr ) );								assert( lDBID_Blr_CapRtd > 0 );
+			long lDBID_Blr_CapRtd = BEMPX_GetDatabaseID( "CapRtdSim", osRunInfo.ClassID( ROT_Blr ) );								assert( lDBID_Blr_CapRtd > 0 );
 			if (osRunInfo.NumObjects( ROT_Blr ) > 0 && lDBID_Blr_CapRtd > 0 && osRunInfo.PostEquipCapsToBEMBase())	// SAC 9/10/13 - only post equipment sizing results to BEMBase when specified
 			{	assert( osRunInfo.NumResultObjects( ROT_Blr )==osRunInfo.NumObjects( ROT_Blr ) );
 				double faResults[2] = {0,0};
@@ -1408,7 +1408,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				}
 			}
 	
-			long lDBID_Chlr_CapRtd = BEMPX_GetDatabaseID( "CapRtd", osRunInfo.ClassID( ROT_Chlr ) );								assert( lDBID_Chlr_CapRtd > 0 );
+			long lDBID_Chlr_CapRtd = BEMPX_GetDatabaseID( "CapRtdSim", osRunInfo.ClassID( ROT_Chlr ) );								assert( lDBID_Chlr_CapRtd > 0 );
 			if (osRunInfo.NumObjects( ROT_Chlr ) > 0 && lDBID_Chlr_CapRtd > 0 && osRunInfo.PostEquipCapsToBEMBase())	// SAC 9/10/13 - only post equipment sizing results to BEMBase when specified
 			{	assert( osRunInfo.NumResultObjects( ROT_Chlr )==osRunInfo.NumObjects( ROT_Chlr ) );
 				double faResults[2] = {0,0};
@@ -1423,7 +1423,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				}
 			}
 
-			long lDBID_HtRej_CapRtd = BEMPX_GetDatabaseID( "CapRtd", osRunInfo.ClassID( ROT_HtRej ) );							assert( lDBID_HtRej_CapRtd > 0 );
+			long lDBID_HtRej_CapRtd = BEMPX_GetDatabaseID( "CapRtdSim", osRunInfo.ClassID( ROT_HtRej ) );							assert( lDBID_HtRej_CapRtd > 0 );
 			if (osRunInfo.NumObjects( ROT_HtRej ) > 0 && lDBID_HtRej_CapRtd > 0 && osRunInfo.PostEquipCapsToBEMBase())	// SAC 9/10/13 - only post equipment sizing results to BEMBase when specified
 			{	assert( osRunInfo.NumResultObjects( ROT_HtRej )==osRunInfo.NumObjects( ROT_HtRej ) );
 				double faResults[2] = {0,0};
@@ -1438,7 +1438,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				}
 			}
 	
-			long lDBID_Pump_FlowCap = BEMPX_GetDatabaseID( "FlowCap", osRunInfo.ClassID( ROT_Pump ) );							assert( lDBID_Pump_FlowCap > 0 );
+			long lDBID_Pump_FlowCap = BEMPX_GetDatabaseID( "FlowCapSim", osRunInfo.ClassID( ROT_Pump ) );							assert( lDBID_Pump_FlowCap > 0 );
 			if (osRunInfo.NumObjects( ROT_Pump ) > 0 && lDBID_Pump_FlowCap > 0 && osRunInfo.PostEquipCapsToBEMBase())	// SAC 9/10/13 - only post equipment sizing results to BEMBase when specified
 			{	assert( osRunInfo.NumResultObjects( ROT_Pump )==osRunInfo.NumObjects( ROT_Pump ) );
 				double faResults[2] = {0,0};

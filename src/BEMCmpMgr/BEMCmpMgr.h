@@ -72,6 +72,7 @@ typedef long (CALLBACK* PAnalysisProgressCallbackFunc)( long lAnalProgType, long
 extern "C" {
 #endif  /* __cplusplus */
 
+void BEMCMPMGR_API __cdecl CMX_ExitBEMProcAndCmpMgrDLLs();
 void BEMCMPMGR_API __cdecl CMX_ExitBEMCmpMgrDLL();
 
 bool BEMCMPMGR_API __cdecl CMX_GetUIActiveFlag();
@@ -171,6 +172,9 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_DHWUseCSEIncCopyErr	56		//  Error copying DHW Use/Load Profile CSE include file into processing directory
 #define  BEMAnal_CECRes_DHWUseHashError		57		//  Error setting up check of DHW use/profile file hash
 #define  BEMAnal_CECRes_CSEBattCtrlSetupErr	58		//  Error setting up CSE battery control data
+#define  BEMAnal_CECRes_CSEOpenGLError			59		//  Error initializing OpenGL (required for CSE shading simulation)
+#define  BEMAnal_CECRes_TDVFileWriteError		60		//  Error writing CSV file w/ TDV data (required for CSE simulation)
+#define  BEMAnal_CECRes_EvalSetupPMFError		61		//  Error evaluating SetupRun_ProposedMixedFuel rules
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report

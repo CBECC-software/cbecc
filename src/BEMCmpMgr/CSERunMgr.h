@@ -46,6 +46,7 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_SOrientProp,
    CRM_WOrientProp,
    CRM_StdDesign,
+   CRM_PropMixedFuel,
    CRM_DesignRating
 };
 
@@ -67,6 +68,8 @@ public:
 	const QString& GetRunAbbrev() const { return m_sRunAbbrev; }
 	void SetOutFile(const QString& sOutFile, OutFile of) { m_sOutFiles[of] = sOutFile; }
 	const QString& GetOutFile(OutFile of) const { return m_sOutFiles[of]; }
+	void SetTDVFName(const QString& sTDVFName) { m_sTDVFName = sTDVFName; }
+	const QString& GetTDVFName() const { return m_sTDVFName; }
 	void SetRunNumber(long lRunNumber) { m_lRunNumber = lRunNumber; }
 	long GetRunNumber() const { return m_lRunNumber; }
 	void SetRunType(int iRunType) { m_iRunType = iRunType; }
@@ -87,6 +90,7 @@ private:
 	QString m_sRunIDProcFile;
 	QString m_sRunAbbrev;
 	QString m_sOutFiles[OutFileCOUNT];
+	QString m_sTDVFName;		// SAC 4/16/17
 	long m_lRunNumber;
 	int  m_iRunType;	// SAC 3/26/15
 	BOOL m_bLastRun;
@@ -100,18 +104,23 @@ class CSERunMgr
 public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
-		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1 );
+		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0 );
 	~CSERunMgr();
-	int SetupRun(	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
+	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
+	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	int GetNumRuns() const { return m_iNumRuns; }
 	void DoRuns();
+	void DoRun( int iRunIdx );
+	void MonitorRuns();
 	bool ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int iOutFileType );		// SAC 11/7/16 - process CSE errors and/or reports into file for user review
+	void IncNumOpenGLErrors() { m_iNumOpenGLErrors++; }
+	int  GetNumOpenGLErrors() const { return m_iNumOpenGLErrors; }
+	bool ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstException);
 
 private:
-	bool ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstException);
 	void StartRun(CSERun& cseRun);
 	QString GetVersionInfo();
 
@@ -127,6 +136,7 @@ private:
 	long m_lAnalysisType;
 	long m_lStdDesignBaseID;
 	long m_lDesignRatingRunID;
+	long m_lPropMixedFuelRunReqd;
 	bool m_bVerbose;
 	bool m_bStoreBEMProcDetails;
 	bool m_bPerformSimulations;
@@ -138,6 +148,7 @@ private:
 	int m_iNumRuns;
 	int m_iSimReportOpt;		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
 	int m_iSimErrorOpt;		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
+	int m_iNumOpenGLErrors;		// SAC 3/16/17
 	std::vector<CSERun*> m_vCSERun;
 	std::vector<CSERun*> m_vCSEActiveRun;
 

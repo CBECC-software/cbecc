@@ -53,8 +53,13 @@ static char THIS_FILE[] = __FILE__;
 #include "memLkRpt.h"
 
 
-
 /////////////////////////////////////////////////////////////////////////////
+
+void CMX_ExitBEMProcAndCmpMgrDLLs()
+{	// Clear out building database & ruleset
+	BEMPX_CloseBEMProc();
+	CMX_ExitBEMCmpMgrDLL();
+}
 
 void CMX_ExitBEMCmpMgrDLL()
 {

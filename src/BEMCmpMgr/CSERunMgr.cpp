@@ -54,6 +54,7 @@ CSERun::CSERun() :
 	m_iExitCode( 0),
 	m_pES( NULL)
 {
+	m_sTDVFName.clear();		// SAC 4/16/17
 }
 
 CSERun::~CSERun()
@@ -81,7 +82,8 @@ CSERunMgr::CSERunMgr(
 	void* pCompRuleDebugInfo,
 	const char* pszUIVersionString,
 	int iSimReportOpt,
-	int iSimErrorOpt) :
+	int iSimErrorOpt,
+	long lPropMixedFuelRunReqd) :
 
 	m_sCSEexe( sCSEexe),
 	m_sCSEWthr( sCSEWthr),
@@ -103,11 +105,16 @@ CSERunMgr::CSERunMgr(
 	m_pszUIVersionString( pszUIVersionString),
 	m_iError( 0),
 	m_iSimReportOpt(iSimReportOpt),
-	m_iSimErrorOpt(iSimErrorOpt)
+	m_iSimErrorOpt(iSimErrorOpt),
+	m_lPropMixedFuelRunReqd(lPropMixedFuelRunReqd),
+	m_iNumOpenGLErrors(0)
 {
 	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
 	if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
-		m_iNumRuns++;
+	{	m_iNumRuns++;
+		if (m_lPropMixedFuelRunReqd > 0)		// SAC 4/5/17
+			m_iNumRuns++;
+	}
 }		// CSERunMgr::CSERunMgr
 
 CSERunMgr::~CSERunMgr()
@@ -121,7 +128,7 @@ CSERunMgr::~CSERunMgr()
 }
 
 
-static int ExecuteNow( QString sEXEFN, QString sEXEParams )
+static int ExecuteNow( CSERunMgr* pRunMgr, QString sEXEFN, QString sEXEParams )
 {
 			int iExitCode = -99;
 			bool bRunOK = true;
@@ -142,16 +149,28 @@ static int ExecuteNow( QString sEXEFN, QString sEXEParams )
 				while (!bEXEDone)
 				{	try
 					{	if (pES->running())
-						{	//ProcessRunOutput( pES, iRun, bFirstException);
+						{	pRunMgr->ProcessRunOutput( pES, 0/*iRun*/, bFirstException);
 							Sleep(100);
 						}
 						else
 						{	bEXEDone = true;
-							//while( ProcessRunOutput( pES, iRun, bFirstExceptionX));
+							bool bFirstExceptionX=true;
+							while( pRunMgr->ProcessRunOutput( pES, 0/*iRun*/, bFirstExceptionX));
 							pES->close();
 							iExitCode = pES->exit_code();
 						}
 					}
+		//			{	if (pES->running())
+		//				{	//ProcessRunOutput( pES, iRun, bFirstException);
+		//					Sleep(100);
+		//				}
+		//				else
+		//				{	bEXEDone = true;
+		//					//while( ProcessRunOutput( pES, iRun, bFirstExceptionX));
+		//					pES->close();
+		//					iExitCode = pES->exit_code();
+		//				}
+		//			}
 					catch(exec_stream_t::error_t &e2)
 					{	if (bFirstException)
 						{	std::string sLogMsg=e2.what();
@@ -193,6 +212,8 @@ int CSERunMgr::SetupRun(
 	QString sOrientLtr, sOrientName;
 	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+	else if (iRunType == CRM_PropMixedFuel)
+		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
 	{	// SAC 3/27/15 - SET 
 		if (iRunType == CRM_DesignRating)
@@ -439,6 +460,110 @@ int CSERunMgr::SetupRun(
 			}
 		}
 
+		// SAC 3/18/17 - storage of TDV CSV file to be made available to the CSE input file
+		pCSERun->SetTDVFName( "" );		// SAC 4/16/17
+		QString sTDVFile;
+		if (iRetVal == 0)
+		{	long lCSE_WriteTDV;
+			if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_WriteTDV" ), lCSE_WriteTDV ) && lCSE_WriteTDV > 0)
+			{	sTDVFile = sProjFileAlone + "-tdv.csv";
+				QString sFullTDVFile = m_sProcessPath + sTDVFile;
+				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+								 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( "TDV", sFullTDVFile, "compliance report generation" );
+				if (!OKToWriteOrDeleteFile( sFullTDVFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+				{	if (m_bSilent)
+						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file (required for CSE simulation):  %2" ).arg( "TDV", sFullTDVFile );
+					else
+						sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file (required for CSE simulation):  %2" ).arg( "TDV", sFullTDVFile );
+					iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+				}
+				else
+				{	double daTDVElec[8760], daTDVFuel[8760];		long lCZ=0, lGas=0;
+					if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lCZ  ) || lCZ  < 1 || lCZ > 16 ||
+							!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"     ), lGas ) || lGas < 1 || lGas > 2 ||
+							BEMPX_GetTableColumn( &daTDVElec[0], 8760, "TDVTable", ((lCZ-1) * 3) + 1       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
+							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, "TDVTable", ((lCZ-1) * 3) + 1 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					{	assert( false );
+						sErrorMsg = QString( "ERROR:  Unable to retrieve TDV data for CZ %1, Gas Type %2 (required for CSE simulation)" ).arg( QString::number(lCZ), QString::number(lGas) );
+						iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+					}
+					else
+					{	QDateTime locTime = QDateTime::currentDateTime();
+						QString timeStamp = locTime.toString("ddd dd-MMM-yy  hh:mm:ss ap");   // "Wed 14-Dec-16  12:30:29 pm"
+
+		      		QString qsVer, qsGas;
+						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMgrVersion" ), qsVer ) || qsVer.length() < 1)
+							qsVer = "(unknown version)";
+						switch (lGas)
+						{	case  1 :	qsGas = "NatGas";   break;
+							case  2 :	qsGas = "Propane";  break;
+							default :	qsGas = "(unknown)";  break;
+						}
+
+						FILE *fp_CSV;
+						int iErrorCode;
+						try
+						{	iErrorCode = fopen_s( &fp_CSV, sFullTDVFile.toLocal8Bit().constData(), "wb" );
+							if (iErrorCode != 0 || fp_CSV == NULL)
+							{	assert( false );
+								sErrorMsg = QString( "ERROR:  Unable to write TDV data file (required for CSE simulation):  %1" ).arg( sFullTDVFile );
+								iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+							}
+							else
+							{	fprintf( fp_CSV, "\"TDV Data (TDV/Btu)\",\"001\"\n" );
+								fprintf( fp_CSV, "\"%s\"\n", timeStamp.toLocal8Bit().constData() );
+								fprintf( fp_CSV, "\"%s, CZ%ld, Fuel %s\",\"Hour\"\n", qsVer.toLocal8Bit().constData(), lCZ, qsGas.toLocal8Bit().constData() );
+								fprintf( fp_CSV, "\"tdvElec\",\"tdvFuel\"\n" );
+								for (int hr=0; hr<8760; hr++)
+									fprintf( fp_CSV, "%g,%g\n", daTDVElec[hr], daTDVFuel[hr] );
+								fflush( fp_CSV );
+								fclose( fp_CSV );
+							}
+						}
+						catch( ... )
+						{	assert( false );
+							sErrorMsg = QString( "ERROR:  Exception thrown writing TDV data file (required for CSE simulation):  %1" ).arg( sFullTDVFile );
+							iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+					// how to handle error writing to TDV CSV file ??
+						}
+				}	}
+				if (iRetVal == 0)
+					pCSERun->SetTDVFName( sTDVFile );		// SAC 4/16/17
+		}	}
+
+		if (iRetVal == 0)
+			iRetVal = SetupRunFinish( iRunIdx, sErrorMsg );
+	}
+	return iRetVal;
+}		// CSERunMgr::SetupRun
+
+int CSERunMgr::SetupRunFinish(
+	int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy /*=NULL*/ )
+{
+	int iRetVal = 0;
+	QString sMsg, sLogMsg;
+
+	CSERun* pCSERun = (iRunIdx < (int) m_vCSERun.size() ? m_vCSERun[iRunIdx] : NULL);
+	if (pCSERun == NULL)
+	{	assert( false );
+		return BEMAnal_CECRes_SimInputWriteError;
+	}
+
+//	long lRunNumber;
+	QString sRunID, sRunIDProcFile, sRunAbbrev;
+	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:RunID"         ),  sRunID         );
+	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:RunIDProcFile" ),  sRunIDProcFile );
+	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:RunAbbrev"     ),  sRunAbbrev     );
+
+	QString sProjFileAlone = m_sModelFileOnlyNoExt + sRunIDProcFile;
+
+		QString sTDVFName = pCSERun->GetTDVFName();		// SAC 4/16/17
+		if (sTDVFName.length() > 0)
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), BEMP_QStr, (void*) &sTDVFName );
+		else
+			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), m_iError );
+
 // SAC 12/14/16 - code to confirm need for CSE Battery PRE-RUN
 		QString sProjCSEBattFile, sCSEBattCtrlCSVFile;
 		BEMObject* pBattCtrlImpFileObj = NULL;
@@ -512,6 +637,11 @@ int CSERunMgr::SetupRun(
 				}
 				else
 				{	SetCurrentDirectory( m_sProcessPath.toLocal8Bit().constData() );
+					if (sCSEFileCopy && strlen( sCSEFileCopy ) > 0)
+					{	QString sCSECopyFileName = sLpCSEFile.left( sLpCSEFile.length()-4 );
+						sCSECopyFileName += sCSEFileCopy;		sCSECopyFileName += ".cse";
+						CopyFile( sLpCSEFile.toLocal8Bit().constData(), sCSECopyFileName.toLocal8Bit().constData(), FALSE );
+					}
 					if (m_bStoreBEMProcDetails)
 					{	QString sDbgFileName = sLpCSEFile.left( sLpCSEFile.length()-3 );
 						sDbgFileName += "ibd-Detail";
@@ -535,7 +665,7 @@ int CSERunMgr::SetupRun(
 			if (!sProjCSEFileForArg.right(4).compare(".CSE", Qt::CaseInsensitive))
 				sProjCSEFileForArg = sProjCSEFileForArg.left( sProjCSEFileForArg.length()-4 );
 			sCSEParams = QString( "-b \"%1\"" ).arg( sProjCSEFileForArg );
-			int iCSEExitCode = ExecuteNow( m_sCSEexe, sCSEParams );
+			int iCSEExitCode = ExecuteNow( this, m_sCSEexe, sCSEParams );
 			if (iCSEExitCode != 0)
 			{	assert( false );
 // how to handle errant BTPreRun simulation ??
@@ -551,7 +681,7 @@ int CSERunMgr::SetupRun(
 				}
 				else
 				{	bool bTDVDataOK = true;
-					QString sTDVCSVFile = m_sProcessPath + sProjFileAlone + "-tdv.csv";
+					QString sTDVCSVFile = m_sProcessPath + sProjFileAlone + "-tdvelec.csv";  // switched TDV filename here to "tdvelec" to not conflict w/ new 2-col CSV above - SAC 3/18/17
 					FILE *fp_CSV;
 					int iErrorCode;
 					try
@@ -564,7 +694,7 @@ int CSERunMgr::SetupRun(
 						else
 						{	fprintf( fp_CSV, "\"TDV Data\",001\n" );
 							fprintf( fp_CSV, "\"Wed 14-Dec-16   9:39:00 am\",\n" );
-							fprintf( fp_CSV, "\"TDV [kBtu/kWh]\",\"Hour\"\n" );
+							fprintf( fp_CSV, "\"TDV [TDV/Btu]\",\"Hour\"\n" );		// SAC 3/10/17 - fixed incorrect units label, was: TDV [kBtu/kWh]
 							fprintf( fp_CSV, "\"tdv\"\n" );
 							for (int hr=0; hr<8760; hr++)
 								fprintf( fp_CSV, "%g\n", daTDVData[hr] );
@@ -614,7 +744,7 @@ int CSERunMgr::SetupRun(
 //	QString sDbgMsg = QString( "about to run calc_bt_control:\n%1" ).arg( sCBCParams );
 //	BEMMessageBox( sDbgMsg );
 
-						int iCBCExitCode = ExecuteNow( sCBCexe, sCBCParams );
+						int iCBCExitCode = ExecuteNow( this, sCBCexe, sCBCParams );
 						if (iCBCExitCode != 0)
 						{	assert( false );
 // how to handle error running calc_bt_control ??
@@ -650,9 +780,9 @@ int CSERunMgr::SetupRun(
 	#endif
 			pCSERun->SetArgs( sParams);
 		}
-	}
+
 	return iRetVal;
-}		// CSERunMgr::SetupRun
+}		// CSERunMgr::SetupRunFinish
 
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
 											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/ )
@@ -1003,7 +1133,22 @@ void CSERunMgr::DoRuns()
 		StartRun( *pCSERun);
 		m_vCSEActiveRun.push_back( pCSERun);
 	}
+	MonitorRuns();
+}		// CSERunMgr::DoRuns
 
+void CSERunMgr::DoRun( int iRunIdx )
+{
+	CSERun* pCSERun = (iRunIdx < (int) m_vCSERun.size() ? m_vCSERun[iRunIdx] : NULL);
+	if (pCSERun)
+	{	StartRun( *pCSERun);
+		m_vCSEActiveRun.push_back( pCSERun);
+	}
+	MonitorRuns();
+}		// CSERunMgr::DoRun
+
+void CSERunMgr::MonitorRuns()
+{
+	CSERun* pCSERun;
 	exec_stream_t* pES = NULL;
 	std::string sOut;
 	bool bFirstException = true;
@@ -1048,6 +1193,10 @@ bool CSERunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstEx
 		{	sOut = " " + sOut;
 			if (CSE_ProcessMessage( 0, sOut.c_str(), iRun, this) == CSE_ABORT)
 				pES->kill(255);
+			else if (sOut.find("OpenGL") != std::string::npos)
+				IncNumOpenGLErrors();
+//			if (pCSERunMgr && (strstr( msg, "OpenGL" ) != NULL))
+//				pCSERunMgr->IncNumOpenGLErrors();
 		}
 	}
 	catch(exec_stream_t::error_t &e)

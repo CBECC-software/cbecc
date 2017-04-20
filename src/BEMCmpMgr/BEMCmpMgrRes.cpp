@@ -504,6 +504,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	bool bAnalysisPriorToRptGenOK = false;
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
+	long lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
 	bool bDHWCalcMethodUserSpecified = false;
 	int iRulesetCodeYear = 0;
 	QString sResTemp1, sResTemp2, sResTemp3;	// SAC 2/7/17
@@ -578,8 +579,39 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						BEMPX_WriteLogFile( saWarningsForUser[iFRWIdx], NULL /*sLogPathFile*/, FALSE /*bBlankFile*/,
 													TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
-
 // ??? evaluate FileOpen rulelist to address backward compatibility issues ???
+
+				// SAC 4/20/17 - moved code handling setting of batch processing inputs UP TO HERE FROM below (so mods are made to User Input model)
+				// SAC 5/14/16 - added code to handle setting of batch processing inputs
+				std::string sBatchProps[]		= { "RunTitle",		"ClimateZone",		"AnalysisType",	"StandardsVersion",	"AllOrientations",	"FrontOrientation",	"" };
+				int			iBatchDatatype[]	= {  BEMP_Str,			 BEMP_Str,			 BEMP_Str,			 BEMP_Str,				 BEMP_Int,				 BEMP_Flt,				};
+				int iBIdx=-1;		QString sBatchInp;	long lBatchInp;  double fBatchInp;	void* pBatchInp;	int iNumBatchInpsStored=0;
+				while (sBatchProps[++iBIdx].size() > 0 && ResRetVal_ContinueProcessing( iRetVal ))
+				{	pBatchInp = NULL;
+					int iBatchDT = iBatchDatatype[iBIdx];
+					if (iBatchDatatype[iBIdx] == BEMP_Str)
+					{	GetCSVOptionString( sBatchProps[iBIdx].c_str(), sBatchInp, saCSVOptions );
+						if (!sBatchInp.isEmpty())
+						{	pBatchInp = (void*) &sBatchInp;
+							iBatchDT = BEMP_QStr;
+					}	}
+					else if (iBatchDatatype[iBIdx] == BEMP_Int)
+					{	lBatchInp = GetCSVOptionValue( sBatchProps[iBIdx].c_str(), -99, saCSVOptions );
+						if (lBatchInp != -99)
+							pBatchInp = (void*) &lBatchInp;
+					}
+					else if (iBatchDatatype[iBIdx] == BEMP_Flt)
+					{	fBatchInp = GetCSVOptionValue( sBatchProps[iBIdx].c_str(), -99, saCSVOptions );
+						if (fBatchInp != -99)
+							pBatchInp = (void*) &fBatchInp;
+					}
+					if (pBatchInp)
+					{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( sBatchProps[iBIdx].c_str(), BEMPX_GetDBComponentID( "Proj" ) ), iBatchDT, pBatchInp );
+						iNumBatchInpsStored++;
+					}
+				}				assert( iNumBatchInpsStored < 1 || bStoreResultsToModelInput );	// if not, then these batch inputs will NOT get stored back into user model RIBD
+								// ?? STORAGE OF RIBD* (following default rule evaluation) IF ANY BATCH DATA MODIFIED ABOVE ??
+
 				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{	bBEMLogFileSet = TRUE;
 					iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
@@ -761,33 +793,6 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 						dTimeToModelAndSecurityChecks += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
-		// SAC 5/14/16 - added code to handle setting of batch processing inputs
-		std::string sBatchProps[]		= { "RunTitle",		"ClimateZone",		"AnalysisType",	"StandardsVersion",	"AllOrientations",	"FrontOrientation",	"" };
-		int			iBatchDatatype[]	= {  BEMP_Str,			 BEMP_Str,			 BEMP_Str,			 BEMP_Str,				 BEMP_Int,				 BEMP_Flt,				};
-		int iBIdx=-1;		QString sBatchInp;	long lBatchInp;  double fBatchInp;	void* pBatchInp;
-		while (sBatchProps[++iBIdx].size() > 0)
-		{	pBatchInp = NULL;
-			int iBatchDT = iBatchDatatype[iBIdx];
-			if (iBatchDatatype[iBIdx] == BEMP_Str)
-			{	GetCSVOptionString( sBatchProps[iBIdx].c_str(), sBatchInp, saCSVOptions );
-				if (!sBatchInp.isEmpty())
-				{	pBatchInp = (void*) &sBatchInp;
-					iBatchDT = BEMP_QStr;
-			}	}
-			else if (iBatchDatatype[iBIdx] == BEMP_Int)
-			{	lBatchInp = GetCSVOptionValue( sBatchProps[iBIdx].c_str(), -99, saCSVOptions );
-				if (lBatchInp != -99)
-					pBatchInp = (void*) &lBatchInp;
-			}
-			else if (iBatchDatatype[iBIdx] == BEMP_Flt)
-			{	fBatchInp = GetCSVOptionValue( sBatchProps[iBIdx].c_str(), -99, saCSVOptions );
-				if (fBatchInp != -99)
-					pBatchInp = (void*) &fBatchInp;
-			}
-			if (pBatchInp)
-			   BEMPX_SetBEMData( BEMPX_GetDatabaseID( sBatchProps[iBIdx].c_str(), BEMPX_GetDBComponentID( "Proj" ) ), iBatchDT, pBatchInp );
-		}
-
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && !sXMLResultsFileName.isEmpty())  // SAC 2/19/13 - added to export the USER INPUT model to XML results file
 		{
 	   // write user model to XML results file
@@ -871,6 +876,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		long lAnalysisType = 0;
 		long lAllOrientations = 0;  // SAC 6/22/13
 		lDesignRatingRunID = 0;  // SAC 3/27/15
+		lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{
@@ -884,6 +890,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs"  ), lDRCalcs ) && lDRCalcs > 0)
 				{	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingBase" ), lDesignRatingRunID ) || lDesignRatingRunID < 1)
 						lDesignRatingRunID = 0;
+					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PropMixedFuelRunReqd" ), lPropMixedFuelRunReqd ) || lPropMixedFuelRunReqd < 1)  // SAC 4/5/17
+						lPropMixedFuelRunReqd = 0;
 				}
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdDesignBase" ), lStdDesignBaseID );  // 0/1 (boolean)
 			}
@@ -1257,7 +1265,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, bFullComplianceAnalysis,
 			bInitHourlyResults, lAllOrientations, lAnalysisType, lStdDesignBaseID, lDesignRatingRunID, bVerbose,
 			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-			iSimReportDetailsOption, iSimErrorDetailsOption	);		// SAC 11/7/16 - added sim report/error option arguments
+			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd );		// SAC 11/7/16 - added sim report/error option arguments
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
@@ -1276,7 +1284,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
 				iRunType[iNumRuns++] = CRM_StdDesign;
 			if (lDesignRatingRunID > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly  - SAC 2/9/17 - allow AT=2 for ExEDR analysis
+			{	if (lPropMixedFuelRunReqd > 0)	// SAC 4/5/17
+					iRunType[iNumRuns++] = CRM_PropMixedFuel;
 				iRunType[iNumRuns++] = CRM_DesignRating;
+			}
 		}
 
 #if defined( CSE_MULTI_RUN)
@@ -1369,19 +1380,17 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					BEMPX_RefreshLogFile();	// SAC 5/19/14
 
 					if (iCSERetVal != 0)
-					{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
-						iRetVal = BEMAnal_CECRes_CSESimError;
+					{	if (cseRunMgr.GetNumOpenGLErrors() > 0)
+						{	sErrorMsg = "Error initializing OpenGL (required for CSE shading simulation)";  //).arg( QString::number(iCSERetVal) );
+							iRetVal = BEMAnal_CECRes_CSEOpenGLError;
+						}
+						else
+						{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
+							iRetVal = BEMAnal_CECRes_CSESimError;
+						}
 					}
 					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
-
-
-// SAC 12/14/16 - code to run Battery model
-					// Perform secondary CSE run to simulate Battery use
-					if (ResRetVal_ContinueProcessing( iRetVal ))
-					{
-					}
-
 
 					// Retrieve CSE simulation results
 					if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -1457,6 +1466,267 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					{	sLogMsg = "      done calling 'ProcessResults' rules";
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
+
+
+
+	// SAC 4/13/17 - 
+	if (iRunIdx == (iNumRuns-1) && ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
+	{
+		//		QString sdTargetDesignRtg, sdPVWDCSizeMultiplier, sdaTargetDRtgScores[5], sdaTargetDRtgPVMults[5], slTargetDRtgIterNum, slTargetDRtgMaxIter, sTargetDRtgResMsg, sTDRMsg;
+		//		BOOL bTDR  = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDesignRtg"     ), sdTargetDesignRtg, TRUE, 1 );
+		//		BOOL bPVSM = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:PVWDCSizeMultiplier" ), sdPVWDCSizeMultiplier, TRUE, 3 );
+		//		BOOL bDRS1 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[1]" ), sdaTargetDRtgScores[0], TRUE, 1 );
+		//		BOOL bDRS2 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[2]" ), sdaTargetDRtgScores[1], TRUE, 1 );
+		//		BOOL bDRS3 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[3]" ), sdaTargetDRtgScores[2], TRUE, 1 );
+		//		BOOL bDRM1 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[1]" ), sdaTargetDRtgPVMults[0], TRUE, 3 );
+		//		BOOL bDRM2 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[2]" ), sdaTargetDRtgPVMults[1], TRUE, 3 );
+		//		BOOL bDRM3 = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[3]" ), sdaTargetDRtgPVMults[2], TRUE, 3 );
+		//		BOOL bItN  = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgIterNum"    ), slTargetDRtgIterNum );
+		//		BOOL bMIt  = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgMaxIter"    ), slTargetDRtgMaxIter );
+		long laTDR_DBIDs[] = {	BEMPX_GetDatabaseID( "Proj:TargetDesignRtg"     ), 	BEMPX_GetDatabaseID( "Proj:PVWDCSizeMultiplier" ),		// 0, 1
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[1]" ),		BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[2]" ),		// 2, 3
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[3]" ),		BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[4]" ),		// 4, 5
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgScores[5]" ),		BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[1]" ),	// 6, 7
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[2]" ),	BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[3]" ),	// 8, 9
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[4]" ),	BEMPX_GetDatabaseID( "Proj:TargetDRtgPVMults[5]" ),	// 10, 11
+										BEMPX_GetDatabaseID( "Proj:TargetDRtgIterNum"    ),	BEMPX_GetDatabaseID( "Proj:TargetDRtgMaxIter"    ),	// 12, 13 / 0, 1
+										0  };
+		int iNumTDRDbls = 12;	int iTDRIdx = -1;
+		BOOL baTDR_OK[14];	double daTDR_Data[12];		long laTDR_Data[2];		QString sTargetDRtgResMsg, sTDRMsg;
+		while (laTDR_DBIDs[++iTDRIdx] > 0)
+		{	if (iTDRIdx < iNumTDRDbls)
+				baTDR_OK[iTDRIdx] = BEMPX_GetFloat(   laTDR_DBIDs[iTDRIdx], daTDR_Data[iTDRIdx] );
+			else
+				baTDR_OK[iTDRIdx] = BEMPX_GetInteger( laTDR_DBIDs[iTDRIdx], laTDR_Data[iTDRIdx-iNumTDRDbls] );
+		}
+		BOOL bDRM  = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgResMsg" ), sTargetDRtgResMsg );
+
+		int iRunIdx2 = 0;
+		while (baTDR_OK[12]/*TDRIterNum*/ && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
+		{	assert( laTDR_Data[0] <= laTDR_Data[1] );
+
+			//if (bStoreBEMProcDetails)	// SAC 1/20/13 - added export of additional "detail" file to help isolate unnecessary object creation issues
+			//{	QString sDbgFileName = QString( "%1%2 - TDR%3.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt, QString::number(laTDR_Data[0]) );
+   	   //	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+			//}
+		//	sTDRMsg = QString( "Target Design Rating data:\n      Target Design Rating:  %1\n      TDR PV Size Mult:  %2\n      TDR Rtg iter1:  %3\n      TDR PV Mult iter1:  %4\n      TDR Iteration Num:  %5\n      TDR Max Num Iterations:  %6\n      TDR Msg:  %7" ).arg(
+			sTDRMsg = QString( "Target Design Rating data:   Target Design Rating: %1   TDR PV Size Mult: %2   TDR Rtg (iter): %3   TDR PV Mult (iter): %4   TDR Iteration Num: %5   TDR Max Num Iterations: %6   TDR Msg: %7" ).arg(
+										(baTDR_OK[0]  ? QString::number( daTDR_Data[0], 'f', 1 ) : "-") ).arg( (baTDR_OK[1] ? QString::number( daTDR_Data[1], 'f', 3 ) : "-") ).arg(
+										(baTDR_OK[2]  ? QString::number( daTDR_Data[1+laTDR_Data[0]], 'f', 1 ) : "-") ).arg(
+										(baTDR_OK[7]  ? QString::number( daTDR_Data[7], 'f', 3 ) : "-") ).arg(
+										(baTDR_OK[12] ? QString::number( laTDR_Data[0] ) : "-") ).arg( (baTDR_OK[13] ? QString::number( laTDR_Data[1] ) : "-") ).arg( (bDRM ? sTargetDRtgResMsg : "-") );
+		//	BEMMessageBox( sTDRMsg , "Target Design Rating" );
+			BEMPX_WriteLogFile( sTDRMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+		// re-initialize ALL hourly results
+			if (bInitHourlyResults)
+				BEMPX_InitializeHourlyResults();
+
+		// loop over ALL runs, simulating only Prop but processing results for ALL
+			for (iRunIdx2 = 0; (iRunIdx2 < iNumRuns && ResRetVal_ContinueProcessing( iRetVal )); iRunIdx2++)
+			{
+				const CSERun& cseRun2 = cseRunMgr.GetRun(iRunIdx2);
+				const QString& sRunID2 = cseRun2.GetRunID();
+				const QString& sRunIDProcFile2 = cseRun2.GetRunIDProcFile();
+				const QString& sRunAbbrev2 = cseRun2.GetRunAbbrev();
+				long lRunNumber2 = (lAnalysisType < 1 ? 1 : cseRun2.GetRunNumber());
+
+					BEMPX_SetActiveModel( iRunIdx2+1 );
+
+				//	BOOL bLastRun = cseRun.GetLastRun();
+					BOOL bIsStdDesign2 = cseRun2.GetIsStdDesign();
+					BOOL bIsDesignRtg2 = cseRun2.GetIsDesignRtg();
+
+					if (iRunIdx2 == 0)
+					{
+					// COPY PVWDCSizeMultiplier into Proposed model for use in simulation
+						BEMPX_SetBEMData( laTDR_DBIDs[1], BEMP_Flt, &daTDR_Data[1], BEMO_User, -1, BEMS_ProgDefault );
+
+	// Adjust progress monitoring before RE-simulation ??
+
+					// Simulation clean-up
+						iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
+							if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+								iRetVal = BEMAnal_CECRes_RuleProcAbort;
+					// try evaluating prop & postprop rulelists EVERY time
+						if (iRetVal == 0)
+							iRetVal = LocalEvaluateRuleset(		sErrorMsg, BEMAnal_CECRes_EvalPropInp3Error, "ProposedInput", bVerbose, pCompRuleDebugInfo );		// generic project defaulting
+							if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+								iRetVal = BEMAnal_CECRes_RuleProcAbort;
+						if (iRetVal == 0) // && iRunIdx == 0)	// ??? perform simulation check on BUDGET model as well ???
+							iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimChkError, "ProposedModelSimulationCheck", bVerbose, pCompRuleDebugInfo );		// check user input model for simulation-related errors
+							if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+								iRetVal = BEMAnal_CECRes_RuleProcAbort;
+						if (iRetVal == 0)
+							iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPostPropError, "PostProposedInput", bVerbose, pCompRuleDebugInfo );		// setup for Proposed run
+							if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+								iRetVal = BEMAnal_CECRes_RuleProcAbort;
+						if (iRetVal == 0)
+							iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSimPrepError, "CSE_SimulationPrep", bVerbose, pCompRuleDebugInfo );
+							if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
+								iRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+							if (bStoreBEMProcDetails)	// SAC 4/16/17 - store LAST CSE input before overwriting it
+							{	long iLastTDR = laTDR_Data[0]-1;
+								QString sCopyCSEFr = QString( "%1%2%3.cse" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2 );
+								QString sCopyCSETo = QString( "%1%2%3 TDR%4.cse" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2, QString::number(iLastTDR) );
+								CopyFile( sCopyCSEFr.toLocal8Bit().constData(), sCopyCSETo.toLocal8Bit().constData(), FALSE );
+								sCopyCSEFr = QString( "%1%2%3.csv" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2 );
+								sCopyCSETo = QString( "%1%2%3 TDR%4.csv" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2, QString::number(iLastTDR) );
+								CopyFile( sCopyCSEFr.toLocal8Bit().constData(), sCopyCSETo.toLocal8Bit().constData(), FALSE );
+							}
+
+					// RE-simulate proposed model
+						//iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, (sCSECopyExt.length() < 1 ? NULL : (const char*) sCSECopyExt.toLocal8Bit().constData()) );		assert( iRetVal == 0 );
+						iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, NULL );		assert( iRetVal == 0 );
+							if (bStoreBEMProcDetails)	// SAC 4/16/17 - store TDR details AFTER all CSE defaulting/prep
+							{	QString sDbg2FileName = QString( "%1%2%3 TDR%4.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2, QString::number(laTDR_Data[0]) );
+							  	BEMPX_WriteProjectFile( sDbg2FileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+							}
+						if (iRetVal == 0)
+						{	cseRunMgr.DoRun(0);
+									dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+						}
+						if (!ResRetVal_ContinueProcessing( iRetVal ))
+							break;
+					}
+
+					if (iRunIdx2 > 0)
+					{
+					// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
+						int iResCopyRetVal = 0;
+						if (ResRetVal_ContinueProcessing( iRetVal ))
+						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+	// DELETE results objects before copying them ??
+
+							QString sResCopyErrMsg;
+							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev2.toLocal8Bit().constData(), iRunIdx2, iRunIdx2+1 );
+							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+							if (iResCopyRetVal > 0)
+							{	if (sErrorMsg.isEmpty())
+									sErrorMsg = sResCopyErrMsg;
+								switch (iResCopyRetVal)
+								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+									default :	assert( FALSE );	break;
+								}
+						}	}
+					// now results objects from previous run are in place, now ensure that references to those objects are also valid
+						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+						int iRORPIdx = -1;
+						while (pszaResObjRefProps[++iRORPIdx] != NULL)
+						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+							QString sROR;
+							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx2 /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+	               	                                      //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+						}	}	}
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+					}
+
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
+				{
+					int iCSERetVal = cseRun2.GetExitCode();
+					if (bVerbose)  // SAC 1/31/13
+					{	sLogMsg = QString( "      CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+					BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+					if (iCSERetVal != 0)
+					{	if (cseRunMgr.GetNumOpenGLErrors() > 0)
+						{	sErrorMsg = "Error initializing OpenGL (required for CSE shading simulation)";  //).arg( QString::number(iCSERetVal) );
+							iRetVal = BEMAnal_CECRes_CSEOpenGLError;
+						}
+						else
+						{	sErrorMsg = QString( "ERROR:  CSE simulation returned %1" ).arg( QString::number(iCSERetVal) );
+							iRetVal = BEMAnal_CECRes_CSESimError;
+						}
+					}
+					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
+						iRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+					// Retrieve CSE simulation results
+					if (ResRetVal_ContinueProcessing( iRetVal ))
+					{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
+						int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun2.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber2-1, 
+																													sRunID2.toLocal8Bit().constData(), sRunAbbrev2.toLocal8Bit().constData() );
+						if (bVerbose)  // SAC 1/31/13
+						{	sLogMsg = QString( "      Hourly CSE results retrieval returned %1" ).arg( QString::number(iHrlyResRetVal) );
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
+					// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
+						if (BEMPX_AddHourlyResultArray(	NULL, sRunID2.toLocal8Bit().constData(), "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ ) != 0.0)
+						{	assert( false );
+						}
+					}
+				}
+				BEMPX_RefreshLogFile();	// SAC 5/19/14
+						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
+				{
+					// Process & summarize results
+					iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
+					if (iRV2 > 0)
+						iRetVal = iRV2;
+					if (bVerbose)
+					{	sLogMsg = "      done calling 'ProcessResults' rules";
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+				}
+
+				if (iRunIdx2 == (iNumRuns-1))
+				{	iTDRIdx = -1;
+					while (laTDR_DBIDs[++iTDRIdx] > 0)
+					{	if (iTDRIdx < iNumTDRDbls)
+							baTDR_OK[iTDRIdx] = BEMPX_GetFloat(   laTDR_DBIDs[iTDRIdx], daTDR_Data[iTDRIdx] );
+						else
+							baTDR_OK[iTDRIdx] = BEMPX_GetInteger( laTDR_DBIDs[iTDRIdx], laTDR_Data[iTDRIdx-iNumTDRDbls] );
+					}
+					bDRM  = BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgResMsg" ), sTargetDRtgResMsg );
+				}
+
+			}  // end of for loop over runs (#2)
+		}  // end of: while (baTDR_OK[12]/*TDRIterNum*/ && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
+	// Confirm PVWDCSizeMultiplier not stored in USER model...
+
+		if (iRunIdx2 > 0)
+		{	if (bStoreBEMProcDetails)	// SAC 1/20/13 - added export of additional "detail" file to help isolate unnecessary object creation issues
+			{	QString sDbgFileName = QString( "%1%2 - TDRF.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt );
+   	   	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+			}
+		//	sTDRMsg = QString( "Target Design Rating data:\n      Target Design Rating:  %1\n      TDR PV Size Mult:  %2\n      TDR Rtg iter1:  %3\n      TDR PV Mult iter1:  %4\n      TDR Iteration Num:  %5\n      TDR Max Num Iterations:  %6\n      TDR Msg:  %7" ).arg(
+			sTDRMsg = QString( "Target Design Rating data:   Target Design Rating: %1   TDR PV Size Mult: %2   TDR Rtg (iter): %3   TDR PV Mult (iter): %4   TDR Iteration Num: %5   TDR Max Num Iterations: %6   TDR Msg: %7" ).arg(
+										(baTDR_OK[0]  ? QString::number( daTDR_Data[0], 'f', 1 ) : "-") ).arg( (baTDR_OK[1] ? QString::number( daTDR_Data[1], 'f', 3 ) : "-") ).arg(
+										(baTDR_OK[2]  ? QString::number( daTDR_Data[1+laTDR_Data[0]], 'f', 1 ) : "-") ).arg(
+										(baTDR_OK[7]  ? QString::number( daTDR_Data[7], 'f', 3 ) : "-") ).arg(
+										(baTDR_OK[12] ? QString::number( laTDR_Data[0] ) : "-") ).arg( (baTDR_OK[13] ? QString::number( laTDR_Data[1] ) : "-") ).arg( (bDRM ? sTargetDRtgResMsg : "-") );
+		//	BEMMessageBox( sTDRMsg , "Target Design Rating" );
+			BEMPX_WriteLogFile( sTDRMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+	}
+//   1,           "TargetDRtgResMsg",  BEMP_Str,  1,  1,  0, "",                 0,  0,                           7010, "TargetDesignRating results message - populated only once target achieved (or can't be achieved)"
+//
+//   Proj:TargetDRtgMaxIter,    - already set -   NotInput,   0,    0,   0,    1,  1,  1 BEMP_Int,  1,  0,  0,  "Max number of times we will iterate to achieve the target design rating"  ; SAC 4/11/17
+//   Proj:TargetDRtgIterNum,     NotInput,   0,    0,   0,    1,  1,  1 BEMP_Int,  1,  0,  0,  "Number of times we have iterated thus far to achieve the target design rating"
+//   Proj:TargetDRtgScores[ALL], NotInput,   0,    0,   0,    1,  1,  1 BEMP_Flt,  5,  1,  0,  "Archive of EDR scores from each iteration (to achieve the target design rating)"
+//   Proj:TargetDRtgPVMults[ALL],NotInput,   0,    0,   0,    1,  1,  1 BEMP_Flt,  5,  1,  0,  "Archive of PV size multipliers from each iteration (to achieve the target design rating)"
+//
+//   "Set Proj:PVWDCSizeMultiplier (iff undefined) - multiplier on PV system size, used to iterate to achieve a target design rating"
+//      Proj:PVWDCSizeMultiplier  = {
+//         if (LocalStatus( PVWDCSizeMultiplier ) > 0) then  UNCHANGED
+//         else  1  endif  }
+//
+//   Set Proj:TargetDesignRtg - Target Design Rating (100 * Prop / DesignRtg TDV)"
+//      Proj:TargetDesignRtg  = {
+//
+//BOOL    BEMPROC_API __cdecl BEMPX_GetString(  long lDBID, QString& sStr, BOOL bAddCommas=TRUE, int iPrecision=0,		// for backward compatibility with BEMPX_SetDataString
+//																int iDispDataType=-1, int iOccur=-1, int iObjType=BEMO_User,
+//																const char* pszDefault=NULL, long lDBID2=0, int iBEMProcIdx=-1 );
+
 				}
 				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -3330,8 +3600,9 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 				else if (iAnalRetVal > 0)
 				{	// some error occurred - should be documented already
 					if (strlen( pszRuleErr ) > 0)
-									sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % pszRuleErr );
-					else			sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  (no description returned)" ) % (iRun+1) % iaBatchRecNums[iRun]  );
+									sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d returned %d:  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % iAnalRetVal % pszRuleErr );
+					else			sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d returned %d:  (no description returned)" ) % (iRun+1) % iaBatchRecNums[iRun] % iAnalRetVal  );
+					bStoreResults = (iAnalRetVal >= BEMAnal_CECRes_MinErrorWithResults);
 				}
 				else
 					bStoreResults = true;
