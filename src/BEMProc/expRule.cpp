@@ -1724,7 +1724,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_IfValidAnd :  // arguments can be Local*/Parent*/Global* arguments
       case BF_ValidOr    :  // arguments can be Local*/Parent*/Global* arguments
 		case BF_SymString  :  // arguments can be Local*/Parent*/Global* arguments
-      case BF_HrlyResMltNEM :  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <"OtherSaleEnduseOne">, ... )
+      case BF_HrlyResMltNEM :  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <SaleHrlyMultiplier>, <"OtherSaleEnduseOne">, ... )
 		case BF_Par2SymStr    :  // SAC 4/10/14
 		case BF_Par3SymStr    :  // SAC 4/10/14
 		case BF_LocRefSymStr  :  // SAC 4/10/14
@@ -5188,12 +5188,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpxStackPush( stack, pNode );
                            break; }
 
-      case BF_HrlyResMltNEM : {  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <"OtherSaleEnduseOne">, ... )
+      case BF_HrlyResMltNEM : {  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <SaleHrlyMultiplier>, <"OtherSaleEnduseOne">, ... )
                            ExpNode* pNode = NULL;
 									BOOL bArgsOK = FALSE;
 									double dResult = -99999.0;
-                           if (nArgs < 8 || nArgs > 15)
-                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 8-15, all strings except #3 integer table column index & #8 NEM constant)" );
+                           if (nArgs < 8 || nArgs > 16)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 8-16, all strings except #3 integer table column index, #8 NEM constant & #9 sale enduse multiplier)" );
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (arg > 1)  // don't delete last argument - used to store return value
@@ -5206,9 +5206,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            }
                            else
                            {	// valid # of arguments
-										QString sArgs[15];
+										QString sArgs[16];
 										int iTableColumn = -1;
-										double dNEMconst = 0.0;
+										double dNEMconst = 0.0, dHrlyMult=1.0;
 										bArgsOK = TRUE;
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
@@ -5216,11 +5216,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												iTableColumn = (int) pNode->info.fValue;
                                  else if (pNode && arg == 8 && pNode->type == EXP_Value)
 												dNEMconst = pNode->info.fValue;
-											else if (pNode && arg != 3 && arg != 8 && pNode->type == EXP_String)
+                                 else if (pNode && arg == 9 && pNode->type == EXP_Value)
+												dHrlyMult = pNode->info.fValue;
+											else if (pNode && arg != 3 && arg != 8 && arg != 9 && pNode->type == EXP_String)
 												sArgs[arg-1] = (char*) pNode->info.pValue;
 											else
                            	   {	bArgsOK = FALSE;
-												ExpSetErr( error, EXP_RuleProc, "Invalid ApplyHourlyResultMultipliers_NEM() function argument type (str, str, int, str, str, str, float<, str, str...>)." );
+												ExpSetErr( error, EXP_RuleProc, "Invalid ApplyHourlyResultMultipliers_NEM() function argument type (str, str, int, str, str, str, float<, float, str, str...>)." );
                                  }
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
@@ -5253,10 +5255,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													else if (WithinMargin( dSale, -99999.0, 0.1 ))
 														ExpSetErr( error, EXP_RuleProc, "Error encountered retrieving sale enduse hourly results to be referenced by ApplyHourlyResultMultipliers_NEM() function." );
 													else
-													{	dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dOthrHrlyRes,  sArgs[3].toLocal8Bit().constData(),  sArgs[4].toLocal8Bit().constData() , sArgs[8].toLocal8Bit().constData() ,
-																							sArgs[9].toLocal8Bit().constData(),  sArgs[10].toLocal8Bit().constData(), sArgs[11].toLocal8Bit().constData(), sArgs[12].toLocal8Bit().constData(),
-																							sArgs[13].toLocal8Bit().constData(), sArgs[14].toLocal8Bit().constData() );
-														if (szErrMsg[0] != '\0' && sArgs[8].length() > 0)
+													{	dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dOthrHrlyRes,  sArgs[3].toLocal8Bit().constData(),  sArgs[4].toLocal8Bit().constData() , sArgs[9].toLocal8Bit().constData() ,
+																							sArgs[10].toLocal8Bit().constData(), sArgs[11].toLocal8Bit().constData(), sArgs[12].toLocal8Bit().constData(), sArgs[13].toLocal8Bit().constData(),
+																							sArgs[14].toLocal8Bit().constData(), sArgs[15].toLocal8Bit().constData() );
+														if (szErrMsg[0] != '\0' && sArgs[9].length() > 0)
 															ExpSetErr( error, EXP_RuleProc, szErrMsg );
 														else
 														{	int iHr;
@@ -5265,6 +5267,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 																for (iHr=0; iHr<8760; iHr++)
 																	dOthrHrlyRes[iHr] = 0.0;
 															}
+														// apply <SaleHrlyMultiplier> if not = 1.0 - SAC 4/7/17
+															if (dHrlyMult != 1.0)
+															{	for (iHr=0; iHr<8760; iHr++)
+																{	dTotHrlyRes[ iHr] -= (dSaleHrlyRes[iHr] + dOthrHrlyRes[iHr]);	// remove effect of original sale enduses
+																	dSaleHrlyRes[iHr] *= dHrlyMult;											// apply multiplier to sale enduse series
+																	dOthrHrlyRes[iHr] *= dHrlyMult;
+																	dTotHrlyRes[ iHr] += (dSaleHrlyRes[iHr] + dOthrHrlyRes[iHr]);	// add back effect of multiplied sale enduses
+															}	}
 															double dTblVal, dHrlySum=0.0, dSell;
 															for (iHr=0; iHr<8760; iHr++)
 															{	if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
