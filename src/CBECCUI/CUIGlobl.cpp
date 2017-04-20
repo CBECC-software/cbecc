@@ -2563,7 +2563,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
-	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 440;   }
+	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 440;   }
 	else if (iBDBClass == eiBDBCID_SCSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_DHWSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }

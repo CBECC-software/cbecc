@@ -462,11 +462,12 @@ int CComplianceUIApp::ExitInstance()
 //   if (hWndCUIRpt)
 //      ::PostMessage( hWndCUIRpt, WM_CLOSE, 0, 0L );
 
-	// Clear out building database & ruleset
-	BEMPX_CloseBEMProc();
-
-	// Closes down Qt app (if created via CBECC-* analysis)
-	CMX_ExitBEMCmpMgrDLL();
+//	// Clear out building database & ruleset
+//	BEMPX_CloseBEMProc();
+//	// Closes down Qt app (if created via CBECC-* analysis)
+//	CMX_ExitBEMCmpMgrDLL();
+	// shuts down both BEMProc & BEMCmpMgr libraries
+	CMX_ExitBEMProcAndCmpMgrDLLs();
 
 #if defined(WIN32) && defined(_DEBUG)
 	setFilterDebugHook();

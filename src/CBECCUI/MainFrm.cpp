@@ -1208,7 +1208,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 		}
 
 #ifdef UI_CARES
-      else if (wAction >= 171 && wAction <= 188)
+      else if (wAction >= 171 && wAction <= 189)
       {	int iDlgHt = 600, iDlgWd = 770;  // Present dialog to collect Multifamily Dwelling Unit data
       	if (wAction == 187)	// SAC 1/15/15 - Present dialog to collect properties defaulted based on Proj:SimSpeedOption
       	{	iDlgHt = 400;
@@ -1217,6 +1217,10 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
       	else if (wAction == 188)	// SAC 2/2/15 - Present dialog to review/edit AirNet effective leakage area properties
       	{	iDlgHt = 300;
       		iDlgWd = 400;
+      	}
+      	else if (wAction == 189)	// SAC 4/3/17 - Present dialog to review/edit PreCooling properties
+      	{	iDlgHt = 350;
+      		iDlgWd = 700;
       	}
 			CString sDialogCaption;
 			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
@@ -4162,7 +4166,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 				CWnd* pWnd = GetFocus();
 				CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-				                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 440 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+				                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 490 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
 				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -4176,6 +4180,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		{	CString sErrResultMsg;
 			if (iSimResult == BEMAnal_CECRes_UserAbortedAnalysis || iSimResult == BEMAnal_CECRes_AbortViaCallback)		// unique return value indicating user aborted analysis -OR- callback return value caused abort
 				sErrResultMsg.Format( "Analysis aborted by user (code %d).", iSimResult );
+			else if (iSimResult == BEMAnal_CECRes_CSEOpenGLError)		// SAC 3/16/17 - unique return value indicating CSE-OpenGL problem
+				sErrResultMsg = "Error initializing OpenGL (required for CSE shading simulation).";
 			else		
 			{	int iNumErrors = BEMPX_GetRulesetErrorCount();
 				if (iNumErrors > 0)
@@ -4882,7 +4888,7 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 440 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 490 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
