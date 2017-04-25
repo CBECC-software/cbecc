@@ -70,15 +70,15 @@ extern "C" {
 
 #include "expFormula.h"
 
-#define MAXEXPLEN 16384   /* SAC 9/23/99 - Doubled MAXEXPLEN to make up for float -> double node conversion */
+#define MAXEXPLEN 24576   /* SAC 4/21/17 - increased by 50% due to ExpNode mods | SAC 9/23/99 - Doubled MAXEXPLEN to make up for float -> double node conversion */
 
 #ifdef __cplusplus
 }
 #endif
 // --------------
 
-typedef UINT (FAR *PFRuleGetId)( const char *name );
-typedef void (FAR *PFRuleSetValue)( UINT id, float value );
+// typedef UINT (FAR *PFRuleGetId)( const char *name );
+// typedef void (FAR *PFRuleSetValue)( UINT id, float value );
 // typedef bool (*PFGetBEMPVar)( const char *name, int* type, void* data, long compID = -1 );
 
 class Rule;  // SAC 8/6/10 - declare before referencing in ExpEvalStruct

@@ -527,7 +527,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
 
    int iDataType = BEMPX_GetDataType( pEval->lLocDBID );
 	BOOL bSetObjToNone = (iDataType == BEMP_Obj && node.type == EXP_String &&	  // SAC 4/10/13 - if object assignment being set to "NONE", then re-default the property
-									boost::iequals( (char*) node.info.pValue, "NONE" ));
+									boost::iequals( (char*) node.pValue, "NONE" ));
    if (iDataType == BEMP_Str && BEMPX_GetPropertyID( pEval->lLocDBID ) == 0 &&
                                 BEMPX_GetArrayID(    pEval->lLocDBID ) == BEM_PARAM0_ACTION)
    {  // SAC 3/20/99 - Prevent any data setting if propertytype being set is "Action"
@@ -535,7 +535,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       if (pEval->bVerboseOutput || pEval->bEvalItemADebugTarget)   // SAC 8/6/10
          sDebug += "Action (no data modified)";
    }
-   else if (node.type == EXP_Value  &&  IsReserved_UNCHANGED( node.info.fValue ))
+   else if (node.type == EXP_Value  &&  IsReserved_UNCHANGED( node.fValue ))
    {  // => UNCHANGED => bypass all data changing
       bRetVal = true;
 
@@ -543,8 +543,10 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       if (pEval->bVerboseOutput || pEval->bEvalItemADebugTarget)   // SAC 8/6/10
          sDebug += "UNCHANGED";
    }
-   else if (bSetObjToNone || (node.type == EXP_Value  &&  IsReserved_UNDEFINED( node.info.fValue )) ||  // SAC 8/24/01  - SAC 4/10/13
-				(node.type == EXP_String && IsReserved_UNDEFINED( node.info.fValue ) && boost::iequals( (char*) node.info.pValue, "UNDEFINED" )))  // SAC 1/9/14 - revised to better process UNDEFINED data
+   else if (bSetObjToNone || IsReserved_UNDEFINED( node.fValue ) ||  // SAC 8/24/01  - SAC 4/10/13   - SAC 4/21/17 - revised logic due to removal of union in struct
+				(node.type == EXP_String && boost::iequals( (char*) node.pValue, "UNDEFINED" )))  // SAC 1/9/14 - revised to better process UNDEFINED data
+//   else if (bSetObjToNone || (node.type == EXP_Value  &&  IsReserved_UNDEFINED( node.fValue )) ||  // SAC 8/24/01  - SAC 4/10/13
+//				(node.type == EXP_String && IsReserved_UNDEFINED( node.fValue ) && boost::iequals( (char*) node.pValue, "UNDEFINED" )))  // SAC 1/9/14 - revised to better process UNDEFINED data
    {  // => UNDEFINED => re-default (blast) value
       // SAC 9/18/01 - Revised to ignore return value of BEMPX_DefaultProperty() which only returns true is a user-defined default is installed
       BEMPX_DefaultProperty( pEval->lLocDBID, iError, pEval->iLocObjIdx, pEval->eLocObjType );
@@ -571,19 +573,19 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       int iSpecialVal = 0;
       if (node.type == EXP_Value)
       {  // rule evaluated to a numeric
-         if ( IsReserved_DEFAULT( node.info.fValue ) || IsReserved_NONE( node.info.fValue ) )
+         if ( IsReserved_DEFAULT( node.fValue ) || IsReserved_NONE( node.fValue ) )
          {  // rule evaluated to special values to be passed to the database
-            iSpecialVal = (IsReserved_DEFAULT( node.info.fValue )) ? SV_Default : SV_None;
+            iSpecialVal = (IsReserved_DEFAULT( node.fValue )) ? SV_Default : SV_None;
 
             // SAC 9/25/02 - added code to implement verbose debug output
             if (pEval->bVerboseOutput || pEval->bEvalItemADebugTarget)   // SAC 8/6/10
-               sDebug += (IsReserved_DEFAULT( node.info.fValue )) ? "Default (special value)" : "None (special value)";
+               sDebug += (IsReserved_DEFAULT( node.fValue )) ? "Default (special value)" : "None (special value)";
          }
          else
          {
             if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
             {  // cast double result to integer in preparation for setting database data
-               lData = (long) node.info.fValue;
+               lData = (long) node.fValue;
                pData = (void*) &lData;
 
                // SAC 9/25/02 - added code to implement verbose debug output
@@ -595,7 +597,7 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
             }
             else if (iDataType == BEMP_Flt)
             {
-               fData = node.info.fValue;
+               fData = node.fValue;
                pData = (void*) &fData;
 
                // SAC 9/25/02 - added code to implement verbose debug output
@@ -612,11 +614,11 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
          if (iDataType == BEMP_Obj || iDataType == BEMP_Sym || iDataType == BEMP_Str)
          {
             iDataType = BEMP_Str;
-            pData = node.info.pValue;
+            pData = node.pValue;
 
             // SAC 9/25/02 - added code to implement verbose debug output
             if (pEval->bVerboseOutput || pEval->bEvalItemADebugTarget)   // SAC 8/6/10
-               sDebug += (char*) node.info.pValue;
+               sDebug += (char*) node.pValue;
          }
       }
 
@@ -756,11 +758,11 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
    }
       
    // SAC - 1/2/98 - Attempted fix of rule eval memory leak
-   if ( (node.type == EXP_String) && (node.info.pValue) )
+   if ( (node.type == EXP_String) && (node.pValue) )
    {  // SAC 6/10/99 - switched this 'delete' to free() since allocation was via malloc() and not 'new'
-      // delete node.info.pValue;
-      free( node.info.pValue );
-      node.info.pValue = NULL;   // SAC 10/30/07 - added to prevent re-deletion of same string later on
+      // delete node.pValue;
+      free( node.pValue );
+      node.pValue = NULL;   // SAC 10/30/07 - added to prevent re-deletion of same string later on
    }
 
    return bRetVal;
@@ -839,7 +841,7 @@ BOOL ParseStringPortion( QString& sParseStr, ExpNode* pParseNode, int iDataType,
    if (pParseNode)
    {
       pParseNode->type = EXP_Invalid;
-      pParseNode->info.fValue = 0;
+      pParseNode->fValue = 0;
    }
 
    int iNumCharsParsed = 0;
@@ -891,20 +893,20 @@ BOOL ParseStringPortion( QString& sParseStr, ExpNode* pParseNode, int iDataType,
          if (iDataType == BEMP_Int || iDataType == BEMP_Flt)
          {
             pParseNode->type = EXP_Value;
-            pParseNode->info.fValue = fVal;
+            pParseNode->fValue = fVal;
          }
          else
          {
             pParseNode->type = EXP_String;
             if (sVal.length() > 0)
             {
-               pParseNode->info.pValue = malloc( sVal.length() + 1 );
+               pParseNode->pValue = malloc( sVal.length() + 1 );
 #pragma warning (disable:4996)
-               strcpy( (char*) pParseNode->info.pValue, (const char*) sVal.toLocal8Bit().constData() );
+               strcpy( (char*) pParseNode->pValue, (const char*) sVal.toLocal8Bit().constData() );
 #pragma warning (default:4996)
             }
             else
-               pParseNode->info.pValue = NULL;
+               pParseNode->pValue = NULL;
          }
       }
    }
@@ -1386,9 +1388,9 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 //       else
 //       {
 //          node->type = EXP_Function;
-//          node->info.fn.function = function->evaluate;
-//          node->info.fn.op = function->op;
-//          node->info.fn.nArgs = nArgs;
+//          node->fn.function = function->evaluate;
+//          node->fn.op = function->op;
+//          node->fn.nArgs = nArgs;
 // 
 //          ExpListAddTail( parseList, node );
 //       }
@@ -2148,23 +2150,23 @@ int GetValue( ExpNode* result, const ExpNode* node, void* /*data*/ )
    // Get keyword values
    if ( node->type == EXP_Keyword )
    {
-      switch ( (int)node->info.fValue )
+      switch ( (int)node->fValue )
       {
          case KW_Default :
             result->type = EXP_Value;
-            result->info.fValue = -99999;
+            result->fValue = -99999;
             break;
          case KW_None :
             result->type = EXP_Value;
-            result->info.fValue = -99998;
+            result->fValue = -99998;
             break;
          case KW_Unchanged :               // SAC 3/31/01
             result->type = EXP_Value;
-            result->info.fValue = -99997;
+            result->fValue = -99997;
             break;
          case KW_Undefined :               // SAC 8/24/01
             result->type = EXP_Value;
-            result->info.fValue = -99996;
+            result->fValue = -99996;
             break;
          default :
             ok = FALSE;
@@ -2437,15 +2439,15 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
                            if (pNode[i]->type == EXP_String)
                            {	bRetVal = StringFormatValid( sFormatThis, iPctIdx, error );		// SAC 4/25/16 - added to verify valid format for string output
                            	if (bRetVal)
-                              	sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (char*) pNode[i]->info.pValue );
+                              	sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (char*) pNode[i]->pValue );
                            }
 								// experiment w/ using '%c' to insert individual ASCII characters - SAC 3/18/12
                            else if (cNext == 'c')
-                              sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (int) pNode[i]->info.fValue );
+                              sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (int) pNode[i]->fValue );
                            else
 									{	bRetVal = NumericFormatValid( sFormatThis, iPctIdx, error );		// SAC 4/25/16 - added to verify valid format for string output
                            	if (bRetVal)
-                           		sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), pNode[i]->info.fValue );
+                           		sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), pNode[i]->fValue );
                            }
                            sRetStr += sTemp;
                         }
@@ -2501,6 +2503,9 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
+static int AreSame(double a, double b)  /*SAC 4/21/17 - added DBL_EPSILON check to handle float representation issues */
+{	return (fabs(a-b) < (10.0*DBL_EPSILON) ? 1 : 0);
+}
                                     //  0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20
 static const char* spszAppendNum[] = { "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th", "th" };
 
@@ -2528,13 +2533,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                ExpNode* pNode = ExpxStackPop( stack );
 										 if (nArgs > 3)  // SAC 3/17/13 - added handling of new 4th optional argument
 										 {  if (pNode->type == EXP_String)
-										 	 {	 sLibParentObjectName = (char*) pNode->info.pValue;
+										 	 {	 sLibParentObjectName = (char*) pNode->pValue;
 											 	 assert( !sLibParentObjectName.isEmpty() );
 											 }
                                   else if (pNode->type == EXP_Value)
-											 {	 //long lParNameDBID = (long) pNode->info.fValue;
+											 {	 //long lParNameDBID = (long) pNode->fValue;
 											 	 long lParNameDBID = 0;
-                                     long long lMDBID = (long long) pNode->info.fValue;
+                                     long long lMDBID = (long long) pNode->fValue;
 												 int i0Model = -1;
 												 int iParNameObjIdx = -1;
 											    BEM_ObjType eParNameObjType = BEMO_User;
@@ -2616,8 +2621,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										 {  if (pNode->type != EXP_Value)
                                      ExpSetErr( error, EXP_RuleProc, "Invalid RuleLibrary() 3rd argument (should be 0/1)" );
                                   else
-											    //bAlwaysRetrieveComp = (pNode->info.fValue > 0.1);
-												 iImportUniqueRuleLibObjOption = (int) pNode->info.fValue;	// SAC 4/25/14
+											    //bAlwaysRetrieveComp = (pNode->fValue > 0.1);
+												 iImportUniqueRuleLibObjOption = (int) pNode->fValue;	// SAC 4/25/14
 														//	0 - ImportOnlyIfUnique - only import object if no user object contains the same data as that which describes the library item
 														//	1 - ImportAlways - always import library object, regardless of whether duplicate objects already exist in the user model
 														//	2 - EnsureLibraryName - import lib object if no equiovalent object found in user model BY THE SAME NAME as the library object
@@ -2649,9 +2654,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             int iParClass = (op == BF_Parent ? pEval->iPrimPar1Class : (op == BF_Parent2 ? pEval->iPrimPar2Class : pEval->iPrimPar3Class));
                             if (iParClass <= 0)
                             {  // push a 0-value node onto the stack to prevent a bunch of error messages
-                               ExpNode* p0Node = (ExpNode*) malloc( sizeof( ExpNode ) );
+                               ExpNode* p0Node = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                                p0Node->type = EXP_Value;
-                               p0Node->info.fValue = 0.0;
+                               p0Node->fValue = 0.0;
                                ExpxStackPush( stack, p0Node );
                             }
                             else
@@ -2660,7 +2665,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                if (pNode->type == EXP_String)
                                {
                                   int iRefCompID = 0;  // SAC 7/17/01
-											 QString sParArg = (char*) pNode->info.pValue;
+											 QString sParArg = (char*) pNode->pValue;
 																			assert( !ruleSet.IsDataModel() || (pEval && !pEval->sRuleListName.isEmpty()) );
 											 int iCurTransID = ((ruleSet.IsDataModel() && pEval && !pEval->sRuleListName.isEmpty()) ? GetTransformationIDFromRulelistName( pEval->sRuleListName ) : 0); 	// SAC 3/29/14 - enable rulelist expression grouping
 											 iTransIdx = RemovePrecedingTransformationID( sParArg, iCurTransID );
@@ -2681,9 +2686,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
                                   if (dbId > 0)
                                   {
-                                     free( pNode->info.pValue );
+                                     free( pNode->pValue );
                                      pNode->type = EXP_Value;
-                                     pNode->info.fValue = (double) dbId;
+                                     pNode->fValue = (double) dbId;
                                   }
                                }
 
@@ -2695,7 +2700,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                                            (op == BF_Parent2 ? pEval->iPrimPar2ObjIdx  : pEval->iPrimPar3ObjIdx ));
                                   BEM_ObjType eParObjType = (op == BF_Parent  ? pEval->ePrimParObjType  :
                                                            (op == BF_Parent2 ? pEval->ePrimPar2ObjType : pEval->ePrimPar3ObjType));
-                                  GetBEMProcData( (long long) pNode->info.fValue, iParObjIdx, eParObjType, stack, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                                  GetBEMProcData( (long long) pNode->fValue, iParObjIdx, eParObjType, stack, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
                                }
                                else
                                   ExpSetErr( error, EXP_RuleProc, "Invalid Parent() argument" );
@@ -2708,7 +2713,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               if (pNode->type == EXP_Value)
                               {
 											long lDBID = 0;
-											long long lMDBID = (long long) pNode->info.fValue;
+											long long lMDBID = (long long) pNode->fValue;
 											int iBEMProcIdx = -1;
 											if (lMDBID > BEM_MODEL_MULT)
 											{	iBEMProcIdx = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -2717,14 +2722,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											else
 												lDBID = (long) lMDBID;
                                  if (BEMPX_GetDefaultSymbolIfInvalid( lDBID, pEval->iPrimObjIdx, pEval->ePrimObjType, FALSE, iBEMProcIdx ) == 1)
-                                    pNode->info.fValue = (double) 0;  // local symbol value IS VALID
+                                    pNode->fValue = (double) 0;  // local symbol value IS VALID
                                  else
-                                    pNode->info.fValue = (double) 1;  // local symbol value IS NOT VALID
+                                    pNode->fValue = (double) 1;  // local symbol value IS NOT VALID
                               }
                               else
                               {
                                  ExpSetErr( error, EXP_RuleProc, "Invalid LocalSymbolInvalid() argument" );
-                                 pNode->info.fValue = 1;
+                                 pNode->fValue = 1;
                               }
                               ExpxStackPush( stack, pNode );
                             break; }
@@ -2736,7 +2741,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	  ExpSetErr( error, EXP_RuleProc, "Local*() argument not found" );
 									 else
 									 {	if (pNode->type == EXP_Value)
-                            	   GetBEMProcData( (long long) pNode->info.fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || ruleSet.IsDataModel()), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                            	   GetBEMProcData( (long long) pNode->fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || ruleSet.IsDataModel()), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
                             	else
                             	   ExpSetErr( error, EXP_RuleProc, "Invalid Local*() argument" );
                             	ExpxNodeDelete( pNode );
@@ -2754,7 +2759,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									 else
                             {	if (pNode->type == EXP_Value)
                             	{  long lDBID = 0;
-                            	   long long lMDBID = (long long) pNode->info.fValue;
+                            	   long long lMDBID = (long long) pNode->fValue;
 											int iBEMProcIdx = -1;
 											if (lMDBID > BEM_MODEL_MULT)
 											{	iBEMProcIdx = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -2772,10 +2777,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	      else if (op == BF_GlobStatus || op == BF_GCompAssign)  // SAC 5/12/12
                             	      {  // SAC 8/24/01 - based on similar code within LocalParentChildRef()
                             	         // Setup node to be pushed onto stack
-                            	         ExpNode* pRetNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                            	         ExpNode* pRetNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                             	         pRetNode->type = EXP_Value;
                             	      	if (op == BF_GlobStatus)
-                            	            pRetNode->info.fValue = BEMPX_GetDataStatus( lDBID, 0, BEMO_User, iBEMProcIdx );
+                            	            pRetNode->fValue = BEMPX_GetDataStatus( lDBID, 0, BEMO_User, iBEMProcIdx );
 									 	  		   else
 									 	  		   {  // Get pointer to object which we are trying to find out is assigned or not
    								 	  		      int iDataStatus, iDataType, iSpecialVal;
@@ -2786,7 +2791,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
             					 	  		      if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID, 0 /*iOccur*/ ))
             					 	  		         ReportTargetedDebugInfo( pEval, iDataType, lDBID, 0 /*iOccur*/, BEMO_User /*eObjType*/, "BEMPFunction() on GlobalCompAssigned()", iBEMProcIdx );
             					 	  		      // set return value
-            					 	  		      pRetNode->info.fValue = ((iError >= 0 && pObj && iDataStatus > 0) ? 1.0 : 0.0);  // SAC 11/17/13 - fixed bug by replacing pNode-> with pRetNode-> here
+            					 	  		      pRetNode->fValue = ((iError >= 0 && pObj && iDataStatus > 0) ? 1.0 : 0.0);  // SAC 11/17/13 - fixed bug by replacing pNode-> with pRetNode-> here
 									 	  		   }
                             	         ExpxStackPush( stack, pRetNode );  // push result node onto stack
                             	      }
@@ -2848,7 +2853,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											}
 											else if (op==BF_ConsUFctr)
-                            		{  iCalcMethod = (int) pNode->info.fValue;
+                            		{  iCalcMethod = (int) pNode->fValue;
 												if (iCalcMethod < 1 || iCalcMethod > 1)
 												{  sErrMsg = QString( "Invalid %1() calculation method (%2, expecting 1 (CBECC-Com2013) (no other options available at this time))" ).arg( sFuncName, QString::number( iCalcMethod ) );
 												   ExpSetErr( error, EXP_RuleProc, sErrMsg );
@@ -2856,7 +2861,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												}
 											}
 											else
-                            			iCodeVint = (int) pNode->info.fValue;
+                            			iCodeVint = (int) pNode->fValue;
                             		if (pNode)
 												ExpxNodeDelete( pNode );
 
@@ -2898,14 +2903,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											}
 										}
 
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (dUFactor >= 0)
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = dUFactor;
+											pNode->fValue = dUFactor;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0.0;
+											pNode->fValue = 0.0;
 										}
 										ExpxStackPush( stack, pNode );
 									}	break;
@@ -2947,14 +2952,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
  										   BEMPX_WriteLogFile( sErrMsg );
 										}
 
-										ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (dNumCreated >= 0)
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = dNumCreated;
+											pNode->fValue = dNumCreated;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0.0;
+											pNode->fValue = 0.0;
 										}
 										ExpxStackPush( stack, pNode );
 									}	break;
@@ -2976,14 +2981,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										if (pEval->bVerboseOutput && !sErrMsg.isEmpty())
 											//BEMMessageBox( sErrMsg, NULL, 3 /*error*/ );
    									   BEMPX_WriteLogFile( sErrMsg );
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (sErrMsg.isEmpty())
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = (double) iNumObjsCreated;
+											pNode->fValue = (double) iNumObjsCreated;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0.0;
+											pNode->fValue = 0.0;
 										}
 										ExpxStackPush( stack, pNode );
 									}	break;
@@ -3006,7 +3011,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 	                           	if (pNode->type != EXP_Value)
 												ExpSetErr( error, EXP_RuleProc, "Invalid DaylightableArea() argument, expecting calculation method (1 - CBECC-Com2013 (no other options at this time))" );
 											else
-                            		{  iCalcMethod = (int) pNode->info.fValue;
+                            		{  iCalcMethod = (int) pNode->fValue;
 												if (iCalcMethod < 1 || iCalcMethod > 1)
 												{  sErrMsg = QString( "Invalid DaylightableArea() calculation method (%1, expecting 1 (CBECC-Com2013) (no other options available at this time))" ).arg( QString::number( iCalcMethod ) );
 												   ExpSetErr( error, EXP_RuleProc, sErrMsg );
@@ -3045,14 +3050,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											}
 										}
 
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (dDayltArea >= 0)
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = dDayltArea;
+											pNode->fValue = dDayltArea;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0.0;
+											pNode->fValue = 0.0;
 										}
 										ExpxStackPush( stack, pNode );
 									}	break;
@@ -3079,7 +3084,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													ExpSetErr( error, EXP_RuleProc, "Invalid first ScalePolyLoop() argument, expecting numeric database ID" );
 												else
                             			{  long lScaleDBID = 0;
-                            			   long long lMDBID = (long long) pNode->info.fValue;
+                            			   long long lMDBID = (long long) pNode->fValue;
 													int iBEMProcIdx = -1;
 													int iScaleObjIdx = -1;
 													BEM_ObjType eScaleObjType = BEMO_User;
@@ -3115,7 +3120,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 	                           		if (pNode->type != EXP_Value)
 													ExpSetErr( error, EXP_RuleProc, "Invalid second ScalePolyLoop() argument, expecting scaling method (0-VerticalGlazing or 1-Skylight)" );
 												else
-                            			{  iScaleMethod = (int) pNode->info.fValue;
+                            			{  iScaleMethod = (int) pNode->fValue;
 													if (iScaleMethod < 0 || iScaleMethod > 1)
 													{  sErrMsg = QString( "Invalid PolyLoop scaling method (%1, expecting 0(VerticalGlazing) or 1(Skylight))" ).arg( QString::number( iScaleMethod ) );
 													   ExpSetErr( error, EXP_RuleProc, sErrMsg );
@@ -3296,14 +3301,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
 										}
 
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (fPolyArea >= 0)
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = fPolyArea;
+											pNode->fValue = fPolyArea;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0;
+											pNode->fValue = 0;
 										}
 										ExpxStackPush( stack, pNode );
                            }  break;
@@ -3341,17 +3346,17 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
 										int iPolyLpObjIdx = -1, iStatus=0, iSpecialVal, iError;
 										if (sErrMsg.isEmpty())
-										{	if (pNode[4]->info.fValue == 5)  // different argument specification for Shade w/ lower-left X,Y vs. others where X,Y,Z is centroid
-												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->info.fValue /*Area*/, pNode[1]->info.fValue /*Azimuth*/, pNode[2]->info.fValue /*Tilt*/,
-																		pNode[3]->info.fValue /*Z*/, (int) pNode[4]->info.fValue /*PolyType*/, (pNode[5] ? pNode[5]->info.fValue : -1) /*Arg6*/,
-																		(pNode[6] ? pNode[6]->info.fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 
-																		(pNode[7] ? pNode[7]->info.fValue : -1) /*dDX*/, (pNode[8] ? pNode[8]->info.fValue : -1) /*dDY*/ );  //, (pNode[9] ? pNode[9]->info.fValue : -1) /*dDZ*/ );
+										{	if (pNode[4]->fValue == 5)  // different argument specification for Shade w/ lower-left X,Y vs. others where X,Y,Z is centroid
+												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->fValue /*Area*/, pNode[1]->fValue /*Azimuth*/, pNode[2]->fValue /*Tilt*/,
+																		pNode[3]->fValue /*Z*/, (int) pNode[4]->fValue /*PolyType*/, (pNode[5] ? pNode[5]->fValue : -1) /*Arg6*/,
+																		(pNode[6] ? pNode[6]->fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 
+																		(pNode[7] ? pNode[7]->fValue : -1) /*dDX*/, (pNode[8] ? pNode[8]->fValue : -1) /*dDY*/ );  //, (pNode[9] ? pNode[9]->fValue : -1) /*dDZ*/ );
 											else
-												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->info.fValue /*Area*/, pNode[1]->info.fValue /*Azimuth*/, pNode[2]->info.fValue /*Tilt*/,
-																		pNode[3]->info.fValue /*Z*/, (int) pNode[4]->info.fValue /*PolyType*/, (pNode[5] ? pNode[5]->info.fValue : -1) /*Arg6*/,
-																		(pNode[6] ? pNode[6]->info.fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 0 /*dDX*/,
-																		0 /*dDY*/, 0 /*dDZ*/, -1 /*dChldHgt*/, -1 /*dChldX*/, -1 /*dChldY*/, (pNode[7] ? pNode[7]->info.fValue : -1) /*CentX*/,
-																		(pNode[8] ? pNode[8]->info.fValue : -1) /*CentY*/, (pNode[9] ? pNode[9]->info.fValue : -1) /*CentZ*/ );
+												iPolyLpObjIdx = BEMPX_CreatePolyLoop( pNode[0]->fValue /*Area*/, pNode[1]->fValue /*Azimuth*/, pNode[2]->fValue /*Tilt*/,
+																		pNode[3]->fValue /*Z*/, (int) pNode[4]->fValue /*PolyType*/, (pNode[5] ? pNode[5]->fValue : -1) /*Arg6*/,
+																		(pNode[6] ? pNode[6]->fValue : -1) /*Arg7*/, -1 /*iBEMProcIdx*/, NULL /*pdFurthestFromXYOrig*/, 0 /*dDX*/,
+																		0 /*dDY*/, 0 /*dDZ*/, -1 /*dChldHgt*/, -1 /*dChldX*/, -1 /*dChldY*/, (pNode[7] ? pNode[7]->fValue : -1) /*CentX*/,
+																		(pNode[8] ? pNode[8]->fValue : -1) /*CentY*/, (pNode[9] ? pNode[9]->fValue : -1) /*CentZ*/ );
 											if (iPolyLpObjIdx < 0)
 												sErrMsg = QString( "Error encountered in CreatePolyLpChild() function - return code %1." ).arg( QString::number( iPolyLpObjIdx ) );
 											else
@@ -3373,17 +3378,17 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											}	}
 										}
 
-										pNode[0] = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (!sErrMsg.isEmpty())
 										{	// post error & setup return argument
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											pNode[0]->type = EXP_Invalid;
-											pNode[0]->info.fValue = 0;
+											pNode[0]->fValue = 0;
 										}
 										else
 										{	// setup return argument
 											pNode[0]->type = EXP_Value;
-											pNode[0]->info.fValue = (double) iPolyLpObjIdx;
+											pNode[0]->fValue = (double) iPolyLpObjIdx;
 										}
 										ExpxStackPush( stack, pNode[0] );
 									}	break;
@@ -3430,14 +3435,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										if (iPolyLpObjIdx >= 0)
 											dPolyArea = InitPolyLoop( iPolyLpObjIdx, pEval, error );
 
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										if (dPolyArea >= 0)
 										{	pNode->type = EXP_Value;
-											pNode->info.fValue = dPolyArea;
+											pNode->fValue = dPolyArea;
 										}
 										else
 										{	pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0;
+											pNode->fValue = 0;
 										}
 										ExpxStackPush( stack, pNode );
                            }  break;
@@ -3498,8 +3503,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             if (pNode->type != EXP_Value)
                                ExpSetErr( error, EXP_RuleProc, "Invalid ChildCount() argument" );
                             else
-                               pNode->info.fValue = BEMPX_GetNumChildren( pEval->lPrimDBID, pEval->iPrimObjIdx, pEval->ePrimObjType,
-                                                                        (int) pNode->info.fValue );
+                               pNode->fValue = BEMPX_GetNumChildren( pEval->lPrimDBID, pEval->iPrimObjIdx, pEval->ePrimObjType,
+                                                                        (int) pNode->fValue );
                             ExpxStackPush( stack, pNode );
                             break; }
 
@@ -3508,19 +3513,19 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             if (pNode->type != EXP_Value)
                                ExpSetErr( error, EXP_RuleProc, "Invalid ComponentCount() argument" );
                             else
-                               pNode->info.fValue = BEMPX_GetNumObjects( (int) pNode->info.fValue );
+                               pNode->fValue = BEMPX_GetNumObjects( (int) pNode->fValue );
                             ExpxStackPush( stack, pNode );
                             break; }
 
       case BF_CurTime    :  // "CurrentTime",       
       case BF_CurYear    : {// "CurrentYear",       
-                            ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                            ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                             pNode->type = EXP_Value;
                       //      CTime time = CTime::GetCurrentTime();
-                      //      pNode->info.fValue = (double) ( op == BF_CurTime ? time.GetTime() :
+                      //      pNode->fValue = (double) ( op == BF_CurTime ? time.GetTime() :
                       //                                                         time.GetYear() );
                             QDateTime time = QDateTime::currentDateTime();
-                            pNode->info.fValue = (double) ( op == BF_CurTime ? time.toTime_t() :
+                            pNode->fValue = (double) ( op == BF_CurTime ? time.toTime_t() :
                                                                                time.date().year() );
                             ExpxStackPush( stack, pNode );
                             break; }
@@ -3534,7 +3539,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             if (pNode->type != EXP_Value)
                                ExpSetErr( error, EXP_RuleProc, "Invalid Date() 3rd argument" );
                             else
-                               iDay = (int) pNode->info.fValue;
+                               iDay = (int) pNode->fValue;
                             // delete last argument node
                             ExpxNodeDelete( pNode );
                                
@@ -3543,7 +3548,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             if (pNode->type != EXP_Value)
                                ExpSetErr( error, EXP_RuleProc, "Invalid Date() 2nd argument" );
                             else
-                               iMonth = (int) pNode->info.fValue;
+                               iMonth = (int) pNode->fValue;
                             // delete second argument node
                             ExpxNodeDelete( pNode );
                                
@@ -3551,19 +3556,19 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             pNode = ExpxStackPop( stack );
                             if (pNode->type != EXP_Value)
                                ExpSetErr( error, EXP_RuleProc, "Invalid Date() 1st argument" );
-                            else if (pNode->info.fValue < 1970 || pNode->info.fValue > 2037)
+                            else if (pNode->fValue < 1970 || pNode->fValue > 2037)
                                ExpSetErr( error, EXP_RuleProc, "Invalid Date() year value" );
                             else
-                               iYear = (int) pNode->info.fValue;
+                               iYear = (int) pNode->fValue;
                             // don't delete this node since it is the one we will set and push back onto the stack
 
                             if (iDay > 0 && iMonth > 0 && iYear > 0)
                             {
                          //      CTime time( iYear, iMonth, iDay, 0, 0, 0 );
-                         //      pNode->info.fValue = (double) time.GetTime();
+                         //      pNode->fValue = (double) time.GetTime();
                                QDate date( iYear, iMonth, iDay );
                                QDateTime time( date );
-                               pNode->info.fValue = (double) time.toTime_t();
+                               pNode->fValue = (double) time.toTime_t();
                             }
 
                             // Push second argument node back onto the stack to serve as return value
@@ -3587,7 +3592,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                   if (pNode->type != EXP_Value)
                                      ExpSetErr( error, EXP_RuleProc, "Invalid FltToStr() 5th argument" );
                                   else
-                                     bTrimTrailingDecZeroes = (pNode->info.fValue != 0);
+                                     bTrimTrailingDecZeroes = (pNode->fValue != 0);
                                   // delete argument node
                                   ExpxNodeDelete( pNode );
                                   pNode = ExpxStackPop( stack );
@@ -3597,7 +3602,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                   if (pNode->type != EXP_Value)
                                      ExpSetErr( error, EXP_RuleProc, "Invalid FltToStr() 4th argument" );
                                   else
-                                     iZeroFillLeftToLength = (int) pNode->info.fValue;
+                                     iZeroFillLeftToLength = (int) pNode->fValue;
                                   // delete argument node
                                   ExpxNodeDelete( pNode );
                                   pNode = ExpxStackPop( stack );
@@ -3607,7 +3612,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                   if (pNode->type != EXP_Value)
                                      ExpSetErr( error, EXP_RuleProc, "Invalid FltToStr() 3rd argument" );
                                   else
-                                     bCommas = (pNode->info.fValue != 0);
+                                     bCommas = (pNode->fValue != 0);
                                   // delete argument node
                                   ExpxNodeDelete( pNode );
                                   pNode = ExpxStackPop( stack );
@@ -3617,7 +3622,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                   if (pNode->type != EXP_Value)
                                      ExpSetErr( error, EXP_RuleProc, "Invalid FltToStr() 2nd argument" );
                                   else
-                                     iDecPrec = (int) pNode->info.fValue;
+                                     iDecPrec = (int) pNode->fValue;
                                   // delete argument node
                                   ExpxNodeDelete( pNode );
                                   pNode = ExpxStackPop( stack );
@@ -3627,7 +3632,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                if (pNode->type != EXP_Value)
                                   ExpSetErr( error, EXP_RuleProc, "Invalid FltToStr() 1st argument" );
                                else
-                                  fValue = pNode->info.fValue;
+                                  fValue = pNode->fValue;
                                // don't delete this node since it is the one we will set and push back onto the stack
 
 										 // SAC 2/8/05 - Added code to handle decimal precision values 101-106 as "significant digits" indicators
@@ -3661,8 +3666,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                QString sNum = BEMPX_FloatToString( fValue, iDecPrec, bCommas, iZeroFillLeftToLength, bTrimTrailingDecZeroes );
 
                                pNode->type = EXP_String;
-                               pNode->info.pValue = malloc( sNum.length() + 1 );
-                               strcpy( (char*) pNode->info.pValue, (const char*) sNum.toLocal8Bit().constData() );
+                               pNode->pValue = malloc( sNum.length() + 1 );
+                               strcpy( (char*) pNode->pValue, (const char*) sNum.toLocal8Bit().constData() );
 
                                // Push second argument node back onto the stack to serve as return value
                                ExpxStackPush( stack, pNode );
@@ -3677,13 +3682,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											pNode->type = EXP_Invalid;
 										}
 										else
-										{	if (strlen( (const char*) pNode->info.pValue ) > 0)
-											{	dVal = BEMPX_StringToFloat( (const char*) pNode->info.pValue );
-												free( pNode->info.pValue );
+										{	if (strlen( (const char*) pNode->pValue ) > 0)
+											{	dVal = BEMPX_StringToFloat( (const char*) pNode->pValue );
+												free( pNode->pValue );
 											}
 											pNode->type = EXP_Value;
 										}
-										pNode->info.fValue = dVal;
+										pNode->fValue = dVal;
 										ExpxStackPush( stack, pNode );
 										break; }
 
@@ -3695,10 +3700,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               ExpNode* pNode = ExpxStackPop( stack );
                               if (pNode->type != EXP_Value)
                                  ExpSetErr( error, EXP_RuleProc, "Invalid SplitPath() 2nd argument type (must be integer)" );
-                              else if (pNode->info.fValue < 1 || pNode->info.fValue > 4)
+                              else if (pNode->fValue < 1 || pNode->fValue > 4)
                                  ExpSetErr( error, EXP_RuleProc, "Invalid SplitPath() 2nd argument value (must be in range 1-4)" );
                               else
-                                  iRetKey = (int) pNode->info.fValue;
+                                  iRetKey = (int) pNode->fValue;
                               // delete second argument node
                               ExpxNodeDelete( pNode );
                                   
@@ -3708,7 +3713,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               if (pNode->type != EXP_String)
                                  ExpSetErr( error, EXP_RuleProc, "Invalid SplitPath() 1st argument type (must be character string)" );
                               else
-                                 pszPath = (const char*) pNode->info.pValue;
+                                 pszPath = (const char*) pNode->pValue;
                               // don't delete this node since it is the one we will set and push back onto the stack
 
                               pNode->type = EXP_Invalid;
@@ -3733,23 +3738,23 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  }
                                  if (pRetStr && strlen( pRetStr ) > 0)
                                  {
-                                    free( pNode->info.pValue );
-                                    pNode->info.pValue = malloc( strlen( pRetStr ) + 1 );
-                                    strcpy( (char*) pNode->info.pValue, (const char*) pRetStr );
+                                    free( pNode->pValue );
+                                    pNode->pValue = malloc( strlen( pRetStr ) + 1 );
+                                    strcpy( (char*) pNode->pValue, (const char*) pRetStr );
                                     pNode->type = EXP_String;
                                  }
                               }
                               // setup return node for invalid/errant result
                               if (pNode->type == EXP_Invalid)
                               {
-                                 free( pNode->info.pValue );
+                                 free( pNode->pValue );
                                  switch (iRetKey)
                                  {
-                                    case  1 : pNode->info.pValue = malloc( 11 );   strcpy( (char*) pNode->info.pValue, "(no drive)"     );   break;
-                                    case  2 : pNode->info.pValue = malloc( 10 );   strcpy( (char*) pNode->info.pValue, "(no path)"      );   break;
-                                    case  3 : pNode->info.pValue = malloc( 14 );   strcpy( (char*) pNode->info.pValue, "(no filename)"  );   break;
-                                    case  4 : pNode->info.pValue = malloc( 15 );   strcpy( (char*) pNode->info.pValue, "(no extension)" );   break;
-                                    default : pNode->info.pValue = malloc(  8 );   strcpy( (char*) pNode->info.pValue, "(error)"        );   break;
+                                    case  1 : pNode->pValue = malloc( 11 );   strcpy( (char*) pNode->pValue, "(no drive)"     );   break;
+                                    case  2 : pNode->pValue = malloc( 10 );   strcpy( (char*) pNode->pValue, "(no path)"      );   break;
+                                    case  3 : pNode->pValue = malloc( 14 );   strcpy( (char*) pNode->pValue, "(no filename)"  );   break;
+                                    case  4 : pNode->pValue = malloc( 15 );   strcpy( (char*) pNode->pValue, "(no extension)" );   break;
+                                    default : pNode->pValue = malloc(  8 );   strcpy( (char*) pNode->pValue, "(error)"        );   break;
                                  }
                                  pNode->type = EXP_String;
                               }
@@ -3758,9 +3763,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               break; }
 
       case BF_CheckSym   : {// "EnsureSymbolExists",       
-                            ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                            ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                             pNode->type = EXP_Value;
-                            pNode->info.fValue = (double) BEMPX_GetDefaultSymbolIfInvalid( pEval->lPrimDBID, pEval->iPrimObjIdx, pEval->ePrimObjType );
+                            pNode->fValue = (double) BEMPX_GetDefaultSymbolIfInvalid( pEval->lPrimDBID, pEval->iPrimObjIdx, pEval->ePrimObjType );
                             ExpxStackPush( stack, pNode );
                             break; }
 
@@ -3775,10 +3780,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                int iEvalOption = 0;
                                if (nArgs == 2)
                                {
-                                  if (pNode->type != EXP_Value || pNode->info.fValue < 0 || pNode->info.fValue > 2)   // SAC 1/22/06
+                                  if (pNode->type != EXP_Value || pNode->fValue < 0 || pNode->fValue > 2)   // SAC 1/22/06
                                      ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() EvalOption argument" );
                                   else
-                                     iEvalOption = (int) pNode->info.fValue;
+                                     iEvalOption = (int) pNode->fValue;
 
                                   // delete last argument node & pop next one
                                   ExpxNodeDelete( pNode );
@@ -3788,7 +3793,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                   ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() argument" );
                                else // post rulelist name to the eval struct
                                {
-                                  pEval->sRulelistToEvaluate = (char*) pNode->info.pValue;
+                                  pEval->sRulelistToEvaluate = (char*) pNode->pValue;
                                   assert( pEval->maRulelistEvalObjIdxs.size() < 1 );
                                   if (iEvalOption == 1)
                                      pEval->maRulelistEvalObjIdxs.push_back( pEval->iPrimObjIdx );
@@ -3831,7 +3836,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pNode->type != EXP_String)
                               ExpSetErr( error, EXP_RuleProc, "Invalid CompExists() 2nd argument type" );
                            else
-                              sCompName = (const char*) pNode->info.pValue;
+                              sCompName = (const char*) pNode->pValue;
                            // delete second argument node
                            ExpxNodeDelete( pNode );
 
@@ -3841,11 +3846,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pNode->type != EXP_Value)
                               ExpSetErr( error, EXP_RuleProc, "Invalid CompExists() 1st argument type" );
                            else
-                              i1CompClass = (int) pNode->info.fValue;
+                              i1CompClass = (int) pNode->fValue;
                            // don't delete this node since it is the one we will set and push back onto the stack
 
                            int iError;
-                           pNode->info.fValue = ( ( i1CompClass > 0 && !sCompName.isEmpty() &&
+                           pNode->fValue = ( ( i1CompClass > 0 && !sCompName.isEmpty() &&
                                                     BEMPX_GetObjectByName( i1CompClass, iError, sCompName.toLocal8Bit().constData() ) != NULL ) ? 1 : 0 );
 
                            // Push argument node back onto the stack to serve as return value
@@ -3858,10 +3863,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = ExpxStackPop( stack );
                            if (pNode->type != EXP_Value)
                               ExpSetErr( error, EXP_RuleProc, "Invalid CompName() 2nd argument type" );
-                           else if (pNode->info.fValue < 1)
+                           else if (pNode->fValue < 1)
                               ExpSetErr( error, EXP_RuleProc, "Invalid CompName() 2nd argument value too low" );
                            else
-                              i0CompIdx = (int) pNode->info.fValue - 1;
+                              i0CompIdx = (int) pNode->fValue - 1;
                            // delete second argument node
                            ExpxNodeDelete( pNode );
 
@@ -3871,7 +3876,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pNode->type != EXP_Value)
                               ExpSetErr( error, EXP_RuleProc, "Invalid CompName() 1st argument type" );
                            else
-                              i1CompClass = (int) pNode->info.fValue;
+                              i1CompClass = (int) pNode->fValue;
                            // don't delete this node since it is the one we will set and push back onto the stack
 
                            pNode->type = EXP_String;
@@ -3879,13 +3884,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            BEMObject* pObj = BEMPX_GetObjectByClass( i1CompClass, iError, i0CompIdx );
                            if (iError >= 0 && pObj && !pObj->getName().isEmpty())
                            {
-                              pNode->info.pValue = malloc( pObj->getName().length() + 1 );
-                              strcpy( (char*) pNode->info.pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
+                              pNode->pValue = malloc( pObj->getName().length() + 1 );
+                              strcpy( (char*) pNode->pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
                            }
                            else
                            {
-                              pNode->info.pValue = malloc( 5 );
-                              strcpy( (char*) pNode->info.pValue, "NONE" );
+                              pNode->pValue = malloc( 5 );
+                              strcpy( (char*) pNode->pValue, "NONE" );
                            }
 
                            // Push argument node back onto the stack to serve as return value
@@ -3901,20 +3906,20 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            else if (nArgs == 1)  // SAC 11/14/16 - revisions to accommodate a single object reference property
                            {
 	                           ExpNode* pNode = ExpxStackPop( stack );
-	                           if (pNode->type != EXP_Value || pNode->info.fValue < BEM_COMP_MULT)
+	                           if (pNode->type != EXP_Value || pNode->fValue < BEM_COMP_MULT)
 	                           {  i0ObjIdx = -1;
                            	   ExpSetErr( error, EXP_RuleProc, "Invalid ComponentIndex() argument type (expecting DBID)" );
                            	}
 	                           else
 	                           {	int iCIObjIdx = -1;		BEM_ObjType eCIObjTyp = BEMO_User;		int iCISpVal, iCIErr;
-	                           	int iCIClsID = BEMPX_GetClassID( (long) pNode->info.fValue );
+	                           	int iCIClsID = BEMPX_GetClassID( (long) pNode->fValue );
 	                           	if (iCIClsID == BEMPX_GetClassID( pEval->lPrimDBID ))
 	                           	{	iCIObjIdx = pEval->iPrimObjIdx;		eCIObjTyp = pEval->ePrimObjType;
 	                           	}
 	                           	else if (iCIClsID == BEMPX_GetClassID( pEval->lLocDBID ))
 	                           	{	iCIObjIdx = pEval->iLocObjIdx;		eCIObjTyp = pEval->eLocObjType;
 	                           	}
-											BEMObject* pCIObj = BEMPX_GetObjectPtr( (long) pNode->info.fValue, iCISpVal, iCIErr, iCIObjIdx, eCIObjTyp );
+											BEMObject* pCIObj = BEMPX_GetObjectPtr( (long) pNode->fValue, iCISpVal, iCIErr, iCIObjIdx, eCIObjTyp );
 											if (pCIObj == NULL)
 		                           {  i0ObjIdx = -1;
    	                        	   ExpSetErr( error, EXP_RuleProc, "Unable to retrieve object referenced by ComponentIndex() argument" );
@@ -3925,9 +3930,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 	                           // delete argument node
 	                           ExpxNodeDelete( pNode );
                            }
-                           ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                           ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                            pNode->type = EXP_Value;
-                           pNode->info.fValue = (double) i0ObjIdx + 1;
+                           pNode->fValue = (double) i0ObjIdx + 1;
                            ExpxStackPush( stack, pNode );
                            break; }
 
@@ -3945,14 +3950,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (pNode->type != EXP_Value)
                                     ExpSetErr( error, EXP_RuleProc, "Invalid ChildIndex() 1st argument" );   // SAC 6/24/04 - Corrected bogus error string
                                  else
-                                    bOnlyCountPrimaryObjects = ((int) pNode->info.fValue != 0);
+                                    bOnlyCountPrimaryObjects = ((int) pNode->fValue != 0);
                               }
 
                               if (pNode == NULL)
-                                 pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                                 pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 
                               pNode->type = EXP_Value;
-                              pNode->info.fValue = 0.0;
+                              pNode->fValue = 0.0;
                               if (pEval->iPrimPar1Class > 0)
                               {
                                  int iError;
@@ -3961,17 +3966,17 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (pChildObj && pParObj)
                                  {
                                     int iChildIdx = 0;
-                              //      for (POSITION pos = pParObj->m_children.GetHeadPosition(); (pos != NULL && pNode->info.fValue < 1); /*iChildIdx++*/)
+                              //      for (POSITION pos = pParObj->m_children.GetHeadPosition(); (pos != NULL && pNode->fValue < 1); /*iChildIdx++*/)
                               //      {
                               //         BEMObject* pObj = (BEMObject*) pParObj->m_children.GetNext( pos );
-												for (int iC=0; (pNode->info.fValue < 1 && iC < pParObj->getChildCount()); iC++)
+												for (int iC=0; (pNode->fValue < 1 && iC < pParObj->getChildCount()); iC++)
 												{	BEMObject* pObj = pParObj->getChild( iC );			assert( pObj );
 
                                        if (!bOnlyCountPrimaryObjects || pObj->getClass()->get1BEMClassIdx() == pChildObj->getClass()->get1BEMClassIdx())
                                           iChildIdx++;
 
                                        if (pObj == pChildObj)
-                                          pNode->info.fValue = iChildIdx;
+                                          pNode->fValue = iChildIdx;
                                     }
                                  }
                               }
@@ -3991,12 +3996,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
 //// SAC 7/1/99 - DEBUGGING
 //QString sMsg = "Storing file: <project file>.";
-//sMsg += (const char*) pFNExtNode->info.pValue;
+//sMsg += (const char*) pFNExtNode->pValue;
 //BEMMessageBox( sMsg, NULL, 3 /*error*/ );
 
                             // Call BEMProc function to store the current BEMProc
-                            pNode->info.fValue = (double) BEMPX_WriteProjectFile( (const char*) pFNExtNode->info.pValue, //(pNode->info.fValue > 0), TRUE );  - SAC 8/1/12 - updated second argument
-									 													(pNode->info.fValue > 0 ? BEMFM_INPUT : BEMFM_DETAIL) /*iFileMode*/, TRUE /*bUseLogFileName*/ );
+                            pNode->fValue = (double) BEMPX_WriteProjectFile( (const char*) pFNExtNode->pValue, //(pNode->fValue > 0), TRUE );  - SAC 8/1/12 - updated second argument
+									 													(pNode->fValue > 0 ? BEMFM_INPUT : BEMFM_DETAIL) /*iFileMode*/, TRUE /*bUseLogFileName*/ );
 
 //// SAC 7/1/99 - DEBUGGING
 //BEMMessageBox( "File Storage Completed", NULL, 3 /*error*/ );
@@ -4024,9 +4029,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               }
                               else
                                  switch (i)
-                                 {  case 0 :  iOrdIdx     = (int)  pNode->info.fValue;   break;
-                                    case 1 :  iMaxIdx     = (int)  pNode->info.fValue;   break;
-                                    case 2 :		lMDBID = (long long) pNode->info.fValue;
+                                 {  case 0 :  iOrdIdx     = (int)  pNode->fValue;   break;
+                                    case 1 :  iMaxIdx     = (int)  pNode->fValue;   break;
+                                    case 2 :		lMDBID = (long long) pNode->fValue;
 																if (lMDBID > BEM_MODEL_MULT)
 																{	lDBIDReturn = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
 																	i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -4034,7 +4039,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 																else
 																	lDBIDReturn = (long) lMDBID;
 																break;
-                                    case 3 :		lMDBID = (long long) pNode->info.fValue;
+                                    case 3 :		lMDBID = (long long) pNode->fValue;
 																if (lMDBID > BEM_MODEL_MULT)
 																{	lDBIDArray = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
 																	i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -4048,11 +4053,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            }
                            if (pNode->type == EXP_String)
                            {
-                              free( pNode->info.pValue );
-                              pNode->info.pValue = NULL;
+                              free( pNode->pValue );
+                              pNode->pValue = NULL;
                            }
                            pNode->type = EXP_Invalid;
-                           pNode->info.fValue = 0;
+                           pNode->fValue = 0;
 
                            if (iOrdIdx > 0 && iOrdIdx <= iMaxIdx && lDBIDReturn > BEM_COMP_MULT && lDBIDArray > BEM_COMP_MULT)
                            {  assert( (BEMPX_GetArrayID( lDBIDReturn ) == 1 && BEMPX_GetArrayID( lDBIDArray ) == 1) );
@@ -4116,7 +4121,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                     if (iaIdxs.size() == iOrdIdx)
                                     {
                                        pNode->type = EXP_Value;
-                                       pNode->info.fValue = faRetVals[ iaIdxs[iOrdIdx-1] ];
+                                       pNode->fValue = faRetVals[ iaIdxs[iOrdIdx-1] ];
                                     }
                                  }
                                  else
@@ -4135,7 +4140,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 								if (nArgs < 1)
 								{	iRetVal = -1;
 									sErrMsg = "OpenExportFile() requires at least one argument, path/filename of file to open.";
-									pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+									pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 									pNode->type = EXP_Invalid;
 								}
 								else
@@ -4157,18 +4162,18 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												sErrMsg = "Invalid OpenExportFile() second argument, expecting string containing file open mode (typically 'wt' or 'at' (write/append text)).";
 											}
 											else
-												sFOMode = (char*) pNode->info.pValue;
+												sFOMode = (char*) pNode->pValue;
 											ExpxNodeDelete( pNode );
 											pNode = ExpxStackPop( stack );
 										}
-										if (pNode->type != EXP_String || strlen( (char*) pNode->info.pValue ) < 3)
+										if (pNode->type != EXP_String || strlen( (char*) pNode->pValue ) < 3)
 										{	iRetVal = -4;
 											sErrMsg = "Invalid OpenExportFile() first argument, expecting string containing path/filename to open.";
 										}
 										else
-										{	QString sExpFN = (char*) pNode->info.pValue;
-            		         		free( pNode->info.pValue );
-											pNode->info.pValue = NULL;
+										{	QString sExpFN = (char*) pNode->pValue;
+            		         		free( pNode->pValue );
+											pNode->pValue = NULL;
 											iRetVal = ruleSet.nextExportFileIndex();
 											if (iRetVal < 0)
 											{	iRetVal = -5;
@@ -4186,7 +4191,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									ExpSetErr( error, EXP_RuleProc, sErrMsg );
 								if (pNode)
 								{	pNode->type = EXP_Value;
-									pNode->info.fValue = iRetVal;
+									pNode->fValue = iRetVal;
 					            ExpxStackPush( stack, pNode );
 					         }
 					         break;
@@ -4200,12 +4205,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
       		               QString sErrMsg = "Invalid or missing CloseExportFile() function argument - expecting integer export file index (0-N).";
             		         ExpSetErr( error, EXP_RuleProc, sErrMsg );
             		         if (pNode->type == EXP_String)
-            		         {	free( pNode->info.pValue );
-										pNode->info.pValue = NULL;
+            		         {	free( pNode->pValue );
+										pNode->pValue = NULL;
             		         }
                   		}
 		                  else if (pNode)
-      		            {	int iFirstExpFileIdx, iLastExpFileIdx;  iFirstExpFileIdx = iLastExpFileIdx = (int) pNode->info.fValue;
+      		            {	int iFirstExpFileIdx, iLastExpFileIdx;  iFirstExpFileIdx = iLastExpFileIdx = (int) pNode->fValue;
       		            	if (iFirstExpFileIdx == -1)
       		            	{	iFirstExpFileIdx = 0;
       		            		iLastExpFileIdx  = NUM_RULE_EXPORTFILES-1;
@@ -4219,10 +4224,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										iRetVal = ruleSet.closeExportFile( iFirstExpFileIdx, iLastExpFileIdx );
 								}
 								if (!pNode)
-									pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+									pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
             		      if (pNode)
 								{	pNode->type = EXP_Value;
-									pNode->info.fValue = iRetVal;
+									pNode->fValue = iRetVal;
 					            ExpxStackPush( stack, pNode );
 					         }
 					         break;
@@ -4244,9 +4249,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
             if (nArgs < iMinArgs)
             {  // post error & setup return argument
                ExpSetErr( error, EXP_RuleProc, "Format() requires at least one argument." );
-               pNode[0] = (ExpNode*) malloc( sizeof( ExpNode ) );
+               pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                pNode[0]->type = EXP_Invalid;
-               pNode[0]->info.fValue = 0;
+               pNode[0]->fValue = 0;
             }
             else if (nArgs > iMaxArgs)
             {  // post error, delete all but one arguments & setup return argument
@@ -4259,11 +4264,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                }
                if (pNode[0]->type == EXP_String)
                {
-                  free( pNode[0]->info.pValue );
-                  pNode[0]->info.pValue = NULL;
+                  free( pNode[0]->pValue );
+                  pNode[0]->pValue = NULL;
                }
                pNode[0]->type = EXP_Invalid;
-               pNode[0]->info.fValue = 0;
+               pNode[0]->fValue = 0;
             }
             else  // # arguments OK
             {
@@ -4292,7 +4297,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                      ExpSetErr( error, EXP_RuleProc, sErrMsg );
                   }
                   else if (pXFINode)
-                  	iExpFileIdx = (int) pXFINode->info.fValue;
+                  	iExpFileIdx = (int) pXFINode->fValue;
                   if (pXFINode)
 	                  ExpxNodeDelete( pXFINode );
 					}
@@ -4303,7 +4308,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile);  // SAC 3/8/17
                if (bArgsOK)
                {
-                  QString sFormat = (char*) pNode[0]->info.pValue;
+                  QString sFormat = (char*) pNode[0]->pValue;
 						bFmtOK = ProcessFormatStatement( sRetStr, sFormat, &pNode[1], nArgs-1, error, bPreserveNewlines );	// SAC 1/26/15 - populate formatted string via subordinate routine to enable access from other routine(s)
 
                   // now perform the appropriate action with the resulting string
@@ -4370,25 +4375,25 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   ExpxNodeDelete( pNode[i] );
                if (pNode[0]->type == EXP_String)
                {
-                  free( pNode[0]->info.pValue );
-                  pNode[0]->info.pValue = NULL;
+                  free( pNode[0]->pValue );
+                  pNode[0]->pValue = NULL;
                }
 
                if (!bArgsOK || !bFmtOK)
                {
                   pNode[0]->type = EXP_Invalid;
-                  pNode[0]->info.fValue = 0;
+                  pNode[0]->fValue = 0;
                }
                else
                {
                   pNode[0]->type = EXP_String;
                   if (sRetStr.length() > 0)
                   {
-                     pNode[0]->info.pValue = malloc( sRetStr.length() + 1 );
-                     strcpy( (char*) pNode[0]->info.pValue, (const char*) sRetStr.toLocal8Bit().constData() );
+                     pNode[0]->pValue = malloc( sRetStr.length() + 1 );
+                     strcpy( (char*) pNode[0]->pValue, (const char*) sRetStr.toLocal8Bit().constData() );
                   }
                   else
-                     pNode[0]->info.pValue = NULL;
+                     pNode[0]->pValue = NULL;
                }
             }
             ExpxStackPush( stack, pNode[0] );
@@ -4402,7 +4407,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 				int iTimerID=4, iResetTimer=1;
             ExpNode* pNode[3];											assert( nArgs <= 3 );
             if (nArgs < 1)
-            {  pNode[0] = (ExpNode*) malloc( sizeof( ExpNode ) );
+            {  pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                pNode[0]->type = EXP_Value;
 				//	sDurationMsgArg = "            LogDuration() returned:  %.3f seconds";  // default message
 					sDurationMsgArg = "            LogDuration() returned:  %1 seconds";  // default message
@@ -4416,11 +4421,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   pNode[0] = ExpxStackPop( stack );
                }
                if (pNode[0]->type == EXP_String)
-               {  free( pNode[0]->info.pValue );
-                  pNode[0]->info.pValue = NULL;
+               {  free( pNode[0]->pValue );
+                  pNode[0]->pValue = NULL;
                }
                pNode[0]->type = EXP_Invalid;
-               pNode[0]->info.fValue = 0;
+               pNode[0]->fValue = 0;
             }
             else  // # arguments OK
             {  // pop and check each function argument
@@ -4436,13 +4441,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   }
 						else
 						{	switch (i)
-							{	case  0 :	sDurationMsgArg = (char*) pNode[0]->info.pValue;
-														free( pNode[0]->info.pValue );	// prepare node to be return value
-														pNode[0]->info.pValue = NULL;
+							{	case  0 :	sDurationMsgArg = (char*) pNode[0]->pValue;
+														free( pNode[0]->pValue );	// prepare node to be return value
+														pNode[0]->pValue = NULL;
 														pNode[0]->type = EXP_Value;
 														break;
-								case  1 :	iTimerID    = (int) pNode[1]->info.fValue;		break;
-								case  2 :	iResetTimer = (int) pNode[2]->info.fValue;		break;
+								case  1 :	iTimerID    = (int) pNode[1]->fValue;		break;
+								case  2 :	iResetTimer = (int) pNode[2]->fValue;		break;
 								default :	assert( FALSE );		break;
 					}	}	}
 				}
@@ -4459,7 +4464,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 						BEMPX_WriteLogFile( sDurationMsg );
 						ruleSet.logMsgCallback( logMsgMESSAGE, sDurationMsg, NULL );
 					}
-               pNode[0]->info.fValue = dDuration;
+               pNode[0]->fValue = dDuration;
 				}
             ExpxStackPush( stack, pNode[0] );
             break;
@@ -4470,7 +4475,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = ExpxStackPop( stack );
                            // translate second argument
                            if (pNode->type == EXP_String)
-                              sSubStr = (char*) pNode->info.pValue;
+                              sSubStr = (char*) pNode->pValue;
                            else
                               ExpSetErr( error, EXP_RuleProc, "Second FindInString() function argument must be a string." );
                            // delete this node and pop next one
@@ -4479,20 +4484,20 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            // translate first argument
                            if (pNode->type == EXP_String)
                            {
-                              sMainStr = (char*) pNode->info.pValue;
-                              free( pNode->info.pValue );
-                              pNode->info.pValue = NULL;
+                              sMainStr = (char*) pNode->pValue;
+                              free( pNode->pValue );
+                              pNode->pValue = NULL;
                            }
                            else
                               ExpSetErr( error, EXP_RuleProc, "First FindInString() function argument must be a string." );
 
                            if (!sSubStr.isEmpty() && sMainStr.length() >= sSubStr.length())
                            {  pNode->type = EXP_Value;
-                              pNode->info.fValue = (double) sMainStr.indexOf( sSubStr );
+                              pNode->fValue = (double) sMainStr.indexOf( sSubStr );
                            }
                            else                           // SAC 8/6/09 - revised code to return valid value here of -1 => substring not found
                            {  pNode->type = EXP_Value;    // pNode->type = EXP_Invalid;
-                              pNode->info.fValue = -1.0;  // pNode->info.fValue = 0.0;
+                              pNode->fValue = -1.0;  // pNode->fValue = 0.0;
                            }
                            ExpxStackPush( stack, pNode );
                            break; }
@@ -4503,7 +4508,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = ExpxStackPop( stack );
                            // translate second argument
                            if (pNode->type == EXP_String)
-                              sRplcStr = (char*) pNode->info.pValue;
+                              sRplcStr = (char*) pNode->pValue;
                            else
                               ExpSetErr( error, EXP_RuleProc, "Second ReplaceInString() function argument must be a string." );
                            // delete this node and pop next one
@@ -4512,9 +4517,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            // translate first argument
                            if (pNode->type == EXP_String)
                            {
-                              sFindStr = (char*) pNode->info.pValue;
-                              free( pNode->info.pValue );
-                              pNode->info.pValue = NULL;
+                              sFindStr = (char*) pNode->pValue;
+                              free( pNode->pValue );
+                              pNode->pValue = NULL;
                            }
                            else
                               ExpSetErr( error, EXP_RuleProc, "First ReplaceInString() function argument must be a string." );
@@ -4537,12 +4542,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
                            if (bRISRetValOK)
                            {  pNode->type = EXP_String;
-                              pNode->info.pValue = malloc( sMainStr.length() + 1 );
-                              strcpy( (char*) pNode->info.pValue, (const char*) sMainStr.toLocal8Bit().constData() );
+                              pNode->pValue = malloc( sMainStr.length() + 1 );
+                              strcpy( (char*) pNode->pValue, (const char*) sMainStr.toLocal8Bit().constData() );
                            }
                            else
                            {  pNode->type = EXP_Invalid;
-                              pNode->info.fValue = 0;
+                              pNode->fValue = 0;
                            }
                            ExpxStackPush( stack, pNode );
                            break; }
@@ -4555,7 +4560,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               ExpSetErr( error, EXP_RuleProc, "Invalid UniqueComponentName() argument type" );
                            else
                            {
-                              sUnqCompName = (const char*) pNode->info.pValue;
+                              sUnqCompName = (const char*) pNode->pValue;
                               if (sUnqCompName.isEmpty())
                                  ExpSetErr( error, EXP_RuleProc, "UniqueComponentName() argument empty" );
                               else if (BEMPX_GetComponentByNameQ( sUnqCompName ) != NULL)
@@ -4563,23 +4568,23 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  int iCompIdx = 1;
                                  do
                                  {
-                                    sUnqCompName = QString( "%1-%2" ).arg( (const char*) pNode->info.pValue, QString::number( ++iCompIdx ) );
+                                    sUnqCompName = QString( "%1-%2" ).arg( (const char*) pNode->pValue, QString::number( ++iCompIdx ) );
                                  } while (BEMPX_GetComponentByNameQ( sUnqCompName ) != NULL);
                               }
-                              free( pNode->info.pValue );
-                              pNode->info.pValue = NULL;
+                              free( pNode->pValue );
+                              pNode->pValue = NULL;
                            }
 
                            if (sUnqCompName.isEmpty())
                            {
                               pNode->type = EXP_Invalid;
-                              pNode->info.fValue = 0;
+                              pNode->fValue = 0;
                            }
                            else
                            {
                               pNode->type = EXP_String;
-                              pNode->info.pValue = malloc( sUnqCompName.length() + 1 );
-                              strcpy( (char*) pNode->info.pValue, (const char*) sUnqCompName.toLocal8Bit().constData() );
+                              pNode->pValue = malloc( sUnqCompName.length() + 1 );
+                              strcpy( (char*) pNode->pValue, (const char*) sUnqCompName.toLocal8Bit().constData() );
                            }
                            ExpxStackPush( stack, pNode );
                            break;  }
@@ -4592,10 +4597,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pPrimObj && pPrimObj->getParent() && pPrimObj->getParent()->getClass())
                               sParCompType = pPrimObj->getParent()->getClass()->getShortName();
 
-                           ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                           ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                            pNode->type = EXP_String;
-                           pNode->info.pValue = malloc( sParCompType.length() + 1 );
-                           strcpy( (char*) pNode->info.pValue, (const char*) sParCompType.toLocal8Bit().constData() );
+                           pNode->pValue = malloc( sParCompType.length() + 1 );
+                           strcpy( (char*) pNode->pValue, (const char*) sParCompType.toLocal8Bit().constData() );
                            ExpxStackPush( stack, pNode );
                            break;  }
 
@@ -4606,12 +4611,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pNode->type != EXP_String)
                               ExpSetErr( error, EXP_RuleProc, "Invalid ComponentType() argument type (expecting a character string)" );
                            else
-                           {  if (pNode->info.pValue == NULL || strlen( (const char*) pNode->info.pValue ) < 1)
+                           {  if (pNode->pValue == NULL || strlen( (const char*) pNode->pValue ) < 1)
                                  ExpSetErr( error, EXP_RuleProc, "ComponentType() argument empty" );
                               else
-                              {	iCTypRetVal = (int) BEMPX_GetDBComponentID( (const char*) pNode->info.pValue );
-                                 free( pNode->info.pValue );
-	                              pNode->info.pValue = NULL;
+                              {	iCTypRetVal = (int) BEMPX_GetDBComponentID( (const char*) pNode->pValue );
+                                 free( pNode->pValue );
+	                              pNode->pValue = NULL;
 											if (iCTypRetVal <= 0)
 	                                 ExpSetErr( error, EXP_RuleProc, "ComponentType() argument not found in component type list." );
 										}
@@ -4619,7 +4624,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									if (pNode)
 									{
 	                           pNode->type = (iCTypRetVal > 0 ? EXP_Value : EXP_Invalid);
-	                           pNode->info.fValue = (double) iCTypRetVal;
+	                           pNode->fValue = (double) iCTypRetVal;
 	                           ExpxStackPush( stack, pNode );
 									}
          						break;  }
@@ -4632,21 +4637,21 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               ExpSetErr( error, EXP_RuleProc, "Invalid FileExists() argument type" );
                            else
                            {
-                              sFileName = (const char*) pNode->info.pValue;
+                              sFileName = (const char*) pNode->pValue;
                               if (sFileName.isEmpty())
                                  ExpSetErr( error, EXP_RuleProc, "FileExists() argument empty" );
                               else
                                  bFileExists = FileExists( sFileName.toLocal8Bit().constData() );
 
-                              free( pNode->info.pValue );
-                              pNode->info.pValue = NULL;
+                              free( pNode->pValue );
+                              pNode->pValue = NULL;
                            }
 
                            if (sFileName.isEmpty())
                               pNode->type = EXP_Invalid;
                            else
                               pNode->type = EXP_Value;
-                           pNode->info.fValue = (bFileExists ? 1 : 0);
+                           pNode->fValue = (bFileExists ? 1 : 0);
                            ExpxStackPush( stack, pNode );
                            break;  }
 
@@ -4665,8 +4670,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
                                  {
-                                    free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                    free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
                            }
@@ -4678,7 +4683,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  ExpSetErr( error, EXP_RuleProc, "Invalid ImportComponentFromFile() 2nd argument type" );
                               else
                               {
-                                 sFileName = (const char*) pNode->info.pValue;
+                                 sFileName = (const char*) pNode->pValue;
                                  if (sFileName.isEmpty())
                                     ExpSetErr( error, EXP_RuleProc, "ImportComponentFromFile() 2nd argument empty" );
                                  else if (!FileExists( sFileName.toLocal8Bit().constData() ))
@@ -4686,8 +4691,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                     ExpSetErr( error, EXP_RuleProc, "ImportComponentFromFile() 2nd argument - file not found" );
                                     sFileName.clear();
                                  }
-                                 free( pNode->info.pValue );
-                                 pNode->info.pValue = NULL;
+                                 free( pNode->pValue );
+                                 pNode->pValue = NULL;
                               }
                               // delete second argument node
                               ExpxNodeDelete( pNode );
@@ -4696,10 +4701,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               pNode = ExpxStackPop( stack );
                               if (pNode->type != EXP_Value)
                                  ExpSetErr( error, EXP_RuleProc, "Invalid ImportComponentFromFile() 1st argument type" );
-                              else if (pNode->info.fValue < 1 || pNode->info.fValue > BEMPX_GetNumClasses())
+                              else if (pNode->fValue < 1 || pNode->fValue > BEMPX_GetNumClasses())
                                  ExpSetErr( error, EXP_RuleProc, "Invalid ImportComponentFromFile() 1st argument value" );
                               else
-                                 iCompType = (int) pNode->info.fValue;
+                                 iCompType = (int) pNode->fValue;
                               
                               // don't delete this node since it is the one we will set and push back onto the stack
                            }
@@ -4707,15 +4712,15 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            if (pNode)
                            {
                               pNode->type = EXP_Invalid;
-                              pNode->info.fValue = 0;
+                              pNode->fValue = 0;
                               if (iCompType > 1 && !sFileName.isEmpty())
                               {
                                  BEMObject* pObj = BEMPX_ReadProjectComponent( sFileName.toLocal8Bit().constData(), iCompType );
                                  if (pObj && !pObj->getName().isEmpty())
                                  {
                                     pNode->type = EXP_String;
-                                    pNode->info.pValue = malloc( pObj->getName().length() + 1 );
-                                    strcpy( (char*) pNode->info.pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
+                                    pNode->pValue = malloc( pObj->getName().length() + 1 );
+                                    strcpy( (char*) pNode->pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
                                  }
                               }
                               ExpxStackPush( stack, pNode );
@@ -4723,7 +4728,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            break;  }
 
       case BF_EnsureChild : { // SAC  4/27/04 - added EnsureChildAssigned() function
-                           ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                           ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                            int iError;
                            BEMObject* pSupposedChildObj = NULL;
                            BEMObject* pPrimObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iError, pEval->iPrimObjIdx, pEval->ePrimObjType );
@@ -4745,19 +4750,19 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               if (pFirstChildObj != NULL)
                               {  // assign the first child of the child class
                                  pNode->type = EXP_String;
-                                 pNode->info.pValue = malloc( pFirstChildObj->getName().length() + 1 );
-                                 strcpy( (char*) pNode->info.pValue, (const char*) pFirstChildObj->getName().toLocal8Bit().constData() );
+                                 pNode->pValue = malloc( pFirstChildObj->getName().length() + 1 );
+                                 strcpy( (char*) pNode->pValue, (const char*) pFirstChildObj->getName().toLocal8Bit().constData() );
                               }
                               else
                               {  // blast bogus assignment
                                  pNode->type = EXP_Value;
-                                 pNode->info.fValue = -99998;   // => set to "NONE"
+                                 pNode->fValue = -99998;   // => set to "NONE"
                               }
                            }
                            else
                            {  // if no component already assigned, then do not change anything
                               pNode->type = EXP_Value;
-                              pNode->info.fValue = -99997;
+                              pNode->fValue = -99997;
                            }
                            ExpxStackPush( stack, pNode );
                            break; }
@@ -4779,11 +4784,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										      if (arg > 1)  // don't delete last argument - used to store return value
 										         ExpxNodeDelete( pNode );
 										      else if (pNode && pNode->type == EXP_String)
-										      {  free( pNode->info.pValue );
-										         pNode->info.pValue = NULL;
+										      {  free( pNode->pValue );
+										         pNode->pValue = NULL;
 											}	}
 											if (nArgs == 0)
-												pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+												pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										}
 										else
 										{  double dVal1=0., dVal2=0.;
@@ -4801,10 +4806,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													ExpSetErr( error, EXP_RuleProc, "Invalid final ValidOr() function argument (should be static numeric or string)" );
 											}	}
 											else if (pNode && pNode->type == EXP_Value)
-												dVal2 = pNode->info.fValue;
+												dVal2 = pNode->fValue;
 											else if (pNode && pNode->type == EXP_String)
 											{	bArgsAreStrs = TRUE;
-												sStr2 = (char*) pNode->info.pValue;
+												sStr2 = (char*) pNode->pValue;
 											}
 											else
 											{	bFuncEvalOK = FALSE;
@@ -4818,8 +4823,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									// Conditional Operator
 											if (op == BF_IfValidAnd)
 										   {	pNode = ExpxStackPop( stack );
-												if (pNode && pNode->type == EXP_Value && pNode->info.fValue >= EQ && pNode->info.fValue <= GE)
-													iOper = (int) pNode->info.fValue;
+												if (pNode && pNode->type == EXP_Value && pNode->fValue >= EQ && pNode->fValue <= GE)
+													iOper = (int) pNode->fValue;
 												else
 												{	bFuncEvalOK = FALSE;
 	         								   ExpSetErr( error, EXP_RuleProc, "Invalid middle IfValidAnd() argument (expecting conditional operator)" );
@@ -4832,10 +4837,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											if (pNode && pNode->type == EXP_Invalid)
 												bPerformOperation = FALSE;
 											else if (!bArgsAreStrs && pNode && pNode->type == EXP_Value)
-												dVal1 = pNode->info.fValue;
+												dVal1 = pNode->fValue;
 											else if (bArgsAreStrs && pNode && pNode->type == EXP_String)
-											{	sStr1 = (char*) pNode->info.pValue;
-												dVal1 = pNode->info.fValue;  // still grab fValue which can indicate whether or not data retrieved from BEMBase was undefined
+											{	sStr1 = (char*) pNode->pValue;
+												dVal1 = pNode->fValue;  // still grab fValue which can indicate whether or not data retrieved from BEMBase was undefined
 											}
 											else if (pNode && ( (bArgsAreStrs && pNode->type == EXP_Value) || (!bArgsAreStrs && pNode->type == EXP_String) ))
 											{	bFuncEvalOK = FALSE;
@@ -4854,8 +4859,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											//if (pNode)   - This node used to return result
 											//	ExpxNodeDelete( pNode );
 											if (pNode->type == EXP_String)
-											{	free( pNode->info.pValue );
-												pNode->info.pValue = NULL;
+											{	free( pNode->pValue );
+												pNode->pValue = NULL;
 											}
 									// Perform Operation
 											if (bFuncEvalOK)
@@ -4882,20 +4887,26 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													else
 													{	// NUMERIC comparison
 														switch (iOper)
-														{	case EQ :	dResult = (dVal1 == dVal2 ? 1.0 : 0.0);		break;
-															case NEQ:	dResult = (dVal1 != dVal2 ? 1.0 : 0.0);		break;
-															case LT :	dResult = (dVal1 <  dVal2 ? 1.0 : 0.0);		break;
-															case GT :	dResult = (dVal1 >  dVal2 ? 1.0 : 0.0);		break;
-															case LE :	dResult = (dVal1 <= dVal2 ? 1.0 : 0.0);		break;
-															case GE :	dResult = (dVal1 >= dVal2 ? 1.0 : 0.0);		break;
+											//			{	case EQ :	dResult = (dVal1 == dVal2 ? 1.0 : 0.0);		break;
+											//				case NEQ:	dResult = (dVal1 != dVal2 ? 1.0 : 0.0);		break;
+											//				case LT :	dResult = (dVal1 <  dVal2 ? 1.0 : 0.0);		break;
+											//				case GT :	dResult = (dVal1 >  dVal2 ? 1.0 : 0.0);		break;
+											//				case LE :	dResult = (dVal1 <= dVal2 ? 1.0 : 0.0);		break;
+											//				case GE :	dResult = (dVal1 >= dVal2 ? 1.0 : 0.0);		break;		- SAC 4/21/17 - replaced w/ below to better handle floating point representation issues
+														{	case EQ :	dResult = (AreSame( dVal1, dVal2 )    ? 1.0 : 0.0);		break;
+															case NEQ:	dResult = (AreSame( dVal1, dVal2 )==0 ? 1.0 : 0.0);		break;
+															case LT :	dResult = ((dVal1 < dVal2 && AreSame( dVal1, dVal2 )==0) ? 1.0 : 0.0);		break;
+															case GT :	dResult = ((dVal1 > dVal2 && AreSame( dVal1, dVal2 )==0) ? 1.0 : 0.0);		break;
+															case LE :	dResult = ((dVal1 < dVal2 || AreSame( dVal1, dVal2 )   ) ? 1.0 : 0.0);		break;
+															case GE :	dResult = ((dVal1 > dVal2 || AreSame( dVal1, dVal2 )   ) ? 1.0 : 0.0);		break;
 												}	}	}
 										}	}
                               pNode->type = (op == BF_IfValidAnd || !bArgsAreStrs) ? EXP_Value : EXP_String;
 										if (pNode->type == EXP_Value)
-	                              pNode->info.fValue = dResult;
+	                              pNode->fValue = dResult;
 										else
-										{	pNode->info.pValue = malloc( sStr2.length() + 1 );
-											strcpy( (char*) pNode->info.pValue, (const char*) sStr2.toLocal8Bit().constData() );
+										{	pNode->pValue = malloc( sStr2.length() + 1 );
+											strcpy( (char*) pNode->pValue, (const char*) sStr2.toLocal8Bit().constData() );
 										}
 										ExpxStackPush( stack, pNode );
 										break; }
@@ -4908,9 +4919,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										else
 										{	ExpSetErr( error, EXP_RuleProc, "Invalid EnumString() argument - should be Loc/Par#/Global Object:Property name" );
 											if (pNode == NULL)
-												pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+												pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 											pNode->type = EXP_Invalid;
-											pNode->info.fValue = 0.0;
+											pNode->fValue = 0.0;
 										}
 										ExpxStackPush( stack, pNode );
 										break; }
@@ -4922,35 +4933,35 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = ExpxStackPop( stack );
                            if (pNode->type != EXP_Value)
                               ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcDBID() 3rd argument type" );
-                           else if (pNode->info.fValue < 0  ||  pNode->info.fValue >= BEM_PARAM_MULT)
+                           else if (pNode->fValue < 0  ||  pNode->fValue >= BEM_PARAM_MULT)
                               ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcDBID() array index" );
                            else
-                              iArrIdx = (int) pNode->info.fValue;
+                              iArrIdx = (int) pNode->fValue;
                            // delete third argument node
                            ExpxNodeDelete( pNode );
                               
                            // Get the 2nd argument - Property Name
                            pNode = ExpxStackPop( stack );
-                           if (pNode->type != EXP_String || pNode->info.pValue == NULL)
+                           if (pNode->type != EXP_String || pNode->pValue == NULL)
                               ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcDBID() 2nd argument type" );
                            else
-                              sParam = (const char*) pNode->info.pValue;
+                              sParam = (const char*) pNode->pValue;
                            // delete second argument node
                            ExpxNodeDelete( pNode );
                               
                            // Get the 1st argument - Component Type Name
                            pNode = ExpxStackPop( stack );
-                           if (pNode->type != EXP_String || pNode->info.pValue == NULL)
+                           if (pNode->type != EXP_String || pNode->pValue == NULL)
                               ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcDBID() 1st argument type" );
                            else
                            {
-                              sComp = (const char*) pNode->info.pValue;
-                              free( pNode->info.pValue );
+                              sComp = (const char*) pNode->pValue;
+                              free( pNode->pValue );
                            }
                            // don't delete this node since it is the one we will set and push back onto the stack - but DO (above) free up the char string memory
 
                            pNode->type = EXP_Invalid;
-                           pNode->info.fValue = 0;
+                           pNode->fValue = 0;
                            int iClass = BEMP_GetDBComponentID( sComp );
                            if (iClass < 1)
                               ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcDBID() 1st argument type - Class name not found" );
@@ -4964,7 +4975,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               else
                               {
                                  lParamID /= BEM_PARAM_MULT;
-                                 pNode->info.fValue = (double) BEMPX_GetDBID( iClass, lParamID, iArrIdx );
+                                 pNode->fValue = (double) BEMPX_GetDBID( iClass, lParamID, iArrIdx );
                                  pNode->type = EXP_Value;
                               }
                            }
@@ -4985,30 +4996,30 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											bErrorLogged = true;
 										}
-										else if (!bErrorLogged && pNode && pNode->info.fValue < 1)
+										else if (!bErrorLogged && pNode && pNode->fValue < 1)
 										{	QString sErrMsg = QString( "Invalid %1() argument #%2 (%3) - numeric value must be >= 1." ).arg( (op == BF_YrMoDa2Date ?	"YrMoDaToSerial" : "YrMoDaToDayOfWeek"), QString::number( arg ), (arg==1 ? "year" : (arg==2 ? "month" : "day")) );
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											bErrorLogged = true;
 										}
-										else if (!bErrorLogged && pNode && pNode->info.fValue >= 1)
+										else if (!bErrorLogged && pNode && pNode->fValue >= 1)
 										{	switch (arg)
-											{	case  1 :  iYr = (int) pNode->info.fValue;		break;
-												case  2 :  iMo = (int) pNode->info.fValue;		break;
-												case  3 :  iDa = (int) pNode->info.fValue;		break;
+											{	case  1 :  iYr = (int) pNode->fValue;		break;
+												case  2 :  iMo = (int) pNode->fValue;		break;
+												case  3 :  iDa = (int) pNode->fValue;		break;
 										}	}
                               if (arg > 1)  // don't delete last argument - used to store return value
                                  ExpxNodeDelete( pNode );
                            }
 									if (pNode == NULL)
-										pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+										pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                            if (bErrorLogged)
 									{	pNode->type = EXP_Invalid;
-										pNode->info.fValue = 0.0;
+										pNode->fValue = 0.0;
 									}
 									else if (op == BF_YrMoDa2Date)
-										pNode->info.fValue = (double) YrMoDaToSerial( iYr, iMo, iDa );
+										pNode->fValue = (double) YrMoDaToSerial( iYr, iMo, iDa );
 									else
-										pNode->info.fValue = (double) YrMoDaToDayOfWeek( iYr, iMo, iDa );
+										pNode->fValue = (double) YrMoDaToDayOfWeek( iYr, iMo, iDa );
 									ExpxStackPush( stack, pNode );
 									break; }
 
@@ -5016,21 +5027,21 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
       case BF_Date2Mo     :   // int SerialDateToMonth( long lSerial );             
       case BF_Date2Yr     :   // int SerialDateToYear( long lSerial );              
 								{	ExpNode* pNode = ExpxStackPop( stack );				assert( pNode );
-									if (pNode == NULL || pNode->type != EXP_Value || pNode->info.fValue < 1)
+									if (pNode == NULL || pNode->type != EXP_Value || pNode->fValue < 1)
 									{	QString sErrMsg = QString( "Invalid %1() date argument - %2." ).arg(
 													(op == BF_Date2WkDay ?	"SerialDateToDayOfMonth" : (op == BF_Date2Mo ?	"SerialDateToMonth" : "SerialDateToYear")),
 													(pNode->type != EXP_Value ? "should be numeric value" : "must be > 0") );
 										ExpSetErr( error, EXP_RuleProc, sErrMsg );
 										if (pNode == NULL)
-											pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+											pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 										pNode->type = EXP_Invalid;
-										pNode->info.fValue = 0.0;
+										pNode->fValue = 0.0;
 									}
 									else if (pNode)
 									{	switch (op)
-										{	case  BF_Date2WkDay :  pNode->info.fValue = (double) SerialDateToDayOfMonth( (long) pNode->info.fValue );		break;
-											case  BF_Date2Mo    :  pNode->info.fValue = (double) SerialDateToMonth(      (long) pNode->info.fValue );		break;
-											case  BF_Date2Yr    :  pNode->info.fValue = (double) SerialDateToYear(       (long) pNode->info.fValue );		break;
+										{	case  BF_Date2WkDay :  pNode->fValue = (double) SerialDateToDayOfMonth( (long) pNode->fValue );		break;
+											case  BF_Date2Mo    :  pNode->fValue = (double) SerialDateToMonth(      (long) pNode->fValue );		break;
+											case  BF_Date2Yr    :  pNode->fValue = (double) SerialDateToYear(       (long) pNode->fValue );		break;
 									}	}
 									ExpxStackPush( stack, pNode );
 									break; }
@@ -5046,8 +5057,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
                            }
@@ -5058,7 +5069,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (pNode && pNode->type == EXP_String)
-												sArgs[arg-1] = (char*) pNode->info.pValue;
+												sArgs[arg-1] = (char*) pNode->pValue;
 											else
                            	   {	bArgsOK = FALSE;
 												ExpSetErr( error, EXP_RuleProc, "Invalid HourlyResultSum() function argument type (all must be strings)." );
@@ -5066,8 +5077,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
 										if (bArgsOK)
@@ -5083,11 +5094,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									}
 									if (WithinMargin( dResult, -99999.0, 0.1 ))
 									{  pNode->type = EXP_Invalid;
-	                           pNode->info.fValue = 0;
+	                           pNode->fValue = 0;
 									}
 									else
                            {	pNode->type = EXP_Value;
-										pNode->info.fValue = dResult;
+										pNode->fValue = dResult;
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );
@@ -5104,8 +5115,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
                            }
@@ -5117,9 +5128,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (pNode && arg == 3 && pNode->type == EXP_Value)
-												iTableColumn = (int) pNode->info.fValue;
+												iTableColumn = (int) pNode->fValue;
 											else if (pNode && arg != 3 && pNode->type == EXP_String)
-												sArgs[arg-1] = (char*) pNode->info.pValue;
+												sArgs[arg-1] = (char*) pNode->pValue;
 											else
                            	   {	bArgsOK = FALSE;
 												ExpSetErr( error, EXP_RuleProc, "Invalid ApplyHourlyResultMultipliers() function argument type (str, str, int, str, str, str<, str, str...>)." );
@@ -5127,8 +5138,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
 										if (bArgsOK)
@@ -5178,11 +5189,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									}
 									if (WithinMargin( dResult, -99999.0, 0.1 ))
 									{  pNode->type = EXP_Invalid;
-	                           pNode->info.fValue = 0;
+	                           pNode->fValue = 0;
 									}
 									else
                            {	pNode->type = EXP_Value;
-										pNode->info.fValue = dResult;
+										pNode->fValue = dResult;
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );
@@ -5199,8 +5210,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
                            }
@@ -5213,13 +5224,13 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (pNode && arg == 3 && pNode->type == EXP_Value)
-												iTableColumn = (int) pNode->info.fValue;
+												iTableColumn = (int) pNode->fValue;
                                  else if (pNode && arg == 8 && pNode->type == EXP_Value)
-												dNEMconst = pNode->info.fValue;
+												dNEMconst = pNode->fValue;
                                  else if (pNode && arg == 9 && pNode->type == EXP_Value)
-												dHrlyMult = pNode->info.fValue;
+												dHrlyMult = pNode->fValue;
 											else if (pNode && arg != 3 && arg != 8 && arg != 9 && pNode->type == EXP_String)
-												sArgs[arg-1] = (char*) pNode->info.pValue;
+												sArgs[arg-1] = (char*) pNode->pValue;
 											else
                            	   {	bArgsOK = FALSE;
 												ExpSetErr( error, EXP_RuleProc, "Invalid ApplyHourlyResultMultipliers_NEM() function argument type (str, str, int, str, str, str, float<, float, str, str...>)." );
@@ -5227,8 +5238,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
                                  else if (pNode && pNode->type == EXP_String)
-                                 {  free( pNode->info.pValue );
-                                    pNode->info.pValue = NULL;
+                                 {  free( pNode->pValue );
+                                    pNode->pValue = NULL;
                                  }
                               }
 										if (bArgsOK)
@@ -5308,11 +5319,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									}
 									if (WithinMargin( dResult, -99999.0, 0.1 ))
 									{  pNode->type = EXP_Invalid;
-	                           pNode->info.fValue = 0;
+	                           pNode->fValue = 0;
 									}
 									else
                            {	pNode->type = EXP_Value;
-										pNode->info.fValue = dResult;
+										pNode->fValue = dResult;
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );
@@ -5404,7 +5415,7 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
 	{	if (pNode->type != EXP_String)
 			ExpSetErr( error, EXP_RuleProc, "Invalid CreateComp() 5th argument (name of object to copy)" );
 		else // post rulelist name to the eval struct
-			sObjToCopyName = (char*) pNode->info.pValue;
+			sObjToCopyName = (char*) pNode->pValue;
 		ExpxNodeDelete( pNode );
 		pNode = ExpxStackPop( stack );
 	}
@@ -5414,14 +5425,14 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
    if ( (op == BF_Cr8Child  &&  nArgs > 4) ||
         (op == BF_Cr8Comp   &&  nArgs > 3) )
    {
-      if (pNode->type != EXP_Value || pNode->info.fValue < 0 || pNode->info.fValue > 1)
+      if (pNode->type != EXP_Value || pNode->fValue < 0 || pNode->fValue > 1)
       {
          if (op == BF_Cr8Child)
                ExpSetErr( error, EXP_RuleProc, "Optional 5th CreateChildren() argument must be EvalOption (0 or 1)" );
          else  ExpSetErr( error, EXP_RuleProc, "Optional 4th CreateComp() argument must be EvalOption (0 or 1)" );
       }
       else // post rulelist name to the eval struct
-         iEvalOption = (int) pNode->info.fValue;
+         iEvalOption = (int) pNode->fValue;
       ExpxNodeDelete( pNode );
       pNode = ExpxStackPop( stack );
    }
@@ -5438,7 +5449,7 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
          else  ExpSetErr( error, EXP_RuleProc, "Invalid CreateComp() 3rd argument (Rulelist Name)" );
       }
       else // post rulelist name to the eval struct
-         pEval->sRulelistToEvaluate = (char*) pNode->info.pValue;
+         pEval->sRulelistToEvaluate = (char*) pNode->pValue;
       ExpxNodeDelete( pNode );
       pNode = ExpxStackPop( stack );
    }
@@ -5452,7 +5463,7 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
       else  ExpSetErr( error, EXP_RuleProc, "Invalid CreateComp() 2nd argument" );
    }
    else
-      sNamePrefix = (char*) pNode->info.pValue;
+      sNamePrefix = (char*) pNode->pValue;
    ExpxNodeDelete( pNode );
 
    int iNumComps = 1;
@@ -5462,7 +5473,7 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
       if (pNode->type != EXP_Value)
          ExpSetErr( error, EXP_RuleProc, "Invalid CreateChildren() 2nd argument" );
       else
-         iNumComps = (int) pNode->info.fValue;
+         iNumComps = (int) pNode->fValue;
       ExpxNodeDelete( pNode );
    }
 
@@ -5478,7 +5489,7 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
    }
    else
    {  // Perform component creation
-      int i1Cr8Class    = (int) pNode->info.fValue;
+      int i1Cr8Class    = (int) pNode->fValue;
       int i1ParentClass = BEMPX_GetClassID( pEval->lPrimDBID );
 
 		if (op == BF_Cr8Comp && !sObjToCopyName.isEmpty())
@@ -5562,8 +5573,8 @@ static void CreateChildrenOrComp( int op, int nArgs, ExpStack* stack, ExpEvalStr
       // this name will be used to set an assigned component depending on the rule's left side
 #pragma warning(disable : 4996)		// SAC 9/9/16
       pNode->type = EXP_String;
-      pNode->info.pValue = malloc( sCompName.length() + 1 );
-      strcpy( (char*) pNode->info.pValue, (const char*) sCompName.toLocal8Bit().constData() );
+      pNode->pValue = malloc( sCompName.length() + 1 );
+      strcpy( (char*) pNode->pValue, (const char*) sCompName.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
    }
    else
@@ -5621,13 +5632,13 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
         (op == BF_DelAllComps && nArgs > 2) )
    {
       pNode = ExpxStackPop( stack );
-      if (pNode->type != EXP_Value || pNode->info.fValue < 0 || pNode->info.fValue > 1)
+      if (pNode->type != EXP_Value || pNode->fValue < 0 || pNode->fValue > 1)
       {
          ExpSetErr( error, EXP_RuleProc, pszDelError0[iErrFuncIdx] );
          bSuccess = FALSE;
       }
       else // post rulelist name to the eval struct
-         iEvalOption = (int) pNode->info.fValue;
+         iEvalOption = (int) pNode->fValue;
       ExpxNodeDelete( pNode );
    }
 
@@ -5643,7 +5654,7 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
          bSuccess = FALSE;
       }
       else // post rulelist name to the eval struct
-         pEval->sRulelistToEvaluate = (char*) pNode->info.pValue;
+         pEval->sRulelistToEvaluate = (char*) pNode->pValue;
       ExpxNodeDelete( pNode );
    }
 
@@ -5658,7 +5669,7 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
          bSuccess = FALSE;
       }
       else
-         i1DelClass = (int) pNode->info.fValue;
+         i1DelClass = (int) pNode->fValue;
       ExpxNodeDelete( pNode );
    }
    else // op == BF_DelComp
@@ -5749,7 +5760,7 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
    }
 
    // SAC 5/26/00 - Create node to serve as result
-   pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 
    // setup result node
    if (bSuccess)
@@ -5757,14 +5768,14 @@ static void DeleteChildrenCompOrAll( int op, int nArgs, ExpStack* stack, ExpEval
       if (op == BF_DelChild || op == BF_DelAllComps)
       {  // setup node to return the number of children which have been deleted
          pNode->type = EXP_Value;
-         pNode->info.fValue = (double) iNumDeleted;
+         pNode->fValue = (double) iNumDeleted;
       }
       else  // op == BF_DelComp
       {  // setup node to return the character string "NONE"
          pNode->type = EXP_String;
 #pragma warning(disable : 4996)		// SAC 9/9/16
-         pNode->info.pValue = malloc( 5 );
-         strcpy( (char*) pNode->info.pValue, "NONE" );
+         pNode->pValue = malloc( 5 );
+         strcpy( (char*) pNode->pValue, "NONE" );
 #pragma warning(default : 4996)
       }
 
@@ -5793,11 +5804,11 @@ int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStr
 	if (pNode1->type != EXP_String)
 		sErrMsg = QString( "Invalid AddCSEReportColumn() argument #1 (processing option) - should be character string." );
 	else
-	{	sProcOption = (char*) pNode1->info.pValue;
+	{	sProcOption = (char*) pNode1->pValue;
 		if (pNode2->type == EXP_Value)
-			lDBID_RptColRef = (long) pNode2->info.fValue;	// DBID of cseREPORTCOL property that will store a reference to the adjacent object
+			lDBID_RptColRef = (long) pNode2->fValue;	// DBID of cseREPORTCOL property that will store a reference to the adjacent object
 		else
-			sRptColData = (char*) pNode2->info.pValue;
+			sRptColData = (char*) pNode2->pValue;
 	}
 	ExpxNodeDelete( pNode1 );
 	ExpxNodeDelete( pNode2 );
@@ -6065,20 +6076,20 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 		{	if (iArg == 1)
 			{	// object type node
 				if (pNode->type != EXP_Value)
-					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created ('%s' supplied)" ) % (char*) pNode->info.pValue );
-				else if (pNode->info.fValue < 1 || pNode->info.fValue > BEMPX_GetNumClasses())
-					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created (%g supplied)" ) % pNode->info.fValue );
+					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created ('%s' supplied)" ) % (char*) pNode->pValue );
+				else if (pNode->fValue < 1 || pNode->fValue > BEMPX_GetNumClasses())
+					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created (%g supplied)" ) % pNode->fValue );
 				else
-					iObjCID = (int) pNode->info.fValue;
+					iObjCID = (int) pNode->fValue;
 			}
 			else if (iArg == 2)
 			{	// object name
 				if (pNode->type != EXP_String)
-					boost::str( boost::format( "AssignOrCreateComp() Error:  Second argument must be name of object to be created (%g supplied)" ) % pNode->info.fValue );
-				else if (pNode->info.pValue == NULL || (strlen( (char*) pNode->info.pValue ) == 1 && ((char*) pNode->info.pValue)[0] == ' '))
+					boost::str( boost::format( "AssignOrCreateComp() Error:  Second argument must be name of object to be created (%g supplied)" ) % pNode->fValue );
+				else if (pNode->pValue == NULL || (strlen( (char*) pNode->pValue ) == 1 && ((char*) pNode->pValue)[0] == ' '))
 					sCompName = "";
 				else
-					sCompName = (char*) pNode->info.pValue;
+					sCompName = (char*) pNode->pValue;
 			}
 			else
 			{	// DBID/value pair
@@ -6087,16 +6098,16 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 				{	// string/numeric value
 					baArgNumeric[iArgPairIdx] = (pNode->type != EXP_String);
 					if (pNode->type == EXP_String)
-						saArgs[iArgPairIdx] = (char*) pNode->info.pValue;
+						saArgs[iArgPairIdx] = (char*) pNode->pValue;
 					else
-						faArgs[iArgPairIdx] = pNode->info.fValue;
+						faArgs[iArgPairIdx] = pNode->fValue;
 				}
 				else
 				{	// DBID
 					if (pNode->type != EXP_String)
-						boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to (%g supplied instead)" ) % iArg % pNode->info.fValue );
+						boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to (%g supplied instead)" ) % iArg % pNode->fValue );
 					else
-						saDBIDs[iArgPairIdx] = (char*) pNode->info.pValue;
+						saDBIDs[iArgPairIdx] = (char*) pNode->pValue;
 		}	}	}
 		ExpxNodeDelete( pNode );
 	}
@@ -6239,19 +6250,19 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 	}
 
 	// allocate & setup result node
-	pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+	pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 	if (sErrMsg.size() > 0)
 	{	ExpSetErr( error, EXP_RuleProc, sErrMsg.c_str() );
 		pNode->type = EXP_Invalid;
-		pNode->info.fValue = 0.0;
+		pNode->fValue = 0.0;
 	}
 	else
 	{	// setup node to return the name of the last component created
 		// this name will be used to set an assigned component depending on the rule's left side
 #pragma warning(disable : 4996)		// SAC 9/9/16
 		pNode->type = EXP_String;
-		pNode->info.pValue = malloc( sCompName.size() + 1 );
-		strcpy( (char*) pNode->info.pValue, (const char*) sCompName.c_str() );
+		pNode->pValue = malloc( sCompName.size() + 1 );
+		strcpy( (char*) pNode->pValue, (const char*) sCompName.c_str() );
 #pragma warning(default : 4996)
 	}
 
@@ -6350,7 +6361,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 				ExpSetErr( error, EXP_RuleProc, "Invalid final Local*() argument (must be numeric value)" );
 		}
       else
-         iChildIdx = (int) pIdxNode->info.fValue;
+         iChildIdx = (int) pIdxNode->fValue;
       ExpxNodeDelete( pIdxNode );
       nArgs--;
    }
@@ -6379,7 +6390,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
    		 op == BF_ChildRef   || op == BF_GlobalRef   || op == BF_GlobStatus  || bRetMustBeValid  ) )   // SAC 8/28/12   // SAC 2/13/14
    {  // must PARSE ParentRef() argument -> multiple comp:param ID Args
 		bParseAsWeEvaluate = TRUE;
-		sParseArg = (char*) pNode->info.pValue;								assert( !sParseArg.isEmpty() );
+		sParseArg = (char*) pNode->pValue;								assert( !sParseArg.isEmpty() );
 		if (op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus || op == BF_LocalVal )   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
 			i1ParsedClass = BEMPX_GetClassID( pEval->lPrimDBID );
 		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal )  // SAC 8/28/12  // SAC 2/13/14
@@ -6456,8 +6467,8 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
          if (pNode->type != EXP_Value)
             ExpSetErr( error, EXP_RuleProc, "Invalid XxxRef() argument" );
          else
-         //   plParams[ arg-1 ] = (long) pNode->info.fValue;
-         {	lMDBID = (long long) pNode->info.fValue;				// SAC 3/19/13 - code to handle DBIDs including MODEL index
+         //   plParams[ arg-1 ] = (long) pNode->fValue;
+         {	lMDBID = (long long) pNode->fValue;				// SAC 3/19/13 - code to handle DBIDs including MODEL index
 				if (lMDBID > BEM_MODEL_MULT)
 				{	plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );						assert( i0ArgModel<0 || i0ArgModel==((int) BEMPX_GetModelID( lMDBID )-1) );
 					i0ArgModel = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -6569,11 +6580,11 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
    // Retrieve and return data associated with last Comp:Param node
    if ( (iOccur < 0) || (iError < 0) )
    {
-     	pNode = (ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
+     	pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
 		if (bRetMustBeValid)  // SAC 2/13/14 - ensure return of INVALID node when path not successfully negotiated
 		{	// for certain routines we want to know that the data was not returnable
       	pNode->type = EXP_Invalid;
-      	pNode->info.fValue = -99996.0;
+      	pNode->fValue = -99996.0;
 		}
 		else if (iInvalidFirstArgClass > 0)
 		{	BEMClass* pExpectClass = BEMPX_GetClass( iFirstClassToCheck   , iError, i0Model );
@@ -6585,7 +6596,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 				sErrMsg = QString( "Invalid Parent/Local/GlobalRef() argument - expecting object of type Class=%1 but found Class=%2" ).arg( QString::number( iFirstClassToCheck ), QString::number( iInvalidFirstArgClass ) );
          ExpSetErr( error, EXP_RuleProc, sErrMsg );
 	      pNode->type = EXP_Invalid;
-      	pNode->info.fValue = 0.0;
+      	pNode->fValue = 0.0;
 			iInvalidFirstArgClass = -1;  // reset flag to avoid double reporting
 		}
 		else
@@ -6593,7 +6604,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
       	// Allow rules to evaluate despite lack of existing reference objects to prevent
       	// a large number of errors from being reported
       	pNode->type = EXP_Value;
-      	pNode->info.fValue = 0.0;
+      	pNode->fValue = 0.0;
 		}
       ExpxStackPush( stack, pNode );
       bPushedResult = TRUE;
@@ -6619,9 +6630,9 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
          }
 
          // Setup node to be pushed onto stack
-         pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+         pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
          pNode->type = EXP_Value;
-         pNode->info.fValue = (double) iMaxStrLen;
+         pNode->fValue = (double) iMaxStrLen;
          // push result node onto stack
          ExpxStackPush( stack, pNode );
       }
@@ -6631,20 +6642,20 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
          long i0ArrayIdx = (iLastArgIdx < (nArgs-1) && plParams[nArgs-1] < BEM_COMP_MULT ? plParams[nArgs-1]-1 : 0);  // SAC 11/20/09 - user-specified string array index
          assert( i0ArrayIdx >= 0 && i0ArrayIdx < BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[ iLastArgIdx ], i0Model ) );
          // allocate memory for node to be pushed onto stack
-         pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+         pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 
          QString sTempStr;
          if (BEMPX_GetString( plParams[ iLastArgIdx ] + i0ArrayIdx, sTempStr, TRUE, 0, -1, iOccur, eObjType, NULL, 0, i0Model ))
          {
 #pragma warning(disable : 4996)		// SAC 9/9/16
             pNode->type = EXP_String;
-            pNode->info.pValue = malloc( sTempStr.length() + 1 );
-            strcpy( (char*) pNode->info.pValue, (const char*) sTempStr.toLocal8Bit().constData() );
+            pNode->pValue = malloc( sTempStr.length() + 1 );
+            strcpy( (char*) pNode->pValue, (const char*) sTempStr.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
          }
          else
          {  pNode->type = EXP_Invalid;
-            pNode->info.fValue = 0;
+            pNode->fValue = 0;
          }
          // push result node onto stack
          ExpxStackPush( stack, pNode );
@@ -6660,11 +6671,11 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 			}
 			else
          {	// Setup node to be pushed onto stack
-         	pNode = (ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
+         	pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
          	pNode->type = EXP_Value;
 
          	if ( op == BF_LocStatus || op == BF_ParStatus || op == BF_GlobStatus )
-         	   pNode->info.fValue = BEMPX_GetDataStatus( lDBID, iOccur, eObjType, i0Model );
+         	   pNode->fValue = BEMPX_GetDataStatus( lDBID, iOccur, eObjType, i0Model );
          	else
          	{
 					iDataType = BEMPX_GetDataType( lDBID );
@@ -6687,14 +6698,14 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 
          	   // set return value
          	   if (op == BF_LCompAssign || op == BF_PCompAssign)
-         	   {  //pNode->info.fValue = ((iError >= 0 && pData) ? 1.0 : 0.0);   - 7/24/12 - revise return value to equal class index of the referenced object
+         	   {  //pNode->fValue = ((iError >= 0 && pData) ? 1.0 : 0.0);   - 7/24/12 - revise return value to equal class index of the referenced object
          	      if (iError >= 0 && pObj && iDataStatus > 0 && pObj->getClass() && pObj->getClass()->get1BEMClassIdx() > 0)
-	      	         pNode->info.fValue = (double) pObj->getClass()->get1BEMClassIdx();
+	      	         pNode->fValue = (double) pObj->getClass()->get1BEMClassIdx();
 						else
-	      	         pNode->info.fValue = 0.0;
+	      	         pNode->fValue = 0.0;
 					}
          	   else // if (op == BF_LIsDefault || op == BF_PIsDefault)
-         	      pNode->info.fValue = ((iError >= 0 && iSpecialVal == SV_Default) ? 1.0 : 0.0);
+         	      pNode->fValue = ((iError >= 0 && iSpecialVal == SV_Default) ? 1.0 : 0.0);
          	}
 
          	// push result node onto stack
@@ -6716,11 +6727,11 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 
 	if (iInvalidFirstArgClass > 0) // SAC 8/25/14
 	{	// handle this error just like the previous one above
-		pNode = (ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
+		pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
 		if (bRetMustBeValid)  // SAC 2/13/14 - ensure return of INVALID node when path not successfully negotiated
 		{	// for certain routines we want to know that the data was not returnable
       	pNode->type = EXP_Invalid;
-      	pNode->info.fValue = -99996.0;
+      	pNode->fValue = -99996.0;
 		}
 		else
 		{	BEMClass* pExpectClass = BEMPX_GetClass( iFirstClassToCheck   , iError, i0Model );
@@ -6732,7 +6743,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 				sErrMsg = QString( "Invalid Parent/Local/GlobalRef() argument - expecting object of type Class=%1 but found Class=%2" ).arg( QString::number( iFirstClassToCheck ), QString::number( iInvalidFirstArgClass ) );
          ExpSetErr( error, EXP_RuleProc, sErrMsg );
 	      pNode->type = EXP_Invalid;
-      	pNode->info.fValue = 0.0;
+      	pNode->fValue = 0.0;
 		}
       ExpxStackPush( stack, pNode );
       bPushedResult = TRUE;
@@ -6742,7 +6753,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
    // to prevent further errors due to missing result node
    if (!bPushedResult)
    {
-      pNode = (ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
+      pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );  // SAC 12/19/01
       pNode->type = EXP_Invalid;
 
       // Push new node onto stack
@@ -6846,9 +6857,9 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 		{	iNumConsecStringArgs = 0;
 			if (!bArgCondRightParsed)
 			{	if (pThisNode->type == EXP_Value)
-				{	if (pThisNode->info.fValue > BEM_COMP_MULT)
-					{	//lArgCondDBID[1] = (long) pThisNode->info.fValue;
-						lMDBID = (long long) pThisNode->info.fValue;
+				{	if (pThisNode->fValue > BEM_COMP_MULT)
+					{	//lArgCondDBID[1] = (long) pThisNode->fValue;
+						lMDBID = (long long) pThisNode->fValue;
 						if (lMDBID > BEM_MODEL_MULT)
 						{	lArgCondDBID[1] = (long) BEMPX_MDBIDtoDBID( lMDBID );
 							iArg0Model[1] = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -6858,19 +6869,19 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						iArgCond1Class[1] = BEMPX_GetClassID( lArgCondDBID[1] );
 					}
 					else
-						dArgCond[1] = pThisNode->info.fValue;
+						dArgCond[1] = pThisNode->fValue;
 				}
 				else
-					sArgCond[1] = (const char*) pThisNode->info.pValue;
+					sArgCond[1] = (const char*) pThisNode->pValue;
 				bArgCondRightParsed = TRUE;
 			}
 			else if (!bArgCondParsed)
-			{	if (pThisNode->type != EXP_Value || pThisNode->info.fValue < EQ || pThisNode->info.fValue > GE)
+			{	if (pThisNode->type != EXP_Value || pThisNode->fValue < EQ || pThisNode->fValue > GE)
 				{	bAbort = TRUE;
 	            ExpSetErr( error, EXP_RuleProc, "Invalid SumXxxIf() argument (expecting conditional operator)" );
 				}
 				else
-				{	iArgCondition = (int) pThisNode->info.fValue;
+				{	iArgCondition = (int) pThisNode->fValue;
 // #define EQ 268
 // #define NEQ 269
 // #define LT 270
@@ -6882,9 +6893,9 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 			}
 			else if (!bArgCondLeftParsed)
 			{	if (pThisNode->type == EXP_Value)
-				{	if (pThisNode->info.fValue > BEM_COMP_MULT)
-					{	//lArgCondDBID[0] = (long) pThisNode->info.fValue;
-						lMDBID = (long long) pThisNode->info.fValue;
+				{	if (pThisNode->fValue > BEM_COMP_MULT)
+					{	//lArgCondDBID[0] = (long) pThisNode->fValue;
+						lMDBID = (long long) pThisNode->fValue;
 						if (lMDBID > BEM_MODEL_MULT)
 						{	lArgCondDBID[0] = (long) BEMPX_MDBIDtoDBID( lMDBID );
 							iArg0Model[0] = (int) BEMPX_GetModelID( lMDBID ) - 1;
@@ -6894,10 +6905,10 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						iArgCond1Class[0] = BEMPX_GetClassID( lArgCondDBID[0] );
 					}
 					else
-						dArgCond[0] = pThisNode->info.fValue;
+						dArgCond[0] = pThisNode->fValue;
 				}
 				else
-					sArgCond[0] = (const char*) pThisNode->info.pValue;
+					sArgCond[0] = (const char*) pThisNode->pValue;
 				bArgCondLeftParsed = TRUE;
 			}
 			else
@@ -6921,9 +6932,9 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
          	   ExpSetErr( error, EXP_RuleProc, "Invalid SumXxx() argument" );
       }	}
       else
-//         plParams[ arg-1 ] = (long) pThisNode->info.fValue;
+//         plParams[ arg-1 ] = (long) pThisNode->fValue;
 		{	iNumConsecStringArgs = 0;
-			lMDBID = (long long) pThisNode->info.fValue;
+			lMDBID = (long long) pThisNode->fValue;
 			if (lMDBID < 11 && lMDBID >= 0 && (op == BF_SumChld || op == BF_MaxChild || op == BF_MinChild || op == BF_MaxChildC || op == BF_MinChildC))	// store OnlyChildGen argument
 			{	iOnlyChildGen = (int) lMDBID;  // used to restrict *Children*() routines to a FIXED, SINGLE generation, as opposed to traversing all possible generations (SAC 5/29/15)
 	         nArgs--;
@@ -7358,12 +7369,19 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							else if (bIsNumeric[0] && bIsNumeric[1])
 							{	// NUMERIC comparison
 								switch (iArgCondition)
-								{	case EQ :	bSumThisOne = (dValCond[0] == dValCond[1]);		break;
-									case NEQ:	bSumThisOne = (dValCond[0] != dValCond[1]);		break;
-									case LT :	bSumThisOne = (dValCond[0] <  dValCond[1]);		break;
-									case GT :	bSumThisOne = (dValCond[0] >  dValCond[1]);		break;
-									case LE :	bSumThisOne = (dValCond[0] <= dValCond[1]);		break;
-									case GE :	bSumThisOne = (dValCond[0] >= dValCond[1]);		break;
+					//			{	case EQ :	bSumThisOne = (dValCond[0] == dValCond[1]);		break;
+					//				case NEQ:	bSumThisOne = (dValCond[0] != dValCond[1]);		break;
+					//				case LT :	bSumThisOne = (dValCond[0] <  dValCond[1]);		break;
+					//				case GT :	bSumThisOne = (dValCond[0] >  dValCond[1]);		break;
+					//				case LE :	bSumThisOne = (dValCond[0] <= dValCond[1]);		break;
+					//				case GE :	bSumThisOne = (dValCond[0] >= dValCond[1]);		break;
+					//				default :	bSumThisOne = FALSE;		assert( FALSE );			break;		- SAC 4/21/17 - replaced w/ below to better handle floating point representation issues
+								{	case EQ :	bSumThisOne = (AreSame( dValCond[0], dValCond[1] )   );		break;
+									case NEQ:	bSumThisOne = (AreSame( dValCond[0], dValCond[1] )==0);		break;
+									case LT :	bSumThisOne = (dValCond[0] < dValCond[1] && AreSame( dValCond[0], dValCond[1] )==0);		break;
+									case GT :	bSumThisOne = (dValCond[0] > dValCond[1] && AreSame( dValCond[0], dValCond[1] )==0);		break;
+									case LE :	bSumThisOne = (dValCond[0] < dValCond[1] || AreSame( dValCond[0], dValCond[1] )   );		break;
+									case GE :	bSumThisOne = (dValCond[0] > dValCond[1] || AreSame( dValCond[0], dValCond[1] )   );		break;
 									default :	bSumThisOne = FALSE;		assert( FALSE );			break;
 								}
 							}
@@ -7533,9 +7551,10 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 				{	ExpNode* pFmtNodes[30];
 					ExpNode tempNodes[30];
 					for (i=0; i<iNumFmtArgs; i++)
-					{	tempNodes[i].type = EXP_Invalid;
-						tempNodes[i].info.fValue = 0;
-					}
+						ExpNode_init( &tempNodes[i] );	// SAC 4/21/17
+				//	{	tempNodes[i].type = EXP_Invalid;
+				//		tempNodes[i].fValue = 0;
+				//	}
 					int iProcObjIdx=0;
 					int iFirstProcNodeIdx = i0FirstFormatStrArgIdx + 3;
 					std::vector<int>::iterator it = ivObjIdxs.begin();
@@ -7544,13 +7563,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						// process each argument following formatting strings into values/strings to be inserted into formatted list
 						for (i=0; (i<iNumFmtArgs && !bAbort); i++)
 						{	if (pOrigNodes[iFirstProcNodeIdx+i]->type == EXP_String ||
-								(pOrigNodes[iFirstProcNodeIdx+i]->type == EXP_Value && pOrigNodes[iFirstProcNodeIdx+i]->info.fValue < BEM_COMP_MULT))
+								(pOrigNodes[iFirstProcNodeIdx+i]->type == EXP_Value && pOrigNodes[iFirstProcNodeIdx+i]->fValue < BEM_COMP_MULT))
 							{	// no processing of string or value not a DBID required - pass directly into format string population routine
 								pFmtNodes[i] = pOrigNodes[iFirstProcNodeIdx+i];
 							}
 							else if (pOrigNodes[iFirstProcNodeIdx+i]->type == EXP_Value)
 							{	long lDBID, iThisModel = i0Model;
-								lMDBID = (long long) pOrigNodes[iFirstProcNodeIdx+i]->info.fValue;
+								lMDBID = (long long) pOrigNodes[iFirstProcNodeIdx+i]->fValue;
 								GetBEMProcDataToNode( &tempNodes[i], lMDBID, *it, eObjType, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
 								if (tempNodes[i].type == EXP_Invalid)
 								{  QString sBEMProcErr;
@@ -7575,7 +7594,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 							if (iProcObjIdx > 1)
 								iFmtNodeIdx += (iProcObjIdx == iNumProcObjs ? 2 : 1);
 
-							if (ProcessFormatStatement( sThisObj, (const char*) pOrigNodes[iFmtNodeIdx]->info.pValue, pFmtNodes, iNumFmtArgs, error, true /*bPreserveNewlines*/ ))
+							if (ProcessFormatStatement( sThisObj, (const char*) pOrigNodes[iFmtNodeIdx]->pValue, pFmtNodes, iNumFmtArgs, error, true /*bPreserveNewlines*/ ))
 								sResult += sThisObj;
 							else
 							{	ExpSetErr( error, EXP_RuleProc, "Error populating formatted string from function arguments in BEMProcSumChildrenAllOrRevRef()" );
@@ -7584,13 +7603,13 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						}
 
 						for (i=0; i<iNumFmtArgs; i++)
-						{	if (tempNodes[i].type == EXP_String && tempNodes[i].info.pValue)
+						{	if (tempNodes[i].type == EXP_String && tempNodes[i].pValue)
 							{
-                        free( tempNodes[i].info.pValue );
-                        tempNodes[i].info.pValue = NULL;
+                        free( tempNodes[i].pValue );
+                        tempNodes[i].pValue = NULL;
                      }
                      tempNodes[i].type = EXP_Invalid;
-                     tempNodes[i].info.fValue = 0;
+                     tempNodes[i].fValue = 0;
 						}
 					}
 			}	}
@@ -7644,12 +7663,12 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 	}
 
    // Create, set and push result node
-   ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
    if (bAbort)
       pNode->type = EXP_Invalid;
    else if (bReturnUNDEFINED)  // SAC 4/19/13
 	{	pNode->type = EXP_Value;
-		pNode->info.fValue = -99996;  // => UNDEFINED
+		pNode->fValue = -99996;  // => UNDEFINED
 	}
 	else
    {
@@ -7657,8 +7676,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       {
 #pragma warning(disable : 4996)		// SAC 9/9/16
          pNode->type = EXP_String;
-         pNode->info.pValue = malloc( sResult.length() + 1 );
-         strcpy( (char*) pNode->info.pValue, (const char*) sResult.toLocal8Bit().constData() );
+         pNode->pValue = malloc( sResult.length() + 1 );
+         strcpy( (char*) pNode->pValue, (const char*) sResult.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
       }
       else
@@ -7671,20 +7690,20 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 //            fResult = 0;
 //
 //         pNode->type = EXP_Value;
-//         pNode->info.fValue = fResult;
+//         pNode->fValue = fResult;
 // SAC 8/20/13 - replaced above w/ the following to cause Min/Max return value to be UNCHANGED when no value found
          if ( (bGetMax  &&  WithinMargin( fResult, -99999999.0, 0.1 )) ||
               (bGetMin  &&  WithinMargin( fResult,  99999999.0, 0.1 )) )
 			{	pNode->type = EXP_Value;
 // SAC 9/3/14 - leading up to CBECC-Com v3 release - DR suggests switching Min/Max return value when not set to UNDEFINED, in place of UNCHANGED - to be considered @ a later date
-         	pNode->info.fValue = -99997;   // = UNCHANGED
+         	pNode->fValue = -99997;   // = UNCHANGED
 			}
 			else
 			{	if (bReturnArrayIdx)   // SAC 11/10/04 - for BF_MaxRevRefA
          	   fResult = iMinMaxArrIdx;
 
          	pNode->type = EXP_Value;
-         	pNode->info.fValue = fResult;
+         	pNode->fValue = fResult;
 			}
       }
    }
@@ -7732,9 +7751,9 @@ static void ComponentArray( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruc
          ExpSetErr( error, EXP_RuleProc, "Invalid ComponentArray() argument" );
       }
       else
-      {  pdParams[ arg-1 ] =        pNode->info.fValue;
-         //plParams[ arg-1 ] = (long) pNode->info.fValue;
-			lMDBID = (long long) pNode->info.fValue;
+      {  pdParams[ arg-1 ] =        pNode->fValue;
+         //plParams[ arg-1 ] = (long) pNode->fValue;
+			lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT && (arg==3 || arg==4))
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
 				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
@@ -7802,12 +7821,12 @@ static void ComponentArray( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruc
                   if (bPassesCheck)
                   {  BEMObject* pObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( plParams[3] ), iError, iObj, pEval->ePrimObjType );        assert( pObj );
                      if (pObj && !pObj->getName().isEmpty())
-                     {  ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                     {  ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                         if (pNode)
                         {  pNode->type = EXP_String;
 #pragma warning(disable : 4996)		// SAC 9/9/16
-                           pNode->info.pValue = malloc( pObj->getName().length() + 1 );
-                           strcpy( (char*) pNode->info.pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
+                           pNode->pValue = malloc( pObj->getName().length() + 1 );
+                           strcpy( (char*) pNode->pValue, (const char*) pObj->getName().toLocal8Bit().constData() );
 #pragma warning(default : 4996)
 
                            expStructCopy.lPrimDBID++;   expStructCopy.lLocDBID++;   iSetArrayIdx++;
@@ -7826,10 +7845,10 @@ static void ComponentArray( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruc
          // go through remainder of array and restore each element to "undefined"
          for (; (!bAbort && iSetArrayIdx < iArraySize); iObj++)
          {
-                     {  ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+                     {  ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                         if (pNode)
                         {  pNode->type = EXP_Value;
-                           pNode->info.fValue = -99996;
+                           pNode->fValue = -99996;
 
                            expStructCopy.lPrimDBID++;   expStructCopy.lLocDBID++;   iSetArrayIdx++;
                            expStructCopy.bEvalItemADebugTarget = (expStructCopy.iNumTargetedDebugItems < 1 ? FALSE : expStructCopy.pTargetedDebugInfo->MatchExists( expStructCopy.lLocDBID, 0 ));  // targeted debugging
@@ -7845,13 +7864,13 @@ static void ComponentArray( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruc
    }  // end of:  if !bAbort
 
    // Create, set and push result node
-   ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
    if (bAbort)
       pNode->type = EXP_Invalid;
    else
    {
       pNode->type = EXP_Value;
-      pNode->info.fValue = (double) iResult;
+      pNode->fValue = (double) iResult;
    }
    // Push new node onto stack
    ExpxStackPush( stack, pNode );
@@ -7877,8 +7896,8 @@ static void BEMProc_CountNoRefs( int /*op*/, int nArgs, ExpStack* stack, ExpEval
          bAbort = TRUE;
       }
       else
-      //   plParams[ arg-1 ] = (long) pNode->info.fValue;
-		{	lMDBID = (long long) pNode->info.fValue;
+      //   plParams[ arg-1 ] = (long) pNode->fValue;
+		{	lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT)
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
 				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
@@ -7921,13 +7940,13 @@ static void BEMProc_CountNoRefs( int /*op*/, int nArgs, ExpStack* stack, ExpEval
    }
 
    // Create, set and push result node
-   ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
    if (bAbort)
       pNode->type = EXP_Invalid;
    else
    {
       pNode->type = EXP_Value;
-      pNode->info.fValue = fResult;
+      pNode->fValue = fResult;
    }
    // Push new node onto stack
    ExpxStackPush( stack, pNode );
@@ -7959,8 +7978,8 @@ void BEMProc_BitwiseMatches( int op, int nArgs, ExpStack* stack, ExpEvalStruct* 
          bAbort = TRUE;
       }
       else
-      //   plParams[ arg-1 ] = (long) pNode->info.fValue;
-		{	lMDBID = (long long) pNode->info.fValue;
+      //   plParams[ arg-1 ] = (long) pNode->fValue;
+		{	lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT)
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
 				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
@@ -8062,7 +8081,7 @@ void BEMProc_BitwiseMatches( int op, int nArgs, ExpStack* stack, ExpEvalStruct* 
    }
 
    // Create, set and push result node
-   ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
    if (bAbort)
       pNode->type = EXP_Invalid;
    else if (op == BF_BitMatchCmp)
@@ -8070,21 +8089,21 @@ void BEMProc_BitwiseMatches( int op, int nArgs, ExpStack* stack, ExpEvalStruct* 
       if (sCompName.isEmpty())
       {
          pNode->type = EXP_Value;
-         pNode->info.fValue = -99998;   // => set to "NONE"
+         pNode->fValue = -99998;   // => set to "NONE"
       }
       else
       {
 #pragma warning(disable : 4996)		// SAC 9/9/16
          pNode->type = EXP_String;
-         pNode->info.pValue = malloc( sCompName.length() + 1 );
-         strcpy( (char*) pNode->info.pValue, (const char*) sCompName.toLocal8Bit().constData() );
+         pNode->pValue = malloc( sCompName.length() + 1 );
+         strcpy( (char*) pNode->pValue, (const char*) sCompName.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
       }
    }
    else
    {
       pNode->type = EXP_Value;
-      pNode->info.fValue = fResult;
+      pNode->fValue = fResult;
    }
    // Push new node onto stack
    ExpxStackPush( stack, pNode );
@@ -8114,8 +8133,8 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
       {
          switch (arg)
          {
-            case 0 :  //lArrayDBID = (long)  pNode->info.fValue;   break;
-								{	lMDBID = (long long) pNode->info.fValue;
+            case 0 :  //lArrayDBID = (long)  pNode->fValue;   break;
+								{	lMDBID = (long long) pNode->fValue;
 									if (lMDBID > BEM_MODEL_MULT)
 									{	assert( FALSE );  // routine not yet MODEL-DBID compatible
 										lArrayDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
@@ -8124,8 +8143,8 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
 									else
 										lArrayDBID = (long) lMDBID;
 								}  break;
-            case 1 :  lArrayIdx  = (long)  pNode->info.fValue;   break;
-            case 2 :  fValToSum  =         pNode->info.fValue;   break;
+            case 1 :  lArrayIdx  = (long)  pNode->fValue;   break;
+            case 2 :  fValToSum  =         pNode->fValue;   break;
          }
       }
 
@@ -8133,8 +8152,8 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
          ExpxNodeDelete( pNode );
       else if (pNode->type == EXP_String)
       {  // for last node, free string argument, but not entire node
-         free( pNode->info.pValue );
-         pNode->info.pValue = NULL;
+         free( pNode->pValue );
+         pNode->pValue = NULL;
       }
    }
 
@@ -8199,14 +8218,14 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
 
    // setup result node
    if (pNode == NULL)
-      pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+      pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 
    if (bAbort)
       pNode->type = EXP_Invalid;
    else
    {
       pNode->type = EXP_Value;
-      pNode->info.fValue = fResult;
+      pNode->fValue = fResult;
    }
    // Push new node onto stack
    ExpxStackPush( stack, pNode );
@@ -8260,7 +8279,7 @@ static void BEMProc_EnsureStringUniqueness( int /*op*/, int nArgs, ExpStack* sta
          }
          else
          {
-            iMaxStringLen = (int) pNode->info.fValue;
+            iMaxStringLen = (int) pNode->fValue;
             if (iMaxStringLen < 4)
             {
                ExpSetErr( error, EXP_RuleProc, "Invalid second EnsureStringUniqueness() argument (MaxStringLen must be >= 4)" );
@@ -8279,8 +8298,8 @@ static void BEMProc_EnsureStringUniqueness( int /*op*/, int nArgs, ExpStack* sta
             bAbort = TRUE;
          }
          else
-         //   lDBID = (long) pNode->info.fValue;
-			{	lMDBID = (long long) pNode->info.fValue;
+         //   lDBID = (long) pNode->fValue;
+			{	lMDBID = (long long) pNode->fValue;
 				if (lMDBID > BEM_MODEL_MULT)
 				{	assert( FALSE );  // routine not yet MODEL-DBID compatible
 					lDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
@@ -8345,13 +8364,13 @@ static void BEMProc_EnsureStringUniqueness( int /*op*/, int nArgs, ExpStack* sta
    }
 
    // Create, set and push result node
-   pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
    if (bAbort)
       pNode->type = EXP_Invalid;
    else
    {
       pNode->type = EXP_Value;
-      pNode->info.fValue = fResult;
+      pNode->fValue = fResult;
    }
    // Push new node onto stack
    ExpxStackPush( stack, pNode );
@@ -8392,7 +8411,7 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	   if (pColNode->type != EXP_Value)
 	      ExpSetErr( error, EXP_RuleProc, "Invalid table lookup argument: column" );
 	   else
-	      iCol = (int) pColNode->info.fValue;
+	      iCol = (int) pColNode->fValue;
 	
 	   double* pfParams = (double*) malloc ( sizeof(double) * nArgs );
 	   for ( int arg = nArgs; arg > 1; arg-- )
@@ -8401,14 +8420,14 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	      if (pNode->type != EXP_Value)
 	         ExpSetErr( error, EXP_RuleProc, "Invalid table lookup argument" );
 	      else
-	         pfParams[ arg-2 ] = pNode->info.fValue;
+	         pfParams[ arg-2 ] = pNode->fValue;
 	      ExpxNodeDelete( pNode );
 	   }
 	
 	   pColNode->type = EXP_Value;
 	   double fReturn = 0;  // SAC 6/30/00 - added initialization to 0 to prevent an unintialized value from being referenced below
 	   bool bValueFound = ruleSet.getTableValue( i1TblIdx, pfParams, iCol, &fReturn, pEval->bVerboseOutput );  // SAC 9/25/02
-	   pColNode->info.fValue = fReturn;
+	   pColNode->fValue = fReturn;
 	
 	   if (!bValueFound)
 	   {
@@ -8459,11 +8478,11 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 			if (pNode && pNode->type == EXP_String)
 			{	bIndepNumeric = false;
 				fIndepVal = 0.0;
-				sIndepStr = (char*) pNode->info.pValue;
+				sIndepStr = (char*) pNode->pValue;
 			}
 			else if (pNode && pNode->type == EXP_Value)
 			{	bIndepNumeric = true;
-				fIndepVal = pNode->info.fValue;
+				fIndepVal = pNode->fValue;
 				sIndepStr.clear();
 			}
 			else
@@ -8480,7 +8499,7 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 						bStoreArguments = false;
 					}
 	      		else if (bStoreArguments)
-					{	saIndepNames.push_back( (char*) pNode->info.pValue );
+					{	saIndepNames.push_back( (char*) pNode->pValue );
 						baIndepNumeric.push_back( bIndepNumeric );
 						faIndepValues.push_back(  fIndepVal     );
   						saIndepStrings.push_back( sIndepStr     );
@@ -8490,9 +8509,9 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 			}
 	   }
 
-	   pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+	   pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 	   pNode->type = EXP_Invalid;
-		pNode->info.fValue = 0.;
+		pNode->fValue = 0.;
 		BEMTableCell* pRetCell = NULL;
 		if (sErrMsg.length() < 1 && bStoreArguments)
 		{	pRetCell = ruleSet.getTableCell( i1TblIdx, i1ColIdx, saIndepNames, saIndepStrings,
@@ -8500,18 +8519,18 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 			if (pRetCell)
 			{	switch (pRetCell->getCellType())
 				{	case BEMTCT_Float     :		pNode->type = EXP_Value;
-														pNode->info.fValue = pRetCell->getValue();
+														pNode->fValue = pRetCell->getValue();
 														break;
 				   case BEMTCT_String    : {	string strRet = pRetCell->getString();
 														if (boost::iequals( strRet, "NA" ) || boost::iequals( strRet, "N/A" ))
 														{	pNode->type = EXP_Value;
-															pNode->info.fValue = -99996;  // => UNDEFINED
+															pNode->fValue = -99996;  // => UNDEFINED
 														}
 														else
 														{	pNode->type = EXP_String;
 #pragma warning(disable : 4996)		// SAC 9/9/16
-   														pNode->info.pValue = malloc( strRet.length() + 1 );
-   														strcpy( (char*) pNode->info.pValue, strRet.c_str() );
+   														pNode->pValue = malloc( strRet.length() + 1 );
+   														strcpy( (char*) pNode->pValue, strRet.c_str() );
 #pragma warning(default : 4996)
 														}
 													}	break;
@@ -8523,7 +8542,7 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
                         						//   ExpSetErr( error, EXP_RuleProc, QString("Error:  ") + QString(sErrMsg.c_str()) );
 													}	break;
 				   case BEMTCT_Warning   : {	pNode->type = EXP_Value;  // set return value to UNDEFINED rather than retaining an invalid return value
-														pNode->info.fValue = -99996;  // => UNDEFINED
+														pNode->fValue = -99996;  // => UNDEFINED
 														if (sErrMsg.length() < 1)
 															sWarnMsg = "Table lookup warning encountered.";
 														else
@@ -8538,7 +8557,7 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 				   case BEMTCT_Missing   :  
 				   case BEMTCT_Undefined :  // do nothing for these
 														pNode->type = EXP_Value;
-														pNode->info.fValue = -99996;  // => UNDEFINED
+														pNode->fValue = -99996;  // => UNDEFINED
 														break;
 				}
 			}
@@ -8612,7 +8631,7 @@ static void TableLookupFunction( int op, int nArgs, ExpStack* stack, ExpEvalStru
 void GetBEMProcData( long long lMDBID, int iOccur, BEM_ObjType eObjType, ExpStack* stack, ExpError* error, BOOL bGetSymStr,
 										ExpEvalStruct* pEval, BOOL bReturnInvalidWhenUndefined, int iObjIdxModel /*=-1*/ )  // SAC 8/6/10 - added pEval argument   // SAC 2/13/14 - added bReturnInvalidWhenUndefined
 {
-   ExpNode* pNode = (ExpNode*) malloc( sizeof( ExpNode ) );
+   ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 
 	GetBEMProcDataToNode( pNode, lMDBID, iOccur, eObjType, error, bGetSymStr, pEval, bReturnInvalidWhenUndefined, iObjIdxModel );
 
@@ -8692,15 +8711,15 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 //		{
 //			if (bReturnInvalidWhenUndefined)  // SAC 2/13/14
 //			{	pNode->type = EXP_Invalid;
-//				pNode->info.fValue = -99996.0;	// => UNDEFINED
+//				pNode->fValue = -99996.0;	// => UNDEFINED
 //			}
 //			else if (iDataType == BEMP_Int || (iDataType == BEMP_Sym && !bGetSymStr) || iDataType == BEMP_Flt)
 //			{	pNode->type = EXP_Value;
-//				pNode->info.fValue = -99996.0;	// => UNDEFINED
+//				pNode->fValue = -99996.0;	// => UNDEFINED
 //			}
 //			else
 //			{	pNode->type = EXP_String;
-//				pNode->info.fValue = -99996.0;	// => UNDEFINED
+//				pNode->fValue = -99996.0;	// => UNDEFINED
 //		      if (iDataType == BEMP_Obj)
 //	            sCurrStr = "NONE";
 //				else
@@ -8720,7 +8739,7 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 //            // Get long data
 //            long lNewVal = *(long*) pData;
 //            pNode->type = EXP_Value;
-//            pNode->info.fValue = (double) lNewVal;
+//            pNode->fValue = (double) lNewVal;
 //         }
 //      }
 //      else if (iDataType == BEMP_Flt)
@@ -8728,7 +8747,7 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 //         // Get long data
 //         float fNewVal = *(float*) pData;
 //         pNode->type = EXP_Value;
-//         pNode->info.fValue = fNewVal;
+//         pNode->fValue = fNewVal;
 //      }
 //      else if (iDataType == BEMP_Str)
 //      {
@@ -8763,10 +8782,10 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
       if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID, iOccur ))
          ReportTargetedDebugInfo( pEval, iDataType, lDBID, iOccur, eObjType, "GetBEMProcData()", iBEMProcModel );
 	if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
-	{	pNode->info.fValue = (double) BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
+	{	pNode->fValue = (double) BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
 		if (iDataStatus > 0)
 		{	if (iDataType == BEMP_Sym  &&  bGetSymStr)
-			{	sCurrStr = BEMPX_GetSymbolString( (int) pNode->info.fValue, lDBID, iOccur, eObjType, iBEMProcModel );
+			{	sCurrStr = BEMPX_GetSymbolString( (int) pNode->fValue, lDBID, iOccur, eObjType, iBEMProcModel );
 				pNode->type = EXP_String;
 			}
 			else
@@ -8774,7 +8793,7 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 		}
 	}
 	else if (iDataType == BEMP_Flt)
-	{	pNode->info.fValue = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
+	{	pNode->fValue = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
 		if (iDataStatus > 0)
 			pNode->type = EXP_Value;
 	}
@@ -8798,15 +8817,15 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 	if (iDataStatus < 1 && sBEMProcErr.isEmpty())		// property is UNDEFINED
 	{	if (bReturnInvalidWhenUndefined)  // SAC 2/13/14
 		{	pNode->type = EXP_Invalid;
-			pNode->info.fValue = -99996.0;	// => UNDEFINED
+			pNode->fValue = -99996.0;	// => UNDEFINED
 		}
 		else if (iDataType == BEMP_Int || (iDataType == BEMP_Sym && !bGetSymStr) || iDataType == BEMP_Flt)
 		{	pNode->type = EXP_Value;
-			pNode->info.fValue = -99996.0;	// => UNDEFINED
+			pNode->fValue = -99996.0;	// => UNDEFINED
 		}
 		else
 		{	pNode->type = EXP_String;
-			pNode->info.fValue = -99996.0;	// => UNDEFINED
+			pNode->fValue = -99996.0;	// => UNDEFINED
 			if (iDataType == BEMP_Obj)
 				sCurrStr = "NONE";
 			else
@@ -8816,8 +8835,8 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
    if (pNode->type == EXP_String)
    {
 #pragma warning(disable : 4996)		// SAC 9/9/16
-   	pNode->info.pValue = malloc( sCurrStr.length() + 1 );
-		strcpy( (char*) pNode->info.pValue, (const char*) sCurrStr.toLocal8Bit().constData() );
+   	pNode->pValue = malloc( sCurrStr.length() + 1 );
+		strcpy( (char*) pNode->pValue, (const char*) sCurrStr.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
    }
 }

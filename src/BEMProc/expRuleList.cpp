@@ -1785,6 +1785,7 @@ bool Rule::Eval( ExpEvalStruct* pEval, BOOL bTagDataAsUserDefined, BOOL bPerform
 {
    bool bRetVal = false;
    ExpNode node;
+   ExpNode_init( &node );	// SAC 4/21/17
    node.type = EXP_Invalid;
    ExpError expError;
    expError.code = EXP_None;  // SAC 4/2/01
@@ -1939,16 +1940,16 @@ bool Rule::Write( CryptoFile& file, QFile& errorFile, const char* pszRLName )
 	   	for (node = ExpListHead( &m_parsedExpression ); node != NULL; node = ExpListNext( &m_parsedExpression, node ))
 	   	{	switch (node->type)
 				{	case EXP_Keyword	:
-					case EXP_Value		:	if (node->info.fValue > BEM_COMP_MULT)
-														dbgMsg = QString( "         node%1:  type %2 fValue %3\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->info.fValue, 'f', 0 ) );
-												else	dbgMsg = QString( "         node%1:  type %2 fValue%3\n"  ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->info.fValue, 'e' ), 13 );
-				//	case EXP_Value		:	dbgMsg.sprintf( "         node%3d:  type %s fValue%14e\n", ++iNodeIdx, pszNodeTypes[node->type], node->info.fValue );
+					case EXP_Value		:	if (node->fValue > BEM_COMP_MULT)
+														dbgMsg = QString( "         node%1:  type %2 fValue %3\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->fValue, 'f', 0 ) );
+												else	dbgMsg = QString( "         node%1:  type %2 fValue%3\n"  ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QString::number( node->fValue, 'e' ), 13 );
+				//	case EXP_Value		:	dbgMsg.sprintf( "         node%3d:  type %s fValue%14e\n", ++iNodeIdx, pszNodeTypes[node->type], node->fValue );
 															break;
-				//	case EXP_String	:	dbgMsg.sprintf( "         node%3d:  type %s pValue '%s'\n", ++iNodeIdx, pszNodeTypes[node->type], (char*) node->info.pValue );
-					case EXP_String	:	dbgMsg = QString( "         node%1:  type %2 pValue '%3'\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QLatin1String( (const char*) node->info.pValue ) );
+				//	case EXP_String	:	dbgMsg.sprintf( "         node%3d:  type %s pValue '%s'\n", ++iNodeIdx, pszNodeTypes[node->type], (char*) node->pValue );
+					case EXP_String	:	dbgMsg = QString( "         node%1:  type %2 pValue '%3'\n" ).arg( QString::number( ++iNodeIdx ), 3 ).arg( pszNodeTypes[node->type] ).arg( QLatin1String( (const char*) node->pValue ) );
 															break;
 					case EXP_Function	:	dbgMsg.sprintf( "         node%3d:  type %s                       function%3d  op%5d  nArgs%2d\n", ++iNodeIdx,
-															pszNodeTypes[node->type], node->info.fn.function, node->info.fn.op, node->info.fn.nArgs );
+															pszNodeTypes[node->type], node->fn.function, node->fn.op, node->fn.nArgs );
 															break;
 					default  			:	dbgMsg.sprintf( "         node%3d:  type %s \n", ++iNodeIdx, pszNodeTypes[node->type] );
 															break;

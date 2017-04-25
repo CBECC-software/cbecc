@@ -303,8 +303,8 @@ typedef struct
 typedef struct ExpNode
 {
    ExpNodeType type;     /* node type */
-   union
-   {
+/*   union    - SAC 4/20/17 - removed union in favor of individual members to avoid some if check issues */
+/*   { */
       void* pValue;      /* pointer to a value, typically a character string */
       /* SAC 9/23/99 - switched from float to double */
       double fValue;      /* a floating point value */
@@ -315,12 +315,14 @@ typedef struct ExpNode
          int nArgs;      /* this keeps track of the number of function
                           * arguments for variable argument functions  */
       } fn;
-   } info;
+/*   } info; */
    /* Note: There is code for saving parsed expressions which 
       depends on pNext being the last thing in this struct. */
    struct ExpNode *pNext;  /* pointer to the next node in list */
    struct ExpNode *pPrev;  /* pointer to the previous node in list */
 } ExpNode;
+extern ExpNode* ExpNode_new();  /* SAC 4/21/17 - added constructor-like routine to ensure member initialization */
+extern void ExpNode_init( ExpNode* pNode );
 
 /* Various function pointer types which get passed in via several exported functions */
 typedef void (*PFErrorFunc)( const int type, const int num, const char* string );

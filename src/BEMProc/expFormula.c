@@ -49,6 +49,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>     /* strtod */
+#include <cfloat>  /* DBL_EPSILON */
 
 #include "expFormula.h"
 #include "memLkRpt.h"
@@ -576,6 +577,28 @@ static void ExpListAddTail( ParsedExpression *pParsed, ExpNode* node );
 static void ExpStackInit( ExpStack* stack, int count );
 static void ExpStackDelete( ExpStack* stack );
 
+/********************************************************************************************/
+
+void ExpNode_init( ExpNode* p )
+{	if (p)
+	{	p->type = EXP_Invalid;
+		p->pValue = NULL;
+		p->fValue = 0.0;
+		p->fn.function = 0;
+		p->fn.op = 0;
+		p->fn.nArgs = 0;
+		p->pNext = NULL;
+		p->pPrev = NULL;
+	}
+}
+
+ExpNode* ExpNode_new()
+{	ExpNode* p = malloc(sizeof(ExpNode));
+	if (p)
+		ExpNode_init(p);
+	return p;
+}
+
 /********************************************************************************************
    Expression List handling routines
 *********************************************************************************************/
@@ -675,7 +698,7 @@ void ExpListDelete( ParsedExpression *pParsed )
       ExpNode* next = pParsed->nodeList->head->pNext;
 
       if ( pParsed->nodeList->head->type == EXP_String )
-         free( pParsed->nodeList->head->info.pValue );
+         free( pParsed->nodeList->head->pValue );
 
       free( pParsed->nodeList->head );
       pParsed->nodeList->head = next;
@@ -705,7 +728,7 @@ void ExpNodeDelete( ExpNode* node )
    if ( node == NULL )
       return;
    if ( node->type == EXP_String )
-      free( node->info.pValue );
+      free( node->pValue );
    free( (void*)node );
 }
 
@@ -713,21 +736,21 @@ BOOL ExpNodeCopy( ExpNode* target, ExpNode* node )
 {
    BOOL ok = TRUE;
    if ( target->type == EXP_String )
-      free( target->info.pValue );
+      free( target->pValue );
 
    memcpy( (char*) target, (char*) node, sizeof( ExpNode ) );
 
    if ( node->type == EXP_String )
    {
-      if (node->info.pValue == NULL)    // SAC 10/31/07 - added if statement to handle case where no string is present
-         target->info.pValue = NULL;
+      if (node->pValue == NULL)    // SAC 10/31/07 - added if statement to handle case where no string is present
+         target->pValue = NULL;
       else
       {
-         target->info.pValue = malloc( strlen( node->info.pValue ) + 1 );
-         if ( target->info.pValue == NULL )
+         target->pValue = malloc( strlen( node->pValue ) + 1 );
+         if ( target->pValue == NULL )
             ok = FALSE;
          else
-            strcpy( target->info.pValue, node->info.pValue );
+            strcpy( target->pValue, node->pValue );
       }
    }
 
@@ -743,7 +766,7 @@ void ExpStackPush( ExpStack* stack, ExpNode* node )
 BOOL ExpStackPushCopy( ExpStack* stack, ExpNode* node )
 {
    BOOL ok = TRUE;
-   ExpNode* newNode = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* newNode = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( newNode == NULL )
       ok = FALSE;
@@ -752,16 +775,16 @@ BOOL ExpStackPushCopy( ExpStack* stack, ExpNode* node )
       memcpy( (char*) newNode, (char*) node, sizeof( ExpNode ) );
       if ( node->type == EXP_String )
       {   
-         int length = (int) strlen( node->info.pValue );
-         newNode->info.pValue = malloc( ( length + 1 ) * sizeof( char ) );
-         if ( newNode->info.pValue == NULL )
+         int length = (int) strlen( node->pValue );
+         newNode->pValue = malloc( ( length + 1 ) * sizeof( char ) );
+         if ( newNode->pValue == NULL )
          {
             ok = FALSE;
             free( (void*)newNode );
             ExpSetError( parseError, EXP_NoMem, NULL );
          }
          else
-            strcpy( newNode->info.pValue, node->info.pValue );
+            strcpy( newNode->pValue, node->pValue );
       }
 
       if ( ok )
@@ -898,16 +921,16 @@ void ExpAddFunctionNode( void* func, int nArgs )
       ExpSetError( parseError, EXP_BadArgs, function->name );
    else
    {
-      ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+      ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
       if ( node == NULL )
          ExpSetError( parseError, EXP_NoMem, NULL );
       else
       {
          node->type = EXP_Function;
-         node->info.fn.function = function->evaluate;
-         node->info.fn.op = function->op;
-         node->info.fn.nArgs = nArgs;
+         node->fn.function = function->evaluate;
+         node->fn.op = function->op;
+         node->fn.nArgs = nArgs;
 
          ExpListAddTail( parseList, node );
       }
@@ -955,7 +978,7 @@ void ExpAddTableNode( long table, int nArgs )
       ExpSetError( parseError, EXP_RuleProc, "Error: Too few args for table" );
    else
    {
-      ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+      ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
       if ( node == NULL )
          ExpSetError( parseError, EXP_NoMem, NULL );
@@ -965,9 +988,9 @@ void ExpAddTableNode( long table, int nArgs )
          // To indicate which table, we will use a negative value for fn.op.
          // ( table id's are 1-based)
          node->type = EXP_Function;
-         node->info.fn.function = EXP_BEMPFunc;
-         node->info.fn.op = (int)-table;
-         node->info.fn.nArgs = nArgs;
+         node->fn.function = EXP_BEMPFunc;
+         node->fn.op = (int)-table;
+         node->fn.nArgs = nArgs;
 
          ExpListAddTail( parseList, node );
       }
@@ -1000,16 +1023,16 @@ void ExpAddRefFuncNode( void* func, int nArgs )
       ExpSetError( parseError, EXP_BadArgs, function->name );
    else
    {
-      ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+      ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
       if ( node == NULL )
          ExpSetError( parseError, EXP_NoMem, NULL );
       else
       {
          node->type = EXP_Function;
-         node->info.fn.function = function->evaluate;
-         node->info.fn.op = function->op;
-         node->info.fn.nArgs = nArgs;
+         node->fn.function = function->evaluate;
+         node->fn.op = function->op;
+         node->fn.nArgs = nArgs;
 
          ExpListAddTail( parseList, node );
       }
@@ -1018,7 +1041,7 @@ void ExpAddRefFuncNode( void* func, int nArgs )
 
 void ExpAddVarArgString( char* string )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
@@ -1033,11 +1056,11 @@ void ExpAddVarArgString( char* string )
          length = (int) (quotePtr - string);
 
       node->type = EXP_String;
-      node->info.pValue = (char*)malloc( length + 1 );
-      if ( node->info.pValue != NULL )
+      node->pValue = (char*)malloc( length + 1 );
+      if ( node->pValue != NULL )
       {
-         strncpy( node->info.pValue, string, length );
-         ((char*)node->info.pValue)[ length ] = '\0';
+         strncpy( node->pValue, string, length );
+         ((char*)node->pValue)[ length ] = '\0';
 
          ExpListAddTail( parseList, node );
       }
@@ -1048,14 +1071,14 @@ void ExpAddVarArgString( char* string )
 
 void ExpAddVarArgConst( double value )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Value;
-      node->info.fValue = value;
+      node->fValue = value;
 
       ExpListAddTail( parseList, node );
    }
@@ -1069,16 +1092,16 @@ void ExpAddErrNode( void* func, int nArgs )
       ExpSetError( parseError, EXP_BadArgs, function->name );
    else
    {
-      ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+      ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
       if ( node == NULL )
          ExpSetError( parseError, EXP_NoMem, NULL );
       else
       {
          node->type = EXP_Function;
-         node->info.fn.function = EXP_ErrorFunc;
-         node->info.fn.op = OP_ErrorExp;
-         node->info.fn.nArgs = nArgs;
+         node->fn.function = EXP_ErrorFunc;
+         node->fn.op = OP_ErrorExp;
+         node->fn.nArgs = nArgs;
 
          ExpListAddTail( parseList, node );
       }
@@ -1087,15 +1110,15 @@ void ExpAddErrNode( void* func, int nArgs )
 
 void ExpAddBinOpNode( int op )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Function;
-      node->info.fn.function = EXP_Binary;
-      node->info.fn.op = op;
+      node->fn.function = EXP_Binary;
+      node->fn.op = op;
 
       ExpListAddTail( parseList, node );
    }
@@ -1103,15 +1126,15 @@ void ExpAddBinOpNode( int op )
 
 void ExpAddUnOpNode( int op )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Function;
-      node->info.fn.function = EXP_Unary;
-      node->info.fn.op = op;
+      node->fn.function = EXP_Unary;
+      node->fn.op = op;
 
       ExpListAddTail( parseList, node );
    }
@@ -1119,14 +1142,14 @@ void ExpAddUnOpNode( int op )
 
 void ExpAddBEMIndex( const char* command, const char* keyword )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Index;
-      node->info.pValue = 0; /* GetComKeyIndex( command, keyword ); */	command;	keyword;
+      node->pValue = 0; /* GetComKeyIndex( command, keyword ); */	command;	keyword;
 
       ExpListAddTail( parseList, node );
    }
@@ -1134,14 +1157,14 @@ void ExpAddBEMIndex( const char* command, const char* keyword )
 
 void ExpAddConstantNode( double value )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Value;
-      node->info.fValue = value;
+      node->fValue = value;
 
       ExpListAddTail( parseList, node );
    }
@@ -1149,14 +1172,14 @@ void ExpAddConstantNode( double value )
 
 void ExpAddKeyWordNode( long keywordIndex )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Keyword;
-      node->info.fValue = (double)keywordIndex;
+      node->fValue = (double)keywordIndex;
 
       ExpListAddTail( parseList, node );
    }
@@ -1164,14 +1187,14 @@ void ExpAddKeyWordNode( long keywordIndex )
 
 void ExpAddBldgElemNode( long long dbId )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
    else
    {
       node->type = EXP_Value;
-      node->info.fValue = (double)dbId;
+      node->fValue = (double)dbId;
 
       ExpListAddTail( parseList, node );
    }
@@ -1179,7 +1202,7 @@ void ExpAddBldgElemNode( long long dbId )
 
 void ExpAddStringNode( const char* string )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
@@ -1194,11 +1217,11 @@ void ExpAddStringNode( const char* string )
          length = (int) (quotePtr - string);
 
       node->type = EXP_String;
-      node->info.pValue = (char*)malloc( length + 1 );
-      if ( node->info.pValue != NULL )
+      node->pValue = (char*)malloc( length + 1 );
+      if ( node->pValue != NULL )
       {
-         strncpy( node->info.pValue, string, length );
-         ((char*)node->info.pValue)[ length ] = '\0';
+         strncpy( node->pValue, string, length );
+         ((char*)node->pValue)[ length ] = '\0';
 
          ExpListAddTail( parseList, node );
       }
@@ -1209,7 +1232,7 @@ void ExpAddStringNode( const char* string )
 
 void ExpAddControlNode( int tokenType )
 {
-   ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+   ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
 
    if ( node == NULL )
       ExpSetError( parseError, EXP_NoMem, NULL );
@@ -1728,7 +1751,7 @@ extern void EvaluateExpression( ParsedExpression* pExp, PFGetValue pfGetValue,
             {
                ExpNode* testValue;
                testValue = ExpStackPop( &stack );
-               if ( !testValue->info.fValue )
+               if ( !testValue->fValue )
                {
                   node = SkipTilNode( pExp, node, EXP_Else );
                   /* Skip else node */
@@ -1771,20 +1794,21 @@ extern void EvaluateExpression( ParsedExpression* pExp, PFGetValue pfGetValue,
                break;
 
             case EXP_Function :
-               evalFunctions[ node->info.fn.function ]( &stack, node->info.fn.op, 
-                                                        node->info.fn.nArgs, pData, pError );
+               evalFunctions[ node->fn.function ]( &stack, node->fn.op, 
+                                                        node->fn.nArgs, pData, pError );
                break;
 
             default :
             {
                ExpNode newNode;
+					ExpNode_init( &newNode );	// SAC 4/21/17
                pfGetValue( &newNode, node, NULL );
 
                if( !ExpStackPushCopy( &stack, &newNode ) )
                   ExpSetError( pError, EXP_NoMem, NULL );
 
                if ( newNode.type == EXP_String )
-                  free( newNode.info.pValue );
+                  free( newNode.pValue );
 
                break;
             }
@@ -1843,14 +1867,14 @@ extern BOOL CheckExpDependence( ParsedExpression* pExp, long lBEMPFunc, char* pP
 //         {
 //            if ( (lBEMPFunc == BF_Parameter) && (!bFoundParam) &&
 //                 (pParamName != NULL) &&
-//                 (strcmp( pParamName, node->info.pValue ) == 0) )
+//                 (strcmp( pParamName, node->pValue ) == 0) )
 //               bFoundParam = TRUE;
 //            break;
 //         }
 //         case EXP_Function :
 //         {
-//            if ( (node->info.fn.function == BEMPFuncIndex) &&
-//                 (node->info.fn.op == lBEMPFunc) &&
+//            if ( (node->fn.function == BEMPFuncIndex) &&
+//                 (node->fn.op == lBEMPFunc) &&
 //                 ((lBEMPFunc != BF_Parameter) || (bFoundParam)) )
 //               bRetVal = TRUE;
 //            break;
@@ -1879,9 +1903,9 @@ static BOOL IsEqual( ExpNode* node1, ExpNode* node2 )
    if ( node1->type == node2->type )
    {
       if ( node1->type == EXP_Value )
-         isEqual = node1->info.fValue == node2->info.fValue;
+         isEqual = node1->fValue == node2->fValue;
       else if ( node1->type == EXP_String )
-         isEqual = stricmp_( (char*)node1->info.pValue, (char*)node2->info.pValue ) == 0;
+         isEqual = stricmp_( (char*)node1->pValue, (char*)node2->pValue ) == 0;
       /* Compare for strings is case insensitive. */
    }
    return isEqual;
@@ -1976,102 +2000,102 @@ static void UnaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError
          switch( op )
          {
             case NEG :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "negation" );
 					else
-               	node->info.fValue = -node->info.fValue;
+               	node->fValue = -node->fValue;
                break;
             case OP_Log :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "log()" );
-               else if( node->info.fValue <= 0.0 )
+               else if( node->fValue <= 0.0 )
                   ExpSetError( error, EXP_NegLog, NULL );
-               node->info.fValue = log( node->info.fValue );
+               node->fValue = log( node->fValue );
                break;
             case OP_Exp :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "exp()" );
 					else
-               	node->info.fValue = exp( node->info.fValue );
+               	node->fValue = exp( node->fValue );
                break;
             case OP_Abs :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "abs()" );
 					else
-               	node->info.fValue = node->info.fValue >= 0 ? 
-               	                    node->info.fValue : -node->info.fValue;
+               	node->fValue = node->fValue >= 0 ? 
+               	                    node->fValue : -node->fValue;
                break;
             case OP_Upr:
             case OP_Lwr :
-               node->info.fValue = 0.0;
+               node->fValue = 0.0;
                break;
             case OP_Int :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "int()" );
 					else
-               	node->info.fValue = floor(node->info.fValue);
+               	node->fValue = floor(node->fValue);
                break;
             case OP_Log10 :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "log10()" );
-               else if( node->info.fValue <= 0.0F )
+               else if( node->fValue <= 0.0F )
                   ExpSetError( error, EXP_NegLog, NULL );
-               node->info.fValue = log10(node->info.fValue);
+               node->fValue = log10(node->fValue);
                break;
             case OP_Sin :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "sin()" );
 					else
-               	node->info.fValue = sin(node->info.fValue);
+               	node->fValue = sin(node->fValue);
                break;
             case OP_ASin :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "asin()" );
-               else if( node->info.fValue <= -1 || node->info.fValue >= 1 )
+               else if( node->fValue <= -1 || node->fValue >= 1 )
                   ExpSetError( error, EXP_Trig, NULL );
-               node->info.fValue = asin(node->info.fValue);
+               node->fValue = asin(node->fValue);
                break;
             case OP_Cos :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "cos()" );
 					else
-               	node->info.fValue = cos(node->info.fValue);
+               	node->fValue = cos(node->fValue);
                break;
             case OP_ACos :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "acos()" );
-               else if( node->info.fValue <= -1 || node->info.fValue >= 1 )
+               else if( node->fValue <= -1 || node->fValue >= 1 )
                   ExpSetError( error, EXP_Trig, NULL );
-               node->info.fValue = acos(node->info.fValue);
+               node->fValue = acos(node->fValue);
                break;
             case OP_Tan :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "tan()" );
 					else
-               	node->info.fValue = tan(node->info.fValue);
+               	node->fValue = tan(node->fValue);
                break;
             case OP_ATan :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "atan()" );
 					else
-               	node->info.fValue = atan(node->info.fValue);
+               	node->fValue = atan(node->fValue);
                break;
             case OP_Sqrt :
-					if (IsReserved_UNDEFINED( node->info.fValue ))
+					if (IsReserved_UNDEFINED( node->fValue ))
 						ExpSetError( error, EXP_UndefArg, "sqrt()" );
-               else if( node->info.fValue < 0 )
+               else if( node->fValue < 0 )
                   ExpSetError( error, EXP_NegSqrt, NULL );
 					else
-               	node->info.fValue = sqrt(node->info.fValue);
+               	node->fValue = sqrt(node->fValue);
                break;
             case OP_ErrorExp :
                break;
             case OP_Ftoa:
-               sprintf( temp, "%f", node->info.fValue );
+               sprintf( temp, "%f", node->fValue );
                node->type = EXP_String;
-               node->info.pValue = malloc( strlen( temp ) + 1 );
-               if ( node->info.pValue != NULL )
-                  strcpy( node->info.pValue, temp );
+               node->pValue = malloc( strlen( temp ) + 1 );
+               if ( node->pValue != NULL )
+                  strcpy( node->pValue, temp );
                else
                   ExpSetError( error, EXP_NoMem, NULL );
                break;
@@ -2104,8 +2128,8 @@ static void ErrorFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError
            node2->type == EXP_Value  && 
            node1->type == EXP_Value )
       {
-         showError( node1->info.fValue, node2->info.fValue, node3->info.pValue );
-         free( node3->info.pValue );
+         showError( node1->fValue, node2->fValue, node3->pValue );
+         free( node3->pValue );
       }
       else
       {
@@ -2128,25 +2152,29 @@ static void StringUnaryFunc( ExpStack* stack, int op, ExpNode* node, void* pData
    switch( op )
    {
       case OP_Upr :
-         strupr_( node->info.pValue );
+         strupr_( node->pValue );
          break;
       case OP_Lwr :
-         strlwr_( node->info.pValue );
+         strlwr_( node->pValue );
          break;
       case OP_SLen :  /* SAC 2/11/03 - added strlen() function */
-         NodeToValue( node, ((node->type == EXP_String && node->info.pValue) ? (double) strlen( node->info.pValue ) : -1) );
+         NodeToValue( node, ((node->type == EXP_String && node->pValue) ? (double) strlen( node->pValue ) : -1) );
          break;
       case OP_Atof :  /* SAC 2/23/16 - added atof() */
-			NodeToValue( node, ((node->type == EXP_String && node->info.pValue) ? strtod( node->info.pValue, NULL ) : -1) );
+			NodeToValue( node, ((node->type == EXP_String && node->pValue) ? strtod( node->pValue, NULL ) : -1) );
          break;
       case NEG :
       case OP_Log :
       case OP_Exp :
       case OP_Abs :
       case OP_Ftoa :
-         node->info.fValue = 0;
+         node->fValue = 0;
          break;
    }
+}
+
+static int AreSame(double a, double b)  /*SAC 4/21/17 - added DBL_EPSILON check to handle float representation issues */
+{	return (fabs(a-b) < (10.0*DBL_EPSILON) ? 1 : 0);
 }
 
 static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpError* error)
@@ -2163,15 +2191,15 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
       if ( node1->type != node2->type )  /* Can't operate on 2 different types, return 0. */
       {
          if (node1->type == EXP_String)
-            free( node1->info.pValue );
-         node1->info.fValue = 0;
+            free( node1->pValue );
+         node1->fValue = 0;
          node1->type = EXP_Value;
          ExpSetError( error, EXP_RuleProc, "Error: operator cannot be applied to data of different types" );  // SAC 8/12/12 - added error descriptor to plug into error message
       }
       else if ( node1->type == EXP_String && node2->type == EXP_String ) /* 2 Strings */
       {
-         char* str1 = node1->info.pValue;
-         char* str2 = node2->info.pValue;
+         char* str1 = node1->pValue;
+         char* str2 = node2->pValue;
          /* SAC 2/24/99 - Fixed string comparison bug associated w/ EQ,NE,LT,GT,LE & GE operations    */
          /*               (comparsions were being performed AFTER one of the two strings were FREEd!) */
          double fVal = 0;
@@ -2179,38 +2207,38 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
          {
             case EQ :
                fVal = stricmp_( str1, str2 ) == 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case NEQ :
                fVal = stricmp_( str1, str2 ) != 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case LT :
                fVal = stricmp_( str1, str2 ) < 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case GT :
                fVal = stricmp_( str1, str2 ) > 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case LE :
                fVal = stricmp_( str1, str2 ) <= 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case GE :
                fVal = stricmp_( str1, str2 ) >= 0 ? 1.0 : 0.0;
-               free( node1->info.pValue );
-               node1->info.fValue = fVal;
+               free( node1->pValue );
+               node1->fValue = fVal;
                node1->type = EXP_Value;
                break;
             case '+' :
@@ -2225,15 +2253,15 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
                   strcat( newStr, str2 );
                   newStr[ length ] = '\0';
                }
-               free( node1->info.pValue );
-               node1->info.pValue = newStr;
+               free( node1->pValue );
+               node1->pValue = newStr;
                break;
             }
 				case OP_Find :			/* SAC 2/4/13 - added find() function */
 				case OP_FindN :		/* SAC 2/4/13 - added findnocase() function */
 				{	if (str1 == NULL || str2 == NULL || strlen( str2 ) < 1 || strlen( str2 ) > strlen( str1 ))
-					{	free( node1->info.pValue );
-						node1->info.fValue = 0;
+					{	free( node1->pValue );
+						node1->fValue = 0;
 					}
 					else
 					{	char* strN = NULL;
@@ -2249,8 +2277,8 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 							}
 						}
 						strN = strstr( str1, str2 );
-						free( node1->info.pValue );
-						node1->info.fValue = (strN ? strN - str1 + 1 : 0);
+						free( node1->pValue );
+						node1->fValue = (strN ? strN - str1 + 1 : 0);
 					}
 					node1->type = EXP_Value;
 					break;
@@ -2265,8 +2293,8 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
             case OP_Min :
             case OP_Max :
             case OP_Mod :  /* SAC 2/18/01 - added mod() function */
-               free( node1->info.pValue );
-               node1->info.fValue = 0.0;
+               free( node1->pValue );
+               node1->fValue = 0.0;
                node1->type = EXP_Value;
                ExpSetError( error, EXP_RuleProc, "Error: operator incompatible with string data" );  // SAC 8/12/12 - added error descriptor to plug into error message
                break;
@@ -2275,8 +2303,8 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
       else /* We have 2 numbers  */
       {
          double result=0.;
-         double value1 = node1->info.fValue;
-         double value2 = node2->info.fValue;
+         double value1 = node1->fValue;
+         double value2 = node2->fValue;
          switch( op )
          {
             case OR :
@@ -2286,10 +2314,12 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
                result = value1 != 0.0 && value2 != 0.0 ? 1.0 : 0.0;
                break;
             case EQ :
-               result = value1 == value2 ? 1.0 : 0.0;
+               /*result = value1 == value2 ? 1.0 : 0.0;*/
+               result = AreSame( value1, value2 ) ? 1.0 : 0.0;
                break;
             case NEQ :
-               result = value1 != value2 ? 1.0 : 0.0;
+               /*result = value1 != value2 ? 1.0 : 0.0;*/
+               result = AreSame( value1, value2 )==0 ? 1.0 : 0.0;
                break;
             case LT :
 					if (IsReserved_UNDEFINED( value1 ))
@@ -2297,7 +2327,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 					else if (IsReserved_UNDEFINED( value2 ))
 						ExpSetError( error, EXP_UndefArg, "right side of '<'" );
 					else
-						result = value1 < value2 ? 1.0 : 0.0;
+						result = (value1 < value2 && AreSame( value1, value2 )==0) ? 1.0 : 0.0;
                break;
             case GT :
 					if (IsReserved_UNDEFINED( value1 ))
@@ -2305,7 +2335,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 					else if (IsReserved_UNDEFINED( value2 ))
 						ExpSetError( error, EXP_UndefArg, "right side of '>'" );
 					else
-               	result = value1 > value2 ? 1.0 : 0.0;
+               	result = (value1 > value2 && AreSame( value1, value2 )==0) ? 1.0 : 0.0;
                break;
             case LE :
 					if (IsReserved_UNDEFINED( value1 ))
@@ -2313,7 +2343,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 					else if (IsReserved_UNDEFINED( value2 ))
 						ExpSetError( error, EXP_UndefArg, "right side of '<='" );
 					else
-               	result = value1 <= value2 ? 1.0 : 0.0;
+               	result = (value1 <= value2 || AreSame( value1, value2 )) ? 1.0 : 0.0;
                break;
             case GE :
 					if (IsReserved_UNDEFINED( value1 ))
@@ -2321,7 +2351,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 					else if (IsReserved_UNDEFINED( value2 ))
 						ExpSetError( error, EXP_UndefArg, "right side of '>='" );
 					else
-               	result = value1 >= value2 ? 1.0 : 0.0;
+               	result = (value1 >= value2 || AreSame( value1, value2 )) ? 1.0 : 0.0;
                break;
             case '+' :
 					if (IsReserved_UNDEFINED( value1 ))
@@ -2403,7 +2433,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
                ExpSetError( error, EXP_RuleProc, "Error: operator/function incompatible with numeric data" );
                break;
          }
-         node1->info.fValue = result;
+         node1->fValue = result;
       }
 
 /*      if( EXP_ERRORCODE( *error ) == EXP_None ) */
@@ -2437,7 +2467,7 @@ BOOL BlobToParsed( ParsedExpression* pExp, void* blob )
 
    for ( n = 0; n < nNodes && bufferIndex < blobSize && ok; n++ )
    {
-      ExpNode* node = (ExpNode*)malloc( sizeof( ExpNode ) );
+      ExpNode* node = ExpNode_new();  //(ExpNode*)malloc( sizeof( ExpNode ) );
       if ( node == NULL )
          ok = FALSE;
       else
@@ -2452,16 +2482,16 @@ BOOL BlobToParsed( ParsedExpression* pExp, void* blob )
             case EXP_String :
                strLen = *(long*)&buffer[ bufferIndex ];
                bufferIndex += sizeof( long );
-               node->info.pValue = malloc( (int)strLen + 1 );
-               if ( node->info.pValue == NULL )
+               node->pValue = malloc( (int)strLen + 1 );
+               if ( node->pValue == NULL )
                {
                   ok = FALSE;
                   free( node );
                }
                else
                {
-                  strncpy( (char*)node->info.pValue, &buffer[ bufferIndex ], (int)strLen );
-                  ((char*)node->info.pValue)[ strLen ] = '\0';
+                  strncpy( (char*)node->pValue, &buffer[ bufferIndex ], (int)strLen );
+                  ((char*)node->pValue)[ strLen ] = '\0';
                   bufferIndex += strLen;
                   ExpListAddTail( pExp, node );
                }
@@ -2505,7 +2535,7 @@ long int GetBlobSize( ParsedExpression* pExp )
       switch ( node->type )
       {
          case EXP_String :
-            blobSize += (long) (nodeSize + strlen( node->info.pValue ) + sizeof( long ));
+            blobSize += (long) (nodeSize + strlen( node->pValue ) + sizeof( long ));
             break;
          default :
             blobSize += nodeSize;
@@ -2559,10 +2589,10 @@ BOOL MakeBlob( ParsedExpression* pExp, void* blob, long size )
             /* Node data followed by strlen followed by strlen chars. */
             memcpy( (char*)&buffer[ bufferIndex ], (char*)node, nodeSize );
             bufferIndex += nodeSize;
-            *(long*)&buffer[ bufferIndex ] = (long) strlen( node->info.pValue );
+            *(long*)&buffer[ bufferIndex ] = (long) strlen( node->pValue );
             bufferIndex += sizeof( long );
-            strcpy( (char*)&buffer[ bufferIndex ], node->info.pValue );
-            bufferIndex += (long) strlen( node->info.pValue );
+            strcpy( (char*)&buffer[ bufferIndex ], node->pValue );
+            bufferIndex += (long) strlen( node->pValue );
             break;
 
          default :
@@ -2579,10 +2609,10 @@ BOOL MakeBlob( ParsedExpression* pExp, void* blob, long size )
 void NodeToValue( ExpNode* node, double fVal )
 {
    if (node->type == EXP_String)
-      free( node->info.pValue );
+      free( node->pValue );
 
    node->type = EXP_Value;
-   node->info.fValue = fVal;
+   node->fValue = fVal;
 }
 
 #pragma warning(default : 4996)
