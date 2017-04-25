@@ -4647,6 +4647,8 @@ void CMainFrame::OnPerformAPIAnalysis()
 			sLogAnalArg.Format( "   pszAnalysisErr   = (ptr to str)" );							BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   AnalysisErrLen   = 2056" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   DisplayProgress  = true" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
+			sLogAnalArg.Format( "   SecurityKeyIndex = 1" );										BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
+			sLogAnalArg.Format( "   SecurityKey      = <security key>" );						BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   ProgCallbackFunc = (null)" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 
 //int DLLAPI __cdecl CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszCSEEXEPath, const char* pszCSEWeatherPath,
