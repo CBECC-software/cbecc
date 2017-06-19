@@ -1,0 +1,7 @@
+; BEMProcUI19c.def : Declares the module parameters for the DLL.
+
+LIBRARY      "BEMProcUI19c"
+; DESCRIPTION  'BEMProcUI19c Windows Dynamic Link Library'  - throws compiler warning
+
+EXPORTS
+    ; Explicit exports can go here
