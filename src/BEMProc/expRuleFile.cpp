@@ -1,8 +1,8 @@
 // expRuleFile.cpp - RuleFile class definition
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -123,6 +123,26 @@ static int siaDMRuleDataTypes[] = {	BEMP_Str,
 													BEMP_Flt,
 													BEMP_Sym  };
 													//BEMP_Obj,
+
+const char* pszDataTypeStrs[] = {	"Integer",
+												"Float",
+												"Enumeration",
+												"String",
+												"Object",
+												"QString"  };
+const char* PropTypeIDToString( int iPTID )
+{	const char* pszRetVal = NULL;
+	switch (iPTID)
+	{	case  BEMP_Int  :  pszRetVal = pszDataTypeStrs[0];		break;
+		case  BEMP_Flt  :  pszRetVal = pszDataTypeStrs[1];		break;
+		case  BEMP_Sym  :  pszRetVal = pszDataTypeStrs[2];		break;
+		case  BEMP_Str  :  pszRetVal = pszDataTypeStrs[3];		break;
+		case  BEMP_Obj  :  pszRetVal = pszDataTypeStrs[4];		break;
+		case  BEMP_QStr :  pszRetVal = pszDataTypeStrs[5];		break;
+	}
+	return pszRetVal;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -1156,6 +1176,14 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 																				{	token2 = file.ReadToNextToken( saReservedStrs );
 																					if (pNewRuleProp)
 																					{	assert( (pNewRuleProp->getPropType() < 0 || pNewRuleProp->getPropType() == BEMP_Flt) );
+																						if (pNewRuleProp->getPropType() >= 0 && pNewRuleProp->getPropType() != BEMP_Flt)
+																						{	BEMClass* pNRPCls = BEMPX_GetClass( pNewRuleProp->getObjTypeID(), iError );
+																							const char* pszPropTypeStr = PropTypeIDToString( pNewRuleProp->getPropType() );
+																							sErr = QString( "\n\tWarning:  Property '%1:%2' of type '%3' being assigned units '%4' - found on line: %5 of '%6'\n" ).arg(
+																								(pNRPCls ? pNRPCls->getShortName() : "unknown"), pNewRuleProp->getPropName(), (pszPropTypeStr ? pszPropTypeStr : "unknown"),
+																								token2, QString::number(file.GetLineCount()), file.FileName() );
+																							errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+																						}
 																						pNewRuleProp->setPropType( BEMP_Flt );
 																						pNewRuleProp->setUnits( token2 );		// SAC 8/6/14 - added storage of Units specified in rule new block
 																					}

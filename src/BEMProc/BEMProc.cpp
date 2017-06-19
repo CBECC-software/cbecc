@@ -1,8 +1,8 @@
 // BEMProc.cpp : Defines the exported functions for the DLL application.
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -3105,7 +3105,7 @@ long    BEMPX_GetIntegerAndStatus( long lDBID, int& iStatus, int& iSpecialVal, i
 											break;
 			}	}
 			else
-			{	assert( eObjType == BEMO_RuleLib );		// invalid property - CAN happen during rule library read/parse
+			{	//assert( eObjType == BEMO_RuleLib );		// invalid property - CAN happen during rule library read/parse
 			}
 		}
 	}
@@ -3833,7 +3833,7 @@ int BEMPX_SetBEMData( long lDBID, int iDataType, void* pData, BEM_ObjType eObjFr
                   else
 						{	iRetVal = -10;
 							if (pszErrMsg && iErrMsgLen > 4)  // SAC 4/10/13 - error message return
-							{	if (_snprintf_s( pszErrMsg, iErrMsgLen, _TRUNCATE, "Unable to find object '%s' (DBID=%ld, Occur=%d)", sObjName /*(const char*) pData*/, lDBID, iOccur ) == -1)
+							{	if (_snprintf_s( pszErrMsg, iErrMsgLen, _TRUNCATE, "Unable to find object '%s' (DBID=%ld, Occur=%d)", sObjName.toLocal8Bit().constData() /*(const char*) pData*/, lDBID, iOccur ) == -1)
 									AppendEllipsis( pszErrMsg, iErrMsgLen );
 						}	}
                }
@@ -5167,7 +5167,7 @@ int BEMPX_CheckForDuplicateObjectNames( char* pszErrMsg, int iErrMsgLen, BOOL bW
 // Function(s) to evaluate conditions (for screen control toggling and range checking)
 /////////////////////////////////////////////////////////////////////////////
 
-BOOL BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue, long lRtDBID, int iOccur )
+BOOL BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue, long lRtDBID, int iOccur, long lChkDBID, double dChkValue )
 {
    BOOL bRetVal = TRUE;
 
@@ -5176,7 +5176,9 @@ BOOL BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue,
       int iError, iSpecialVal;
       int iDispDataType = BEMPX_GetDataType( lRtDBID );
       int iStatus = BEMPX_GetDataStatus( lRtDBID, iOccur );  // SAC 8/4/02 - Pass in iOccur
-      if (iStatus > BEMS_Undefined && iStatus < BEMS_NumTypes)
+		if (lRtDBID > 0 && lChkDBID == lRtDBID)  // SAC 6/6/17 - added logic to substitute value being checked into condition test if DBIDs match
+			fRtValue = dChkValue;
+      else if (iStatus > BEMS_Undefined && iStatus < BEMS_NumTypes)
       {
 //         void* pData = BEMPX_GetData( lRtDBID, iDataType, iSpecialVal, iError, iOccur );  // SAC 8/4/02 - Pass in iOccur
 			if (iDispDataType == BEMP_Flt || iDispDataType == BEMP_Int || iDispDataType == BEMP_Sym)
@@ -5222,7 +5224,7 @@ BOOL BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue,
 // Function(s) to evaluate conditions (for screen control toggling and range checking)
 /////////////////////////////////////////////////////////////////////////////
 
-BOOL BEMPX_ConditionTrue( long lCondDBID, int iCondition, double fRtValue, long lRtDBID, int iOccur, long lCondDBID2 )
+BOOL BEMPX_ConditionTrue( long lCondDBID, int iCondition, double fRtValue, long lRtDBID, int iOccur, long lCondDBID2, long lChkDBID, double dChkValue )
 {
    BOOL bRetVal = TRUE;
    double fLtValue = 0;
@@ -5239,7 +5241,9 @@ BOOL BEMPX_ConditionTrue( long lCondDBID, int iCondition, double fRtValue, long 
 			iDispDataType = BEMPX_GetDataType( lCondDBID2 );
 			iStatus = BEMPX_GetDataStatus( lCondDBID2, iOccur, pObj->getObjectType() );
 	}	}
-   if (iStatus > BEMS_Undefined && iStatus < BEMS_NumTypes)
+	if (lCondDBID > 0 && lChkDBID == lCondDBID)  // SAC 6/6/17 - added logic to substitute value being checked into condition test if DBIDs match
+		fLtValue = dChkValue;
+   else if (iStatus > BEMS_Undefined && iStatus < BEMS_NumTypes)
    {
 //      void* pData = BEMPX_GetData( lCondDBID, iDataType, iSpecialVal, iError, iOccur );
 //
@@ -5279,7 +5283,7 @@ BOOL BEMPX_ConditionTrue( long lCondDBID, int iCondition, double fRtValue, long 
       bRetVal = FALSE;
 
    if (bRetVal)
-      bRetVal = BEMPX_FloatConditionTrue( fLtValue, iCondition, fRtValue, lRtDBID, iOccur );  // SAC 8/4/02 - pass iOccur into BEMPX_FloatConditionTrue()
+      bRetVal = BEMPX_FloatConditionTrue( fLtValue, iCondition, fRtValue, lRtDBID, iOccur, lChkDBID, dChkValue );  // SAC 8/4/02 - pass iOccur into BEMPX_FloatConditionTrue()
 
    return bRetVal;
 }

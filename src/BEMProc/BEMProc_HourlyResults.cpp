@@ -1,8 +1,8 @@
 // BEMProc_HourlyResults.cpp : 
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -70,7 +70,15 @@ int BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char
 											const char** ppResEnduses /*=NULL*/, const char** ppEnduseMap /*=NULL*/ )
 {	int iRetVal = -1;
    BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
-	if (pBEMProc && iRunIdx >= 0 && iRunIdx < BEMRun_MaxNumRuns && strlen( pszRunName ) < BEMRun_RunNameLen && strlen( pszRunAbbrev ) < BEMRun_RunAbbrevLen)
+	if (!pBEMProc)
+		iRetVal = -2;
+	else if (iRunIdx < 0 || iRunIdx >= BEMRun_MaxNumRuns)
+		iRetVal = -3;
+	else if (strlen( pszRunName ) >= BEMRun_RunNameLen)
+		iRetVal = -4;
+	else if (strlen( pszRunAbbrev ) >= BEMRun_RunAbbrevLen)
+		iRetVal = -5;
+	else
 		iRetVal = pBEMProc->readCSEHourlyResults( iRunIdx, pszRunName, pszRunAbbrev, pszFilename, ppResMeters, ppMetersMap, pdMetersMult, ppResEnduses, ppEnduseMap );
 	return iRetVal;
 }
@@ -133,7 +141,7 @@ double BEMPX_GetHourlyResultSum( char* pszErrMsgBuffer, int iErrMsgBufferLen, co
 			{	BEMRunHourlyResultEnduse* pEnduse = GetHourlyResultEnduse( pMeter, pszaEU[i] );
 				if (pEnduse == NULL)
 				{	// assert( FALSE );  // enduse not found   -- can be OK in some cases where we expect to have missing enduses
-					sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  Enduse '%s' (#%d) not found for meter '%s' & run '%s'." ).arg( pszaEU[i], QString::number( i+1 ), pszMeterName, pszRunName );
+					sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  Enduse '%1' (#%2) not found for meter '%3' & run '%4'." ).arg( pszaEU[i], QString::number( i+1 ), pszMeterName, pszRunName );
 					dRetVal = -99999.0;
 				}
 				else
@@ -143,10 +151,10 @@ double BEMPX_GetHourlyResultSum( char* pszErrMsgBuffer, int iErrMsgBufferLen, co
 				}
 			}
 		if (sErrorMsg.isEmpty() && dRetVal == -99999.0)
-			sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  No valid enduse names provided for meter '%s' & run '%s'." ).arg( pszMeterName, pszRunName );
+			sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  No valid enduse names provided for meter '%1' & run '%2'." ).arg( pszMeterName, pszRunName );
 	}
 	else
-		sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  Results for meter '%s' not found for run '%s'." ).arg( pszMeterName, pszRunName );
+		sErrorMsg = QString( "BEMPX_GetHourlyResultSum() Error:  Results for meter '%1' not found for run '%2'." ).arg( pszMeterName, pszRunName );
 
 	if (!sErrorMsg.isEmpty() && pszErrMsgBuffer && iErrMsgBufferLen > 0)
 	{
@@ -176,7 +184,7 @@ double BEMPX_GetHourlyResultArray( char* pszErrMsgBuffer, int iErrMsgBufferLen, 
 			{	BEMRunHourlyResultEnduse* pEnduse = GetHourlyResultEnduse( pMeter, pszaEU[i] );
 				if (pEnduse == NULL)
 				{	assert( FALSE );  // enduse not found
-					sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  Enduse '%s' (#%d) not found for meter '%s' & run '%s'." ).arg( pszaEU[i], QString::number( i+1 ), pszMeterName, pszRunName );
+					sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  Enduse '%1' (#%2) not found for meter '%3' & run '%4'." ).arg( pszaEU[i], QString::number( i+1 ), pszMeterName, pszRunName );
 					dRetVal = -99999.0;
 				}
 				else
@@ -194,10 +202,10 @@ double BEMPX_GetHourlyResultArray( char* pszErrMsgBuffer, int iErrMsgBufferLen, 
 				}
 			}
 		if (sErrorMsg.isEmpty() && bFirstEU)
-			sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  No valid enduse names provided for meter '%s' & run '%s'." ).arg( pszMeterName, pszRunName );
+			sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  No valid enduse names provided for meter '%1' & run '%2'." ).arg( pszMeterName, pszRunName );
 	}
 	else
-		sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  Results for meter '%s' not found for run '%s'." ).arg( pszMeterName, pszRunName );
+		sErrorMsg = QString( "BEMPX_GetHourlyResultArray() Error:  Results for meter '%1' not found for run '%2'." ).arg( pszMeterName, pszRunName );
 
 	if (!sErrorMsg.isEmpty())
 	{
@@ -236,7 +244,7 @@ int BEMPX_GetHourlyResultArrayPtr( double** ppDbl, char* pszErrMsgBuffer, int iE
 			if (pEnduse == NULL)
 			{	iRetVal = 4;
 				if (pszErrMsgBuffer && iErrMsgBufferLen > 0)
-					sErrorMsg = QString( "BEMPX_GetHourlyResultArrayPtr() Error:  Enduse '%s' not found for meter '%s' & run '%s'." ).arg( pszEnduse, pszMeterName, pszRunName );
+					sErrorMsg = QString( "BEMPX_GetHourlyResultArrayPtr() Error:  Enduse '%1' not found for meter '%2' & run '%3'." ).arg( pszEnduse, pszMeterName, pszRunName );
 			}
 			else
 				*ppDbl = pEnduse->getHourlyArray();
@@ -244,7 +252,7 @@ int BEMPX_GetHourlyResultArrayPtr( double** ppDbl, char* pszErrMsgBuffer, int iE
 		else
 		{	iRetVal = 5;
 			if (pszErrMsgBuffer && iErrMsgBufferLen > 0)
-				sErrorMsg = QString( "BEMPX_GetHourlyResultArrayPtr() Error:  Results for meter '%s' not found for run '%s'." ).arg( pszMeterName, pszRunName );
+				sErrorMsg = QString( "BEMPX_GetHourlyResultArrayPtr() Error:  Results for meter '%1' not found for run '%2'." ).arg( pszMeterName, pszRunName );
 		}
 	}
 	if (!sErrorMsg.isEmpty() && pszErrMsgBuffer && iErrMsgBufferLen > 0)

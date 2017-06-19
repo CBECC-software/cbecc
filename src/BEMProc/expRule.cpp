@@ -1,8 +1,8 @@
 // rulelist.cpp - all the ruleset class definitions
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -3495,7 +3495,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_ParRefSymStr  :  // SAC 4/10/14
 		case BF_Par2RefSymStr :  // SAC 4/10/14
 		case BF_Par3RefSymStr :  // SAC 4/10/14
-                            LocalParentChildRef( op, nArgs, stack, pEval, error );
+                            if (nArgs < 1)
+										 ExpSetErr( error, EXP_RuleProc, QString( "Missing %1() function argument(s)" ).arg( ExpGetFuncTableNameByOpType( op ) ) );  // SAC 5/3/17
+                            else
+                               LocalParentChildRef( op, nArgs, stack, pEval, error );
                             break;
 
       case BF_ChildCnt   : {// "ChildCount"
@@ -5082,9 +5085,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                  }
                               }
 										if (bArgsOK)
-										{	char szErrMsg[80];
+										{	char szErrMsg[256];
 											szErrMsg[0] = '\0';
-											dResult = BEMPX_GetHourlyResultSum( szErrMsg, 80,  sArgs[0].toLocal8Bit().constData(), sArgs[1].toLocal8Bit().constData(),
+											dResult = BEMPX_GetHourlyResultSum( szErrMsg, 256,  sArgs[0].toLocal8Bit().constData(), sArgs[1].toLocal8Bit().constData(),
 																sArgs[2].toLocal8Bit().constData(), sArgs[3].toLocal8Bit().constData(), sArgs[4].toLocal8Bit().constData(),
 																sArgs[5].toLocal8Bit().constData(), sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(),
 																sArgs[8].toLocal8Bit().constData(), sArgs[9].toLocal8Bit().constData() );
@@ -6391,7 +6394,8 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
    {  // must PARSE ParentRef() argument -> multiple comp:param ID Args
 		bParseAsWeEvaluate = TRUE;
 		sParseArg = (char*) pNode->pValue;								assert( !sParseArg.isEmpty() );
-		if (op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus || op == BF_LocalVal )   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
+		if (op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus || op == BF_LocalVal ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
+			 op == BF_LocSymStr || op == BF_LocRefSymStr )		// SAC 5/19/17 - added Loc*SymStr checks
 			i1ParsedClass = BEMPX_GetClassID( pEval->lPrimDBID );
 		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal )  // SAC 8/28/12  // SAC 2/13/14
 		{	// first portion of argument string identifies the object type to start with
@@ -9847,7 +9851,7 @@ int XCONS::xc_GetDBFloat(		// get float property value from DB
 			if (bMsgMissing)
 			{	QString sCompParam;
 				BEMPX_DBIDToDBCompParamString( propID, sCompParam );
-				xc_Err( "no value found for ID=%d (%s)", propID, sCompParam);
+				xc_Err( "no value found for ID=%d (%s)", propID, sCompParam.toLocal8Bit().constData() );
 			}
 		}
 	}
@@ -9881,7 +9885,7 @@ int XCONS::xc_GetDBInt(		// get integer property value from DB
 			if (bMsgMissing)
 			{	QString sCompParam;
 				BEMPX_DBIDToDBCompParamString( propID, sCompParam );
-				xc_Err( "no value found for ID=%d (%s)", propID, sCompParam);
+				xc_Err( "no value found for ID=%d (%s)", propID, sCompParam.toLocal8Bit().constData() );
 			}
 		}
 	}

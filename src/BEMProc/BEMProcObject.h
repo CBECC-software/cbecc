@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -43,7 +43,7 @@
 /////////////////////////////////////////////////////////////////////////////
 //	BEM Run Hourly Results
 
-#define	BEMRun_MaxNumRuns				   6
+#define	BEMRun_MaxNumRuns				   6	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
 #define	BEMRun_RunNameLen				  32
 #define	BEMRun_RunAbbrevLen			  16
 #define	BEMRun_NumMeters				   4
