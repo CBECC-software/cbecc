@@ -1,8 +1,8 @@
 // BEMCmpMgr.cpp : Defines the initialization routines for the DLL.
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -689,9 +689,9 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 	if (iRun >= 0)
 		sCSERun = QString("[%1]").arg(QString::number(iRun));
 	if (msg && strlen(msg) > 2 && (msg[0] != '-' || msg[1] != '-' || msg[2] != '-') && (msg[0] != ' ' || msg[1] != ' ' || msg[2] != ' '))
-		sprintf_s( szCSECallbackMsg, 1024, "      CSE%s callback #%d, lvl= %d, msg= %s", sCSERun, siCallbackCount, level, msg );
+		sprintf_s( szCSECallbackMsg, 1024, "      CSE%s callback #%d, lvl= %d, msg= %s", sCSERun.toLocal8Bit().constData(), siCallbackCount, level, msg );
 	else
-		sprintf_s( szCSECallbackMsg, 1024, "      CSE%s callback #%d, lvl= %d", sCSERun, siCallbackCount, level );
+		sprintf_s( szCSECallbackMsg, 1024, "      CSE%s callback #%d, lvl= %d", sCSERun.toLocal8Bit().constData(), siCallbackCount, level );
 	if (sbLogCSECallbacks)
 		BEMPX_WriteLogFile( szCSECallbackMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	//QString sMsg;
@@ -709,7 +709,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 	if (bCalcProgress && pCSERunMgr)
 	{	bCalcProgress =
 			mapCSECallback.find(msg) != mapCSECallback.end() &&
-			++mapCSECallback[msg] == pCSERunMgr->GetNumRuns();
+			++mapCSECallback[msg] == pCSERunMgr->GetNumProgressRuns();
 	}
 
 	if (bCalcProgress)
@@ -722,14 +722,20 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 			if (!strncmp(  pszCSEProgressMsgs[  i], msg, strlen(pszCSEProgressMsgs[i]) ))  // SAC 8/19/13 - fix bug where 'msg', when set to ' Reports' includes a trailing LF character
 			{	bFound = true;
 				iProgVal = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/));
+				//		if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
+				//			BEMPX_WriteLogFile( QString( "              si1ProgressRunNum: %1  siNumProgressRuns: %2  fValSumThusFar: %3  fCSEProgressValSum: %4  sfPctDoneFollowingSimulations: %5" ).arg( 
+				//						QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns), QString::number(fValSumThusFar), QString::number(fCSEProgressValSum),
+				//						QString::number(sfPctDoneFollowingSimulations) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			}
 		}
 		if (!bFound && !strncmp( msg, "Error", 5 ))
 		{	bError = true;
 			siNumProgressErrors++;
 		}
+	//	if (sbLogCSECallbacks)  // SAC 5/5/17 - debugging progress of iterating runs
+	//		BEMPX_WriteLogFile( QString( "              iProgVal: %1  slCurrentProgress: %2  sbFreezeProgress: %3" ).arg( QString::number(iProgVal), QString::number(slCurrentProgress), (sbFreezeProgress ? "true" : "false") ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
-		//prevent progress from slipping backwards
+		// prevent progress from slipping backwards
 		if (iProgVal > slCurrentProgress && !sbFreezeProgress)
 		{	slCurrentProgress = iProgVal;
 			bIncrementProgress = true;

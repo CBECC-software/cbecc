@@ -1,8 +1,8 @@
 // BEMCmpMgrCom.cpp : Defines the commercial model analysis routines
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -43,6 +43,7 @@
 #include "..\BEMProc\BEMProc.h"
 #include "..\BEMProc\BEMClass.h"
 #include "..\BEMProc\BEMPropertyType.h"
+#include "..\BEMProc\BEMProcObject.h"
 
 #ifdef _DEBUG
 //#define new DEBUG_NEW
@@ -2079,6 +2080,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int iDLLCodeYear = 2013;		// SAC 11/19/15
 #ifdef CODEYEAR2016
 	    iDLLCodeYear = 2016;
+#elif  CODEYEAR2019
+	    iDLLCodeYear = 2019;
 #endif
 
 	QString sProxyServerAddress, sProxyServerCredentials, sProxyServerType, sNetComLibrary;
@@ -4080,7 +4083,23 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 													int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, sRunID.toLocal8Bit().constData(),
 																								sRunAbbrev.toLocal8Bit().constData(), -1, pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap );	// SAC 5/31/16
-													if (bVerbose)  // SAC 1/31/13
+													if (iHrlyResRetVal < 0)  // SAC 6/12/17
+													{	switch (iHrlyResRetVal)
+														{	case -1 :  sLogMsg = QString( "Error retrieving hourly CSE results (-1) / run: %1, runID: %2, runAbrv: %3, file: %4" ).arg(
+																													QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -2 :  sLogMsg = QString( "Error retrieving hourly CSE results (-2) / Unable to retrieve BEMProc pointer / run: %1, runID: %2, runAbrv: %3, file: %4" ).arg(
+																													QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -3 :  sLogMsg = QString( "Error retrieving hourly CSE results (-3) / Run index not in valid range 0-%1 / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
+																													QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -4 :  sLogMsg = QString( "Error retrieving hourly CSE results (-4) / RunID too large (limit of %1 chars) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
+																													QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -5 :  sLogMsg = QString( "Error retrieving hourly CSE results (-4) / RunAbrv too large (limit of %1 chars) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
+																													QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+														}
+														if (sLogMsg.size() > 0)
+															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+													}
+													else if (bVerbose)  // SAC 1/31/13
 													{	sLogMsg.sprintf( "      Hourly CSE results retrieval returned %d", iHrlyResRetVal );
 														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													}
@@ -5272,7 +5291,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 		ParseCSV( line, lines );
 		assert( lines.size()==1 );
 		if (lines.size() > 0)
-		{
+		{	if (lines[0][0].size() > 3 && lines[0][0][0] < 0 && lines[0][0][1] < 0 && lines[0][0][2] < 0 && lines[0][0][3] > 0)
+				lines[0][0] = lines[0][0].erase( 0, 3 );		// SAC 5/9/17 - blast bogus chars prior to usable record data (possibly resulting from Excel save in 'CSV UTF-8' format)
 			if (lines[0][0].find(';') == 0)
 			{	// comment line - do nothing
 			}

@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -107,7 +107,8 @@ CSERunMgr::CSERunMgr(
 	m_iSimReportOpt(iSimReportOpt),
 	m_iSimErrorOpt(iSimErrorOpt),
 	m_lPropMixedFuelRunReqd(lPropMixedFuelRunReqd),
-	m_iNumOpenGLErrors(0)
+	m_iNumOpenGLErrors(0),
+	m_iNumProgressRuns(-1)
 {
 	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
 	if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
@@ -212,7 +213,7 @@ int CSERunMgr::SetupRun(
 	QString sOrientLtr, sOrientName;
 	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
-	else if (iRunType == CRM_PropMixedFuel)
+	else if (iRunType >= CRM_PropMixedFuel && iRunType <= CRM_WPropMixedFuel)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
 	{	// SAC 3/27/15 - SET 
@@ -1140,10 +1141,12 @@ void CSERunMgr::DoRun( int iRunIdx )
 {
 	CSERun* pCSERun = (iRunIdx < (int) m_vCSERun.size() ? m_vCSERun[iRunIdx] : NULL);
 	if (pCSERun)
-	{	StartRun( *pCSERun);
+	{	m_iNumProgressRuns = 1;
+		StartRun( *pCSERun);
 		m_vCSEActiveRun.push_back( pCSERun);
 	}
 	MonitorRuns();
+	m_iNumProgressRuns = -1;
 }		// CSERunMgr::DoRun
 
 void CSERunMgr::MonitorRuns()

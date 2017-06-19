@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,10 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_WOrientProp,
    CRM_StdDesign,
    CRM_PropMixedFuel,
+   CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
+   CRM_EPropMixedFuel,
+   CRM_SPropMixedFuel,
+   CRM_WPropMixedFuel,
    CRM_DesignRating
 };
 
@@ -112,6 +116,7 @@ public:
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	int GetNumRuns() const { return m_iNumRuns; }
+	int GetNumProgressRuns() const { return (m_iNumProgressRuns > 0 ? m_iNumProgressRuns : m_iNumRuns); }
 	void DoRuns();
 	void DoRun( int iRunIdx );
 	void MonitorRuns();
@@ -149,6 +154,7 @@ private:
 	int m_iSimReportOpt;		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
 	int m_iSimErrorOpt;		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
 	int m_iNumOpenGLErrors;		// SAC 3/16/17
+	int m_iNumProgressRuns;		// SAC 5/5/17 - added to facilitate progress reporting on run subsets
 	std::vector<CSERun*> m_vCSERun;
 	std::vector<CSERun*> m_vCSEActiveRun;
 
