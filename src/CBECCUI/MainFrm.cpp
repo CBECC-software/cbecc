@@ -1,8 +1,8 @@
 // MainFrm.cpp : implementation of the CMainFrame class
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -3902,12 +3902,57 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 
 	UpdateSoftwareVersionString();		// SAC 9/17/12
 	CComplianceUIApp* pApp = (CComplianceUIApp*)AfxGetApp();  // SAC 11/11/13 - moved outside sector-specific sections
+	BOOL bContinue = TRUE;
 
-	BOOL bContinue = FALSE;
+#ifdef UI_CARES
+	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0;		double dTargetDesignRtgInp=0;
+	if (bContinue && BEMPX_GetUIActiveFlag() && 
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
+		 ( ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
+		 	  ( lRunScope == 2 ||    // add or alter
+		 	   (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) ) ||   // addition alone
+		   ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
+		 	  BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
+		 	  BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   ) && lAllOrientations > 0 ) ))
+	{	CString sUnsupportMsg = "The following model characteristics are present in this project but not fully supported in this release:\n"; 
+		if (lRunScope == 2)
+			sUnsupportMsg += "> Run Scope of Addition and/or Alteration\n";
+		else if (lRunScope == 1 && lIsAddAlone > 0)
+			sUnsupportMsg += "> Run Scope of Addition Alone\n";
+		if (lSpecifyTargetDRtg > 0 && dTargetDesignRtgInp > -200 && lAllOrientations > 0)
+			sUnsupportMsg += "> Combination of Multiple Orientation and Target EDR analysis\n";
+		sUnsupportMsg += "\nCalculations can be performed, but the results are likely invalid.";
+		sUnsupportMsg += "\nWould you like to continue performing analysis?";
+
+		if (BEMMessageBox( sUnsupportMsg, "Compliance Analysis", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
+	   	bContinue = FALSE;
+	}
+
+	if (bContinue && BEMPX_GetUIActiveFlag() && 
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
+		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200)
+	{
+     		CWnd* pWnd = GetFocus();
+         CSACDlg dlgProj( pWnd, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, 186 /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Analysis Options" /*pszDialogCaption*/,
+									220 /*Ht*/, 500 /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Continue" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           FALSE /*bBypassChecksOnCancel*/, TRUE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 120 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         bContinue = (dlgProj.DoModal() == IDOK);
+	}
+#endif
+
    CDocument* pDoc = GetActiveDocument();
-   if ( (pDoc != NULL) && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) &&
+   if ( bContinue && pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) &&
         (((CComplianceUIDoc*) pDoc)->CUISaveModified( "compliance analysis" )) )
-   	bContinue = TRUE;
+   {  }
+	else
+   	bContinue = FALSE;
 
 	bool bRptGenOfflineConfirmed = false;
 	if (bContinue && BEMPX_GetUIActiveFlag() && ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ ) > 0)
@@ -4013,9 +4058,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
-			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
+			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
+			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					9 /*iResFormatVer*/, sOriginalFileName );
+																					10 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
 				char pszCSVColLabel1[1280], pszCSVColLabel2[2560], pszCSVColLabel3[2560];
@@ -4036,8 +4082,9 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 																false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
 				}
 
-				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7  - SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v9.csv", TRUE /*bGetPath*/ );
+				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7
+				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v10.csv", TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else
@@ -6754,6 +6801,8 @@ void CMainFrame::OnHelpMandatoryRequirementsForAssemblies()
 		if (sCodeYearAbbrev.IsEmpty())	// no project loaded
 #ifdef UI_PROGYEAR2016
 			sDefPDF = "Documents\\2016 Mandatory Requirements for Assemblies.pdf";
+#elif  UI_PROGYEAR2019
+			sDefPDF = "Documents\\2019 Mandatory Requirements for Assemblies.pdf";
 #else
 			sDefPDF = "Documents\\Mandatory Requirements for Assemblies.pdf";
 #endif

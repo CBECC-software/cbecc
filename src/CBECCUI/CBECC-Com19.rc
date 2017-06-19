@@ -54,7 +54,7 @@ BEGIN
     "LANGUAGE 9, 1\r\n"
     "#pragma code_page(1252)\r\n"
     "#endif\r\n"
-    "#include ""res\\CBECC-Res.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""res\\CBECC-Com.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
     "#include ""afxres.rc""         // Standard components\r\n"
     "#include ""afxprint.rc""       // printing/print preview resources\r\n"
     "#endif\0"
@@ -70,9 +70,9 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\CBECC-Res.ico"
-IDR_MAINFRAMEDEV        ICON    DISCARDABLE     "res\\CBECC-ResDev.ico"
-IDR_COMCHKTYPE          ICON    DISCARDABLE     "res\\CBECC-ResDoc.ico"
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\CBECC-Com.ico"
+IDR_MAINFRAMEDEV        ICON    DISCARDABLE     "res\\CBECC-ComDev.ico"
+IDR_COMCHKTYPE          ICON    DISCARDABLE     "res\\CBECC-ComDoc.ico"
 IDI_WIZARD              ICON    DISCARDABLE     "res\\wizard.ico"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -295,34 +295,32 @@ BEGIN
         MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
         MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
+        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
-        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
-        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
-        MENUITEM "&Check Building Database",    IDM_CHECKDBASE
-        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
-//        MENUITEM SEPARATOR
-//        MENUITEM "Generate &HVAC Equipment Report Records",  IDM_TOOLS_GENMECH1RECS
-//        MENUITEM "Generate &DHW Equipment Report Records",   IDM_TOOLS_GENDHWRECS
-//        MENUITEM "Generate &IAQ Ventilation Report Records", IDM_TOOLS_GENIAQRECS
-        MENUITEM SEPARATOR
+        MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
 //        MENUITEM "Build &Number...",            ID_TOOL_BUILDNUM
 //        MENUITEM "&Display Detailed Inputs",    IDM_DISPLAYALLCTRLS
-        MENUITEM "&Building Summary Report (input model)", IDM_RPT_BLDGSUMMARY
-        MENUITEM "Building Summary Report (&proposed/standard)", IDM_RPT_BLDGSUMMARYT24
-        MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
         MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
+        MENUITEM "Review &Unmet Load Hours Violations", IDM_TOOLS_REVIEWUMLH
+        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "&Generate CAHP/CMFNH Report", IDM_TOOLS_CAHPRPT
+        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Help Topics",                ID_HELP_FINDER, GRAYED
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
         MENUITEM "&Quick Start Guide",          IDM_HELP_OVERVIEW
         MENUITEM "&User Manual",                IDM_HELP_USERMANUAL
-        MENUITEM "&CSE Simulation Engine Documentation",  IDM_HELP_CSEDOCU
-        MENUITEM "&Mandatory Requirements for Assemblies",  IDM_HELP_MANDREQASSEM
+// SAC 7/25/15 - comment out comp forms options for 2019 alpha
+//        MENUITEM SEPARATOR
+//        POPUP "&Compliance Forms Checklist"
+//        BEGIN
+//            MENUITEM "&New Construction",       IDM_HELP_COMPFORMS_NEW
+//            MENUITEM "&Alterations",            IDM_HELP_COMPFORMS_ALTER
+//        END
+//        MENUITEM "Compliance &Forms"            IDM_FILELIST_01
         MENUITEM SEPARATOR
         MENUITEM "&About California Building Energy Code Compliance...", ID_APP_ABOUT
     END
@@ -338,7 +336,7 @@ BEGIN
         MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
         MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "&Import Geometry...",         ID_FILE_IMPORTRESGEOM
+        MENUITEM "&Import Model...",            ID_FILE_IMPORTMODEL
         MENUITEM SEPARATOR
         MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
         MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
@@ -379,41 +377,34 @@ BEGIN
     BEGIN
         MENUITEM "Program and Analysis &Options", IDM_TOOLS_OPTIONS
         MENUITEM "Pro&xy Server Settings",      IDM_TOOLS_PROXY
-        MENUITEM "&Generate Model...",          IDM_TOOLS_GENMODEL
         MENUITEM "View T-24 Compliance &Report", IDM_TOOLS_VIEWT24COMPRPT
+        MENUITEM "View T-24 Standard Model &Report", IDM_TOOLS_VIEWT24STDRPT
         MENUITEM "View Project &Folder",        IDM_TOOLS_VIEWFOLDER
         MENUITEM "View Project &Log File",      IDM_TOOLS_VIEWLOG
         MENUITEM "Delete Project &Log File",    IDM_TOOLS_DELETELOG
-        MENUITEM "View CSE Simulation &Errors File", IDM_TOOLS_VIEWCSEERR
-        MENUITEM "View CSE Simulation &Reports File", IDM_TOOLS_VIEWCSERPT
         MENUITEM "&Check Building Database",    IDM_CHECKDBASE
-        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
-//        MENUITEM SEPARATOR
-//        MENUITEM "Generate &HVAC Equipment Report Records",  IDM_TOOLS_GENMECH1RECS
-//        MENUITEM "Generate &DHW Equipment Report Records",   IDM_TOOLS_GENDHWRECS
-//        MENUITEM "Generate &IAQ Ventilation Report Records", IDM_TOOLS_GENIAQRECS
-        MENUITEM SEPARATOR
         POPUP "&Write Simulation Input File"
         BEGIN
             MENUITEM "&Annual Simulation",          IDM_WRITEANNSIMINP
             MENUITEM "&HVAC Sizing Simulation",     IDM_WRITEDDSIMINP
         END
-        MENUITEM "Write &Input Details File (.ribd*-detail)", IDM_WRITEINPDETAILS
-        MENUITEM "Export &HPXML File (single)", IDM_EXPORTHPXML_SGL
-        MENUITEM "Rewrite Input File (no Ver or Mod updates)", IDM_REWRITEINPUT
-        MENUITEM "Reload &Screen Data",         IDM_RELOADSCREENS
- //       MENUITEM "Build &Number...",            ID_TOOL_BUILDNUM
- //       MENUITEM "&Display Detailed Inputs",    IDM_DISPLAYALLCTRLS
-        MENUITEM "&Building Summary Report (input model)", IDM_RPT_BLDGSUMMARY
-        MENUITEM "Building Summary Report (&proposed/standard)", IDM_RPT_BLDGSUMMARYT24
-        MENUITEM "Perform Analysis &Range Checks", IDM_ANALRANGECHECKS
+        MENUITEM "Write All Inputs Project File (.cibd19/cibd19x)", IDM_WRITEALLINPUTS
+        MENUITEM "Write Building Details File (.cibd*-detail)", IDM_WRITEINPDETAILS
+        MENUITEM "&Purge Unreferenced Objects", IDM_TOOLS_PURGEUNREFOBJ
+        MENUITEM "&Generate Window Shades...",  IDM_TOOLS_WINDOWSHADES
         MENUITEM "&Evaluate Rulelist",          IDM_TOOLS_EVALLIST
-//        MENUITEM "&T-24 DHW Simulation",        IDM_TOOLS_T24DHWSIM
+        MENUITEM "Reload &Screen Data",         IDM_RELOADSCREENS
+//        MENUITEM "Build &Number...",            ID_TOOL_BUILDNUM
+//        MENUITEM "&Display Detailed Inputs",    IDM_DISPLAYALLCTRLS
+        MENUITEM "Perform Analysis &Range Checks", IDM_ANALRANGECHECKS
         MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
         MENUITEM "Perform Analysis via API",    IDM_PERFORMAPIANALYSIS
+//        MENUITEM "&T-24 DHW Simulation",        IDM_TOOLS_T24DHWSIM
         MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
+        MENUITEM "Review &Unmet Load Hours Violations", IDM_TOOLS_REVIEWUMLH
+        MENUITEM "&Check Report Generator Access", IDM_CHECKRPTGENACCESS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "&Generate CAHP/CMFNH Report", IDM_TOOLS_CAHPRPT
+        MENUITEM "Generate T-24 &Standard Model Report", IDM_TOOLS_T24STDRPT
         MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
 //        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
         MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
@@ -421,11 +412,17 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Help Topics",                ID_HELP_FINDER, GRAYED
+        MENUITEM "&Help Topics",                ID_HELP_FINDER
         MENUITEM "&Quick Start Guide",          IDM_HELP_OVERVIEW
         MENUITEM "&User Manual",                IDM_HELP_USERMANUAL
-        MENUITEM "&CSE Simulation Engine Documentation",  IDM_HELP_CSEDOCU
-        MENUITEM "&Mandatory Requirements for Assemblies",  IDM_HELP_MANDREQASSEM
+// SAC 7/25/15 - comment out comp forms options for 2019 alpha
+//        MENUITEM SEPARATOR
+//        POPUP "&Compliance Forms Checklist"
+//        BEGIN
+//            MENUITEM "&New Construction",       IDM_HELP_COMPFORMS_NEW
+//            MENUITEM "&Alterations",            IDM_HELP_COMPFORMS_ALTER
+//        END
+//        MENUITEM "Compliance &Forms"            IDM_FILELIST_01
         MENUITEM SEPARATOR
         MENUITEM "&About California Building Energy Code Compliance...", ID_APP_ABOUT
     END
@@ -486,11 +483,11 @@ END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 274, 126
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About CBECC-Res 2016"
+CAPTION "About CBECC-Com 2019"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,7,99,21,20
-    LTEXT           "California Building Energy Code Compliance 2016",IDC_VERSIONSTRING,36,
+    LTEXT           "California Building Energy Code Compliance 2019",IDC_VERSIONSTRING,36,
                     105,190,8,SS_NOPREFIX
     DEFPUSHBUTTON   "Done",IDOK,235,105,32,14,WS_GROUP
     CONTROL         "",IDC_LICENSERTF,"RICHEDIT",ES_MULTILINE | 
@@ -591,7 +588,7 @@ CAPTION "Compliance Analysis Completed"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "View Compliance Reports",IDOK,7,33,99,14
-    PUSHBUTTON      "Return to CBECC-Res",IDCANCEL,118,33,99,14
+    PUSHBUTTON      "Return to CBECC-Com",IDCANCEL,118,33,99,14
     RTEXT           "Compliance Result:",IDC_STATIC,19,11,83,12
     CTEXT           "???",IDC_RESULT,106,9,71,12,0,WS_EX_CLIENTEDGE
 END
@@ -655,20 +652,22 @@ END
 
 IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 98
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "CBECC-Res 2016 Startup Options"
+CAPTION "CBECC-Com 2019 Startup Options"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,111,75,40,16
-    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,160,75,81,16
-    PUSHBUTTON      "E&xit",IDCANCEL,249,75,40,16
+    DEFPUSHBUTTON   "OK",IDOK,117,75,38,16
+    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,164,75,79,16
+    PUSHBUTTON      "E&xit",IDCANCEL,251,75,38,16
     CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
-                    BS_AUTORADIOBUTTON,12,9,146,8
+                    BS_AUTORADIOBUTTON,12,9,120,8
     COMBOBOX        IDC_START_FILELIST,36,20,231,116,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
-                    "Button",BS_AUTORADIOBUTTON,12,40,168,8
+                    "Button",BS_AUTORADIOBUTTON,12,40,130,8
+    CONTROL         "&Create a New Simplfied Geometry Project",IDC_START_NEW,
+                    "Button",BS_AUTORADIOBUTTON,12,56,150,8
     CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
-                    BS_AUTORADIOBUTTON,12,56,182,8
+                    BS_AUTORADIOBUTTON,12,72,95,8
 END
 
 
@@ -679,9 +678,9 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2016,304,0,946		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
- PRODUCTVERSION 2016,304,0,946	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
- FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
+ FILEVERSION 2019,41,0,946		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
+ PRODUCTVERSION 2019,41,0,946	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
+ FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
 #else
@@ -697,15 +696,15 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
-            VALUE "FileDescription", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "FileVersion", "2016.3.0-beta (946)\0"
+            VALUE "FileDescription", "California Building Energy Code Compliance (commercial 2019)\0"
+            VALUE "FileVersion", "2019.0.4-alpha (946)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2017, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "CBECC-Res16.exe\0"
+            VALUE "OriginalFilename", "CBECC-Com19.exe\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "ProductVersion", "2016.3.0-beta\0"
+            VALUE "ProductName", "California Building Energy Code Compliance (commercial 2019)\0"
+            VALUE "ProductVersion", "2019.0.4-alpha\0"
             VALUE "SpecialBuild", "build 946\0"
         END
     END
@@ -840,13 +839,13 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "CBECC-Res 2016\n\nCBECC-Res 2016\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+    IDR_MAINFRAME           "CBECC-Com 2019\n\nCBECC-Com 2019\nCBECC-Com Files (*.cibd19)\n.cibd19\nCBECC-Com19.Document\nCBECC-Com19 Document"
     IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAMEDEV        "CBECC-Res 2016\n\nCBECC-Res 2016\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+    IDR_MAINFRAMEDEV        "CBECC-Com 2019\n\nCBECC-Com 2019\nCBECC-Com Files (*.cibd19)\n.cibd19\nCBECC-Com19.Document\nCBECC-Com19 Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -856,7 +855,7 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "CBECC-Res 2016"
+    AFX_IDS_APP_TITLE       "CBECC-Com 2019"
     AFX_IDS_IDLEMESSAGE     "Ready"
     AFX_IDS_HELPMODEMESSAGE "Select an object on which to get Help"
 END
@@ -1041,7 +1040,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDM_VIEW_BUDGET         "View the budget building design for the current project\nBudget Building Design"
     IDM_WRITEINPDETAILS     "Write input details file (<project file>.ib2)\nWrite Input Details File"
-    ID_TOOL_BUILDNUM        "Display CBECC-Res 2016 version and build number"
+    ID_TOOL_BUILDNUM        "Display CBECC-Com version and build number"
     IDM_TOOLS_EVALLIST      "Evaluate selected compliance rulelist"
     IDM_ANALRANGECHECKS     "Range check all inputs at beginning of compliance analysis"
     IDM_POSTWIZHELP         "Check if viewing post-wizard compliance checklist help is desired."
@@ -1066,7 +1065,7 @@ END
 LANGUAGE 9, 1
 #pragma code_page(1252)
 #endif
-#include "res\CBECC-Res.rc2"  // non-Microsoft Visual C++ edited resources
+#include "res\CBECC-Com.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
 #include "afxprint.rc"       // printing/print preview resources
 #endif

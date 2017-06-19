@@ -1,8 +1,8 @@
 // CUIGlobl.cpp : Defines the PNL Comply External Objects
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -118,6 +118,8 @@ CString esUserManualPDF;	// SAC 7/8/13
 CString esProgramName = "CBECC-Com";    // SAC 9/2/14
 	#ifdef UI_PROGYEAR2016
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd16", "cpbd16", "cbbd16" };
+	#elif  UI_PROGYEAR2019
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd19", "cpbd19", "cbbd19" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd", "cpbd", "cbbd" };
 	#endif
@@ -127,6 +129,8 @@ const char pcCharsNotAllowedInObjNames[] = { '"', ',', '\'', '!', ';', NULL };	/
 CString esProgramName = "CBECC-Res";    // SAC 9/2/14
 	#ifdef UI_PROGYEAR2016
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd16", "rpbd16", "rbbd16" };
+	#elif  UI_PROGYEAR2019
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd19", "rpbd19", "rbbd19" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd", "rpbd", "rbbd" };
 	#endif
@@ -596,6 +600,9 @@ void GetProgramPath()
  #ifdef UI_PROGYEAR2016
 	esOverviewPDF   = esProgramPath + "CBECC-Com16_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com16_UserManual.pdf";			// SAC 7/8/13
+ #elif  UI_PROGYEAR2019
+	esOverviewPDF   = esProgramPath + "CBECC-Com19_QuickStartGuide.pdf";
+	esUserManualPDF = esProgramPath + "CBECC-Com19_UserManual.pdf";			// SAC 4/26/17
  #else
  	esOverviewPDF   = esProgramPath + "CBECC-Com_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com_UserManual.pdf";			// SAC 7/8/13
@@ -893,6 +900,30 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 
 #ifdef UI_PROGYEAR2016
 		//CString sCodeYr = "2016";
+	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
+		int iMiddleNum = (int) floor( minor / 100.0 );
+		int iMinorNum = (int) floor( minor / 10.0 ) - (iMiddleNum * 10);
+		int iAlphBeta = minor % 10;
+		CString sAlphBeta;
+		switch (iAlphBeta)
+		{	case  0 :	break;
+			case  1 :	sAlphBeta = " Alpha";		break;
+			case  2 :	sAlphBeta = " Alpha 2";		break;
+			case  3 :	sAlphBeta = " Alpha 3";		break;
+			case  4 :	sAlphBeta = " Beta";			break;
+			case  5 :	sAlphBeta = " Beta 2";		break;
+			case  6 :	sAlphBeta = " Beta 3";		break;
+			case  7 :	sAlphBeta = " RC";			break;
+			case  8 :	sAlphBeta = " RC 2";			break;
+			case  9 :	sAlphBeta = " RC 3";			break;
+			default :	sAlphBeta = " ????" ;		break;
+		}
+		if (bLongVer)
+			sProgVer.Format( "%d.%d.%d%s (%d)", major, iMiddleNum, iMinorNum, sAlphBeta, build );
+		else
+			sProgVer.Format( "%d.%d.%d%s", major, iMiddleNum, iMinorNum, sAlphBeta );
+#elif  UI_PROGYEAR2019
+		//CString sCodeYr = "2019";
 	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
 		int iMiddleNum = (int) floor( minor / 100.0 );
 		int iMinorNum = (int) floor( minor / 10.0 ) - (iMiddleNum * 10);
