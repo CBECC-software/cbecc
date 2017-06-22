@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -1526,7 +1526,7 @@ DWORD CButtonST::OffsetColor(BYTE byColorIndex, int shOffset, BOOL bRepaint)
 		if (byGreen + shOffset > 255)	shOffsetG = 255 - byGreen;
 		if (byBlue + shOffset > 255)	shOffsetB = 255 - byBlue;
 
-		shOffset = min(min(shOffsetR, shOffsetG), shOffsetB);
+		shOffset = std::min( std::min( shOffsetR, shOffsetG ), shOffsetB );
 	} // if
 	else
 	{
@@ -1534,7 +1534,7 @@ DWORD CButtonST::OffsetColor(BYTE byColorIndex, int shOffset, BOOL bRepaint)
 		if (byGreen + shOffset < 0)		shOffsetG = -byGreen;
 		if (byBlue + shOffset < 0)		shOffsetB = -byBlue;
 
-		shOffset = max(max(shOffsetR, shOffsetG), shOffsetB);
+		shOffset = std::max( std::max( shOffsetR, shOffsetG ), shOffsetB );
 	} // else
 
 	// Set new color
