@@ -1996,6 +1996,16 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_MsgBox      : // SAC 9/29/06 - added MessageBox() function
       case BF_WriteToFile : // SAC 6/6/13 - added WriteToFile() - same arguments as other message/log functions (file pointer provided in ruleset data)
          // SAC 5/14/01 - variable args where 1st is format string followed by up to 6 string or numeric arguments to sprintf()
+				// SAC 7/6/17 - added code to enable arguments of these functions to include table look-ups
+      		dbId = ruleSet.getTableID( name );
+      		found = dbId > 0;
+      		if ( found )
+      		{  ((YYSTYPE*)data)->index = (long long)dbId;
+      		   *pVar = BEMPTABLE;
+#ifdef YYDEBUG
+					_snprintf( parseMsg, 256, "         GetNodeType: name '%s', op %d (%s), BEMPTABLE %ld\n", name, crntFunc, (pFuncName ? pFuncName : "?"), dbId );
+#endif
+      		}
          break;
 
       case BF_UnqCompName :	// SAC 4/9/02 - Added to ensure that a character string is unique across all currently defined BEMProc component names

@@ -1468,6 +1468,23 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx,
 		readMsg = "         done.\n\n";
 		errorFile.write( readMsg.toLocal8Bit().constData(), readMsg.length() );
    }
+	catch (BEMTextioException& te)
+	{
+		if ( te.m_cause == BEMTextioException::endOfFile )
+		{	assert( FALSE ); // we're done, no problem (??)
+		}
+		else
+		{	QString sErrMsg = QString( "Error reading rule file: %1\n\t%2" ).arg( sRulePathFileName, te.m_strError.toLocal8Bit().constData() );
+		//{	QString sErrMsg = QString( "Error reading rule file because '%1'" ).arg( te.what() );
+		//	if (BEMPX_WriteLogFile( sErrMsg, NULL, FALSE, m_bSupressAllMessageBoxes ) && !m_bSupressAllMessageBoxes)
+		//		BEMMessageBox( sErrMsg, NULL, 3 /*error*/ );
+		//	throw std::runtime_error(boost::str(boost::format("Error reading analysis results from file because '%1") %
+		//															te.m_strError.toLocal8Bit().constData() ));
+			errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+			bRetVal = FALSE;
+	      BEMMessageBox( sErrMsg, "", 3 /*error*/ );
+		}
+	}
 	catch (std::exception& e)
 	{
 		QString sErrMsg = QString( "Error opening file: %1\n\t - cause: %2" ).arg( sRulePathFileName, e.what() );
