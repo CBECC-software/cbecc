@@ -661,8 +661,13 @@ static long** ClassToDBIDAssignmentList( int iBDBClass )
    else                                      			 return &slapNULL[0];
 }
 
-static bool PreventCreationWhenNotDevMenu( int /*iBDBClass*/ )	// SAC 4/7/16 - prevent certain object types from being create-able in the tree unless DeveloperMenu INI flag is set
-{   return false;
+static bool PreventCreationWhenNotDevMenu( int iBDBClass )	// SAC 4/7/16 - prevent certain object types from being create-able in the tree unless DeveloperMenu INI flag is set
+{	if (iBDBClass == eiBDBCID_PVArrayGeom || iBDBClass == eiBDBCID_Shade)
+	{	long lEnergyCodeYr;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+	   return (lEnergyCodeYr != 0 && lEnergyCodeYr < 2019);
+	} 
+	return false;
 }
 
 static int ClassToPopulateChildMode( int /*iBDBClass*/ )		// SAC 7/27/14 - 0-Class/ChildIndex | 1-ChildIndex
@@ -2638,7 +2643,8 @@ void CTreeBDB::PresentQuickMenu( HTREEITEM htiSelItem )
                      	if (pClass->getLongName().length() > 0 &&
                      	    !menuCr8.AppendMenu( MF_STRING, IDQM_TREECREATE1, pClass->getLongName().toLatin1().constData() ))
                      	   MessageBox( "AppendCr8Menu( ... ) Failed." );
-                     	else if (!BEMPX_CanCreateAnotherUserObject( iBDBClass ))
+                     	else if (!BEMPX_CanCreateAnotherUserObject( iBDBClass ) ||
+							  				(eiDeveloperMenu < 1 && PreventCreationWhenNotDevMenu( iBDBClass )))  // SAC 6/26/17 - gray items not available when not in dev mode
                      	   // if item added but no more of this comp type can be created, then gray it out
                      	   menuCr8.EnableMenuItem( IDQM_TREECREATE1, MF_GRAYED );
 							}

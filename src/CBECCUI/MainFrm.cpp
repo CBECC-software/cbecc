@@ -2902,7 +2902,7 @@ void CMainFrame::OnUpdateFileImportResGeometry(CCmdUI* pCmdUI)		// SAC 2/20/17
 #ifdef UI_CARES
 		long lEnergyCodeYr;
 		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
-   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && lEnergyCodeYr > 18) );
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && lEnergyCodeYr > 2018) );
 #else
    pCmdUI->Enable( FALSE );
 #endif
@@ -2921,8 +2921,8 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 		BOOL bContinue = TRUE;
 		long lEnergyCodeYr;
 		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
-		BOOL bPVWInputsActive = (lEnergyCodeYr >= 19);
-		if (lEnergyCodeYr == 16)
+		BOOL bPVWInputsActive = (lEnergyCodeYr >= 2019);
+		if (lEnergyCodeYr == 2016)
 		{	long lAllow, lDRCalcs;
 			bPVWInputsActive = ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllowDesignRating" ), lAllow   ) && lAllow > 0 &&
 				                  BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs" ), lDRCalcs ) && lDRCalcs > 0 );

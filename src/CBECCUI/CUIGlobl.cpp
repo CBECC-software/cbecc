@@ -2573,7 +2573,7 @@ long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 750;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;
+	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 850;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;
 	else if (iBDBClass == eiBDBCID_DwellUnitType)		{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
 	else if (iBDBClass == eiBDBCID_DwellUnit)				{  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
 	else if (iBDBClass == eiBDBCID_Zone)      			{  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
