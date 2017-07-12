@@ -1,8 +1,8 @@
 // bemcm_LoadModel.cpp : Defines routines to load models (from input files).
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -1714,6 +1714,18 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 						psaWarningsForUser->push_back( "HVAC equipment assignment for multifamily buildings is now done for each individual DwellUnitType.  Review these assignments and counts in the DwellUnitType dialog to ensure proper HVAC equipment simulation and reporting." );
 				}	}
 			}	// if the model needs to be converted from old (<= v2) to new (v3+) dwelling unit inputs
+
+		// SAC 6/28/17 - added evaluation of rulelist to handle 1-time LoadModel processing
+			if (BEMPX_RulelistExists( "LoadModelAdjustments" ))
+			{	QString sLMAErrMsg;
+				int iLMAEvalRetVal = LocalEvaluateRuleset( sLMAErrMsg, 7, "LoadModelAdjustments", FALSE /*bVerbose*/, NULL /*pCompRuleDebugInfo*/ );
+				if (iLMAEvalRetVal != 0)
+				{	iRetVal = 7;
+					if (psaWarningsForUser)
+					{	if (sLMAErrMsg.isEmpty())
+							sLMAErrMsg = QString( "ERROR:  Error encountered evaluating rulelist '%1'" ).arg( "LoadModelAdjustments" );
+						psaWarningsForUser->push_back( sLMAErrMsg );
+			}	}	}
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 	}

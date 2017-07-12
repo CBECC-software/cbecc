@@ -1263,6 +1263,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 
+		int iNumPolyLps = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PolyLp" ) );   // SAC 6/26/17
+
 	// SAC 7/8/15 - transition from T24DHW DLL use -> CSE for DHW simulation
 // SAC 9/10/15 - NOTE - the following enduse names for storing DHWPump elec use are INCORRECT (should be "*DHWPmp"), but are being retained in order to maintain consistency w/ results from the previous public release version
 // SAC 10/8/15 - fixed bug reported above to bring this enduse name inline with other source code and ruleset 
@@ -2019,6 +2021,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 								sNoSignMsg = "Compliance report will be generated without security measures due to Proj:ReportIncludeFile being specified in the project data";
  							else if (bDHWCalcMethodUserSpecified)			// SAC 7/15/15
 								sNoSignMsg = "Compliance report will be generated without security measures due to Proj:DHWCalcMethod being specified in the project data (via user input or analysis option)";
+ 							else if (iNumPolyLps > 0)			// SAC 6/26/17
+								sNoSignMsg = QString( "Compliance report will be generated without security measures due to the presence of %1 3D geometry (PolyLp) object(s)" ).arg( QString::number(iNumPolyLps) );
 							else if (iRetVal >= BEMAnal_CECRes_MinErrorWithResults)		// SAC 12/12/16
 							{	switch (iRetVal)
 								{	case  BEMAnal_CECRes_ModelRptError			:	sNoSignMsg = "Compliance report will be generated without security measures due to error generating model report";		break;

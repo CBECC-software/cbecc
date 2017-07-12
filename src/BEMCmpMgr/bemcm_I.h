@@ -1,8 +1,8 @@
 // bemcm_I.H - externs used within 'BEMCmpMgr*.DLL'
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -105,7 +105,7 @@ extern int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* ps
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, const char* pszPrivateKey, 
 										const char* pszProxyAddress, const char* pszProxyCredentials, 		// pass NULLs for no proxy 
 										const char* pszPDFOnlyBool, const char* pszDebugBool, bool bVerbose=false, bool bSilent=false, bool bSendSignature=false,
-										const char* pszCompRptID=NULL, const char* pszRptGetServer=NULL, const char* pszRptGenApp=NULL,
+										const char* pszCompRptID=NULL, const char* pszRptGenServer=NULL, const char* pszRptGenApp=NULL,
 										const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
 										const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL, long iSecurityKeyIndex=0 );		// SAC 1/10/17
 extern int GenerateReportViaQt(	const char* pszOutPathFile, const char* pszURL, const char* pszCACertPath, const char* pszRptData, int iRptDataLen,

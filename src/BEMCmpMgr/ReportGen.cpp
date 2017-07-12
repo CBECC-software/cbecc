@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -558,13 +558,13 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 												const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 												const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy  
 												const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/,
-												const char* pszCompRptID /*=NULL*/, const char* pszRptGetServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
+												const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 												const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,
 												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/ )	// SAC 11/5/15
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2, pszSignature, 
 										pszPublicKey, NULL /*pszRptPrvKey*/, pszProxyAddress, pszProxyCredentials, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
-										pszCompRptID, pszRptGetServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary );
+										pszCompRptID, pszRptGenServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary );
 }
 
 
@@ -600,7 +600,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, const char* pszPrivateKey, 
 										const char* pszProxyAddress, const char* pszProxyCredentials, 		// pass NULLs for no proxy 
 										const char* pszPDFOnlyBool, const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSendSignature /*=false*/,
-										const char* pszCompRptID /*=NULL*/, const char* pszRptGetServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
+										const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
 										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/ )	// SAC 11/5/15   // SAC 1/10/17
 { 
@@ -612,7 +612,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 							(pszXMLResultsPathFile ? pszXMLResultsPathFile : "(null)"), (pszCACertPath ? pszCACertPath : "(null)"), (pszReportName ? pszReportName : "(null)"), (pszAuthToken1 ? pszAuthToken1 : "(null)"), (pszAuthToken2 ? pszAuthToken2 : "(null)"),
 							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? "<PubKey>"/*pszPublicKey*/ : "(null)"), (pszPrivateKey ? "<PrvKey>"/*pszPrivateKey*/ : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
 							(pszPDFOnlyBool ? pszPDFOnlyBool : "(null)"), (pszDebugBool ? pszDebugBool : "(null)"), (bVerbose ? "true" : "false"), (bSilent ? "true" : "false"), (bSendSignature ? "true" : "false"), (pszCompRptID ? pszCompRptID : "(null)"),
-							(pszRptGetServer ? pszRptGetServer : "(null)"), (pszRptGenApp ? pszRptGenApp : "(null)"), (pszRptGenService ? pszRptGenService : "(null)"), (pszSecKeyRLName ? pszSecKeyRLName : "(null)"),
+							(pszRptGenServer ? pszRptGenServer : "(null)"), (pszRptGenApp ? pszRptGenApp : "(null)"), (pszRptGenService ? pszRptGenService : "(null)"), (pszSecKeyRLName ? pszSecKeyRLName : "(null)"),
 							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)"), (iSecurityKeyIndex==0 ? "0" : ">0") );
 					BEMPX_WriteLogFile( sFuncArgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
@@ -638,7 +638,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 	QString sDebugBool = pszDebugBool;
 
 	QString sCompRptID     = ((pszCompRptID      != NULL && strlen( pszCompRptID     ) > 0) ? pszCompRptID     : "BEES" );		// SAC 6/2/14
-	QString sRptGetServer  = ((pszRptGetServer   != NULL && strlen( pszRptGetServer  ) > 0) ? pszRptGetServer  : "t24docs.com" );
+	QString sRptGenServer  = ((pszRptGenServer   != NULL && strlen( pszRptGenServer  ) > 0) ? pszRptGenServer  : "t24docs.com" );
 	QString sRptGenApp     = ((pszRptGenApp      != NULL && strlen( pszRptGenApp     ) > 0) ? pszRptGenApp     : (sReportName.indexOf( "NRCC_" )==0 ? "ReportGeneratorCom" : "ReportGeneratorRes") );  // SAC 1/5/15 - was: "T24SoftwareReportingServiceDev" );
 	QString sRptGenService = ((pszRptGenService  != NULL && strlen( pszRptGenService ) > 0) ? pszRptGenService : "ReportingService.svc" );
 	QString sSecKeyRLName  = ((pszSecKeyRLName   != NULL && strlen( pszSecKeyRLName  ) > 0) ? pszSecKeyRLName  : (sReportName.indexOf( "NRCC_" )==0 ? "rl_SECURITYKEYS" : "SetReportKeys") );
@@ -944,7 +944,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
          // URL setting moved down here from above
 	// SAC 10/18/13 - for now, send ALL traffic to ...T24SoftwareReportingServiceDev address
 	//			if (sSignHex.length() > 4)
-					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGetServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 										pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 	//			else
 	//				sURL.sprintf( "https://t24docs.com/T24SoftwareReportingService/ReportingService.svc/%s/%s/%s/%s/%s/%s", 

@@ -1,8 +1,8 @@
 // BEMCmpMgr.H - Public API exported from 'BEMCmpMgr*.DLL'
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -196,7 +196,7 @@ int  BEMCMPMGR_API __cdecl CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResul
 																						const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 																						const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy 
 																						const char* pszDebugBool, bool bVerbose=false, bool bSilent=false,
-																						const char* pszCompRptID=NULL, const char* pszRptGetServer=NULL, const char* pszRptGenApp=NULL,		// SAC 8/7/14 - added more args to facilitate URL path specification
+																						const char* pszCompRptID=NULL, const char* pszRptGenServer=NULL, const char* pszRptGenApp=NULL,		// SAC 8/7/14 - added more args to facilitate URL path specification
 																						const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
 																						const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL );	// SAC 11/5/15
 
