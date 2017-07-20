@@ -1960,15 +1960,26 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						iRpt = 1;	iMaxRpt = 0;
 				}	}
 
-				for (; (ResRetVal_ContinueProcessing( iRetVal ) && iRpt <= iMaxRpt); iRpt++)
+		// SAC 7/17/17 - modes to support single-pass report generation
+		//		for (; (ResRetVal_ContinueProcessing( iRetVal ) && iRpt <= iMaxRpt); iRpt++)
+				if (iRpt <= iMaxRpt)
 				{
 					//	QString sMsg, sOutRptFN = (sProjFileName.lastIndexOf('.') > 0 ? sProjFileName.left( sProjFileName.lastIndexOf('.') ) : sProjFileName);
-					QString sRptFileExt = (iRpt==0 ? "PDF" : "XML"), sOutRptFN = sModelPathOnly + sModelFileOnlyNoExt;
+		//			QString sRptFileExt = (iRpt==0 ? "PDF" : "XML"), sOutRptFN = sModelPathOnly + sModelFileOnlyNoExt;
+					QString sRptFileExt = "xml", sOutRptFN = sModelPathOnly + sModelFileOnlyNoExt;
 					sOutRptFN += " - AnalysisResults-BEES.";
+					QString sOutPDFRptFN;
+					if (bComplianceReportPDF)
+						sOutPDFRptFN = sOutRptFN + "pdf";
 					sOutRptFN += sRptFileExt;
 					sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 									 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( sRptFileExt, sOutRptFN, "compliance report generation" );
+					QString sMsg2;
+					if (bComplianceReportPDF)
+						sMsg2 = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+									 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( "PDF", sOutPDFRptFN, "compliance report generation" );
 					if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
 					{	if (bSilent)
 							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( sRptFileExt, sOutRptFN );
@@ -1976,16 +1987,24 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( sRptFileExt, sOutRptFN );
 						iRetVal = BEMAnal_CECRes_CompRptWriteError;
 					}
+					else if (!sOutPDFRptFN.isEmpty() && !OKToWriteOrDeleteFile( sOutPDFRptFN.toLocal8Bit().constData(), sMsg2, bSilent ))
+					{	if (bSilent)
+							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "PDF", sOutPDFRptFN );
+						else
+							sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "PDF", sOutPDFRptFN );
+						iRetVal = BEMAnal_CECRes_CompRptWriteError;
+					}
 					else
 					{
-						QString sPDFOnly = (iRpt==0 ? "true" : "false");
+		//				QString sPDFOnly = (iRpt==0 ? "true" : "false");
+						QString sPDFOnly = (iRpt < iMaxRpt ? "both" : (iRpt==0 ? "true" : "false"));
 						QString sDebugRpt = (bVerbose ? "true" : "false");
 
 //sLogMsg = QString( "Pausing before %1 report generation on:  %2" ).arg( (iRpt==0 ? "pdf" : "full"), sResFN );
 //BEMMessageBox( sLogMsg , "");
 
 									if (bVerbose)
-									{	sLogMsg = QString( "      about to generate %1 compliance report:  %2" ).arg( (iRpt==0 ? "pdf" : "full"), sXMLResultsFileName );
+									{	sLogMsg = QString( "      about to generate %1 compliance report(s):  %2" ).arg( (iRpt < iMaxRpt ? "both pdf & full" : (iRpt==0 ? "pdf" : "full")), sXMLResultsFileName );
 										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 
@@ -2067,7 +2086,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 																sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																sProxyServerType.toLocal8Bit().constData(), 
-																(sNetComLibrary.isEmpty() ? NULL : sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex );		// SAC 11/5/15   // SAC 1/10/17
+																(sNetComLibrary.isEmpty() ? NULL : sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false );		// SAC 11/5/15   // SAC 1/10/17
 // GOOD - from UI
 // - GenerateReport_CEC( 'C:\WSF\devLibs\CompMgr\src\BEM-open\bin\Res\Projects\Samples-2016\1storyExample3-sv - AnalysisResults.xml', 
 // 								'C:\WSF\devLibs\CompMgr\src\BEM-open\bin\Release_VC12', 
@@ -2083,17 +2102,41 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //                        '(null)', 'Http', '' )
 
 									if (bVerbose || iRptGenRetVal != 0)
-									{	sLogMsg = QString( "      generation of %1 compliance report %2 (returned %3)" ).arg( (iRpt==0 ? "pdf" : "full"), (iRptGenRetVal==0 ? "succeeded" : "failed"), QString::number(iRptGenRetVal) );
+									{	sLogMsg = QString( "      generation of %1 compliance report(s) %2 (returned %3)" ).arg( (iRpt < iMaxRpt ? "both pdf & full" : (iRpt==0 ? "pdf" : "full")), (iRptGenRetVal==0 ? "succeeded" : "failed"), QString::number(iRptGenRetVal) );
 										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 						if (iRptGenRetVal != 0)
-						{	sErrorMsg = QString( "ERROR:  Error encountered generating compliance report file:  %1" ).arg( sOutRptFN );
+						{	sErrorMsg = QString( "ERROR:  Error (%1) encountered generating compliance report file:  %2" ).arg( QString::number(iRptGenRetVal), sOutRptFN );
+							BEMPX_WriteLogFile( sErrorMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							iRetVal = BEMAnal_CECRes_CompRptGenError;
 						}
 						else
-						{	long lOne = 1;
-							QString sWrittenDBID = (iRpt==0 ? "Proj:CompRptPDFWritten" : "Proj:CompRptXMLWritten");
-					      BEMPX_SetBEMData( BEMPX_GetDatabaseID( sWrittenDBID ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+						{
+							if (bComplianceReportPDF)
+							{	// EXTRACT PDF from XML
+								if (!CMX_ExtractTitle24ReportFromXML( sOutRptFN.toLocal8Bit().constData(), sOutPDFRptFN.toLocal8Bit().constData(), "Report2", TRUE /*bSupressAllMessageBoxes*/ ))
+									iRetVal = BEMAnal_CECRes_RptGenPDFExtract;		// Error extracting PDF report from full XML report file
+							}
+
+						// CHECK FOR ERRORS in XML returned from report generator
+							QString sRGErrs;
+							int iNumRptGenErrs = ExtractErrorsFromTitle24ReportXML( sOutRptFN.toLocal8Bit().constData(), sRGErrs, TRUE /*bPostToProjectLog*/,
+																										TRUE /*bPostToBEMProc*/, TRUE /*bSupressAllMessageBoxes*/ );
+							if (iRetVal == 0 && iNumRptGenErrs > 0)
+							{	iRetVal = BEMAnal_CECRes_RptGenErrorReturned;		// Report generator found errors in analysis inputs and/or results
+								sErrorMsg = sRGErrs;
+							}
+
+							if (iRetVal == 0 && !bComplianceReportXML)
+								// DELETE Full (XML) compliance report (if XML (full) report not requested & no errors logged there)
+								DeleteFile( sOutRptFN.toLocal8Bit().constData() );
+
+							long lOne = 1;
+			//				QString sWrittenDBID = (iRpt==0 ? "Proj:CompRptPDFWritten" : "Proj:CompRptXMLWritten");
+							if (bComplianceReportPDF)
+					      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:CompRptPDFWritten" ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+							if (bComplianceReportXML)
+					      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:CompRptXMLWritten" ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
 						}
 					}
 				}
@@ -2201,7 +2244,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 #endif
 
-	if (!sErrorMsg.isEmpty())
+	if (!sErrorMsg.isEmpty() && iRetVal != BEMAnal_CECRes_RptGenErrorReturned)  // errors already written to log & BEMProc when iRetVal = BEMAnal_CECRes_RptGenErrorReturned
 	{	BEMPX_WriteLogFile( sErrorMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		BEMPX_AddRulesetError( sErrorMsg.toLocal8Bit().constData() );  // SAC 1/9/13
 	}
@@ -2314,7 +2357,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  10		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/6/17 - 9->10
+#define  CSVFmtVer_CECRes  11		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -2346,6 +2389,9 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 		int iEnergyUseObjectSets = 1;  // SAC 8/6/13
 		QString sTDVSavPctTot, sTDVSavPctComp, sCAHPKickDOE, sCAHPKickFutCode, sCAHPKickHELtg,
 					sCAHPKickTDV100, sCAHPKickTDV60, sCAHPScoreInitVal, sCAHPIncInit, sCAHPScoreFinal, sCAHPIncFinal;
+		QString s16CAHPEDRBonusPoints, s16CAHPDeltaEDR, s16CAHPCashBonusTotal, s16CAHP2019ZoneReadyKicker, s16CAHP2019ZoneKicker, s16CAHPHighPerfFenKicker,	// SAC 7/19/17 - CAHP update
+					s16CAHPHighPerfAtticKicker, s16CAHPHighPerfWallKicker, s16CAHPWholeHouseFansKicker, s16CAHPBalancedIAQKicker, s16CAHPDOEZeroEnergyKicker,
+					s16CAHPDrainWtHtRecKicker, s16CAHPDesignCharretteKicker, s16CAHPESLaundryRecKicker, s16CAHPBaseIncentive, s16CAHPTotalIncentive;
 		QString sProjPathFile;
 		if (pszProjectPathFileName && strlen( pszProjectPathFileName ) > 0)
 			sProjPathFile.sprintf( "\"%s\",", pszProjectPathFileName );
@@ -2381,26 +2427,60 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 						long lCAHPProgram;
 						if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CAHPProgram" ), lCAHPProgram ) && lCAHPProgram > 0)
-						{
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickDOE"      ), sCAHPKickDOE     , FALSE,  0, -1, iObjIdx ))
-								sCAHPKickDOE.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickFutCode"  ), sCAHPKickFutCode , FALSE,  0, -1, iObjIdx ))
-								sCAHPKickFutCode.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickHELtg"    ), sCAHPKickHELtg   , FALSE,  0, -1, iObjIdx ))
-								sCAHPKickHELtg.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV100"   ), sCAHPKickTDV100  , FALSE,  0, -1, iObjIdx ))
-								sCAHPKickTDV100.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV60"    ), sCAHPKickTDV60   , FALSE,  0, -1, iObjIdx ))
-								sCAHPKickTDV60.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreInitVal" ), sCAHPScoreInitVal, FALSE,  0, -1, iObjIdx ))
-								sCAHPScoreInitVal.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncInit"      ), sCAHPIncInit     , FALSE,  2, -1, iObjIdx ))
-								sCAHPIncInit.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreFinal"   ), sCAHPScoreFinal  , FALSE,  0, -1, iObjIdx ))
-								sCAHPScoreFinal.clear();
-							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncFinal"     ), sCAHPIncFinal    , FALSE,  2, -1, iObjIdx ))
-								sCAHPIncFinal.clear();
-						}
+						{	if (iResultsFormatVersion >= 11)		// SAC 7/19/17 - CAHP update
+							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPEDRBonusPoints"        ), s16CAHPEDRBonusPoints       , FALSE,  0, -1, iObjIdx ))
+									s16CAHPEDRBonusPoints.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDeltaEDR"              ), s16CAHPDeltaEDR             , FALSE,  0, -1, iObjIdx ))
+									s16CAHPDeltaEDR.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPCashBonusTotal"        ), s16CAHPCashBonusTotal       , FALSE,  0, -1, iObjIdx ))
+									s16CAHPCashBonusTotal.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneReadyKicker"   ), s16CAHP2019ZoneReadyKicker  , FALSE,  0, -1, iObjIdx ))
+									s16CAHP2019ZoneReadyKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneKicker"        ), s16CAHP2019ZoneKicker       , FALSE,  0, -1, iObjIdx ))
+									s16CAHP2019ZoneKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfFenKicker"     ), s16CAHPHighPerfFenKicker    , FALSE,  0, -1, iObjIdx ))
+									s16CAHPHighPerfFenKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfAtticKicker"   ), s16CAHPHighPerfAtticKicker  , FALSE,  0, -1, iObjIdx ))
+									s16CAHPHighPerfAtticKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfWallKicker"    ), s16CAHPHighPerfWallKicker   , FALSE,  0, -1, iObjIdx ))
+									s16CAHPHighPerfWallKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPWholeHouseFansKicker"  ), s16CAHPWholeHouseFansKicker , FALSE,  0, -1, iObjIdx ))
+									s16CAHPWholeHouseFansKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBalancedIAQKicker"     ), s16CAHPBalancedIAQKicker    , FALSE,  0, -1, iObjIdx ))
+									s16CAHPBalancedIAQKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDOEZeroEnergyKicker"   ), s16CAHPDOEZeroEnergyKicker  , FALSE,  0, -1, iObjIdx ))
+									s16CAHPDOEZeroEnergyKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDrainWtHtRecKicker"    ), s16CAHPDrainWtHtRecKicker   , FALSE,  0, -1, iObjIdx ))
+									s16CAHPDrainWtHtRecKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDesignCharretteKicker" ), s16CAHPDesignCharretteKicker, FALSE,  0, -1, iObjIdx ))
+									s16CAHPDesignCharretteKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPESLaundryRecKicker"    ), s16CAHPESLaundryRecKicker   , FALSE,  0, -1, iObjIdx ))
+									s16CAHPESLaundryRecKicker.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBaseIncentive"         ), s16CAHPBaseIncentive        , FALSE,  0, -1, iObjIdx ))
+									s16CAHPBaseIncentive.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPTotalIncentive"        ), s16CAHPTotalIncentive       , FALSE,  0, -1, iObjIdx ))
+									s16CAHPTotalIncentive.clear();
+							}
+							else
+							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickDOE"      ), sCAHPKickDOE     , FALSE,  0, -1, iObjIdx ))
+									sCAHPKickDOE.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickFutCode"  ), sCAHPKickFutCode , FALSE,  0, -1, iObjIdx ))
+									sCAHPKickFutCode.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickHELtg"    ), sCAHPKickHELtg   , FALSE,  0, -1, iObjIdx ))
+									sCAHPKickHELtg.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV100"   ), sCAHPKickTDV100  , FALSE,  0, -1, iObjIdx ))
+									sCAHPKickTDV100.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV60"    ), sCAHPKickTDV60   , FALSE,  0, -1, iObjIdx ))
+									sCAHPKickTDV60.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreInitVal" ), sCAHPScoreInitVal, FALSE,  0, -1, iObjIdx ))
+									sCAHPScoreInitVal.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncInit"      ), sCAHPIncInit     , FALSE,  2, -1, iObjIdx ))
+									sCAHPIncInit.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreFinal"   ), sCAHPScoreFinal  , FALSE,  0, -1, iObjIdx ))
+									sCAHPScoreFinal.clear();
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncFinal"     ), sCAHPIncFinal    , FALSE,  2, -1, iObjIdx ))
+									sCAHPIncFinal.clear();
+						}	}
 					}
 				}
 				else
@@ -2759,7 +2839,20 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						sStdDemand = ",,,,,,,,,,,";
 				}
 
-				if (iResultsFormatVersion >= 4 && bExpectStdDesResults)
+				if (iResultsFormatVersion >= 11)	// SAC 7/19/17 - CAHP update
+				{	if (bExpectStdDesResults)
+						sDemSavAndCAHP.sprintf( "%g,%g,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,",
+														(faStdKW[9] - faPropKW[9]), (faStdKW[10] - faPropKW[10]),  sTDVSavPctTot.toLocal8Bit().constData(), sTDVSavPctComp.toLocal8Bit().constData(), 	// SAC 11/24/14 - added for format ver 4
+														s16CAHPEDRBonusPoints.toLocal8Bit().constData(), s16CAHPDeltaEDR.toLocal8Bit().constData(), s16CAHPCashBonusTotal.toLocal8Bit().constData(), 
+														s16CAHP2019ZoneReadyKicker.toLocal8Bit().constData(), s16CAHP2019ZoneKicker.toLocal8Bit().constData(), s16CAHPHighPerfFenKicker.toLocal8Bit().constData(), 
+														s16CAHPHighPerfAtticKicker.toLocal8Bit().constData(), s16CAHPHighPerfWallKicker.toLocal8Bit().constData(), s16CAHPWholeHouseFansKicker.toLocal8Bit().constData(), 
+														s16CAHPBalancedIAQKicker.toLocal8Bit().constData(), s16CAHPDOEZeroEnergyKicker.toLocal8Bit().constData(), s16CAHPDrainWtHtRecKicker.toLocal8Bit().constData(), 
+														s16CAHPDesignCharretteKicker.toLocal8Bit().constData(), s16CAHPESLaundryRecKicker.toLocal8Bit().constData(), s16CAHPBaseIncentive.toLocal8Bit().constData(), 
+														s16CAHPTotalIncentive.toLocal8Bit().constData()  );
+					else
+						sDemSavAndCAHP = ",,,,,,,,,,,,,,,,,,,,";
+				}
+				else if (iResultsFormatVersion >= 4 && bExpectStdDesResults)
 					sDemSavAndCAHP.sprintf( "%g,%g,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,",
 													(faStdKW[9] - faPropKW[9]), (faStdKW[10] - faPropKW[10]),  sTDVSavPctTot.toLocal8Bit().constData(), sTDVSavPctComp.toLocal8Bit().constData(), 	// SAC 11/24/14 - added for format ver 4
 													sCAHPKickDOE.toLocal8Bit().constData(), sCAHPKickFutCode.toLocal8Bit().constData(), sCAHPKickHELtg.toLocal8Bit().constData(), 
@@ -2945,7 +3038,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 		long lEnergyCodeYearNum;
 		if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ))
 			lEnergyCodeYearNum = 2013;
-		bool bExportBT = (lEnergyCodeYearNum >= 2019);	// SAC 12/15/16 - prevent export of BT for 2013-16 analysis
+		bool bExportBT = (lEnergyCodeYearNum >= 2016);	// SAC 12/15/16 - prevent export of BT for 2013-16 analysis   - SAC 7/13/17 - expanded to export Battery for 2016 as well
 		QString sBT = "BT";
 
 		FILE *fp_CSV;
@@ -3337,15 +3430,16 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 
 // SAC 10/7/16 - updated col titles to include new 2019 proposed model PV reporting
 // SAC 6/6/17 - updated to add some inputs and Battery results and reorganize demand results - max string len = 2410 characters
+// SAC 7/19/17 - updated to replace old (2013) CAHP results columns w/ new ones (9->16)
 static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site"
 										" Other Fuel Use,,,,,,,,,,Proposed Model TDV,,,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,"
 										",,,Standard Model Site Natural Gas Use,,,,,,,,,,Standard Model Site Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Standard Model El"
-										"ectric Demand,,,,,,,,,,,Software Versions,,,Savings Results,,,,CAHP-SF / CAHP-MF / CMFNH Results,,,,,,,,,Proposed Design Rating Model Site"
-										" Electric Use,,,,,,,,,,,,Proposed  Design Rating Model Site Natural Gas Use,,,,,,,,,,Proposed  Design Rating Model Site Other Fuel Use,,,,"
-										",,,,,,Proposed  Design Rating Model TDV,,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,Reference Design Rating Model S"
-										"ite Electric Use,,,,,,,,,,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,"
-										",,,,,,,Reference Design Rating Model TDV,,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings,,,,,Complia"
-										"nce Total TDV Results By Fuel (kTDV/ft2-yr)\n";
+										"ectric Demand,,,,,,,,,,,Software Versions,,,Savings Results,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,,Proposed Design Rating Model Site Elect"
+										"ric Use,,,,,,,,,,,,Proposed  Design Rating Model Site Natural Gas Use,,,,,,,,,,Proposed  Design Rating Model Site Other Fuel Use,,,,,,,,,,"
+										"Proposed  Design Rating Model TDV,,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,Reference Design Rating Model Site El"
+										"ectric Use,,,,,,,,,,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,,,,,,,"
+										",Reference Design Rating Model TDV,,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings,,,,,Compliance To"
+										"tal TDV Results By Fuel (kTDV/ft2-yr)\n";
 static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,"
 										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ"
 										" Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Ligh"
@@ -3354,16 +3448,17 @@ static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance
 										"AQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & "
 										"Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc H"
 										"eat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Compliance,,End User,Total Demand,Compl"
-										"iance Demand,Total TDV,Compliance TDV,Zero Energy Ready Kicker,Future Code Kicker,High Efficacy Licker,Low Use Kicker,Ultra Low Use Kicker"
-										",Initial Score,Initial Incentive,Final Score,Final Incentive,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Co"
-										"ok,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,"
-										"IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV Credit,Batter"
-										"y,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,E"
-										"xterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Othe"
-										"r HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Ld"
-										"s,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,O"
-										"ther HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Mod"
-										"el,,Proposed Design Rating Model,,Reference Design Rating Model\n";
+										"iance Demand,Total TDV,Compliance TDV,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone Kicker,High Perfor"
+										"mance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ Kicker,DOE Zero "
+										"Energy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Incentive,CAHP Total "
+										"Incentive,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Ve"
+										"nt,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,"
+										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV Credit,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc"
+										" Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC"
+										",Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exte"
+										"rior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other H"
+										"VAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,E"
+										"xterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design Rating Model\n";
 static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
 										"(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu"
 										"),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTD"
@@ -3371,15 +3466,15 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
 										",(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Th"
 										"erms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-y"
 										"r),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW)"
-										",(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Ruleset,CSE,Application,(kW),(kW),(%),(%),(0 or 5),(0 or 3),(0 or 5),(0 or 5),(0 or 5),(int)"
-										",($),(int),($),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therm"
-										"s),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV"
-										"/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kT"
-										"DV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms"
-										"),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu)"
-										",(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),("
-										"kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Excl. PV+Batt,PV+Batt Only,Final EDR,Excl. PV,Min Reqd PV,Ele"
-										"ctric,Gas,Electric,Gas,Electric,Gas,Electric,Gas\n";
+										",(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Ruleset,CSE,Application,(kW),(kW),(%),(%),(int),(int),($),($),($),($),($),($),($),($),($),($"
+										"),($),($),($),($),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Th"
+										"erms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(k"
+										"TDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),"
+										"(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(The"
+										"rms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMB"
+										"tu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr"
+										"),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Excl. PV+Batt,PV+Batt Only,Final EDR,Excl. PV,Min Reqd PV,"
+										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas\n";
 
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;

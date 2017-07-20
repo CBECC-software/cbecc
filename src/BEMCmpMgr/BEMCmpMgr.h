@@ -184,6 +184,8 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_WthrHashChkFail		204	// (was 49)  Weather file hash failed consistency check
 #define  BEMAnal_CECRes_InputSaveFailed		205	// Attempt to save project inputs (including results) following analysis failed
 #define  BEMAnal_CECRes_DHWUseHashChkFail		206	// DHW use/profile file hash failed consistency check
+#define  BEMAnal_CECRes_RptGenErrorReturned	207	// Report generator found errors in analysis inputs and/or results
+#define  BEMAnal_CECRes_RptGenPDFExtract		208	// Error extracting PDF report from full XML report file
 // -----------------------------------------------------------------------------
 
 #ifdef CECRPTGEN
@@ -208,6 +210,8 @@ int  BEMCMPMGR_API __cdecl CMX_GenerateFileHashesFromCSV( const char* pszHashFil
 bool BEMCMPMGR_API __cdecl CMX_RetrievePublicKey( QString sSecKeyRulelistName, bool bConvertBinHex, QString& sRptPubKey, QString& sErrMsg );
 
 bool BEMCMPMGR_API __cdecl CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName=NULL, BOOL bSupressAllMessageBoxes=FALSE );
+
+int  BEMCMPMGR_API __cdecl CMX_ExtractErrorsFromReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog=TRUE, BOOL bPostToBEMProc=TRUE, BOOL bSupressAllMessageBoxes=FALSE );
 #endif // CECRPTGEN
 
 // SAC 6/10/13 - routine to generate a report summarizing/describing a building model that is heavily ruleset-defined

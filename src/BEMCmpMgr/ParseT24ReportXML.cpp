@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -369,7 +369,6 @@ bool DecodeBase64_ORIGINAL_VERSION( const char* outFileName, const char* data )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, const char* rptElemName /*=NULL*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
 			//			QString& sRulesetFilename, BOOL bReturnRulesetFilename,
          //         int iMaxDBIDSetFailures, int* piDBIDSetFailures,  // SAC 5/12/00 - enable UI reporting of failed data setting
@@ -528,3 +527,216 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 
 	return bRetVal;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// return values:		0 => no errors found
+//						 > 0 => number of errors found
+//						  -1 => error opening XML file
+//						  -2 => error reading stream from XML file
+//						  -3 => 'Title24' object not found in XML file
+//						  -4 => error reading stream from XML file (#2)
+int ExtractErrorsFromTitle24ReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog /*=TRUE*/,
+														BOOL bPostToBEMProc /*=TRUE*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
+{	int iRetVal = 0;
+	QString sFileName = xmlFileName;
+	QFile file( sFileName );
+	if (!file.open( QFile::ReadOnly | QFile::Text ))
+		return -1;
+	else
+	{
+		QXmlStreamReader stream( &file );
+
+		QString sErrorsElemName = "Errors";
+		QString sErrElemName = "Error";
+
+		QString sErrMsg;
+		int iXMLElementCount = 0;
+		bool bDoneProcessingFile = false, bFoundErrorList = false;
+		QString sElemName;
+		QVector<QString> saErrName, saErrMsgBefore, saErrMsgAfter;	int iNumErrors=0;
+		while (iRetVal >= 0 && sErrMsg.isEmpty() && !bDoneProcessingFile && !stream.atEnd())
+		{
+			stream.readNext();
+			if (stream.error())
+			{	iRetVal = -2;
+				QString sErr = QObject::tr("Error: %1 in file '%2' at line %3, column %4")
+															.arg(stream.errorString())
+															.arg(xmlFileName)
+															.arg(stream.lineNumber())
+															.arg(stream.columnNumber());
+				sErrMsg = sErr.toLocal8Bit().constData();
+				//BEMMessageBox( (LPCSTR)sErr.toLocal8Bit().constData(), "BEMProc ReadXMLFile() Error", 3 /*error*/ );
+			}
+			else
+			{
+#ifdef _DEBUG
+//				WriteTokenToLog( stream );
+#endif
+				switch (stream.tokenType())
+				{	case QXmlStreamReader::NoToken               : assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::Invalid               : assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::StartElement          : {	iXMLElementCount++;
+																						sElemName = stream.name().toLocal8Bit().constData();
+																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0)
+																						{	// ERROR - not a proper Title24 report XML file (??)
+																							iRetVal = -3;
+																							sErrMsg = QString( "ERROR:  File not a Title24 analysis report, first element '%1' (expected 'Title24' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
+																						}
+																						else if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0)
+																						{	// do nothing here
+																						}
+																						else if (sElemName.compare(sErrorsElemName, Qt::CaseInsensitive) == 0)
+																						{	// found list of errors
+																							assert( bFoundErrorList == false );
+																							bFoundErrorList = true;
+																						}
+
+						//																	QXmlStreamAttributes attribs = stream.attributes();
+						//																	assert( attribs.size() == 0 );  // only element having attributes is 'RulesetFilename' processed (ignored) above
+						//																	int iBEMClassIdx = BEMPX_GetDBComponentID( sElemName.toLocal8Bit().constData() );
+						//																	int iBEMMapGroupID = -1;		// SAC 5/7/14
+						//																	if (iBEMClassIdx < 1)
+						//																		iBEMMapGroupID = FindOldCompMapGroupID( pCompMap, sElemName, lFileVersion, NULL );
+						//																	if (iBEMClassIdx < 1 && iBEMMapGroupID < 0)
+						//																	{	bRetVal = false;
+						//																		sErrMsg = QString( "ERROR:  Invalid object type '%1' encountered on line %2 of SDDXML file:  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
+						//																	}
+						//																	else
+						//																	{	if (bReturnRulesetFilename)
+						//																			bDoneProcessingFile = true;  // if we have reached the point where a BEMBase object is being created, we are beyond where the ruleset filename should be specified
+						//																		else
+						//																			bRetVal = ReadXMLComponent( xmlFileName, stream, sElemName, iBEMClassIdx, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts,
+						//																													pStraightMap, lDBIDVersion, lFileVersion, pCompMap, pPropMap, &ivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
+						//																	}
+																						else
+																						{	// ignore data in other elements, such as:  Payload / SDDXML
+																							bool bIsErr = (bFoundErrorList && sElemName.compare(sErrElemName, Qt::CaseInsensitive) == 0);
+																							if (bIsErr)
+																							{	saErrName.push_back( "" );  saErrMsgBefore.push_back( "" );  saErrMsgAfter.push_back( "" );  iNumErrors++;
+																							}
+																							QString sSkipElemName;
+																							bool bSkippingElement = true;
+																							int iErrProp = 0;
+																							while (iRetVal >= 0 && sErrMsg.isEmpty() && !bDoneProcessingFile && !stream.atEnd() && bSkippingElement)
+																							{
+																								stream.readNext();
+																								if (stream.error())
+																								{	iRetVal = -4;
+																									QString sErr = QObject::tr("Error: %1 in file '%2' at line %3, column %4").arg(stream.errorString()).arg(xmlFileName).arg(stream.lineNumber()).arg(stream.columnNumber());
+																									sErrMsg = sErr.toLocal8Bit().constData();
+																									//BEMMessageBox( (LPCSTR)sErr.toLocal8Bit().constData(), "BEMProc ReadXMLFile() Error", 3 /*error*/ );
+																								}
+																								else
+																								{	switch (stream.tokenType())
+																									{	case QXmlStreamReader::StartElement :
+																															iErrProp = 0;
+																															if (bIsErr)
+																															{	QString sErrElemName = stream.name().toLocal8Bit().constData();
+																																if (sErrElemName.compare("Name", Qt::CaseInsensitive) == 0)
+																																	iErrProp = 1;
+																																else if (sErrElemName.compare("MessageBefore", Qt::CaseInsensitive) == 0)
+																																	iErrProp = 2;
+																																else if (sErrElemName.compare("MessageAfter", Qt::CaseInsensitive) == 0)
+																																	iErrProp = 3;
+																															}  break;
+																										case QXmlStreamReader::Characters   :
+																															switch (iErrProp)
+																															{	case  1 :  saErrName[     iNumErrors-1] = stream.text().toLocal8Bit().constData();
+																																			  saErrName[     iNumErrors-1] = saErrName[     iNumErrors-1].trimmed();  break;
+																																case  2 :  saErrMsgBefore[iNumErrors-1] = stream.text().toLocal8Bit().constData();
+																																			  saErrMsgBefore[iNumErrors-1] = saErrMsgBefore[iNumErrors-1].trimmed();  break;
+																																case  3 :  saErrMsgAfter[ iNumErrors-1] = stream.text().toLocal8Bit().constData();
+																																			  saErrMsgAfter[ iNumErrors-1] = saErrMsgAfter[ iNumErrors-1].trimmed();  break;
+																															}	iErrProp = 0;
+																																break;
+																										case QXmlStreamReader::EndElement	:	sSkipElemName = stream.name().toLocal8Bit().constData();
+																																							if (sSkipElemName.compare(sElemName, Qt::CaseInsensitive) == 0)
+																																								bSkippingElement = false;
+																																							break;
+																										default										:	break;
+																								}	}
+																							}	assert( !bSkippingElement );
+																						}
+																					}  break;
+					case QXmlStreamReader::EndElement            :  {	if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0 || sElemName.compare("Payload", Qt::CaseInsensitive) == 0 ||
+																							 sElemName.compare("SDDXML" , Qt::CaseInsensitive) == 0 || sElemName.compare("Report" , Qt::CaseInsensitive) == 0)
+																						{	// do nothing here
+																						}
+																						else if (sElemName.compare("Error" , Qt::CaseInsensitive) == 0)
+																						{	//	bFoundNewError = false;
+																						}
+																						else if (sElemName.compare("Errors", Qt::CaseInsensitive) == 0)
+																						{	bFoundErrorList = false;
+																							bDoneProcessingFile = true;
+																						}
+																						else
+																						{	assert( FALSE );		// ever get here ?
+																						}
+																					}	break;  // see what conditions we end up here
+					case QXmlStreamReader::Characters            :  //if (CharsAreAllSpaces( stream.text().toLocal8Bit().constData() ))
+																					//{	siLastIndent = stream.text().length();
+																					//	SetIndentString( ssLastIndentChars, siLastIndent );
+																					//}
+//																					if (bFoundReport)
+//																					{	QString sPDFEncodedData = stream.text().toLocal8Bit().constData();
+//
+////  <Report id="Sign2">JVBERi0xL
+//																						if (!sPDFEncodedData.isEmpty())
+//																							bRetVal = DecodeBase64ToFile( pdfFileName, sPDFEncodedData.toLocal8Bit().constData() );
+//
+//																						bFoundReport = false;
+//																						bDoneProcessingFile = true;  // once we have found & saved the PDF report, bail
+//																					}
+																					{	QString sCharData = stream.text().toLocal8Bit().constData();
+																					}
+																					break;
+					case QXmlStreamReader::Comment               :  assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::DTD                   :  assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::EntityReference       :  assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::ProcessingInstruction :  assert( FALSE );   break;  // see what conditions we end up here
+					case QXmlStreamReader::StartDocument         :
+					case QXmlStreamReader::EndDocument           :  break;   // ignore these
+					default                                      :  assert( FALSE );   break;  // see what conditions we end up here
+				}
+				//int iHere = 0;
+			}
+		}
+
+//#ifdef _DEBUG
+		if (iRetVal < 0 && sErrMsg.isEmpty())
+		{	QString sErr = QObject::tr("%1\nLine %2, column %3, return %4")
+														.arg(stream.errorString())
+														.arg(stream.lineNumber())
+														.arg(stream.columnNumber())
+														.arg(iRetVal);
+			sErrMsg = sErr.toLocal8Bit().constData();
+			//BEMMessageBox( (LPCSTR)sErr.toLocal8Bit().constData(), "BEMProc ReadXMLFile() Error", 3 /*error*/ );
+		}
+//#endif
+
+		if (!sErrMsg.isEmpty())
+      {  BEMPX_WriteLogFile( sErrMsg, NULL, FALSE, bSupressAllMessageBoxes );  // SAC 4/27/03
+         if (!bSupressAllMessageBoxes)
+            BEMMessageBox( sErrMsg, NULL, 2 /*warning*/ );
+		}
+		else if (iNumErrors > 0)
+		{	iRetVal = iNumErrors;
+			sErrors = QString( "%1 error(s) reported while generating analysis report:" ).arg( QString::number(iNumErrors) );
+			if (bPostToProjectLog)
+				BEMPX_WriteLogFile( sErrors, NULL, FALSE, bSupressAllMessageBoxes );
+			for (int i=0; i < iNumErrors; i++)
+			{	QString sRlErrMsg;
+				if (bPostToProjectLog)
+					BEMPX_WriteLogFile( saErrMsgBefore[i], NULL, FALSE, bSupressAllMessageBoxes );
+				if (bPostToBEMProc)
+				{	sRlErrMsg = saErrMsgBefore[i] + " (RptGen)";
+					BEMPX_AddRulesetError( sRlErrMsg.toLocal8Bit().constData() );
+				}
+				sErrors += QString( "\n%1)  %2" ).arg( QString::number(i+1), saErrMsgBefore[i] );
+		}	}
+	}
+
+	return iRetVal;
+}
+

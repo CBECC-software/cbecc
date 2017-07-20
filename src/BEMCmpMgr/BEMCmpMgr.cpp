@@ -1821,6 +1821,10 @@ bool CMX_ExtractTitle24ReportFromXML( const char* xmlFileName, const char* pdfFi
 {	return ParseTitle24ReportXML( xmlFileName, pdfFileName, rptElemName, bSupressAllMessageBoxes );
 }
 
+int  CMX_ExtractErrorsFromReportXML( const char* xmlFileName, QString& sErrors, BOOL bPostToProjectLog /*=TRUE*/, BOOL bPostToBEMProc /*=TRUE*/, BOOL bSupressAllMessageBoxes /*=FALSE*/ )
+{	return ExtractErrorsFromTitle24ReportXML( xmlFileName, sErrors, bPostToProjectLog, bPostToBEMProc, bSupressAllMessageBoxes );
+}
+
 #endif // CECRPTGEN
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
