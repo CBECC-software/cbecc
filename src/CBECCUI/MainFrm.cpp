@@ -4059,13 +4059,13 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
 			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
-			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10
+			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					10 /*iResFormatVer*/, sOriginalFileName );
+																					11 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
-				char pszCSVColLabel1[1280], pszCSVColLabel2[2560], pszCSVColLabel3[2560];
-				VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1280, pszCSVColLabel2, 2560, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
+				char pszCSVColLabel1[1280], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
+				VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1280, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
 				const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 
 				CString sCSVResultSummary = pszCSVResultSummary;
@@ -4083,8 +4083,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				}
 
 				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7
-				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v10.csv", TRUE /*bGetPath*/ );
+				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v11.csv", TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else
@@ -5047,6 +5047,15 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 			sRptFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
 			if (!sAppendForXML.IsEmpty())  // SAC 11/29/16
 				sRptXMLFileName = sRptFileName + sAppendForXML;
+
+// TESTING
+//			QString sXMLErrors;
+//			int iErrs = CMX_ExtractErrorsFromReportXML( sRptXMLFileName, sXMLErrors );  //, BOOL bPostToProjectLog=TRUE, BOOL bPostToBEMProc=TRUE, BOOL bSupressAllMessageBoxes=FALSE )
+//			sErrMsg.Format( "CMX_ExtractErrorsFromReportXML()returned %d:\n\n%s", iErrs, sXMLErrors.toLocal8Bit().constData() );
+//							AfxMessageBox( sErrMsg );
+//			iActionToPerform = 4;
+//	}	}
+
 			sRptFileName += sAppendForPDF;
 			if (FileExists( sRptFileName ))
 				iActionToPerform = 1;
@@ -5181,25 +5190,38 @@ void CMainFrame::OnUpdateToolsCAHPReport(CCmdUI* pCmdUI)
 void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 {
 #ifdef UI_CARES
-	// check to ensure this IS a CAHP project and there are some CAHP results before generating report
-	CString sRptGenCompReport;		BEMObject* pEUseSumObj;		int iEUseSumObjIdx, iError;		double fCAHPIncFinal=-999;
-	BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:CAHPReportID" ), sRptGenCompReport );
-//	BEMPX_SetDataObject( BEMPX_GetDatabaseID( "Proj:ResultSummary[1]" ), pEUseSumObj );
-// SAC 5/28/15 - instead of retriving the EUseSummayr obejct assigned to the Proj, simply grab the first available one (since it MAY nto be assiged to the Proj at this point)
-	pEUseSumObj = BEMPX_GetObjectByClass( eiBDBCID_EUseSummary, iError, 0 /*iObjIdx*/ );  // , BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
-	if (pEUseSumObj && pEUseSumObj->getClass())
-	{	iEUseSumObjIdx = BEMPX_GetObjectIndex( pEUseSumObj->getClass(), pEUseSumObj );
-		if (iEUseSumObjIdx >= 0)
-			BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncFinal" ), fCAHPIncFinal, -999, -1, iEUseSumObjIdx );
-	}
-	if (sRptGenCompReport.GetLength() < 1)
-		AfxMessageBox( "CAHP/CMFNH report generation not available when CAHP/CMFNH program not selected.\nCAHP/CMFNH options must be specified in Project > CAHP/CMFNH dialog tab and analysis performed before this report can be generated." );
-	else if (fCAHPIncFinal == -999)
-		AfxMessageBox( "Cannot generate report due to lack of CAHP/CMFNH results.\nSuccessful analysis must be performed before this report can be generated." );
-	else
-		GenerateReport( 2 /*iReportID*/ );
+	CString sNoRptIDMsg, sCAHPResultProperty;
+#ifdef UI_PROGYEAR2019
+	AfxMessageBox( "CAHP/CMFNH report generation only available in 2013/16 Title-24 mode." );
+#elif  UI_PROGYEAR2016
+	sNoRptIDMsg = "CAHP/CMFNH report generation not available when CAHP/CMFNH program not selected.\nCAHP/CMFNH options must be specified in Project > Analysis -and- CAHP/CMFNH dialog tabs and analysis performed before this report can be generated.";
+	sCAHPResultProperty = "EUseSummary:CAHPTotalIncentive";
 #else
-	AfxMessageBox( "CAHP/CMFNH report generation only available in 2013 Title-24 mode." );
+	sNoRptIDMsg = "CAHP/CMFNH report generation not available when CAHP/CMFNH program not selected.\nCAHP/CMFNH options must be specified in Project > CAHP/CMFNH dialog tab and analysis performed before this report can be generated.";
+	sCAHPResultProperty = "EUseSummary:CAHPIncFinal";
+#endif
+	if (!sNoRptIDMsg.IsEmpty() && !sCAHPResultProperty.IsEmpty())
+	{
+		// check to ensure this IS a CAHP project and there are some CAHP results before generating report
+		CString sRptGenCompReport;		BEMObject* pEUseSumObj;		int iEUseSumObjIdx, iError;		double fCAHPIncFinal=-999;
+		BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:CAHPReportID" ), sRptGenCompReport );
+	//	BEMPX_SetDataObject( BEMPX_GetDatabaseID( "Proj:ResultSummary[1]" ), pEUseSumObj );
+	// SAC 5/28/15 - instead of retriving the EUseSummayr obejct assigned to the Proj, simply grab the first available one (since it MAY nto be assiged to the Proj at this point)
+		pEUseSumObj = BEMPX_GetObjectByClass( eiBDBCID_EUseSummary, iError, 0 /*iObjIdx*/ );  // , BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+		if (pEUseSumObj && pEUseSumObj->getClass())
+		{	iEUseSumObjIdx = BEMPX_GetObjectIndex( pEUseSumObj->getClass(), pEUseSumObj );
+			if (iEUseSumObjIdx >= 0)
+				BEMPX_GetFloat( BEMPX_GetDatabaseID( sCAHPResultProperty ), fCAHPIncFinal, -999, -1, iEUseSumObjIdx );
+		}
+		if (sRptGenCompReport.GetLength() < 1)
+			AfxMessageBox( sNoRptIDMsg );
+		else if (fCAHPIncFinal == -999)
+			AfxMessageBox( "Cannot generate report due to lack of CAHP/CMFNH results.\nSuccessful analysis must be performed before this report can be generated." );
+		else
+			GenerateReport( 2 /*iReportID*/ );
+	}
+#else
+	AfxMessageBox( "CAHP/CMFNH report generation only available in 2013/16 Title-24 mode." );
 #endif
 }
 
