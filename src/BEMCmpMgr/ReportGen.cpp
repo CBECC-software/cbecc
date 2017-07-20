@@ -1425,15 +1425,20 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bVerbose ))
 				{
 					sSignHex = signature_hex;
+#pragma warning(disable:4996)
 				// now simple Bin->Hex of public key...
 					int iRptPubKeyLen = sRptPubKey.length();
-					char* pszRptPubKeyHex = (char *)malloc( iRptPubKeyLen * 2 + 1 );
-#pragma warning(disable:4996)
-					if(pszRptPubKeyHex)
-					{	for(int iH = 0; iH < iRptPubKeyLen; iH++)
-							sprintf( pszRptPubKeyHex + iH * 2, "%02x", sRptPubKey[iH] );
-						sRptPubHexKey = pszRptPubKeyHex;
-						delete [] pszRptPubKeyHex;
+					char* pszRptPubKeyOrig = (char *)malloc( iRptPubKeyLen + 1 );
+					if (pszRptPubKeyOrig)
+					{	sprintf( pszRptPubKeyOrig, "%s", sRptPubKey.toLocal8Bit().constData() );
+						char* pszRptPubKeyHex = (char *)malloc( iRptPubKeyLen * 2 + 1 );
+						if(pszRptPubKeyHex)
+						{	for(int iH = 0; iH < iRptPubKeyLen; iH++)
+								sprintf( pszRptPubKeyHex + iH * 2, "%02x", pszRptPubKeyOrig[iH] );
+							sRptPubHexKey = pszRptPubKeyHex;
+							delete [] pszRptPubKeyHex;
+						}
+						delete [] pszRptPubKeyOrig;
 					}
 #pragma warning(default:4996)
 				}
