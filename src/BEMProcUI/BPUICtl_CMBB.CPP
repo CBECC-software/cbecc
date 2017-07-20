@@ -1054,6 +1054,8 @@ BOOL CComboBoxCtl::LoadStrings()
 	//						w/out this update, object creation is hard-wired to create an object of only the first compatible type defined...
 	//			CArray<int> caClassIds;
 	//			caClassIds.SetSize( iLoopEnd);
+				CString sLastCr8Str;
+		      int iLast1ClassID = 0;
 				for (int iObjCls=0; iObjCls < iLoopEnd; iObjCls++)		// SAC 6/15/12 - enable multiple object types to be created...
 				{	if (iProp > 0)
 						i1ClassID = m_iaObjCompID[iObjCls];
@@ -1100,7 +1102,7 @@ BOOL CComboBoxCtl::LoadStrings()
 																							FALSE /*bOnlyFromCurrentSymDepSet*/ );												//ASSERT( !sCr8Typ.IsEmpty() ); - may not be dependent on enumeration property...
 									sCr8Typ = qsSymStr.toLatin1().constData();
 								}
-								if (!sCr8Typ.IsEmpty())
+								if (!sCr8Typ.IsEmpty() && (CompatibleLibraryObjectExists( i1ClassID ) || sCr8Typ.CompareNoCase("New")))  // SAC 7/19/17 - prevent item string "- Create new New ... (Res tic #861)
 								{	sCr8Str += sCr8Typ;
 									sCr8Str += ' ';
 								}
@@ -1117,10 +1119,15 @@ BOOL CComboBoxCtl::LoadStrings()
 							else
 	         			   sCr8Str += szCr82;
 
-            			AddString( sCr8Str );
-							// SAC 6/15/12 - revision to use of sdwCreateData
-            			//SetItemData( GetCount() - 1, sdwCreateData+i1ClassID );
-            			SetItemData( GetCount() - 1, (iProp > 0 ? sdwCreateData+1+iObjCls : sdwCreateData+100+i1ClassID) );
+							if ( sLastCr8Str.IsEmpty() ||   // SAC 7/19/17 - avoid consecutive identical selections (Res tic #861)
+								  (sLastCr8Str.Compare( sCr8Str ) && (iLast1ClassID != i1ClassID || !sCr8Typ.IsEmpty())) )
+            			{	AddString( sCr8Str );
+								// SAC 6/15/12 - revision to use of sdwCreateData
+   	         			//SetItemData( GetCount() - 1, sdwCreateData+i1ClassID );
+      	      			SetItemData( GetCount() - 1, (iProp > 0 ? sdwCreateData+1+iObjCls : sdwCreateData+100+i1ClassID) );
+      	      			sLastCr8Str = sCr8Str;
+      	      			iLast1ClassID = i1ClassID;
+      	      		}
 						}
 	//				}
 				}

@@ -652,6 +652,7 @@ BOOL CSACBEMProcDialog::InitControls()
             pCtrl->m_bActive = FALSE;
       }
       // Now go through controls AGAIN, this time displaying them
+      int iNumCtrlsToDisplay=0, iNumLabelsToDisplay=0;	// SAC 7/14/17
       CWnd* pFirstActiveCtrl = NULL;
       for (i=m_pTDPage->m_iFirstCtrlIdx; i<=m_pTDPage->m_iLastCtrlIdx; i++)
       {
@@ -664,6 +665,7 @@ BOOL CSACBEMProcDialog::InitControls()
                if (pCtrl->CanDisplay())
                {
                   pWnd->EnableWindow( TRUE );
+      				iNumCtrlsToDisplay++;	// SAC 7/14/17
 
 //                  pWnd->ShowWindow( SW_SHOW );
 // SAC 6/17/00 - added if statement to prevent spreadsheet from being displayed prior to it getting all setup
@@ -691,11 +693,16 @@ BOOL CSACBEMProcDialog::InitControls()
             }
          }
          else if (pCtrl && (pCtrl->m_uiCtrlType == TDCT_Label || pCtrl->m_uiCtrlType == TDCT_Line))
-            pCtrl->m_bActive = pCtrl->CanDisplay();
+         {  pCtrl->m_bActive = pCtrl->CanDisplay();
+         	if (pCtrl->m_bActive)
+      			iNumLabelsToDisplay++;	// SAC 7/14/17
+         }
       }
 
 //???
 //      PaintTabCtrlStuff();
+		if (iNumCtrlsToDisplay == 0 && iNumLabelsToDisplay > 0)	// SAC 7/14/17 - call PaintTabCtrlStuff() directly here if we have only labels or lines to draw
+			PaintTabCtrlStuff( TRUE, FALSE );
    }
 
    return TRUE;
