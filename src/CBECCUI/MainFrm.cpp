@@ -4031,6 +4031,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		int iVerbose = ReadProgInt( "options", "LogRuleEvaluation", 0 /*default*/ );
 	//		BOOL bStoreBEMProcDetails = (ReadProgInt( "options", "StoreBEMDetails", 0) > 0);
 
+		// SAC 7/22/17 - code to ensure Proj:RptGenUI* properties setup for CBECC-Res
+	   BOOL bRptGenUIEvalSuccessful = CMX_EvaluateRuleset( "ForceDefault_CodeVersion_RptGenUI", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, (iVerbose > 0) );
+	   assert( bRptGenUIEvalSuccessful );
+
 		// Always generate summary report during analysis ??
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "AnalysisReport", eiBDBCID_Proj ), BEMP_Str, (void*) "Building Summary (csv)" );
 
@@ -4678,6 +4682,16 @@ void CMainFrame::OnPerformAPIAnalysis()
 		CString sT24DHWPath = esProgramPath + "T24DHW\\";
 		sT24DHWPath = ReadProgString( szPaths, "T24DHWPath", sT24DHWPath, TRUE );  // in case there is one in the INI to override the default
 
+		int iToolID = ReadProgInt( "options", "APIAnalysisToolID", 1 /*default*/ );	// SAC 7/22/17 - enable third party tool testing via INI options
+		CString sKey = ReadProgString( "options", "APIAnalysisKey", "" );
+		CString sSoftwareVer = ReadProgString( "options", "APIAnalysisSoftwareVer", "" );
+		if (iToolID > 1 || !sKey.IsEmpty())
+			sOptionsCSVString = "StoreResultsToModelInput,0," + sOptionsCSVString;  // PREPEND option to ensure results NOT stored back to project file
+		if (sKey.IsEmpty())
+			sKey = esSecurityKey;
+		if (sSoftwareVer.IsEmpty())
+			sSoftwareVer = sUIVersionString;
+
 			CString sLogAnalArg = "Arguments of CMX_PerformAnalysisCB_CECRes();";			BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   BEMBasePathFile  = %s", sBEMBasePathFile );				BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   RulesetPathFile  = %s", sRulePathFile );					BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
@@ -4688,13 +4702,13 @@ void CMainFrame::OnPerformAPIAnalysis()
 			sLogAnalArg.Format( "   ProcessingPath   = %s", sProcessingPath );				BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   ModelPathFile    = %s", sCurrentFileName );				BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   LogPathFile      = (null)" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
-			sLogAnalArg.Format( "   UIVersionString  = %s", sUIVersionString );				BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
+			sLogAnalArg.Format( "   UIVersionString  = %s", sSoftwareVer );					BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   LoadModelFile    = true" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   OptionsCSVString = %s", pszAnalOpts );						BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   pszAnalysisErr   = (ptr to str)" );							BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   AnalysisErrLen   = 2056" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   DisplayProgress  = true" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
-			sLogAnalArg.Format( "   SecurityKeyIndex = 1" );										BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
+			sLogAnalArg.Format( "   SecurityKeyIndex = %d", iToolID );							BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   SecurityKey      = <security key>" );						BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 			sLogAnalArg.Format( "   ProgCallbackFunc = (null)" );									BEMPX_WriteLogFile( sLogAnalArg, NULL, FALSE /*bBlank*/, TRUE /*bSupressMsgBxs*/, FALSE /*bCopyPrevLog*/ );
 
@@ -4707,8 +4721,8 @@ void CMainFrame::OnPerformAPIAnalysis()
 					EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
 		iAnalysisResult = CMX_PerformAnalysisCB_CECRes( sBEMBasePathFile /*pszBEMBasePathFile*/, sRulePathFile /*pszRulesetPathFile*/,	sCSEPath /*pszCSEEXEPath*/, sCSEPath /*pszCSEWeatherPath*/,
 																	sT24DHWPath /*pszDHWDLLPath*/, NULL /*pszDHWWeatherPath*/, sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
-																	NULL /*pszLogPathFile*/, sUIVersionString, true /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/, 
-																	1 /*SecKeyIndex*/, esSecurityKey, NULL /*callback func ptr*/ );
+																	NULL /*pszLogPathFile*/, sSoftwareVer, true /*bLoadModelFile*/, pszAnalOpts, pszAnalysisErr, 2056, true /*bDisplayProgress*/, 
+																	iToolID /*SecKeyIndex*/, sKey, NULL /*callback func ptr*/ );
 					EnableWindow( TRUE );
 #elif UI_CANRES
 
