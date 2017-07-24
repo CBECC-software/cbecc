@@ -616,6 +616,12 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				}				assert( iNumBatchInpsStored < 1 || bStoreResultsToModelInput );	// if not, then these batch inputs will NOT get stored back into user model RIBD
 								// ?? STORAGE OF RIBD* (following default rule evaluation) IF ANY BATCH DATA MODIFIED ABOVE ??
 
+				// SAC 7/23/17 - added eval of Default_CodeVersion_RptGenUI rules to ensure RptGenUI properties defaulted (if not specified in loaded input)
+				if (ResRetVal_ContinueProcessing( iRetVal ))
+				{	int iDRGUIrules = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "Default_CodeVersion_RptGenUI", bVerbose, pCompRuleDebugInfo );
+					assert( iDRGUIrules == 0 );
+				}
+
 				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{	bBEMLogFileSet = TRUE;
 					iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
@@ -3896,6 +3902,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 																			sBatchLogPathFile.c_str() /* ??? use overall batch OR individual Project Log File ??? */,
 																			pszUIVersionString, true /*bLoadModelFile*/, saOptionCSV[iRun].c_str(), pszRuleErr, 1024,
 																			bDisplayProgress, /*GetSafeHwnd() HWND hWnd,*/ iSecurityKeyIndex, pszSecurityKey, NULL /*callback func ptr*/ );
+
 	// Populate string w/ summary results of analysis
 
 				bool bStoreResults = false;
