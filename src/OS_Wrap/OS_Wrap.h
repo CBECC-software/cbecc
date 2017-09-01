@@ -90,7 +90,7 @@ enum  OS_EndUseType        //OPENSTUDIO_ENUM(EndUseType,
 	OSEU_IntEquip_Process,  //  ((InteriorEquipment)) + "Process"             23
 	OSEU_IntEquip_Refrig,   //  ((InteriorEquipment)) + "Refrig"              24
 	OSEU_IntEquip_IntTrans, //  ((InteriorEquipment)) + "Internal Transport"  25   - SAC 8/19/14 - added for elevator/escalator power
-	OSEU_Fans_PrkgGar,      //  ((Fans)) + "ParkingGarageFans"                26	 - SAC 1/30/17 - to be removed from Comp Fans and add into NonComp Process
+	OSEU_Fans_ProcMtrs,     //  ((Fans)) + "ProcessMotors"                    26	 - SAC 1/30/17 - to be removed from Comp Fans and add into NonComp Process  // SAC 8/14/17 - switched ParkingGarageFans to ProcessMotors & OSEU_Fans_PrkgGar to OSEU_Fans_ProcMtrs
 	OSEU_NumEndUses
 };
 #define  OSWrap_NumEPlusEnduses  27
