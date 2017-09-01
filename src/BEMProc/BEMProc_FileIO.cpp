@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -3998,8 +3998,14 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 								for (int iSDS=0; iSDS < eBEMProc.getPropertyType(iProp1)->getSymbolList()->getNumSymDependencySets(); iSDS++)
 								{	BEMSymDependencySet* pSDS = eBEMProc.getPropertyType(iProp1)->getSymbolList()->getSymDependencySet(iSDS);			assert( pSDS );
 									if (pSDS && pSDS->getDepValue(0) > -1001)   // dep values < -1000 assumed to be backward compatibility-related, and we don't want to echo those symbol lists here
-									{	if (pSDS->getCompParam(0) > 0 && pSDS->getDepValue(0) != -999)
-										{	for (int i=0; i<MAX_DEP_DBIDS_PER_SYMBOL_LIST; i++)
+									{	int i, iNumDeps=0;
+										for (i=0; i<MAX_DEP_DBIDS_PER_SYMBOL_LIST; i++)		// added prelim loop to check to see if any non-wilcard dependencies are defined - SAC 8/22/17
+										{	if (pSDS->getCompParam(i) > 0 && pSDS->getDepValue(i) != -999)
+												iNumDeps++;
+										}
+										if (iNumDeps > 0)
+										{	bool bFirstThisRnd = true;
+											for (i=0; i<MAX_DEP_DBIDS_PER_SYMBOL_LIST; i++)
    										   if (pSDS->getCompParam(i) > 0 && pSDS->getDepValue(i) != -999)
 												{	QString sDepSymStr;
 													BEMPropertyType* pDepPropType = BEMPX_GetPropertyTypeFromDBID( pSDS->getCompParam(i), iError );
@@ -4008,11 +4014,12 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 													BEMPX_DBIDToDBCompParamString( pSDS->getCompParam(i), sTemp2 );
 											      if ((iExportType == BEMDMX_INP || iExportType == BEMDMX_INPMP) && !sDepSymStr.isEmpty())
 													//	sTemp.sprintf( "                               %s  %s = \"%s\"\n", (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), sDepSymStr.toLocal8Bit().constData() );
-														sTemp = QString( "                               %1  %2 = \"%3\"\n" ).arg( (i==0 ? "When:" : " and:"), sTemp2, sDepSymStr );
+														sTemp = QString( "                               %1  %2 = \"%3\"\n" ).arg( (bFirstThisRnd ? "When:" : " and:"), sTemp2, sDepSymStr );
 													else
 													//	sTemp.sprintf( "                               %s  %s = %g\n"  , (i==0 ? "When:" : " and:"), sTemp2.toLocal8Bit().constData(), pSDS->getDepValue(i) );
-														sTemp = QString( "                               %1  %2 = %3\n" ).arg( (i==0 ? "When:" : " and:"), sTemp2, QString::number( pSDS->getDepValue(i) ) );
+														sTemp = QString( "                               %1  %2 = %3\n" ).arg( (bFirstThisRnd ? "When:" : " and:"), sTemp2, QString::number( pSDS->getDepValue(i) ) );
 													file.write( sTemp.toLatin1() );
+													bFirstThisRnd = false;
 												}
 										}
 										else if (iSDS > 0 && iNumSymListsWritten > 0)
@@ -4020,7 +4027,7 @@ bool BEMPX_WriteDataModelExport( int iExportType, const char* pszDataModelOutFil
 
 										sTemp.sprintf( "                                      default:  %ld\n", pSDS->getDefaultValue() );
 										file.write( sTemp.toLatin1() );
-										for (int i=0; i < pSDS->getNumSymbols(); i++)
+										for (i=0; i < pSDS->getNumSymbols(); i++)
 										{	BEMSymbol* pSym = pSDS->getSymbol(i);						assert( pSym );
 											if (pSym)
 											//{	sTemp.sprintf( "                                       %6ld:  \"%s\"\n", pSym->getValue(), pSym->getString().toLocal8Bit().constData() );

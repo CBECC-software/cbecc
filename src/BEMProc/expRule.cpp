@@ -7146,7 +7146,16 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       else if ( bRevRefFunc && !bStoreArgsForProcessing && nArgs > 1 &&  BEMPX_GetArrayID( plParams[0] ) != BEMPX_GetArrayID( plParams[1] ) && !bAbort )
          iStartArg++;
 
-      assert( (!bGetCount || nArgs == iStartArg) );  // SAC 1/3/02
+      assert( (!bGetCount || nArgs == iStartArg || BEMPX_GetArrayID( plParams[0] ) > 1) );  // SAC 1/3/02
+#ifdef _DEBUG
+				if (bGetCount && nArgs != iStartArg && BEMPX_GetArrayID( plParams[0] ) < 2)
+         	{	QString dbgMsg;   dbgMsg = QString( "         BEMProcSumChildrenAllOrRevRef() Error: (bGetCount(true) && nArgs(%1) != iStartArg(%2)) evaluating %3" ).arg(
+         											QString::number(nArgs), QString::number(iStartArg), pEval->sRuleID );
+         		//errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+         		BEMPX_WriteLogFile( dbgMsg );
+               //ruleSet.logMsgCallback( logMsgMESSAGE, sRetStr, NULL );
+				}
+#endif
 
       fResult = (bGetMax ? dLowestMaxVal : (bGetMin ? 99999999.0 : 0.0));   // SAC 11/10/04 - added new dLowestMaxVal variable
       vector<int> iaParentObjIdxs;  // SAC 1/4/02

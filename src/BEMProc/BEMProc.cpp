@@ -5808,7 +5808,8 @@ int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT
 					msgBox.setStandardButtons( (QMessageBox::StandardButtons) nType );		// QMessageBox::Ok );
 		//			msgBox.addButton( QMessageBox::Abort );
 					if (sbDefault != QMessageBox::NoButton)
-						msgBox.setStandardButtons( (QMessageBox::StandardButton) sbDefault );		// QMessageBox::Ok );
+						msgBox.setDefaultButton( (QMessageBox::StandardButton) sbDefault );		// QMessageBox::Ok );
+						//msgBox.setStandardButtons( (QMessageBox::StandardButton) sbDefault );		// QMessageBox::Ok );
 		//			bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
 					iRetVal = msgBox.exec();
 

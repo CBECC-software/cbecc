@@ -1,8 +1,8 @@
 // table.cpp - implementation of BEMTable and BEMTableList classes
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -691,7 +691,7 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 											else if (StringExclusivelyNumber( sThisFld ))
             								pNewData[i].setValue( atof( sThisFld.toLocal8Bit().constData() ) );
 											else
-											{	assert( iCond < 0 );		// assert here means there is a condition listed prior to a character string field - which MAY be valid for enumeration strings that include a preceding condition symbol...
+											{	//assert( iCond < 0 );		// assert here means there is a condition listed prior to a character string field - which MAY be valid for enumeration strings that include a preceding condition symbol...
             								pNewData[i].setString( saFields[i].toLocal8Bit().constData() );
 											}
 										}

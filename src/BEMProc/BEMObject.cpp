@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -218,13 +218,14 @@ bool BEMObject::ChangeParentChildIndex( BEMObject* pChild, bool bMoveUp /*=true*
 			bool bDoSwap = false;
 			if (bMoveUp)
 			{	// insert in list BEFORE previous item
-				if (i0ThisChildIdx < 1)		// can't move up from top of vector
+						// SAC 8/22/17 - fixed bug in this and following equality check preventing all valid moves
+				if (i0ThisChildIdx > 0)		// can't move up from top of vector
 				{	iSwapIdx = i0ThisChildIdx - 1;
 					bDoSwap = true;
 			}	}
 			else
 			{	// insert in list AFTER next item
-				if (i0ThisChildIdx >= (int) m_children.size()-1)		// can't move down from end of vector
+				if (i0ThisChildIdx < (int) m_children.size()-1)		// can't move down from end of vector
 				{	iSwapIdx = i0ThisChildIdx + 1;
 					bDoSwap = true;
 			}	}

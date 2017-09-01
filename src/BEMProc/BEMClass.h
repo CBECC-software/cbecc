@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -233,8 +233,8 @@ private:
 //    library-defined components).
 /////////////////////////////////////////////////////////////////////////////
 
-// SAC 3/13/13 - added multiple model support
-#define  BEMPROC_MAXMODELS  11 
+// SAC 3/13/13 - added multiple model support  // SAC 8/8/17 - 11->15
+#define  BEMPROC_MAXMODELS  15 
 
 #define  DEFAULT_TREE_STATE  0xFF
 

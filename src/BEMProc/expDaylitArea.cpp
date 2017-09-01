@@ -1,8 +1,8 @@
 // expDaylitArea.cpp - 
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -846,6 +846,8 @@ public:
 	bool AdjustReferencePoint( int idx, BEMSpaceDaylitArea* pSpcDLAs=NULL );
 	bool AdjustSecondarySideDaylitRefPnt( BEMSpaceDaylitArea& spcDLAs );		// SAC 11/1/16
 
+	double DistanceFromClosestWindow( BEMPoint& ptChkRefPt, double dMargin, BEMDaylitArea* pDAChk );
+
 	bool IsSidelitArea()	{	return (m_pGeomDBIDs && m_i1ObjClass == m_pGeomDBIDs->m_iOID_Win  );	};
 	bool IsToplitArea()	{	return (m_pGeomDBIDs && m_i1ObjClass == m_pGeomDBIDs->m_iOID_Skylt);	};
 
@@ -1505,6 +1507,79 @@ bool BEMDaylitArea::InitSideDaylitAreas( double dParentZ )
 }
 
 
+double BEMDaylitArea::DistanceFromClosestWindow( BEMPoint& ptChkRefPt, double dMargin, BEMDaylitArea* pDAChk )
+{	double dRetVal = 999;
+	if (m_pParentSpace && m_pParentSpace->m_daylitAreas.size() > 0)
+	{	// loop over all sidelit daylt areas and find the one w/ the closest glazing
+		for (std::vector<BEMDaylitArea>::iterator chk1=m_pParentSpace->m_daylitAreas.begin(); chk1!=m_pParentSpace->m_daylitAreas.end(); ++chk1)
+		{	BEMDaylitArea* pChk1 = &(*chk1);
+			if (pChk1 && (pDAChk==NULL || pChk1 != pDAChk) && pChk1->IsSidelitArea())
+			{	double dMaxGlzVertDist=0;
+				BEMPoint ptExtGlzCoord[2];
+				std::deque<BEMPoint> ptaGlazPolyPts;
+				boost::geometry::intersection( pChk1->m_polyGlazing, pChk1->m_polyGlazing, ptaGlazPolyPts );
+				BOOST_FOREACH(BEMPoint const& p, ptaGlazPolyPts)
+				{	BOOST_FOREACH(BEMPoint const& p2, ptaGlazPolyPts)
+					{	if (dMaxGlzVertDist < boost::geometry::distance( p, p2 ))
+						{	dMaxGlzVertDist = boost::geometry::distance( p, p2 );
+							ptExtGlzCoord[0] = p;
+							ptExtGlzCoord[1] = p2;
+				}	}	}
+				if (boost::geometry::distance( pChk1->m_ptGlazingCentroid, ptChkRefPt ) < (dMaxGlzVertDist * 0.6)+dMargin)
+				{	// check for distance only if the point being checked is within 60%+ of the glazing centroid
+					double dAngExtToChk = LineAngle(	boost::geometry::get<0>( ptExtGlzCoord[0] ), boost::geometry::get<0>( ptChkRefPt ),
+																boost::geometry::get<1>( ptExtGlzCoord[0] ), boost::geometry::get<1>( ptChkRefPt ), 0.01 );
+					double dAngExtToExt = LineAngle(	boost::geometry::get<0>( ptExtGlzCoord[0] ), boost::geometry::get<0>( ptExtGlzCoord[1] ),
+																boost::geometry::get<1>( ptExtGlzCoord[0] ), boost::geometry::get<1>( ptExtGlzCoord[1] ), 0.01 );
+					double dAngDelta = fabs( dAngExtToChk - dAngExtToExt );
+					double dDistExtToChk = fabs( boost::geometry::distance( ptExtGlzCoord[0], ptChkRefPt ) );
+					double dDistChkToGlz = fabs( dDistExtToChk * sin( dAngDelta ) );
+					if (dRetVal > dDistChkToGlz)
+						dRetVal = dDistChkToGlz;	// closest glazing so far...
+				}
+
+//	BEMPoly		m_polyGlazing;					//	polygon representing glazing itself
+
+//			std::deque<BEMPoint> ptaIntPts;
+//			boost::geometry::intersection( m_pParentSpace->m_polySpace, mptRefPtLine, ptaIntPts );		// calculate intersection of space and ref point line segment
+//			double dMaxDistFromGlz = 0.;
+//			BEMPoint ptNewRefPt;
+//			BOOST_FOREACH(BEMPoint const& p, ptaIntPts)
+//			{	if (boost::geometry::distance( p, m_ptGlazingCentroid ) > dMaxDistFromGlz)
+//				{	ptNewRefPt = p;
+//					dMaxDistFromGlz = boost::geometry::distance( p, m_ptGlazingCentroid );
+//			}	}
+
+//						std::deque<BEMPoint> ptaSpcEdgePts, ptaGlzEdgePts;
+//						boost::geometry::intersection( m_pParentSpace->m_polySpace, lineCtrlGlaz, ptaSpcEdgePts );		// calculate intersection of space poly and CtrlGlaz line segment
+
+		}	}
+	}
+	return dRetVal;
+
+//	m_dDistFromParentCentroid = boost::geometry::distance( m_ptGlazingCentroid, m_pParentSpace->m_ptSpcCenter );
+
+//	if (daylitAreas.size() > 0)
+//	{	for (std::vector<BEMDaylitArea>::iterator chk1=daylitAreas.begin(); chk1!=daylitAreas.end(); ++chk1)
+//		{	BEMDaylitArea* pChk1 = &(*chk1);
+//			if (pChk1)
+//			{	int iLpTo = (pChk1->IsToplitArea() ? 1 : 2);
+//				for (int i=0; i<iLpTo; i++)
+//				{	switch (iWhatToPlot)
+//					{	case  0 :	mapper.add( pChk1->m_polyOrigDaylitInSpc[i] );		break;
+//						case  1 :	//mapper.add( pChk1->m_polyFinalDaylit[0] );	break;
+//										BOOST_FOREACH(BEMPoly const& p, pChk1->m_polyFinalDaylit[i])
+//										{	mapper.add( p );
+//											//if (boost::geometry::area(p) > 0)
+//										}	break;
+//					}
+//					mapper.add( pChk1->m_polyGlazing );
+//			}	}
+//	}	}
+
+}
+
+
 bool BEMDaylitArea::InitTopDaylitArea( double dParentZ )
 {	bool bRetVal = false;
 	m_fDegreesFromSouth = -1;		// constant for toplit areas
@@ -1620,15 +1695,9 @@ bool BEMDaylitArea::InitTopDaylitArea( double dParentZ )
 					ptChkRefPt.set<0>( (dCenterX+dX + dCenterX+dX2) / 2.0 );
 					ptChkRefPt.set<1>( (dCenterY+dY + dCenterY+dY2) / 2.0 );
 					double dThisDist = boost::geometry::distance( ptChkRefPt, m_pParentSpace->m_ptSpcCenter );
-					if (boost::geometry::within( ptChkRefPt, m_pParentSpace->m_polySpace ))
-					{	if (dThisDist < dDistToSpcCentroid)
-						{	m_pntDayltgRefPnts[0] = ptChkRefPt;
-							dDistToSpcCentroid = dThisDist;
-							m_bDLRefPntValid[0]		= true;		// whether or not the dayltg ref points were successfully positioned
-							m_bDLRefPntInStdLoc[0]	= true;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
-					}	}
-					else	// daylighting ctrl (ptChkRefPt) lies OUTSIDE the space boundary
-					{	BEMLine lineCtrlGlaz;		// line between reference pt and glazing centroid
+					if (!boost::geometry::within( ptChkRefPt, m_pParentSpace->m_polySpace ))
+					{	// daylighting ctrl (ptChkRefPt) lies OUTSIDE the space boundary
+						BEMLine lineCtrlGlaz;		// line between reference pt and glazing centroid
 						boost::geometry::append( lineCtrlGlaz, m_ptGlazingCentroid );
 						boost::geometry::append( lineCtrlGlaz, ptChkRefPt );
 						std::deque<BEMPoint> ptaSpcEdgePts, ptaGlzEdgePts;
@@ -1637,18 +1706,21 @@ bool BEMDaylitArea::InitTopDaylitArea( double dParentZ )
 																		assert( !ptaSpcEdgePts.empty() && !ptaGlzEdgePts.empty() );
 						if (!ptaSpcEdgePts.empty() && !ptaGlzEdgePts.empty())
 						{	dThisDist = boost::geometry::distance( ptaSpcEdgePts[0], ptaGlzEdgePts[0] );
-							if (dThisDist > dDistPtOutsdToSpcEdge)
-							{	dDistPtOutsdToSpcEdge = dThisDist;
+				//			if (dThisDist > dDistPtOutsdToSpcEdge)
+				//			{	dDistPtOutsdToSpcEdge = dThisDist;
 								// reset ref pt to be 3" inside Space boundary toward glazing centroid
 								double dAngVertToCtr = LineAngle(	boost::geometry::get<0>( ptaSpcEdgePts[0] ), boost::geometry::get<0>( ptaGlzEdgePts[0] ),
 																				boost::geometry::get<1>( ptaSpcEdgePts[0] ), boost::geometry::get<1>( ptaGlzEdgePts[0] ), 0.01 );
-								ptaSpcEdgePts[0].set<0>( (boost::geometry::get<0>( ptaSpcEdgePts[0] ) + (0.25 * cos( dAngVertToCtr ))) );  // move point 3" toward centroid of skylight
-								ptaSpcEdgePts[0].set<1>( (boost::geometry::get<1>( ptaSpcEdgePts[0] ) + (0.25 * sin( dAngVertToCtr ))) );
-								m_pntDayltgRefPnts[0] = ptaSpcEdgePts[0];
-								m_bDLRefPntValid[0]		= true;		// whether or not the dayltg ref points were successfully positioned
-								m_bDLRefPntInStdLoc[0]	= true;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
-							}
+								ptChkRefPt.set<0>( (boost::geometry::get<0>( ptaSpcEdgePts[0] ) + (0.25 * cos( dAngVertToCtr ))) );  // move point 3" toward centroid of skylight
+								ptChkRefPt.set<1>( (boost::geometry::get<1>( ptaSpcEdgePts[0] ) + (0.25 * sin( dAngVertToCtr ))) );
+				//				ptaSpcEdgePts[0].set<0>( (boost::geometry::get<0>( ptaSpcEdgePts[0] ) + (0.25 * cos( dAngVertToCtr ))) );  // move point 3" toward centroid of skylight
+				//				ptaSpcEdgePts[0].set<1>( (boost::geometry::get<1>( ptaSpcEdgePts[0] ) + (0.25 * sin( dAngVertToCtr ))) );
+				//				m_pntDayltgRefPnts[0] = ptaSpcEdgePts[0];
+				//				m_bDLRefPntValid[0]		= true;		// whether or not the dayltg ref points were successfully positioned
+				//				m_bDLRefPntInStdLoc[0]	= true;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
+				//			}
 						}
+
 	// Last resort => find points 3" in (toward daylit area centroid) from each daylit area vertex and return the furthest of those from the glazing centroid
 //				BEMPoint ptTemp, ptCurDaylitAreaCenter;
 //				double dTemp, dFurthestDist = 0.;
@@ -1678,6 +1750,14 @@ bool BEMDaylitArea::InitTopDaylitArea( double dParentZ )
 //					//			m_dRefPntToSpcCenterDist[0] = boost::geometry::distance( m_pntDayltgRefPnts[0], m_pParentSpace->m_ptSpcCenter );
 //						}
 					}
+
+					if (dThisDist < dDistToSpcCentroid)
+					{	m_pntDayltgRefPnts[0] = ptChkRefPt;
+						dDistToSpcCentroid = dThisDist;
+						m_bDLRefPntValid[0]		= true;		// whether or not the dayltg ref points were successfully positioned
+						m_bDLRefPntInStdLoc[0]	= true;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
+					}
+
 				}																		assert( dDistToSpcCentroid < 99998. || dDistPtOutsdToSpcEdge > 0. );
 				if (dDistToSpcCentroid > 99998. && dDistPtOutsdToSpcEdge < 0.0001)
 				{	assert( FALSE );
@@ -2159,6 +2239,37 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 		// Mods to ensure secondary side daylit area reference points are not inside any primary sidelit areas (of different glazings)
 			for (std::vector<BEMDaylitArea>::iterator chk1=spcDLAs.m_daylitAreas.begin(); chk1!=spcDLAs.m_daylitAreas.end(); ++chk1)
 			{	BEMDaylitArea* pChk1 = &(*chk1);
+
+			// code to ensure that NO dayltg ctrl position is wihtin 6" of any window - SAC 8/21/17
+				if (pChk1 && pChk1->m_dFinalArea[0] >= 0.1 && pChk1->m_bDLRefPntValid[0])
+				{	int iWinDistLoop = 0;
+					while (pChk1->DistanceFromClosestWindow( pChk1->m_pntDayltgRefPnts[0], 0.5, (pChk1->IsSidelitArea() ? pChk1 : NULL) ) <= 0.5 && ++iWinDistLoop < 10)
+					{	// this dayltg ref pt within 6" of nearest window, so pull it in toward skylt centroid by 3"
+						double dAngPtToCtr = LineAngle(	boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[0] ), boost::geometry::get<0>( pChk1->m_ptGlazingCentroid ),
+																	boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[0] ), boost::geometry::get<1>( pChk1->m_ptGlazingCentroid ), 0.01 );
+						pChk1->m_pntDayltgRefPnts[0].set<0>( (boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[0] ) + (0.25 * cos( dAngPtToCtr ))) );  // move point 3" toward centroid of glazing
+						pChk1->m_pntDayltgRefPnts[0].set<1>( (boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[0] ) + (0.25 * sin( dAngPtToCtr ))) );
+					}
+					if (iWinDistLoop > 1)
+						pChk1->m_bDLRefPntInStdLoc[0]	= false;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
+					if (iWinDistLoop >= 10)
+						pChk1->m_bDLRefPntValid[0]		= false;		// whether or not the dayltg ref points were successfully positioned
+				}
+				if (pChk1 && pChk1->IsSidelitArea() && pChk1->m_dFinalArea[1] >= 0.1 && pChk1->m_bDLRefPntValid[1])
+				{	int iWinDistLoop = 0;
+					while (pChk1->DistanceFromClosestWindow( pChk1->m_pntDayltgRefPnts[1], 0.5, pChk1 ) <= 0.5 && ++iWinDistLoop < 10)
+					{	// this dayltg ref pt within 6" of nearest window, so pull it in toward skylt centroid by 3"
+						double dAngPtToCtr = LineAngle(	boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[1] ), boost::geometry::get<0>( pChk1->m_ptGlazingCentroid ),
+																	boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[1] ), boost::geometry::get<1>( pChk1->m_ptGlazingCentroid ), 0.01 );
+						pChk1->m_pntDayltgRefPnts[1].set<0>( (boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[1] ) + (0.25 * cos( dAngPtToCtr ))) );  // move point 3" toward centroid of glazing
+						pChk1->m_pntDayltgRefPnts[1].set<1>( (boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[1] ) + (0.25 * sin( dAngPtToCtr ))) );
+					}
+					if (iWinDistLoop > 1)
+						pChk1->m_bDLRefPntInStdLoc[1]	= false;		// whether or not the dayltg ref points are positioned in there generic locations or required special re-positioning
+					if (iWinDistLoop >= 10)
+						pChk1->m_bDLRefPntValid[1]		= false;		// whether or not the dayltg ref points were successfully positioned
+				}
+
 				if (pChk1 && pChk1->IsSidelitArea() && pChk1->m_dFinalArea[1] >= 0.1)
 					pChk1->AdjustSecondarySideDaylitRefPnt( spcDLAs );
 			}
