@@ -582,7 +582,7 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 //											10 : Report generation processing error in send request
 //											11 : Report generation processing error in result retrieval
 //											12 : No Report Name specified
-//											13 : Missing or invalid PDf Only boolean string (must be 'true' or 'false' (case insensitive))
+//											13 : Missing or invalid PDF Only boolean string (must be 'true', 'false', 'both' or a Component:Property name (case insensitive))   - REVISED
 //											14 : Missing or invalid report generation debug boolean string (must be 'true' or 'false' (case insensitive))
 //											15 : Missing or invalid AuthToken1 string
 //											16 : Missing or invalid AuthToken2 string
@@ -832,7 +832,7 @@ int GenerateReport_CEC_OLD(	const char* pszXMLResultsPathFile, const char* pszCA
 			if (iRetVal == 0)
 			{	sLogMsg.sprintf( "The XML file '%s' is opened in another application.  This file must be closed in that "
 			                "application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-								 "(once the file is closed), or \n'Cancel' to abort the analysis.", FileOutName );
+								 "(once the file is closed), or \n'Abort' to abort the analysis.", FileOutName );
 				if (!OKToWriteOrDeleteFile( FileOutName, sLogMsg, bSilent ))
 				{	//sErrorMsg.sprintf( "ERROR:  User chose not to overwrite %s file:  %s", pszOutFileDescs[i], sOutFiles[i] );
 					iRetVal = 5;
@@ -1187,7 +1187,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 	QString sCompRptID     = ((pszCompRptID      != NULL && strlen( pszCompRptID     ) > 0) ? pszCompRptID     : "BEES" );		// SAC 6/2/14
 	QString sRptGenServer  = ((pszRptGenServer   != NULL && strlen( pszRptGenServer  ) > 0) ? pszRptGenServer  : "t24docs.com" );
-	QString sRptGenApp     = ((pszRptGenApp      != NULL && strlen( pszRptGenApp     ) > 0) ? pszRptGenApp     : (sReportName.indexOf( "NRCC_" )==0 ? "ReportGeneratorCom" : "ReportGeneratorRes") );  // SAC 1/5/15 - was: "T24SoftwareReportingServiceDev" );
+	QString sRptGenApp     = ((pszRptGenApp      != NULL && strlen( pszRptGenApp     ) > 0) ? pszRptGenApp     : (sReportName.indexOf( "NRCC_" )==0 ? "ReportGeneratorCom2" : "ReportGeneratorRes2") );  // SAC 1/5/15 - was: "T24SoftwareReportingServiceDev" );  // SAC 8/31/17 - updated to Com/Res'2'
 	QString sRptGenService = ((pszRptGenService  != NULL && strlen( pszRptGenService ) > 0) ? pszRptGenService : "ReportingService.svc" );
 	QString sSecKeyRLName  = ((pszSecKeyRLName   != NULL && strlen( pszSecKeyRLName  ) > 0) ? pszSecKeyRLName  : (sReportName.indexOf( "NRCC_" )==0 ? "rl_SECURITYKEYS" : "SetReportKeys") );
 	if (sReportName.indexOf("STD") > 0)		// SAC 11/13/15 - tweak output report filename for 'Std' reports
@@ -1213,12 +1213,20 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 	{	iRetVal = 1;			assert( FALSE );			//	1 : XML file not found
 	}
 
+	long lRptIDNum = -1;		// SAC 8/24/17 - revise use of PDFOnlyBool argument to enable specification of a report ID number Component:Property name
+	if (!sPDFOnlyBool.isEmpty() && sPDFOnlyBool.indexOf(':') > 0)
+	{	long lDBID_RptIDNum = BEMPX_GetDatabaseID( sPDFOnlyBool.toLocal8Bit().constData() );			assert( lDBID_RptIDNum > 0 );
+		if (lDBID_RptIDNum < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_RptIDNum, lRptIDNum, -1 ))
+			lRptIDNum = -1;
+	}
+
 	if (iRetVal != 0)
 	{	// do nothing
 	}
 	else if (sReportName.isEmpty())
 		iRetVal = 12;
-	else if (sPDFOnlyBool.isEmpty() || (sPDFOnlyBool.compare("true", Qt::CaseInsensitive)!=0 && sPDFOnlyBool.compare("false", Qt::CaseInsensitive)!=0 && sPDFOnlyBool.compare("both", Qt::CaseInsensitive)!=0))  // SAC 7/14/17
+	else if (sPDFOnlyBool.isEmpty() || (lRptIDNum < 0 &&		// SAC 8/24/17
+	                                    sPDFOnlyBool.compare("true", Qt::CaseInsensitive)!=0 && sPDFOnlyBool.compare("false", Qt::CaseInsensitive)!=0 && sPDFOnlyBool.compare("both", Qt::CaseInsensitive)!=0))  // SAC 7/14/17
 		iRetVal = 13;
 	else if (sDebugBool.isEmpty() || (sDebugBool.compare("true", Qt::CaseInsensitive)!=0 && sDebugBool.compare("false", Qt::CaseInsensitive)!=0))
 		iRetVal = 14;
@@ -1231,8 +1239,23 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 	else if (pszPublicKey == NULL || strlen( pszPublicKey ) < 1)
 		iRetVal = 18;
 	else
-	{	bool bPDFRpt = ((sPDFOnlyBool.compare("true",  Qt::CaseInsensitive) == 0 || sPDFOnlyBool.compare("both", Qt::CaseInsensitive) == 0) ? true : false);
-		bool bXMLRpt = ((sPDFOnlyBool.compare("false", Qt::CaseInsensitive) == 0 || sPDFOnlyBool.compare("both", Qt::CaseInsensitive) == 0) ? true : false);
+	{	bool bPDFRpt=false, bXMLRpt=false, bSecRpts[4]={false,false,false,false}, bSingleRpt=false;
+		if (lRptIDNum >= 0)
+		{	bPDFRpt = (lRptIDNum & 2);		bSecRpts[0] = (lRptIDNum & 4);		bSecRpts[2] = (lRptIDNum & 16);
+			bXMLRpt = (lRptIDNum & 1);		bSecRpts[1] = (lRptIDNum & 8);		bSecRpts[3] = (lRptIDNum & 32);
+		}
+		else
+		{	bSingleRpt = true; 
+			bPDFRpt = ((sPDFOnlyBool.compare("true",  Qt::CaseInsensitive) == 0 || sPDFOnlyBool.compare("both", Qt::CaseInsensitive) == 0) ? true : false);
+			bXMLRpt = ((sPDFOnlyBool.compare("false", Qt::CaseInsensitive) == 0 || sPDFOnlyBool.compare("both", Qt::CaseInsensitive) == 0) ? true : false);
+			if (sReportName.indexOf( "NRCC_" )==0)
+			{	if (sReportName.indexOf( "STD" ) >= 0)
+					lRptIDNum  = 4;
+				else
+				{	lRptIDNum  = (bPDFRpt ? 2 : 0);
+					lRptIDNum += (bXMLRpt ? 1 : 0);
+		}	}	}
+
 		try
 		{
 	// code to collect private/public keys to perform digital signing...
@@ -1368,7 +1391,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 			if (iRetVal == 0)
 			{	sLogMsg.sprintf( "The XML file '%s' is opened in another application.  This file must be closed in that "
 			                "application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-								 "(once the file is closed), or \n'Cancel' to abort the analysis.", FileOutName );
+								 "(once the file is closed), or \n'Abort' to abort the report generation.", FileOutName );
 				if (!OKToWriteOrDeleteFile( FileOutName, sLogMsg, bSilent ))
 				{	//sErrorMsg.sprintf( "ERROR:  User chose not to overwrite %s file:  %s", pszOutFileDescs[i], sOutFiles[i] );
 					iRetVal = 5;
@@ -1487,6 +1510,11 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 		//			sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 		//								pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 		// SAC 7/14/17 - new URL scheme for single-pass report gen
+		// SAC 8/24/17 - revised new scheme replacing bPDFRpt & bXMLRpt w/ an integer servings as bitwise flags for addiitonal reports
+				if (lRptIDNum >= 0)
+					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%ld/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
+							pszReportName, pszAuthToken1, pszAuthToken2, lRptIDNum, /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
+				else
 					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 							pszReportName, pszAuthToken1, pszAuthToken2, (bPDFRpt ? "true" : "false"), (bXMLRpt ? "true" : "false"), /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
 
@@ -1532,13 +1560,35 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 			}
 
 			// code to extract PDF from XML report - and delete the XML if full rpt not requested
-			if (iRetVal == 0 && bFinalPDFGeneration && bPDFRpt)
-			{
-			// EXTRACT PDF from XML
-				if (!CMX_ExtractTitle24ReportFromXML( FileOutName, FileOutPDFName, "Report2", TRUE /*bSupressAllMessageBoxes*/ ))
-					iRetVal = 26;		// Error extracting PDF from compliance report XML
+			int iNumPDFsSaved=0;
+			if (iRetVal == 0 && bFinalPDFGeneration)
+			{	if (bSingleRpt)
+				{	QString sXMLRptID = (lRptIDNum == 4 ? "Report3" : "Report2");
+					if (!CMX_ExtractTitle24ReportFromXML( FileOutName, FileOutPDFName, sXMLRptID.toLocal8Bit().constData(), TRUE /*bSupressAllMessageBoxes*/ ))
+						iRetVal = 26;		// Error extracting PDF from compliance report XML
+					else
+						iNumPDFsSaved++;
+				}
+				else
+				{	if (bPDFRpt)
+					// EXTRACT PDF from XML
+					{	if (!CMX_ExtractTitle24ReportFromXML( FileOutName, FileOutPDFName, "Report2", TRUE /*bSupressAllMessageBoxes*/ ))
+							iRetVal = 26;		// Error extracting PDF from compliance report XML
+						else
+							iNumPDFsSaved++;
+					}
+					for (int iPDFRpt=1; iPDFRpt<=4; iPDFRpt++)
+					{	if (iRetVal == 0 && bSecRpts[iPDFRpt-1])
+						{	QString qsRptID = QString( "Report%1" ).arg( QString::number(iPDFRpt+2) );
+							QString qsRptFile = QString( "%1 - rpt%2.pdf" ).arg( pszOutputPathFile, QString::number(iPDFRpt+2) );
+							if (!CMX_ExtractTitle24ReportFromXML( FileOutName, qsRptFile.toLocal8Bit().constData(), qsRptID.toLocal8Bit().constData(), TRUE /*bSupressAllMessageBoxes*/ ))
+								iRetVal = 26;		// Error extracting PDF from compliance report XML
+							else
+								iNumPDFsSaved++;
+					}	}
+				}
 
-				if (iRetVal == 0 && !bXMLRpt)
+				if (iRetVal == 0 && iNumPDFsSaved > 0 && !bXMLRpt)
 					// DELETE Full (XML) compliance report (if XML (full) report not requested & no errors logged there)
 					DeleteFile( FileOutName );
 			}

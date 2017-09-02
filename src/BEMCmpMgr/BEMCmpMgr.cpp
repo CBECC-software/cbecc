@@ -319,7 +319,7 @@ BOOL OKToWriteOrDeleteFile( const char* pszFileName, QString sUserMsg, bool bSil
          else if (!bRetVal)
          {
          //   bAbort = (BEMMessageBox(sUserMsg, "", 3 /*error*/, MB_RETRYCANCEL)  == IDCANCEL);
-            bAbort = (BEMMessageBox(sUserMsg, "", 3 /*error*/, (QMessageBox::Retry | QMessageBox::Cancel) )  == QMessageBox::Cancel );
+            bAbort = (BEMMessageBox(sUserMsg, "", 3 /*error*/, (QMessageBox::Retry | QMessageBox::Abort) )  == QMessageBox::Abort );
          }
       }
    }
@@ -1438,7 +1438,7 @@ int Local_GenerateRulesetModelReport( QString sRptPathFile, QString sRptRL,
 			QString sMsg;
 			sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 			             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-							 "(once the file is closed), or \n'Cancel' to abort the %s.", "report", sRptPathFile.toLocal8Bit().constData(), "report generation" );
+							 "(once the file is closed), or \n'Abort' to abort the %s.", "report", sRptPathFile.toLocal8Bit().constData(), "report generation" );
 			if (!OKToWriteOrDeleteFile( sRptPathFile.toLocal8Bit().constData(), sMsg, bSilent ))
 				iRetVal = 4;
 			else

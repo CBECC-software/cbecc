@@ -166,7 +166,7 @@ int CMX_GenerateFileHashesFromCSV( const char* pszHashFileListCSVPathFile, const
 	{	std::string sOutputPathFile = pszHashOutputPathFile;
 		std::string sOverwriteFileMsg = boost::str( boost::format( "The file hash output file '%s' is opened in another application.  This file must be closed in that "
 													"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-													"(once the file is closed), or \n'Cancel' to abort the hash generation." ) % sOutputPathFile.c_str() );
+													"(once the file is closed), or \n'Abort' to abort the hash generation." ) % sOutputPathFile.c_str() );
 		if (!OKToWriteOrDeleteFile( sOutputPathFile.c_str(), sOverwriteFileMsg.c_str() ))
 		{	//if (pszErrorMsg && iErrorMsgLen > 0)
 			//	sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to file hash output file:  %s", sOutputPathFile );

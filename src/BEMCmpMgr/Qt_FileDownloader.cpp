@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -509,7 +509,7 @@ int Qt_URLFile::SaveFile()
 	{
 		std::string sOverwriteMsg = boost::str( boost::format( "The file to save downloaded data to '%s' is opened in another application.  This file must be closed in that "
 													"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-													"(once the file is closed), or \n'Cancel' to abort the file writing." ) % m_sPathFile.toLocal8Bit().constData() );
+													"(once the file is closed), or \n'Abort' to abort the file writing." ) % m_sPathFile.toLocal8Bit().constData() );
 		if (!OKToWriteOrDeleteFile( m_sPathFile.toLocal8Bit().constData(), sOverwriteMsg.c_str() ))
 		{	iRetVal = 3;
 													if (m_bVerbose)

@@ -37,6 +37,25 @@
 const int CSE_CONTINUE = 0;		// continue execution
 const int CSE_ABORT = -1;		// abort and cleanup
 
+extern const char* pszRunAbbrev_u;
+extern const char* pszRunAbbrev_p;
+extern const char* pszRunAbbrev_pN;
+extern const char* pszRunAbbrev_pE;
+extern const char* pszRunAbbrev_pS;
+extern const char* pszRunAbbrev_pW;
+extern const char* pszRunAbbrev_s;
+extern const char* pszRunAbbrev_pfx;
+extern const char* pszRunAbbrev_pfxN;
+extern const char* pszRunAbbrev_pfxE;
+extern const char* pszRunAbbrev_pfxS;
+extern const char* pszRunAbbrev_pfxW;
+extern const char* pszRunAbbrev_pmf;
+extern const char* pszRunAbbrev_pmfN;
+extern const char* pszRunAbbrev_pmfE;
+extern const char* pszRunAbbrev_pmfS;
+extern const char* pszRunAbbrev_pmfW;
+extern const char* pszRunAbbrev_dr;
+
 enum CRM_RunType	// SAC 3/26/15
 {
    CRM_User,	// user model w/out full proposed setup when in Research Mode
@@ -46,6 +65,11 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_SOrientProp,
    CRM_WOrientProp,
    CRM_StdDesign,
+   CRM_PropFlex,	// SAC 8/3/17 - added proposed Flexibility (for now just pre-cooling) runs
+   CRM_NPropFlex,
+   CRM_EPropFlex,
+   CRM_SPropFlex,
+   CRM_WPropFlex,
    CRM_PropMixedFuel,
    CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
    CRM_EPropMixedFuel,
@@ -108,9 +132,11 @@ class CSERunMgr
 public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
-		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0 );
+		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0,
+		long lPropFlexRunReqd=0, int iNumRuns=-1 );
 	~CSERunMgr();
-	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true );
+	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
+						const char* pszRunAbbrev=NULL );
 	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
@@ -142,6 +168,7 @@ private:
 	long m_lStdDesignBaseID;
 	long m_lDesignRatingRunID;
 	long m_lPropMixedFuelRunReqd;
+	long m_lPropFlexRunReqd;
 	bool m_bVerbose;
 	bool m_bStoreBEMProcDetails;
 	bool m_bPerformSimulations;

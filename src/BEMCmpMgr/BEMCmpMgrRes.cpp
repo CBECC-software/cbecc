@@ -224,7 +224,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	if (!sDebugRuleEvalCSV.isEmpty() && FileExists( sDebugRuleEvalCSV.toLocal8Bit().constData() ))
 	{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Cancel' to ignore this file." ).arg( "rule evaluation debug", sDebugRuleEvalCSV );
+						 "(once the file is closed), or \n'Abort' to ignore this file." ).arg( "rule evaluation debug", sDebugRuleEvalCSV );
 		if (!OKToWriteOrDeleteFile( sDebugRuleEvalCSV.toLocal8Bit().constData(), sLogMsg, bSilent ))
 		{	if (bSilent)
 				sLogMsg = QString( "ERROR:  Unable to open %1 file:  %2" ).arg( "rule evaluation debug", sDebugRuleEvalCSV );
@@ -352,10 +352,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	QString sXMLResultsFileName = sModelPathFile;
 	if (sXMLResultsFileName.lastIndexOf('.'))
-	{	sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
-		//sXMLResultsFileName += " - following analysis.xml";
-		sXMLResultsFileName += " - AnalysisResults.xml";
-	}
+		sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
+	sXMLResultsFileName += " - AnalysisResults.xml";
 
 	QString sCSESimRptOutputFileName, sCSESimErrOutputFileName;	// SAC 11/7/16
 	if (iSimReportDetailsOption > 0)
@@ -367,7 +365,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		// make sure file writeable, and if it is and present, delete it before continuing analysis
 		sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Cancel' to ignore this file." ).arg( "CSE report output", sCSESimRptOutputFileName );
+						 "(once the file is closed), or \n'Abort' to ignore this file." ).arg( "CSE report output", sCSESimRptOutputFileName );
 		if ( !OKToWriteOrDeleteFile( sCSESimRptOutputFileName.toLocal8Bit().constData(), sLogMsg, bSilent ) ||
 			  (FileExists( sCSESimRptOutputFileName ) && !DeleteFile( sCSESimRptOutputFileName.toLocal8Bit().constData() )) )
 		{	sLogMsg = QString( "Warning:  CSE report output cannot be overwritten and will not be updated for this analysis:  %1" ).arg( sCSESimRptOutputFileName );
@@ -384,7 +382,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		// make sure file writeable, and if it is and present, delete it before continuing analysis
 		sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Cancel' to ignore this file." ).arg( "CSE error output", sCSESimErrOutputFileName );
+						 "(once the file is closed), or \n'Abort' to ignore this file." ).arg( "CSE error output", sCSESimErrOutputFileName );
 		if ( !OKToWriteOrDeleteFile( sCSESimErrOutputFileName.toLocal8Bit().constData(), sLogMsg, bSilent ) ||
 			  (FileExists( sCSESimErrOutputFileName ) && !DeleteFile( sCSESimErrOutputFileName.toLocal8Bit().constData() )) )
 		{	sLogMsg = QString( "Warning:  CSE error output cannot be overwritten and will not be updated for this analysis:  %1" ).arg( sCSESimErrOutputFileName );
@@ -508,6 +506,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bAnalysisPriorToRptGenOK = false;
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
 	long lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
+	long lPropFlexRunReqd = 0;  // SAC 8/3/17
 	bool bDHWCalcMethodUserSpecified = false;
 	int iRulesetCodeYear = 0;
 	QString sResTemp1, sResTemp2, sResTemp3;	// SAC 2/7/17
@@ -528,6 +527,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				iRetVal = BEMAnal_CECRes_LogFileWriteError;
 			}
 		}
+
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
+		{	sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+							 "(once the file is closed), or \n'Abort' to abort the %s.", "analysis results XML", sXMLResultsFileName.toLocal8Bit().constData(), "analysis" );
+			if (!OKToWriteOrDeleteFile( sXMLResultsFileName.toLocal8Bit().constData(), sMsg ))
+			{	sErrMsg.sprintf( "ERROR:  Analysis aborting - user chose not to overwrite analysis results XML file:  %s", sXMLResultsFileName.toLocal8Bit().constData() );
+				iRetVal = BEMAnal_CECRes_AnalResWriteError;		// Unable to overwrite analysis results XML file
+		}	}
 
 	// SAC 3/11/16 - moved declaration of xmlResultsFile up here before model loading in order to be able to write User model to the file BEFORE modifying the project w/ analysis settings
 		BEMXMLWriter xmlResultsFile( ((ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty()) ? sXMLResultsFileName.toLocal8Bit().constData() : NULL) );
@@ -886,6 +894,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		long lAnalysisType = 0;
 		long lAllOrientations = 0;  // SAC 6/22/13
 		lDesignRatingRunID = 0;  // SAC 3/27/15
+		lPropFlexRunReqd = 0;  // SAC 8/3/17
 		lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
 		double fPctDoneFollowingFinalSim=0;		// SAC 5/5/17
@@ -905,7 +914,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						lPropMixedFuelRunReqd = 0;
 				}
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdDesignBase" ), lStdDesignBaseID );  // 0/1 (boolean)
-			}
+				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PropFlexRunReqd" ), lPropFlexRunReqd ) || lPropFlexRunReqd < 1)  // SAC 8/3/17
+					lPropFlexRunReqd = 0;
+				if (lPropFlexRunReqd > 0)
+				{	double dPropFlexFrac = 0;
+					if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:PropFlexFrac" ), dPropFlexFrac ) || dPropFlexFrac <= 0)
+						lPropFlexRunReqd = 0;	// toggle OFF PropFlex run if PropFlexFrac not > 0 - SAC 8/10/17
+			}	}
 
 		// ensure RunNumber not already > 0
 			long lInitRunNum = (lAnalysisType==0 ? 1 : 0);		// SAC 5/14/14 - ensure initial RunNumber = 1 for Research runs
@@ -1286,40 +1301,53 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //	-----  Project loaded & defaulted, weather files present  -----
 //	-----  Loop over (potentially multiple) individual Runs  -----
 //
+		QString sMsg;
+//		int iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
+// SAC 3/27/15 - mods to describe each run to be performed
+		int iNumRuns = 0;
+		int iRunType[16] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+		const char* pszRunAbbrev[16] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+		pszRunAbbrev[0]      = (lAnalysisType < 1 ? pszRunAbbrev_u : (lAllOrientations > 0 ? pszRunAbbrev_pN : pszRunAbbrev_p));
+		iRunType[iNumRuns++] = (lAnalysisType < 1 ? CRM_User : (lAllOrientations > 0 ? CRM_NOrientProp : CRM_Prop));
+		if (lAnalysisType > 0)
+		{	if (lAllOrientations > 0)
+			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pE;		iRunType[iNumRuns++] = CRM_EOrientProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pS;		iRunType[iNumRuns++] = CRM_SOrientProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pW;		iRunType[iNumRuns++] = CRM_WOrientProp;
+			}
+			if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
+			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_s;		iRunType[iNumRuns++] = CRM_StdDesign;
+			}
+			if ((lAnalysisType >= 13 || lAnalysisType == 2) && lPropFlexRunReqd > 0)		// SAC 8/3/17 - add in PropFlex run(s)
+			{	pszRunAbbrev[iNumRuns] = (lAllOrientations > 0 ? pszRunAbbrev_pfxN : pszRunAbbrev_pfx);
+				iRunType[iNumRuns++]   = (lAllOrientations > 0 ? CRM_NPropFlex     : CRM_PropFlex    );
+				if (lAllOrientations > 0)
+				{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxE;		iRunType[iNumRuns++] = CRM_EPropFlex;
+					pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxS;		iRunType[iNumRuns++] = CRM_SPropFlex;
+					pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxW;		iRunType[iNumRuns++] = CRM_WPropFlex;
+				}
+			}
+			if (lDesignRatingRunID > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly  - SAC 2/9/17 - allow AT=2 for ExEDR analysis
+			{	if (lPropMixedFuelRunReqd > 0)	// SAC 4/5/17
+				{	pszRunAbbrev[iNumRuns] = (lAllOrientations > 0 ? pszRunAbbrev_pmfN  : pszRunAbbrev_pmf );
+					iRunType[iNumRuns++]   = (lAllOrientations > 0 ? CRM_NPropMixedFuel : CRM_PropMixedFuel);
+					if (lAllOrientations > 0)
+					{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfE;		iRunType[iNumRuns++] = CRM_EPropMixedFuel;
+						pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfS;		iRunType[iNumRuns++] = CRM_SPropMixedFuel;
+						pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfW;		iRunType[iNumRuns++] = CRM_WPropMixedFuel;
+				}	}
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_dr;		iRunType[iNumRuns++] = CRM_DesignRating;
+			}
+		}
+
 #if defined( CSE_MULTI_RUN)
 		CSERunMgr cseRunMgr(
 			sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, bFullComplianceAnalysis,
 			bInitHourlyResults, lAllOrientations, lAnalysisType, lStdDesignBaseID, lDesignRatingRunID, bVerbose,
 			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd );		// SAC 11/7/16 - added sim report/error option arguments
+			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd, lPropFlexRunReqd, iNumRuns );		// SAC 11/7/16 - added sim report/error option arguments  // SAC 8/14/17 - added iNumRuns arg
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-		QString sMsg;
-//		int iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
-// SAC 3/27/15 - mods to describe each run to be performed
-		int iNumRuns = 0;
-		int iRunType[12] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-		iRunType[iNumRuns++] = (lAnalysisType < 1 ? CRM_User : (lAllOrientations > 0 ? CRM_NOrientProp : CRM_Prop));
-		if (lAnalysisType > 0)
-		{	if (lAllOrientations > 0)
-			{	iRunType[iNumRuns++] = CRM_EOrientProp;
-				iRunType[iNumRuns++] = CRM_SOrientProp;
-				iRunType[iNumRuns++] = CRM_WOrientProp;
-			}
-			if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
-				iRunType[iNumRuns++] = CRM_StdDesign;
-			if (lDesignRatingRunID > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly  - SAC 2/9/17 - allow AT=2 for ExEDR analysis
-			{	if (lPropMixedFuelRunReqd > 0)	// SAC 4/5/17
-				{	iRunType[iNumRuns++] = (lAllOrientations > 0 ? CRM_NPropMixedFuel : CRM_PropMixedFuel);
-					if (lAllOrientations > 0)
-					{	iRunType[iNumRuns++] = CRM_EPropMixedFuel;
-						iRunType[iNumRuns++] = CRM_SPropMixedFuel;
-						iRunType[iNumRuns++] = CRM_WPropMixedFuel;
-				}	}
-				iRunType[iNumRuns++] = CRM_DesignRating;
-			}
-		}
 
 #if defined( CSE_MULTI_RUN)
 		siNumProgressRuns = 1;   // don't increment for run iteration - future mods will adjust this for batch processing
@@ -1332,16 +1360,30 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		{
 #if defined( CSE_MULTI_RUN)
 			if (iRunIdx > 0 || !bFirstModelCopyCreated)
-				BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
-			iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowReportIncludeFile );
-			if (iRV2 > 0)
-				iRetVal = iRV2;
-						dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+			{	// SAC 8/8/17 - added code to confirm positive return value from BEMPX_AddModel()
+				if (!BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ ))
+				{	if (sErrorMsg.isEmpty())
+						sErrorMsg = QString( "ERROR:  Unable to initialize analysis building model #%1 (%2)" ).arg( QString::number(iRunIdx+1), (pszRunAbbrev[iRunIdx] ? pszRunAbbrev[iRunIdx] : "") );
+					iRetVal = BEMAnal_CECRes_SimModelInitError;		// 63	- Error initializing analysis model
+			}	}
+			if (ResRetVal_ContinueProcessing( iRetVal ))
+			{	iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowReportIncludeFile, pszRunAbbrev[iRunIdx] );
+				if (iRV2 > 0)
+					iRetVal = iRV2;
+			}			dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 		}
 
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
 			cseRunMgr.DoRuns();
 						dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+		for (iRunIdx = 0; iRunIdx < iNumRuns; iRunIdx++)	// SAC 8/8/17 - move archiving of CSE Rpt & Err data outside loop ensuring 
+		{	// process CSE errors and/or reports into file for user review - SAC 11/7/16
+			if (bPerformSimulations && !bBypassCSE && !sCSESimRptOutputFileName.isEmpty())
+				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimRptOutputFileName, CSERun::OutFileREP );
+			if (bPerformSimulations && !bBypassCSE && !sCSESimErrOutputFileName.isEmpty())
+				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimErrOutputFileName, CSERun::OutFileERR );
+		}
 
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		for (iRunIdx = 0; iRunIdx < iNumRuns; iRunIdx++)
@@ -1351,12 +1393,6 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
 			const QString& sRunAbbrev = cseRun.GetRunAbbrev();
 			long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
-
-		// process CSE errors and/or reports into file for user review - SAC 11/7/16
-			if (bPerformSimulations && !bBypassCSE && !sCSESimRptOutputFileName.isEmpty())
-				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimRptOutputFileName, CSERun::OutFileREP );
-			if (bPerformSimulations && !bBypassCSE && !sCSESimErrOutputFileName.isEmpty())
-				cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimErrOutputFileName, CSERun::OutFileERR );
 
 			if (ResRetVal_ContinueProcessing( iRetVal )) // SAC 11/7/16 - moved iRetVal == 0 condition out of for() loop and down here to process output of simulated runs (above) even after errors encountered
 			{
@@ -1505,6 +1541,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
 				{
+					if (bVerbose)
+					{	sLogMsg = QString( "      Processing results for run %1 (%2)" ).arg( sRunID, sRunAbbrev );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
 					// Process & summarize results
 					iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
 					if (iRV2 > 0)
@@ -1763,6 +1803,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
 				{
+					if (bVerbose)
+					{	sLogMsg = QString( "      Processing results for run %1 (%2)" ).arg( sRunID2, sRunAbbrev2 );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
 					// Process & summarize results
 					iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
 					if (iRV2 > 0)
@@ -1980,12 +2024,12 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					sOutRptFN += sRptFileExt;
 					sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( sRptFileExt, sOutRptFN, "compliance report generation" );
+									 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( sRptFileExt, sOutRptFN, "compliance report generation" );
 					QString sMsg2;
 					if (bComplianceReportPDF)
 						sMsg2 = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( "PDF", sOutPDFRptFN, "compliance report generation" );
+									 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "PDF", sOutPDFRptFN, "compliance report generation" );
 					if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
 					{	if (bSilent)
 							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( sRptFileExt, sOutRptFN );
@@ -3011,7 +3055,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 	{	QString sOverwriteMsg;
 		sOverwriteMsg.sprintf(	"The hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
 										"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-										"(once the file is closed), or \n'Cancel' to abort the analysis.", pszHourlyResultsPathFile );
+										"(once the file is closed), or \n'Abort' to abort the analysis.", pszHourlyResultsPathFile );
 		if (!OKToWriteOrDeleteFile( pszHourlyResultsPathFile, sOverwriteMsg, bSilent ))
 		{	iRetVal = 2;
 			sErrMsg.sprintf( "Unable to open and/or write hourly CSV results file:  %s", pszHourlyResultsPathFile );
@@ -3558,7 +3602,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 	}
 	std::string sOverwriteProjFileMsg = boost::str( boost::format( "The batch processing log file '%s' is opened in another application.  This file must be closed in that "
 												"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-												"(once the file is closed), or \n'Cancel' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
+												"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
 	if (!OKToWriteOrDeleteFile( sBatchLogPathFile.c_str(), sOverwriteProjFileMsg.c_str() ))
 	{	if (pszErrorMsg && iErrorMsgLen > 0)
 			sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to batch processing log file:  %s", sBatchLogPathFile );
@@ -3621,7 +3665,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 						PrependPathIfNecessary( sBatchResultsFN, sBatchPath );
 						sOverwriteResultsFileMsg = boost::str( boost::format( "The CSV file '%s' is opened in another application.  This file must be closed in that "
 																	"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-																	"(once the file is closed), or \n'Cancel' to abort the batch processing." ) % sBatchResultsFN );
+																	"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchResultsFN );
 						if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str() ))
 						{			iMode = -3;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to batch results file specified in record %d:  '%s'" )
@@ -3690,7 +3734,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 							sOverwriteProjFileMsg.append( sRecProjOutFN );
 							sOverwriteProjFileMsg.append( "' is opened in another application.  This file must be closed in that "
 																		"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-																		"(once the file is closed), or \n'Cancel' to abort the batch processing." );
+																		"(once the file is closed), or \n'Abort' to abort the batch processing." );
 							if (!OKToWriteOrDeleteFile( sRecProjOutFN.c_str(), sOverwriteProjFileMsg.c_str() ))
 							{		iMode = -6;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to project output/save file specified in record %d:  '%s'" )

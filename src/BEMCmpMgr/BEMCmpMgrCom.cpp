@@ -1973,6 +1973,7 @@ static QString sDbgFileName;
 //											65 : Error copying simulation weather file to processing directory
 //											66 : Analysis aborted - user chose to abort due to compliance reporting issue(s)
 //											67 : Error evaluating ProposedModelPrep rules
+//											68 : One or more errors returned from Compliance Report Generator
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2109,7 +2110,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	if (!sDebugRuleEvalCSV.isEmpty() && FileExists( sDebugRuleEvalCSV.toLocal8Bit().constData() ))
 	{	sLogMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 		             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-						 "(once the file is closed), or \n'Cancel' to ignore this file.", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
+						 "(once the file is closed), or \n'Abort' to ignore this file.", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
 		if (!OKToWriteOrDeleteFile( sDebugRuleEvalCSV.toLocal8Bit().constData(), sLogMsg, bSilent ))
 		{	if (bSilent)
 				sLogMsg.sprintf( "ERROR:  Unable to open %s file:  %s", "rule evaluation debug", sDebugRuleEvalCSV.toLocal8Bit().constData() );
@@ -2195,7 +2196,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	RelativeToCompletePath_IfNeeded( sLogPathFile     );
 	RelativeToCompletePath_IfNeeded( sEPlusPath       );  // SAC 12/30/13
 
-	QString sDHWDLLPath			= sCompMgrDLLPath + "T24DHW\\";
 	QString sCSEEXEPath			= sCompMgrDLLPath + "CSE\\";		// SAC 5/24/16
 	QString sCSEWeatherPath		= sSimWeatherPath;
 #ifdef _DEBUG
@@ -2212,10 +2212,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	QString sXMLResultsFileName = sModelPathFile;
 	if (sXMLResultsFileName.lastIndexOf('.'))
-	{	sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
-		//sXMLResultsFileName += " - following analysis.xml";
-		sXMLResultsFileName += " - AnalysisResults.xml";
-	}
+		sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
+	sXMLResultsFileName += " - AnalysisResults.xml";
 
 	// UMLH check stuff
 	QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));		// enables Locale-specific formatted numeric strings
@@ -2773,7 +2771,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 19 :   sFHPathFile = sCompMgrDLLPath + "openstudio_utilities.dll";       break;
 					case 20 :   sFHPathFile = sCompMgrDLLPath + "qtwinmigrate.dll";               break;
 					case 21 :   sFHPathFile = sCompMgrDLLPath + "zkexpat.dll";                    break;
-					case 22 :	sFHPathFile = sCompMgrDLLPath + "qwt.dll";                        break;
+					case 22 :	sFHPathFile = sCompMgrDLLPath + "qwt.dll";                        bRequiredForCodeYear = false;  							break;	// SAC 8/27/17 - removed (not req'd for analysis)
 					case 23 :	sFHPathFile = sCompMgrDLLPath + "Qt5Cored.dll";                   break;  // SAC 12/3/14 - revised for Qt5
 					case 24 :	sFHPathFile = sCompMgrDLLPath + "Qt5Guid.dll";                    break;
 					case 25 :	sFHPathFile = sCompMgrDLLPath + "Qt5Networkd.dll";                break;
@@ -3052,6 +3050,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	}
 
+	if (!bAbort && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
+	{	sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+	                "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+						 "(once the file is closed), or \n'Abort' to abort the %s.", "analysis results XML", sXMLResultsFileName.toLocal8Bit().constData(), "analysis" );
+		if (!OKToWriteOrDeleteFile( sXMLResultsFileName.toLocal8Bit().constData(), sMsg ))
+		{	sErrMsg.sprintf( "Analysis aborting - user chose not to overwrite analysis results XML file:  %s", sXMLResultsFileName.toLocal8Bit().constData() );
+//											15 : Error creating or accessing the analysis processing directory
+			ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 15 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+	}	}
 	BEMXMLWriter xmlResultsFile( ((!bAbort && !sXMLResultsFileName.isEmpty()) ? (const char*) sXMLResultsFileName.toLocal8Bit().constData() : NULL) );
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !sXMLResultsFileName.isEmpty())
 	{							if (bVerbose)
@@ -3543,6 +3550,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	char pszEPlusVerStr[60] = "\0";
 	char pszOpenStudioVerStr[60] = "\0";
 	QString sCSEVersion;  // SAC 10/10/16
+	bool bHaveResult=false, bResultIsPass=false;
+	QString sResTemp1, sResTemp2;
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps)
 	{
 
@@ -3649,6 +3658,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //		bool bThisOSSimSkipped = false, bLastOSSimSkipped = false;	// SAC 4/18/14
 		bool bSimRunsNow = false;	// SAC 8/19/15 - added to facilitate more than 2 simulations at a time (for 90.1 baseline orientation sim/averaging)
 		int iSimRunIdx = 0, iSimRun, iProgressModelSum=0;
+		QString sErrMsgShortenedToFit;
 
 // ----------
 // RUN LOOP
@@ -3868,9 +3878,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				QString sProjSDDFile = sProcessingPath + sProjFileAlone + " - " + sRunID + ".xml";
 				sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
 			                "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-								 "(once the file is closed), or \n'Cancel' to abort the %s.", "SDD XML", sProjSDDFile.toLocal8Bit().constData(), "analysis" );
+								 "(once the file is closed), or \n'Abort' to abort the %s.", "SDD XML", sProjSDDFile.toLocal8Bit().constData(), "analysis" );
 				if (!OKToWriteOrDeleteFile( sProjSDDFile.toLocal8Bit().constData(), sMsg ))
-				{	sErrMsg.sprintf( "Analysis aborting - user chose not to overwrite SDD XML file:  %s", "SDD XML", sProjSDDFile.toLocal8Bit().constData() );
+				{	sErrMsg.sprintf( "Analysis aborting - user chose not to overwrite SDD XML file:  %s", sProjSDDFile.toLocal8Bit().constData() );
 //										22 : Analysis aborted - user chose not to overwrite SDD XML file
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 22 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 				}
@@ -3899,7 +3909,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 
 			// continue on processing run...
-				QString sErrMsgShortenedToFit;
 				bool bForceXMLFileWriteDespiteAbort = false;		// SAC 9/6/13 - added to ensure XML results file still written despite errors (to help diagnose problems in model...)
 				if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
 				{	SetCurrentDirectory( sProcessingPath.toLocal8Bit().constData() );
@@ -3932,33 +3941,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							if (!bBypassRecircDHW && iNumRecircDHWSysObjs > 0)
 							{
 					// DHW SIMULATION
-								long lDBID_DHWCalcMthd = BEMPX_GetDatabaseID( "DHWCalcMthd", iCID_Proj );				assert( lDBID_DHWCalcMthd > BEM_COMP_MULT );
-								QString sDHWCalcMthd;
 								BOOL bDHWSimOK = TRUE;		QString sDHWErrMsg;
-								if (lDBID_DHWCalcMthd < BEM_COMP_MULT || !BEMPX_GetString( lDBID_DHWCalcMthd, sDHWCalcMthd ))
-								{	sErrMsg = "DHWCalcMthd not available to determine DHW simulation method";
-//										41 : DHW simulation not successful
-									ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-								}
-			//else if (TRUE)
-								else if (sDHWCalcMthd.compare("T24DHW", Qt::CaseInsensitive)==0)
-								{
-									assert( false );
-									bDHWSimOK = false;
-					// T24DHW not ported to open source
-					//				// perform DHW simulation using T24DHW DLLs and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
-					//				int iNonElecMtrIdx = 1;		// ??? 1 for NatGas / 2 for OtherFuel ???
-					//				bool bDHWStdRun = ((iCodeType == CT_T24N && iRun == 3) || (iCodeType != CT_T24N && iRun >  5));
-					//				bDHWSimOK = CMX_PerformSimulation_T24DHW(	sDHWErrMsg, sDHWDLLPath, sProcessingPath, sProjFileAlone, sRunID, pszaEPlusFuelNames[iNonElecMtrIdx], 
-					//													pszaEPlusFuelNames[0], "Domestic Hot Water", "Pumps & Misc.", bDHWStdRun /*bIsStdRun*/, (bVerbose || bLogRecircDHWSimulation),
-     				//													FALSE /*bDurationStats*/, NULL /*pszExternWthrPathFile*/, NULL /*pdDHWFuelKBTU*/, NULL /*pdDHWElecKBTU*/, T24DHW_CALCMODE_CECNONRES );
-					//				if (bVerbose)  // SAC 1/31/13
-					//				{	sLogMsg.sprintf( "      CEC DHW simulation successful: %s", (bDHWSimOK ? "True" : "False") );
-					//					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					//				}
-								}
-								else
-								{	// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
+									// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
 		// --- CSE DHW simulation based on CECRes analysis ---
 									QString sCSE_DHWUseMthd;
 									BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd );
@@ -4113,7 +4097,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									bDHWSimOK = (iDHWSimRetVal == 0);
 									if (sDHWErrMsg.isEmpty() && iDHWSimRetVal != 0)
 										sDHWErrMsg.sprintf( "error code %d", iDHWSimRetVal );
-								}
+
 								if (!bDHWSimOK)
 								{	sErrMsg.sprintf( "DHW simulation not successful:  %s", sDHWErrMsg.toLocal8Bit().constData() );
 //										41 : DHW simulation not successful
@@ -4513,7 +4497,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	if (bWriteUMLHViolationsToFile && !sUMLHTextFileName.isEmpty())
 																	{	QString sUMLHOverwriteMsg;
 																		sUMLHOverwriteMsg.sprintf(	"The zone UMLH violations text file '%s' is opened in another application.  This file must be closed in that application before an updated file "
-																											"can be written.\n\nSelect 'Retry' to proceed (once the file is closed), or \n'Cancel' to abort the file writing.", sUMLHTextFileName.toLocal8Bit().constData() );
+																											"can be written.\n\nSelect 'Retry' to proceed (once the file is closed), or \n'Abort' to abort the file writing.", sUMLHTextFileName.toLocal8Bit().constData() );
 																		if (!OKToWriteOrDeleteFile( sUMLHTextFileName.toLocal8Bit().constData(), sUMLHOverwriteMsg, bSilent ))
 																			sUMLHOverwriteMsg.sprintf( "Unable to open and/or write zone UMLH violations text file:  %s", sUMLHTextFileName.toLocal8Bit().constData() );
 																		else
@@ -4668,6 +4652,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (iRetVal == 0)
 			xmlResultsFile.Close();
 
+		if (iRetVal == 0 && iCodeType == CT_T24N)
+		{	// SAC 8/28/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature
+			bHaveResult = (	!bAbort && iRetVal == 0 &&
+									!sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName.toLocal8Bit().constData() ) &&
+									iAnalysisThruStep >= 8 && !pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] &&
+									BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"   ), sResTemp1 ) &&
+									BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse8[8]" ), sResTemp2 ) );
+			bResultIsPass = (bHaveResult && (sResTemp1.indexOf("PASS") >= 0 || sResTemp1.indexOf("Pass") >= 0 || sResTemp1.indexOf("pass") >= 0));
+		}
+
 	// ----------
 	// COMPLIANCE REPORT GENERATION   - SAC 9/14/13
 		if (iRetVal == 0 && iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) && !sXMLResultsFileName.isEmpty())		// SAC 10/7/14 - added check to require iCodeType == CT_T24N (no rpt gen reports for 90.1 analysis)
@@ -4693,16 +4687,40 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					//const char* pszProxyServerType        = (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()       );	// SAC 11/4/15
 					//const char* pszNetComLibrary          = (sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()         );	// SAC 11/5/15
 
-					int iRpt    = 0;  // (bComplianceReportPDF ? 0 : 1);
-					int iMaxRpt = 2;  // (bComplianceReportXML ? 1 : 0);
-					bool baDoRpt[] = { bComplianceReportPDF, bComplianceReportXML, bComplianceReportStd };		// SAC 11/13/15
-					int iNumRptsToGen = (bComplianceReportPDF ? 1 : 0);
-					if (bComplianceReportXML)
-						iNumRptsToGen++;
-					if (bComplianceReportStd)
-						iNumRptsToGen++;
+		//			int iRpt    = 0;  // (bComplianceReportPDF ? 0 : 1);
+		//			int iMaxRpt = 2;  // (bComplianceReportXML ? 1 : 0);
+		//			bool baDoRpt[] = { bComplianceReportPDF, bComplianceReportXML, bComplianceReportStd };		// SAC 11/13/15
+		//			int iNumRptsToGen = (bComplianceReportPDF ? 1 : 0);
+		//			if (bComplianceReportXML)
+		//				iNumRptsToGen++;
+		//			if (bComplianceReportStd)
+		//				iNumRptsToGen++;
+		// SAC 8/24/17 - replaced above w/ following to enable single-pass rpt gen
+					QString sRptIDStr, sRptFileExt;
+					long lRptIDNum = -1;		// SAC 8/24/17 - enable specification of a report ID number Component:Property name
+					long lDBID_RptIDNum = BEMPX_GetDatabaseID( "Proj:CompReportNum" );
+					bool bRptToGen = false, bRptVerbose = bVerbose;
+					if (lDBID_RptIDNum > BEM_COMP_MULT)
+					{	if (!BEMPX_GetInteger( lDBID_RptIDNum, lRptIDNum, -1 ))
+							lRptIDNum = -1;
+						else
+						{	bRptToGen = (lRptIDNum > 0);
+							sRptIDStr = "Proj:CompReportNum";
+							sRptFileExt = "xml";
+					}	}
+					else
+					{	bRptToGen = (bComplianceReportPDF || bComplianceReportXML);  // no Std rpt output w/out Proj:CompReportNum - || bComplianceReportStd );
+						if (bComplianceReportPDF && bComplianceReportXML)
+							sRptIDStr = "both";
+						else if (bComplianceReportPDF)
+							sRptIDStr = "true";
+						if (bComplianceReportXML)
+							sRptFileExt = "xml";
+						else
+							sRptFileExt = "pdf";
+					}
 
-					if (iNumRptsToGen > 0 && iEnableRptGenStatusChecks > 0)
+					if (bRptToGen && iEnableRptGenStatusChecks > 0)
 					{	// confirm that report generator is accessible before calling for the report(s) to be generated
 						int iRptGenAvail = CMX_CheckSiteAccess( "Proj:RptGenCheckURL", sCACertPath.toLocal8Bit().constData(),
 																				(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
@@ -4715,41 +4733,83 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							sLogMsg.sprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							// iRetVal = 45;
-							iRpt = 1;	iMaxRpt = 0;
+							bRptToGen = false;  // iRpt = 1;	iMaxRpt = 0;
 					}	}
 
 					QString sLogMsg2;
-					for (; (iRetVal == 0 && iRpt <= iMaxRpt); iRpt++)
-					if (baDoRpt[iRpt])
+		// SAC 8/24/17 - mods to support single-pass report generation
+		//			for (; (iRetVal == 0 && iRpt <= iMaxRpt); iRpt++)
+					if (bRptToGen)  // baDoRpt[iRpt])
 					{
 						sLogMsg.clear();
 						//	QString sMsg, sOutRptFN = (sProjFileName.lastIndexOf('.') > 0 ? sProjFileName.left( sProjFileName.lastIndexOf('.') ) : sProjFileName);
-						QString sRptFileExt = (iRpt==1 ? "XML" : "PDF"), sOutRptFN = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
-						if (iRpt == 2)
-							sOutRptFN += "-BEES-Std.";
-						else
-							sOutRptFN += "-BEES.";
-						sOutRptFN += sRptFileExt;
-						sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
-						             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-										 "(once the file is closed), or \n'Cancel' to abort the %s.", sRptFileExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData(), "compliance report generation" );
-						if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
-						{	if (bSilent)
-								sLogMsg.sprintf( "   Unable to overwrite %s file:  %s", sRptFileExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
-							else
-								sLogMsg.sprintf( "   User chose not to overwrite %s file:  %s", sRptFileExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
-							//iRetVal = 45;
+		//				QString sRptFileExt = (iRpt==1 ? "XML" : "PDF"), sOutRptFN = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
+		//				if (iRpt == 2)
+		//					sOutRptFN += "-BEES-Std.";
+		//				else
+		//					sOutRptFN += "-BEES.";
+		//				sOutRptFN += sRptFileExt;
+						QString sOutRptFN;
+						int iOrigRptIDNum = lRptIDNum;
+						for (int iRptChk=0; iRptChk<3; iRptChk++)
+						{	int iRptBitChk = (iRptChk==0 ? 1 : (iRptChk==1 ? 2 : 4));
+							if (iRptChk==0 || lRptIDNum & iRptBitChk)
+							{	QString sRptChkExt, sRptChkFNAppend, sRptChkDescrip;
+								switch (iRptChk)
+								{	case  0 :  sRptChkExt = "XML";  sRptChkFNAppend = "-BEES.";			break;
+									case  1 :  sRptChkExt = "PDF";  sRptChkFNAppend = "-BEES.";			break;
+									case  2 :  sRptChkExt = "PDF";  sRptChkFNAppend = "-BEES-Std.";	break;
+								}
+								sOutRptFN = QString( "%1%2%3" ).arg( sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') ), sRptChkFNAppend, sRptChkExt );
+								sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+								             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+												 "(once the file is closed), or \n'Abort' to abort the %s.", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData(), "overwriting of this file" );
+								if (!OKToWriteOrDeleteFile( sOutRptFN.toLocal8Bit().constData(), sMsg, bSilent ))
+								{	if (iRptChk==0)
+									{	if (bSilent)
+											sLogMsg.sprintf( "   Reporting disabled due to inability to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+										else
+											sLogMsg.sprintf( "   Reporting disabled due to user choosing not to overwrite main report output file:  %s", sOutRptFN.toLocal8Bit().constData() );
+										lRptIDNum = 0;  // toggle off generation of ALL reports
+									}
+									else
+									{	if (bSilent)
+											sLogMsg.sprintf( "   Unable to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+										else
+											sLogMsg.sprintf( "   User chose not to overwrite %s file:  %s", sRptChkExt.toLocal8Bit().constData(), sOutRptFN.toLocal8Bit().constData() );
+										lRptIDNum -= iRptBitChk;  // toggle off generation of this rpt, but still proceed w/ others
+									}
+									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									//iRetVal = 45;
+								}
+						}	}
+						if (lRptIDNum > 0 && lRptIDNum != iOrigRptIDNum)
+							// update RptIDNum in database to reflect report(s) removed from generation list in above loop
+				      	BEMPX_SetBEMData( lDBID_RptIDNum, BEMP_Int, (void*) &lRptIDNum, BEMO_User, -1, BEMS_ProgDefault );
+
+						if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass))	// toggle OFF report security if compliance result is undefined or 'Fail'
+						{	// SAC 8/28/17 - prevent report signature if compliance result NOT PASS
+							if (!bHaveResult)
+								sLogMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
+							else if (!bResultIsPass)
+								sLogMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							bSendRptSignature = false;
 						}
-						else
-						{	QString sPDFOnly = (iRpt!=1 ? "true" : "false");
+
+						if (lRptIDNum > 0)  // baDoRpt[iRpt])
+						{
+		//					QString sPDFOnly = "Proj:CompReportNum";  // SAC 8/24/17 - was: (iRpt!=1 ? "true" : "false");
 							QString sDebugRpt = (bVerbose ? "true" : "false");
-							QString sRptNameProp = (iRpt==2 ? "RptGenStdReport" : "RptGenCompReport");		// SAC 11/13/15
+		//					QString sRptNameProp = (iRpt==2 ? "RptGenStdReport" : "RptGenCompReport");		// SAC 11/13/15
+							QString sRptNameProp = "RptGenCompReport";
 
 //sLogMsg.sprintf( "Pausing before %s report generation on:  %s", (iRpt==0 ? "pdf" : "full"), sResFN );
 //BEMMessageBox( sLogMsg, "" );
 
 									if (bVerbose)
-									{	sLogMsg2.sprintf( "      about to generate %s compliance report:  %s", (iRpt!=1 ? "pdf" : "full"), sXMLResultsFileName.toLocal8Bit().constData() );
+		//							{	sLogMsg2.sprintf( "      about to generate %s compliance report:  %s", (iRpt!=1 ? "pdf" : "full"), sXMLResultsFileName.toLocal8Bit().constData() );
+									{	sLogMsg2.sprintf( "      about to generate compliance report(s):  %s", sXMLResultsFileName.toLocal8Bit().constData() );
 										BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 
@@ -4773,16 +4833,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	"none" /*Signature*/, "none" /*PublicKey*/, (pszSecurityKey ? pszSecurityKey : NULL) /*PrivateKey*/, 
 																	(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
 																	(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
-																	sPDFOnly.toLocal8Bit().constData(), sDebugRpt.toLocal8Bit().constData(), bVerbose, bSilent, bSendRptSignature,
+																	sRptIDStr.toLocal8Bit().constData(), sDebugRpt.toLocal8Bit().constData(), bRptVerbose, bSilent, bSendRptSignature,
 																	sRptGenCompRptID.toLocal8Bit().constData(), sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), 
 																	sRptGenService.toLocal8Bit().constData(), sSecKeyRLName.toLocal8Bit().constData(), NULL /*pszOutputPathFile*/, 
 																	(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex );		// SAC 11/5/15   // SAC 1/10/17
+																	(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()), iSecurityKeyIndex, false );		// SAC 11/5/15   // SAC 1/10/17   // SAC 8/25/17
 							dTimeToReport += DeltaTime( tmMark );		// log time spent generating report
 							iNumTimeToReport++; 
 							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
 										if (bVerbose || iRptGenRetVal != 0)
-										{	sLogMsg2.sprintf( "      generation of %s compliance report %s (returned %d)", (iRpt!=1 ? "pdf" : "full"), (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
+		//								{	sLogMsg2.sprintf( "      generation of %s compliance report %s (returned %d)", (iRpt!=1 ? "pdf" : "full"), (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
+										{	sLogMsg2.sprintf( "      generation of compliance report(s) %s (returned %d)", (iRptGenRetVal==0 ? "succeeded" : "failed"), iRptGenRetVal );
 											BEMPX_WriteLogFile( sLogMsg2, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										}
 							if (iRptGenRetVal != 0)
@@ -4790,9 +4851,43 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								//iRetVal = 46;
 							}
 							else
-							{	long lOne = 1;
-								QString sWrittenDBID = (iRpt==0 ? "CompReportPDFWritten" : (iRpt==1 ? "CompReportXMLWritten" : "CompReportStdWritten"));
-						      BEMPX_SetBEMData( BEMPX_GetDatabaseID( sWrittenDBID, iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+							{	bool bRetainXMLRptFile = (lRptIDNum & 1);		bool bExtCompPdf=true, bExtStdPdf=true;
+								sOutRptFN = QString( "%1-BEES.xml" ).arg( sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') ) );
+								if (lRptIDNum & 2)	// PDF Comp Rpt
+								{	QString sOutPDFRptFN = QString( "%1-BEES.pdf" ).arg( sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') ) );
+									if (!CMX_ExtractTitle24ReportFromXML( sOutRptFN.toLocal8Bit().constData(), sOutPDFRptFN.toLocal8Bit().constData(), "Report2", TRUE /*bSupressAllMessageBoxes*/ ))
+									{	QString sExtractRptErr = QString( "Error encountered extracting PDF %1 report (%2) from XML: %3" ).arg( "Compliance", "Report2", sOutRptFN );
+										BEMPX_WriteLogFile( sExtractRptErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										bRetainXMLRptFile = true;		bExtCompPdf = false;
+								}	}
+								if (lRptIDNum & 4)	// PDF Std Model Rpt
+								{	QString sOutPDFRptFN = QString( "%1-BEES-Std.pdf" ).arg( sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') ) );
+									if (!CMX_ExtractTitle24ReportFromXML( sOutRptFN.toLocal8Bit().constData(), sOutPDFRptFN.toLocal8Bit().constData(), "Report3", TRUE /*bSupressAllMessageBoxes*/ ))
+									{	QString sExtractRptErr = QString( "Error encountered extracting PDF %1 report (%2) from XML: %3" ).arg( "Standard Model", "Report3", sOutRptFN );
+										BEMPX_WriteLogFile( sExtractRptErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										bRetainXMLRptFile = true;		bExtStdPdf = false;
+								}	}
+
+							// CHECK FOR ERRORS in XML returned from report generator
+								QString sRGErrs;
+								int iNumRptGenErrs = ExtractErrorsFromTitle24ReportXML( sOutRptFN.toLocal8Bit().constData(), sRGErrs, TRUE /*bPostToProjectLog*/,
+																											TRUE /*bPostToBEMProc*/, TRUE /*bSupressAllMessageBoxes*/ );
+								if (iRetVal == 0 && iNumRptGenErrs > 0)
+									iRetVal = 68;				// One or more errors returned from Compliance Report Generator - already logged by above call
+
+								if (!bRetainXMLRptFile)
+									// DELETE Full (XML) compliance report (if XML (full) report not requested & no errors logged there)
+									DeleteFile( sOutRptFN.toLocal8Bit().constData() );
+
+								long lOne = 1;
+		//						QString sWrittenDBID = (iRpt==0 ? "CompReportPDFWritten" : (iRpt==1 ? "CompReportXMLWritten" : "CompReportStdWritten"));
+		//				      BEMPX_SetBEMData( BEMPX_GetDatabaseID( sWrittenDBID, iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+								if (lRptIDNum & 1)	// SAC 8/24/17
+						      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportXMLWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+								if (lRptIDNum & 2 && bExtCompPdf)
+						      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportPDFWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
+								if (lRptIDNum & 4 && bExtStdPdf)
+						      	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompReportStdWritten", iCID_Proj ), BEMP_Int, (void*) &lOne, BEMO_User, -1, BEMS_ProgDefault );
 							}
 						}
 						if (!sLogMsg.isEmpty())
@@ -4839,7 +4934,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 // SAC 1/23/14 - added code to setup FINAL result log message (including analysis duration stats)
-	QString sAnalResLogMsg, sAnalTimeStats, sResTemp1, sResTemp2;
+	QString sAnalResLogMsg, sAnalTimeStats;
 	if (bAbort)
 		sAnalResLogMsg = "Analysis aborted";
 	else if (iRetVal != 0 || sXMLResultsFileName.isEmpty() || !FileExists( sXMLResultsFileName.toLocal8Bit().constData() ))
@@ -4848,8 +4943,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3] ) // ||
 			//		pbBypassSimulation[0] || pbBypassSimulation[1] || pbBypassSimulation[2] || pbBypassSimulation[3] )
 		sAnalResLogMsg = "Analysis incomplete";
-	else if (!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"   ), sResTemp1 )  ||
-				!BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse8[8]" ), sResTemp2 ))
+	else if (!bHaveResult)
 		sAnalResLogMsg = "Analysis result unknown";
 	else
 	{	sAnalResLogMsg.sprintf( "Analysis result:  %s  (TDV margin: %s)", sResTemp1.toLocal8Bit().constData(), sResTemp2.toLocal8Bit().constData() );
@@ -4857,6 +4951,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		{	sResTemp2  = '\"' + sResTemp2;
 			sResTemp2 += '\"';
 	}	}
+
 	dTimeToOther += DeltaTime( tmAnalOther );			// log time spent prior to this point to "other" bucket
 	dTimeOverall += DeltaTime( tmAnalStartTime );	// log time spent over the entire analysis
 	double dTimeTotTrans = 0.0, dTimeTotDsgn = 0.0, dTimeTotAnn = 0.0; 
@@ -5259,7 +5354,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 	sBatchLogPathFile += ".log";
 	std::string sOverwriteProjFileMsg = boost::str( boost::format( "The batch processing log file '%s' is opened in another application.  This file must be closed in that "
 												"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-												"(once the file is closed), or \n'Cancel' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
+												"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchLogPathFile.c_str() );
 	if (!OKToWriteOrDeleteFile( sBatchLogPathFile.c_str(), sOverwriteProjFileMsg.c_str() ))
 	{	if (pszErrorMsg && iErrorMsgLen > 0)
 			sprintf_s( pszErrorMsg, iErrorMsgLen, "Unable to write to batch processing log file:  %s", sBatchLogPathFile );
@@ -5317,7 +5412,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						PrependPathIfNecessary( sBatchResultsFN, sBatchPath );
 						sOverwriteResultsFileMsg = boost::str( boost::format( "The CSV file '%s' is opened in another application.  This file must be closed in that "
 																	"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-																	"(once the file is closed), or \n'Cancel' to abort the batch processing." ) % sBatchResultsFN );
+																	"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sBatchResultsFN );
 						if (!OKToWriteOrDeleteFile( sBatchResultsFN.c_str(), sOverwriteResultsFileMsg.c_str() ))
 						{			iMode = -3;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to batch results file specified in record %d:  '%s'" )
@@ -5385,7 +5480,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							sOverwriteProjFileMsg.append( sRecProjOutFN );
 							sOverwriteProjFileMsg.append( "' is opened in another application.  This file must be closed in that "
 																		"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-																		"(once the file is closed), or \n'Cancel' to abort the batch processing." );
+																		"(once the file is closed), or \n'Abort' to abort the batch processing." );
 							if (!OKToWriteOrDeleteFile( sRecProjOutFN.c_str(), sOverwriteProjFileMsg.c_str() ))
 							{		iMode = -6;
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to project output/save file specified in record %d:  '%s'" )
@@ -5689,7 +5784,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 								else
 								{	std::string sOverwriteSDDXMLMsg = boost::str( boost::format( "The simulation SDD XML file '%s' is opened in another application.  This file must be closed in that "
 																				"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-																				"(once the file is closed), or \n'Cancel' to abort the batch processing." ) % sFileToWrite.c_str() );
+																				"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sFileToWrite.c_str() );
 									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteSDDXMLMsg.c_str() ))
 									{	sLogMsg = boost::str( boost::format( "Unable to overwrite simulation SDD XML file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
 										if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
@@ -6046,7 +6141,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 	{	QString sOverwriteMsg;
 		sOverwriteMsg.sprintf(	"The hourly CSV results file '%s' is opened in another application.  This file must be closed in that "
 										"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-										"(once the file is closed), or \n'Cancel' to abort the analysis.", pszHourlyResultsPathFile );
+										"(once the file is closed), or \n'Abort' to abort the hourly export.", pszHourlyResultsPathFile );
 		if (!OKToWriteOrDeleteFile( pszHourlyResultsPathFile, sOverwriteMsg, bSilent ))
 		{	iRetVal = 2;
 			sErrMsg.sprintf( "Unable to open and/or write hourly CSV results file:  %s", pszHourlyResultsPathFile );
@@ -6065,10 +6160,10 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 		else
 			timeStamp = "<unknown analysis day/time>";
 
-		QString sUIVer, sCmpMgrVer, sOSVer, sEPlusVer, sT24DHWVer, sRuleVer;
+		QString sUIVer, sCmpMgrVer, sOSVer, sEPlusVer, sCSEVer, sRuleVer;
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SoftwareVersion"    ),	sUIVer   );
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompManagerVersion" ),	sCmpMgrVer );
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:DHWSimEngVersion"   ),	sT24DHWVer );
+		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:DHWSimEngVersion"   ),	sCSEVer );
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:Ruleset"            ),	sRuleVer );
 		if (pszEPlusVerStr && strlen( pszEPlusVerStr ) > 0)
 			sEPlusVer = pszEPlusVerStr;
@@ -6096,7 +6191,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				fprintf( fp_CSV, ",CompMgr:,,\"%s\"\n",    sCmpMgrVer.toLocal8Bit().constData() );
 				fprintf( fp_CSV, ",OpenStudio:,,\"%s\"\n", sOSVer.toLocal8Bit().constData()     );
 				fprintf( fp_CSV, ",EnergyPlus:,,\"%s\"\n", sEPlusVer.toLocal8Bit().constData()  );
-				fprintf( fp_CSV, ",T-24 DHW:,,\"%s\"\n",   sT24DHWVer.toLocal8Bit().constData() );
+				fprintf( fp_CSV, ",CSE:,,\"%s\"\n",        sCSEVer.toLocal8Bit().constData()    );
 				fprintf( fp_CSV, ",Ruleset:,,\"%s\"\n",    sRuleVer.toLocal8Bit().constData()   );
 
 				fprintf( fp_CSV,     "Run Title:,,,\"%s\"\n", sRunTitle.toLocal8Bit().constData()  );

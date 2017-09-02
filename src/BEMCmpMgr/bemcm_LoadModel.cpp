@@ -1133,21 +1133,93 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 			long lDBID_Proj_CliZnNum	= BEMPX_GetDatabaseID( "CliZnNum", iCID_Proj );					assert( lDBID_Proj_CliZnNum > 0 );
 			long lDBID_Proj_WthrSta		= BEMPX_GetDatabaseID( "WeatherStation", iCID_Proj );			assert( lDBID_Proj_WthrSta > 0 );
 			long lDBID_Proj_WthrStaNum	= BEMPX_GetDatabaseID( "WeatherStationNum", iCID_Proj );		assert( lDBID_Proj_WthrStaNum > 0 );
-			if (iCID_Proj > 0 && lDBID_Proj_ZipCode > 0 && lDBID_Proj_CliZn > 0 && lDBID_Proj_CliZnNum > 0 && lDBID_Proj_WthrSta > 0 && lDBID_Proj_WthrStaNum > 0)
+			sWarnMsg.clear();
+			if (iCodeType == CT_T24N && iCID_Proj > 0 && lDBID_Proj_ZipCode > 0 && lDBID_Proj_CliZn > 0 && lDBID_Proj_CliZnNum > 0 && lDBID_Proj_WthrSta > 0 && lDBID_Proj_WthrStaNum > 0)
 			{	long lZipCodeI, lCliZnI, lCliZnNI, lWSI, lWSNI;		int iStatusZip, iStatusCZ, iStatusCZN, iStatusWS, iStatusWSN;		QString sWarnMsg;
 				lZipCodeI = BEMPX_GetIntegerAndStatus( lDBID_Proj_ZipCode   , iStatusZip, iSpecialVal, iError );
 				lCliZnI   = BEMPX_GetIntegerAndStatus( lDBID_Proj_CliZn     , iStatusCZ , iSpecialVal, iError );
 				lCliZnNI  = BEMPX_GetIntegerAndStatus( lDBID_Proj_CliZnNum  , iStatusCZN, iSpecialVal, iError );
 				lWSI      = BEMPX_GetIntegerAndStatus( lDBID_Proj_WthrSta   , iStatusWS , iSpecialVal, iError );
 				lWSNI     = BEMPX_GetIntegerAndStatus( lDBID_Proj_WthrStaNum, iStatusWSN, iSpecialVal, iError );
+				if (iStatusZip > 0 && iStatusCZ <= BEMS_ProgDefault && lZipCodeI > 90000 && lZipCodeI < 99999)
+				{	// equivalent of rule-based table defaulting for CliZn
+					double dZipCode = (double) lZipCodeI;
+					std::vector<std::string> saIndepNames;		saIndepNames.push_back( "ZipCode" );
+					std::vector<std::string> saIndepStrings;	saIndepStrings.push_back( " " );		
+					std::vector<double> faIndepValues;		faIndepValues.push_back( dZipCode );	
+					std::vector<bool> baIndepNumeric;		baIndepNumeric.push_back( true );		
+					std::string sTblErrMsg;
+					double dTblVal = BEMPX_RuleTableLookupFloat( "ClimateZoneBoundaries:CliZn", saIndepNames, saIndepStrings, faIndepValues,
+																				baIndepNumeric, sTblErrMsg, FALSE /*bVerboseOutput*/ );
+					if ( dTblVal < 1 ||		// IsValid from table > 0 => there IS a valid default WeatherStation
+							(sTblErrMsg.length() > 0 && dTblVal == -1) )		// combination of table and column name not found
+					{	// do nothing
+					}
+					else
+					{	lCliZnI = (long) dTblVal;
+						iStatusCZ = BEMS_ProgDefault;
+				}	}
+			//	if (iStatusWSN < 1 && (iStatusWS > BEMS_ProgDefault || (iStatusZip > 0 && lZipCodeI > 90000 && lZipCodeI < 99999 && lCliZnI >= 1 && lCliZnI <= 16))
+			//	{	// equivalent of rule-based table defaulting for WeatherStationNum
+			//		QString sWthrSta;
+			//		if (iStatusWS > BEMS_ProgDefault)
+			//			BEMPX_GetString( lDBID_Proj_WthrSta, sWthrSta );
+			//		if (!sWthrSta.isEmpty())
+			//		{	// lookup WeatherStationNum based on WeatherStation
+			//			std::vector<std::string> saIndepNames;		saIndepNames.push_back( "WthrFile" );	
+			//			std::vector<std::string> saIndepStrings;	saIndepStrings.push_back( sWthrSta.toLocal8Bit().constData() );
+			//			std::vector<double> faIndepValues;			faIndepValues.push_back( -1 );
+			//			std::vector<bool> baIndepNumeric;			baIndepNumeric.push_back( false );	
+			//			std::string sTblErrMsg;
+			//			double dTblVal = BEMPX_RuleTableLookupFloat( "WeatherFileClimateZone:WthrStationNum", saIndepNames, saIndepStrings, faIndepValues,
+			//																		baIndepNumeric, sTblErrMsg, FALSE /*bVerboseOutput*/ );
+			//			if ( dTblVal > 0 ||		// IsValid from table > 0 => there IS a valid default WeatherStation
+			//					(sTblErrMsg.length() > 0 && dTblVal == -1) )		// combination of table and column name not found => not evaluating T-24 rules - so bail on data mods
+			//			{	// do nothing
+			//			}
+			//			else
+			//			{	lWSNI = (long) dTblVal;
+			//				iStatusWSN = BEMS_ProgDefault;
+			//		}	}
+			//		if (iStatusWSN < 1 && iStatusZip > 0 && lZipCodeI > 90000 && lZipCodeI < 99999 && lCliZnI >= 1 && lCliZnI <= 16)
+			//		{	// lookup WeatherStationNum based on ZipCode & CliZn
+			//			double dZipCode = (double) lZipCodeI;
+			//			double dCliZn   = (double) lCliZnI;
+			//			std::vector<std::string> saIndepNames;		saIndepNames.push_back( "ZipCode" );		saIndepNames.push_back( "CliZn" );
+			//			std::vector<std::string> saIndepStrings;	saIndepStrings.push_back( " " );				saIndepStrings.push_back( " " );
+			//			std::vector<double> faIndepValues;			faIndepValues.push_back( dZipCode );		faIndepValues.push_back( dCliZn );
+			//			std::vector<bool> baIndepNumeric;			baIndepNumeric.push_back( true );			baIndepNumeric.push_back( true );
+			//			std::string sTblErrMsg;
+			//			double dTblVal = BEMPX_RuleTableLookupFloat( "WeatherFileData:WthrStationNum", saIndepNames, saIndepStrings, faIndepValues,
+			//																		baIndepNumeric, sTblErrMsg, FALSE /*bVerboseOutput*/ );
+			//			if ( dTblVal > 0 ||		// IsValid from table > 0 => there IS a valid default WeatherStation
+			//					(sTblErrMsg.length() > 0 && dTblVal == -1) )		// combination of table and column name not found => not evaluating T-24 rules - so bail on data mods
+			//			{	// do nothing
+			//			}
+			//			else
+			//			{	lWSNI = (long) dTblVal;
+			//				iStatusWSN = BEMS_ProgDefault;
+			//		}	}
+			//	}
+
 				if (lBEMVersion < 13 && iStatusZip >= BEMS_UserLibrary && lZipCodeI == 92133)
 				{	// model included invalid ZipCode = 92133 - removed from ruleset Apr-2016 before release of ver 3d
 					long lZip = 92132;
 					BEMPX_SetBEMData( lDBID_Proj_ZipCode, BEMP_Int, (void*) &lZip, BEMO_User, -1, BEMS_UserDefined );
-					sWarnMsg = "Invalid ZipCode setting of 92133 has been switched to 92132.";
-					if (bCalledFromUI)
-						sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
-					psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+					sWarnMsg = "Invalid ZipCode setting of 92133 has been switched to 92132.";			assert( FALSE );
+				}
+				else if (lBEMVersion < 14 && iStatusZip < BEMS_UserLibrary && 		// SAC 8/17/17
+							( (lWSI == 47 && lCliZnI == 10) ||	// CAMP-PENDLETON_722926 in CZ 10
+							  (lWSI == 32 && lCliZnI ==  7) ))	// SAN-DIEGO-GILLESPIE_722907 in CZ 7
+				{	// no specified ZipCode and both CliZn & WeatherStation are specified and no longer consistent
+					// -> then blast WeatherStation and inform user of wthr sta switch and that they must re-specify WeatherStation
+					if (lWSI == 47)
+						sWarnMsg = "Mapping of the Camp Pendleton weather file has switched from climate zone 10 to 7.";
+					else
+						sWarnMsg = "Mapping of the San Diego Gillespie Field weather file has switched from climate zone 7 to 10.";
+					assert( FALSE );
+					BEMPX_DefaultProperty( lDBID_Proj_WthrSta   , iError );
+					BEMPX_DefaultProperty( lDBID_Proj_WthrStaNum, iError );
 				}
 				else if (lBEMVersion < 13 && iStatusZip >= BEMS_UserLibrary && (lZipCodeI == 95321 || lZipCodeI == 92675))
 				{	// SAC 2/28/17 - certain zips switched from one CZ to another with release of 2016.3.0 ~Mar-2017 (tic #1972)
@@ -1164,9 +1236,7 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 							sWarnMsg = "Mapping of ZipCode 95321 has switched from climate zone 16 to 12 (weather station South Lake Tahoe to Merced).";
 						else
 							sWarnMsg = "Mapping of ZipCode 92675 has switched from climate zone 8 to 6 (weather station Santa Ana to Torrance).";
-						if (bCalledFromUI)
-							sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
-						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+						assert( FALSE );
 					}
 					else
 					{	// one or more Zip-dependencies are user-defined to the previous (incorrect) default, so re-default ALL
@@ -1174,10 +1244,79 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 						BEMPX_DefaultProperty( lDBID_Proj_CliZnNum  , iError );
 						BEMPX_DefaultProperty( lDBID_Proj_WthrSta   , iError );
 						BEMPX_DefaultProperty( lDBID_Proj_WthrStaNum, iError );
-						sWarnMsg = QString( "Mapping of ZipCode %1 has switched climate zones and weather stations, so these data have been re-defaulted (based on ZipCode)." ).arg( QString::number( lZipCodeI ) );
-						if (bCalledFromUI)
-							sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
-						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+						sWarnMsg = QString( "Mapping of ZipCode %1 has switched climate zones and weather stations, so these data have been re-defaulted (based on ZipCode)." ).arg( QString::number( lZipCodeI ) );		assert( FALSE );
+					}
+				}
+				else if (lBEMVersion < 14 && ( (lCliZnI ==  7 && (lZipCodeI == 91941 || lZipCodeI == 91942 || lZipCodeI == 91945 || lZipCodeI == 92054 ||		// SAC 8/17/17
+																				  lZipCodeI == 92055 || lZipCodeI == 92057 || lZipCodeI == 92119 )) ||
+														 (lCliZnI == 10 && (lZipCodeI == 91901 || lZipCodeI == 91914 || lZipCodeI == 91917 || lZipCodeI == 91935 ||
+																				  lZipCodeI == 91977 || lZipCodeI == 91978 || lZipCodeI == 92003 || lZipCodeI == 92019 ||
+																				  lZipCodeI == 92020 || lZipCodeI == 92021 || lZipCodeI == 92025 || lZipCodeI == 92026 ||
+																				  lZipCodeI == 92027 || lZipCodeI == 92028 || lZipCodeI == 92029 || lZipCodeI == 92040 ||
+																				  lZipCodeI == 92059 || lZipCodeI == 92061 || lZipCodeI == 92064 || lZipCodeI == 92065 ||
+																				  lZipCodeI == 92069 || lZipCodeI == 92071 || lZipCodeI == 92078 || lZipCodeI == 92082 ||
+																				  lZipCodeI == 92096 || lZipCodeI == 92127 || lZipCodeI == 92128 || lZipCodeI == 92131 ||
+																				  lZipCodeI == 92562 || lZipCodeI == 92590 || lZipCodeI == 92591 || lZipCodeI == 92592 )) ))
+				{	// selected zip is one that has a modified weather mapping and CZ is the default
+					if (iStatusWS < BEMS_UserLibrary)
+					{	// WeatherStation is not user-specified
+						// -> prompt user that default wthr sta has changed (default table will re-assign WeatherStation)
+						sWarnMsg = QString( "The default weather station for Zip code %1 in climate zone %2 has changed." ).arg( QString::number(lZipCodeI), QString::number(lCliZnI) );		assert( FALSE );
+					}
+					else if ( (lZipCodeI == 91901 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 91914 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 91917 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 91935 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 91941 && lWSI != 32 && lWSI != 34 ) || (lZipCodeI == 91942 && lWSI != 32 && lWSI != 34 ) ||
+								 (lZipCodeI == 91945 && lWSI != 32 && lWSI != 34 ) || (lZipCodeI == 91977 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 91978 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92003 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92019 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92020 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92021 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92025 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92026 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92027 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92028 && lWSI != 47 && lWSI != 45 ) || (lZipCodeI == 92029 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92040 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92054 && lWSI != 30 && lWSI != 47 ) ||
+								 (lZipCodeI == 92055 && lWSI != 30 && lWSI != 47 ) || (lZipCodeI == 92057 && lWSI != 30 && lWSI != 47 ) ||
+								 (lZipCodeI == 92059 && lWSI != 47 && lWSI != 45 ) || (lZipCodeI == 92061 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92064 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92065 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92069 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92071 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92078 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92082 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92096 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92119 && lWSI != 32 && lWSI != 34 ) ||
+								 (lZipCodeI == 92127 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92128 && lWSI != 47 && lWSI != 32 ) ||
+								 (lZipCodeI == 92131 && lWSI != 47 && lWSI != 32 ) || (lZipCodeI == 92562 && lWSI != 47 && lWSI != 45 ) ||
+								 (lZipCodeI == 92590 && lWSI != 47 && lWSI != 45 ) || (lZipCodeI == 92591 && lWSI != 47 && lWSI != 45 ) ||
+								 (lZipCodeI == 92592 && lWSI != 47 && lWSI != 45 ) )
+					{	// WeatherStation is specified by user as neither the past or new default
+						// -> then do nothing (their original input not related to this re-mapping)
+					}
+					else if ( (lZipCodeI == 92054 && lWSI == 30) ||   // CARLSBAD_722927,  ->  47 CAMP-PENDLETON_722926, 
+								 (lZipCodeI == 92055 && lWSI == 30) ||   // CARLSBAD_722927,  ->  47 CAMP-PENDLETON_722926, 
+								 (lZipCodeI == 92057 && lWSI == 30) )    // CARLSBAD_722927,  ->  47 CAMP-PENDLETON_722926, 
+					{	// WeatherStation is specified by user as the prior (incorrect) default
+						// AND the old default WeatherStation is NOT one that switched CZs (NOT Gill or CampPend)
+						// -> inform user the default wthr sta for that Zip changed, but DON'T re-default WthrSta
+						sWarnMsg = QString( "The default weather station for Zip code %1 in climate zone %2 was Carlsbad and is now Camp Pendleton." ).arg( QString::number(lZipCodeI), QString::number(lCliZnI) );		assert( FALSE );
+					}
+					else if ( (lWSI == 32 && ( lZipCodeI == 91941 || lZipCodeI == 91942 || lZipCodeI == 91945 || lZipCodeI == 92119 )) ||
+								 (lWSI == 47 && ( lZipCodeI == 91901 || lZipCodeI == 91914 || lZipCodeI == 91917 || lZipCodeI == 91935 || lZipCodeI == 91977 || 
+														lZipCodeI == 91978 || lZipCodeI == 92003 || lZipCodeI == 92019 || lZipCodeI == 92020 || lZipCodeI == 92021 || 
+														lZipCodeI == 92025 || lZipCodeI == 92026 || lZipCodeI == 92027 || lZipCodeI == 92028 || lZipCodeI == 92029 || 
+														lZipCodeI == 92040 || lZipCodeI == 92059 || lZipCodeI == 92061 || lZipCodeI == 92064 || lZipCodeI == 92065 || 
+														lZipCodeI == 92069 || lZipCodeI == 92071 || lZipCodeI == 92078 || lZipCodeI == 92082 || lZipCodeI == 92096 || 
+														lZipCodeI == 92127 || lZipCodeI == 92128 || lZipCodeI == 92131 || lZipCodeI == 92562 || lZipCodeI == 92590 || 
+														lZipCodeI == 92591 || lZipCodeI == 92592 )) )
+					{	// WeatherStation is specified by user as the prior (incorrect) default
+						// AND the old default WeatherStation IS one that switched CZs (Gillespie or CampPendleton)
+						// -> re-default WeatherStation and inform user of wthr sta mapping update
+						QString sCurWthr;		int iCurCZ, iNewCZ;
+						if (lZipCodeI == 91941 || lZipCodeI == 91942 || lZipCodeI == 91945 || lZipCodeI == 92119)
+						{	sCurWthr = "San Diego Gillespie Field";   iCurCZ = 7;   iNewCZ = 10;
+						} else
+						{	sCurWthr = "Camp Pendleton";              iCurCZ = 10;   iNewCZ = 7;
+						}
+						sWarnMsg = QString( "The selected weather station %1 for Zip code %2 has been re-mapped from climate zone %3 to %4,"
+												  " so the WthrSta and WthrStaNum properties have been re-defaulted (based on ZipCode)." ).arg(
+												  	sCurWthr, QString::number(lZipCodeI), QString::number(iCurCZ), QString::number(iNewCZ) );
+						assert( FALSE );
+						BEMPX_DefaultProperty( lDBID_Proj_WthrSta   , iError );
+						BEMPX_DefaultProperty( lDBID_Proj_WthrStaNum, iError );
 					}
 				}
 				else if (iStatusZip >= BEMS_UserLibrary && ((iStatusCZ >= BEMS_UserLibrary) || (iStatusCZN >= BEMS_UserLibrary)) &&
@@ -1203,12 +1342,14 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 						BEMPX_DefaultProperty( lDBID_Proj_CliZn   , iError );
 						BEMPX_DefaultProperty( lDBID_Proj_CliZnNum, iError );
 						sWarnMsg = QString( "There is no longer a default weather station for Zip code %1 in climate zone %2, so the CliZn and CliZnNum"
-													" properties have been re-defaulted (based on ZipCode)." ).arg( QString::number(dZipCode, 'f', 0), QString::number(dCliZn, 'f', 0) );
-						if (bCalledFromUI)
-							sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
-						psaWarningsForUser->push_back( sWarnMsg );				assert( FALSE );
+													" properties have been re-defaulted (based on ZipCode)." ).arg( QString::number(dZipCode, 'f', 0), QString::number(dCliZn, 'f', 0) );		assert( FALSE );
 				}	}
-			}
+
+				if (sWarnMsg.length() > 0)
+				{	if (bCalledFromUI)
+						sWarnMsg += "\nCheck/confirm location settings before performing analysis.";
+					psaWarningsForUser->push_back( sWarnMsg );
+			}	}
 
 		// SAC 4/6/16 - code to override ThrmlZn:VentSrc of "None" w/ "Natural" for residential, conditioned spaces
 			//int iCID_Spc = BEMPX_GetDBComponentID( "Spc" );										assert( iCID_Spc > 0 );

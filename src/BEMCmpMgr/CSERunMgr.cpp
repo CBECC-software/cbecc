@@ -38,6 +38,26 @@
 #include "CSERunMgr.h"
 #include "memLkRpt.h"
 
+const char* pszRunAbbrev_u  = "u";
+const char* pszRunAbbrev_p  = "p";
+const char* pszRunAbbrev_pN = "p-N";
+const char* pszRunAbbrev_pE = "p-E";
+const char* pszRunAbbrev_pS = "p-S";
+const char* pszRunAbbrev_pW = "p-W";
+const char* pszRunAbbrev_s    = "s";    
+const char* pszRunAbbrev_pfx  = "pfx";  
+const char* pszRunAbbrev_pfxN = "pfx-N";
+const char* pszRunAbbrev_pfxE = "pfx-E";
+const char* pszRunAbbrev_pfxS = "pfx-S";
+const char* pszRunAbbrev_pfxW = "pfx-W";
+const char* pszRunAbbrev_pmf  = "pmf";  
+const char* pszRunAbbrev_pmfN = "pmf-N";
+const char* pszRunAbbrev_pmfE = "pmf-E";
+const char* pszRunAbbrev_pmfS = "pmf-S";
+const char* pszRunAbbrev_pmfW = "pmf-W";
+const char* pszRunAbbrev_dr   = "dr";   
+
+
 int StringInArray( QVector<QString>& saStrs, QString& sStr )
 {	int iSize = (int) saStrs.size();
 	for (int i=0; i<iSize; i++)
@@ -83,7 +103,9 @@ CSERunMgr::CSERunMgr(
 	const char* pszUIVersionString,
 	int iSimReportOpt,
 	int iSimErrorOpt,
-	long lPropMixedFuelRunReqd) :
+	long lPropMixedFuelRunReqd,
+	long lPropFlexRunReqd,
+	int iNumRuns) :
 
 	m_sCSEexe( sCSEexe),
 	m_sCSEWthr( sCSEWthr),
@@ -107,15 +129,21 @@ CSERunMgr::CSERunMgr(
 	m_iSimReportOpt(iSimReportOpt),
 	m_iSimErrorOpt(iSimErrorOpt),
 	m_lPropMixedFuelRunReqd(lPropMixedFuelRunReqd),
+	m_lPropFlexRunReqd(lPropFlexRunReqd),
 	m_iNumOpenGLErrors(0),
 	m_iNumProgressRuns(-1)
 {
-	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
-	if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
-	{	m_iNumRuns++;
-		if (m_lPropMixedFuelRunReqd > 0)		// SAC 4/5/17
+	if (iNumRuns > 0)
+		m_iNumRuns = iNumRuns;
+	else
+	{	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
+		if (m_lPropFlexRunReqd > 0)		// SAC 8/3/17
 			m_iNumRuns++;
-	}
+		if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
+		{	m_iNumRuns++;
+			if (m_lPropMixedFuelRunReqd > 0)		// SAC 4/5/17
+				m_iNumRuns++;
+	}	}
 }		// CSERunMgr::CSERunMgr
 
 CSERunMgr::~CSERunMgr()
@@ -190,7 +218,8 @@ static int ExecuteNow( CSERunMgr* pRunMgr, QString sEXEFN, QString sEXEParams )
 
 
 int CSERunMgr::SetupRun(
-	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/ )	// SAC 4/29/15 - add argument to DISABLE report include files
+	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 4/29/15 - add argument to DISABLE report include files
+	const char* pszRunAbbrev /*=NULL*/ )
 {
 	int iRetVal = 0;
 	CSERun* pCSERun = new CSERun;
@@ -209,12 +238,16 @@ int CSERunMgr::SetupRun(
 
 	long lRunNumber = (iRunType == CRM_User ? 0 : iRunIdx+1 );		// SAC 4/21/15 - mods to set RunNumber in source code - necessary since we are now starting EACH run's BEMComp database w/ the Proposed Model's
 	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunNumber" ), BEMP_Int, (void*) &lRunNumber );
+	if (pszRunAbbrev && strlen( pszRunAbbrev ) > 0)
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), BEMP_Str, (void*) pszRunAbbrev );
 
 	QString sOrientLtr, sOrientName;
 	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
 	else if (iRunType >= CRM_PropMixedFuel && iRunType <= CRM_WPropMixedFuel)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
+	else if (iRunType >= CRM_PropFlex && iRunType <= CRM_WPropFlex)
+		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_ProposedFlexibility", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 8/3/17
 	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
 	{	// SAC 3/27/15 - SET 
 		if (iRunType == CRM_DesignRating)
@@ -331,7 +364,7 @@ int CSERunMgr::SetupRun(
 			for (; (i<CSERun::OutFileCOUNT && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 							"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-								 "(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( pszOutFileDescs[i], sOutFiles[i] );
+								 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszOutFileDescs[i], sOutFiles[i] );
 				if (!OKToWriteOrDeleteFile( sOutFiles[i].toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszOutFileDescs[i], sOutFiles[i] );
@@ -429,7 +462,7 @@ int CSERunMgr::SetupRun(
 			for (i=0; (psaCopySrc[i] != NULL && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 									"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									"(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
+									"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
 				if (!OKToWriteOrDeleteFile( psaCopyDest[i]->toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
@@ -446,7 +479,7 @@ int CSERunMgr::SetupRun(
 			for (i=0; (i < saZoneIncFiles.size() && iRetVal == 0); i++)
 			{	sMsg = QString( "The zone '%1' CSE include file '%2' is opened in another application.  This file must be closed in that "
 									"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									"(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( saZoneNameIncFiles[i], saProcZoneIncFiles[i] );
+									"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( saZoneNameIncFiles[i], saProcZoneIncFiles[i] );
 				if (!OKToWriteOrDeleteFile( saProcZoneIncFiles[i].toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite zone '%1' CSE include file:  %2" ).arg( saZoneNameIncFiles[i], saProcZoneIncFiles[i] );
@@ -471,7 +504,7 @@ int CSERunMgr::SetupRun(
 				QString sFullTDVFile = m_sProcessPath + sTDVFile;
 				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-								 "(once the file is closed), or \n'Cancel' to abort the %3." ).arg( "TDV", sFullTDVFile, "compliance report generation" );
+								 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "TDV", sFullTDVFile, "compliance report generation" );
 				if (!OKToWriteOrDeleteFile( sFullTDVFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file (required for CSE simulation):  %2" ).arg( "TDV", sFullTDVFile );
@@ -621,7 +654,7 @@ int CSERunMgr::SetupRunFinish(
 				// Write CSE input file  (and store BEM details file)
 				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 							 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-								 "(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( "CSE input", sLpCSEFile );
+								 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sLpCSEFile );
 				if (!OKToWriteOrDeleteFile( sLpCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "CSE input", sLpCSEFile );
@@ -901,11 +934,12 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //
 			QString sCSEVersion = GetVersionInfo();
 			if (!sCSEVersion.isEmpty())
-				*psCSEVer = sCSEVersion;
-//				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:PrimSimEngingVer" ), BEMP_QStr, (void*) &sCSEVersion );
-//			else
-//				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:PrimSimEngingVer" ), m_iError );
-//
+			{	*psCSEVer = sCSEVersion;
+				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:DHWSimEngVersion" ), BEMP_QStr, (void*) &sCSEVersion );	// SAC 8/23/17 - added storage of CSE sim ver (in place of old T24DHW engine)
+			}
+			else
+				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:DHWSimEngVersion" ), m_iError );
+
 //			// SAC 1/8/13 - DHW engine version stored to BEMBase DURING DHW simulation (immediately following the ...Init() call)
 //			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "Proj:SecSimEngingVer" ), m_iError );
 		}
@@ -928,7 +962,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			for (; (i<CSERun::OutFileCOUNT && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 								"application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-								"(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( pszOutFileDescs[i], sOutFiles[i] );
+								"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszOutFileDescs[i], sOutFiles[i] );
 				if (!OKToWriteOrDeleteFile( sOutFiles[i].toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszOutFileDescs[i], sOutFiles[i] );
@@ -1026,7 +1060,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			for (i=0; (psaCopySrc[i] != NULL && iRetVal == 0); i++)
 			{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 									"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									"(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
+									"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
 				if (!OKToWriteOrDeleteFile( psaCopyDest[i]->toLocal8Bit().constData(), sMsg, m_bSilent ))
 				{	if (m_bSilent)
 						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
@@ -1077,7 +1111,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			sProjCSEFile = m_sProcessPath + sProjFileAlone + ".cse";
 			sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 							 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-							 "(once the file is closed), or \n'Cancel' to abort the analysis." ).arg( "CSE input", sProjCSEFile );
+							 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sProjCSEFile );
 			if (!OKToWriteOrDeleteFile( sProjCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
 			{	if (m_bSilent)
 					sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
@@ -1261,40 +1295,49 @@ static const char pszDashes[] = "-----------------------------------------------
 
 // process CSE errors and/or reports into file for user review - SAC 11/7/16
 bool CSERunMgr::ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int iOutFileType )
-{	bool bRetVal = true;
+{	bool bRetVal = ((int) m_vCSERun.size() > iRunIdx ? true : false);
 
-	const CSERun& cseRun = GetRun(iRunIdx);
-	QString sTemp, sCSEOutFile = cseRun.GetOutFile( (CSERun::OutFile) iOutFileType );		assert( !sCSEOutFile.isEmpty() );
-	QStringList slErrors;
-	if (iOutFileType == CSERun::OutFileERR && m_iSimErrorOpt == 1)
-	{	// make sure Errors exist in the error output file BEFORE 
-		QFile errFile( sCSEOutFile );
-		if (errFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-		{
-         char buff[ 300 ];
-         // read each line from the prev file into the log file
-         int iReadRetVal;   bool bSavingErr = false;   int iErrIdx = -1;
-         while (iReadRetVal = errFile.readLine( buff, 299 ) > 0)
-         {	sTemp = buff;
-         	if (bSavingErr)
-         	{	if (sTemp.left(4).compare("----"))
-         			slErrors[iErrIdx] += sTemp;
-        			else  // end of error
-        				bSavingErr = false;
-         	}
-         	else if (!sTemp.right(8).compare("Error: \n"))
-         	{	// start of new error message
-         		int iStartParen = sTemp.lastIndexOf('('), iEndParen = sTemp.lastIndexOf(')');		assert( iEndParen > (iStartParen+1) && iStartParen > 0 );
-         		if (iEndParen > (iStartParen+1) && iStartParen > 0)
-         		{	slErrors.push_back( QString("\nError on line %1: ").arg( sTemp.mid( iStartParen+1, (iEndParen-iStartParen-1) ) ) );
-         			iErrIdx++;
-        				bSavingErr = true;
-         		}
-         	}	
-         }
-         assert( iReadRetVal==0 );	// if -1, then error reading
-			if (iReadRetVal < 0)
-				bRetVal = false;
+	if (bRetVal)
+	{	const CSERun& cseRun = GetRun(iRunIdx);
+		QString sTemp, sCSEOutFile = cseRun.GetOutFile( (CSERun::OutFile) iOutFileType );		assert( !sCSEOutFile.isEmpty() );
+		QStringList slErrors;
+		if (iOutFileType == CSERun::OutFileERR && m_iSimErrorOpt == 1)
+		{	// make sure Errors exist in the error output file BEFORE 
+			QFile errFile( sCSEOutFile );
+			if (errFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+			{
+	         char buff[ 300 ];
+	         // read each line from the prev file into the log file
+	         int iReadRetVal;   bool bSavingErr = false;   int iErrIdx = -1;
+	         while (iReadRetVal = errFile.readLine( buff, 299 ) > 0)
+	         {	sTemp = buff;
+	         	if (bSavingErr)
+	         	{	if (sTemp.left(4).compare("----"))
+	         			slErrors[iErrIdx] += sTemp;
+	        			else  // end of error
+	        				bSavingErr = false;
+	         	}
+	         	else
+	         	{	bool bCSELineErr  = (!sTemp.right(8).compare("Error: \n"));
+	         		bool bOtherCSEErr = (!sTemp.left( 5).compare("Error"));
+	         		if (bCSELineErr || bOtherCSEErr)
+		         	{	// start of new error message
+		         		if (bCSELineErr)
+		         		{	int iStartParen = sTemp.lastIndexOf('('), iEndParen = sTemp.lastIndexOf(')');		assert( iEndParen > (iStartParen+1) && iStartParen > 0 );
+			         		if (iEndParen > (iStartParen+1) && iStartParen > 0)
+			         			slErrors.push_back( QString("\nError on line %1: ").arg( sTemp.mid( iStartParen+1, (iEndParen-iStartParen-1) ) ) );
+			         		else
+			         			slErrors.push_back( QString("\n%1").arg( sTemp ) );
+			         	}
+		         		else	// added else condition for those errors that don;t track directly back to CSE input line numbers
+		         			slErrors.push_back( QString("\n%1").arg( sTemp ) );
+		        			iErrIdx++;
+		     				bSavingErr = true;
+	         	}	}
+	         }
+	         assert( iReadRetVal==0 );	// if -1, then error reading
+				if (iReadRetVal < 0)
+					bRetVal = false;
 //---------------
 // Error: C:\WSF\DEVLIBS\COMPMGR\SRC\BEM-OPEN\BIN\RES\PROJECTS\SAMPLES-2016\1STORYEXAMPLE3-SMATTIC2 - COMP16\1STORYEXAMPLE3-SMATTIC2 - PROP.CSE(1935): Error: 
 //  RSYS 'rsys-HVAC System 1': 
@@ -1306,75 +1349,80 @@ bool CSERunMgr::ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int i
 // Info: C:\WSF\DEVLIBS\COMPMGR\SRC\BEM-OPEN\BIN\RES\PROJECTS\SAMPLES-2016\1STORYEXAMPLE3-SMATTIC2 - COMP16\1STORYEXAMPLE3-SMATTIC2 - PROP.CSE(1983): Info: 
 //  S0214: No run due to error(s) above
 //---------------
-	}	}
+		}	}
 
-	if (bRetVal && (iOutFileType != CSERun::OutFileERR || slErrors.size() > 0) &&
-						(iOutFileType != CSERun::OutFileREP || FileExists( sCSEOutFile )))
-	{
-	try
-	{	bool bOutFileAlreadyExists = FileExists( sSimOutputPathFile );
-		QFile outFile( sSimOutputPathFile );
-		if (!bOutFileAlreadyExists)
-			bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate );
-		else
-			bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );
-																																		assert( bRetVal );
-		if (bRetVal)
+//if (iOutFileType == CSERun::OutFileERR)
+//{QString sDbgMsg = QString( "%1 errors found listed in CSE error file: %2" ).arg( QString::number(slErrors.size()), sCSEOutFile );
+//BEMMessageBox( sDbgMsg );
+//}
+
+		if (bRetVal && (iOutFileType != CSERun::OutFileERR || slErrors.size() > 0) &&
+							(iOutFileType != CSERun::OutFileREP || FileExists( sCSEOutFile )))
 		{
-			if (bOutFileAlreadyExists)
-				outFile.write( "\n\n" );
+		try
+		{	bool bOutFileAlreadyExists = FileExists( sSimOutputPathFile );
+			QFile outFile( sSimOutputPathFile );
+			if (!bOutFileAlreadyExists)
+				bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate );
+			else
+				bRetVal = outFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append );
+																																			assert( bRetVal );
+			if (bRetVal)
+			{
+				if (bOutFileAlreadyExists)
+					outFile.write( "\n\n" );
 
-			QString sCSEInpFile = cseRun.GetArgs();
-			sCSEInpFile = sCSEInpFile.left( sCSEInpFile.length()-1 );
-			int iLastSlash    = std::max( sCSEInpFile.lastIndexOf('\\'),               sCSEInpFile.lastIndexOf('/') );
-			int i2ndLastSlash = std::max( sCSEInpFile.lastIndexOf('\\', iLastSlash-1), sCSEInpFile.lastIndexOf('/', iLastSlash-1) );
+				QString sCSEInpFile = cseRun.GetArgs();
+				sCSEInpFile = sCSEInpFile.left( sCSEInpFile.length()-1 );
+				int iLastSlash    = std::max( sCSEInpFile.lastIndexOf('\\'),               sCSEInpFile.lastIndexOf('/') );
+				int i2ndLastSlash = std::max( sCSEInpFile.lastIndexOf('\\', iLastSlash-1), sCSEInpFile.lastIndexOf('/', iLastSlash-1) );
 
 //--------------------------------------------------------------------------------
 //--  PROPOSED model:  Dir\File.cse
 //--------------------------------------------------------------------------------
-			outFile.write( pszDashes );
-			outFile.write( QString("--  %1 model:  %2\n").arg( cseRun.GetRunID().toUpper(), sCSEInpFile.right( (sCSEInpFile.length()-i2ndLastSlash-1) ) ).toLocal8Bit().constData() );
-			outFile.write( pszDashes );
+				outFile.write( pszDashes );
+				outFile.write( QString("--  %1 model:  %2\n").arg( cseRun.GetRunID().toUpper(), sCSEInpFile.right( (sCSEInpFile.length()-i2ndLastSlash-1) ) ).toLocal8Bit().constData() );
+				outFile.write( pszDashes );
 
-			if (iOutFileType == CSERun::OutFileERR)
-				for (int i=0; i<slErrors.size(); i++)
-				{	outFile.write( slErrors[i].toLocal8Bit().constData() );
-					//outFile.write( "\n" );
-				}
-			else	// report (not error) file
-			{
-				QFile repFile( sCSEOutFile );
-				if (repFile.open( QIODevice::Text | QIODevice::ReadOnly ))
-				{
-		         char buff[ 300 ];
-		         // read each line from the prev file into the log file
-		         int iReadRetVal;
-		         while (iReadRetVal = repFile.readLine( buff, 299 ) > 0)
-		// at some point 
-					{	outFile.write( buff );
+				if (iOutFileType == CSERun::OutFileERR)
+					for (int i=0; i<slErrors.size(); i++)
+					{	outFile.write( slErrors[i].toLocal8Bit().constData() );
 						//outFile.write( "\n" );
 					}
-		         assert( iReadRetVal==0 );	// if -1, then error reading
-					if (iReadRetVal < 0)
+				else	// report (not error) file
+				{
+					QFile repFile( sCSEOutFile );
+					if (repFile.open( QIODevice::Text | QIODevice::ReadOnly ))
+					{
+			         char buff[ 300 ];
+			         // read each line from the prev file into the log file
+			         int iReadRetVal;
+			         while (iReadRetVal = repFile.readLine( buff, 299 ) > 0)
+			// at some point 
+						{	outFile.write( buff );
+							//outFile.write( "\n" );
+						}
+			         assert( iReadRetVal==0 );	// if -1, then error reading
+						if (iReadRetVal < 0)
+							bRetVal = false;
+					}
+					else
 						bRetVal = false;
 				}
-				else
-					bRetVal = false;
-			}
 
 //	int m_iSimReportOpt;		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
 //	int m_iSimErrorOpt;		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
 //	int  iSimReportDetailsOption	=	GetCSVOptionValue( "SimReportDetailsOption",   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
 //	int  iSimErrorDetailsOption	=	GetCSVOptionValue( "SimErrorDetailsOption" ,   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
 
-			outFile.close();
+				outFile.close();
+			}
 		}
-	}
-	catch( ... )
-	{	assert( false );
-		bRetVal = false;
-	}
-	}	// end of if (bRetVal)
+		catch( ... )
+		{	assert( false );
+			bRetVal = false;
+		}
+	}	}	// end of if (bRetVal)
 
 	return bRetVal;
 }
