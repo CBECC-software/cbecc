@@ -4336,6 +4336,11 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
    {
       long lTime = (long) time.GetTime();
 		int iVerbose = ReadProgInt( "options", "LogRuleEvaluation", 0);
+
+		// SAC 8/15/17 - code to ensure Proj:RptGenUI* properties setup for CBECC-Com
+	   BOOL bRptGenUIEvalSuccessful = CMX_EvaluateRuleset( "ForceDefault_CodeVersion_RptGenUI", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, (iVerbose > 0) );
+	   assert( bRptGenUIEvalSuccessful );
+
 		CString sProcessingPath = sCurrentFileName.Left( sCurrentFileName.ReverseFind('.') );
 		//CString sProjFileBase = sProcessingPath.Right( sProcessingPath.GetLength() - sProcessingPath.ReverseFind('\\') - 1 );     ASSERT( !sProjFileBase.IsEmpty() );
 		sProcessingPath += " - run\\";
@@ -5355,6 +5360,10 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 						CString sNetComLibrary;
 						sNetComLibrary = "";   // SAC 1/4/17 - no longer an option - ReadProgString( "proxy", "NetComLibrary", "", FALSE );
 						const char* pszNetComLibrary = (sNetComLibrary.IsEmpty() ? NULL : (const char*) sNetComLibrary );
+
+						// SAC 8/2/17 - code to ensure Proj:RptGenUI* properties setup for CBECC-*
+					   BOOL bRptGenUIEvalSuccessful = CMX_EvaluateRuleset( "ForceDefault_CodeVersion_RptGenUI", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose );
+					   assert( bRptGenUIEvalSuccessful );
 
 	//					CString sReportName = (iReportID==0 ? "CF1R_NCB_PRF" : "NRCC_PRF_01");
 	//#ifdef UI_CARES
