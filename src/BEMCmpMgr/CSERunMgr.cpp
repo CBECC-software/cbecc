@@ -382,7 +382,9 @@ int CSERunMgr::SetupRun(
 		if (iRetVal == 0)
 		{	// Write Report Include file statement
 			long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" );
-			if (bAllowReportIncludeFile && lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile ) && !sRptIncFile.isEmpty())
+			if (lProjReportIncludeFileDBID > 0)
+				BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile );
+			if (bAllowReportIncludeFile && !sRptIncFile.isEmpty())
 			{	BOOL bOrigRptIncFileLastSlashIdx = sRptIncFile.lastIndexOf('\\');
 				if (sRptIncFile.indexOf(':') < 0 && sRptIncFile.indexOf('\\') != 0)
 					// report file does not include a FULL path, so expected to be a path relative to the project file - so prepend project path...
@@ -406,6 +408,11 @@ int CSERunMgr::SetupRun(
 					sRptIncFile.clear();
 					sProcRptIncFile.clear();
 				}
+			}
+			else if (!bAllowReportIncludeFile && !sRptIncFile.isEmpty())
+			{	// SAC 9/4/17 - force re-default of Proj:ReportIncludeFile if it is specified but this run should not have it
+				BEMPX_DefaultProperty( lProjReportIncludeFileDBID, m_iError );
+				sRptIncFile.clear();
 			}
 
 			// SAC 7/2/15 - added logic here to check for and address usage of Zone:TstatIncludeFile
@@ -513,7 +520,8 @@ int CSERunMgr::SetupRun(
 					iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
 				}
 				else
-				{	double daTDVElec[8760], daTDVFuel[8760];		long lCZ=0, lGas=0;
+				{	double daTDVElec[8760], daTDVFuel[8760], daTDVSecElec[8760], daTDVSecFuel[8760];		long lCZ=0, lGas=0;
+					bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
 					if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lCZ  ) || lCZ  < 1 || lCZ > 16 ||
 							!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"     ), lGas ) || lGas < 1 || lGas > 2 ||
 							BEMPX_GetTableColumn( &daTDVElec[0], 8760, "TDVTable", ((lCZ-1) * 3) + 1       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
@@ -526,6 +534,17 @@ int CSERunMgr::SetupRun(
 					{	QDateTime locTime = QDateTime::currentDateTime();
 						QString timeStamp = locTime.toString("ddd dd-MMM-yy  hh:mm:ss ap");   // "Wed 14-Dec-16  12:30:29 pm"
 
+						// SAC 9/23/17 - added code to summ GHG TDV adders to TDV data stored to 
+						QString qsTDVSecTblElec, qsTDVSecTblFuel;
+						bHaveSecTDVElec = ( BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Elec" ), qsTDVSecTblElec ) && 
+												  qsTDVSecTblElec.length() > 0 && qsTDVSecTblElec.compare( "none", Qt::CaseInsensitive ) && 
+												  BEMPX_GetTableColumn( &daTDVSecElec[0], 8760, qsTDVSecTblElec.toLocal8Bit().constData(), lCZ, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+						if (lGas == 1)
+							BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_NGas" ), qsTDVSecTblFuel );
+						else
+							BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Othr" ), qsTDVSecTblFuel );
+						bHaveSecTDVFuel = ( qsTDVSecTblFuel.length() > 0 && qsTDVSecTblFuel.compare( "none", Qt::CaseInsensitive ) && 
+												  BEMPX_GetTableColumn( &daTDVSecFuel[0], 8760, qsTDVSecTblFuel.toLocal8Bit().constData(), lCZ, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
 		      		QString qsVer, qsGas;
 						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMgrVersion" ), qsVer ) || qsVer.length() < 1)
 							qsVer = "(unknown version)";
@@ -550,7 +569,12 @@ int CSERunMgr::SetupRun(
 								fprintf( fp_CSV, "\"%s, CZ%ld, Fuel %s\",\"Hour\"\n", qsVer.toLocal8Bit().constData(), lCZ, qsGas.toLocal8Bit().constData() );
 								fprintf( fp_CSV, "\"tdvElec\",\"tdvFuel\"\n" );
 								for (int hr=0; hr<8760; hr++)
+								{	if (bHaveSecTDVElec)
+										daTDVElec[hr] += (daTDVSecElec[hr] / 3.413);
+									if (bHaveSecTDVFuel)
+										daTDVFuel[hr] += (daTDVSecFuel[hr] / 100);
 									fprintf( fp_CSV, "%g,%g\n", daTDVElec[hr], daTDVFuel[hr] );
+								}
 								fflush( fp_CSV );
 								fclose( fp_CSV );
 							}
@@ -648,6 +672,15 @@ int CSERunMgr::SetupRunFinish(
             	BEMObject* pBattObj = BEMPX_GetObjectByClass( BEMPX_GetDBComponentID( "cseBATTERY" ), iBattObjErr, 0 );
             	if (pBattObj)
 						BEMPX_DeleteObject( pBattObj );
+
+				// SAC 9/4/17 - toggle OFF ReportIncludeFile for BTPreRun CSE run - in this case defaulting to '1' (prevent in BTPreRun)
+					long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" ), lReportInclPropOnly = 1;
+					QString sChkRptIncFile;
+					if (lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile ) && !sChkRptIncFile.isEmpty() &&
+						 !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ReportInclPropOnly" ), lReportInclPropOnly ))
+						lReportInclPropOnly = 1;
+					if (!sChkRptIncFile.isEmpty() && lReportInclPropOnly > 0)
+						BEMPX_DefaultProperty( lProjReportIncludeFileDBID, m_iError );
 				}
 
 				QString sLpCSEFile = (iFLp==0 ? sProjCSEFile : sProjCSEBattFile);
@@ -707,14 +740,19 @@ int CSERunMgr::SetupRunFinish(
 			else
 			{			
 		// then need to write CSV of selected TDV series
-				double daTDVData[8760];		long lClimateZone=0;
+				double daTDVData[8760], daTDVSecData[8760];		long lClimateZone=0;		bool bHaveSecTDV=false;
 				if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lClimateZone ) ||
 						BEMPX_GetTableColumn( &daTDVData[0], 8760, "TDVTable", ((lClimateZone-1) * 3) + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 				{	assert( false );
 // how to handle error retrieving climate zone or TDV data ??
 				}
 				else
-				{	bool bTDVDataOK = true;
+				{	// SAC 9/23/17 - added code to summ GHG TDV adders to TDV data stored to 
+					QString qsTDVSecTblElec;
+					bHaveSecTDV = ( BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Elec" ), qsTDVSecTblElec ) && 
+										 qsTDVSecTblElec.length() > 0 && qsTDVSecTblElec.compare( "none", Qt::CaseInsensitive ) && 
+										 BEMPX_GetTableColumn( &daTDVSecData[0], 8760, qsTDVSecTblElec.toLocal8Bit().constData(), lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+					bool bTDVDataOK = true;
 					QString sTDVCSVFile = m_sProcessPath + sProjFileAlone + "-tdvelec.csv";  // switched TDV filename here to "tdvelec" to not conflict w/ new 2-col CSV above - SAC 3/18/17
 					FILE *fp_CSV;
 					int iErrorCode;
@@ -730,8 +768,14 @@ int CSERunMgr::SetupRunFinish(
 							fprintf( fp_CSV, "\"Wed 14-Dec-16   9:39:00 am\",\n" );
 							fprintf( fp_CSV, "\"TDV [TDV/Btu]\",\"Hour\"\n" );		// SAC 3/10/17 - fixed incorrect units label, was: TDV [kBtu/kWh]
 							fprintf( fp_CSV, "\"tdv\"\n" );
-							for (int hr=0; hr<8760; hr++)
-								fprintf( fp_CSV, "%g\n", daTDVData[hr] );
+							if (bHaveSecTDV)	// SAC 9/23/17
+							{	for (int hr=0; hr<8760; hr++)
+									fprintf( fp_CSV, "%g\n", (daTDVData[hr] + (daTDVSecData[hr]/3.413)) );
+							}
+							else
+							{	for (int hr=0; hr<8760; hr++)
+									fprintf( fp_CSV, "%g\n", daTDVData[hr] );
+							}
 							fflush( fp_CSV );
 							fclose( fp_CSV );
 						}

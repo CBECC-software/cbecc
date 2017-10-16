@@ -529,11 +529,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
-		{	sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
+		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-							 "(once the file is closed), or \n'Abort' to abort the %s.", "analysis results XML", sXMLResultsFileName.toLocal8Bit().constData(), "analysis" );
-			if (!OKToWriteOrDeleteFile( sXMLResultsFileName.toLocal8Bit().constData(), sMsg ))
-			{	sErrMsg.sprintf( "ERROR:  Analysis aborting - user chose not to overwrite analysis results XML file:  %s", sXMLResultsFileName.toLocal8Bit().constData() );
+							 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "analysis results XML", sXMLResultsFileName.toLocal8Bit().constData(), "analysis" );
+			if (!OKToWriteOrDeleteFile( sXMLResultsFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
+			{	sErrorMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite analysis results XML file:  %1" ).arg( sXMLResultsFileName );
 				iRetVal = BEMAnal_CECRes_AnalResWriteError;		// Unable to overwrite analysis results XML file
 		}	}
 
@@ -1261,10 +1261,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 	// Check for specification of Report Include file - and if found, prevent secure report
-		long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" );
+		long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" ), lReportInclPropOnly = 0;
 		QString sChkRptIncFile;
 		if (lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile /*, FALSE, 0, -1, -1, BEMO_User, NULL, 0, iBEMProcIdx*/ ) && !sChkRptIncFile.isEmpty())
-			bCSEIncludeFileUsed = true;
+		{	bCSEIncludeFileUsed = true;
+			if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ReportInclPropOnly" ), lReportInclPropOnly ))		// SAC 9/4/17 - enable specification of include file only for Proposed model runs
+				lReportInclPropOnly = 0;
+		}
 		else
 		{	long lUseTstatIncFile, lDBID_Zone_UseTstatIncFile = BEMPX_GetDatabaseID( "Zone:UseTstatIncFile" );		// SAC 7/2/15
 			int iNumZones = (lDBID_Zone_UseTstatIncFile < 1 ? 0 : BEMPX_GetNumObjects( BEMPX_GetClassID( lDBID_Zone_UseTstatIncFile ) ));
@@ -1367,7 +1370,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					iRetVal = BEMAnal_CECRes_SimModelInitError;		// 63	- Error initializing analysis model
 			}	}
 			if (ResRetVal_ContinueProcessing( iRetVal ))
-			{	iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowReportIncludeFile, pszRunAbbrev[iRunIdx] );
+			{	bool bAllowRptInclThisRun = (bAllowReportIncludeFile && (lReportInclPropOnly==0 || ( iRunType[iRunIdx] != CRM_StdDesign && iRunType[iRunIdx] != CRM_DesignRating &&		// SAC 9/4/17 - enable specification of include file only for Proposed model runs
+																																(iRunType[iRunIdx] < CRM_PropMixedFuel || iRunType[iRunIdx] > CRM_WPropMixedFuel))));
+				iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowRptInclThisRun, pszRunAbbrev[iRunIdx] );
 				if (iRV2 > 0)
 					iRetVal = iRV2;
 			}			dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
@@ -2407,7 +2412,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  11		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11
+#define  CSVFmtVer_CECRes  13		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -2598,12 +2603,12 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 			}
 
 		// set EnergyUse object reference offset based on which set of results is desired - SAC 8/6/13
+			long lWorstOrientation=0;
 			if (iEnergyUseObjectSets > 1)
 			{	assert( iEnergyUseObjectSets == 4 && lAllOrientations > 0 );	// N,E,S,W is only known case here
 		      int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
 				int iNumEnergyUseObjects = BEMPX_GetNumObjects( iCID_EnergyUse );
 				assert( iNumEnergyUseObjects == (4 * 11) );	// current set (as of 8/6/13)
-				long lWorstOrientation;
 				if (iNumEnergyUseObjects < 40 || !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:WorstOrientation" ), lWorstOrientation ))
 					iRetVal = 7;
 				else
@@ -2911,6 +2916,81 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				else
 					sDemSavAndCAHP = ",,,,,,,,,,,,,";
 
+				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sPropMixedFuel = ",,", sCarbonEmissions = ",,,,,,";
+				if (iResultsFormatVersion >= 12)		// SAC 9/15/17 - additional PV scaling, target EDR & proposed mixed fuel run results
+				{	BEMObject* pObjResultSummary = NULL;    int iEUSObjIdx=-1;
+					if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
+					{	iEUSObjIdx = BEMPX_GetObjectIndex( pObjResultSummary->getClass(), pObjResultSummary );		assert( iEUSObjIdx >= 0 );
+					}
+
+					long lTEDRActive=0;   double dTargetEDR=-999;
+					BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ),  lTEDRActive, 0 );
+					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ),  dTargetEDR , -999 );
+					// Proposed PV Scaling:  Max PV Ratio: Proj:MaxPropPVRatio  //  PV Scale Factor: if () then Proj:TargetDRtgPVMult else Proj:PropPVScaleFactor
+					//		Scaled PV Total kW: PVScaleFactor(above) * Proj:PVWDCSysTotal
+					double dPVSclMaxRat, dPVSclFctr, dScldPVKW=-1;
+					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:MaxPropPVRatio"    ),  dPVSclMaxRat , -1 );
+					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"     ),  dScldPVKW    , -1 );
+					if (iEUSObjIdx >= 0)
+					{	if (lTEDRActive && dTargetEDR > -998)
+							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:TargetDRtgPVMult"  ), dPVSclFctr, -1, BEMP_Flt, iEUSObjIdx );
+						else
+							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropPVScaleFactor" ), dPVSclFctr, -1, BEMP_Flt, iEUSObjIdx );
+					}
+					if (dScldPVKW > 0 && dPVSclFctr >= 0)
+						dScldPVKW *= dPVSclFctr;
+					if (dPVSclMaxRat >= 0)
+						sPropPVScaling = QString( "%1," ).arg( QString::number( dPVSclMaxRat ) );
+					else
+						sPropPVScaling = ",";
+					if (dPVSclFctr >= 0)
+						sPropPVScaling += QString( "%1,%2," ).arg( QString::number( dPVSclFctr ), QString::number( dScldPVKW ) );
+					else if (dScldPVKW > 0)		// SAC 10/4/17 - revised logic to export overall (scaled) PV regardless of scaling
+						sPropPVScaling += QString( ",%1," ).arg( QString::number( dScldPVKW ) );
+					else
+						sPropPVScaling += ",,";
+
+					// Target EDR (iff Proj:SpecifyTargetDRtg > 0):  EDR: Proj:TargetDesignRtgInp  //  TEDR Achieved: 
+					if (lTEDRActive && dTargetEDR > -998)
+					{	QString sTEDRMsg, sTEDRResult;
+						BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TargetDRtgResMsg" ), sTEDRMsg );
+						if (sTEDRMsg.isEmpty())
+							sTEDRResult = "unknown";
+						else if (sTEDRMsg.indexOf("rating achieved") > 0)
+							sTEDRResult = "achieved";
+						else if (sTEDRMsg.indexOf("not achievable w/out exceeding max PV") > 0)
+							sTEDRResult = "too much PV required";
+						else if (sTEDRMsg.indexOf("not achieved within the max") > 0)
+							sTEDRResult = "too many iterations required";
+						else
+							sTEDRResult = "not achievable";
+						sTargetEDR = QString( "%1,%2," ).arg( QString::number( dTargetEDR ), sTEDRResult );
+					}
+
+					// Min Req'd (std dsgn) PV kW = (-1 * ResultSummary[1]:PropMixedFuelkWh / ResultSummary[1]:PropMixedFuelPV)
+					if (iEUSObjIdx >= 0)
+					{	double dPropMixedFuelkWh=-1, dPropMixedFuelPV=0;
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelkWh" ), dPropMixedFuelkWh, -1, BEMP_Flt, iEUSObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelPV"  ), dPropMixedFuelPV,  -1, BEMP_Flt, iEUSObjIdx );
+						if (dPropMixedFuelkWh > 0 && dPropMixedFuelPV != 0.0)
+							sPropMixedFuel = QString( "%1,%2," ).arg( QString::number( dPropMixedFuelkWh ), QString::number( (-1*dPropMixedFuelkWh/dPropMixedFuelPV) ) );
+					}
+
+					// Carbon Emissions - SAC 10/6/17
+					if (iResultsFormatVersion >= 13 && iEUSObjIdx >= 0)
+					{	double dPCarbSelfCons, dPCarbExport, dPCarbFinal, dSCarbSelfCons, dSCarbExport, dSCarbFinal;
+						int iPArrIdx = (lAllOrientations > 0 && lWorstOrientation > 0) ? lWorstOrientation : 0;
+						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropSelfConsCarbon" )+iPArrIdx, dPCarbSelfCons, -1, BEMP_Flt, iEUSObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropExportCarbon"   )+iPArrIdx, dPCarbExport  , -1, BEMP_Flt, iEUSObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropFinalCarbon"    )+iPArrIdx, dPCarbFinal   , -1, BEMP_Flt, iEUSObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdSelfConsCarbon"  )         , dSCarbSelfCons, -1, BEMP_Flt, iEUSObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdExportCarbon"    )         , dSCarbExport  , -1, BEMP_Flt, iEUSObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdFinalCarbon"     )         , dSCarbFinal   , -1, BEMP_Flt, iEUSObjIdx ) )
+							sCarbonEmissions = QString( "%1,%2,%3,%4,%5,%6," ).arg( QString::number( dPCarbSelfCons ), QString::number( dPCarbExport ), QString::number( dPCarbFinal ),
+																									  QString::number( dSCarbSelfCons ), QString::number( dSCarbExport ), QString::number( dSCarbFinal ) );
+					}
+				}
+
 				sDRtgEnergyDemand = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
 				if (bExpectDesignRatingResults)
 				{	if (iResultsFormatVersion == 5)
@@ -2969,9 +3049,10 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 			// concatenate individual strings into complete CSV record
 				if (iResultsFormatVersion >= 10)	// SAC 6/7/17 - Re-ordered string groups, spliting up Prop & Std demand results
-					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
+					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
 										sStdEnergy.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sVersionFields.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
-										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData() );
+										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
+										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sPropMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData() );
 				else 
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), 
 										sVersionFields.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
@@ -3193,6 +3274,27 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 //
 //			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone"     ), lClimateZone     ) ||
 //			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvailable" ), lNatGasAvailable ) )
+
+				// SAC 9/24/17 - added code to summ GHG TDV adders to TDV data stored to 
+				double daTDVSec[2][8760];		bool bHaveSecTDV[2] = { false, false };
+				QString qsTDVSecTbl[2];
+				bHaveSecTDV[0] = ( BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Elec" ), qsTDVSecTbl[0] ) && 
+										  qsTDVSecTbl[0].length() > 0 && qsTDVSecTbl[0].compare( "none", Qt::CaseInsensitive ) && 
+										  BEMPX_GetTableColumn( &daTDVSec[0][0], 8760, qsTDVSecTbl[0].toLocal8Bit().constData(), lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+				if (lNatGasAvailable > 0)
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_NGas" ), qsTDVSecTbl[1] );
+				else
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Othr" ), qsTDVSecTbl[1] );
+				bHaveSecTDV[1] = ( qsTDVSecTbl[1].length() > 0 && qsTDVSecTbl[1].compare( "none", Qt::CaseInsensitive ) && 
+										  BEMPX_GetTableColumn( &daTDVSec[1][0], 8760, qsTDVSecTbl[1].toLocal8Bit().constData(), lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+				if (bHaveSecTDV[0])  // qsTDVSecTbl[0] IS loaded and valid
+				{	for (iYrHr=0; iYrHr<8760; iYrHr++)
+						daTDVData[0][iYrHr] += (daTDVSec[0][iYrHr] / 3.413);
+				}
+				if (bHaveSecTDV[1])  // qsTDVSecTbl[1] IS loaded and valid
+				{	for (iYrHr=0; iYrHr<8760; iYrHr++)
+						daTDVData[1][iYrHr] += (daTDVSec[1][iYrHr] / 100);
+				}
 
 				double daElecDemand[8760];		// SAC 8/23/14
 				double* daElDmndData = &daElecDemand[0];
@@ -3481,6 +3583,8 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 // SAC 10/7/16 - updated col titles to include new 2019 proposed model PV reporting
 // SAC 6/6/17 - updated to add some inputs and Battery results and reorganize demand results - max string len = 2410 characters
 // SAC 7/19/17 - updated to replace old (2013) CAHP results columns w/ new ones (9->16)
+// SAC 9/15/17 - added 3 more sets of colums: Proposed PV Scaling(3), Target EDR (2), and Minimum Req'd PV (2)
+// SAC 10/6/17 - added 2 more sets of colums: Proposed & Standard design carbon emissions
 static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site"
 										" Other Fuel Use,,,,,,,,,,Proposed Model TDV,,,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,"
 										",,,Standard Model Site Natural Gas Use,,,,,,,,,,Standard Model Site Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Standard Model El"
@@ -3489,7 +3593,7 @@ static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site 
 										"Proposed  Design Rating Model TDV,,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,Reference Design Rating Model Site El"
 										"ectric Use,,,,,,,,,,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,,,,,,,"
 										",Reference Design Rating Model TDV,,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings,,,,,Compliance To"
-										"tal TDV Results By Fuel (kTDV/ft2-yr)\n";
+										"tal TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Proposed PV Scaling,,,Target EDR,,Minimum Req'd PV,,Proposed Design Carbon Emissions,,,Standard Design Carbon Emissions,,\n";
 static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,"
 										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ"
 										" Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Ligh"
@@ -3508,7 +3612,9 @@ static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance
 										",Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exte"
 										"rior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other H"
 										"VAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,E"
-										"xterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design Rating Model\n";
+										"xterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design "
+										"Rating Model,,Max PV,PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Min Req'd,Self Consumed Solar,Grid Exported Solar,Carbon Generated,Self Co"
+										"nsumed Solar,Grid Exported Solar,Carbon Generated\n";
 static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
 										"(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu"
 										"),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTD"
@@ -3524,7 +3630,7 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
 										"rms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMB"
 										"tu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr"
 										"),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Excl. PV+Batt,PV+Batt Only,Final EDR,Excl. PV,Min Reqd PV,"
-										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas\n";
+										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(tons),(tons),(tons),(tons),(tons),(tons)\n";
 
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;
