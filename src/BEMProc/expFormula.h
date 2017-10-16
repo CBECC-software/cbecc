@@ -2,8 +2,8 @@
  *             functions used to parse and evaluate expressions.
  */
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -235,6 +235,8 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_Cr8DUWHtr,     /* 162 */  /* SAC 5/29/16 - added */
    BF_AddCSERptCol,  /* 163 */  /* SAC 11/14/16 - added */
    BF_HrlyResMltNEM, /* 164 */  /* SAC 1/23/17 - added */
+   BF_HrlyResMltNeg, /* 165 */  /* SAC 10/4/17 - added */
+   BF_CopyHrlyRes,   /* 166 */  /* SAC 10/5/17 - added */
 } OpTypes;
 
 typedef enum fmerrorcode_

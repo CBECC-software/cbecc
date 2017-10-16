@@ -87,8 +87,17 @@ int BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char
 BEMRunHourlyResultMeter* GetHourlyResultMeter( const char* pszRunName, const char* pszMeterName, int iBEMProcIdx, BOOL bAddMeterIfNoExist )
 {
    BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
+   BEMRun* pRun = NULL;
 	if (pBEMProc && pszRunName && pszMeterName && strlen( pszRunName ) > 0 && strlen( pszMeterName ) > 0)
-	{	BEMRun* pRun = pBEMProc->getRun( pszRunName );
+	{	pRun = pBEMProc->getRun( pszRunName );
+		if (pRun == NULL && iBEMProcIdx < 0)
+		{	// try prior models in case the run ID can be found there - SAC 10/5/17
+			iBEMProcIdx = eActiveBEMProcIdx;
+			while (pRun == NULL && --iBEMProcIdx >= 0)
+			{  pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
+				if (pBEMProc)
+					pRun = pBEMProc->getRun( pszRunName );
+		}	}
 		if (pRun == NULL)
 		{	assert( FALSE );  // run not found
 		}
