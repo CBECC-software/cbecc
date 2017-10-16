@@ -126,7 +126,7 @@ public:
    void DeleteControls();
    BOOL InitControls();
 
-   void PaintTabCtrlStuff( BOOL bUpdateLabelsOnly=FALSE, BOOL bCallDisplayMods=TRUE );
+   void PaintTabCtrlStuff( BOOL bUpdateLabelsOnly=FALSE, BOOL bCallDisplayMods=TRUE, BOOL bPaintAllLabels=FALSE );	// SAC 10/16/17
 //   BOOL ToggleControlIfNecessary( CBEMPUIControl* pCtrl, BOOL bEraseLabels );
    BOOL ToggleControlIfNecessary( void* pVoidCtrl, BOOL bEraseLabels );
 

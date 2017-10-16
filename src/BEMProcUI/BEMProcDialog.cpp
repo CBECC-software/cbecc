@@ -329,6 +329,9 @@ void CSACBEMProcDialog::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 
+//CString sDbgDispMsg;		// SAC 10/16/17
+//sDbgDispMsg.Format( "   calling PaintTabCtrlStuff( F, T ) from OnPaint()" );
+//BEMPX_WriteLogFile( sDbgDispMsg );
    PaintTabCtrlStuff();
 }
 
@@ -512,6 +515,10 @@ LONG CSACBEMProcDialog::DisplayMods( UINT, LONG )
       pChild->SendMessage( WM_DISPLAYDATA );
       pChild = pChild->GetNextWindow( GW_HWNDNEXT );
    }
+
+//CString sDbgDispMsg;		// SAC 10/16/17
+//sDbgDispMsg.Format( "   calling PaintTabCtrlStuff( T, F ) from DisplayMods()" );
+//BEMPX_WriteLogFile( sDbgDispMsg );
 
 // SAC 6/23/99 - added this call based on contents of SACWizardDlg
    // Now loop over all controls and re-display labels that display data that may have been updated
@@ -702,14 +709,19 @@ BOOL CSACBEMProcDialog::InitControls()
 //???
 //      PaintTabCtrlStuff();
 		if (iNumCtrlsToDisplay == 0 && iNumLabelsToDisplay > 0)	// SAC 7/14/17 - call PaintTabCtrlStuff() directly here if we have only labels or lines to draw
-			PaintTabCtrlStuff( TRUE, FALSE );
+		{
+//CString sDbgDispMsg;		// SAC 10/16/17
+//sDbgDispMsg.Format( "   calling PaintTabCtrlStuff( T, F, T ) from InitControls()" );
+//BEMPX_WriteLogFile( sDbgDispMsg );
+			PaintTabCtrlStuff( TRUE, FALSE, TRUE );
+		}
    }
 
    return TRUE;
 }
 
 
-void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDisplayMods )
+void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDisplayMods, BOOL bPaintAllLabels /*=FALSE*/ )
 {
 //   int iPage = m_BEMProcTabCtrl.GetCurSel();
 //   CDC* pDC = m_BEMProcTabCtrl.GetDC();
@@ -743,6 +755,10 @@ void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDis
 //   pDC->SelectObject( GetWizFont(FNT_STD) );
 //   pDC->ExtTextOut( srDbgRect.left+1, srDbgRect.top+1, ETO_OPAQUE, srDbgRect, ssDbgMsg, NULL);
 // DEBUGGING
+
+//CString sDbgDispMsg;		// SAC 10/16/17
+//sDbgDispMsg.Format( "      paint tab %s - %s (%d) - CSACBEMProcDialog::PaintTabCtrlStuff()", m_sCaptionString, m_pTDPage->m_sCaption, m_pTDPage->m_iPageId );
+//BEMPX_WriteLogFile( sDbgDispMsg );
 
          for (int i=m_pTDPage->m_iFirstCtrlIdx; i<=m_pTDPage->m_iLastCtrlIdx; i++)
          {
@@ -780,7 +796,9 @@ void CSACBEMProcDialog::PaintTabCtrlStuff( BOOL bUpdateLabelsOnly, BOOL bCallDis
                if (bUpdateLabelsOnly)
                {
 //                  if (pCtrl->m_bLabelRequiringRefresh)
-                  if (pCtrl->m_bLabelRequiringRefresh &&
+//sDbgDispMsg.Format( "         UpdLblsOnly - #%d - m_bLabelRequiringRefresh = %s - CSACBEMProcDialog::PaintTabCtrlStuff()", pCtrl->m_uiCtrlID, (pCtrl->m_bLabelRequiringRefresh ? "T":"F") );
+//BEMPX_WriteLogFile( sDbgDispMsg );
+                  if ((pCtrl->m_bLabelRequiringRefresh || bPaintAllLabels) &&		// SAC 10/16/17 - added ref to bPaintAllLabels to ensure labels displayed following tab change
                       // SAC 7/15/00 - added check to ensure one of the label offset values is non-zero
                       //               if they are both zero, then this label is likely a rulelist name to be evaluated (ChkList control)
                       // SAC 5/14/01 - added leading condition to ensure Label controls always refreshed when m_bLabelRequiringRefresh == TRUE
