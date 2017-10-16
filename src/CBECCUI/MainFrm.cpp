@@ -4063,15 +4063,14 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
 			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
-			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11
+			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					11 /*iResFormatVer*/, sOriginalFileName );
+																					13 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
-				char pszCSVColLabel1[1280], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
-				VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1280, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
+				char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
+				VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1536, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
 				const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
-
 				CString sCSVResultSummary = pszCSVResultSummary;
 //				sCSVResultSummary += CString("\"") + sOriginalFileName + CString("\"");  // append full project path/file to CSV record
 				// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
@@ -4087,8 +4086,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				}
 
 				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7
-				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v11.csv", TRUE /*bGetPath*/ );
+				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v13.csv", TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else
