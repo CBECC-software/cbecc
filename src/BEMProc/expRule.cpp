@@ -6167,13 +6167,14 @@ int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStr
 
 /////////////////////////////////////////////////////////////////////////////
 
-// SAC 3/11/14 - AssignOrCreateComp() - first argument comp type, 2nd is comp name, following args are pairs of created comp property name (in quotes) and values/strings/enumerations for each property */
+// SAC 3/11/14 - AssignOrCreateComp() - first argument comp type, 2nd is comp name, following args are pairs of created comp property name (in quotes) and values/strings/enumerations for each property
+// SAC 10/31/17 - mod to recognize -99996 as UNDEFINED to check for certain properties that are not defined (via baArgUndef[]) (Res tic #917)
 void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )
 {
 	ExpNode* pNode = NULL;
 	vector<string> saArgs, saDBIDs;
 	vector<double> faArgs;
-	vector<bool> baArgNumeric;
+	vector<bool> baArgNumeric, baArgUndef;
 	vector<long> laDBID;
 	vector<int> iaPropType;
 	string sCompName, sErrMsg;
@@ -6189,6 +6190,7 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 		laDBID.resize(  iNumDBIDArgPairs );
 		saDBIDs.resize( iNumDBIDArgPairs );
 		baArgNumeric.resize( iNumDBIDArgPairs );
+		baArgUndef.resize(   iNumDBIDArgPairs );
 		iaPropType.resize(   iNumDBIDArgPairs );
 	}
 
@@ -6219,11 +6221,13 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 				if ((iArg % 2) == 0)
 				{	// string/numeric value
 					baArgNumeric[iArgPairIdx] = (pNode->type != EXP_String);
+					baArgUndef[  iArgPairIdx] = false;
 					if (pNode->type == EXP_String)
 						saArgs[iArgPairIdx] = (char*) pNode->pValue;
 					else
-						faArgs[iArgPairIdx] = pNode->fValue;
-				}
+					{	faArgs[iArgPairIdx] = pNode->fValue;
+						baArgUndef[iArgPairIdx] = IsReserved_UNDEFINED( pNode->fValue );
+				}	}
 				else
 				{	// DBID
 					if (pNode->type != EXP_String)
@@ -6246,20 +6250,20 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 			else
 			{	switch (pPropType->getPropType())
 				{	case  BEMP_Int :	iaPropType[iArg] = BEMP_Int;
-											if (!baArgNumeric[iArg])
+											if (!baArgNumeric[iArg] && !baArgUndef[iArg])
 												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Flt :	iaPropType[iArg] = BEMP_Flt;
-											if (!baArgNumeric[iArg])
+											if (!baArgNumeric[iArg] && !baArgUndef[iArg])
 												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Sym :	iaPropType[iArg] = (baArgNumeric[iArg] ? BEMP_Int : BEMP_Str);		break;
 					case  BEMP_Str :	iaPropType[iArg] = BEMP_Str;
-											if (!baArgNumeric[iArg])
+											if (baArgNumeric[iArg] && !baArgUndef[iArg])
 												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Obj :	iaPropType[iArg] = BEMP_Str;
-											if (!baArgNumeric[iArg])
+											if (baArgNumeric[iArg] && !baArgUndef[iArg])
 												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					default :	boost::str( boost::format( "AssignOrCreateComp() Error:  Invalid BEMPropertyType for argument #%d ('%s' supplied, type = %ld)" ) % iFuncArg % saDBIDs[iArg].c_str() % pPropType->getPropType() );	break;
@@ -6293,26 +6297,29 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 			for (iObj=0; (!bObjFound && iObj < iNumObjs); iObj++)
 			{	bObjFound = true;
 				for (iArg=0; (bObjFound && iArg < iNumDBIDArgPairs); iArg++)
-				{	switch( iaPropType[iArg] )
-					{	case  BEMP_Int :	if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
-													bObjFound = (BEMPX_GetInteger( laDBID[iArg], lData, (long) (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && (lData == 0));
-												else
-													bObjFound = (BEMPX_GetInteger( laDBID[iArg], lData, (long) (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && (lData == (long) faArgs[iArg]));
-												break;
-						case  BEMP_Flt :	//if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
-												//	bObjFound = (BEMPX_SetDataFloat( laDBID[iArg], fData, (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && WithinMargin( fData, 0.0, 0.00001 ));
-												//else
-												//	bObjFound = (BEMPX_SetDataFloat( laDBID[iArg], fData, (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && WithinMargin( fData, faArgs[iArg], (faArgs[iArg] / 10000.0) ));
-												fData = BEMPX_GetFloatAndStatus( laDBID[iArg], iStatus, iSpecialVal, iError, iaObjIdx[iObj], BEMO_User, -1, true );
-												if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
-													bObjFound = (iStatus > 0 && WithinMargin( fData, 0.0, 0.00001 ));
-												else
-													bObjFound = (iStatus > 0 && WithinMargin( fData, faArgs[iArg], (faArgs[iArg] / 10000.0) ));
-												break;
-						case  BEMP_Str :	bObjFound = (BEMPX_GetString( laDBID[iArg], sData, FALSE, 0, -1, iaObjIdx[iObj] ) && sData.compare( saArgs[iArg].c_str() ) == 0);
-												break;
-						default        :	bObjFound = false;	break;
-					}
+				{	if (baArgUndef[iArg])
+						bObjFound = (BEMPX_GetDataStatus( laDBID[iArg], iaObjIdx[iObj] ) < 1);	// SAC 10/31/17
+					else
+						switch( iaPropType[iArg] )
+						{	case  BEMP_Int :	if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
+														bObjFound = (BEMPX_GetInteger( laDBID[iArg], lData, (long) (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && (lData == 0));
+													else
+														bObjFound = (BEMPX_GetInteger( laDBID[iArg], lData, (long) (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && (lData == (long) faArgs[iArg]));
+													break;
+							case  BEMP_Flt :	//if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
+													//	bObjFound = (BEMPX_SetDataFloat( laDBID[iArg], fData, (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && WithinMargin( fData, 0.0, 0.00001 ));
+													//else
+													//	bObjFound = (BEMPX_SetDataFloat( laDBID[iArg], fData, (faArgs[iArg]-2), -1, iaObjIdx[iObj] ) && WithinMargin( fData, faArgs[iArg], (faArgs[iArg] / 10000.0) ));
+													fData = BEMPX_GetFloatAndStatus( laDBID[iArg], iStatus, iSpecialVal, iError, iaObjIdx[iObj], BEMO_User, -1, true );
+													if (WithinMargin( faArgs[iArg], 0.0, 0.00001 ))
+														bObjFound = (iStatus > 0 && WithinMargin( fData, 0.0, 0.00001 ));
+													else
+														bObjFound = (iStatus > 0 && WithinMargin( fData, faArgs[iArg], (faArgs[iArg] / 10000.0) ));
+													break;
+							case  BEMP_Str :	bObjFound = (BEMPX_GetString( laDBID[iArg], sData, FALSE, 0, -1, iaObjIdx[iObj] ) && sData.compare( saArgs[iArg].c_str() ) == 0);
+													break;
+							default        :	bObjFound = false;	break;
+						}
 				}
 				if (bObjFound)
 				{	// make sure that sCompName reflects ACTUAL OBJECT name
@@ -6344,21 +6351,22 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 				else
 				{	sCompName = sNewCompName.toLocal8Bit().constData();
 					for (iArg=0; (sErrMsg.size() < 1 && iArg < iNumDBIDArgPairs); iArg++)
-					{	switch( iaPropType[iArg] )
-						{	case  BEMP_Int :	lData = (long) faArgs[iArg];
-													if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Int, (void*) &lData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-														boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set int to new object (DBID '%s'/%ld, value %ld)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % lData );
-													break;
-							case  BEMP_Flt :	fData = faArgs[iArg];
-													if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Flt, (void*) &fData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-														boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set float to new object (DBID '%s'/%ld, value %g)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % fData );
-													break;
-							case  BEMP_Str :	sData = saArgs[iArg].c_str();
-													if (BEMPX_SetBEMData( laDBID[iArg], BEMP_QStr, (void*) &sData,  // BEMP_Str, (void*) sData.toLocal8Bit().constData(), 
-																						BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-														boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set string to new object (DBID '%s'/%ld, string '%s')" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % sData.toLocal8Bit().constData() );
-													break;
-					}	}
+					{	if (!baArgUndef[iArg])
+							switch( iaPropType[iArg] )
+							{	case  BEMP_Int :	lData = (long) faArgs[iArg];
+														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Int, (void*) &lData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set int to new object (DBID '%s'/%ld, value %ld)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % lData );
+														break;
+								case  BEMP_Flt :	fData = faArgs[iArg];
+														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Flt, (void*) &fData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set float to new object (DBID '%s'/%ld, value %g)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % fData );
+														break;
+								case  BEMP_Str :	sData = saArgs[iArg].c_str();
+														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_QStr, (void*) &sData,  // BEMP_Str, (void*) sData.toLocal8Bit().constData(), 
+																							BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set string to new object (DBID '%s'/%ld, string '%s')" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % sData.toLocal8Bit().constData() );
+														break;
+					}		}
 
 			// perhaps in the future enable rulelist eval following object creation...
 			//		else if (pEval->sRulelistToEvaluate.length() > 0 && iEvalOption == 1)

@@ -385,10 +385,17 @@ int CSERunMgr::SetupRun(
 			if (lProjReportIncludeFileDBID > 0)
 				BEMPX_GetString( lProjReportIncludeFileDBID, sRptIncFile );
 			if (bAllowReportIncludeFile && !sRptIncFile.isEmpty())
-			{	BOOL bOrigRptIncFileLastSlashIdx = sRptIncFile.lastIndexOf('\\');
+			{	QString sOrigRptIncFile = sRptIncFile;
+				BOOL bOrigRptIncFileLastSlashIdx = sRptIncFile.lastIndexOf('\\');
 				if (sRptIncFile.indexOf(':') < 0 && sRptIncFile.indexOf('\\') != 0)
-					// report file does not include a FULL path, so expected to be a path relative to the project file - so prepend project path...
+				{	// report file does not include a FULL path, so expected to be a path relative to the project file - so prepend project path...
 					sRptIncFile = m_sModelPathOnly + sRptIncFile;
+					if (!FileExists( sRptIncFile.toLocal8Bit().constData() ))
+					{	// if rpt incl file not found in model path, it might have been located elsewhere and already copied into processing directory - SAC 10/27/17
+						QString sChkRptIncFile = m_sProcessPath + sOrigRptIncFile;
+						if (FileExists( sChkRptIncFile.toLocal8Bit().constData() ))
+							sRptIncFile = sChkRptIncFile;
+				}	}
 				if (!FileExists( sRptIncFile.toLocal8Bit().constData() ))
 				{	sLogMsg = QString( "CSE report include file not found '%1'" ).arg( sRptIncFile );
 					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
