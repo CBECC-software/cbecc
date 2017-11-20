@@ -91,6 +91,7 @@ float appYRatio;
 
 BOOL ebAppInitialized = FALSE;
 BOOL ebInitiateProjectCreation = TRUE;
+BOOL ebInitiateBatchProcViaStartDlg = FALSE;	// SAC 11/14/17
 BOOL ebDisplayAllUIControls = FALSE;
 BOOL ebAnalysisRangeChecks = TRUE;
 BOOL ebShowHelpFollowingWizard = TRUE;  // SAC 2/14/01
@@ -914,8 +915,8 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			case  5 :	sAlphBeta = " Beta 2";		break;
 			case  6 :	sAlphBeta = " Beta 3";		break;
 			case  7 :	sAlphBeta = " RC";			break;
-			case  8 :	sAlphBeta = " RC 2";			break;
-			case  9 :	sAlphBeta = " RC 3";			break;
+			case  8 :	sAlphBeta = " SP1";			break;
+			case  9 :	sAlphBeta = " SP2";			break;
 			default :	sAlphBeta = " ????" ;		break;
 		}
 		if (bLongVer)
@@ -938,8 +939,8 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			case  5 :	sAlphBeta = " Beta 2";		break;
 			case  6 :	sAlphBeta = " Beta 3";		break;
 			case  7 :	sAlphBeta = " RC";			break;
-			case  8 :	sAlphBeta = " RC 2";			break;
-			case  9 :	sAlphBeta = " RC 3";			break;
+			case  8 :	sAlphBeta = " SP1";			break;
+			case  9 :	sAlphBeta = " SP2";			break;
 			default :	sAlphBeta = " ????" ;		break;
 		}
 		if (bLongVer)
@@ -2571,6 +2572,15 @@ long elDBID_DHWSys_DHWHeater6 = 0;
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
+int eiBDBCID_BatchRuns = 0;		// SAC 11/10/17
+long elDBID_BatchRuns_BatchDefsCSV = 0;       
+long elDBID_BatchRuns_BatchName = 0;          
+long elDBID_BatchRuns_ProjDirectory = 0;     
+long elDBID_BatchRuns_IncludeSubdirs = 0;     
+long elDBID_BatchRuns_ProjFileNames = 0;     
+long elDBID_BatchRuns_StoreProjToSepDir = 0; 
+long elDBID_BatchRuns_OutputProjDir = 0;     
+
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 850;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;
@@ -3058,6 +3068,15 @@ void InitBEMDBIDs()
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
+
+	eiBDBCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+	elDBID_BatchRuns_BatchDefsCSV       = BEMPX_GetDatabaseID( "BatchDefsCSV",       eiBDBCID_BatchRuns );       
+	elDBID_BatchRuns_BatchName          = BEMPX_GetDatabaseID( "BatchName",          eiBDBCID_BatchRuns );          
+	elDBID_BatchRuns_ProjDirectory      = BEMPX_GetDatabaseID( "ProjDirectory",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_IncludeSubdirs     = BEMPX_GetDatabaseID( "IncludeSubdirs",     eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_ProjFileNames      = BEMPX_GetDatabaseID( "ProjFileNames",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
+	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
 
 	BEMPUIX_AddPasswordDBIDPair( elDBID_INISettings_ProxyServerCredentials, elDBID_INISettings_ShowProxyServerCredentials, TRUE );	// SAC 1/9/17
 #endif   // UI_CARES

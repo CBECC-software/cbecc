@@ -5011,11 +5011,18 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											bErrorLogged = true;
 										}
-										else if (!bErrorLogged && pNode && pNode->fValue < 1)
-										{	QString sErrMsg = QString( "Invalid %1() argument #%2 (%3) - numeric value must be >= 1." ).arg( (op == BF_YrMoDa2Date ?	"YrMoDaToSerial" : "YrMoDaToDayOfWeek"), QString::number( arg ), (arg==1 ? "year" : (arg==2 ? "month" : "day")) );
+										else if (!bErrorLogged && pNode && pNode->fValue < 1 && pNode->fValue != -1)
+										{	QString sErrMsg = QString( "Invalid %1() argument #%2 (%3) - numeric value must be >= 1 (or -1 indicating 'today')." ).arg( (op == BF_YrMoDa2Date ?	"YrMoDaToSerial" : "YrMoDaToDayOfWeek"), QString::number( arg ), (arg==1 ? "year" : (arg==2 ? "month" : "day")) );
 											ExpSetErr( error, EXP_RuleProc, sErrMsg );
 											bErrorLogged = true;
 										}
+										else if (!bErrorLogged && pNode && pNode->fValue == -1)	// SAC 11/9/17 - new option to allow for 'today'
+										{	QDateTime time = QDateTime::currentDateTime();
+											switch (arg)
+											{	case  1 :  iYr = time.date().year();		break;
+												case  2 :  iMo = time.date().month();		break;
+												case  3 :  iDa = time.date().day();			break;
+										}	}
 										else if (!bErrorLogged && pNode && pNode->fValue >= 1)
 										{	switch (arg)
 											{	case  1 :  iYr = (int) pNode->fValue;		break;

@@ -81,6 +81,7 @@
 #include <direct.h>
 
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QDirIterator>
 
 #ifdef UI_CARES
 #include "XMLParse.h"
@@ -859,6 +860,11 @@ void CMainFrame::OnPaint()
 			{	ebInitiateProjectCreation = FALSE;
 				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
 			}
+         else if (startDlg.m_iOption == -4)    // Batch Processing - SAC 11/14/17
+         {	ebInitiateBatchProcViaStartDlg = TRUE;
+				ebInitiateProjectCreation = FALSE;
+				PostMessage( WM_COMMAND, ID_FILE_NEW, 0L );
+         }
          //	{  }
          else                                  // Exit
             PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );
@@ -951,6 +957,17 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 #endif //_DEBUG
 
+/////////////////////////////////////////////////////////////////////////////
+
+static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM /*lParam*/, LPARAM lpData)
+{	if(uMsg == BFFM_INITIALIZED)
+	{	//std::string tmp = (const char *) lpData;
+		//std::cout << "path: " << tmp << std::endl;
+//		SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+		SendMessage(hwnd, BFFM_SETEXPANDED, TRUE, lpData);
+	}
+	return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Button Processing
@@ -1170,7 +1187,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				{}
 			}
 		}
-		else if (wAction == 3051)
+		else if (wAction >= 3051 && wAction <= 3055)
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1189,6 +1206,32 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				sFileExt	    = _T("idf");
 				lDBID_File	 = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Proj );			ASSERT( lDBID_File > 0 );
 			}
+			else if (wAction == 3052 || wAction == 3053)
+			{	bOpenDlg = FALSE;
+				if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sBrowsePath ) || sBrowsePath.IsEmpty())
+					sBrowsePath = esProjectsPath;
+				if (wAction == 3052)
+				{	sFileDescrip = _T("Summary results file (*.csv)|*.csv||");
+					sFileExt	    = _T("csv");
+					lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName" );			ASSERT( lDBID_File > 0 );
+				}
+				else
+				{	sFileDescrip = _T("Processing log file (*.log)|*.log||");
+					sFileExt	    = _T("log");
+					lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:LogFileName" );			ASSERT( lDBID_File > 0 );
+			}	}
+			else if (wAction == 3054)
+			{	sBrowsePath = esProjectsPath;
+				sFileDescrip = _T("Batch run definitions file (*.csv)|*.csv||");
+				sFileExt	    = _T("csv");
+				lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:BatchDefsCSV" );			ASSERT( lDBID_File > 0 );
+			}
+			else if (wAction == 3055)
+			{	sBrowsePath = "C:\\Program Files\\";
+				sFileDescrip = _T("Directory comparison executable (*.exe)|*.exe||");
+				sFileExt	    = _T("exe");
+				lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:Comparison" );				ASSERT( lDBID_File > 0 );
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1198,6 +1241,12 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				CFileDialog dlg( bOpenDlg, sFileExt, sInitString, (bOpenDlg ? OFN_FILEMUSTEXIST | OFN_HIDEREADONLY : OFN_HIDEREADONLY), sFileDescrip, pDlg );
 				if (dlg.DoModal()==IDOK)
 				{	CString sSelectedFile = dlg.GetPathName();
+					if (wAction == 3052 || wAction == 3053)
+					{	// remove portion of path equal to default Projects path for certain file selections
+						if (sSelectedFile.GetLength() > esProjectsPath.GetLength() &&
+							 esProjectsPath.CompareNoCase( sSelectedFile.Left( esProjectsPath.GetLength() ) ) == 0)
+							sSelectedFile = sSelectedFile.Right( sSelectedFile.GetLength() - esProjectsPath.GetLength() );
+					}
 					// Store filename to BEMBase
 					int iSetDataRetVal = BEMPX_SetBEMData( lDBID_File, BEMP_Str, (void*) ((const char*) sSelectedFile) );
 					if (iSetDataRetVal >= 0)
@@ -1205,6 +1254,75 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 							pDoc->SetModifiedFlag();
 						lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}
+		}
+		else if (wAction >= 3060 && wAction <= 3061)
+		{
+			QString qsInitPath;
+			long lDBID_Path = 0;
+			UINT uiBrowseFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+			if (wAction == 3060)
+			{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:ProjDirectory" );
+				uiBrowseFlags = uiBrowseFlags | BIF_NONEWFOLDERBUTTON;
+			}
+			else if (wAction == 3061)
+				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:OutputProjDir" );
+
+			ASSERT( lDBID_Path > 0 );
+			CDocument* pDoc = GetActiveDocument();
+			if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) && lDBID_Path > 0)
+			{
+				if (BEMPX_GetString( lDBID_Path, qsInitPath ) && !qsInitPath.isEmpty())
+				{	if (qsInitPath.indexOf(':') < 0 && qsInitPath.indexOf('\\') != 0 && qsInitPath.indexOf('/') != 0)
+						// if InitPath not a complete path, then PREpend 
+						qsInitPath = QString( "%1%2" ).arg( (const char*) esProjectsPath, qsInitPath );
+				}
+				if (qsInitPath.isEmpty())
+					qsInitPath = (const char*) esProjectsPath;
+				if (!qsInitPath.isEmpty() && qsInitPath.lastIndexOf('\\') == qsInitPath.length()-1)
+					qsInitPath = qsInitPath.left( qsInitPath.length()-1 );	// trim trailing '\'
+
+				TCHAR path[_MAX_PATH];
+				std::string saved_path = qsInitPath.toLatin1().constData();
+				//const char * path_param = saved_path.c_str();
+				std::wstring wsaved_path(saved_path.begin(),saved_path.end());
+				const wchar_t * path_param = wsaved_path.c_str();
+
+				BROWSEINFO bi = { 0 };
+				bi.lpszTitle  = ("Browse for folder...");
+				bi.ulFlags    = uiBrowseFlags;   // was: BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+				bi.lpfn       = BrowseCallbackProc;
+				if (!qsInitPath.isEmpty())
+					bi.lParam  = (LPARAM) path_param;
+
+				LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
+				if ( pidl != 0 )
+				{	//get the name of the folder and put it in path
+					SHGetPathFromIDList ( pidl, path );
+					//free memory used
+					IMalloc * imalloc = 0;
+					if ( SUCCEEDED( SHGetMalloc ( &imalloc )) )
+					{	imalloc->Free ( pidl );
+						imalloc->Release ( );
+					}
+
+					qsInitPath = (LPSTR) path;
+					if (!qsInitPath.isEmpty())
+					{	qsInitPath.replace('/','\\');
+						if (!qsInitPath.isEmpty() && qsInitPath.lastIndexOf('\\') != qsInitPath.length()-1)
+							qsInitPath += '\\';	// add trailing '\'
+						if (qsInitPath.length() > esProjectsPath.GetLength() &&
+							 esProjectsPath.CompareNoCase( qsInitPath.left( esProjectsPath.GetLength() ).toLatin1().constData() ) == 0)
+							 //qsInitPath.compare( (const char*) esProjectsPath.Left( qsInitPath.length() ), Qt::CaseInsensitive )==0)
+							qsInitPath = qsInitPath.right( qsInitPath.length() - esProjectsPath.GetLength() );
+
+						int iSetDataRetVal = BEMPX_SetBEMData( lDBID_Path, BEMP_QStr, (void*) &qsInitPath );
+						if (iSetDataRetVal >= 0)
+						{	if (pDoc)
+								pDoc->SetModifiedFlag();
+							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
+							BatchUIDefaulting();
+					}	}
+			}	}
 		}
 
 #ifdef UI_CARES
@@ -2304,6 +2422,12 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 				BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iCartPtParentPolyLpObjIdx );
 		}	}
 	}
+#elif UI_CARES
+	if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName || lDBID == elDBID_BatchRuns_ProjDirectory ||
+		 lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir )
+	{
+		BatchUIDefaulting();		// SAC 11/10/17
+	}
 #endif
 
    // set flag indicating project has been modified
@@ -2706,6 +2830,13 @@ void CMainFrame::OnUpdateToolsBatchProcessing(CCmdUI* pCmdUI)		// SAC 5/22/13
 void CMainFrame::OnToolsBatchProcessing()		// SAC 5/22/13
 {
 	BatchProcessing();
+
+	if (ebInitiateBatchProcViaStartDlg)
+	{	CDocument* pDoc = GetActiveDocument();
+		if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+			pDoc->SetModifiedFlag( FALSE );
+		PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );	// initiate application shutdown
+	}
 }
 
 void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
@@ -2781,21 +2912,75 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 	}
 #elif UI_CARES
    CDocument* pDoc = GetActiveDocument();			bOLDRules;
-   if ( (pDoc != NULL) && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) &&
-        (((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" )) )
+   if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
+        ( ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() ||
+          ((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" ) ) )
    {
-		ChangeProgDir( szPaths, szProjPath );
-		CFileDialog dlg( TRUE, _T("csv"), NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
-		                 _T("Batch Definition Files (*.csv)|*.csv||"), this );
-		if (dlg.DoModal()==IDOK)
-		{
-			CString sBatchPathFile = dlg.GetPathName();
+		CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, sCompareCommandLine;		bool bBRObjCreated = false;
+   	int iCID_BatchRuns = 0;
+   	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+		if (iCID_BatchRuns < 1)
+		{	// must load ruleset 
+		   LoadRuleset();
+	   	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+	   }
+		if (iCID_BatchRuns > 0 && BEMPX_GetNumObjects( iCID_BatchRuns ) < 1)
+		{ // typical scenario where we need to create a BatchRuns object
+			if (BEMPX_CreateObject( iCID_BatchRuns ) != NULL)
+				bBRObjCreated = true;
+// ?? delete BatchRuns following batch analysis (or keep around for subsequent batch runs) ??
+		}
 
-			CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
+		if (iCID_BatchRuns < 1 || BEMPX_GetNumObjects( iCID_BatchRuns ) < 1)
+		{	// no BatchRuns object type exists, so just prompt for batch defs CSV (old method)
+			ChangeProgDir( szPaths, szProjPath );
+			CFileDialog dlg( TRUE, _T("csv"), NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+			                 _T("Batch Definition Files (*.csv)|*.csv||"), this );
+			if (dlg.DoModal()==IDOK)
+				sBatchPathFile = dlg.GetPathName();
+		}
+		else
+		{	// new method to enable simplified batch UI via BatchRuns object
+			BatchUIDefaulting();
+	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
+			int iTabCtrlWd = 610, iTabCtrlHt = 560;
+			CWnd* pWnd = GetFocus();
+			//CWnd* pWnd = GetTopLevelParent();
+         CSACDlg dlgBatchRun( pWnd /*this*/, iCID_BatchRuns, 0 /* lDBID_ScreenIdx */, 5010 /*iDlgID*/, 0, 0, 0,
+							"Default_BatchRuns" /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Batch Processing",
+							iTabCtrlHt, iTabCtrlWd, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+							0 /*lDBID_CtrlDBIDOffset*/, "&Process" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+							0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                     FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/, FALSE /*bBypassChecksOnCancel*/,
+                     FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
+  		   if (dlgBatchRun.DoModal() == IDOK)
+			{	long lHaveBatchDefsCSV;
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:HaveBatchDefsCSV" ), lHaveBatchDefsCSV ) && lHaveBatchDefsCSV > 0 &&
+					 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullBatchDefsCSV" ), sBatchPathFile ) && !sBatchPathFile.IsEmpty())
+				{	// do nothing - sBatchPathFile already setup for processing
+				}
+				else
+				{	if (!GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile ))
+						sBatchPathFile.Empty();  // error processing inputs into Batch Defs CSV, so prevent processing
+					else
+					{	CString sFullIn, sFullOut, sCompare;		long lStoreProjToSepDir;
+						if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:StoreProjToSepDir" ), lStoreProjToSepDir ) && lStoreProjToSepDir > 0 &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), sFullIn  ) &&  !sFullIn.IsEmpty() &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sFullOut ) && !sFullOut.IsEmpty() &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:Comparison"        ), sCompare ) && !sCompare.IsEmpty() )
+							// create command line for direcotry comparison between input & output processing directories
+							sCompareCommandLine.Format( "\"%s\" \"%s\" \"%s\"", sCompare, sFullIn, sFullOut );
+				}	}
+		}	}
+
+		if (!sBatchPathFile.IsEmpty() && FileExists( sBatchPathFile ))
+		{	CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
 			CString sRulePathFile = ReadProgString( "paths", "RulesetPath", "", TRUE );
 			sRulePathFile += ReadProgString( "files", "RulesetFile", "" );
 			char pszBatchErr[1024];
 			pszBatchErr[0] = '\0';
+			char pszBatchReturn[128];
+			pszBatchReturn[0] = '\0';
 
 			CString sCSEPath = esProgramPath + "CSE\\";
 			sCSEPath = ReadProgString( szPaths, "CSEPath", sCSEPath, TRUE );  // in case there is one in the INI to override the default
@@ -2813,21 +2998,329 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 				pszAnalOpts = (const char*) sOptionsCSVString;
 
 			int iBatchResult = CMX_PerformBatchAnalysis_CECRes( sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
-														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/, NULL /*pszLogPathFile*/,
+														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/, sBatchLogPathFile /*pszLogPathFile*/,
 														sUIVersionString, pszAnalOpts, pszBatchErr, 1024, true /*bDisplayProgress*/,
-														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey );
+														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
-				sResult.Format( "CMX_PerformBatchAnalysis_CECRes() returned %d:\n\n%s", iBatchResult, pszBatchErr );
+				sResult.Format( "Batch processing routine returned %d:\n\n   %s", iBatchResult, pszBatchErr );
+			else if (iBatchResult == 0)
+			{	if (strlen( pszBatchReturn ) > 0)
+					sResult.Format( "Batch processing successful:\n\n   %s", pszBatchReturn );
+				else
+					sResult = "Batch processing successful.";
+			}
 			else
-				sResult.Format( "CMX_PerformBatchAnalysis_CECRes() returned %d", iBatchResult );
-			AfxMessageBox( sResult );
+			{	if (strlen( pszBatchReturn ) > 0)
+					sResult.Format( "Batch processing routine returned error code %d:\n\n   %s", iBatchResult, pszBatchReturn );
+				else
+					sResult.Format( "Batch processing routine returned error code %d.", iBatchResult );
+			}
+			BOOL bHaveLogOutput = (!sBatchLogPathFile.IsEmpty() && FileExists( sBatchLogPathFile ));
+			BOOL bHaveResOutput = (!sBatchResultsPathFile.IsEmpty() && FileExists( sBatchResultsPathFile ));
+			if (bHaveLogOutput || bHaveResOutput)
+			{	CString sBtnFile[3], sBtnLabel[3], sFinBtnLabel;
+				int iNumViewBtns=0;
+				if (bHaveLogOutput && bHaveResOutput)
+					sResult += "\n\nResults (CSV) and log outputs are available for review";
+				else if (bHaveLogOutput)
+					sResult += "\n\nLog output is available for review";
+				else
+					sResult += "\n\nResults (CSV) output is available for review";
+				if (!sCompareCommandLine.IsEmpty())
+				{	sFinBtnLabel = "All Files/Actions";		sResult += ", along with a comparison of input & output directories.";
+				}
+				else
+				{	sFinBtnLabel = "All Files";				sResult += ".";
+				}
+
+				if (bHaveResOutput)
+				{	sBtnFile[iNumViewBtns] = sBatchResultsPathFile;		sBtnLabel[iNumViewBtns++] = "Results CSV";
+				}
+				if (bHaveLogOutput)
+				{	sBtnFile[iNumViewBtns] = sBatchLogPathFile;			sBtnLabel[iNumViewBtns++] = "Processing Log";
+				}
+				if (!sCompareCommandLine.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCompareCommandLine;		sBtnLabel[iNumViewBtns++] = "Directory Compare";
+				}
+
+				PromptToDisplayPDFs( "Batch Processing Output", sResult, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], sBtnFile[2], sBtnLabel[2], sFinBtnLabel );
+			}
+			else
+				AfxMessageBox( sResult );
 		}
 	}
 #else
 	AfxMessageBox( "Batch processing not available in this UI mode." );
 #endif
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
+{
+	BOOL bRetVal = TRUE;
+#ifdef UI_CARES
+	CString sTemp;		int iSV, iErr;
+	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:DefaultProjPath" ), sTemp ) || sTemp.IsEmpty())
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:DefaultProjPath" ), BEMP_Str,
+								(void*) ((const char*) esProjectsPath), BEMO_User, -1, BEMS_ProgDefault );
+
+	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), sTemp ) || sTemp.IsEmpty())
+	{	CString sCompareApp = ReadProgString( "files", "CompareApp", "", TRUE );
+		if (!sCompareApp.IsEmpty() && FileExists( sCompareApp ))
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), BEMP_Str,
+									(void*) ((const char*) sCompareApp), BEMO_User, -1, BEMS_ProgDefault );
+	}
+
+	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:ProjDirectory" ), sTemp ) || sTemp.IsEmpty())		// SAC 11/19/17 - added ProjDir defaulting
+	{	sTemp.Empty();
+		CDocument* pDoc = GetActiveDocument();
+		if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
+			  !pDoc->GetPathName().IsEmpty() )
+		{	// default ProjPath based on current project path
+			sTemp = pDoc->GetPathName();
+			int iLastSlash = std::max( sTemp.ReverseFind('/'), sTemp.ReverseFind('\\') );
+			if (iLastSlash < sTemp.GetLength()-1)
+				sTemp = sTemp.Left( iLastSlash+1 );
+			if (sTemp.GetLength() > esProjectsPath.GetLength() && 
+				 esProjectsPath.CompareNoCase( sTemp.Left( esProjectsPath.GetLength() ) ) == 0)
+				sTemp = sTemp.Right( sTemp.GetLength()-esProjectsPath.GetLength() );
+		}
+		else if (epMRU && epMRU->GetSize() > 0)
+		{	// default ProjPath based on most recent files
+			int iMRSize = epMRU->GetSize();
+			for (int iMR=0; (sTemp.IsEmpty() && iMR<iMRSize); iMR++)
+			{	CString sRecentFile = (*epMRU)[iMR];
+				if (sRecentFile.GetLength() > 0 && FileExists( sRecentFile ))
+				{	sTemp = sRecentFile;
+					int iLastSlash = std::max( sTemp.ReverseFind('/'), sTemp.ReverseFind('\\') );
+					if (iLastSlash < sTemp.GetLength()-1)
+						sTemp = sTemp.Left( iLastSlash+1 );
+					if (sTemp.GetLength() > esProjectsPath.GetLength() && 
+						 esProjectsPath.CompareNoCase( sTemp.Left( esProjectsPath.GetLength() ) ) == 0)
+						sTemp = sTemp.Right( sTemp.GetLength()-esProjectsPath.GetLength() );
+			}	}
+		}
+		if (!sTemp.IsEmpty())
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:ProjDirectory" ), BEMP_Str,
+									(void*) ((const char*) sTemp), BEMO_User, -1, BEMS_ProgDefault );
+	}
+
+	VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) ); // to set FullProjDirectory prior to the following logic
+
+	QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
+	QString qsProjFileNames = BEMPX_GetString(                elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
+	long lIncludeSubdirs     = BEMPX_GetInteger(               elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
+	long iNumProjFiles = 0;
+	if (!qsFullProjDir.isEmpty() && !qsProjFileNames.isEmpty())
+	{
+		QStringList filters;
+		filters << qsProjFileNames;
+
+//		QDir dir( qsFullProjDir );
+//		QStringList dirs = dir.entryList( filters );
+//		iNumProjFiles = (int) dirs.size();
+
+		QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
+		QString qsFile;
+		while (it.hasNext())
+		{	qsFile = it.next();
+			iNumProjFiles++;
+		}
+//QString sTestMsg = QString( "%1 files found" ).arg( QString::number( iNumProjFiles ) );
+//BEMMessageBox( sTestMsg );
+	}
+	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:NumProjInputs" ), BEMP_Int,
+							(void*) &iNumProjFiles, BEMO_User, -1, BEMS_ProgDefault );
+
+//;  SET IN SOFTWARE
+//;           "NumProjInputs",      BEMP_Int,  1,  0,  0, "",                 0,  0,                           1005, "Number of project inputs based on FullProjDirectory, IncludeSubdirs & ProjFileNames" 
+//;           "DefaultProjPath",     BEMP_Str,  1,  0,  0, "",                 0,  0,                           1005, "Program default Projects path" 
+
+	VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
+
+//	CString sDbg;
+//	if (BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:SelectedProjMsg" ), sDbg ))
+//	{	sTemp.Format( "NumProjFiles = %d\n\n%s", iNumProjFiles, sDbg );
+//		BEMMessageBox( sTemp );
+//	}
+#endif
+
+	return bRetVal;
+}
+
+BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile ) 	// SAC 11/10/17
+{	QString qsErrMsg;
+#ifdef UI_CARES
+	if (!BatchUIDefaulting())
+		qsErrMsg = "Error performing batch defaulting.";
+	else
+	{	int iSV, iErr;
+		long lNumProjInputs = BEMPX_GetInteger( BEMPX_GetDatabaseID( "BatchRuns:NumProjInputs" ), iSV, iErr );
+		if (lNumProjInputs < 1)
+			qsErrMsg = "No batch runs identified.";
+		else
+		{	BOOL bIsUIActive = (BEMPX_GetUIActiveFlag());		CString sFileMsg;		QString qsFileDescrip;
+			long lStoreProjToSepDir = BEMPX_GetInteger( elDBID_BatchRuns_StoreProjToSepDir, iSV, iErr );
+			QString qsOutputProjDir = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), iSV, iErr );
+			QString qsResultsCSVFN  = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName"    ), iSV, iErr );
+			QString qsOutputLogFN   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:LogFileName"        ), iSV, iErr );
+
+			CString sCompareApp;
+			if (lStoreProjToSepDir > 0 && !qsOutputProjDir.isEmpty() &&
+				 BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), sCompareApp ) &&
+				 !sCompareApp.IsEmpty() && FileExists( sCompareApp ))
+			{	// store current comparison app file path to INI for future use - SAC 11/20/17
+				VERIFY( WriteProgString( "files", "CompareApp", sCompareApp ) );
+			}
+
+//	if (!qsOutputProjDir.isEmpty())
+//		BEMMessageBox( qsOutputProjDir );
+
+			if (lStoreProjToSepDir > 0 && qsOutputProjDir.isEmpty())
+				qsErrMsg = "Store Processed Projects in Separate Folder selected but no folder specified.";
+			else if (qsOutputLogFN.isEmpty())
+				qsErrMsg = "Batch Processing Log filename must be specified.";
+			else if (qsResultsCSVFN.isEmpty())
+				qsErrMsg = "Summary Results CSV filename must be specified.";
+			else
+			{	if (lStoreProjToSepDir > 0 && !DirectoryExists( qsOutputProjDir.toLatin1().constData() ))
+					CreateAndChangeDirectory( qsOutputProjDir.toLatin1().constData() );
+				if (qsOutputProjDir.isEmpty())
+					qsErrMsg = "No output folder found/defined.";
+				else if (!DirectoryExists( qsOutputProjDir.toLatin1().constData() ))
+					qsErrMsg = QString( "Error encountered creating output directory:  %1" ).arg( qsOutputProjDir );
+			}
+
+			if (qsErrMsg.isEmpty())
+			{	if (qsOutputProjDir.right(1) != "\\" && qsOutputProjDir.right(1) != "/")
+					qsOutputProjDir += '\\';
+
+				if (qsOutputLogFN.indexOf(':') > 0 || qsOutputLogFN.indexOf('\\') == 0 || qsOutputLogFN.indexOf('/') == 0)
+				{	// full path already specified - do nothing
+				}
+				else if (qsOutputLogFN.indexOf('\\') > 0 || qsOutputLogFN.indexOf('/') > 0)
+					// prepend default Projects path
+					qsOutputLogFN = (const char*) esProjectsPath + qsOutputLogFN;
+				else
+					// no path at all specified, so write to Output dir
+					qsOutputLogFN = qsOutputProjDir + qsOutputLogFN;
+
+				qsFileDescrip = "batch processing log";
+				sFileMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+				             "application before an updated file can be written.\n\nSelect 'Retry' "
+								 "once the file is closed, or \n'Cancel' to abort processing.", qsFileDescrip.toLatin1().constData(), qsOutputLogFN.toLatin1().constData() );
+				if (!OKToWriteOrDeleteFile( qsOutputLogFN.toLatin1().constData(), sFileMsg, (!bIsUIActive) ))
+				{	if (!bIsUIActive)
+						qsErrMsg = QString( "Unable to open %s file:  %s" ).arg( qsFileDescrip, qsOutputLogFN );
+					else
+						qsErrMsg = QString( "User chose not to use/reference %s file:  %s" ).arg( qsFileDescrip, qsOutputLogFN );
+			}	}
+
+			if (qsErrMsg.isEmpty())
+			{	if (qsResultsCSVFN.indexOf(':') > 0 || qsResultsCSVFN.indexOf('\\') == 0 || qsResultsCSVFN.indexOf('/') == 0)
+				{	// full path already specified - do nothing
+				}
+				else if (qsResultsCSVFN.indexOf('\\') > 0 || qsResultsCSVFN.indexOf('/') > 0)
+					// prepend default Projects path
+					qsResultsCSVFN = (const char*) esProjectsPath + qsResultsCSVFN;
+				else
+					// no path at all specified, so write to Output dir
+					qsResultsCSVFN = qsOutputProjDir + qsResultsCSVFN;
+
+				qsFileDescrip = "summary results CSV";
+				sFileMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+				             "application before an updated file can be written.\n\nSelect 'Retry' "
+								 "once the file is closed, or \n'Cancel' to abort processing.", qsFileDescrip.toLatin1().constData(), qsResultsCSVFN.toLatin1().constData() );
+				if (!OKToWriteOrDeleteFile( qsResultsCSVFN.toLatin1().constData(), sFileMsg, (!bIsUIActive) ))
+				{	if (!bIsUIActive)
+						qsErrMsg = QString( "Unable to open %s file:  %s" ).arg( qsFileDescrip, qsResultsCSVFN );
+					else
+						qsErrMsg = QString( "User chose not to use/reference %s file:  %s" ).arg( qsFileDescrip, qsResultsCSVFN );
+			}	}
+
+			if (qsErrMsg.isEmpty())
+			{	sBatchLogPathFile = qsOutputLogFN.toLatin1().constData();
+				sBatchResultsPathFile = qsResultsCSVFN.toLatin1().constData();
+				int iLastSlash = std::max( qsOutputLogFN.lastIndexOf('\\'), qsOutputLogFN.lastIndexOf('/') );
+				if (qsOutputLogFN.lastIndexOf('.') > iLastSlash)
+					sBatchDefsPathFile.Format( "%s.csv", qsOutputLogFN.left( qsOutputLogFN.lastIndexOf('.') ).toLatin1().constData() );
+				else
+					sBatchDefsPathFile.Format( "%s.csv", qsOutputLogFN.toLatin1().constData() );
+				if (FileExists( sBatchDefsPathFile ))
+				{	// batch input file already exists, so revise until unique
+					CString sDefsBase = sBatchDefsPathFile.Left( sBatchDefsPathFile.GetLength()-4 );
+					int idx=1;
+					do
+					{	sBatchDefsPathFile.Format( "%s-%d.csv", sDefsBase, ++idx );
+					}	while (FileExists( sBatchDefsPathFile ));
+				}
+
+				QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
+				QString qsProjFileNames = BEMPX_GetString(                elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
+				long lIncludeSubdirs     = BEMPX_GetInteger(               elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
+				bool bOutDirSameAsIn = (qsFullProjDir.compare( qsOutputProjDir, Qt::CaseInsensitive ) == 0);
+		      CStdioFile defsFile;
+		      // open file
+	         bool ok = (defsFile.Open( sBatchDefsPathFile, CFile::modeCreate | CFile::modeWrite ) != 0);
+		      if (!ok)
+		      	qsErrMsg = QString( "Error encountered attempting to open batch definitions CSV file:\n   %s" ).arg( (const char*) sBatchDefsPathFile );
+	   	   else
+				{	CString str;
+					defsFile.WriteString( "; Fmt Ver,Summary Results File\n" );
+					str.Format( "1,\"%s\"\n", qsResultsCSVFN.toLatin1().constData() );		defsFile.WriteString( str );
+					defsFile.WriteString( ";\n" );
+					defsFile.WriteString( ";   1,2,3,4,5,6,7,8,9,10,11,12\n" );
+					defsFile.WriteString( "; Process,Existing,New or Save As,,,,,Multiple,Front,Program,Processing\n" );
+					defsFile.WriteString( "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Output,Options\n" );
+
+					int iRunNum=0;
+					QStringList filters;
+					filters << qsProjFileNames;
+					QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
+					QString qsFile;
+					while (it.hasNext())
+					{	qsFile = it.next();
+						iRunNum++;
+						if (bOutDirSameAsIn)
+							str.Format( "1,\"%s\",\"%s\",,,,,,,,CumCSV,,\n", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+						else
+						{	QString qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+							int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+							if (iLastSlash > qsOutputProjDir.length())
+							{	QDir dir( qsOutDir.left( iLastSlash ) );
+								if (!dir.exists())
+									dir.mkpath(".");
+								if (!dir.exists() && qsErrMsg.isEmpty())
+									qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
+							}
+							str.Format( "1,\"%s\",\"%s%s\",,,,,,,,CumCSV,,\n", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+																							   qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+						}
+						defsFile.WriteString( str );
+					}
+
+					defsFile.WriteString( "-1\n" );
+					defsFile.Close();
+				}
+		}	}
+	}
+
+	if (!qsErrMsg.isEmpty())
+	{	qsErrMsg = "Batch processing aborting -\n\n" + qsErrMsg;
+		BEMMessageBox( qsErrMsg, "Batch Processing", 3 /*error*/ );
+		sBatchDefsPathFile.Empty();	sBatchLogPathFile.Empty();
+	}
+#else
+	sBatchDefsPathFile.Empty();		sBatchLogPathFile.Empty();		sBatchResultsPathFile.Empty();
+	qsErrMsg = "Batch processing via UI only available in CBECC-Res.";
+#endif
+
+	return qsErrMsg.isEmpty();
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -5210,12 +5703,12 @@ void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 #ifdef UI_CARES
 	CString sNoRptIDMsg, sCAHPResultProperty;
 #ifdef UI_PROGYEAR2019
-	AfxMessageBox( "CAHP/CMFNH report generation only available in 2013/16 Title-24 mode." );
+	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
 #elif  UI_PROGYEAR2016
-	sNoRptIDMsg = "CAHP/CMFNH report generation not available when CAHP/CMFNH program not selected.\nCAHP/CMFNH options must be specified in Project > Analysis -and- CAHP/CMFNH dialog tabs and analysis performed before this report can be generated.";
+	sNoRptIDMsg = "CAHP report generation not available when CAHP program not selected.\nCAHP options must be specified in Project > Analysis -and- CAHP dialog tabs and analysis performed before this report can be generated.";
 	sCAHPResultProperty = "EUseSummary:CAHPTotalIncentive";
 #else
-	sNoRptIDMsg = "CAHP/CMFNH report generation not available when CAHP/CMFNH program not selected.\nCAHP/CMFNH options must be specified in Project > CAHP/CMFNH dialog tab and analysis performed before this report can be generated.";
+	sNoRptIDMsg = "CAHP report generation not available when CAHP program not selected.\nCAHP options must be specified in Project > CAHP dialog tab and analysis performed before this report can be generated.";
 	sCAHPResultProperty = "EUseSummary:CAHPIncFinal";
 #endif
 	if (!sNoRptIDMsg.IsEmpty() && !sCAHPResultProperty.IsEmpty())
@@ -5234,12 +5727,12 @@ void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 		if (sRptGenCompReport.GetLength() < 1)
 			AfxMessageBox( sNoRptIDMsg );
 		else if (fCAHPIncFinal == -999)
-			AfxMessageBox( "Cannot generate report due to lack of CAHP/CMFNH results.\nSuccessful analysis must be performed before this report can be generated." );
+			AfxMessageBox( "Cannot generate report due to lack of CAHP results.\nSuccessful analysis must be performed before this report can be generated." );
 		else
 			GenerateReport( 2 /*iReportID*/ );
 	}
 #else
-	AfxMessageBox( "CAHP/CMFNH report generation only available in 2013/16 Title-24 mode." );
+	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
 #endif
 }
 
@@ -5257,7 +5750,7 @@ BOOL CMainFrame::OnSetCursor( CWnd* pWnd, UINT nHitTest, UINT message )
 
 // iReportID  =>	0 : CARES2013
 //						1 : CANRES2013
-//						2 : CAHP/CMFNH
+//						2 : CAHP
 void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 {
 	if (iReportID >= 0)
@@ -5288,7 +5781,7 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			      			if (sRptGenCompReport.IsEmpty())
 			      				sErrMsg = "The ruleset selected for this project does not define a Standard Model report ID (Proj:CAHPReportID) and therefore the report cannot be generated.";
 								sAppendToFN.Format( " - %s.pdf", (sRptGenCompReport.IsEmpty() ? "CAHP-CMFNH" : sRptGenCompReport) );
-								sRptType = "CAHP/CMFNH";			sRptTypeLong = "CAHP/CMFNH Report";
+								sRptType = "CAHP";			sRptTypeLong = "CAHP Report";
 								break;
 				case  3 :	// T-24 Nonres Standard Model report - SAC 11/18/15
 			      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenStdReport" ), sRptGenCompReport );
@@ -7280,7 +7773,16 @@ void CMainFrame::OnFileList( int i1FileListID )
 
 bool CMainFrame::OpenFileViaShellExecute( CString sFile, const char* pszFileDescrip )
 {	bool bRetVal = false;
-	if (!sFile.IsEmpty() && FileExists( sFile ))
+	if (!sFile.IsEmpty() && sFile.Find('\"') == 0 && sFile.Find('\"', 1) > 0 )
+	{	// sFile is actually a command line execution string
+		CString sProg, sCommandLineParams;
+		int iProgEnd = sFile.Find('\"', 1);		ASSERT( iProgEnd > 0 );
+		sProg = sFile.Mid( 1, iProgEnd-1 );
+		sCommandLineParams = sFile.Right( sFile.GetLength()-iProgEnd-2 );
+		HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), NULL /*"open"*/, sProg, sCommandLineParams, NULL /*sProjFolder*/, SW_SHOWNORMAL );
+		bRetVal = ((int) hinstShellExec > 32);
+	}
+	else if (!sFile.IsEmpty() && FileExists( sFile ))
 	{	int idx = sFile.ReverseFind('\\');
 		CString sFilePath = (idx > 0 ? sFile.Left( idx ) : "");
 		bRetVal = true;

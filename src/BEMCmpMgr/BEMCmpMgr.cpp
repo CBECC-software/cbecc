@@ -617,6 +617,8 @@ void SetProgressMessage( QString str, bool bBatchMode )
 {	bool bDash = !sqsProgressMsgStart.isEmpty() && !sqProgressRunName.isEmpty();
 	QString qsSeparator = bDash ? "-" : "";
 
+			// debugging
+			//BEMPX_WriteLogFile( QString( "              SetProgressMessage():  bBatchMode %1 / si1ProgressRunNum = %2 / siNumProgressRuns = %3" ).arg( (bBatchMode ? "true" : "false"), QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	QString qsProgMsgStart;		// SAC 5/28/15 - unique batch processing message
 	if (bBatchMode && si1ProgressRunNum > 0 && siNumProgressRuns >= si1ProgressRunNum)
 		qsProgMsgStart = QString("Batch Run %1 of %2:                              \n\n                ").arg( QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) );
@@ -749,7 +751,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 		{	if (bFound)
 			{	if (bIncrementProgress)
 				{	sqt_progress->setValue( (int) iProgVal );
-					SetProgressMessage( msg, false /*bBatchMode*/ );
+					SetProgressMessage( msg, (siNumProgressRuns > 1) /*bBatchMode*/ );
 					sqt_progress->setLabelText( sqProgressMsg );
 				}
 				sqt_win->repaint();
@@ -757,7 +759,7 @@ int CSE_ProcessMessage( int level, const char* msg, int iRun/*=-1*/, const CSERu
 					iRetVal = CSE_ABORT;
 			}
 			else if (bError)
-			{	SetProgressMessage( msg, false /*bBatchMode*/ );
+			{	SetProgressMessage( msg, (siNumProgressRuns > 1) /*bBatchMode*/ );
 				sqt_progress->setLabelText( sqProgressMsg );
 				sqt_win->repaint();
 		}	}

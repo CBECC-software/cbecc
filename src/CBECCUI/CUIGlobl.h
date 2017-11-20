@@ -73,6 +73,7 @@ extern float appXRatio, appYRatio;
 
 extern BOOL ebAppInitialized;
 extern BOOL ebInitiateProjectCreation;
+extern BOOL ebInitiateBatchProcViaStartDlg;	// SAC 11/14/17
 extern BOOL ebDisplayAllUIControls;
 extern BOOL ebAnalysisRangeChecks;
 extern BOOL ebShowHelpFollowingWizard;  // SAC 2/14/01
@@ -767,6 +768,15 @@ extern long elDBID_DHWSys_DHWHeater5;
 extern long elDBID_DHWSys_DHWHeater6;
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
+
+extern int eiBDBCID_BatchRuns;
+extern long elDBID_BatchRuns_BatchDefsCSV;        // BEMP_Str "CSV file containing definitions of all batch runs (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_BatchName;           // BEMP_Str "Name used as basis of log and results filenames" 
+extern long elDBID_BatchRuns_ProjDirectory;       // BEMP_Str "Directory of projects to be batch processed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating whether BatchDefsCSV file defined and exists" 
+extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
+extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
+extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
 #endif   // UI_CARES
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions

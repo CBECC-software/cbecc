@@ -155,6 +155,7 @@
 #define IDC_START_NEW                   319
 #define IDC_START_BLANK                 320
 #define IDC_RESOLVENOTINPUTS            321
+#define IDC_START_BATCH                 322
 #define IDS_VER_INFO_LANG               999
 #define IDC_MAINTAB                     1000
 #define IDC_COMPTYPE                    1002

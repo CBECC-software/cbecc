@@ -531,6 +531,8 @@ protected:
 	void OnUpdateFileList( CCmdUI* pCmdUI, int i1FileListID );
 	void OnFileList( int i1FileListID );
 	void BatchProcessing( bool bOLDRules=false );		// SAC 4/2/14
+	BOOL BatchUIDefaulting();		// SAC 11/10/17
+	BOOL GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile  );		// SAC 11/10/17
 	BOOL GetLogPathFile( CString& sLPF );
 	BOOL LogFileExists();
 	void PromptToDisplayPDFs( CString sCaption, CString sMsg, CString sBtn2File, CString sBtn2Label,

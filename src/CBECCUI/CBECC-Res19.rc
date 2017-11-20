@@ -316,7 +316,9 @@ BEGIN
         MENUITEM "Perform &Analysis",           IDM_PERFORMANALYSIS
         MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "&Generate CAHP/CMFNH Report", IDM_TOOLS_CAHPRPT
+        MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
+        MENUITEM SEPARATOR
+        MENUITEM "&Batch Processing...",        IDM_TOOLS_BATCH
     END
     POPUP "&Help"
     BEGIN
@@ -415,7 +417,7 @@ BEGIN
         MENUITEM "Perform Analysis via API",    IDM_PERFORMAPIANALYSIS
         MENUITEM "Re&view Analysis Results",    IDM_REVIEWRESULTS
         MENUITEM "&Generate Draft T-24 Compliance Report", IDM_TOOLS_T24COMPRPT
-        MENUITEM "&Generate CAHP/CMFNH Report", IDM_TOOLS_CAHPRPT
+        MENUITEM "&Generate CAHP Report", IDM_TOOLS_CAHPRPT
         MENUITEM "&Generate SHA-256 File Hashes...", IDM_TOOLS_FILEHASH
 //        MENUITEM "&Generate Public Key",        IDM_TOOLS_PUBLICKEY
         MENUITEM "&Key Prep",                   IDM_TOOLS_KEYPREP
@@ -660,17 +662,19 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "CBECC-Res 2019 Startup Options"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,111,75,40,16
-    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,160,75,81,16
-    PUSHBUTTON      "E&xit",IDCANCEL,249,75,40,16
+    DEFPUSHBUTTON   "OK",IDOK,126,75,35,16
+    PUSHBUTTON      "&Quick Start Guide",IDC_START_OVERVIEW,170,75,76,16
+    PUSHBUTTON      "E&xit",IDCANCEL,254,75,35,16
     CONTROL         "Open &Recent Project:",IDC_START_RECENT,"Button",
-                    BS_AUTORADIOBUTTON,12,9,146,8
+                    BS_AUTORADIOBUTTON,12,9,125,8
     COMBOBOX        IDC_START_FILELIST,36,20,231,116,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "&Select an Existing Project to Open",IDC_START_EXISTING,
-                    "Button",BS_AUTORADIOBUTTON,12,40,168,8
+                    "Button",BS_AUTORADIOBUTTON,12,40,125,8
+    CONTROL         "Perform Batch &Processing",IDC_START_BATCH,"Button",
+                    BS_AUTORADIOBUTTON,12,56,100,8
     CONTROL         "Start with a &Blank Project",IDC_START_BLANK,"Button",
-                    BS_AUTORADIOBUTTON,12,56,182,8
+                    BS_AUTORADIOBUTTON,12,72,100,8
 END
 
 
@@ -681,8 +685,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,51,0,971		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), ...)
- PRODUCTVERSION 2019,51,0,971	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2019,51,0,975		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2019,51,0,975	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -700,7 +704,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2019)\0"
-            VALUE "FileVersion", "2019.0.5-alpha (971)\0"
+            VALUE "FileVersion", "2019.0.5-alpha (975)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2017, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
@@ -708,7 +712,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2019)\0"
             VALUE "ProductVersion", "2019.0.5-alpha\0"
-            VALUE "SpecialBuild", "build 971\0"
+            VALUE "SpecialBuild", "build 975\0"
         END
     END
     BLOCK "VarFileInfo"

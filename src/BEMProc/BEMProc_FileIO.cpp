@@ -3289,15 +3289,19 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
    // reset log file variables if new log file name provided
    if (psNewLogFileName != NULL)
    {	sThisLogFileName = psNewLogFileName;
-		if (ppCSVColumnLabels)   // SAC 12/19/12 - new arg to facilitate project-based CSV analysis result archival
-		{	sPrevLogFileName = esCSVLogFileName;
-      	esCSVLogFileName = psNewLogFileName;
-		}
-		else
-		{	sPrevLogFileName = esLogFileName;
-      	esLogFileName = psNewLogFileName;
-			esCSVLogFileName = esLogFileName + ".csv";	// SAC 1/9/13 - update CSV log filename as well...
-		}
+   	if (sThisLogFileName.compare( (ppCSVColumnLabels ? esCSVLogFileName : esLogFileName), Qt::CaseInsensitive ) == 0)
+   	{	// do NOT set sPrevLogFileName if new & previous log filenames point to same file (to prevent copying log file onto itself) (Com tic #2482)
+   	}
+   	else
+		{	if (ppCSVColumnLabels)   // SAC 12/19/12 - new arg to facilitate project-based CSV analysis result archival
+			{	sPrevLogFileName = esCSVLogFileName;
+   	   	esCSVLogFileName = psNewLogFileName;
+			}
+			else
+			{	sPrevLogFileName = esLogFileName;
+      		esLogFileName = psNewLogFileName;
+				esCSVLogFileName = esLogFileName + ".csv";	// SAC 1/9/13 - update CSV log filename as well...
+		}	}
    }
 	else
    	sThisLogFileName = (ppCSVColumnLabels ? esCSVLogFileName : esLogFileName);

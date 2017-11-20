@@ -9,8 +9,8 @@
 #include "winver.h"
 
 VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       19,0,5,971
-  PRODUCTVERSION    19,0,5,971
+  FILEVERSION       19,0,5,974
+  PRODUCTVERSION    19,0,5,974
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -27,14 +27,14 @@ BEGIN
 		BEGIN 
 			VALUE "CompanyName",     "California Energy Commission\0"
 			VALUE "FileDescription", "Bldg Energy Model (BEM) Processor (T-24 Com)\0"
-			VALUE "FileVersion",     "2019.0.5 (971)\0"
+			VALUE "FileVersion",     "2019.0.5 (974)\0"
 			VALUE "InternalName",    "BEMProc19c\0"
 			VALUE "LegalCopyright",  "Copyright (C) 2012-2017, California Energy Commission. All rights reserved.\0"
 			VALUE "LegalTrademarks", "\0"
 			VALUE "OriginalFilename","BEMProc19c.dll\0"
 			VALUE "ProductName",     "BEM Processor DLL (Title-24 Com)\0"
 			VALUE "ProductVersion",  "2019.0.5\0"
-			VALUE "SpecialBuild",    "build 971\0"
+			VALUE "SpecialBuild",    "build 974\0"
 		END
 	END
 	BLOCK "VarFileInfo" 

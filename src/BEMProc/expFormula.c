@@ -202,6 +202,7 @@ static FuncTable functable[] =
    { "find",     EXP_Binary,    OP_Find,     2 },  /* SAC 2/4/13 - added find() function */
    { "findnocase", EXP_Binary,  OP_FindN,    2 },  /* SAC 2/4/13 - added findnocase() function */
    { "atof",     EXP_Unary,     OP_Atof,     1 },  /* SAC 2/23/16 - added atof() */
+   { "round",    EXP_Binary,    OP_Round,    2 },  /* SAC 11/13/17 - added round() - round to specified digits */
 
    { "error",    EXP_ErrorFunc, OP_ErrorExp, 3 },
    { "#E",       EXP_ErrorFunc, OP_ErrorExp, 3 },
@@ -2297,6 +2298,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
             case OP_Min :
             case OP_Max :
             case OP_Mod :  /* SAC 2/18/01 - added mod() function */
+            case OP_Round :  /* SAC 11/13/17 - added round() function */
                free( node1->pValue );
                node1->fValue = 0.0;
                node1->type = EXP_Value;
@@ -2429,6 +2431,18 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
                else
                   result = (int) value1 % (int) value2;
                break;
+            case OP_Round :  /* SAC 11/13/17 - added round() function */
+					if (IsReserved_UNDEFINED( value1 ))
+						ExpSetError( error, EXP_UndefArg, "first argument of round()" );
+					else if (IsReserved_UNDEFINED( value2 ))
+						ExpSetError( error, EXP_UndefArg, "second argument of round()" );
+               else if ( (int) value2 < 1 )
+                  ExpSetError( error, EXP_RuleProc, "Error: second argument must be > 0" );
+               else
+               {	char sNum[32];
+						sprintf( sNum, "%.*g", (int) value2, value1 );
+						result = atof( sNum );
+					}  break;
 
             /* These operators do not apply to numerics */
             case OP_Find :      /* SAC 2/4/13 - added find() function */

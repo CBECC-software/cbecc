@@ -297,7 +297,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 		pqt_win = new QWidget;
 		siNumProgressErrors = 0;
-		SetProgressMessage( " Initializing", false /*bBatchMode*/ );
+		SetProgressMessage( " Initializing", (siNumProgressRuns > 1) /*bBatchMode*/ );
 		pqt_progress = new QProgressDialog( sqProgressMsg, "Abort Analysis", 0, 100 );
 		// functions setLabelText() and setCancelButtonText() set the texts shown.
 	 
@@ -1353,7 +1353,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 #if defined( CSE_MULTI_RUN)
-		siNumProgressRuns = 1;   // don't increment for run iteration - future mods will adjust this for batch processing
+//		siNumProgressRuns = 1;   // don't increment for run iteration - future mods will adjust this for batch processing
 //#else
 //		siNumProgressRuns = iNumRuns;
 #endif
@@ -1499,7 +1499,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				{
 					if (bVerbose)
 						BEMPX_WriteLogFile( "      Skipping CSE simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					si1ProgressRunNum = iRunIdx+1;
+//					si1ProgressRunNum = iRunIdx+1;
 					siNumProgressErrors = 0;
 					CSE_MsgCallback( 0 /*level*/, "Skipping CSE simulation" );
 				}
@@ -1596,7 +1596,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		if (fPctDoneFollowingFinalSim > sfPctDoneFollowingSimulations &&
 			 (!baTDR_OK[12]/*TDRIterNum*/ || laTDR_Data[0] < 1 || !baTDR_OK[1]/*TDRPVMult*/))
 		{	// target EDR processing is activated, but NO run iteration is needed (because target hit w/ initial run inputs), so adjust progress window to skip second run - SAC 5/5/17
-			slCurrentProgress = (long) fPctDoneFollowingFinalSim;
+			if (si1ProgressRunNum > 0 && siNumProgressRuns > 1)
+				slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (fPctDoneFollowingFinalSim / siNumProgressRuns));
+			else
+				slCurrentProgress = (long) fPctDoneFollowingFinalSim;
+
 			if (sqt_win && sqt_progress)
 			{	sqt_progress->setValue( (int) slCurrentProgress );
 				sqt_win->repaint();
@@ -1631,7 +1635,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				dSavePctDoneFollowingFirstSim = (dSavePctDoneFollowingFirstSim + dSavePctDoneFollowingFirstSim + fPctDoneFollowingFinalSim) / 3;  // backup only 2/3s of the way back to the first sim breakpoint
 			}
 			else
-			{	slCurrentProgress = (long) dSavePctDoneFollowingFirstSim;
+			{	if (si1ProgressRunNum > 0 && siNumProgressRuns > 1)
+					slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (dSavePctDoneFollowingFirstSim / siNumProgressRuns));
+				else
+					slCurrentProgress = (long) dSavePctDoneFollowingFirstSim;
+
 				dSavePctDoneFollowingFirstSim = ((dSavePctDoneFollowingFirstSim + fPctDoneFollowingFinalSim)/2);  // each subseq run back up 1/2 distance of prev backup
 //BEMMessageBox( "Shift analysis progress LOWER prior to another TEDR run", "Target Design Rating" );
 				if (sqt_win && sqt_progress)
@@ -2487,33 +2495,33 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 									s16CAHPEDRBonusPoints.clear();
 								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDeltaEDR"              ), s16CAHPDeltaEDR             , FALSE,  0, -1, iObjIdx ))
 									s16CAHPDeltaEDR.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPCashBonusTotal"        ), s16CAHPCashBonusTotal       , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPCashBonusTotal"        ), s16CAHPCashBonusTotal       , FALSE,  2, -1, iObjIdx ))
 									s16CAHPCashBonusTotal.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneReadyKicker"   ), s16CAHP2019ZoneReadyKicker  , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneReadyKicker"   ), s16CAHP2019ZoneReadyKicker  , FALSE,  2, -1, iObjIdx ))
 									s16CAHP2019ZoneReadyKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneKicker"        ), s16CAHP2019ZoneKicker       , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneKicker"        ), s16CAHP2019ZoneKicker       , FALSE,  2, -1, iObjIdx ))
 									s16CAHP2019ZoneKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfFenKicker"     ), s16CAHPHighPerfFenKicker    , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfFenKicker"     ), s16CAHPHighPerfFenKicker    , FALSE,  2, -1, iObjIdx ))
 									s16CAHPHighPerfFenKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfAtticKicker"   ), s16CAHPHighPerfAtticKicker  , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfAtticKicker"   ), s16CAHPHighPerfAtticKicker  , FALSE,  2, -1, iObjIdx ))
 									s16CAHPHighPerfAtticKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfWallKicker"    ), s16CAHPHighPerfWallKicker   , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfWallKicker"    ), s16CAHPHighPerfWallKicker   , FALSE,  2, -1, iObjIdx ))
 									s16CAHPHighPerfWallKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPWholeHouseFansKicker"  ), s16CAHPWholeHouseFansKicker , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPWholeHouseFansKicker"  ), s16CAHPWholeHouseFansKicker , FALSE,  2, -1, iObjIdx ))
 									s16CAHPWholeHouseFansKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBalancedIAQKicker"     ), s16CAHPBalancedIAQKicker    , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBalancedIAQKicker"     ), s16CAHPBalancedIAQKicker    , FALSE,  2, -1, iObjIdx ))
 									s16CAHPBalancedIAQKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDOEZeroEnergyKicker"   ), s16CAHPDOEZeroEnergyKicker  , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDOEZeroEnergyKicker"   ), s16CAHPDOEZeroEnergyKicker  , FALSE,  2, -1, iObjIdx ))
 									s16CAHPDOEZeroEnergyKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDrainWtHtRecKicker"    ), s16CAHPDrainWtHtRecKicker   , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDrainWtHtRecKicker"    ), s16CAHPDrainWtHtRecKicker   , FALSE,  2, -1, iObjIdx ))
 									s16CAHPDrainWtHtRecKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDesignCharretteKicker" ), s16CAHPDesignCharretteKicker, FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDesignCharretteKicker" ), s16CAHPDesignCharretteKicker, FALSE,  2, -1, iObjIdx ))
 									s16CAHPDesignCharretteKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPESLaundryRecKicker"    ), s16CAHPESLaundryRecKicker   , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPESLaundryRecKicker"    ), s16CAHPESLaundryRecKicker   , FALSE,  2, -1, iObjIdx ))
 									s16CAHPESLaundryRecKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBaseIncentive"         ), s16CAHPBaseIncentive        , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBaseIncentive"         ), s16CAHPBaseIncentive        , FALSE,  2, -1, iObjIdx ))
 									s16CAHPBaseIncentive.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPTotalIncentive"        ), s16CAHPTotalIncentive       , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPTotalIncentive"        ), s16CAHPTotalIncentive       , FALSE,  2, -1, iObjIdx ))
 									s16CAHPTotalIncentive.clear();
 							}
 							else
@@ -3673,7 +3681,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 													const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 													const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
 													char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool bDisplayProgress /*=false*/, HWND hWnd /*=NULL*/,
-													int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )		// SAC 1/10/17
+													int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/, char* pszResultMsg /*=NULL*/, int iResultMsgLen /*=0*/ )		// SAC 1/10/17  // SAC 11/13/17
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -3973,15 +3981,16 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 
 	int iRunsGood = 0, iRunsBad = 0, iRunsFailedReports = 0;
 	if (iMode > 0 && iRunsToPerform > 0)
-	{
+	{					si1ProgressRunNum = 0;		// SAC 11/13/17
+						siNumProgressRuns = iRunsToPerform;
 		char pszRuleErr[1024];
 		bool bAbort = false;
 																							//	QString sDbgMsg;
 // LOOP OVER EACH BATCH RUN DEFINED
 		for (int iRun=0; (!bAbort && iRun < iRunsToPerform); iRun++)
-		{
-																							//	sDbgMsg.sprintf( "PRIOR to run:  %s", saProjInFN[iRun].c_str() );
-																							//	AfxMessageBox( sDbgMsg );
+		{				si1ProgressRunNum++;		// SAC 11/13/17
+								// debugging
+								//BEMPX_WriteLogFile( QString( "           Initiating run #%1 / si1ProgressRunNum = %2 / siNumProgressRuns = %3" ).arg( QString::number(iRun+1), QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
          bool bThisRunGood = false;
 			pszRuleErr[0] = '\0';
@@ -4237,11 +4246,20 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 	}
 
 	if (iRunsFailedReports > 0)
-		sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / %d report generation failures / return value: %d" ) %
+	{	sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / %d report generation failures / return value: %d" ) %
 																iRunsGood % iRunsBad % iRunsFailedReports % iRetVal );
+		if (pszResultMsg && iResultMsgLen > 0)
+			sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d errors/aborts / %d report generation failures", iRunsGood, iRunsBad, iRunsFailedReports );
+	}
 	else
-		sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / return value: %d" ) % iRunsGood % iRunsBad % iRetVal );
+	{	sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / return value: %d" ) % iRunsGood % iRunsBad % iRetVal );
+		if (pszResultMsg && iResultMsgLen > 0)
+			sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d errors/aborts", iRunsGood, iRunsBad );
+	}
 	BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+	si1ProgressRunNum = 1;	// SAC 11/13/17
+	siNumProgressRuns = 1;
 
 	return iRetVal;
 }
