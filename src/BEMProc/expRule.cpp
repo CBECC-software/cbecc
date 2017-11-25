@@ -10506,25 +10506,49 @@ double XCONS::xc_UModifiedZoneMethod(
 		double RFrm = 2.0*RIImet + 1.0/(fWeb/RImet + (1.0-fWeb)/RIins);
 											// parallel path R of framing based on flange L
 		double crl = 1.0/(RX[ 0] + RFrm + RX[ 1]);	// conductance of frame path
-#if 1	// revised correlation, 7-17-2014
+#if 1	// add interior insulation to Csh, 11-22-2017
 		double cCavPath = 1.0/(RX[ 0] + RIns + RX[ 1]);
 		// Regression based on wReg4bFix.xlsx (17-Jul-2014)
 		//   = wReg4b.xls (Wilcox 7-Apr-2014) with revised coefficients
 		//     change: cLat*cLat var found to actually be ccavPath*ccavPath
 		// Variable equivalences --
 		//  Wilcox Csh = 1/RX[ 0]: conductance of all layers outside frame incl. film
+		//	     rsh used here = RX[ 0] + inside sheathing R; added 11/24/2017 to
+		//           approximate effect of inside sheathing insulation.
+		//           Reasoning; inside and outside sheathing insul should have same effect approx
 		//  Wilcox Rcav = RIns: cavity insulation resistance at full framing thickness
 		//       Note: aka Rcv0 in Niles memo
 		//  crl: defined identically, resistance at framing width L
+		static const double rGBandFilm = 1.13453;	// res of inside layers assumed in regression
+													//   = 0.5 in gyp board + inside surface res
+		double rsh = RX[ 0] + max( 0., RX[ 1] - rGBandFilm);	//	outside res + inside sheating res
 		double W = 5.19788279
 				- 20.51917447  * crl
 				+  6.369940846 * cLat
 				+ 29.350005	   * crl * crl
 				+  2.604793103 * cCavPath * cCavPath
-				+  2.715554894 / RX[ 0]
-				-  5.23862597  * crl / RX[ 0]
+				+  2.715554894 / rsh
+				-  5.23862597  * crl / rsh
 				-  0.021999407 * crl * RIns;
-#else
+#elif 0	// revised correlation, 7-17-2014
+x		double cCavPath = 1.0/(RX[ 0] + RIns + RX[ 1]);
+x		// Regression based on wReg4bFix.xlsx (17-Jul-2014)
+x		//   = wReg4b.xls (Wilcox 7-Apr-2014) with revised coefficients
+x		//     change: cLat*cLat var found to actually be ccavPath*ccavPath
+x		// Variable equivalences --
+x		//  Wilcox Csh = 1/RX[ 0]: conductance of all layers outside frame incl. film
+x		//  Wilcox Rcav = RIns: cavity insulation resistance at full framing thickness
+x		//       Note: aka Rcv0 in Niles memo
+x		//  crl: defined identically, resistance at framing width L
+x		double W = 5.19788279
+x				- 20.51917447  * crl
+x				+  6.369940846 * cLat
+x				+ 29.350005	   * crl * crl
+x				+  2.604793103 * cCavPath * cCavPath
+x				+  2.715554894 / RX[ 0]
+x				-  5.23862597  * crl / RX[ 0]
+x				-  0.021999407 * crl * RIns;
+#elif 0
 x		// Regression based on wReg4.xls from Bruce Wilcox, 4-1-2014
 x		// Variable equivalences --
 x		//  csh = 1/RX[ 0]: conductance of all layers outside frame incl. film
@@ -10539,7 +10563,11 @@ x				+  2.706106175 / RX[ 0]
 x				-  5.216316517 * crl / RX[ 0]
 x				-  0.022176466 * crl * RIns;
 #endif
-		xc_FrameW = max( L, W );
+		xc_FrameW = max( L, W);
+#if 1
+		if (xc_FramingFactor > 0.)
+			xc_FrameW = min( xc_FrameW, 0.98*L/xc_FramingFactor);
+#endif
 	}
 
 	double RI = xc_FrameW / (dIIko / RImet + (xc_FrameW - dII)/RIins);
@@ -10565,9 +10593,10 @@ x				-  0.022176466 * crl * RIns;
 		RPathSave[ XCONS_PATHCAV]  = xc_RPath[ XCONS_PATHCAV];
 		RPathSave[ XCONS_PATHFRM1] = xc_RPath[ XCONS_PATHFRM1];
 		double Upp = xc_UParallelPath( iQII);
-		assert( fabs( Uzm - Upp) < .0001
-			&& fabs( xc_RPath[ XCONS_PATHCAV] - RPathSave[ XCONS_PATHCAV]) < .001
-			&& fabs( xc_RPath[ XCONS_PATHFRM1]- RPathSave[ XCONS_PATHFRM1]) < .001);
+		if (fabs( Uzm - Upp) > .0001
+		 || fabs( xc_RPath[ XCONS_PATHCAV] - RPathSave[ XCONS_PATHCAV]) > .001
+		 || fabs( xc_RPath[ XCONS_PATHFRM1]- RPathSave[ XCONS_PATHFRM1]) > .001)
+			assert( 0);
 #endif
 	}
 	return Uzm;
