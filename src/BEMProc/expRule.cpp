@@ -9200,7 +9200,7 @@ class XMAT		// temporary material (from Mat object)
 	int xm_status;			// status bits this XMAT
 							//  xmatNEEDWRITE: this material should be
 							//        written back to database (see xc_StoreResults())
-	double xm_Thickness;		// thickness, in (or -1 if not defined)
+	double xm_Thickness;	// thickness, in (or -1 if not defined)
 	double xm_Density;		// density, lb/ft3
 	double xm_SpecHeat;		// spec ht, Btu/lb-F
 	double xm_Conductivity;	// conductivity, Btuh-ft/ft2-F
@@ -9242,6 +9242,7 @@ public:
 	void xm_SetRes( double res) { xm_Resistance = res; }		// TODO
 	int xm_Mix( const XMAT& m, double fArea, double fVol);
 	int xm_SetDerived();
+	int xm_AdjustThickness( double newThkns, int options);
 	void xm_SetConductivity( int iQII, double k)
 	{	(iQII ? xm_ConductivityQII : xm_Conductivity) = k; }
 	double xm_GetConductivity( int iQII) const
@@ -9307,7 +9308,7 @@ class XCONS
 x		double xl_fFrm;			// framing factor for layer
 x								//  = 0 - 1, -1 = not framed
 #endif
-		double xl_thkns;			// layer thickness, in
+		double xl_thkns;		// layer thickness, in
 								//   Note: may possible for xl_mat[ ].xm_Thickness to differ
 								//     example: ?
 		int xl_LPType;				// Cons::LayerParams layer type, ltyXXX defined above
@@ -9329,6 +9330,7 @@ x								//  = 0 - 1, -1 = not framed
 		XMAT xl_mat[ XCONS_MAXPATHS];		// layer materials
 		XCONSL() { xl_Init(); }
 		void xl_Init();
+		bool xl_LimitSteelFramed();
 		int xl_MixFurred();
 		int xl_MixSteelFramed( double W, double R);
 	} xc_L[ XCONS_MAXLAYRS];
@@ -9421,6 +9423,8 @@ x	int xc_GetOrGenMat(	int iL,	int iP, long matID,	long symID);
 	double xc_UIsothermalPlanes( int iQII);
 	double xc_UModifiedZoneMethod( int iQII, int options);
 	int xc_StoreResults();
+	template <typename T> static T bracket( T vMin, T v, T vMax)
+	{	return v < vMin ? vMin : v > vMax ? vMax : v; }
 };		// class XCONS
 //=============================================================================
 XMAT::XMAT()
@@ -9597,9 +9601,55 @@ int XMAT::xm_SetDerived()		// derive inter-dependent properties
 		xm_HeatCap = xm_SpecHeat * xm_Density * thknsFt;	// Btu/ft2
 	return ret;
 }		// XMAT::xm_SetDerived
-#if 0
-out of service
 //-----------------------------------------------------------------------------
+#if 0
+incomplete / unnecessary: now handled in rules
+int XMAT::xm_AdjustThickness(		// adjust thickness
+	double thknsNew,	// new thickness, in
+	int options)		// 1: preserve resistance
+// return 1 on success
+//        0 if insufficient properties
+{	
+	int ret = 1;
+#if 0
+	if (xm_Thickness <= 0.)
+		ret = 0;
+	else
+	{	double thickRat = thknsNew / xm_Thickness;
+		xm_Thickness = thknsNew;
+		if (options & 1)
+		{	
+
+		}
+	}
+	int ret = 1;
+	if (xm_Thickness <= 0.0)
+		ret = 0;
+	double thknsFt = xm_Thickness / 12.0;	// thickness in ft
+	if (ret)
+	{	// derive consistent conductivity / resistance
+		if (xm_ConductivityQII > 0.0)
+		{	xm_Resistance = thknsFt / xm_ConductivityQII;
+			xm_RValPerInch = xm_Resistance / xm_Thickness;
+		}
+		else if (xm_RValPerInch > 0.0)
+		{	xm_Resistance = xm_RValPerInch * xm_Thickness;
+			xm_ConductivityQII = (1.0/12.0) / xm_RValPerInch;
+		}
+		else if (xm_Resistance > 0.0)
+		{	xm_ConductivityQII = thknsFt / xm_Resistance;
+			xm_RValPerInch = xm_Resistance / xm_Thickness;
+		}
+		else
+			ret = 0;
+	}
+	if (ret)
+		xm_HeatCap = xm_SpecHeat * xm_Density * thknsFt;	// Btu/ft2
+#endif
+	return ret;
+}		// XMAT::xm_AdjustThickness
+//-----------------------------------------------------------------------------
+out of service
 int XMAT::xm_FromLib(
 	const char* libName)
 // returns 1: success (*this filled, -1 for missing properties)
@@ -9649,7 +9699,7 @@ void XCONS::xc_Init()
 	xc_FrameWInput = 0.0;
 	xc_FrameW = 0.0;
 
-	for (int iP=1; iP < XCONS_MAXPATHS; iP++)
+	for (int iP=0; iP < XCONS_MAXPATHS; iP++)
 		xc_RPath[ iP] = 0.0;
 
 	for (int iL=0; iL<XCONS_MAXLAYRS; iL++)
@@ -9686,6 +9736,31 @@ int XCONS::xc_ErrV( const char* fmt, va_list ap /*=NULL*/)
 	xc_errMsg = pfx + msg;
 	return -1;
 }		// XCONS::xc_ErrV
+//-----------------------------------------------------------------------------
+#if 0
+incomplete / unnecessary: now handled in rules
+bool XCONS::XCONSL::xl_LimitSteelFramed()	// limit properties of metal framed layer
+// WHY: keep characteristics within limits of underlying regression dataset
+{
+
+	if (xl_thkns <= 5.5)
+		return false;
+
+	// limit steel framed layer thickness to 2x6
+	double thknsWas = xl_thkns;
+	xl_thkns = 5.5;
+	for (int iP=0; iP<XCONS_MAXPATHS; iP++)
+	{	if (xl_mat[ iP].xm_Thickness > 0)
+		{	xl_mat[ iP].xm_AdjustThickness( xl_thkns, iP != XCONS_PATHFRM1);
+			xl_mat[ iP].xm_status |= XMAT::xmatNEEDWRITE;
+		}
+	}
+
+	return true;
+
+}		// XCONS::XCONSL::xl_LimitSteelFramed
+
+#endif
 //-----------------------------------------------------------------------------
 int XCONS::XCONSL::xl_MixFurred()	// make mixed material for furred layer
 // XCONS_PATHFRM1 framing material is mixed into XCONS_PATHCAV to
@@ -10475,6 +10550,11 @@ double XCONS::xc_UModifiedZoneMethod(
 
 	XCONSL& LXFrm = xc_L[ xc_GetLayerIdx( iLFrm)];
 
+#if 0
+0 incomplete / unnecessary: now handled in rules
+0	bool bFrmLimited = LXFrm.xl_LimitSteelFramed();
+#endif
+
 	// working copies of geometry (in ASHRAE HOF notation)
 	//  units = inches
 	double L = LXFrm.xl_LPFrameFlangeWidth;		// flange width
@@ -10506,11 +10586,10 @@ double XCONS::xc_UModifiedZoneMethod(
 		double RFrm = 2.0*RIImet + 1.0/(fWeb/RImet + (1.0-fWeb)/RIins);
 											// parallel path R of framing based on flange L
 		double crl = 1.0/(RX[ 0] + RFrm + RX[ 1]);	// conductance of frame path
-#if 1	// add interior insulation to Csh, 11-22-2017
+#if 1	// add interior insulation to Csh and limit regression inputs, 11-22-2017
 		double cCavPath = 1.0/(RX[ 0] + RIns + RX[ 1]);
 		// Regression based on wReg4bFix.xlsx (17-Jul-2014)
 		//   = wReg4b.xls (Wilcox 7-Apr-2014) with revised coefficients
-		//     change: cLat*cLat var found to actually be ccavPath*ccavPath
 		// Variable equivalences --
 		//  Wilcox Csh = 1/RX[ 0]: conductance of all layers outside frame incl. film
 		//	     rsh used here = RX[ 0] + inside sheathing R; added 11/24/2017 to
@@ -10522,14 +10601,22 @@ double XCONS::xc_UModifiedZoneMethod(
 		static const double rGBandFilm = 1.13453;	// res of inside layers assumed in regression
 													//   = 0.5 in gyp board + inside surface res
 		double rsh = RX[ 0] + max( 0., RX[ 1] - rGBandFilm);	//	outside res + inside sheating res
+
+		// limit all independent terms to data range used to make regression
+		crl = bracket( .05565, crl, .560885);
+		cCavPath = bracket( .017921, cCavPath, 0.391389);
+		double cLatL = bracket( .001736, cLat, .13889);
+		rsh = bracket( 1./2.898551, rsh, 1./.061843);
+		double rCav = bracket( 1.08, RIns, 38.5);
+
 		double W = 5.19788279
 				- 20.51917447  * crl
-				+  6.369940846 * cLat
+				+  6.369940846 * cLatL
 				+ 29.350005	   * crl * crl
 				+  2.604793103 * cCavPath * cCavPath
 				+  2.715554894 / rsh
 				-  5.23862597  * crl / rsh
-				-  0.021999407 * crl * RIns;
+				-  0.021999407 * crl * rCav;
 #elif 0	// revised correlation, 7-17-2014
 x		double cCavPath = 1.0/(RX[ 0] + RIns + RX[ 1]);
 x		// Regression based on wReg4bFix.xlsx (17-Jul-2014)
