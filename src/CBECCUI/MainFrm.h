@@ -157,6 +157,8 @@ protected:
 	afx_msg void OnToolAnalysis();
 	afx_msg void OnUpdateToolReports(CCmdUI* pCmdUI);
 	afx_msg void OnToolReports();
+	afx_msg void OnUpdateToolResults(CCmdUI* pCmdUI);
+	afx_msg void OnToolResults();
 	afx_msg void OnDeleteComponent();
 	afx_msg void OnUpdateDeleteComponent(CCmdUI* pCmdUI);
 	afx_msg void OnDisplayAllUIControls();

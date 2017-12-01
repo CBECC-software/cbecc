@@ -137,6 +137,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_COMMAND(ID_TOOL_WIZARD, OnToolWizard)
 	ON_UPDATE_COMMAND_UI(ID_TOOL_ANALYSIS, OnUpdateToolAnalysis)
 	ON_COMMAND(ID_TOOL_ANALYSIS, OnToolAnalysis)
+	ON_UPDATE_COMMAND_UI(ID_TOOL_RESULTS, OnUpdateToolResults)
+	ON_COMMAND(ID_TOOL_RESULTS, OnToolResults)
 	ON_UPDATE_COMMAND_UI(ID_TOOL_REPORTS, OnUpdateToolReports)
 	ON_COMMAND(ID_TOOL_REPORTS, OnToolReports)
 	ON_COMMAND(IDM_DELETECOMP, OnDeleteComponent)
@@ -2967,7 +2969,8 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 						if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:StoreProjToSepDir" ), lStoreProjToSepDir ) && lStoreProjToSepDir > 0 &&
 							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), sFullIn  ) &&  !sFullIn.IsEmpty() &&
 							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sFullOut ) && !sFullOut.IsEmpty() &&
-							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:Comparison"        ), sCompare ) && !sCompare.IsEmpty() )
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:Comparison"        ), sCompare ) && !sCompare.IsEmpty() &&
+							 sFullIn.CompareNoCase( sFullOut ) != 0 )
 							// create command line for direcotry comparison between input & output processing directories
 							sCompareCommandLine.Format( "\"%s\" \"%s\" \"%s\"", sCompare, sFullIn, sFullOut );
 				}	}
@@ -3069,7 +3072,7 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 
 	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), sTemp ) || sTemp.IsEmpty())
 	{	CString sCompareApp = ReadProgString( "files", "CompareApp", "", TRUE );
-		if (!sCompareApp.IsEmpty() && FileExists( sCompareApp ))
+		if (!sCompareApp.IsEmpty() && sCompareApp.Right(1).Compare("\\") != 0 && FileExists( sCompareApp ))
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), BEMP_Str,
 									(void*) ((const char*) sCompareApp), BEMO_User, -1, BEMS_ProgDefault );
 	}
@@ -3165,11 +3168,12 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 		{	BOOL bIsUIActive = (BEMPX_GetUIActiveFlag());		CString sFileMsg;		QString qsFileDescrip;
 			long lStoreProjToSepDir = BEMPX_GetInteger( elDBID_BatchRuns_StoreProjToSepDir, iSV, iErr );
 			QString qsOutputProjDir = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), iSV, iErr );
-			QString qsResultsCSVFN  = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName"    ), iSV, iErr );
-			QString qsOutputLogFN   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:LogFileName"        ), iSV, iErr );
+			QString qsResultsCSVFN  = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName"   ), iSV, iErr );
+			QString qsOutputLogFN   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:LogFileName"       ), iSV, iErr );
+			QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
 
 			CString sCompareApp;
-			if (lStoreProjToSepDir > 0 && !qsOutputProjDir.isEmpty() &&
+			if (lStoreProjToSepDir > 0 && !qsOutputProjDir.isEmpty() && qsOutputProjDir.compare( qsFullProjDir, Qt::CaseInsensitive ) != 0 && 
 				 BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:Comparison" ), sCompareApp ) &&
 				 !sCompareApp.IsEmpty() && FileExists( sCompareApp ))
 			{	// store current comparison app file path to INI for future use - SAC 11/20/17
@@ -3258,7 +3262,6 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 					}	while (FileExists( sBatchDefsPathFile ));
 				}
 
-				QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
 				QString qsProjFileNames = BEMPX_GetString(                elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
 				long lIncludeSubdirs     = BEMPX_GetInteger(               elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
 				bool bOutDirSameAsIn = (qsFullProjDir.compare( qsOutputProjDir, Qt::CaseInsensitive ) == 0);
@@ -7124,128 +7127,37 @@ void CMainFrame::OnToolAnalysis()
 }
 
 
+void CMainFrame::OnUpdateToolResults(CCmdUI* pCmdUI) 
+{
+#ifdef UI_CARES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );		// SAC 11/20/17 - enable analysis results view button
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnToolResults() 
+{
+	OnToolsReviewResults();		// SAC 11/20/17 - enable analysis results view button
+}
+
+
 void CMainFrame::OnUpdateToolReports(CCmdUI* pCmdUI) 
 {
-// SAC 1/14/03 - Modified to enable Report button only when document is unchanged and results file exists
-   BOOL bEnableReportButton = FALSE;
-//   BOOL bEnableReportButton = (eInterfaceMode == IM_INPUT);     -- SAC 8/17/11 - removed access to compliance reporting application (for the time being)
-   if (bEnableReportButton)
-   {
-      bEnableReportButton = FALSE;
-      CDocument* pDoc = GetActiveDocument();
-      if (pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) && !pDoc->IsModified())
-      {
-         CString sBBDFileName = pDoc->GetPathName();
-         if (sBBDFileName.GetLength() > 3)
-         {
-            sBBDFileName = sBBDFileName.Left( sBBDFileName.GetLength()-3 );
-            sBBDFileName += "BBD";
-            bEnableReportButton = (FileExists( sBBDFileName ));
-         }
-      }
-   }
-
-   pCmdUI->Enable( bEnableReportButton );
+#ifdef UI_CARES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );		// SAC 11/20/17 - enable compliance report view button
+#elif UI_CANRES
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
 }
 
 void CMainFrame::OnToolReports() 
 {
-	AfxMessageBox( "CMainFrame::OnToolReports() " );
-//   // Get current project's .BBD filename
-//   CDocument* pDoc = GetActiveDocument();
-//   CString sReportApp = ReadProgString( "files", "ReportApp", "", TRUE );
-//   BOOL bContinue = FALSE;
-//   if (pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))
-//   {
-//      if ( !pDoc->IsModified()  ||
-//           (MessageBox( "The building description has changed, and the compliance reports may not be correct.\n\nPress 'OK' to "
-//                        "view anyway, or 'Cancel' to return to CBECC to perform analysis.", NULL, MB_OKCANCEL ) == IDOK) )
-//      {
-//         CString sBBDFileName = pDoc->GetPathName();
-//         if (sBBDFileName.GetLength() == 0)
-//            MessageBox( "You must save your project and perform the compliance analysis before viewing the compliance reports." );
-//         else
-//         {
-//            sBBDFileName = sBBDFileName.Left( sBBDFileName.GetLength()-3 );
-//            sBBDFileName += "BBD";
-//            if (!FileExists( sBBDFileName ))
-//            {
-//               sBBDFileName = "Error:  Budget building results file '" + sBBDFileName;
-//               sBBDFileName += "' not found.";
-//               MessageBox( sBBDFileName );
-//            }
-//            else
-//            {
-//               // now we must write the name of the current .BBD file to the CUIRpt.INI file
-//               CString sRptINI = sReportApp;
-//               sRptINI = sRptINI.Left( sRptINI.GetLength()-3 );
-//               sRptINI += "INI";
-//   	         if ( FileExists( sRptINI ) &&
-//   	              WritePrivateProfileString( "files", "ResultsFile", sBBDFileName, sRptINI ) )
-//                  bContinue = TRUE;
-//               else
-//               {
-//                  sRptINI = "Error:  Writing to or finding CUIRpt INI file '" + sRptINI;
-//                  sRptINI += "'.";
-//                  MessageBox( sRptINI );
-//               }
-//            }
-//         }
-//      }
-//   }
-//
-//   if (bContinue)
-//   {
-//      CWnd* pCUIRpt = FindWindow( "CUIREPORT", NULL );
-//      if (pCUIRpt != NULL)
-//      {
-//         // send message to cause CUIRpt to refresh its reports BEFORE switching apps
-//// TO DO - ONLY POST THIS MESSAGE IF THE REPORT REQUIRES UPDATING, OTHERWISE DON'T POST THIS MESSAGE
-//   	   CWaitCursor wait;
-//         pCUIRpt->SendMessage( WM_RELOADREPORT );
-//
-//         CWnd* popup = pCUIRpt->GetLastActivePopup();
-//         if (pCUIRpt->IsIconic())
-//            pCUIRpt->ShowWindow( SW_SHOWMAXIMIZED );
-//         else
-//            pCUIRpt->BringWindowToTop();
-//         if (pCUIRpt != popup)
-//            popup->BringWindowToTop();   // if CUIRpt has active popup window
-//      }
-//      else
-//      {
-//         if (!FileExists( sReportApp ))
-//         {
-//            CString sErr = "Reporting application specified in the .INI file as [files] ReportApp = '";
-//            sErr += sReportApp;
-//            sErr += "' not found.  Fix the [files] ReportApp entry in the .INI file in order to navigate to the reporting application.";
-//            MessageBox( sErr );
-//         }
-//         else
-//         {
-//            CString sProgDir = esProgramPath; //ReadProgString( szPaths, szProgPath, "" );
-//            LPTSTR lptCommandLine = NULL;
-//
-//            STARTUPINFO si;
-//            memset(&si, 0, sizeof( STARTUPINFO ));
-//            si.cb              = sizeof( STARTUPINFO );
-//            PROCESS_INFORMATION pi;
-//            BOOL bCr8Ret = CreateProcess( sReportApp, lptCommandLine, NULL, NULL, FALSE, 0, NULL, sProgDir, &si, &pi );
-//
-//            if (bCr8Ret)
-//            {
-//            }
-//            else
-//            {
-//               /* report failure to the user. */
-//               DWORD dwError = GetLastError ();
-//               CString sMsg;
-//               sMsg.Format( "GetLastError = 0x%lx", (int)dwError );
-//               MessageBox( sMsg, "CreateProcess()" );
-//            }
-//         }
-//      }
-//   }
+	ViewReport( 0 );		// SAC 11/20/17 - enable compliance report view button
 }
 
 

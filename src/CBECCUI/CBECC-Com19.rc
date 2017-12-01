@@ -220,6 +220,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_TOOL_WIZARD
     BUTTON      ID_TOOL_ANALYSIS
+    BUTTON      ID_TOOL_RESULTS
     BUTTON      ID_TOOL_REPORTS
     SEPARATOR
     BUTTON      ID_APP_ABOUT
@@ -239,6 +240,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_TOOL_WIZARD
     BUTTON      ID_TOOL_ANALYSIS
+    BUTTON      ID_TOOL_RESULTS
     BUTTON      ID_TOOL_REPORTS
     SEPARATOR
     BUTTON      ID_APP_ABOUT
@@ -678,8 +680,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,51,0,975		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2019,51,0,975	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2019,51,0,977		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-B3, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2019,51,0,977	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -697,7 +699,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "FileVersion", "2019.0.5-alpha (975)\0"
+            VALUE "FileVersion", "2019.0.5-alpha (977)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2017, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
@@ -705,7 +707,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (commercial 2019)\0"
             VALUE "ProductVersion", "2019.0.5-alpha\0"
-            VALUE "SpecialBuild", "build 975\0"
+            VALUE "SpecialBuild", "build 977\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -946,6 +948,7 @@ BEGIN
     IDM_CHECKDBASE          "Check the building databsae for errors"
     ID_TOOL_WIZARD          "Initiate the building creation wizard\nBuilding Wizard"
     ID_TOOL_ANALYSIS        "Perform the compliance analysis\nPerform Analysis"
+    ID_TOOL_RESULTS         "View analysis results\nAnalysis Results"
     ID_TOOL_REPORTS         "View the compliance reports\nCompliance Reports"
     IDM_EDIT_DELETE         "Delete a building component"
     IDM_DELETECOMP          "Delete an existing building component"
