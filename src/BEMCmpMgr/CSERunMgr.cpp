@@ -39,6 +39,11 @@
 #include "memLkRpt.h"
 
 const char* pszRunAbbrev_u  = "u";
+const char* pszRunAbbrev_pmf  = "pmf";  
+const char* pszRunAbbrev_pmfN = "pmf-N";
+const char* pszRunAbbrev_pmfE = "pmf-E";
+const char* pszRunAbbrev_pmfS = "pmf-S";
+const char* pszRunAbbrev_pmfW = "pmf-W";
 const char* pszRunAbbrev_p  = "p";
 const char* pszRunAbbrev_pN = "p-N";
 const char* pszRunAbbrev_pE = "p-E";
@@ -50,11 +55,6 @@ const char* pszRunAbbrev_pfxN = "pfx-N";
 const char* pszRunAbbrev_pfxE = "pfx-E";
 const char* pszRunAbbrev_pfxS = "pfx-S";
 const char* pszRunAbbrev_pfxW = "pfx-W";
-const char* pszRunAbbrev_pmf  = "pmf";  
-const char* pszRunAbbrev_pmfN = "pmf-N";
-const char* pszRunAbbrev_pmfE = "pmf-E";
-const char* pszRunAbbrev_pmfS = "pmf-S";
-const char* pszRunAbbrev_pmfW = "pmf-W";
 const char* pszRunAbbrev_dr   = "dr";   
 
 
@@ -147,15 +147,17 @@ CSERunMgr::CSERunMgr(
 }		// CSERunMgr::CSERunMgr
 
 CSERunMgr::~CSERunMgr()
-{
-	CSERun* pCSERun = NULL;
+{	DeleteRuns();
+}
+
+void CSERunMgr::DeleteRuns()
+{	CSERun* pCSERun = NULL;
 	while (!m_vCSERun.empty())
 	{	pCSERun = m_vCSERun.back();
 		m_vCSERun.pop_back();
 		delete pCSERun;
 	}
 }
-
 
 static int ExecuteNow( CSERunMgr* pRunMgr, QString sEXEFN, QString sEXEParams )
 {
@@ -242,10 +244,13 @@ int CSERunMgr::SetupRun(
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), BEMP_Str, (void*) pszRunAbbrev );
 
 	QString sOrientLtr, sOrientName;
-	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
+	if (iRunType >= CRM_PropMixedFuel && iRunType <= CRM_WPropMixedFuel)		// SAC 12/20/17 - reorder if statement to be consistent w/ new PMF run order
+	{	iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+		if (iRetVal == 0)
+			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
+	}
+	else if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
-	else if (iRunType >= CRM_PropMixedFuel && iRunType <= CRM_WPropMixedFuel)
-		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	else if (iRunType >= CRM_PropFlex && iRunType <= CRM_WPropFlex)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_ProposedFlexibility", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 8/3/17
 	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
@@ -1319,12 +1324,17 @@ QString CSERunMgr::GetVersionInfo()
 	{	LPSTR verData = new char[verSize];
 		if (GetFileVersionInfo( m_sCSEexe.toLocal8Bit().constData(), verHandle, verSize, verData))
 		{	if (VerQueryValue(verData,"\\",(VOID FAR* FAR*)&lpBuffer,&size))
-			{	if (size)
+			{	int iLastSlash = std::max( m_sCSEexe.lastIndexOf('\\'), m_sCSEexe.lastIndexOf('/') );
+				int iLastDot   =           m_sCSEexe.lastIndexOf('.');
+				QString qsCSEName = "CSE";
+				if (iLastSlash > 0 && iLastDot > (iLastSlash+1))		// SAC 12/4/17 - report CSEs w/ different executable filenames
+					qsCSEName = m_sCSEexe.mid( iLastSlash+1, (iLastDot-iLastSlash-1) );
+				if (size)
 				{	VS_FIXEDFILEINFO *verInfo = (VS_FIXEDFILEINFO *)lpBuffer;
 					if (verInfo->dwSignature == 0xfeef04bd)
 					{	int major = HIWORD(verInfo->dwFileVersionMS);
 						int minor = LOWORD(verInfo->dwFileVersionMS);
-						sVersion = QString( "CSE %1.%2" ).arg( QString::number(major), QString::number(minor));
+						sVersion = QString( "%1 %2.%3" ).arg( qsCSEName, QString::number(major), QString::number(minor));
 						int pathLen = m_sCSEexe.length();
 						if (pathLen >=4)
 						{	if (_stricmp( m_sCSEexe.right(4).toLocal8Bit().constData(), ".exe") == 0)

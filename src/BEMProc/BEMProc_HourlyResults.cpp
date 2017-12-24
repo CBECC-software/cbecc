@@ -294,6 +294,18 @@ double BEMPX_AddHourlyResultArray(	double* pDbl, const char* pszRunName, const c
 			dRetVal = pEnduse->getTotal();
 		}
 	}
+#ifdef _DEBUG
+	else if (pMeter)
+	{	QString qsErr;
+		if (pMeter->getNumEnduses()+1 >= BEMRun_NumEnduses)
+			qsErr = "Error:  BEMRun_NumEnduses too small";
+		else if (strlen( pszEnduse ) >= BEMRun_EnduseNameLen)
+			qsErr = QString( "Error:  enduse name '%1' too long (cannot exceed %2 chars)" ).arg( pszEnduse, QString::number(BEMRun_EnduseNameLen) );
+		qsErr += QString( " calling BEMPX_AddHourlyResultArray( <fltarray>, %1, %2, %3, %4, %5 )" ).arg(
+							pszRunName, pszMeterName, pszEnduse, QString::number(iBEMProcIdx), (bAddIfNotExist ? "true" : "false") );
+		BEMMessageBox( qsErr );
+	}
+#endif
 	return dRetVal;
 }
 

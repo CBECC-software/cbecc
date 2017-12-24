@@ -1,8 +1,8 @@
 // rulelist.cpp - all the ruleset class definitions
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -789,12 +789,16 @@ void RuleSet::clearSymbols()
 	m_symbolLists.clear();
 }
 
-BOOL RuleSet::LabelMatches( QString& sLabel, BOOL bCaseSensitive /*=FALSE*/ )		// SAC 9/9/14
-{	BOOL bRetVal = FALSE;
+// SAC 12/19/17 - switched from BOOL LabelMatches() to int LabelIndex() to return 1-based label index (0 if not found)
+int RuleSet::LabelIndex( QString& sLabel, BOOL bCaseSensitive /*=FALSE*/ )		// SAC 9/9/14
+{	int iRetVal = 0;
    int iNumLabels = m_saLabels.size();
-	for (int i=0; (!bRetVal && i < iNumLabels); i++)
-		bRetVal = (	m_saLabels[i].compare( sLabel, (bCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive) )==0 );
-	return bRetVal;
+	for (int i=0; (iRetVal==0 && i < iNumLabels); i++)
+	{	if (m_saLabels[i].compare( sLabel, (bCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive) )==0)
+			iRetVal = i+1;
+		//bRetVal = (	m_saLabels[i].compare( sLabel, (bCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive) )==0 );
+	}
+	return iRetVal;
 }
 
 

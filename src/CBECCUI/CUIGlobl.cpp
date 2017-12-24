@@ -913,7 +913,7 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			case  3 :	sAlphBeta = " Alpha 3";		break;
 			case  4 :	sAlphBeta = " Beta";			break;
 			case  5 :	sAlphBeta = " Beta 2";		break;
-			case  6 :	sAlphBeta = " Beta 3";		break;
+			case  6 :	sAlphBeta = " RV";			break;	// SAC 12/22/17
 			case  7 :	sAlphBeta = " RC";			break;
 			case  8 :	sAlphBeta = " SP1";			break;
 			case  9 :	sAlphBeta = " SP2";			break;
@@ -937,7 +937,7 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			case  3 :	sAlphBeta = " Alpha 3";		break;
 			case  4 :	sAlphBeta = " Beta";			break;
 			case  5 :	sAlphBeta = " Beta 2";		break;
-			case  6 :	sAlphBeta = " Beta 3";		break;
+			case  6 :	sAlphBeta = " RV";			break;	// SAC 12/22/17
 			case  7 :	sAlphBeta = " RC";			break;
 			case  8 :	sAlphBeta = " SP1";			break;
 			case  9 :	sAlphBeta = " SP2";			break;
@@ -2355,6 +2355,15 @@ long elDBID_Boiler_FluidFlowOutRef = 0;     // "FluidSeg"
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
+int eiBDBCID_BatchRuns = 0;		// SAC 11/10/17
+long elDBID_BatchRuns_BatchDefsCSV = 0;       
+long elDBID_BatchRuns_BatchName = 0;          
+long elDBID_BatchRuns_ProjDirectory = 0;     
+long elDBID_BatchRuns_IncludeSubdirs = 0;     
+long elDBID_BatchRuns_ProjFileNames = 0;     
+long elDBID_BatchRuns_StoreProjToSepDir = 0; 
+long elDBID_BatchRuns_OutputProjDir = 0;     
+
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd =  900;    iTabCtrlHt = 580;   }	// SAC 11/8/14
@@ -2899,6 +2908,15 @@ void InitBEMDBIDs()
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
+
+	eiBDBCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+	elDBID_BatchRuns_BatchDefsCSV       = BEMPX_GetDatabaseID( "BatchDefsCSV",       eiBDBCID_BatchRuns );       
+	elDBID_BatchRuns_BatchName          = BEMPX_GetDatabaseID( "BatchName",          eiBDBCID_BatchRuns );          
+	elDBID_BatchRuns_ProjDirectory      = BEMPX_GetDatabaseID( "ProjDirectory",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_IncludeSubdirs     = BEMPX_GetDatabaseID( "IncludeSubdirs",     eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_ProjFileNames      = BEMPX_GetDatabaseID( "ProjFileNames",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
+	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
 
 // SAC 5/13/14 - revised to keep this property characterized as Required (but still marked as Primary)
 	// make adjustments to the InputClass of certain properties to ensure proper UI functionality

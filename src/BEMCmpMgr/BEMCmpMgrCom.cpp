@@ -2196,14 +2196,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	RelativeToCompletePath_IfNeeded( sLogPathFile     );
 	RelativeToCompletePath_IfNeeded( sEPlusPath       );  // SAC 12/30/13
 
-	QString sCSEEXEPath			= sCompMgrDLLPath + "CSE\\";		// SAC 5/24/16
-	QString sCSEWeatherPath		= sSimWeatherPath;
-#ifdef _DEBUG
-		sCSEexe      = sCSEEXEPath + "csed.exe";
-#else
-		sCSEexe      = sCSEEXEPath + "cse.exe";
-#endif
-
 	QString sModelPathOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.left(                               sModelPathFile.lastIndexOf('\\') + 1 ) : "");
 	QString sModelFileOnly = (sModelPathFile.lastIndexOf('\\') ? sModelPathFile.right( sModelPathFile.length() - sModelPathFile.lastIndexOf('\\') - 1 ) : "");		assert( !sModelFileOnly.isEmpty() );
 	QString sModelFileOnlyWithExt = sModelFileOnly;
@@ -2735,6 +2727,25 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	}
 
+	QString sCSEEXEPath			= sCompMgrDLLPath + "CSE\\";		// SAC 5/24/16
+	QString sCSEWeatherPath		= sSimWeatherPath;
+	QString qsCSEName="CSE";
+	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+	{
+	// Setup CSE executable filename based on setting from ruleset - SAC 12/17/17
+		if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSEName" ), qsCSEName ) || qsCSEName.isEmpty())
+			qsCSEName = "CSE";
+					//	#ifdef _DEBUG
+					//			sCSEexe      = sCSEEXEPath + "csed.exe";
+					//	#else
+					//			sCSEexe      = sCSEEXEPath + "cse.exe";
+					//	#endif
+		sCSEexe = sCSEEXEPath + qsCSEName + ".exe";
+		//if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
+		//{	sErrorMsg = "ERROR:  The following required file(s) were not found:\n   " + sCSEexe;
+		//	iRetVal = BEMAnal_CECRes_MissingFiles;
+	}	//}
+
 // Check fairly wide variety of file hashes for supporting files - some required, some not - if inconcistencies found, log them and turn OFF report signature use
 	int iNumFileHashErrs = 0;
 	if (iCodeType == CT_S901G || iCodeType == CT_ECBC)
@@ -2795,8 +2806,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 43 :	sFHPathFile = sCompMgrDLLPath + "BEMCmpMgr19c.dll";               bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					case 44 :	sFHPathFile = sCompMgrDLLPath + "BEMProc19c.dll";                 bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					case 45 :	BEMPX_GetBEMBaseFile( sFHPathFile );			                     bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 46 :   sFHPathFile = sCSEEXEPath + "csed.exe";	             				break;	// SAC 5/24/16
-					case 47 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				break;
+					case 46 :   sFHPathFile = sCSEEXEPath + "cse19.exe";	             				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;	// SAC 5/24/16
+					case 47 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				bRequiredForCodeYear = (iDLLCodeYear <= 2016);		break;
 					case 48 :   sFHPathFile = sCSEEXEPath + "calc_bt_control.exe";      				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					case 49 :   sFHPathFile = sCSEEXEPath + "DHWDUMF.txt";	           				break;
 					default :			assert( FALSE );                                      		break;
@@ -3382,7 +3393,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //	QString saDevOptsObjProps[] = {	"Proj:DisableDayltgCtrls", "Proj:DefaultDayltgCtrls", "Proj:AutoHardSize", "Proj:AutoEffInput", " " };		// SAC 8/12/14 - updated w/ latest dayltg flags
 //	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
 								case 11 :	sLogMsg =        "      user specification of alternative proposed simulation IDF file";		break;
-								case 12 :	sLogMsg.sprintf( "      user specification of CSE include file(s): %s", sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
+								case 12 :	sLogMsg.sprintf( "      user specification of %s include file(s): %s", qsCSEName.toLocal8Bit().constData(), sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
 								case 13 :	sLogMsg.sprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
 						//		case 13 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 //	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
@@ -3947,12 +3958,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									QString sCSE_DHWUseMthd;
 									BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd );
 									if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
-									{	sErrMsg.sprintf( "CSE (residential DHW simulation engine) executable not found: '%s' and/or '%s'", sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
+									{	sErrMsg.sprintf( "%s (residential DHW simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
 //											54 : CSE (recirculation DHW simulation engine) executable(s) not found
-										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+													// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
+										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
 									}
 									else if (sCSE_DHWUseMthd.isEmpty())
-									{	sErrMsg = "CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid";
+									{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
 //											56 : CSE (recirculation DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
 										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 									}
@@ -3961,14 +3973,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										QString sDHWUseIncFile = "DHWDUMF.txt";
 										QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
 										if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
-										{	sErrMsg.sprintf( "CSE (recirculation DHW simulation engine) use profile file not found:  %s", sDHWUseFrom.toLocal8Bit().constData() );
+										{	sErrMsg.sprintf( "%s (recirculation DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
 //												55 : CSE (recirculation DHW simulation engine) use profile file not found
 											ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 										}
 										else
 										{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
 											if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
-											{	sErrMsg.sprintf( "Unable to copy CSE DHW Use/Load Profile include file from '%s' into processing directory '%s'", sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
+											{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
 //													57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
 												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 											}
@@ -3977,7 +3989,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									}	}
 
 									int iDHWSimRetVal = 0;
-									if (iRetVal == 0)
+									if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
 									{
 									// Check for specification of Report Include file - and if found, prevent secure report
 										long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
@@ -3994,7 +4006,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												lNumSpaceWithDefaultedDwellingUnitArea < 1)
 										{	bAllowReportIncludeFile = false;
 											sCSEIncludeFileDBID.clear();
-																sLogMsg = "CSE report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.";
+																sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
 																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										}
 
@@ -4049,13 +4061,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											{
 												int iCSERetVal = cseRun.GetExitCode();
 												if (bVerbose)  // SAC 1/31/13
-												{	sLogMsg.sprintf( "      CSE simulation returned %d", iCSERetVal );
+												{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
 													BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 												}
 												BEMPX_RefreshLogFile();	// SAC 5/19/14
 								
 												if (iCSERetVal != 0)
-												{	sErrMsg.sprintf( "ERROR:  CSE simulation returned %d", iCSERetVal );
+												{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
 													iDHWSimRetVal = BEMAnal_CECRes_CSESimError;
 													BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 												}
@@ -4069,22 +4081,22 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																								sRunAbbrev.toLocal8Bit().constData(), -1, pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap );	// SAC 5/31/16
 													if (iHrlyResRetVal < 0)  // SAC 6/12/17
 													{	switch (iHrlyResRetVal)
-														{	case -1 :  sLogMsg = QString( "Error retrieving hourly CSE results (-1) / run: %1, runID: %2, runAbrv: %3, file: %4" ).arg(
-																													QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -2 :  sLogMsg = QString( "Error retrieving hourly CSE results (-2) / Unable to retrieve BEMProc pointer / run: %1, runID: %2, runAbrv: %3, file: %4" ).arg(
-																													QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -3 :  sLogMsg = QString( "Error retrieving hourly CSE results (-3) / Run index not in valid range 0-%1 / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
-																													QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -4 :  sLogMsg = QString( "Error retrieving hourly CSE results (-4) / RunID too large (limit of %1 chars) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
-																													QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -5 :  sLogMsg = QString( "Error retrieving hourly CSE results (-4) / RunAbrv too large (limit of %1 chars) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg( 
-																													QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+														{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																													qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																													qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+															case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																													qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
 														}
 														if (sLogMsg.size() > 0)
 															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													}
 													else if (bVerbose)  // SAC 1/31/13
-													{	sLogMsg.sprintf( "      Hourly CSE results retrieval returned %d", iHrlyResRetVal );
+													{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
 														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 													}
 												// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
@@ -5326,7 +5338,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* /*pszLogPathFile*/, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
 														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, bool /*bDisplayProgress=false*/, HWND hWnd /*=NULL*/, bool bOLDRules /*=false*/,
-														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/ )   // SAC 1/10/17
+														int iSecurityKeyIndex /*=0*/, const char* pszSecurityKey /*=NULL*/, char* pszResultMsg /*=NULL*/, int iResultMsgLen /*=0*/ )   // SAC 1/10/17   // SAC 12/3/17
 {
 	int iRetVal = 0;
 	si1ProgressRunNum = 1;
@@ -5893,6 +5905,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 	}
 
 	sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / return value: %d" ) % iRunsGood % iRunsBad % iRetVal );
+	if (pszResultMsg && iResultMsgLen > 0)
+		sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d errors/aborts", iRunsGood, iRunsBad );
 	BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	return iRetVal;
@@ -6174,6 +6188,10 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 		else
 			sOSVer = "???";
 
+		QString qsCSEName;	// SAC 12/17/17
+		if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSENme"  ),	qsCSEName  ))
+			qsCSEName = "CSE";
+
 		FILE *fp_CSV;
 		int iErrorCode;
 		try
@@ -6191,7 +6209,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				fprintf( fp_CSV, ",CompMgr:,,\"%s\"\n",    sCmpMgrVer.toLocal8Bit().constData() );
 				fprintf( fp_CSV, ",OpenStudio:,,\"%s\"\n", sOSVer.toLocal8Bit().constData()     );
 				fprintf( fp_CSV, ",EnergyPlus:,,\"%s\"\n", sEPlusVer.toLocal8Bit().constData()  );
-				fprintf( fp_CSV, ",CSE:,,\"%s\"\n",        sCSEVer.toLocal8Bit().constData()    );
+				fprintf( fp_CSV, ",%s:,,\"%s\"\n",         qsCSEName.toLocal8Bit().constData(), sCSEVer.toLocal8Bit().constData() );
 				fprintf( fp_CSV, ",Ruleset:,,\"%s\"\n",    sRuleVer.toLocal8Bit().constData()   );
 
 				fprintf( fp_CSV,     "Run Title:,,,\"%s\"\n", sRunTitle.toLocal8Bit().constData()  );

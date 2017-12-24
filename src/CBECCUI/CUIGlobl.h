@@ -629,6 +629,15 @@ extern long elDBID_Boiler_FluidFlowOutRef;  // "FluidSeg"
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
 
+extern int eiBDBCID_BatchRuns;
+extern long elDBID_BatchRuns_BatchDefsCSV;        // BEMP_Str "CSV file containing definitions of all batch runs (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_BatchName;           // BEMP_Str "Name used as basis of log and results filenames" 
+extern long elDBID_BatchRuns_ProjDirectory;       // BEMP_Str "Directory of projects to be batch processed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating whether BatchDefsCSV file defined and exists" 
+extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
+extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
+extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
+
 #endif   // UI_CANRES
 
 #ifdef UI_CARES

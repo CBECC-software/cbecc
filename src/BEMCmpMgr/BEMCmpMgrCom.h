@@ -1,8 +1,8 @@
 // BEMCmpMgrCom.H - Public API exported from 'BEMCmpMgrCom*.DLL'
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -53,7 +53,7 @@ int  BEMCMPMGR_API __cdecl CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBa
 														const char* pszRulesetPathFile, const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV=NULL,
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bDisplayProgress=false, HWND hWnd=NULL, bool bOLDRules=false,
-														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL );		// SAC 1/10/17
+														int iSecurityKeyIndex=0, const char* pszSecurityKey=NULL, char* pszResultMsg=NULL, int iResultMsgLen=0 );		// SAC 1/10/17   // SAC 12/3/17
 
 //	int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes_OLD(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 //													const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath,

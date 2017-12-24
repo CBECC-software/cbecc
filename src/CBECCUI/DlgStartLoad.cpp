@@ -225,13 +225,19 @@ BOOL CDlgStartLoad::OnInitDialog()
 	}
 
 // SAC 11/20/17 - removed code to hide batch processing option when developer menu option not set
-//	if (eiDeveloperMenu==0 && m_iOption == -4)		// SAC 11/14/17 - added new batch processing option
-//		m_iOption = -1;
-//	if (eiDeveloperMenu==0)
-//	{	CWnd* pWnd = GetDlgItem( IDC_START_BATCH );
-//		if (pWnd)
-//			pWnd->ShowWindow( SW_HIDE );
-//	}
+	int iEnableBatchProc = 1;
+#ifdef UI_CANRES
+	iEnableBatchProc = 0;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
+#endif
+	bool bEnableBatchProc = (ReadProgInt( "options", "EnableBatchProcessing", iEnableBatchProc ) > 0 ||
+									 ReadProgInt( "options", "DeveloperMenu", 0 ) > 0);
+	if (!bEnableBatchProc && m_iOption == -4)
+		m_iOption = -1;
+	if (!bEnableBatchProc)
+	{	CWnd* pWnd = GetDlgItem( IDC_START_BATCH );
+		if (pWnd)
+			pWnd->ShowWindow( SW_HIDE );
+	}
 
    UINT uiSelRadioID;
    switch (m_iOption)

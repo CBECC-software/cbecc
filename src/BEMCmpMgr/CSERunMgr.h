@@ -38,6 +38,11 @@ const int CSE_CONTINUE = 0;		// continue execution
 const int CSE_ABORT = -1;		// abort and cleanup
 
 extern const char* pszRunAbbrev_u;
+extern const char* pszRunAbbrev_pmf;
+extern const char* pszRunAbbrev_pmfN;
+extern const char* pszRunAbbrev_pmfE;
+extern const char* pszRunAbbrev_pmfS;
+extern const char* pszRunAbbrev_pmfW;
 extern const char* pszRunAbbrev_p;
 extern const char* pszRunAbbrev_pN;
 extern const char* pszRunAbbrev_pE;
@@ -49,16 +54,16 @@ extern const char* pszRunAbbrev_pfxN;
 extern const char* pszRunAbbrev_pfxE;
 extern const char* pszRunAbbrev_pfxS;
 extern const char* pszRunAbbrev_pfxW;
-extern const char* pszRunAbbrev_pmf;
-extern const char* pszRunAbbrev_pmfN;
-extern const char* pszRunAbbrev_pmfE;
-extern const char* pszRunAbbrev_pmfS;
-extern const char* pszRunAbbrev_pmfW;
 extern const char* pszRunAbbrev_dr;
 
 enum CRM_RunType	// SAC 3/26/15
 {
    CRM_User,	// user model w/out full proposed setup when in Research Mode
+   CRM_PropMixedFuel,
+   CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
+   CRM_EPropMixedFuel,
+   CRM_SPropMixedFuel,
+   CRM_WPropMixedFuel,
    CRM_Prop,
    CRM_NOrientProp,
    CRM_EOrientProp,
@@ -70,11 +75,6 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_EPropFlex,
    CRM_SPropFlex,
    CRM_WPropFlex,
-   CRM_PropMixedFuel,
-   CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
-   CRM_EPropMixedFuel,
-   CRM_SPropMixedFuel,
-   CRM_WPropMixedFuel,
    CRM_DesignRating
 };
 
@@ -135,12 +135,14 @@ public:
 		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0,
 		long lPropFlexRunReqd=0, int iNumRuns=-1 );
 	~CSERunMgr();
+	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 						const char* pszRunAbbrev=NULL );
 	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL );
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
+	void SetNumRuns( int iNumRuns ) { m_iNumRuns = iNumRuns; }
 	int GetNumRuns() const { return m_iNumRuns; }
 	int GetNumProgressRuns() const { return (m_iNumProgressRuns > 0 ? m_iNumProgressRuns : m_iNumRuns); }
 	void DoRuns();

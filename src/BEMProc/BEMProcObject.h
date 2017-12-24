@@ -48,7 +48,7 @@
 #define	BEMRun_RunAbbrevLen			  16
 #define	BEMRun_NumMeters				   4
 #define	BEMRun_MeterNameLen			  16
-#define	BEMRun_NumEnduses				  48   // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
+#define	BEMRun_NumEnduses				  54   // SAC 12/14/17 - added 6 to accommodate Carbon results  // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
 #define	BEMRun_EnduseNameLen			  32	 // SAC 4/15/15 - 16->32 to accommodate nonres' 'Domestic Hot Water'
 #define	BEMRun_NumHourlyResults		8760
 

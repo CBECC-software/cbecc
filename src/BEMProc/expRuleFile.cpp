@@ -612,31 +612,32 @@ void RemoveComments( QString& str )
 }
 
 // SAC 9/11/14 - added routine to check for one or more ruleset labels and return a bool indicating whether the label(s) match the current ruleset
-BOOL RulesetLabelMatches( BEMTextIO& file, QString token, QStringList& saReservedStrs, BOOL& bTokensSpecified )
-{	BOOL bApplyToThisRuleset = TRUE;
+// SAC 12/19/17 - switched from BOOL RulesetLabelMatches() to int RulesetLabelIndex() to return 1-based label index (0 if not found)
+int RulesetLabelIndex( BEMTextIO& file, QString token, QStringList& saReservedStrs, BOOL& bTokensSpecified )
+{	BOOL iLabelIndex = 1;
 	if (file.NextCharacterOnLine() == ':')
-	{	bApplyToThisRuleset = FALSE;
+	{	iLabelIndex = 0;
 		bTokensSpecified = TRUE;
 		token = file.ReadToken( FALSE /*bAllowLeadingDigit*/, FALSE /*bSkipLeadingDelimeters*/, FALSE /*bAllowMidHyphen*/, FALSE /*bAllowNewLineRead*/ );
 		if (!token.compare(":"))
 			token = file.ReadToken( FALSE /*bAllowLeadingDigit*/, FALSE /*bSkipLeadingDelimeters*/, FALSE /*bAllowMidHyphen*/, FALSE /*bAllowNewLineRead*/ );
 		else if (token.length() > 1 && token[0] == ':')
 			token = token.right( token.length()-1 );
-		while (!bApplyToThisRuleset && !token.isEmpty() && IndexInStringArray( saReservedStrs, token ) == -1)
-		{	bApplyToThisRuleset = ruleSet.LabelMatches( token );
+		while (iLabelIndex==0 && !token.isEmpty() && IndexInStringArray( saReservedStrs, token ) == -1)
+		{	iLabelIndex = ruleSet.LabelIndex( token );
 			token = file.ReadToken( FALSE /*bAllowLeadingDigit*/, FALSE /*bSkipLeadingDelimeters*/, FALSE /*bAllowMidHyphen*/, FALSE /*bAllowNewLineRead*/ );
 		}
-		if (bApplyToThisRuleset && !file.AtEOL())
+		if (iLabelIndex > 0 && !file.AtEOL())
 		{	// continue reading tokens until next valid RULE token found...
 			file.SkipToEndOfLine();
 			file.GetLine();
 		}
-		else if (!bApplyToThisRuleset)
+		else if (iLabelIndex == 0)
 			QString token2 = file.ReadToNextToken( saReservedStrs );
 	}
 	else
 		bTokensSpecified = FALSE;
-	return bApplyToThisRuleset;
+	return iLabelIndex;
 }
 
 
@@ -735,7 +736,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 									{	BOOL bRulesetLabelConsistent = FALSE;
 										token = file.ReadToken();
 										while (!bRulesetLabelConsistent && IndexInStringArray( saReservedStrs, token ) == -1)
-										{	bRulesetLabelConsistent = ruleSet.LabelMatches( token );
+										{	bRulesetLabelConsistent = (ruleSet.LabelIndex( token ) > 0);
 											token = file.ReadToken();
 										}
 										if (bRulesetLabelConsistent)
@@ -874,6 +875,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 							}
             	
 							QStringList saTokensProcessed;
+							std::vector<int> iaTokenIndices;
 							if (!bContinue)
 							{	// this is a generic, blank rule, so skip to end of the rule and search for subsequent rule
 								if (!token.left(6).compare("ENDRUL", Qt::CaseInsensitive))
@@ -893,22 +895,28 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 								{
 					// SAC 9/11/14 - code to process ruleset labels possibly trailing RULE token -AND- to catch duplicate tokens in single RULE block
 									BOOL bTokensSpecified = FALSE;
-									BOOL bProcessToken = RulesetLabelMatches( file, token, saReservedStrs, bTokensSpecified );
+									int iLabelIndex = RulesetLabelIndex( file, token, saReservedStrs, bTokensSpecified );	// SAC 12/19/17
+									BOOL bProcessToken = (iLabelIndex > 0);
 									if (bProcessToken)
 									{	QString sThisToken = (iTokenID < DMRuleReserved_EndRule ? pszDMRuleReserved[iTokenID] : token);
-										if (IndexInStringArray( saTokensProcessed, sThisToken ) >= 0)
+										int iTokensProcessedIdx = IndexInStringArray( saTokensProcessed, sThisToken );
+										if (iTokensProcessedIdx >= 0)
 										{	bProcessToken = FALSE;
+											int iFileErrLine = file.GetLineCount();
 											token2 = file.ReadToNextToken( saReservedStrs );	// skip to next token
-											if (iTokenID <= DMRuleReserved_EndRule2 && bTokensSpecified)
+											if (iTokenID <= DMRuleReserved_EndRule2 && bTokensSpecified && iLabelIndex <= iaTokenIndices[iTokensProcessedIdx])
 											{	// report error re: duplicate tokens found, but allow reading/parsing to continue
-												sErr = QString( "\n\tERROR:  '%1' can only be specified once per RULE block - duplicate found on line: %2 of '%3'\n" ).arg( sThisToken, QString::number(file.GetLineCount()), file.FileName() );
+												// added logic to only report error if INDEX of token in label list is <= the index stored when this token was first processed,
+												// allowing for mroe general (but matching) tokens to follow more specific ones.  - SAC 12/19/17
+												sErr = QString( "\n\tERROR:  '%1' can only be specified once per RULE block - duplicate found on line: %2 of '%3'\n" ).arg( sThisToken, QString::number(iFileErrLine), file.FileName() );
 												errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );			assert( FALSE );
 												bContinue = FALSE;	// skip to end of rule
 												bRetVal = FALSE;
 										}	}
 										else
-											saTokensProcessed.push_back( sThisToken );
-									}
+										{	saTokensProcessed.push_back( sThisToken );
+											iaTokenIndices.push_back( iLabelIndex );
+									}	}
 
 									if (bProcessToken)
 									{	switch (iTokenID)

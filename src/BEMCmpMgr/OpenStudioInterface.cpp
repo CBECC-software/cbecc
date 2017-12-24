@@ -1713,14 +1713,12 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 		lSimRetVal = osWrap.SimulateSDD( pszEPlusPath, pszSimProcessDir, osRunInfo.SDDFile().toLocal8Bit().constData(), osRunInfo.RunID().toLocal8Bit().constData(),
 														osRunInfo.WthrPathFile().toLocal8Bit().constData(), (double*) &adResults[0],
 														osRunInfo.SimulateModel(), (osRunInfo.StoreHourlyResults() != FALSE), pszSQLOutPathFile, iMaxLenSQLOutPathFile,
-		// restore once hrly results debugged...		  (bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, (OSWRAP_MSGCALLBACK*) OSWrapCallback );
-														TRUE /*bWriteHourlyDebugCSV*/, osRunInfo.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo.m_qaData, iProgressModel,		// SAC 1/25/14		// SAC 11/6/14
+														(bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, osRunInfo.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo.m_qaData, iProgressModel,		// SAC 1/25/14		// SAC 11/6/14
 									// RUN #2 data
 														osRunInfo2.SDDFile().toLocal8Bit().constData(), osRunInfo2.RunID().toLocal8Bit().constData(),
 														osRunInfo.WthrPathFile().toLocal8Bit().constData(), (double*) &adResults2[0],
 														osRunInfo2.SimulateModel(), (osRunInfo.StoreHourlyResults() != FALSE), pszSQLOutPathFile2, iMaxLenSQLOutPathFile2,
-		// restore once hrly results debugged...		  (bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, (OSWRAP_MSGCALLBACK*) OSWrapCallback );
-														TRUE /*bWriteHourlyDebugCSV*/, osRunInfo2.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo2.m_qaData,	iProgressModel2,
+														(bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, osRunInfo2.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo2.m_qaData,	iProgressModel2,
 														(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pdTranslationTime, pdSimulationTime,  // SAC 1/23/14		// SAC 5/27/15
 																							// OSWRAP_MSGCALLBACK OSWrapCallback( int level, const char* msg, int action )
 														pszSimSDDErrorMsg, 1024, bIncludeOutputDiagnostics, iCodeType );
@@ -1728,8 +1726,7 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 		lSimRetVal = osWrap.SimulateSDD( pszEPlusPath, pszSimProcessDir, osRunInfo.SDDFile().toLocal8Bit().constData(), osRunInfo.RunID().toLocal8Bit().constData(),
 														osRunInfo.WthrPathFile().toLocal8Bit().constData(), (double*) &adResults[0],
 														osRunInfo.SimulateModel(), (osRunInfo.StoreHourlyResults() != FALSE), pszSQLOutPathFile, iMaxLenSQLOutPathFile,
-		// restore once hrly results debugged...		  (bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, (OSWRAP_MSGCALLBACK*) OSWrapCallback );
-														TRUE /*bWriteHourlyDebugCSV*/, osRunInfo.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo.m_qaData, iProgressModel,  // SAC 1/25/14
+														(bVerbose != FALSE) /*bWriteHourlyDebugCSV*/, osRunInfo.IDFToSimulate().toLocal8Bit().constData(), &osRunInfo.m_qaData, iProgressModel,  // SAC 1/25/14
 														NULL, NULL, NULL, NULL, true, true, NULL, 0, false, NULL, NULL, 0,
 														(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pdTranslationTime, pdSimulationTime,  // SAC 1/23/14		// SAC 5/27/15
 																							// OSWRAP_MSGCALLBACK OSWrapCallback( int level, const char* msg, int action )

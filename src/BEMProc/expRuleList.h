@@ -1,8 +1,8 @@
 // rulelist.h - header file for all the ruleset class definitions
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -596,7 +596,7 @@ public:
 	BOOL  IsProcedural()	{	return (m_iRulesetOrganization == RULESETORG_PROCEDURAL);  };
 	BOOL  IsDataModel()	{	return (m_iRulesetOrganization == RULESETORG_DATAMODEL );  };
 	bool  DataModelRuleActive()	{	return m_bDataModelRuleActive;  };		// SAC 5/26/16
-	BOOL  LabelMatches( QString& sLabel, BOOL bCaseSensitive=FALSE );	// SAC 9/9/14
+	int   LabelIndex( QString& sLabel, BOOL bCaseSensitive=FALSE );	// SAC 9/9/14	// SAC 12/19/17 - switched from BOOL LabelMatches() to int LabelIndex() to return 1-based label index (0 if not found)
 	int   NumRulesetPropertiesForObject( int iObjTypeID );
 	BOOL	PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass=-1 );
    QString  GetBEMBaseFile()		{	return m_sBEMBaseFile;	}

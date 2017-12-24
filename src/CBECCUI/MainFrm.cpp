@@ -2826,7 +2826,13 @@ int CMainFrame::CheckWhichReportsToGenerate( CString& sRptList )	// SAC 2/19/15	
 
 void CMainFrame::OnUpdateToolsBatchProcessing(CCmdUI* pCmdUI)		// SAC 5/22/13
 {
-   pCmdUI->Enable( (eInterfaceMode == IM_INPUT) );
+	int iEnableBatchProc = 1;
+#ifdef UI_CANRES
+	iEnableBatchProc = 0;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
+#endif
+	bool bEnableBatchProc = (ReadProgInt( "options", "EnableBatchProcessing", iEnableBatchProc ) > 0 ||
+									 ReadProgInt( "options", "DeveloperMenu", 0 ) > 0);
+   pCmdUI->Enable( (bEnableBatchProc && eInterfaceMode == IM_INPUT) );
 }
 
 void CMainFrame::OnToolsBatchProcessing()		// SAC 5/22/13
@@ -2871,47 +2877,146 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 	CString sTemp, sOptionsCSVString;
 
 #ifdef UI_CANRES
-   CDocument* pDoc = GetActiveDocument();
-   if ( (pDoc != NULL) && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) &&
-        (((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" )) )
+   CDocument* pDoc = GetActiveDocument();			bOLDRules;
+   if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
+        ( ((CComplianceUIDoc*) pDoc)->GetPathName().IsEmpty() ||
+          ((CComplianceUIDoc*) pDoc)->CUISaveModified( "batch processing" ) ) )
    {
-		ChangeProgDir( szPaths, szProjPath );
-		CFileDialog dlg( TRUE, _T("csv"), NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
-		                 _T("Batch Definition Files (*.csv)|*.csv||"), this );
-		if (dlg.DoModal()==IDOK)
-		{
-			CString sBatchPathFile = dlg.GetPathName();
+		CString sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile, sCompareCommandLine;		bool bBRObjCreated = false;
+   	int iCID_BatchRuns = 0;
+   	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+		if (iCID_BatchRuns < 1)
+		{	// must load ruleset 
+		   LoadRuleset();
+	   	iCID_BatchRuns = BEMPX_GetDBComponentID( "BatchRuns" );
+	   }
+		if (iCID_BatchRuns > 0 && BEMPX_GetNumObjects( iCID_BatchRuns ) < 1)
+		{ // typical scenario where we need to create a BatchRuns object
+			if (BEMPX_CreateObject( iCID_BatchRuns ) != NULL)
+				bBRObjCreated = true;
+// ?? delete BatchRuns following batch analysis (or keep around for subsequent batch runs) ??
+		}
 
-			//char pszRuleErr[1024];
-			//CString sProcessingPath = sCurrentFileName.Left( sCurrentFileName.ReverseFind('.') );
-			//CString sProjFileBase = sProcessingPath.Right( sProcessingPath.GetLength() - sProcessingPath.ReverseFind('\\') - 1 );     ASSERT( !sProjFileBase.IsEmpty() );
-			//sProcessingPath += " - run\\";
-			CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
+		if (iCID_BatchRuns < 1 || BEMPX_GetNumObjects( iCID_BatchRuns ) < 1)
+		{	// no BatchRuns object type exists, so just prompt for batch defs CSV (old method)
+			ChangeProgDir( szPaths, szProjPath );
+			CFileDialog dlg( TRUE, _T("csv"), NULL, OFN_SHOWHELP | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+			                 _T("Batch Definition Files (*.csv)|*.csv||"), this );
+			if (dlg.DoModal()==IDOK)
+				sBatchPathFile = dlg.GetPathName();
+		}
+		else
+		{	// new method to enable simplified batch UI via BatchRuns object
+			BatchUIDefaulting();
+	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
+			int iTabCtrlWd = 610, iTabCtrlHt = 560;
+			CWnd* pWnd = GetFocus();
+			//CWnd* pWnd = GetTopLevelParent();
+         CSACDlg dlgBatchRun( pWnd /*this*/, iCID_BatchRuns, 0 /* lDBID_ScreenIdx */, 5010 /*iDlgID*/, 0, 0, 0,
+							"Default_BatchRuns" /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Batch Processing",
+							iTabCtrlHt, iTabCtrlWd, 10 /*iBaseMarg*/, 0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+							0 /*lDBID_CtrlDBIDOffset*/, "&Process" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+							0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                     FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/, FALSE /*bBypassChecksOnCancel*/,
+                     FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/, ebIncludeLongCompParamStrInToolTip );
+  		   if (dlgBatchRun.DoModal() == IDOK)
+			{	long lHaveBatchDefsCSV;
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:HaveBatchDefsCSV" ), lHaveBatchDefsCSV ) && lHaveBatchDefsCSV > 0 &&
+					 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullBatchDefsCSV" ), sBatchPathFile ) && !sBatchPathFile.IsEmpty())
+				{	// do nothing - sBatchPathFile already setup for processing
+				}
+				else
+				{	if (!GenerateBatchInput( sBatchPathFile, sBatchLogPathFile, sBatchResultsPathFile ))
+						sBatchPathFile.Empty();  // error processing inputs into Batch Defs CSV, so prevent processing
+					else
+					{	CString sFullIn, sFullOut, sCompare;		long lStoreProjToSepDir;
+						if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:StoreProjToSepDir" ), lStoreProjToSepDir ) && lStoreProjToSepDir > 0 &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), sFullIn  ) &&  !sFullIn.IsEmpty() &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sFullOut ) && !sFullOut.IsEmpty() &&
+							 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:Comparison"        ), sCompare ) && !sCompare.IsEmpty() &&
+							 sFullIn.CompareNoCase( sFullOut ) != 0 )
+							// create command line for direcotry comparison between input & output processing directories
+							sCompareCommandLine.Format( "\"%s\" \"%s\" \"%s\"", sCompare, sFullIn, sFullOut );
+				}	}
+		}	}
+
+		if (!sBatchPathFile.IsEmpty() && FileExists( sBatchPathFile ))
+		{	CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
 			CString sRulePathFile = ReadProgString( "paths", "RulesetPath", "", TRUE );
 			sRulePathFile += ReadProgString( "files", "RulesetFile", "" );
 			char pszBatchErr[1024];
 			pszBatchErr[0] = '\0';
+			char pszBatchReturn[128];
+			pszBatchReturn[0] = '\0';
 
 			CString sUIVersionString;
 			GetProgramVersion( sUIVersionString );																													ASSERT( !sUIVersionString.IsEmpty() );
+
 		   CString sWthrPath = ReadProgString( "paths", "WeatherPath", "EPW\\", TRUE );
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 			VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString, true /*bBatchMode*/ ) );		// SAC 1/29/14
+
+			const char* pszAnalOpts = NULL;
+			if (!sOptionsCSVString.IsEmpty())
+				pszAnalOpts = (const char*) sOptionsCSVString;
 
 			int iBatchResult = CMX_PerformBatchAnalysis_CECNonRes(	sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
 																			sWthrPath /*pszSimWeatherPath*/,
 																			NULL /*pszCompMgrDLLPath*/, NULL /*pszDHWWeatherPath*/,
 																		//	sProcessingPath /*pszProcessPath*/, sCurrentFileName /*pszModelPathFile*/,
 																			NULL /*pszLogPathFile*/, sUIVersionString, 
-																			sOptionsCSVString, pszBatchErr, 1024, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/, bOLDRules );
+																			sOptionsCSVString, pszBatchErr, 1024, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
+																			bOLDRules, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
-				sResult.Format( "CMX_PerformBatchAnalysis_CECNonRes() returned %d:\n\n%s", iBatchResult, pszBatchErr );
+				sResult.Format( "Batch processing routine returned %d:\n\n   %s", iBatchResult, pszBatchErr );
+			else if (iBatchResult == 0)
+			{	if (strlen( pszBatchReturn ) > 0)
+					sResult.Format( "Batch processing successful:\n\n   %s", pszBatchReturn );
+				else
+					sResult = "Batch processing successful.";
+			}
 			else
-				sResult.Format( "CMX_PerformBatchAnalysis_CECNonRes() returned %d", iBatchResult );
-			AfxMessageBox( sResult );
+			{	if (strlen( pszBatchReturn ) > 0)
+					sResult.Format( "Batch processing routine returned error code %d:\n\n   %s", iBatchResult, pszBatchReturn );
+				else
+					sResult.Format( "Batch processing routine returned error code %d.", iBatchResult );
+			}
+			BOOL bHaveLogOutput = (!sBatchLogPathFile.IsEmpty() && FileExists( sBatchLogPathFile ));
+			BOOL bHaveResOutput = (!sBatchResultsPathFile.IsEmpty() && FileExists( sBatchResultsPathFile ));
+			if (bHaveLogOutput || bHaveResOutput)
+			{	CString sBtnFile[3], sBtnLabel[3], sFinBtnLabel;
+				int iNumViewBtns=0;
+				if (bHaveLogOutput && bHaveResOutput)
+					sResult += "\n\nResults (CSV) and log outputs are available for review";
+				else if (bHaveLogOutput)
+					sResult += "\n\nLog output is available for review";
+				else
+					sResult += "\n\nResults (CSV) output is available for review";
+				if (!sCompareCommandLine.IsEmpty())
+				{	sFinBtnLabel = "All Files/Actions";		sResult += ", along with a comparison of input & output directories.";
+				}
+				else
+				{	sFinBtnLabel = "All Files";				sResult += ".";
+				}
+
+				if (bHaveResOutput)
+				{	sBtnFile[iNumViewBtns] = sBatchResultsPathFile;		sBtnLabel[iNumViewBtns++] = "Results CSV";
+				}
+				if (bHaveLogOutput)
+				{	sBtnFile[iNumViewBtns] = sBatchLogPathFile;			sBtnLabel[iNumViewBtns++] = "Processing Log";
+				}
+				if (!sCompareCommandLine.IsEmpty())
+				{	sBtnFile[iNumViewBtns] = sCompareCommandLine;		sBtnLabel[iNumViewBtns++] = "Directory Compare";
+				}
+
+				PromptToDisplayPDFs( "Batch Processing Output", sResult, sBtnFile[0], sBtnLabel[0], sBtnFile[1], sBtnLabel[1], sBtnFile[2], sBtnLabel[2], sFinBtnLabel );
+			}
+			else
+				AfxMessageBox( sResult );
 		}
 	}
+
 #elif UI_CARES
    CDocument* pDoc = GetActiveDocument();			bOLDRules;
    if ( pDoc != NULL && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) &&
@@ -4401,7 +4506,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	BOOL bContinue = TRUE;
 
 #ifdef UI_CARES
-	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0;		double dTargetDesignRtgInp=0;
+	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
 		 ( ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
@@ -4427,7 +4532,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
-		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200)
+		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
+		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0)
 	{
      		CWnd* pWnd = GetFocus();
          CSACDlg dlgProj( pWnd, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, 186 /* lDBID_ScreenID */, 0, 0, 0,
@@ -4560,8 +4666,9 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		{
 			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
 			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
+			// SAC 12/12/17 - 13->14
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					13 /*iResFormatVer*/, sOriginalFileName );
+																					14 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
 				char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
@@ -4583,7 +4690,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 
 				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7
 				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v13.csv", TRUE /*bGetPath*/ );
+				// SAC 12/12/17 - 13->14
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v14.csv", TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else
