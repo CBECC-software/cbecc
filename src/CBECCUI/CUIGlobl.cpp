@@ -2367,6 +2367,7 @@ long elDBID_BatchRuns_OutputProjDir = 0;
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj    )				{  iTabCtrlWd =  900;    iTabCtrlHt = 580;   }	// SAC 11/8/14
+	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd =  810;    iTabCtrlHt = 495;   }	// SAC 12/28/17
 	else if (iBDBClass == eiBDBCID_AirSeg  )				{  iTabCtrlWd =  470;    iTabCtrlHt = 530;   }
 	else if (iBDBClass == eiBDBCID_FluidSeg)				{  iTabCtrlWd =  470;    iTabCtrlHt = 530;   }	// SAC 4/30/14
 	else if (iBDBClass == eiBDBCID_Space   )				{  iTabCtrlWd = 1010;    iTabCtrlHt = 580;   }	// SAC 3/4/14 - reduced ht for lower-res screens/projectors
@@ -2593,6 +2594,7 @@ long elDBID_BatchRuns_OutputProjDir = 0;
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
 	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 850;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;
+	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd = 810;    iTabCtrlHt = 520;   }	// SAC 12/28/17
 	else if (iBDBClass == eiBDBCID_DwellUnitType)		{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
 	else if (iBDBClass == eiBDBCID_DwellUnit)				{  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
 	else if (iBDBClass == eiBDBCID_Zone)      			{  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }

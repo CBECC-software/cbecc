@@ -426,6 +426,7 @@ int  BEMPROC_API __cdecl BEMPX_GetActiveModel();		// SAC 3/14/13
 int  BEMPROC_API __cdecl BEMPX_GetModelCount();			// SAC 3/15/13
 int  BEMPROC_API __cdecl BEMPX_GetObjectIndexAcrossModels( int i1Class, int iOutModel, BEM_ObjType eObjType, int iInOccur, int iInModel=-1 );		// SAC 3/14/13
 bool BEMPROC_API __cdecl BEMPX_DeleteModels( bool bIncludingUserModel=false );
+bool BEMPROC_API __cdecl BEMPX_DeleteLastModels( int iNumModelsToDelete=1 );
 int  BEMPROC_API __cdecl BEMPX_CopyClassObjectsAcrossModels( int i1Class, int iFromBEMProcIdx, int iToBEMProcIdx );  // SAC 5/11/13
 
 

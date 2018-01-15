@@ -4946,8 +4946,14 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																							}
 																						}
 																						if (bRetVal)
+																						{
+//#ifdef _DEBUG
+//			QString sDbg = QString("   reading %1 component - Line %2, column %3").arg(sElementName).arg(stream.lineNumber()).arg(stream.columnNumber());
+//		   BEMPX_WriteLogFile( sDbg );
+//#endif
 																							bRetVal = ReadXMLComponent( fileName, stream, sElementName, iNewClassID, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts, pStraightMap,
 																																	lDBIDVersion, lFileVersion, pCompMap, pPropMap, pivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
+																						}
 																					}
 																					else
 																					{  // SAC 3/22/14 - added code to enable backward compatibility via BEMStraightMap* argument
@@ -5053,7 +5059,7 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																			BOOL bEndMainComponent = (pBEMClass && (sEndElemName.compare( pBEMClass->getShortName(), Qt::CaseInsensitive )==0 ||
 																																 sEndElemName.compare( pBEMClass->getLongName() , Qt::CaseInsensitive )==0)); 
 																			if (bEndMainComponent)
-																			{	assert( iInitialIndentLevel == siLastIndent );  // doesn't necessarily have to be the case...
+																			{	//assert( iInitialIndentLevel == siLastIndent );  // doesn't necessarily have to be the case...
 																				if (!bObjectCreated)
 																				{	if (bStoreData)
 																					{	// CREATE OBJECT  (iff it has not yet been created, which will happen only if NO properties are specified (other than Name) for this component
@@ -5249,6 +5255,10 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
                      																		         assert( FALSE );		// m_file.ThrowFormatException(); // should never happen
                      																		         break;
                      																		   }
+//#ifdef _DEBUG
+//			QString sDbg = QString("      just set %1 '%2' %3 - Line %4, column %5").arg((pBEMClass ? pBEMClass->getShortName() : "<unknown type>")).arg(sObjectName).arg(sElementName).arg(stream.lineNumber()).arg(stream.columnNumber());
+//		   BEMPX_WriteLogFile( sDbg );
+//#endif
 
                      																		   if (iSet < 0 || bNotInputError)
                      																		   {  // throw error message if data not successfully posted to database
@@ -5405,8 +5415,14 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
 																							{	if (bReturnRulesetFilename)
 																									bDoneProcessingFile = true;  // if we have reached the point where a BEMBase object is being created, we are beyond where the ruleset filename should be specified
 																								else
+																								{
+//#ifdef _DEBUG
+//			QString sDbg = QString("   reading %1 component - Line %2, column %3").arg(sElemName).arg(stream.lineNumber()).arg(stream.columnNumber());
+//		   BEMPX_WriteLogFile( sDbg );
+//#endif
 																									bRetVal = ReadXMLComponent( fileName, stream, sElemName, iBEMClassIdx, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts,
 																																			pStraightMap, lDBIDVersion, lFileVersion, pCompMap, pPropMap, &ivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
+																								}
 																							}
 																						}
 																					}  break;

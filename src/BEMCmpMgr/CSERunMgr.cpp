@@ -39,6 +39,11 @@
 #include "memLkRpt.h"
 
 const char* pszRunAbbrev_u  = "u";
+const char* pszRunAbbrev_pp  = "pp";  
+const char* pszRunAbbrev_ppN = "pp-N";
+const char* pszRunAbbrev_ppE = "pp-E";
+const char* pszRunAbbrev_ppS = "pp-S";
+const char* pszRunAbbrev_ppW = "pp-W";
 const char* pszRunAbbrev_pmf  = "pmf";  
 const char* pszRunAbbrev_pmfN = "pmf-N";
 const char* pszRunAbbrev_pmfE = "pmf-E";
@@ -104,6 +109,7 @@ CSERunMgr::CSERunMgr(
 	int iSimReportOpt,
 	int iSimErrorOpt,
 	long lPropMixedFuelRunReqd,
+	long lPrelimPropRunReqd,
 	long lPropFlexRunReqd,
 	int iNumRuns) :
 
@@ -129,6 +135,7 @@ CSERunMgr::CSERunMgr(
 	m_iSimReportOpt(iSimReportOpt),
 	m_iSimErrorOpt(iSimErrorOpt),
 	m_lPropMixedFuelRunReqd(lPropMixedFuelRunReqd),
+	m_lPrelimPropRunReqd(lPrelimPropRunReqd),
 	m_lPropFlexRunReqd(lPropFlexRunReqd),
 	m_iNumOpenGLErrors(0),
 	m_iNumProgressRuns(-1)
@@ -139,10 +146,12 @@ CSERunMgr::CSERunMgr(
 	{	m_iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
 		if (m_lPropFlexRunReqd > 0)		// SAC 8/3/17
 			m_iNumRuns++;
+		if (m_lPrelimPropRunReqd > 0)		// SAC 12/29/17
+			m_iNumRuns += (lAllOrientations > 0 ? 4 : 1);
 		if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
 		{	m_iNumRuns++;
 			if (m_lPropMixedFuelRunReqd > 0)		// SAC 4/5/17
-				m_iNumRuns++;
+				m_iNumRuns += (lAllOrientations > 0 ? 4 : 1);
 	}	}
 }		// CSERunMgr::CSERunMgr
 
@@ -250,7 +259,11 @@ int CSERunMgr::SetupRun(
 			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	}
 	else if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
-		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+	{	if (m_lPrelimPropRunReqd && iRunType >= CRM_Prop)
+			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPrelimRunError, "ApplyPrelimRunResults", m_bVerbose, m_pCompRuleDebugInfo );
+		if (iRetVal == 0)
+			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+	}
 	else if (iRunType >= CRM_PropFlex && iRunType <= CRM_WPropFlex)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_ProposedFlexibility", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 8/3/17
 	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
@@ -276,7 +289,10 @@ int CSERunMgr::SetupRun(
 	pCSERun->SetRunIDProcFile( sRunIDProcFile);
 	pCSERun->SetRunAbbrev( sRunAbbrev);
 
-	if (iRetVal == 0 && iRunType >= CRM_NOrientProp && iRunType <= CRM_WOrientProp)		// SAC 3/27/15 - was:  m_bFullComplianceAnalysis && m_lAllOrientations > 0 && !bLastRun)
+	if (iRetVal == 0 && ( (iRunType >= CRM_NPropMixedFuel && iRunType <= CRM_WPropMixedFuel) ||
+								 (iRunType >= CRM_NOrientPreProp && iRunType <= CRM_WOrientPreProp) ||
+								 (iRunType >= CRM_NOrientProp    && iRunType <= CRM_WOrientProp   ) ||
+								 (iRunType >= CRM_NPropFlex      && iRunType <= CRM_WPropFlex     ) ))		// SAC 3/27/15 - was:  m_bFullComplianceAnalysis && m_lAllOrientations > 0 && !bLastRun)
 	{  // Set Orientation for this particular run
 		BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:OrientAbbrev" ),  sOrientLtr  );
 		BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:OrientName"   ),  sOrientName );

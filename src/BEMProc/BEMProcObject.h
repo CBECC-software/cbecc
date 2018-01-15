@@ -43,12 +43,17 @@
 /////////////////////////////////////////////////////////////////////////////
 //	BEM Run Hourly Results
 
-#define	BEMRun_MaxNumRuns				   6	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
+#ifdef GEOM_RES
+#define	BEMRun_MaxNumRuns				   1	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)
+#define	BEMRun_NumEnduses				  54   // SAC 12/14/17 - added 6 to accommodate Carbon results  // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
+#else
+#define	BEMRun_MaxNumRuns				   4	// max # of hourly results runs WITHIN A SINGLE MODEL (BEMProcObject)  - SAC 1/6/18 - 6->4 to reduce Com analysis memory usage
+#define	BEMRun_NumEnduses				  48   // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
+#endif
 #define	BEMRun_RunNameLen				  32
 #define	BEMRun_RunAbbrevLen			  16
 #define	BEMRun_NumMeters				   4
 #define	BEMRun_MeterNameLen			  16
-#define	BEMRun_NumEnduses				  54   // SAC 12/14/17 - added 6 to accommodate Carbon results  // SAC 8/13/12 - doubled enduse array size since it needs to accommodate TDV versions of each enduse in addition to energy
 #define	BEMRun_EnduseNameLen			  32	 // SAC 4/15/15 - 16->32 to accommodate nonres' 'Domestic Hot Water'
 #define	BEMRun_NumHourlyResults		8760
 
@@ -187,6 +192,7 @@ public:
 										{	if (i >= 0 && i < BEMRun_MaxNumRuns)
 											{	m_runs[i].init( pszName, pszAbbrev );
 												m_numRuns = std::max( m_numRuns, i+1 );
+				//	/* DEBUGGING */	QString qsRunAdded = QString( "   adding run #%1: %2 / %3" ).arg( QString::number( m_numRuns ), pszAbbrev, pszName );  BEMPX_WriteLogFile( qsRunAdded );
 												return TRUE;
 											}
 											return FALSE;  }
@@ -202,6 +208,7 @@ public:
 												return -1;
 											m_runs[i].init( pszName, pszAbbrev );
 											m_numRuns = std::max( m_numRuns, i+1 );
+				//	/* DEBUGGING */	QString qsRunAdded = QString( "   reading run #%1 CSE results: %2 / %3" ).arg( QString::number( m_numRuns ), pszAbbrev, pszName );  BEMPX_WriteLogFile( qsRunAdded );
 											return m_runs[i].readCSEHourlyResults( pszFilename, ppResMeters, ppMetersMap,
 																								pdMetersMult, ppResEnduses, ppEnduseMap );
 										}
@@ -286,6 +293,7 @@ extern BEMProcObject* epBEMProcs[BEMPROC_MAXMODELS];
 extern BEMProcObject* getBEMProcPointer( int iBEMProcIdx );
 extern int getBEMProcIndex( BEMProcObject* pBEMProcObj );
 extern void blastSecondaryBEMProcs();
+extern void blastSpecificBEMProcs( int iFirst, int iNum );
 
 extern bool eShuttingDown;
 extern bool eDeletingAllObjects;

@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -92,6 +92,20 @@ int getBEMProcIndex( BEMProcObject* pBEMProcObj )
 				iRetVal = i;
 	}
 	return iRetVal;
+}
+
+void blastSpecificBEMProcs( int iFirst, int iNum )		// SAC 3/13/13 - added multiple model support
+{	assert( iFirst > 0 );
+	assert( eNumBEMProcsLoaded >= (iFirst+iNum) );
+	assert(  BEMPROC_MAXMODELS >= (iFirst+iNum-1) );
+	if (iFirst > 0 && eNumBEMProcsLoaded >= (iFirst+iNum) && BEMPROC_MAXMODELS >= (iFirst+iNum-1))
+	{	for (int i=iFirst+iNum-2; i>iFirst; i--)
+			if (epBEMProcs[i])
+			{	delete epBEMProcs[i];
+				epBEMProcs[i] = NULL;
+			}
+		//eNumBEMProcsLoaded = std::max( eNumBEMProcsLoaded, 1 );
+	}
 }
 
 void blastSecondaryBEMProcs()		// SAC 3/13/13 - added multiple model support

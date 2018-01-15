@@ -72,6 +72,38 @@ static inline bool ResRetVal_ContinueProcessing( int iRetVal )		// SAC 12/12/16 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void CopyResResultsObjectsAcrossRuns( int& iRetVal, const char* pszRunAbbrev, int iSrcBEMPIdx, int iDestBEMPIdx, QString& sErrorMsg )
+{		int iResCopyRetVal = 0;
+		if (ResRetVal_ContinueProcessing( iRetVal ))
+		{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+			QString sResCopyErrMsg;
+			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, pszRunAbbrev, iSrcBEMPIdx, iDestBEMPIdx );
+			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+			if (iResCopyRetVal > 0)
+			{	if (sErrorMsg.isEmpty())
+					sErrorMsg = sResCopyErrMsg;
+				switch (iResCopyRetVal)
+				{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+					case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+					default :	assert( FALSE );	break;
+				}
+		}	}
+	// now results objects from previous run are in place, now ensure that references to those objects are also valid
+		char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+		int iRORPIdx = -1;
+		while (pszaResObjRefProps[++iRORPIdx] != NULL)
+		{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+			int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+			QString sROR;
+			for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+			{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iSrcBEMPIdx /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+				{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+                                               //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+		}	}	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // SAC 9/18/12 - created
 // SAC 6/19/13 - 
 //		Return Values:		0 =>	SUCCESS
@@ -151,9 +183,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 // SAC 1/12/15 - added duration logic and corresponding logging (based on what we do in NonRes analysis)
 	boost::posix_time::ptime	tmAnalStartTime = boost::posix_time::microsec_clock::local_time();
 	boost::posix_time::ptime	tmMark = tmAnalStartTime;
-#define  MAX_TimeArray_Res  6
-	double dTimeToPrepModel[]   = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
-	double dTimeToProcResults[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
+#define  MAX_TimeArray_Res  18
+	double dTimeToPrepModel[]   = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
+	double dTimeToProcResults[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 }; 
 	double dTimeToLoadModel=0.0, dTimeToModelAndSecurityChecks=0.0, dTimeToWriteResultsXML=0.0, dTimeToWriteModelAndHrlyCSVs=0.0, dTimeCSESim=0.0, dTimeDHWSim=0.0, dTimeToReport=0.0, dTimeToOther = 0.0, dTimeOverall=0.0; 
 
 // Parse OptionsCSV string
@@ -189,6 +221,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bStoreDetailedResultsToModelInput= (GetCSVOptionValue( "StoreDetailedResultsToModelInput", 0,  saCSVOptions ) > 0);	// SAC 5/11/15
    long iDHWCalcMethodAnalOpt		=  GetCSVOptionValue( "DHWCalcMethod"         ,  -1,  saCSVOptions );		// SAC 7/15/15
    long lEnableResearchMode		=  GetCSVOptionValue( "EnableResearchMode"    ,   0,  saCSVOptions );		// SAC 5/14/16
+   long lAllowNegativeDesignRatings = GetCSVOptionValue( "AllowNegativeDesignRatings",   0,  saCSVOptions );		// SAC 1/11/18
 
 	int  iLogWritingMode  			=	GetCSVOptionValue( "LogWritingMode"        , 100,  saCSVOptions );		// SAC 5/20/14
 	int  iSimLoggingOption			=	GetCSVOptionValue( "SimLoggingOption"      ,   0,  saCSVOptions );		// SAC 1/12/15
@@ -250,9 +283,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	siCallbackCount = 0;		// SAC 11/17/13 - reset CSE message callback counter between each analysis run
 	bool bStoreAllowCallbackAbort = sbAllowCallbackAbort;		// SAC 4/5/15
 	sbAllowCallbackAbort = bAllowAnalysisAbort;
-	mapCSECallback.clear();
-	for(int i=0; pszCSEProgressMsgs[i]; i++)
-		mapCSECallback[pszCSEProgressMsgs[i]] = 0;
+	ClearCSEProgressMap();	// SAC 1/12/18
 	QString sDHWWthr;
 	bool bBEMLogFileSet = false;
 	bool bDHWSimViaWthrFile = false;
@@ -452,6 +483,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bAnalysisPriorToRptGenOK = false;
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
 	long lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
+	long lPrelimPropRunReqd = 0;  // SAC 12/29/17
 	long lPropFlexRunReqd = 0;  // SAC 8/3/17
 	bool bDHWCalcMethodUserSpecified = false;
 	int iRulesetCodeYear = 0;
@@ -614,6 +646,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			// handle EnableResearchMode option - SAC 5/14/16
 				if (lEnableResearchMode > 0)	
 				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), BEMP_Int, (void*) &lEnableResearchMode );
+
+			// handle AllowNegativeDesignRatings option - SAC 1/11/18
+				if (lAllowNegativeDesignRatings > 0)	
+				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), BEMP_Int, (void*) &lAllowNegativeDesignRatings );
 
 				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{	iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
@@ -801,6 +837,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), BEMP_Int, (void*) &lEnableResearchMode );
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnableResearchMode" ), lEnableResearchMode, 0 );
 
+	// SAC 1/11/18 - 
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lAllowNegativeDesignRatings > 0)
+		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), BEMP_Int, (void*) &lAllowNegativeDesignRatings );
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), lAllowNegativeDesignRatings, 0 );
+
 	// SAC 1/14/15 - added handling of new SimSpeedOption property/option - when >= 0 should force use of the specified selection
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && iSimSpeedOption > 0)
 	      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SimSpeedOption" ), BEMP_Int, (void*) &iSimSpeedOption );
@@ -859,6 +900,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		lDesignRatingRunID = 0;  // SAC 3/27/15
 		lPropFlexRunReqd = 0;  // SAC 8/3/17
 		lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
+		lPrelimPropRunReqd = 0;  // SAC 12/29/17
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
 		double fPctDoneFollowingFinalSim=0;		// SAC 5/5/17
 		if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -869,6 +911,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		// SAC 3/27/15 - parameters used to setup design rating and/or standard design runs
 			if (lAnalysisType > 0)
 			{	long lAllowDR, lDRCalcs;
+				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PrelimPropRunReqd" ), lPrelimPropRunReqd ) || lPrelimPropRunReqd < 1)  // SAC 12/29/17
+					lPrelimPropRunReqd = 0;
 				if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllowDesignRating" ), lAllowDR ) && lAllowDR > 0 &&
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs"  ), lDRCalcs ) && lDRCalcs > 0)
 				{	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingBase" ), lDesignRatingRunID ) || lDesignRatingRunID < 1)
@@ -1272,51 +1316,69 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 // SAC 3/27/15 - mods to describe each run to be performed
 // SAC 12/19/17 - re-ordered runs to perform PMF runs prior to Prop in order to scale PV if needed for Prop sim
 		int iNumRuns = 0;
-		int iFirstPropModelRunType = 0;
-		int iRunType[18] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-		int iBEMPIdx[18] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-		const char* pszRunAbbrev[16] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-		pszRunAbbrev[0]      = (lAnalysisType < 1 ? pszRunAbbrev_u : (lPropMixedFuelRunReqd ? (lAllOrientations > 0 ? pszRunAbbrev_pmfN  : pszRunAbbrev_pmf ) : (lAllOrientations > 0 ? pszRunAbbrev_pN : pszRunAbbrev_p)));
-		iRunType[iNumRuns++] = (lAnalysisType < 1 ? CRM_User       : (lPropMixedFuelRunReqd ? (lAllOrientations > 0 ? CRM_NPropMixedFuel : CRM_PropMixedFuel) : (lAllOrientations > 0 ? CRM_NOrientProp : CRM_Prop      )));
-		int iNumPrelimRuns   = (lAnalysisType < 1 ?   0            : (lPropMixedFuelRunReqd ? (lAllOrientations > 0 ?   4                :   1              ) :   0  ));
-		if (lAnalysisType > 0 && lPropMixedFuelRunReqd < 1)
-		{	assert( bFirstModelCopyCreated );
-			iBEMPIdx[iRunType[0]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
-			iFirstPropModelRunType = iRunType[0];
+		int iFirstPropModelRunType = -1;
+		int iRunType[23] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1};
+		int iBEMPIdx[23] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1};
+		const char* pszRunAbbrev[20] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+		int iNumPrelimRuns = 0;
+		if (lAnalysisType < 1)
+		{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_u;		iRunType[iNumRuns++] = CRM_User;
 		}
-		if (lAnalysisType > 0)
-		{	if (lPropMixedFuelRunReqd > 0 && lAllOrientations > 0)
-			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfE;		iRunType[iNumRuns++] = CRM_EPropMixedFuel;
+		if (lAnalysisType > 0 && lPrelimPropRunReqd)
+		{	if (lAllOrientations > 0)
+			{	iNumPrelimRuns += 4;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_ppN;		iRunType[iNumRuns++] = CRM_NOrientPreProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_ppE;		iRunType[iNumRuns++] = CRM_EOrientPreProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_ppS;		iRunType[iNumRuns++] = CRM_SOrientPreProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_ppW;		iRunType[iNumRuns++] = CRM_WOrientPreProp;
+			}
+			else
+			{	iNumPrelimRuns++;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pp;			iRunType[iNumRuns++] = CRM_PreProp;
+			}
+			iBEMPIdx[iRunType[iNumRuns-(lAllOrientations>0?4:1)]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
+			iFirstPropModelRunType = iRunType[iNumRuns-(lAllOrientations>0?4:1)];		assert( bFirstModelCopyCreated );
+		}
+		if (lAnalysisType > 0 && lPropMixedFuelRunReqd)
+		{	if (lAllOrientations > 0)
+			{	iNumPrelimRuns += 4;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfN;		iRunType[iNumRuns++] = CRM_NPropMixedFuel;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfE;		iRunType[iNumRuns++] = CRM_EPropMixedFuel;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfS;		iRunType[iNumRuns++] = CRM_SPropMixedFuel;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfW;		iRunType[iNumRuns++] = CRM_WPropMixedFuel;
 			}
-			if (lPropMixedFuelRunReqd)
-			{	pszRunAbbrev[iNumRuns] = (lAllOrientations > 0 ? pszRunAbbrev_pN : pszRunAbbrev_p);
-				iRunType[  iNumRuns++] = (lAllOrientations > 0 ? CRM_NOrientProp : CRM_Prop      );
-				assert( bFirstModelCopyCreated );
-				iBEMPIdx[iRunType[iNumRuns-1]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
-				iFirstPropModelRunType = iRunType[iNumRuns-1];
+			else
+			{	iNumPrelimRuns++;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmf;		iRunType[iNumRuns++] = CRM_PropMixedFuel;
 			}
-			if (lAllOrientations > 0)
-			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pE;		iRunType[iNumRuns++] = CRM_EOrientProp;
+		}
+		if (lAnalysisType > 0)
+		{	if (lAllOrientations > 0)
+			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pN;		iRunType[iNumRuns++] = CRM_NOrientProp;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pE;		iRunType[iNumRuns++] = CRM_EOrientProp;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pS;		iRunType[iNumRuns++] = CRM_SOrientProp;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pW;		iRunType[iNumRuns++] = CRM_WOrientProp;
 			}
-			if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
-			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_s;		iRunType[iNumRuns++] = CRM_StdDesign;
+			else
+			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_p;			iRunType[iNumRuns++] = CRM_Prop;
 			}
-			if ((lAnalysisType >= 13 || lAnalysisType == 2) && lPropFlexRunReqd > 0)		// SAC 8/3/17 - add in PropFlex run(s)
-			{	pszRunAbbrev[iNumRuns] = (lAllOrientations > 0 ? pszRunAbbrev_pfxN : pszRunAbbrev_pfx);
-				iRunType[iNumRuns++]   = (lAllOrientations > 0 ? CRM_NPropFlex     : CRM_PropFlex    );
-				if (lAllOrientations > 0)
-				{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxE;		iRunType[iNumRuns++] = CRM_EPropFlex;
-					pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxS;		iRunType[iNumRuns++] = CRM_SPropFlex;
-					pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxW;		iRunType[iNumRuns++] = CRM_WPropFlex;
-				}
-			}
-			if (lDesignRatingRunID > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly  - SAC 2/9/17 - allow AT=2 for ExEDR analysis
-			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_dr;		iRunType[iNumRuns++] = CRM_DesignRating;
-			}
+			if (iFirstPropModelRunType < 0)
+			{	iBEMPIdx[iRunType[iNumRuns-(lAllOrientations>0?4:1)]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
+				iFirstPropModelRunType = iRunType[iNumRuns-(lAllOrientations>0?4:1)];		assert( bFirstModelCopyCreated );
+		}	}
+		if (lAnalysisType == 13)	// SAC 4/21/15 - fix bug where 'Proposed Only' AnalysisType (12) still performing Std Design simulation/reporting
+		{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_s;		iRunType[iNumRuns++] = CRM_StdDesign;
+		}
+		if ((lAnalysisType >= 13 || lAnalysisType == 2) && lPropFlexRunReqd > 0)		// SAC 8/3/17 - add in PropFlex run(s)
+		{	pszRunAbbrev[iNumRuns] = (lAllOrientations > 0 ? pszRunAbbrev_pfxN : pszRunAbbrev_pfx);
+			iRunType[iNumRuns++]   = (lAllOrientations > 0 ? CRM_NPropFlex     : CRM_PropFlex    );
+			if (lAllOrientations > 0)
+			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxE;		iRunType[iNumRuns++] = CRM_EPropFlex;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxS;		iRunType[iNumRuns++] = CRM_SPropFlex;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pfxW;		iRunType[iNumRuns++] = CRM_WPropFlex;
+		}	}
+		if (lDesignRatingRunID > 0 && (lAnalysisType >= 13 || lAnalysisType == 2))		// SAC 12/1/16 - prevent DR run when AnalysisType = ProposedOnly  - SAC 2/9/17 - allow AT=2 for ExEDR analysis
+		{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_dr;		iRunType[iNumRuns++] = CRM_DesignRating;
 		}
 
 //QString sDbgRunDefs = "Runs to be performed:\n";
@@ -1332,7 +1394,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, bFullComplianceAnalysis,
 			bInitHourlyResults, lAllOrientations, lAnalysisType, lStdDesignBaseID, lDesignRatingRunID, bVerbose,
 			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd, lPropFlexRunReqd,			// SAC 11/7/16 - added sim report/error option arguments
+			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd, lPrelimPropRunReqd, lPropFlexRunReqd,			// SAC 11/7/16 - added sim report/error option arguments
 			(iNumPrelimRuns > 0 ? iNumPrelimRuns : iNumRuns) );  // SAC 8/14/17 - added iNumRuns arg
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
@@ -1343,13 +1405,16 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //		siNumProgressRuns = iNumRuns;
 #endif
 
+//* DEBUGGING */	QString qsDbgMO = QString( "   Initiating #%1 prelim simulations (of total %2)" ).arg( QString::number( iNumPrelimRuns ), QString::number( iNumRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 	// ---------------------------------------
 	// SAC 12/21/17 - added loop to perform PRELIM (PropMixedFuel) simulations and process those results BEFORE other model generation & simulation
+		int iPctDoneFollowingPrelimSims = 0;
 		int iRunIdx = 0;
 		if (iNumPrelimRuns > 0)
 		{
 			float fSavePctDoneFollowingSimulations = sfPctDoneFollowingSimulations;
-			sfPctDoneFollowingSimulations = 40;   // revise PctDone to accommodate 2 rounds of simulations
+			iPctDoneFollowingPrelimSims = (int) (sfPctDoneFollowingSimulations * 0.4);
+			sfPctDoneFollowingSimulations = iPctDoneFollowingPrelimSims;   // revise PctDone to accommodate 2 rounds of simulations
 					// iProgVal = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCSEProgressValSum / siNumProgressRuns) * sfPctDoneFollowingSimulations /*98*/));
 
 			for (; (ResRetVal_ContinueProcessing( iRetVal ) && iRunIdx < iNumPrelimRuns); iRunIdx++)
@@ -1381,9 +1446,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			}			dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 			}	// end of prelim run setup loop
 
+//* DEBUGGING */	qsDbgMO = QString( "   about to simulate %1 prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 			if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
 				cseRunMgr.DoRuns();
 							dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//* DEBUGGING */	qsDbgMO = QString( "   back from simulation of %1 prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
 			for (iRunIdx = 0; iRunIdx < iNumPrelimRuns; iRunIdx++)	// SAC 8/8/17 - move archiving of CSE Rpt & Err data outside loop ensuring 
 			{	// process CSE errors and/or reports into file for user review - SAC 11/7/16
@@ -1392,6 +1459,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				if (bPerformSimulations && !bBypassCSE && !sCSESimErrOutputFileName.isEmpty())
 					cseRunMgr.ArchiveSimOutput( iRunIdx, sCSESimErrOutputFileName, CSERun::OutFileERR );
 			}
+//* DEBUGGING */	qsDbgMO = QString( "   CSE simulation output archived for %1 prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
 		// loop to process results for PRELIM runs
 			if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -1416,33 +1484,36 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					if (iRunIdx > 0)
 					{
 					// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
-						int iResCopyRetVal = 0;
-						if (ResRetVal_ContinueProcessing( iRetVal ))
-						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-							QString sResCopyErrMsg;
-							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]] );
-							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-							if (iResCopyRetVal > 0)
-							{	if (sErrorMsg.isEmpty())
-									sErrorMsg = sResCopyErrMsg;
-								switch (iResCopyRetVal)
-								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-									default :	assert( FALSE );	break;
-								}
-						}	}
-					// now results objects from previous run are in place, now ensure that references to those objects are also valid
-						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-						int iRORPIdx = -1;
-						while (pszaResObjRefProps[++iRORPIdx] != NULL)
-						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-							QString sROR;
-							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMPIdx[iRunType[iRunIdx-1]] /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-		                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-						}	}	}
+//* DEBUGGING */	qsDbgMO = QString( "   about to copy results objects %1 -> %2 prelim runs" ).arg( QString::number( iBEMPIdx[iRunType[iRunIdx-1]] ), QString::number( iBEMPIdx[iRunType[iRunIdx]] ) );  BEMPX_WriteLogFile( qsDbgMO );
+						CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
+//						int iResCopyRetVal = 0;
+//						if (ResRetVal_ContinueProcessing( iRetVal ))
+//						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+//							QString sResCopyErrMsg;
+//							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]] );
+//							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+//							if (iResCopyRetVal > 0)
+//							{	if (sErrorMsg.isEmpty())
+//									sErrorMsg = sResCopyErrMsg;
+//								switch (iResCopyRetVal)
+//								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+//									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+//									default :	assert( FALSE );	break;
+//								}
+//						}	}
+//					// now results objects from previous run are in place, now ensure that references to those objects are also valid
+//						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+//						int iRORPIdx = -1;
+//						while (pszaResObjRefProps[++iRORPIdx] != NULL)
+//						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+//							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+//							QString sROR;
+//							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+//							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMPIdx[iRunType[iRunIdx-1]] /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+//								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+//		                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+//						}	}	}
+								assert( iRunIdx < MAX_TimeArray_Res );
 								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 					}
 
@@ -1471,6 +1542,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						// Retrieve CSE simulation results
 						if (ResRetVal_ContinueProcessing( iRetVal ))
 						{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
+//* DEBUGGING */	qsDbgMO = QString( "   about to read CSE results for prelim run %1 / %2:  %3" ).arg( sRunAbbrev, sRunID, cseRun.GetOutFile( CSERun::OutFileCSV) );  BEMPX_WriteLogFile( qsDbgMO );
 							int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), 0 /*lRunNumber-1*/, 
 																														sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData() );
 							if (iHrlyResRetVal < 0)  // SAC 6/12/17
@@ -1507,7 +1579,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						CSE_MsgCallback( 0 /*level*/, "Skipping CSE simulation" );
 					}
 					BEMPX_RefreshLogFile();	// SAC 5/19/14
-							dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 	
 					if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
 					{	// DHW SIMULATION
@@ -1534,6 +1607,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						}
 						// Process & summarize results
+//* DEBUGGING */	qsDbgMO = QString( "   about to eval 'ProcessResults' rules for prelim run %1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 						iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalProcResultsError, "ProcessResults", bVerbose, pCompRuleDebugInfo );
 						if (iRV2 > 0)
 							iRetVal = iRV2;
@@ -1544,7 +1618,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					}
 					if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 						iRetVal = BEMAnal_CECRes_RuleProcAbort;
-							dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 				// call to generate ruleset-defined report on model following simulation & results retrieval/processing
 				// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
@@ -1559,6 +1634,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							sGenRptPathFile  = sGenRptPathFile.left( sGenRptPathFile.lastIndexOf('.') );
 						sGenRptPathFile += sRunIDProcFile;
 
+//* DEBUGGING */	qsDbgMO = QString( "   about to gen model report for prelim run %1:  %2" ).arg( QString::number( iRunIdx ), sGenRptPathFile );  BEMPX_WriteLogFile( qsDbgMO );
 						int iRptRetVal = CMX_GenerateRulesetModelReport( sGenRptPathFile.toLocal8Bit().constData(), sAnalysisReport.toLocal8Bit().constData(),	
 																							NULL /*pszRptPathFile*/, 0 /*iRptPathFileLen*/, (bVerbose), bSilent );
 						if (iRptRetVal > 0)
@@ -1583,6 +1659,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 								sHrlyResExportPathFile = sHrlyResExportPathFile.left( sHrlyResExportPathFile.lastIndexOf('.') );
 							sHrlyResExportPathFile += sRunIDProcFile;
 							sHrlyResExportPathFile += " - HourlyResults.csv";
+//* DEBUGGING */	qsDbgMO = QString( "   about to export hrly results for prelim run %1:  %2" ).arg( QString::number( iRunIdx ), sHrlyResExportPathFile );  BEMPX_WriteLogFile( qsDbgMO );
 							int iHrlyResExportRetVal = CMX_ExportCSVHourlyResults_CECRes( sHrlyResExportPathFile.toLocal8Bit().constData(), pszModelPathFile, 
 																							sRunID.toLocal8Bit().constData(), NULL, 0, bSilent, -1 /*iBEMProcIdx*/ );				assert( iHrlyResExportRetVal == 0 );
 						}
@@ -1594,6 +1671,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					if (ResRetVal_ContinueProcessing( iRetVal ))
 					{
 						// Simulation clean-up + write final (detailed) XML file of inputs & results
+//* DEBUGGING */	qsDbgMO = QString( "   about to eval 'CSE_SimulationCleanUp' rules for prelim run %1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 						iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalSimCleanupError, "CSE_SimulationCleanUp", bVerbose, pCompRuleDebugInfo );
 						if (iRV2 > 0)
 							iRetVal = iRV2;
@@ -1615,34 +1693,46 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					BEMPX_RefreshLogFile();	// SAC 5/19/14
 			}	}	// end of:  for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumPrelimRuns); iRunIdx++)
 
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// adjust CSE run mgr for final round of simulations
+//* DEBUGGING */	qsDbgMO = QString( "   about to delete %1 CSE prelim runs" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 			cseRunMgr.DeleteRuns();
+//* DEBUGGING */	qsDbgMO = QString( "   back from run deletion, SetNumRuns to %1" ).arg( QString::number( iNumRuns-iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 			cseRunMgr.SetNumRuns( (iNumRuns-iNumPrelimRuns) );
 
+		// Copy final Prelim run results into next (Prop) run data model
+			for (iRunIdx = 0; iRunIdx < iNumPrelimRuns; iRunIdx++)
+			{	if (iRunType[iRunIdx] >= CRM_PreProp && iRunType[iRunIdx] <= CRM_WOrientPreProp)
+				{															assert( iBEMPIdx[iRunType[iRunIdx]] >= 0 );
+					int iDeltaRT = iRunType[iRunIdx] - CRM_PreProp;
+					for (int iR2 = iNumPrelimRuns; iR2 < iNumRuns; iR2++)
+					{	if (iRunType[iR2] == CRM_Prop+iDeltaRT)
+							iBEMPIdx[iRunType[iR2]] = iBEMPIdx[iRunType[iRunIdx]];
+			}	}	}														assert( iBEMPIdx[iRunType[iNumPrelimRuns]] >= 0 );
+			BEMPX_SetActiveModel( iBEMPIdx[iRunType[iNumPrelimRuns]] );
+//* DEBUGGING */	qsDbgMO = QString( "   about to copy results objects %1 -> %2 prelim runs" ).arg( QString::number( iBEMPIdx[iRunType[iNumPrelimRuns-1]] ), QString::number( iBEMPIdx[iRunType[iNumPrelimRuns]] ) );  BEMPX_WriteLogFile( qsDbgMO );
+			CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iNumPrelimRuns], iBEMPIdx[iRunType[iNumPrelimRuns-1]], iBEMPIdx[iRunType[iNumPrelimRuns]], sErrorMsg );
 
-		// Copy final Prelim run results into next (Prop) run data model - then delete BEMProc models of Prelim runs
-//			bool bStore
+//		//	then delete BEMProc models of Prelim runs
 //			assert( iBEMPIdx[ iRunType[iNumPrelimRuns] ] > 0  &&  iBEMPIdx[ iRunType[iNumPrelimRuns] ] < iBEMPIdx[ iRunType[iNumPrelimRuns-1] ] );
-//			if (iBEMPIdx[ iRunType[ iRunIdx ] ] >= 0)
+//			if (iBEMPIdx[ iRunType[ iNumPrelimRuns ] ] >= 0)
 //			{
-//
-//			// loop to DELETE in-memory BEMProc models for PRELIM runs (to prevent errors in final run initialization)
-//				if (ResRetVal_ContinueProcessing( iRetVal ))
-//				for (iRunIdx = 0; iRunIdx < iNumPrelimRuns; iRunIdx++)
-//				{
+//				if (!BEMPX_DeleteLastModels( iNumPrelimRuns /*iNumModelsToDelete=1*/ ))
+//				{	assert( false );
 //			}	}
 
-
-
 			sfPctDoneFollowingSimulations = fSavePctDoneFollowingSimulations;
+			ClearCSEProgressMap();	// SAC 1/12/18
 		}
+//* DEBUGGING */	qsDbgMO = QString( "   finished running #%1 prelim simulations" ).arg( QString::number( iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
 	// ---------------------------------------
 	// original run loop where main/remaining runs are initialized and simulated
 		for (iRunIdx = iNumPrelimRuns; (ResRetVal_ContinueProcessing( iRetVal ) && iRunIdx < iNumRuns); iRunIdx++)
 		{
+//* DEBUGGING */	qsDbgMO = QString( "   processing run idx #%1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 #if defined( CSE_MULTI_RUN)
 			if (iBEMPIdx[ iRunType[ iRunIdx ] ] >= 0)
 			{	// no need to add new  model, it is already present - so simply activate it
@@ -1662,6 +1752,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				else
 					iBEMPIdx[ iRunType[ iRunIdx ] ] = BEMPX_GetActiveModel();
 			}
+//* DEBUGGING */	qsDbgMO = QString( "   model activated/added for run idx #%1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 			if (ResRetVal_ContinueProcessing( iRetVal ))
 			{	bool bAllowRptInclThisRun = (bAllowReportIncludeFile && (lReportInclPropOnly==0 || ( iRunType[iRunIdx] != CRM_StdDesign && iRunType[iRunIdx] != CRM_DesignRating &&		// SAC 9/4/17 - enable specification of include file only for Proposed model runs
 																																(iRunType[iRunIdx] < CRM_PropMixedFuel || iRunType[iRunIdx] > CRM_WPropMixedFuel))));
@@ -1669,6 +1760,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				if (iRV2 > 0)
 					iRetVal = iRV2;
 			}			dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//* DEBUGGING */	qsDbgMO = QString( "   model setup for run idx #%1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 		}
 
 //QString sDbgRunDefs = "Runs to be performed:\n";
@@ -1679,9 +1771,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //	sDbgRunDefs += QString::number( iBEMPIdx[iRunType[iDbgR]] );	sDbgRunDefs += ")";
 //}	BEMMessageBox( sDbgRunDefs );
 
+//* DEBUGGING */	qsDbgMO = QString( "   about to launch CSE for %1 runs" ).arg( QString::number( iNumRuns-iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
 			cseRunMgr.DoRuns();
 						dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//* DEBUGGING */	qsDbgMO = QString( "   back from CSE for %1 runs" ).arg( QString::number( iNumRuns-iNumPrelimRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 
 		for (iRunIdx = iNumPrelimRuns; iRunIdx < iNumRuns; iRunIdx++)	// SAC 8/8/17 - move archiving of CSE Rpt & Err data outside loop ensuring 
 		{	// process CSE errors and/or reports into file for user review - SAC 11/7/16
@@ -1716,37 +1810,39 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
 
 // SAC 6/19/14 - add models to BEMBase for each run being performed so that the state of each model can be retained for use the second time through the run loop
-				if (iRunIdx > 0)
+				if (iRunIdx > iNumPrelimRuns)
 				{
 				// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
-					int iResCopyRetVal = 0;
-					if (ResRetVal_ContinueProcessing( iRetVal ))
-					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-						QString sResCopyErrMsg;
-						iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]] );
-						assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-						if (iResCopyRetVal > 0)
-						{	if (sErrorMsg.isEmpty())
-								sErrorMsg = sResCopyErrMsg;
-							switch (iResCopyRetVal)
-							{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-								case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-								default :	assert( FALSE );	break;
-							}
-					}	}
-				// now results objects from previous run are in place, now ensure that references to those objects are also valid
-					char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-					int iRORPIdx = -1;
-					while (pszaResObjRefProps[++iRORPIdx] != NULL)
-					{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-						int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-						QString sROR;
-						for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-						{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMPIdx[iRunType[iRunIdx-1]] /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-							{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-	                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-					}	}	}
-							dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+					CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
+//					int iResCopyRetVal = 0;
+//					if (ResRetVal_ContinueProcessing( iRetVal ))
+//					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+//						QString sResCopyErrMsg;
+//						iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]] );
+//						assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+//						if (iResCopyRetVal > 0)
+//						{	if (sErrorMsg.isEmpty())
+//								sErrorMsg = sResCopyErrMsg;
+//							switch (iResCopyRetVal)
+//							{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+//								case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+//								default :	assert( FALSE );	break;
+//							}
+//					}	}
+//				// now results objects from previous run are in place, now ensure that references to those objects are also valid
+//					char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+//					int iRORPIdx = -1;
+//					while (pszaResObjRefProps[++iRORPIdx] != NULL)
+//					{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+//						int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+//						QString sROR;
+//						for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+//						{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMPIdx[iRunType[iRunIdx-1]] /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+//							{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+//	                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+//					}	}	}
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 				}
 
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
@@ -1811,7 +1907,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					CSE_MsgCallback( 0 /*level*/, "Skipping CSE simulation" );
 				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 	
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassDHW && (lDHWCalcMethod == 0 || lDHWCalcMethod == 2))	// DHWCalcMethod == "T24DHW" -or- "CSE (T24 match)"
 				{	// DHW SIMULATION
@@ -1904,7 +2001,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			 (!baTDR_OK[12]/*TDRIterNum*/ || laTDR_Data[0] < 1 || !baTDR_OK[1]/*TDRPVMult*/))
 		{	// target EDR processing is activated, but NO run iteration is needed (because target hit w/ initial run inputs), so adjust progress window to skip second run - SAC 5/5/17
 			if (si1ProgressRunNum > 0 && siNumProgressRuns > 1)
-				slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (fPctDoneFollowingFinalSim / siNumProgressRuns));
+				slCurrentProgress = iPctDoneFollowingPrelimSims + (long) (((100-iPctDoneFollowingPrelimSims) * (si1ProgressRunNum-1) / siNumProgressRuns) + (fPctDoneFollowingFinalSim / siNumProgressRuns));
+				//slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (fPctDoneFollowingFinalSim / siNumProgressRuns));
 			else
 				slCurrentProgress = (long) fPctDoneFollowingFinalSim;
 
@@ -1914,7 +2012,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //BEMMessageBox( "Adjust analysis progress to skip TEDR run", "Target Design Rating" );
 		}	}
 		
-		int iRunIdx2 = 0;
+		int iRunIdx2 = iNumPrelimRuns;
 		double dSavePctDoneFollowingFirstSim = sfPctDoneFollowingSimulations;
 		while (baTDR_OK[12]/*TDRIterNum*/ && laTDR_Data[0] > 0 && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
 		{	assert( laTDR_Data[0] <= laTDR_Data[1] );
@@ -1936,14 +2034,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			if (bInitHourlyResults)
 				BEMPX_InitializeHourlyResults();
 
-			if (iRunIdx2 == 0)
+			if (iRunIdx2 == iNumPrelimRuns)
 			{	// first TEDR iteration
 				sfPctDoneFollowingSimulations = fPctDoneFollowingFinalSim;
 				dSavePctDoneFollowingFirstSim = (dSavePctDoneFollowingFirstSim + dSavePctDoneFollowingFirstSim + fPctDoneFollowingFinalSim) / 3;  // backup only 2/3s of the way back to the first sim breakpoint
 			}
 			else
 			{	if (si1ProgressRunNum > 0 && siNumProgressRuns > 1)
-					slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (dSavePctDoneFollowingFirstSim / siNumProgressRuns));
+					slCurrentProgress = iPctDoneFollowingPrelimSims + (long) (((100-iPctDoneFollowingPrelimSims) * (si1ProgressRunNum-1) / siNumProgressRuns) + (dSavePctDoneFollowingFirstSim / siNumProgressRuns));
+					//slCurrentProgress = (long) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + (dSavePctDoneFollowingFirstSim / siNumProgressRuns));
 				else
 					slCurrentProgress = (long) dSavePctDoneFollowingFirstSim;
 
@@ -1957,7 +2056,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		// loop over ALL runs, simulating only Prop but processing results for ALL
 			for (iRunIdx2 = iNumPrelimRuns; (iRunIdx2 < iNumRuns && ResRetVal_ContinueProcessing( iRetVal )); iRunIdx2++)
 			{
-				const CSERun& cseRun2 = cseRunMgr.GetRun(iRunIdx2);
+				const CSERun& cseRun2 = cseRunMgr.GetRun(iRunIdx2-iNumPrelimRuns);
 				const QString& sRunID2 = cseRun2.GetRunID();
 				const QString& sRunIDProcFile2 = cseRun2.GetRunIDProcFile();
 				const QString& sRunAbbrev2 = cseRun2.GetRunAbbrev();
@@ -1970,7 +2069,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					BOOL bIsStdDesign2 = cseRun2.GetIsStdDesign();
 					BOOL bIsDesignRtg2 = cseRun2.GetIsDesignRtg();
 
-					if (iRunIdx2 == 0)
+					if (iRunIdx2 == iNumPrelimRuns)
 					{
 					// COPY PVWDCSizeMultiplier into Proposed model for use in simulation
 						BEMPX_SetBEMData( laTDR_DBIDs[1], BEMP_Flt, &daTDR_Data[1], BEMO_User, -1, BEMS_ProgDefault );
@@ -2014,9 +2113,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 					// RE-simulate proposed model
 							// re-init data used to track simulation progress
-								mapCSECallback.clear();
-								for(int is=0; pszCSEProgressMsgs[is]; is++)
-									mapCSECallback[pszCSEProgressMsgs[is]] = 0;
+								ClearCSEProgressMap();	// SAC 1/12/18
 						//iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, (sCSECopyExt.length() < 1 ? NULL : (const char*) sCSECopyExt.toLocal8Bit().constData()) );		assert( iRetVal == 0 );
 						iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, NULL );		assert( iRetVal == 0 );
 							if (bStoreBEMProcDetails)	// SAC 4/16/17 - store TDR details AFTER all CSE defaulting/prep
@@ -2031,39 +2128,41 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							break;
 					}
 
-					if (iRunIdx2 > 0)
+					if (iRunIdx2 > iNumPrelimRuns)
 					{
 					// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
-						int iResCopyRetVal = 0;
-						if (ResRetVal_ContinueProcessing( iRetVal ))
-						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-	// DELETE results objects before copying them ??
-
-							QString sResCopyErrMsg;
-							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev2.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx2-1]], iBEMPIdx[iRunType[iRunIdx2]] );
-							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-							if (iResCopyRetVal > 0)
-							{	if (sErrorMsg.isEmpty())
-									sErrorMsg = sResCopyErrMsg;
-								switch (iResCopyRetVal)
-								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-									default :	assert( FALSE );	break;
-								}
-						}	}
-					// now results objects from previous run are in place, now ensure that references to those objects are also valid
-						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-						int iRORPIdx = -1;
-						while (pszaResObjRefProps[++iRORPIdx] != NULL)
-						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-							QString sROR;
-							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx2 /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-	               	                                      //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-						}	}	}
-								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+						CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev2.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx2-1]], iBEMPIdx[iRunType[iRunIdx2]], sErrorMsg );
+//						int iResCopyRetVal = 0;
+//						if (ResRetVal_ContinueProcessing( iRetVal ))
+//						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+//	// DELETE results objects before copying them ??
+//
+//							QString sResCopyErrMsg;
+//							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev2.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx2-1]], iBEMPIdx[iRunType[iRunIdx2]] );
+//							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+//							if (iResCopyRetVal > 0)
+//							{	if (sErrorMsg.isEmpty())
+//									sErrorMsg = sResCopyErrMsg;
+//								switch (iResCopyRetVal)
+//								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
+//									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
+//									default :	assert( FALSE );	break;
+//								}
+//						}	}
+//					// now results objects from previous run are in place, now ensure that references to those objects are also valid
+//						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+//						int iRORPIdx = -1;
+//						while (pszaResObjRefProps[++iRORPIdx] != NULL)
+//						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
+//							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+//							QString sROR;
+//							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+//							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx2 /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+//								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+//	               	                                      //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+//						}	}	}
+								assert( iRunIdx2 < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx2] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 					}
 
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && !bBypassCSE)
@@ -2096,15 +2195,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						if (iHrlyResRetVal < 0)  // SAC 6/12/17
 						{	switch (iHrlyResRetVal)
 							{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-																						qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+																						qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun2.GetOutFile(CSERun::OutFileCSV) );
 								case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-																						qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+																						qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun2.GetOutFile(CSERun::OutFileCSV) );
 								case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																						qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+																						qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun2.GetOutFile(CSERun::OutFileCSV) );
 								case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																						qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+																						qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun2.GetOutFile(CSERun::OutFileCSV) );
 								case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																						qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+																						qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun2.GetOutFile(CSERun::OutFileCSV) );
 							}
 							if (sLogMsg.size() > 0)
 								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -2120,7 +2219,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					}
 				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx2 < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx2] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 				if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
 				{
@@ -2153,7 +2253,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		}  // end of: while (baTDR_OK[12]/*TDRIterNum*/ && baTDR_OK[1]/*TDRPVMult*/ && ResRetVal_ContinueProcessing( iRetVal ))
 	// Confirm PVWDCSizeMultiplier not stored in USER model...
 
-		if (iRunIdx2 > 0)
+		if (iRunIdx2 > iNumPrelimRuns)
 		{	if (bStoreBEMProcDetails)	// SAC 1/20/13 - added export of additional "detail" file to help isolate unnecessary object creation issues
 			{	QString sDbgFileName = QString( "%1%2 - TDRF.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt );
    	   	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
@@ -2190,7 +2290,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 				if (ResRetVal_ContinueProcessing( iRetVal ) && BEMPX_AbortRuleEvaluation())
 					iRetVal = BEMAnal_CECRes_RuleProcAbort;
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 			// call to generate ruleset-defined report on model following simulation & results retrieval/processing
 			// do this PRIOR to cleaning up CSE simulation stuff but after all simulation results retrieval & processing is done - in case any of the report stuff references any of that data
@@ -2271,7 +2372,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 		}	}	// end of:  for (iRunIdx = 0; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
 
-						dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+								assert( iRunIdx < MAX_TimeArray_Res );
+								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 #else		// NOT CSE_MULTI_RUN
 // code removed ...
@@ -2731,8 +2833,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  14		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
-											// SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13  - SAC 10/6/17 - 13->14
+#define  CSVFmtVer_CECRes  16		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
+											// SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13  - SAC 10/6/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -2761,7 +2863,6 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 		int iBEMBaseModelCount = BEMPX_GetModelCount();   // SAC 3/28/16
 
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunTitle" ), sRunTitle );
-		int iEnergyUseObjectSets = 1;  // SAC 8/6/13
 		QString sTDVSavPctTot, sTDVSavPctComp, sCAHPKickDOE, sCAHPKickFutCode, sCAHPKickHELtg,
 					sCAHPKickTDV100, sCAHPKickTDV60, sCAHPScoreInitVal, sCAHPIncInit, sCAHPScoreFinal, sCAHPIncFinal;
 		QString s16CAHPEDRBonusPoints, s16CAHPDeltaEDR, s16CAHPCashBonusTotal, s16CAHP2019ZoneReadyKicker, s16CAHP2019ZoneKicker, s16CAHPHighPerfFenKicker,	// SAC 7/19/17 - CAHP update
@@ -2782,101 +2883,147 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 			   !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NumDwellingUnits" ), lNumDwellingUnits ) ))
 				iRetVal = 10;
 
+	// moved up and consolidated references to EUseSummary objects - SAC 1/12/18
+		long lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResults" );			assert( lDBID_Proj_RunResults > 0 );
+		int iEnergyUseObjectSets = 1;  // SAC 8/6/13
+		long lWorstOrientation=0;
+		BEMObject* pEUseSummaryObj = NULL;
+		int iEUseSummaryObjIdx = -1;
 		if (iRetVal==0 && lAnalysisType == 13)
 		{	if (lAllOrientations > 0)  // SAC 8/6/13
 				iEnergyUseObjectSets = 4;
-			BEMObject* pObjResultSummary = NULL;
-			if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
-			{	int iObjIdx = BEMPX_GetObjectIndex( pObjResultSummary->getClass(), pObjResultSummary );		assert( iObjIdx >= 0 );
-				if (iObjIdx >= 0)
-				{	sPassFail = "--";  // return PassFail string if full analysis not executed
-					if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), sPassFail, FALSE, 0, BEMP_Str, iObjIdx ) && bExpectStdDesResults)
+
+		// set EnergyUse object reference offset based on which set of results is desired - SAC 8/6/13
+			if (iEnergyUseObjectSets > 1)
+			{	assert( iEnergyUseObjectSets == 4 && lAllOrientations > 0 );	// N,E,S,W is only known case here
+		      int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
+				int iNumEnergyUseObjects = BEMPX_GetNumObjects( iCID_EnergyUse );
+				//assert( iNumEnergyUseObjects == (4 * 11) );	// current set (as of 8/6/13)
+				if (iNumEnergyUseObjects < 40 || !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:WorstOrientation" ), lWorstOrientation ))
+					iRetVal = 7;
+				else
+				{	if (pszRunOrientation == NULL || strlen( pszRunOrientation ) < 1)
+					{	}		// do nothing here - Proj:RunResults array populated w/ worst case, which is the default if no specific orientation is requested
+					else if (strlen( pszRunOrientation ) == 1)
+					{	     if (pszRunOrientation[0]=='N' || pszRunOrientation[0]=='n')
+																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );
+						else if (pszRunOrientation[0]=='E' || pszRunOrientation[0]=='e')
+																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );
+						else if (pszRunOrientation[0]=='S' || pszRunOrientation[0]=='s')
+																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );
+						else
+																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );
+					}
+					else
+					{	pEUseSummaryObj = BEMPX_GetObjectByName( BEMPX_GetDBComponentID( "EUseSummary" ), iError, pszRunOrientation );
+						iEUseSummaryObjIdx = (pEUseSummaryObj==NULL ? -1 : BEMPX_GetObjectIndex( pEUseSummaryObj->getClass(), pEUseSummaryObj ));
+						if (pEUseSummaryObj == NULL || iEUseSummaryObjIdx < 0 || iEUseSummaryObjIdx > 4)
+							iRetVal = 8;
+						else
+						{	switch (iEUseSummaryObjIdx)
+							{	case  0 :																								break;	// "worst case" run results
+								case  1 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );	break;	// 'N'
+								case  2 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );	break;	// 'E'
+								case  3 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );	break;	// 'S'
+								case  4 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );	break;	// 'W'
+								default :	assert( FALSE );
+							}
+						}
+					}						assert( lDBID_Proj_RunResults > 0 );
+				}
+			}
+			if (pEUseSummaryObj == NULL)
+			{	if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pEUseSummaryObj ) && pEUseSummaryObj && pEUseSummaryObj->getClass())
+				{	iEUseSummaryObjIdx = BEMPX_GetObjectIndex( pEUseSummaryObj->getClass(), pEUseSummaryObj );		assert( iEUseSummaryObjIdx >= 0 );
+					if (iEUseSummaryObjIdx < 0)
+						iRetVal = 3;
+				}
+				else
+					iRetVal = 2;
+		}	}
+
+		if (iRetVal==0 && lAnalysisType == 13 && iEUseSummaryObjIdx >= 0)
+		{			sPassFail = "--";  // return PassFail string if full analysis not executed
+					if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), sPassFail, FALSE, 0, BEMP_Str, iEUseSummaryObjIdx ) && bExpectStdDesResults)
 						iRetVal = 4;
 
 					if (iResultsFormatVersion >= 4)		// SAC 11/24/14
 					{
-						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PctSavingsTDV"    ), sTDVSavPctTot , FALSE, 11, -1, iObjIdx ))
+						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PctSavingsTDV"    ), sTDVSavPctTot , FALSE, 11, -1, iEUseSummaryObjIdx ))
 							sTDVSavPctTot.clear();
-						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PctSavingsCmpTDV" ), sTDVSavPctComp, FALSE, 11, -1, iObjIdx ))
+						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PctSavingsCmpTDV" ), sTDVSavPctComp, FALSE, 11, -1, iEUseSummaryObjIdx ))
 							sTDVSavPctComp.clear();
 
 						long lCAHPProgram;
 						if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CAHPProgram" ), lCAHPProgram ) && lCAHPProgram > 0)
 						{	if (iResultsFormatVersion >= 11)		// SAC 7/19/17 - CAHP update
-							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPEDRBonusPoints"        ), s16CAHPEDRBonusPoints       , FALSE,  0, -1, iObjIdx ))
+							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPEDRBonusPoints"        ), s16CAHPEDRBonusPoints       , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									s16CAHPEDRBonusPoints.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDeltaEDR"              ), s16CAHPDeltaEDR             , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDeltaEDR"              ), s16CAHPDeltaEDR             , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									s16CAHPDeltaEDR.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPCashBonusTotal"        ), s16CAHPCashBonusTotal       , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPCashBonusTotal"        ), s16CAHPCashBonusTotal       , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPCashBonusTotal.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneReadyKicker"   ), s16CAHP2019ZoneReadyKicker  , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneReadyKicker"   ), s16CAHP2019ZoneReadyKicker  , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHP2019ZoneReadyKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneKicker"        ), s16CAHP2019ZoneKicker       , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHP2019ZoneKicker"        ), s16CAHP2019ZoneKicker       , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHP2019ZoneKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfFenKicker"     ), s16CAHPHighPerfFenKicker    , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfFenKicker"     ), s16CAHPHighPerfFenKicker    , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPHighPerfFenKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfAtticKicker"   ), s16CAHPHighPerfAtticKicker  , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfAtticKicker"   ), s16CAHPHighPerfAtticKicker  , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPHighPerfAtticKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfWallKicker"    ), s16CAHPHighPerfWallKicker   , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPHighPerfWallKicker"    ), s16CAHPHighPerfWallKicker   , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPHighPerfWallKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPWholeHouseFansKicker"  ), s16CAHPWholeHouseFansKicker , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPWholeHouseFansKicker"  ), s16CAHPWholeHouseFansKicker , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPWholeHouseFansKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBalancedIAQKicker"     ), s16CAHPBalancedIAQKicker    , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBalancedIAQKicker"     ), s16CAHPBalancedIAQKicker    , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPBalancedIAQKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDOEZeroEnergyKicker"   ), s16CAHPDOEZeroEnergyKicker  , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDOEZeroEnergyKicker"   ), s16CAHPDOEZeroEnergyKicker  , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPDOEZeroEnergyKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDrainWtHtRecKicker"    ), s16CAHPDrainWtHtRecKicker   , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDrainWtHtRecKicker"    ), s16CAHPDrainWtHtRecKicker   , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPDrainWtHtRecKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDesignCharretteKicker" ), s16CAHPDesignCharretteKicker, FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPDesignCharretteKicker" ), s16CAHPDesignCharretteKicker, FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPDesignCharretteKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPESLaundryRecKicker"    ), s16CAHPESLaundryRecKicker   , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPESLaundryRecKicker"    ), s16CAHPESLaundryRecKicker   , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPESLaundryRecKicker.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBaseIncentive"         ), s16CAHPBaseIncentive        , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPBaseIncentive"         ), s16CAHPBaseIncentive        , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPBaseIncentive.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPTotalIncentive"        ), s16CAHPTotalIncentive       , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPTotalIncentive"        ), s16CAHPTotalIncentive       , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									s16CAHPTotalIncentive.clear();
 							}
 							else
-							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickDOE"      ), sCAHPKickDOE     , FALSE,  0, -1, iObjIdx ))
+							{	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickDOE"      ), sCAHPKickDOE     , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPKickDOE.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickFutCode"  ), sCAHPKickFutCode , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickFutCode"  ), sCAHPKickFutCode , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPKickFutCode.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickHELtg"    ), sCAHPKickHELtg   , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickHELtg"    ), sCAHPKickHELtg   , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPKickHELtg.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV100"   ), sCAHPKickTDV100  , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV100"   ), sCAHPKickTDV100  , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPKickTDV100.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV60"    ), sCAHPKickTDV60   , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPKickTDV60"    ), sCAHPKickTDV60   , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPKickTDV60.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreInitVal" ), sCAHPScoreInitVal, FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreInitVal" ), sCAHPScoreInitVal, FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPScoreInitVal.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncInit"      ), sCAHPIncInit     , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncInit"      ), sCAHPIncInit     , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									sCAHPIncInit.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreFinal"   ), sCAHPScoreFinal  , FALSE,  0, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPScoreFinal"   ), sCAHPScoreFinal  , FALSE,  0, -1, iEUseSummaryObjIdx ))
 									sCAHPScoreFinal.clear();
-								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncFinal"     ), sCAHPIncFinal    , FALSE,  2, -1, iObjIdx ))
+								if (!BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:CAHPIncFinal"     ), sCAHPIncFinal    , FALSE,  2, -1, iEUseSummaryObjIdx ))
 									sCAHPIncFinal.clear();
 						}	}
 					}
-				}
-				else
-					iRetVal = 3;
-			}
-			else
-				iRetVal = 2;
 		}
 
 		int iEU;
-		double  faStdTDV[11],  faStdKWH[10],  faStdTherms[10],  faStdOther[10],  faStdKW[11];
+		double  faStdTDV[14],  faStdKWH[14],  faStdTherms[10],  faStdOther[10],  faStdKW[14];
 		double faPropTDV[14], faPropKWH[14], faPropTherms[10], faPropOther[10], faPropKW[14], fPropPVCredit[2]={0,0};	// SAC 10/7/16 - expanded TDV, KWH & KW arrays to 13 to handle PV @ [12]  - SAC 6/6/17 - expended again to 14 for Battery @ [13]
-		double faDRtgTDV[11], faDRtgKWH[10], faDRtgTherms[10], faDRtgOther[10], faDRtgKW[11], fDRtgPctSavTDV, fDesignRating=0;		// TDV & KW arrays sized to include CompTotal to simplify retrieval, but those NOT written to record
-		double faDRPropTDV[11], faDRPropKWH[10], faDRPropTherms[10], faDRPropOther[10], faDRPropKW[11];		// SAC 5/1/15 - separate DRtg proposed results (for now only lighting elec may vary)
+		double faDRtgTDV[14], faDRtgKWH[14], faDRtgTherms[10], faDRtgOther[10], faDRtgKW[14], fDRtgPctSavTDV, fDesignRating=0;		// TDV & KW arrays sized to include CompTotal to simplify retrieval, but those NOT written to record
+		double faDRPropTDV[14], faDRPropKWH[14], faDRPropTherms[10], faDRPropOther[10], faDRPropKW[14];		// SAC 5/1/15 - separate DRtg proposed results (for now only lighting elec may vary)
 		double fDRPropKWH_PV=0, fDRPropKW_PV=0, fDRtg_NoPV=0, fDRtg_PVOnly=0;		// SAC 2/1/16 - added DR Prop PV elec use & demand and design rating minus PV  - SAC 3/16/16 - added additional EDR variables
 		//double fPropKWH_PV=0, fPropKW_PV=0;		// SAC 10/7/16 - added in proposed PV KWH & KW w/ format 8 mods to support 2019 analysis
 		double fDRPropKWH_Batt=0, fDRPropKW_Batt=0, fDRPropTDV_Batt=0;		// SAC 6/7/17 - added in proposed Battery KWH & KW w/ format 10 mods
-		double fStdDRtg_NoPV=0, fStdDRtg_MinReqPV=0;		// SAC 6/7/17 - added DR of Std Design w/ No PV & Min Req'd PV
+		double fStdDRtg_NoPV=0, fStdDRtg_StdDsgnPV=0;		// SAC 6/7/17 - added DR of Std Design w/ No PV
 		double  faCmpTDVbyFuel[4][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };  // SAC 2/13/17
 		QString sCmpTDVbyFuel_Prop=",,", sCmpTDVbyFuel_Std=",,", sCmpTDVbyFuel_DRProp=",,", sCmpTDVbyFuel_DRRef=",,";
-		long lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResults" );			assert( lDBID_Proj_RunResults > 0 );
       long lDBID_EnergyUse_CompMarginTDV    = BEMPX_GetDatabaseID( "EnergyUse:CompMarginTDV"    );
       long lDBID_EnergyUse_PropElecEnergy   = BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy"   );
       long lDBID_EnergyUse_PropNatGasEnergy = BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" );
@@ -2905,7 +3052,6 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
       long lDBID_EnergyUse_DRtgNatGasTDV   = BEMPX_GetDatabaseID( "EnergyUse:DRtgNatGasTDV"  );
       long lDBID_EnergyUse_DRtgOtherTDV    = BEMPX_GetDatabaseID( "EnergyUse:DRtgOtherTDV"   );
 
-		BEMObject* pObjEnergyUse = NULL;
 		if (iRetVal==0)
 		{	if (!bExpectStdDesResults)
 			{	faStdTDV[ 10] = 0;		faStdKW[ 10] = 0;
@@ -2922,47 +3068,6 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				}
 			}
 
-		// set EnergyUse object reference offset based on which set of results is desired - SAC 8/6/13
-			long lWorstOrientation=0;
-			if (iEnergyUseObjectSets > 1)
-			{	assert( iEnergyUseObjectSets == 4 && lAllOrientations > 0 );	// N,E,S,W is only known case here
-		      int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
-				int iNumEnergyUseObjects = BEMPX_GetNumObjects( iCID_EnergyUse );
-				assert( iNumEnergyUseObjects == (4 * 11) );	// current set (as of 8/6/13)
-				if (iNumEnergyUseObjects < 40 || !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:WorstOrientation" ), lWorstOrientation ))
-					iRetVal = 7;
-				else
-				{	if (pszRunOrientation == NULL || strlen( pszRunOrientation ) < 1)
-					{	}		// do nothing here - Proj:RunResults array populated w/ worst case, which is the default if no specific orientation is requested
-					else if (strlen( pszRunOrientation ) == 1)
-					{	     if (pszRunOrientation[0]=='N' || pszRunOrientation[0]=='n')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );
-						else if (pszRunOrientation[0]=='E' || pszRunOrientation[0]=='e')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );
-						else if (pszRunOrientation[0]=='S' || pszRunOrientation[0]=='s')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );
-						else
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );
-					}
-					else
-					{	BEMObject* pEUseSummaryObj = BEMPX_GetObjectByName( BEMPX_GetDBComponentID( "EUseSummary" ), iError, pszRunOrientation );
-						int iEUseSummaryObjIdx = (pEUseSummaryObj==NULL ? -1 : BEMPX_GetObjectIndex( pEUseSummaryObj->getClass(), pEUseSummaryObj ));
-						if (pEUseSummaryObj == NULL || iEUseSummaryObjIdx < 0 || iEUseSummaryObjIdx > 4)
-							iRetVal = 8;
-						else
-						{	switch (iEUseSummaryObjIdx)
-							{	case  0 :																								break;	// "worst case" run results
-								case  1 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );	break;	// 'N'
-								case  2 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );	break;	// 'E'
-								case  3 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );	break;	// 'S'
-								case  4 :	lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );	break;	// 'W'
-								default :	assert( FALSE );
-							}
-						}
-					}						assert( lDBID_Proj_RunResults > 0 );
-				}
-			}
-
 			if (iResultsFormatVersion >= 2)		// SAC 11/15/13
 			{	BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:PVCredit[1]" ), fPropPVCredit[0], 0, -1, -1, BEMO_User, ((bExpectDesignRatingResults && iBEMBaseModelCount > 2) ? iBEMBaseModelCount-2 : -1) );
 				fPropPVCredit[0] = -fPropPVCredit[0];
@@ -2972,6 +3077,8 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				}
 			}
 
+			QString sStdPVResults = ",,,";
+			BEMObject* pObjEnergyUse = NULL;
 			for (iEU=0; (iRetVal==0 && iEU<=13); iEU++)		// SAC 2/1/16 - iEUs 11->12 to include PV  - SAC 6/6/17 - iEUs 12->13 to include Battery
 			{	if (iEU==11)
 					iEU++;	// skip 12, go onto 13
@@ -2987,10 +3094,10 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 								BEMPX_GetFloat( 		lDBID_EnergyUse_StdElecDemand   ,     faStdKW[ iEU], 0, BEMP_Flt, iObjIdx );
 							}
 							if (bExpectDesignRatingResults)		// SAC 3/31/15
-							{	BEMPX_GetFloat( 		lDBID_EnergyUse_DesignRatingTDV ,    faDRtgTDV[  iEU], 0, BEMP_Flt, iObjIdx );
-								BEMPX_GetFloat( 		lDBID_EnergyUse_DRtgElecDemand  ,    faDRtgKW[   iEU], 0, BEMP_Flt, iObjIdx );
-								BEMPX_GetFloat( 		lDBID_EnergyUse_ProposedTDV   +1,    faDRPropTDV[iEU], 0, BEMP_Flt, iObjIdx );
-								BEMPX_GetFloat( 		lDBID_EnergyUse_PropElecDemand+1,    faDRPropKW[ iEU], 0, BEMP_Flt, iObjIdx );
+							{	BEMPX_GetFloat( 		lDBID_EnergyUse_DesignRatingTDV+1,    faDRtgTDV[  iEU], 0, BEMP_Flt, iObjIdx );	// SAC 1/5/18 - retrieve 2nd, fuel adjusted value
+								BEMPX_GetFloat( 		lDBID_EnergyUse_DRtgElecDemand   ,    faDRtgKW[   iEU], 0, BEMP_Flt, iObjIdx );
+								BEMPX_GetFloat( 		lDBID_EnergyUse_ProposedTDV    +1,    faDRPropTDV[iEU], 0, BEMP_Flt, iObjIdx );
+								BEMPX_GetFloat( 		lDBID_EnergyUse_PropElecDemand +1,    faDRPropKW[ iEU], 0, BEMP_Flt, iObjIdx );
 							}
 							if (iEU < 10)
 							{	BEMPX_GetFloat(		lDBID_EnergyUse_PropElecEnergy  ,    faPropKWH[iEU], 0, BEMP_Flt, iObjIdx );		   faPropKWH[iEU] =    faPropKWH[iEU] * fCondFloorArea / 3.413;
@@ -3058,7 +3165,14 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 										fDRPropKW_Batt  = faPropKW[ iEU];
 										fDRPropTDV_Batt = faPropTDV[iEU];
 									}
-							}	}
+								}
+								if (iEU == 12 && iResultsFormatVersion >= 16 && bExpectStdDesResults)	// SAC 1/12/18
+								{	BEMPX_GetFloat(		lDBID_EnergyUse_StdElecEnergy   ,     faStdKWH[iEU], 0, BEMP_Flt, iObjIdx );		    faStdKWH[iEU] =     faStdKWH[iEU] * fCondFloorArea / 3.413;
+									BEMPX_GetFloat( 		lDBID_EnergyUse_StandardTDV     ,     faStdTDV[iEU], 0, BEMP_Flt, iObjIdx );
+									BEMPX_GetFloat( 		lDBID_EnergyUse_StdElecDemand   ,     faStdKW[ iEU], 0, BEMP_Flt, iObjIdx );
+									sStdPVResults = QString( "%1,%2,%3,").arg( QString::number( faStdKWH[iEU] ), QString::number( faStdTDV[iEU] ), QString::number( faStdKW[ iEU] ) );
+								}
+							}
 							else if (iResultsFormatVersion >= 6 && bExpectStdDesResults)		// SAC 2/1/16 - added DR Prop PV elec use & demand and design rating minus PV
 							{	if (iEU == 12)
 								{	BEMPX_GetFloat(		lDBID_EnergyUse_PropElecEnergy+1,   fDRPropKWH_PV, 0, BEMP_Flt, iObjIdx );		  fDRPropKWH_PV = fDRPropKWH_PV * fCondFloorArea / 3.413;
@@ -3081,25 +3195,21 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 		// moved Energy Design Rating retrieval to below
 			QString sDRtg_Std = (iResultsFormatVersion >= 10 ? ",,," : ",");
-			if (iResultsFormatVersion >= 6 && bExpectDesignRatingResults)		// SAC 3/16/16
-			{	BEMObject* pObjResultSummary = NULL;
-				if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
-				{	int iObjIdx = BEMPX_GetObjectIndex( pObjResultSummary->getClass(), pObjResultSummary );		assert( iObjIdx >= 0 );
-					if (iObjIdx >= 0)
-					{	BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRating"       ),  fDesignRating, 0, BEMP_Flt, iObjIdx );
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingNoPV"   ),  fDRtg_NoPV   , 0, BEMP_Flt, iObjIdx );
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingPVOnly" ),  fDRtg_PVOnly , 0, BEMP_Flt, iObjIdx );
+			if (iResultsFormatVersion >= 6 && bExpectDesignRatingResults && iEUseSummaryObjIdx >= 0)		// SAC 3/16/16
+			{
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRating"       ),  fDesignRating, 0, BEMP_Flt, iEUseSummaryObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingNoPV"   ),  fDRtg_NoPV   , 0, BEMP_Flt, iEUseSummaryObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingPVOnly" ),  fDRtg_PVOnly , 0, BEMP_Flt, iEUseSummaryObjIdx );
 						if (bExpectStdDesResults)	// SAC 10/27/16 - prevent reporting DRtg_Std when no std design run (ExEDR)
 						{	double fDRtg_Std=0;
-							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStd" ),  fDRtg_Std    , 0, BEMP_Flt, iObjIdx );
+							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStd" ),  fDRtg_Std    , 0, BEMP_Flt, iEUseSummaryObjIdx );
 							if (iResultsFormatVersion < 10)
 								sDRtg_Std = QString("%1,").arg( QString::number( fDRtg_Std ) );
 							else
-							{	BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStdNoPV"   ),  fStdDRtg_NoPV    , 0, BEMP_Flt, iObjIdx );
-								BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStdPVOnly" ),  fStdDRtg_MinReqPV, 0, BEMP_Flt, iObjIdx );
-								sDRtg_Std = QString("%1,%2,%3,").arg( QString::number( fDRtg_Std ), QString::number( fStdDRtg_NoPV ), QString::number( fStdDRtg_MinReqPV ) );
+							{	BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStdNoPV"   ),  fStdDRtg_NoPV     , 0, BEMP_Flt, iEUseSummaryObjIdx );
+								BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:DesignRatingStdPVOnly" ),  fStdDRtg_StdDsgnPV, 0, BEMP_Flt, iEUseSummaryObjIdx );
+								sDRtg_Std = QString("%1,%2,%3,").arg( QString::number( fDRtg_Std ), QString::number( fStdDRtg_NoPV ), QString::number( fStdDRtg_StdDsgnPV ) );
 						}	}
-				}	}
 			}
 
 			if (iRetVal==0)
@@ -3236,13 +3346,13 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				else
 					sDemSavAndCAHP = ",,,,,,,,,,,,,";
 
-				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sPropMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,";
+				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sPropMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,", sGridHarmCred = ",,,,";
 				if (iResultsFormatVersion >= 12)		// SAC 9/15/17 - additional PV scaling, target EDR & proposed mixed fuel run results
-				{	BEMObject* pObjResultSummary = NULL;    int iEUSObjIdx=-1;
-					if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
-					{	iEUSObjIdx = BEMPX_GetObjectIndex( pObjResultSummary->getClass(), pObjResultSummary );		assert( iEUSObjIdx >= 0 );
-					}
-
+				{
+					//BEMObject* pObjResultSummary = NULL;    int iEUSObjIdx=-1;
+					//if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
+					//{	iEUSObjIdx = BEMPX_GetObjectIndex( pObjResultSummary->getClass(), pObjResultSummary );		assert( iEUSObjIdx >= 0 );
+					//}
 					long lTEDRActive=0;   double dTargetEDR=-999;
 					BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ),  lTEDRActive, 0 );
 					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ),  dTargetEDR , -999 );
@@ -3251,12 +3361,15 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 					double dPVSclMaxRat, dPVSclFctr, dScldPVKW=-1;
 					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:MaxPropPVRatio"    ),  dPVSclMaxRat , -1 );
 					BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"     ),  dScldPVKW    , -1 );
-					if (iEUSObjIdx >= 0)
+					if (iEUseSummaryObjIdx >= 0)
 					{	if (lTEDRActive && dTargetEDR > -998)
-							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:TargetDRtgPVMult"  ), dPVSclFctr, -1, BEMP_Flt, iEUSObjIdx );
+							BEMPX_GetFloat( 	 BEMPX_GetDatabaseID( "EUseSummary:TargetDRtgPVMult"  ), dPVSclFctr, -1, BEMP_Flt, iEUseSummaryObjIdx );
 						else
-							BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropPVScaleFactor" ), dPVSclFctr, -1, BEMP_Flt, iEUSObjIdx );
-					}
+						{	if (lEnergyCodeYear >= 2019)
+								BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:PropInputPVMult"   ), dPVSclFctr, -1, BEMP_Flt, iEUseSummaryObjIdx );  // SAC 1/4/18 - was: EUseSummary:PropPVScaleFactor
+							else
+								BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:PropPVScaleFactor" ), dPVSclFctr, -1, BEMP_Flt, iEUseSummaryObjIdx );
+					}	}
 					if (dScldPVKW > 0 && dPVSclFctr >= 0)
 						dScldPVKW *= dPVSclFctr;
 					if (dPVSclMaxRat >= 0)
@@ -3287,38 +3400,47 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						sTargetEDR = QString( "%1,%2," ).arg( QString::number( dTargetEDR ), sTEDRResult );
 					}
 
-					// Min Req'd (std dsgn) PV kW = (-1 * ResultSummary[1]:PropMixedFuelkWh / ResultSummary[1]:PropMixedFuelPV)
-					if (iEUSObjIdx >= 0)
+					// Standard Design PV kW = (-1 * ResultSummary[1]:PropMixedFuelkWh / ResultSummary[1]:PropMixedFuelPV)
+					if (iEUseSummaryObjIdx >= 0)
 					{	double dPropMixedFuelkWh=-1, dPropMixedFuelPV=0;
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelkWh" ), dPropMixedFuelkWh, -1, BEMP_Flt, iEUSObjIdx );
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelPV"  ), dPropMixedFuelPV,  -1, BEMP_Flt, iEUSObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelkWh" ), dPropMixedFuelkWh, -1, BEMP_Flt, iEUseSummaryObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelPV"  ), dPropMixedFuelPV,  -1, BEMP_Flt, iEUseSummaryObjIdx );
 						if (dPropMixedFuelkWh > 0 && dPropMixedFuelPV != 0.0)
 							sPropMixedFuel = QString( "%1,%2," ).arg( QString::number( dPropMixedFuelkWh ), QString::number( (-1*dPropMixedFuelkWh/dPropMixedFuelPV) ) );
 					}
 
 					// Carbon Emissions - SAC 10/6/17
-					if (iResultsFormatVersion >= 13 && iEUSObjIdx >= 0)
+					if (iResultsFormatVersion >= 13 && iEUseSummaryObjIdx >= 0)
 					{	double dPCarbSelfCons, dPCarbExport, dPCarbFinal, dSCarbSelfCons, dSCarbExport, dSCarbFinal;
 						int iPArrIdx = (lAllOrientations > 0 && lWorstOrientation > 0) ? lWorstOrientation : 0;
-						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropSelfConsCarbon" )+iPArrIdx, dPCarbSelfCons, -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropExportCarbon"   )+iPArrIdx, dPCarbExport  , -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropFinalCarbon"    )+iPArrIdx, dPCarbFinal   , -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdSelfConsCarbon"  )         , dSCarbSelfCons, -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdExportCarbon"    )         , dSCarbExport  , -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdFinalCarbon"     )         , dSCarbFinal   , -1, BEMP_Flt, iEUSObjIdx ) )
+						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropSelfConsCarbon" )+iPArrIdx, dPCarbSelfCons, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropExportCarbon"   )+iPArrIdx, dPCarbExport  , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropFinalCarbon"    )+iPArrIdx, dPCarbFinal   , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdSelfConsCarbon"  )         , dSCarbSelfCons, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdExportCarbon"    )         , dSCarbExport  , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdFinalCarbon"     )         , dSCarbFinal   , -1, BEMP_Flt, iEUseSummaryObjIdx ) )
 							sCarbonEmissions = QString( "%1,%2,%3,%4,%5,%6," ).arg( QString::number( dPCarbSelfCons ), QString::number( dPCarbExport ), QString::number( dPCarbFinal ),
 																									  QString::number( dSCarbSelfCons ), QString::number( dSCarbExport ), QString::number( dSCarbFinal ) );
 					}
 
 					// Compliance EDR Margins - SAC 12/12/17
-					if (iResultsFormatVersion >= 14 && iEUSObjIdx >= 0)
+					if (iResultsFormatVersion >= 14 && iEUseSummaryObjIdx >= 0)
 					{	double dEffEDRMarg, dFinEDRMarg;
 						//int iPArrIdx = (lAllOrientations > 0 && lWorstOrientation > 0) ? lWorstOrientation : 0;
-						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:MarginEfficEDR" ), dEffEDRMarg, -1, BEMP_Flt, iEUSObjIdx ) &&
-							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:MarginFinalEDR" ), dFinEDRMarg, -1, BEMP_Flt, iEUSObjIdx ))
+						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:MarginEfficEDR" ), dEffEDRMarg, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:MarginFinalEDR" ), dFinEDRMarg, -1, BEMP_Flt, iEUseSummaryObjIdx ))
 							sCompEDRMargs = QString( "%1,%2," ).arg( QString::number( dEffEDRMarg ), QString::number( dFinEDRMarg ) );
 					}
-				}
+
+					// GHC (grid harmonization credit) - SAC 1/4/18
+					if (iResultsFormatVersion >= 15 && iEUseSummaryObjIdx >= 0 && lEnergyCodeYear >= 2019)
+					{	double dGHCTDVCap, dGHCTDV, dGHCElec, dGHCBattRat;
+						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffCap" ),      dGHCTDVCap , -1, BEMP_Flt, iEUseSummaryObjIdx ) && dGHCTDVCap > 0 &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffTDV" ),      dGHCTDV    , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffElec" ),     dGHCElec   , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffBattFrac" ), dGHCBattRat, -1, BEMP_Flt, iEUseSummaryObjIdx ))
+							sGridHarmCred = QString( "%1,%2,%3,%4," ).arg( QString::number( dGHCTDVCap ), QString::number( dGHCTDV ), QString::number( dGHCElec ), QString::number( dGHCBattRat ) );
+				}	}
 
 				sDRtgEnergyDemand = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
 				if (bExpectDesignRatingResults)
@@ -3378,10 +3500,11 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 			// concatenate individual strings into complete CSV record
 				if (iResultsFormatVersion >= 10)	// SAC 6/7/17 - Re-ordered string groups, spliting up Prop & Std demand results
-					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
+					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
 										sStdEnergy.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sVersionFields.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
 										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
-										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sPropMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(), sCompEDRMargs.toLocal8Bit().constData() );
+										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sPropMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(), sCompEDRMargs.toLocal8Bit().constData(),
+										sGridHarmCred.toLocal8Bit().constData(), sStdPVResults.toLocal8Bit().constData() );
 				else 
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), 
 										sVersionFields.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
@@ -3918,6 +4041,9 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 // SAC 10/6/17 - added 2 more sets of colums: Proposed & Standard design carbon emissions
 // SAC 12/5/17 - altered column labels: "Carbon" -> "CO2" and (tons) -> (metric ton/yr)
 // SAC 12/12/17 - added Compliance EDR Margins columns
+// SAC 1/4/18 - added 4 GHC (grid harmonization credit) columns and updated Min Req'd PV labels to read Std Design PV
+// SAC 1/5/18 - added '(fuel multiplier adjusted)' to EDR Ref TDV column label
+// SAC 1/12/18 - added 3 Standard Design PV results (kWh, TDV & kW)
 static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site"
 										" Other Fuel Use,,,,,,,,,,Proposed Model TDV,,,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,"
 										",,,Standard Model Site Natural Gas Use,,,,,,,,,,Standard Model Site Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Standard Model El"
@@ -3925,8 +4051,8 @@ static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site 
 										"ric Use,,,,,,,,,,,,Proposed  Design Rating Model Site Natural Gas Use,,,,,,,,,,Proposed  Design Rating Model Site Other Fuel Use,,,,,,,,,,"
 										"Proposed  Design Rating Model TDV,,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,Reference Design Rating Model Site El"
 										"ectric Use,,,,,,,,,,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,,,,,,,"
-										",Reference Design Rating Model TDV,,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings,,,,,Compliance To"
-										"tal TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Proposed PV Scaling,,,Target EDR,,Minimum Req'd PV,,Proposed Design CO2 Emissions,,,Standard Design CO2 Emissions,,,Compliance EDR Margins,,\n";
+										",Reference Design Rating Model TDV (fuel multiplier adjusted),,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Design Ratings,,,,,Compliance To"
+										"tal TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Proposed PV Scaling,,,Target EDR,,Standard Design PV,,Proposed Design CO2 Emissions,,,Standard Design CO2 Emissions,,,Compliance EDR Margins,,Grid Harmonization Credit,,,,Standard Design PV Results,,,\n";
 static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,"
 										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ"
 										" Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Ligh"
@@ -3946,8 +4072,8 @@ static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance
 										"rior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other H"
 										"VAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,E"
 										"xterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design "
-										"Rating Model,,Max PV,PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Min Req'd,Self Consumed Solar,Grid Exported Solar,CO2 Generated,Self Co"
-										"nsumed Solar,Grid Exported Solar,CO2 Generated,Efficiency,Final,\n";
+										"Rating Model,,Max PV,PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Std Design,Self Consumed Solar,Grid Exported Solar,CO2 Generated,Self Co"
+										"nsumed Solar,Grid Exported Solar,CO2 Generated,Efficiency,Final,TDV Cap,TDV,Elec Use,Battery,Elec Use,TDV,Demand,\n";
 static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
 										"(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu"
 										"),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTD"
@@ -3964,7 +4090,7 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
 										"tu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr"
 										"),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Excl. PV+Batt,PV+Batt Only,Final EDR,Excl. PV,Min Reqd PV,"
 										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(metric ton/yr),(metric ton/yr),(metr"
-										"ic ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(EDR),(EDR),\n";
+										"ic ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(EDR),(EDR),(kTDV/ft2-yr),(kTDV/ft2-yr),(kWh),Ratio,(kWh),(kTDV/ft2-yr),(kW),\n";
 
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;

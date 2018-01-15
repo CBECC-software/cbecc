@@ -542,6 +542,7 @@ void CSACBEMProcDialog::DeleteControls()
            || (pWnd->IsKindOf(RUNTIME_CLASS(CWMFCtl      )))
 //           || (pWnd->IsKindOf(RUNTIME_CLASS(CFloorPlanCtl)))
            || (pWnd->IsKindOf(RUNTIME_CLASS(CDateTimeCtl )))
+           || (pWnd->IsKindOf(RUNTIME_CLASS(CBEMProcCtrlRTF)))  // SAC 1/3/18 - Res tic #944
            )
          pWnd->DestroyWindow();
          

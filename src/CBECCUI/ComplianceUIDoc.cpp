@@ -820,6 +820,7 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
 		long lEnableFixedFlowOAV  = ReadProgInt( "options", "EnableFixedFlowOAV", 1 ),	lDBID_Proj_EnableFixedFlowOAV = BEMPX_GetDatabaseID( "EnableFixedFlowOAV", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableFixedFlowOAV > 0 );
 		long lEnableEDR           = ReadProgInt( "options", "EnableEDR"         , 0 ),	lDBID_Proj_EnableEDR          = BEMPX_GetDatabaseID( "EnableEDR"         , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableEDR          > 0 );  // SAC 12/17/16
 		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 6/2/14 - added
+		long lAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 ),	lDBID_Proj_AllowNegativeDesignRatings = BEMPX_GetDatabaseID( "AllowNegativeDesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_AllowNegativeDesignRatings > 0 );  // SAC 1/11/18 - added
 		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
 		if (lEnableVarFlowOAV > 0 &&		lDBID_Proj_EnableVarFlowOAV   > 0)
@@ -830,11 +831,12 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableEDR         , BEMP_Int, (void*) &lEnableEDR         , BEMO_User, -1, BEMS_ProgDefault );
 		if (lBypassRuleLimits > 0 &&	   lDBID_Proj_BypassRuleLimits > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_BypassRuleLimits  , BEMP_Int, (void*) &lBypassRuleLimits  , BEMO_User, -1, BEMS_ProgDefault );
+		if (lAllowNegativeDesignRatings > 0 &&	   lDBID_Proj_AllowNegativeDesignRatings > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_AllowNegativeDesignRatings, BEMP_Int, (void*) &lAllowNegativeDesignRatings, BEMO_User, -1, BEMS_ProgDefault );
 
 		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
 		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
-
 #endif
 
       if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))

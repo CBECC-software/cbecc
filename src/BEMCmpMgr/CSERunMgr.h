@@ -38,6 +38,11 @@ const int CSE_CONTINUE = 0;		// continue execution
 const int CSE_ABORT = -1;		// abort and cleanup
 
 extern const char* pszRunAbbrev_u;
+extern const char* pszRunAbbrev_pp;
+extern const char* pszRunAbbrev_ppN;
+extern const char* pszRunAbbrev_ppE;
+extern const char* pszRunAbbrev_ppS;
+extern const char* pszRunAbbrev_ppW;
 extern const char* pszRunAbbrev_pmf;
 extern const char* pszRunAbbrev_pmfN;
 extern const char* pszRunAbbrev_pmfE;
@@ -59,6 +64,11 @@ extern const char* pszRunAbbrev_dr;
 enum CRM_RunType	// SAC 3/26/15
 {
    CRM_User,	// user model w/out full proposed setup when in Research Mode
+   CRM_PreProp,
+   CRM_NOrientPreProp,
+   CRM_EOrientPreProp,
+   CRM_SOrientPreProp,
+   CRM_WOrientPreProp,
    CRM_PropMixedFuel,
    CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
    CRM_EPropMixedFuel,
@@ -133,7 +143,7 @@ public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
 		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0,
-		long lPropFlexRunReqd=0, int iNumRuns=-1 );
+		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1 );
 	~CSERunMgr();
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
@@ -170,6 +180,7 @@ private:
 	long m_lStdDesignBaseID;
 	long m_lDesignRatingRunID;
 	long m_lPropMixedFuelRunReqd;
+	long m_lPrelimPropRunReqd;
 	long m_lPropFlexRunReqd;
 	bool m_bVerbose;
 	bool m_bStoreBEMProcDetails;

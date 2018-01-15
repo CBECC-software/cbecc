@@ -239,7 +239,7 @@ int BEMPUIX_GetNumConsecutiveDialogTabIDs( int iBEMClass, int iUIMode )
 }
 
 int BEMPUIX_GetFirstDialogTabID( int iBEMClass, int iUIMode )	// SAC 1/5/17
-{	int iNumPages = eScreenData.GetNumPagesByClass( iBEMClass, iUIMode );
+{	//int iNumPages = eScreenData.GetNumPagesByClass( iBEMClass, iUIMode );
    CBEMPUIPage* pPage = eScreenData.GetPageByClassAndIndex( iBEMClass, 0, iUIMode );
    return (pPage ? pPage->m_iPageId : -1);
 }

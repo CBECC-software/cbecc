@@ -4323,6 +4323,48 @@ long BEMPX_GetPrimaryPropertyDBID( int i1BEMClass, int iPrimPropIdx )
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+bool BEMPX_DeleteLastModels( int iNumModelsToDelete /*=1*/ )
+{
+	if (iNumModelsToDelete > eNumBEMProcsLoaded)
+		return false;
+
+	bool bRetVal = true;
+	bool bInitDeletingAllObjects = eDeletingAllObjects;
+	eDeletingAllObjects = true;
+	int i, bdClass, ib, iMdl;
+
+	int iMinModel = eNumBEMProcsLoaded-iNumModelsToDelete;
+   for (i=eNumBEMProcsLoaded-1; i >= iMinModel; i--) 
+   {  BEMProcObject* pBEMProc = getBEMProcPointer( i );
+		if (pBEMProc)
+			pBEMProc->clear();
+   }
+
+	if (iMinModel > 0)
+	{	// remove all pointers to model mapped objects for the remaining model objects
+	   for (i=0; i < iMinModel; i++) 
+      {	BEMProcObject* pBEMProc = getBEMProcPointer( i );			assert( pBEMProc );
+			if (pBEMProc)
+   		{	for (bdClass = pBEMProc->getNumClasses()-1; bdClass >= 0; bdClass--)
+					for (i=0; i<3; i++)
+						for (ib = pBEMProc->getClass( bdClass )->ObjectCount( (BEM_ObjType) i )-1; ib >= 0; ib--)
+						{	BEMObject* pObj = pBEMProc->getClass( bdClass )->GetObject( (BEM_ObjType) i, ib );		assert( pObj );
+							if (pObj)
+							{	for (iMdl=iMinModel; iMdl < eNumBEMProcsLoaded; iMdl++)
+									pObj->setModelMappedObject( iMdl, NULL );
+						}	}
+		}	}
+	}
+
+	blastSpecificBEMProcs( iMinModel, iNumModelsToDelete );
+
+	eNumBEMProcsLoaded = iMinModel;
+	eDeletingAllObjects = bInitDeletingAllObjects;
+	return bRetVal;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 bool BEMPX_DeleteModels( bool bIncludingUserModel /*false*/ )
 {
 	bool bRetVal = true;

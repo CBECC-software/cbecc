@@ -817,6 +817,12 @@ int /*CALLBACK*/ CSE_MsgCallback( int level, const char* msg )
 	return CSE_ProcessMessage( level, msg);
 }
 
+void ClearCSEProgressMap()		// SAC 1/12/18
+{	mapCSECallback.clear();
+	for(int i=0; pszCSEProgressMsgs[i]; i++)
+		mapCSECallback[pszCSEProgressMsgs[i]] = 0;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 

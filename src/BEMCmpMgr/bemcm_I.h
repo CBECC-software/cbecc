@@ -166,6 +166,7 @@ extern bool sbLogCSECallbacks;
 extern int  siCallbackCount;
 extern bool sbAllowCallbackAbort;	// SAC 4/5/15
 extern std::map<std::string, int> mapCSECallback;
+extern void ClearCSEProgressMap();	// SAC 1/12/18
 // end of - Analysis progress tracking callback 
 
 

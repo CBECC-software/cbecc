@@ -2725,6 +2725,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
 			sOptionsCSVString += sOptTemp;
 		}
+      int iAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 /*default*/ );		// SAC 1/11/18
+		if (iAllowNegativeDesignRatings > 0)
+		{	sOptTemp.Format( "AllowNegativeDesignRatings,%d,", iAllowNegativeDesignRatings );
+			sOptionsCSVString += sOptTemp;
+		}
       if (ReadProgInt( "options",   "BypassValidFileChecks",     0 /*default*/ ) > 0)		// SAC 5/3/14
          sOptionsCSVString +=       "BypassValidFileChecks,1,";
 		if (!ebAnalysisRangeChecks)
@@ -4666,9 +4671,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		{
 			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
 			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
-			// SAC 12/12/17 - 13->14
+			// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
+			CString sDfltResFN = "AnalysisResults-v16.csv";
 			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					14 /*iResFormatVer*/, sOriginalFileName );
+																					16 /*iResFormatVer*/, sOriginalFileName );
 			if (iCSVResVal == 0)
 			{
 				char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
@@ -4688,10 +4694,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 																false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
 				}
 
-				// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 2/2/16 - fmt 5->6  - SAC 3/16/16 - fmt 6->7
-				// SAC 10/7/16 - fmt 7->8  - SAC 2/13/17 - fmt 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
-				// SAC 12/12/17 - 13->14
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", "AnalysisResults-v14.csv", TRUE /*bGetPath*/ );
+				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
 				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 			}
 			else
@@ -4818,9 +4821,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 				CString sDialogCaption;
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
+				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 				CWnd* pWnd = GetFocus();
 				CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-				                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 490 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+				                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
 				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -5089,9 +5093,10 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 
 				CString sDialogCaption;
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
+				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
       		CWnd* pWnd = GetFocus();
       		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-      		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 495 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+      		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
       		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -5557,9 +5562,10 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 
 		CString sDialogCaption;
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
+		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 490 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -5591,9 +5597,10 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 
 		CString sDialogCaption;
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
+		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, 810 /*iTabCtrlWd*/, 495 /*iTabCtrlHt*/, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,

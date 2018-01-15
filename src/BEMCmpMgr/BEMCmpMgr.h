@@ -178,6 +178,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_EvalSetupPFlxError	62		//  Error evaluating SetupRun_ProposedFlexibility rules
 #define  BEMAnal_CECRes_SimModelInitError		63		//  Error initializing analysis model
 #define  BEMAnal_CECRes_AnalResWriteError		64		//  Unable to overwrite analysis results XML file
+#define  BEMAnal_CECRes_EvalPrelimRunError	65		//  Error evaluating ApplyPrelimRunResults rules
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report

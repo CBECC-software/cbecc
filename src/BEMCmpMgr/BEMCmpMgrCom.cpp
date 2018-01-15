@@ -2142,9 +2142,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	siCallbackCount = 0;		// SAC 11/17/13 - reset CSE message callback counter between each analysis run
 	bool bStoreAllowCallbackAbort = sbAllowCallbackAbort;		// SAC 4/5/15
 	sbAllowCallbackAbort = bAllowAnalysisAbort;
-	mapCSECallback.clear();
-	for(int i=0; pszCSEProgressMsgs[i]; i++)
-		mapCSECallback[pszCSEProgressMsgs[i]] = 0;
+	ClearCSEProgressMap();	// SAC 1/12/18
 
 // QT Application stuff
 //#ifdef CM_QTGUI
