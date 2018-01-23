@@ -174,7 +174,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_CSEBattCtrlSetupErr	58		//  Error setting up CSE battery control data
 #define  BEMAnal_CECRes_CSEOpenGLError			59		//  Error initializing OpenGL (required for CSE shading simulation)
 #define  BEMAnal_CECRes_TDVFileWriteError		60		//  Error writing CSV file w/ TDV data (required for CSE simulation)
-#define  BEMAnal_CECRes_EvalSetupPMFError		61		//  Error evaluating SetupRun_ProposedMixedFuel rules
+#define  BEMAnal_CECRes_EvalSetupSMFError		61		//  Error evaluating SetupRun_StandardMixedFuel rules
 #define  BEMAnal_CECRes_EvalSetupPFlxError	62		//  Error evaluating SetupRun_ProposedFlexibility rules
 #define  BEMAnal_CECRes_SimModelInitError		63		//  Error initializing analysis model
 #define  BEMAnal_CECRes_AnalResWriteError		64		//  Unable to overwrite analysis results XML file

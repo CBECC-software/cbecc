@@ -44,11 +44,7 @@ const char* pszRunAbbrev_ppN = "pp-N";
 const char* pszRunAbbrev_ppE = "pp-E";
 const char* pszRunAbbrev_ppS = "pp-S";
 const char* pszRunAbbrev_ppW = "pp-W";
-const char* pszRunAbbrev_pmf  = "pmf";  
-const char* pszRunAbbrev_pmfN = "pmf-N";
-const char* pszRunAbbrev_pmfE = "pmf-E";
-const char* pszRunAbbrev_pmfS = "pmf-S";
-const char* pszRunAbbrev_pmfW = "pmf-W";
+const char* pszRunAbbrev_smf  = "smf";  
 const char* pszRunAbbrev_p  = "p";
 const char* pszRunAbbrev_pN = "p-N";
 const char* pszRunAbbrev_pE = "p-E";
@@ -108,7 +104,7 @@ CSERunMgr::CSERunMgr(
 	const char* pszUIVersionString,
 	int iSimReportOpt,
 	int iSimErrorOpt,
-	long lPropMixedFuelRunReqd,
+	long lStdMixedFuelRunReqd,
 	long lPrelimPropRunReqd,
 	long lPropFlexRunReqd,
 	int iNumRuns) :
@@ -134,7 +130,7 @@ CSERunMgr::CSERunMgr(
 	m_iError( 0),
 	m_iSimReportOpt(iSimReportOpt),
 	m_iSimErrorOpt(iSimErrorOpt),
-	m_lPropMixedFuelRunReqd(lPropMixedFuelRunReqd),
+	m_lStdMixedFuelRunReqd(lStdMixedFuelRunReqd),
 	m_lPrelimPropRunReqd(lPrelimPropRunReqd),
 	m_lPropFlexRunReqd(lPropFlexRunReqd),
 	m_iNumOpenGLErrors(0),
@@ -149,10 +145,10 @@ CSERunMgr::CSERunMgr(
 		if (m_lPrelimPropRunReqd > 0)		// SAC 12/29/17
 			m_iNumRuns += (lAllOrientations > 0 ? 4 : 1);
 		if (lAnalysisType > 0 /*bFullComplianceAnalysis*/ && m_lDesignRatingRunID > 0)		// SAC 3/27/15
-		{	m_iNumRuns++;
-			if (m_lPropMixedFuelRunReqd > 0)		// SAC 4/5/17
-				m_iNumRuns += (lAllOrientations > 0 ? 4 : 1);
-	}	}
+			m_iNumRuns++;
+		if (m_lStdMixedFuelRunReqd > 0)		// SAC 4/5/17
+			m_iNumRuns++;  //+= (lAllOrientations > 0 ? 4 : 1);
+	}
 }		// CSERunMgr::CSERunMgr
 
 CSERunMgr::~CSERunMgr()
@@ -243,7 +239,8 @@ int CSERunMgr::SetupRun(
 	pCSERun->SetIsStdDesign( bIsStdDesign);
 	if (m_bStoreBEMProcDetails)	// SAC 1/20/13 - added export of additional "detail" file to help isolate unnecessary object creation issues
 	{	QString sDbgFileName;
-		sDbgFileName = QString( "%1%2 - run %3.ibd-b4Evals" ).arg( m_sProcessPath, m_sModelFileOnlyNoExt, QString::number(iRunIdx+1) );
+		//sDbgFileName = QString( "%1%2 - run %3.ibd-b4Evals" ).arg( m_sProcessPath, m_sModelFileOnlyNoExt, QString::number(iRunIdx+1) );
+		sDbgFileName = QString( "%1%2 - %3.ibd-b4Evals" ).arg( m_sProcessPath, m_sModelFileOnlyNoExt, pszRunAbbrev );
 		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
 	}
 
@@ -253,12 +250,7 @@ int CSERunMgr::SetupRun(
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunAbbrev" ), BEMP_Str, (void*) pszRunAbbrev );
 
 	QString sOrientLtr, sOrientName;
-	if (iRunType >= CRM_PropMixedFuel && iRunType <= CRM_WPropMixedFuel)		// SAC 12/20/17 - reorder if statement to be consistent w/ new PMF run order
-	{	iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
-		if (iRetVal == 0)
-			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPMFError, "SetupRun_ProposedMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
-	}
-	else if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && m_lAnalysisType > 0)
+	if (iRunType < CRM_StdDesign /*!bIsStdDesign*/ && iRunType != CRM_StdMixedFuel && m_lAnalysisType > 0)
 	{	if (m_lPrelimPropRunReqd && iRunType >= CRM_Prop)
 			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPrelimRunError, "ApplyPrelimRunResults", m_bVerbose, m_pCompRuleDebugInfo );
 		if (iRetVal == 0)
@@ -266,13 +258,23 @@ int CSERunMgr::SetupRun(
 	}
 	else if (iRunType >= CRM_PropFlex && iRunType <= CRM_WPropFlex)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_ProposedFlexibility", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 8/3/17
-	else if (iRunType >= CRM_StdDesign)	// SAC 3/27/15 - was:  bIsStdDesign)
+	else if (iRunType >= CRM_StdDesign || iRunType == CRM_StdMixedFuel)	// SAC 3/27/15 - was:  bIsStdDesign)
 	{	// SAC 3/27/15 - SET 
 		if (iRunType == CRM_DesignRating)
       	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:StdDesignBase" ), BEMP_Int, (void*) &m_lDesignRatingRunID );
 		// may at some point need to specifically set  StandardsVersion  if/when multiple standard vintages is supported by a single ruleset
 
-		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalStdConvError, "BudgetConversion", m_bVerbose, m_pCompRuleDebugInfo );
+		if (iRunType == CRM_StdMixedFuel && iRunIdx == 0)	// SAC 1/17/18 - eval 'ProposedCompliance' rules prior to BudgetConversion for StdMixedFuel run if no PrelimProp run being simulated
+		{	iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropCompError, "ProposedCompliance", m_bVerbose, m_pCompRuleDebugInfo );
+			if (iRetVal == 0)
+				iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPostPropError, "PostProposedInput", m_bVerbose, m_pCompRuleDebugInfo );		// setup for Proposed run
+		}
+
+		if (iRetVal == 0)
+			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalStdConvError, "BudgetConversion", m_bVerbose, m_pCompRuleDebugInfo );
+
+		if (iRetVal == 0 && iRunType == CRM_StdMixedFuel)	//  SAC 1/16/18 - setup for StdMixedFuel run
+			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupSMFError, "SetupRun_StandardMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	}
 	if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
 		iRetVal = BEMAnal_CECRes_RuleProcAbort;
@@ -289,8 +291,7 @@ int CSERunMgr::SetupRun(
 	pCSERun->SetRunIDProcFile( sRunIDProcFile);
 	pCSERun->SetRunAbbrev( sRunAbbrev);
 
-	if (iRetVal == 0 && ( (iRunType >= CRM_NPropMixedFuel && iRunType <= CRM_WPropMixedFuel) ||
-								 (iRunType >= CRM_NOrientPreProp && iRunType <= CRM_WOrientPreProp) ||
+	if (iRetVal == 0 && ( (iRunType >= CRM_NOrientPreProp && iRunType <= CRM_WOrientPreProp) ||
 								 (iRunType >= CRM_NOrientProp    && iRunType <= CRM_WOrientProp   ) ||
 								 (iRunType >= CRM_NPropFlex      && iRunType <= CRM_WPropFlex     ) ))		// SAC 3/27/15 - was:  m_bFullComplianceAnalysis && m_lAllOrientations > 0 && !bLastRun)
 	{  // Set Orientation for this particular run

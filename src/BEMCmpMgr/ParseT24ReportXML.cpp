@@ -663,6 +663,9 @@ int ExtractErrorsFromTitle24ReportXML( const char* xmlFileName, QString& sErrors
 																							 sElemName.compare("SDDXML" , Qt::CaseInsensitive) == 0 || sElemName.compare("Report" , Qt::CaseInsensitive) == 0)
 																						{	// do nothing here
 																						}
+																						else if (sElemName.compare("Signature" , Qt::CaseInsensitive) == 0)
+																						{	//	any processing for Signature ??
+																						}
 																						else if (sElemName.compare("Error" , Qt::CaseInsensitive) == 0)
 																						{	//	bFoundNewError = false;
 																						}

@@ -3363,13 +3363,14 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
 				if (!ppCSVColumnLabels && sbLogTimeStamps)  // SAC 11/17/13 - added logic to prevent output of timestamps on regular log messages)
       		{
 					QDateTime locTime = QDateTime::currentDateTime();
-					timeStamp = locTime.toString("yyyy-MM-dd HH:mm:ss -");
+					timeStamp = locTime.toString("yyyy-MM-dd HH:mm:ss - ");
 				}
       		else if (!ppCSVColumnLabels)
-					timeStamp = "-";
+					timeStamp = "- ";
+			// SAC 1/15/18 - added trailing spaces to timeStamp above and removed from format statements below to prevent space char @ beginning of lines where timeStamp is empty (writes to .log.csv files)
 
 				// write date/time stamp and output string to file
-				QString sOut = QString("%1 %2\n").arg( timeStamp, output );
+				QString sOut = QString("%1%2\n").arg( timeStamp, output );
          	pLogFile->write( sOut.toLocal8Bit().constData() );
 
 				if (!bLeaveFileOpen)

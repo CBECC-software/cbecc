@@ -4511,7 +4511,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	BOOL bContinue = TRUE;
 
 #ifdef UI_CARES
-	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
 		 ( ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
@@ -4519,7 +4520,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 		 	   (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) ) ||   // addition alone
 		   ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
 		 	  BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
-		 	  BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   ) && lAllOrientations > 0 ) ))
+		 	  lAllOrientations > 0 ) ))
 	{	CString sUnsupportMsg = "The following model characteristics are present in this project but not fully supported in this release:\n"; 
 		if (lRunScope == 2)
 			sUnsupportMsg += "> Run Scope of Addition and/or Alteration\n";
@@ -4536,14 +4537,15 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
-		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
-		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
-		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0)
+		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0 &&
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) &&
+		 ( ( lSpecifyTargetDRtg > 0 && BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 ) ||
+		   ( lSpecifyTargetDRtg < 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVSizeOption"       ), lPVSizeOption ) && lPVSizeOption > 0 ) ))
 	{
      		CWnd* pWnd = GetFocus();
          CSACDlg dlgProj( pWnd, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, 186 /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Analysis Options" /*pszDialogCaption*/,
-									220 /*Ht*/, 500 /*Wd*/, 10 /*iBaseMarg*/,
+									280 /*Ht*/, 500 /*Wd*/, 10 /*iBaseMarg*/,
                            0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
 									0 /*lDBID_CtrlDBIDOffset*/, "&Continue" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
 									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
@@ -4669,42 +4671,44 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
-			// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
-			// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
-			// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
-			CString sDfltResFN = "AnalysisResults-v16.csv";
-			int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, NULL /*pszRunOrientation*/,
-																					16 /*iResFormatVer*/, sOriginalFileName );
-			if (iCSVResVal == 0)
-			{
-				char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
-				VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1536, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
-				const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
-				CString sCSVResultSummary = pszCSVResultSummary;
-//				sCSVResultSummary += CString("\"") + sOriginalFileName + CString("\"");  // append full project path/file to CSV record
-				// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
-			//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
-				QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
-				if (!sCSVLogFN.IsEmpty())
-				{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
-					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-									 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
-					if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
-						VERIFY( BEMPX_WriteLogFile( sCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
-																false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
+			const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
+			int iAllOrientationsResultsCSV = ReadProgInt( "options", "AllOrientationsResultsCSV", 1 /*default*/ );
+			int iMaxCSVOrient = (lAllOrientations > 0 && (iAllOrientationsResultsCSV > 0) ? 4 : 0);
+//CString sDbgCSVMsg;    sDbgCSVMsg.Format( "About to populate/write CSV results - AllOrients = %ld, INI AllOrientationsResultsCSV = %d, iMaxCSVOrient = %d", lAllOrientations, iAllOrientationsResultsCSV, iMaxCSVOrient );   AfxMessageBox( sDbgCSVMsg );
+			for (int iO=0; iO<=iMaxCSVOrient; iO++)
+			{	// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
+				// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
+				// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
+				CString sDfltResFN = "AnalysisResults-v16.csv";
+				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
+																						16 /*iResFormatVer*/, sOriginalFileName );
+				if (iCSVResVal == 0)
+				{
+					char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
+					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1536, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
+					const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
+					CString sCSVResultSummary = pszCSVResultSummary;
+					// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
+					QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
+					if (!sCSVLogFN.IsEmpty())
+					{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+						             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+										 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
+						if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
+							VERIFY( BEMPX_WriteLogFile( sCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+																	false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
+					}
+					CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
+					VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 				}
-
-				CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sDfltResFN, TRUE /*bGetPath*/ );
-				VERIFY( AppendToTextFile( sCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
-			}
-			else
-			{	CString sErrResultMsg;		ASSERT( FALSE );
-				sErrResultMsg.Format( "Error encountered retrieving results summary data.  CMX_PopulateCSVResultSummary_CECRes() returned %d.", iCSVResVal );
-				if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
-					AfxMessageBox( sErrResultMsg );
 				else
-					VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
-			}
+				{	CString sErrResultMsg;		ASSERT( FALSE );
+					sErrResultMsg.Format( "Error encountered retrieving results summary data.  CMX_PopulateCSVResultSummary_CECRes() returned %d.", iCSVResVal );
+					if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
+						AfxMessageBox( sErrResultMsg );
+					else
+						VERIFY( BEMPX_WriteLogFile( sErrResultMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
+			}	}
 		}
 
 	// check for existence of CSE sim output for possible access by user

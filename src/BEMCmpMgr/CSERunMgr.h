@@ -43,11 +43,7 @@ extern const char* pszRunAbbrev_ppN;
 extern const char* pszRunAbbrev_ppE;
 extern const char* pszRunAbbrev_ppS;
 extern const char* pszRunAbbrev_ppW;
-extern const char* pszRunAbbrev_pmf;
-extern const char* pszRunAbbrev_pmfN;
-extern const char* pszRunAbbrev_pmfE;
-extern const char* pszRunAbbrev_pmfS;
-extern const char* pszRunAbbrev_pmfW;
+extern const char* pszRunAbbrev_smf;
 extern const char* pszRunAbbrev_p;
 extern const char* pszRunAbbrev_pN;
 extern const char* pszRunAbbrev_pE;
@@ -69,11 +65,7 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_EOrientPreProp,
    CRM_SOrientPreProp,
    CRM_WOrientPreProp,
-   CRM_PropMixedFuel,
-   CRM_NPropMixedFuel,	// SAC 6/9/17 - added orientation-specific PMF runs
-   CRM_EPropMixedFuel,
-   CRM_SPropMixedFuel,
-   CRM_WPropMixedFuel,
+   CRM_StdMixedFuel,
    CRM_Prop,
    CRM_NOrientProp,
    CRM_EOrientProp,
@@ -142,7 +134,7 @@ class CSERunMgr
 public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
-		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lPropMixedFuelRunReqd=0,
+		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lStdMixedFuelRunReqd=0,
 		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1 );
 	~CSERunMgr();
 	void DeleteRuns();
@@ -179,7 +171,7 @@ private:
 	long m_lAnalysisType;
 	long m_lStdDesignBaseID;
 	long m_lDesignRatingRunID;
-	long m_lPropMixedFuelRunReqd;
+	long m_lStdMixedFuelRunReqd;
 	long m_lPrelimPropRunReqd;
 	long m_lPropFlexRunReqd;
 	bool m_bVerbose;

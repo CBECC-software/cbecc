@@ -75,6 +75,10 @@ static inline bool ResRetVal_ContinueProcessing( int iRetVal )		// SAC 12/12/16 
 
 void CopyResResultsObjectsAcrossRuns( int& iRetVal, const char* pszRunAbbrev, int iSrcBEMPIdx, int iDestBEMPIdx, QString& sErrorMsg )
 {		int iResCopyRetVal = 0;
+#ifdef _DEBUG
+				QString sLogMsg = QString( "    copying results objects from BEMProc %1 to %2 (%3)" ).arg( QString::number(iSrcBEMPIdx), QString::number(iDestBEMPIdx), pszRunAbbrev );
+				BEMPX_WriteLogFile( sLogMsg );  //, sLogPathFile, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ))
+#endif
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
 			QString sResCopyErrMsg;
@@ -482,7 +486,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	bool bAnalysisPriorToRptGenOK = false;
 	long lDesignRatingRunID = 0;  // SAC 3/27/15
-	long lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
+	long lStdMixedFuelRunReqd = 0;  // SAC 4/5/17
 	long lPrelimPropRunReqd = 0;  // SAC 12/29/17
 	long lPropFlexRunReqd = 0;  // SAC 8/3/17
 	bool bDHWCalcMethodUserSpecified = false;
@@ -899,7 +903,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		long lAllOrientations = 0;  // SAC 6/22/13
 		lDesignRatingRunID = 0;  // SAC 3/27/15
 		lPropFlexRunReqd = 0;  // SAC 8/3/17
-		lPropMixedFuelRunReqd = 0;  // SAC 4/5/17
+		lStdMixedFuelRunReqd = 0;  // SAC 4/5/17
 		lPrelimPropRunReqd = 0;  // SAC 12/29/17
 		long lStdDesignBaseID = 0;  	// SAC 3/27/15
 		double fPctDoneFollowingFinalSim=0;		// SAC 5/5/17
@@ -917,8 +921,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingCalcs"  ), lDRCalcs ) && lDRCalcs > 0)
 				{	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:DesignRatingBase" ), lDesignRatingRunID ) || lDesignRatingRunID < 1)
 						lDesignRatingRunID = 0;
-					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PropMixedFuelRunReqd" ), lPropMixedFuelRunReqd ) || lPropMixedFuelRunReqd < 1)  // SAC 4/5/17
-						lPropMixedFuelRunReqd = 0;
+					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdMixedFuelRunReqd" ), lStdMixedFuelRunReqd ) || lStdMixedFuelRunReqd < 1)  // SAC 4/5/17
+						lStdMixedFuelRunReqd = 0;
 				}
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdDesignBase" ), lStdDesignBaseID );  // 0/1 (boolean)
 				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:PropFlexRunReqd" ), lPropFlexRunReqd ) || lPropFlexRunReqd < 1)  // SAC 8/3/17
@@ -1314,13 +1318,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		QString sMsg;
 //		int iNumRuns = (bFullComplianceAnalysis ? (lAllOrientations > 0 ? 5 : 2) : 1);
 // SAC 3/27/15 - mods to describe each run to be performed
-// SAC 12/19/17 - re-ordered runs to perform PMF runs prior to Prop in order to scale PV if needed for Prop sim
+// SAC 12/19/17 - re-ordered runs to perform SMF runs prior to Prop in order to scale PV if needed for Prop sim
 		int iNumRuns = 0;
 		int iFirstPropModelRunType = -1;
 		int iRunType[23] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1};
 		int iBEMPIdx[23] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1,-1,-1,-1,-1, -1,-1,-1};
 		const char* pszRunAbbrev[20] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 		int iNumPrelimRuns = 0;
+		int iNumFinalRunsToCopyPrelimResultsInto = 1;	// SAC 1/18/18 - ensure final prelim results are copied into ALL initial final models (all orientations)
 		if (lAnalysisType < 1)
 		{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_u;		iRunType[iNumRuns++] = CRM_User;
 		}
@@ -1339,22 +1344,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			iBEMPIdx[iRunType[iNumRuns-(lAllOrientations>0?4:1)]]  = (bFirstModelCopyCreated ? 1 : 0);		// to keep track of BEMProcIdx of main Proposed model
 			iFirstPropModelRunType = iRunType[iNumRuns-(lAllOrientations>0?4:1)];		assert( bFirstModelCopyCreated );
 		}
-		if (lAnalysisType > 0 && lPropMixedFuelRunReqd)
-		{	if (lAllOrientations > 0)
-			{	iNumPrelimRuns += 4;
-				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfN;		iRunType[iNumRuns++] = CRM_NPropMixedFuel;
-				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfE;		iRunType[iNumRuns++] = CRM_EPropMixedFuel;
-				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfS;		iRunType[iNumRuns++] = CRM_SPropMixedFuel;
-				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmfW;		iRunType[iNumRuns++] = CRM_WPropMixedFuel;
-			}
-			else
-			{	iNumPrelimRuns++;
-				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pmf;		iRunType[iNumRuns++] = CRM_PropMixedFuel;
-			}
+		if (lAnalysisType > 0 && lStdMixedFuelRunReqd)
+		{	iNumPrelimRuns++;
+			pszRunAbbrev[iNumRuns] = pszRunAbbrev_smf;		iRunType[iNumRuns++] = CRM_StdMixedFuel;
 		}
 		if (lAnalysisType > 0)
 		{	if (lAllOrientations > 0)
-			{	pszRunAbbrev[iNumRuns] = pszRunAbbrev_pN;		iRunType[iNumRuns++] = CRM_NOrientProp;
+			{	iNumFinalRunsToCopyPrelimResultsInto = 4;
+				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pN;		iRunType[iNumRuns++] = CRM_NOrientProp;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pE;		iRunType[iNumRuns++] = CRM_EOrientProp;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pS;		iRunType[iNumRuns++] = CRM_SOrientProp;
 				pszRunAbbrev[iNumRuns] = pszRunAbbrev_pW;		iRunType[iNumRuns++] = CRM_WOrientProp;
@@ -1394,7 +1391,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, bFullComplianceAnalysis,
 			bInitHourlyResults, lAllOrientations, lAnalysisType, lStdDesignBaseID, lDesignRatingRunID, bVerbose,
 			bStoreBEMProcDetails, bPerformSimulations, bBypassCSE, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-			iSimReportDetailsOption, iSimErrorDetailsOption, lPropMixedFuelRunReqd, lPrelimPropRunReqd, lPropFlexRunReqd,			// SAC 11/7/16 - added sim report/error option arguments
+			iSimReportDetailsOption, iSimErrorDetailsOption, lStdMixedFuelRunReqd, lPrelimPropRunReqd, lPropFlexRunReqd,			// SAC 11/7/16 - added sim report/error option arguments
 			(iNumPrelimRuns > 0 ? iNumPrelimRuns : iNumRuns) );  // SAC 8/14/17 - added iNumRuns arg
 #endif
 						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
@@ -1407,7 +1404,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 //* DEBUGGING */	QString qsDbgMO = QString( "   Initiating #%1 prelim simulations (of total %2)" ).arg( QString::number( iNumPrelimRuns ), QString::number( iNumRuns ) );  BEMPX_WriteLogFile( qsDbgMO );
 	// ---------------------------------------
-	// SAC 12/21/17 - added loop to perform PRELIM (PropMixedFuel) simulations and process those results BEFORE other model generation & simulation
+	// SAC 12/21/17 - added loop to perform PRELIM (PrelimProp &/or StdMixedFuel) simulations and process those results BEFORE other model generation & simulation
 		int iPctDoneFollowingPrelimSims = 0;
 		int iRunIdx = 0;
 		if (iNumPrelimRuns > 0)
@@ -1439,7 +1436,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 			if (ResRetVal_ContinueProcessing( iRetVal ))
 			{	bool bAllowRptInclThisRun = (bAllowReportIncludeFile && (lReportInclPropOnly==0 || ( iRunType[iRunIdx] != CRM_StdDesign && iRunType[iRunIdx] != CRM_DesignRating &&		// SAC 9/4/17 - enable specification of include file only for Proposed model runs
-																																(iRunType[iRunIdx] < CRM_PropMixedFuel || iRunType[iRunIdx] > CRM_WPropMixedFuel))));
+																																 iRunType[iRunIdx] != CRM_StdMixedFuel )));
 				iRV2 = cseRunMgr.SetupRun( iRunIdx, iRunType[iRunIdx], sErrorMsg, bAllowRptInclThisRun, pszRunAbbrev[iRunIdx] );
 				if (iRV2 > 0)
 					iRetVal = iRV2;
@@ -1597,7 +1594,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 				// SAC 7/13/15 - code to export CSV files to facilitate comparison of T24DHW & CSE simulation results
 					if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations && lDHWCalcMethod == 2)		// DHWCalcMethod == "CSE (T24 match)"
-					{	assert(  false );  // not pertinent to PropMixedFuel runs
+					{	assert(  false );  
 					}
 
 					if (ResRetVal_ContinueProcessing( iRetVal ) && bPerformSimulations)
@@ -1711,9 +1708,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					{	if (iRunType[iR2] == CRM_Prop+iDeltaRT)
 							iBEMPIdx[iRunType[iR2]] = iBEMPIdx[iRunType[iRunIdx]];
 			}	}	}														assert( iBEMPIdx[iRunType[iNumPrelimRuns]] >= 0 );
-			BEMPX_SetActiveModel( iBEMPIdx[iRunType[iNumPrelimRuns]] );
+
+			for (int iCRRun=0; (iRetVal==0 && iCRRun < iNumFinalRunsToCopyPrelimResultsInto); iCRRun++)	// SAC 1/18/18 - to ensure that ALL Prop orientation runs start w/ final prelim run results
+			{	BEMPX_SetActiveModel( iBEMPIdx[iRunType[iNumPrelimRuns+iCRRun]] );
 //* DEBUGGING */	qsDbgMO = QString( "   about to copy results objects %1 -> %2 prelim runs" ).arg( QString::number( iBEMPIdx[iRunType[iNumPrelimRuns-1]] ), QString::number( iBEMPIdx[iRunType[iNumPrelimRuns]] ) );  BEMPX_WriteLogFile( qsDbgMO );
-			CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iNumPrelimRuns], iBEMPIdx[iRunType[iNumPrelimRuns-1]], iBEMPIdx[iRunType[iNumPrelimRuns]], sErrorMsg );
+				CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iNumPrelimRuns+iCRRun], iBEMPIdx[iRunType[iNumPrelimRuns-1]], iBEMPIdx[iRunType[iNumPrelimRuns+iCRRun]], sErrorMsg );
+			}
+			if (iNumFinalRunsToCopyPrelimResultsInto > 1)
+				BEMPX_SetActiveModel( iBEMPIdx[iRunType[iNumPrelimRuns]] );
 
 //		//	then delete BEMProc models of Prelim runs
 //			assert( iBEMPIdx[ iRunType[iNumPrelimRuns] ] > 0  &&  iBEMPIdx[ iRunType[iNumPrelimRuns] ] < iBEMPIdx[ iRunType[iNumPrelimRuns-1] ] );
@@ -1730,6 +1732,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// ---------------------------------------
 	// original run loop where main/remaining runs are initialized and simulated
+		int iLastRunIdxOfExistingBEMProc = -1;
 		for (iRunIdx = iNumPrelimRuns; (ResRetVal_ContinueProcessing( iRetVal ) && iRunIdx < iNumRuns); iRunIdx++)
 		{
 //* DEBUGGING */	qsDbgMO = QString( "   processing run idx #%1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
@@ -1740,6 +1743,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				{	if (sErrorMsg.isEmpty())
 						sErrorMsg = QString( "ERROR:  Unable to activate analysis building model #%1 (%2, BEMProcIdx %3)" ).arg( QString::number(iRunIdx+1), (pszRunAbbrev[iRunIdx] ? pszRunAbbrev[iRunIdx] : ""), QString::number( iBEMPIdx[ iRunType[ iRunIdx ] ] ) );
 					iRetVal = BEMAnal_CECRes_SimModelInitError;		// 63	- Error initializing analysis model
+				}
+				else if (iRunIdx > 0)
+				{	// Copy results objects from PREVIOUS MODEL to CURRENT MODEL (since Run Setup CAN cause changes to results stored in BEMProc
+					CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iRunIdx], iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
+					iLastRunIdxOfExistingBEMProc = iRunIdx;
 			}	}
 			else // if (iRunIdx > 0 || !bFirstModelCopyCreated)
 			{	// SAC 8/8/17 - added code to confirm positive return value from BEMPX_AddModel()
@@ -1755,7 +1763,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //* DEBUGGING */	qsDbgMO = QString( "   model activated/added for run idx #%1" ).arg( QString::number( iRunIdx ) );  BEMPX_WriteLogFile( qsDbgMO );
 			if (ResRetVal_ContinueProcessing( iRetVal ))
 			{	bool bAllowRptInclThisRun = (bAllowReportIncludeFile && (lReportInclPropOnly==0 || ( iRunType[iRunIdx] != CRM_StdDesign && iRunType[iRunIdx] != CRM_DesignRating &&		// SAC 9/4/17 - enable specification of include file only for Proposed model runs
-																																(iRunType[iRunIdx] < CRM_PropMixedFuel || iRunType[iRunIdx] > CRM_WPropMixedFuel))));
+																																 iRunType[iRunIdx] != CRM_StdMixedFuel )));
 				iRV2 = cseRunMgr.SetupRun( iRunIdx-iNumPrelimRuns, iRunType[iRunIdx], sErrorMsg, bAllowRptInclThisRun, pszRunAbbrev[iRunIdx] );
 				if (iRV2 > 0)
 					iRetVal = iRV2;
@@ -1785,6 +1793,12 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				cseRunMgr.ArchiveSimOutput( iRunIdx-iNumPrelimRuns, sCSESimErrOutputFileName, CSERun::OutFileERR );
 		}
 
+	//	if (ResRetVal_ContinueProcessing( iRetVal ) && iLastRunIdxOfExistingBEMProc >= 0 && iBEMPIdx[iRunType[iLastRunIdxOfExistingBEMProc]] != iBEMPIdx[iRunType[iRunIdx]])
+	//		{	// Copy results objects from PREVIOUS (setup) MODEL to CURRENT MODEL (since Run Setup CAN cause changes to results stored in BEMProc
+	//			CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iRunIdx], iBEMPIdx[iRunType[iLastRunIdxOfExistingBEMProc]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
+	//			iLastRunIdxOfExistingBEMProc = -1;
+	//		}
+
 		if (ResRetVal_ContinueProcessing( iRetVal ))
 		for (iRunIdx = iNumPrelimRuns; iRunIdx < iNumRuns; iRunIdx++)
 		{
@@ -1809,38 +1823,15 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 				BOOL bIsStdDesign = cseRun.GetIsStdDesign();
 				BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
 
-// SAC 6/19/14 - add models to BEMBase for each run being performed so that the state of each model can be retained for use the second time through the run loop
-				if (iRunIdx > iNumPrelimRuns)
-				{
-				// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
-					CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
-//					int iResCopyRetVal = 0;
-//					if (ResRetVal_ContinueProcessing( iRetVal ))
-//					{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-//						QString sResCopyErrMsg;
-//						iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]] );
-//						assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-//						if (iResCopyRetVal > 0)
-//						{	if (sErrorMsg.isEmpty())
-//								sErrorMsg = sResCopyErrMsg;
-//							switch (iResCopyRetVal)
-//							{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-//								case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-//								default :	assert( FALSE );	break;
-//							}
-//					}	}
-//				// now results objects from previous run are in place, now ensure that references to those objects are also valid
-//					char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-//					int iRORPIdx = -1;
-//					while (pszaResObjRefProps[++iRORPIdx] != NULL)
-//					{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-//						int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-//						QString sROR;
-//						for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-//						{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMPIdx[iRunType[iRunIdx-1]] /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-//							{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-//	                                                     //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-//					}	}	}
+				if (iRunIdx > iNumPrelimRuns ||
+					 (iNumPrelimRuns > 0 && iRunIdx == iNumPrelimRuns && iLastRunIdxOfExistingBEMProc >= 0 &&
+					  iBEMPIdx[iRunType[iLastRunIdxOfExistingBEMProc]] != iBEMPIdx[iRunType[iRunIdx]]))		// SAC 1/18/18
+				{	if (iRunIdx > iNumPrelimRuns)
+						// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
+						CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx-1]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
+					else
+						// Copy results objects from PREVIOUS (setup) MODEL to CURRENT MODEL (since Run Setup CAN cause changes to results stored in BEMProc
+						CopyResResultsObjectsAcrossRuns( iRetVal, pszRunAbbrev[iRunIdx], iBEMPIdx[iRunType[iLastRunIdxOfExistingBEMProc]], iBEMPIdx[iRunType[iRunIdx]], sErrorMsg );
 								assert( iRunIdx < MAX_TimeArray_Res );
 								dTimeToProcResults[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 				}
@@ -2888,7 +2879,8 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 		int iEnergyUseObjectSets = 1;  // SAC 8/6/13
 		long lWorstOrientation=0;
 		BEMObject* pEUseSummaryObj = NULL;
-		int iEUseSummaryObjIdx = -1;
+		int iEUseSummaryObjIdx = -1, iOrientIdx = 0;	// SAC 1/14/18 - fix to orientation-specific results retrieval
+		QString qsEUseSummaryName;
 		if (iRetVal==0 && lAnalysisType == 13)
 		{	if (lAllOrientations > 0)  // SAC 8/6/13
 				iEnergyUseObjectSets = 4;
@@ -2906,13 +2898,13 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 					{	}		// do nothing here - Proj:RunResults array populated w/ worst case, which is the default if no specific orientation is requested
 					else if (strlen( pszRunOrientation ) == 1)
 					{	     if (pszRunOrientation[0]=='N' || pszRunOrientation[0]=='n')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );
+						{					iOrientIdx = 1;												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsN" );  }
 						else if (pszRunOrientation[0]=='E' || pszRunOrientation[0]=='e')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );
+						{					iOrientIdx = 2;												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsE" );  }
 						else if (pszRunOrientation[0]=='S' || pszRunOrientation[0]=='s')
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );
-						else
-																												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );
+						{					iOrientIdx = 3;												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsS" );  }
+						else if (pszRunOrientation[0]=='W' || pszRunOrientation[0]=='w')
+						{					iOrientIdx = 4;												lDBID_Proj_RunResults = BEMPX_GetDatabaseID( "Proj:RunResultsW" );  }
 					}
 					else
 					{	pEUseSummaryObj = BEMPX_GetObjectByName( BEMPX_GetDBComponentID( "EUseSummary" ), iError, pszRunOrientation );
@@ -2933,14 +2925,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				}
 			}
 			if (pEUseSummaryObj == NULL)
-			{	if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pEUseSummaryObj ) && pEUseSummaryObj && pEUseSummaryObj->getClass())
+			{	if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" )+iOrientIdx, pEUseSummaryObj ) && pEUseSummaryObj && pEUseSummaryObj->getClass())
 				{	iEUseSummaryObjIdx = BEMPX_GetObjectIndex( pEUseSummaryObj->getClass(), pEUseSummaryObj );		assert( iEUseSummaryObjIdx >= 0 );
 					if (iEUseSummaryObjIdx < 0)
 						iRetVal = 3;
 				}
 				else
 					iRetVal = 2;
-		}	}
+			}
+			if (pEUseSummaryObj && lWorstOrientation > 0)
+				qsEUseSummaryName = pEUseSummaryObj->getName();
+		}
 
 		if (iRetVal==0 && lAnalysisType == 13 && iEUseSummaryObjIdx >= 0)
 		{			sPassFail = "--";  // return PassFail string if full analysis not executed
@@ -3238,6 +3233,13 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				if (bExpectDesignRatingResults)
 					sDesignRating = QString("%1,").arg( QString::number( fDesignRating ) );
 
+				if (iResultsFormatVersion >= 16 && !qsEUseSummaryName.isEmpty())	// SAC 1/15/18 - append EUseSummary name onto RunTitle to document orientation being reported
+				{	if (sRunTitle.isEmpty())
+						sRunTitle = qsEUseSummaryName;
+					else
+					{	sRunTitle += " - ";	sRunTitle += qsEUseSummaryName;
+				}	}
+
 				QString sBeginFields, sPropEnergy, sStdEnergy, sVersionFields, sPropDemand, sStdDemand, sDemSavAndCAHP, sDRtgEnergyDemand;
 		// SAC 3/31/15 - revisions to populate return string is sections to avoid excessively numerous & long individual format statements
 				if (iResultsFormatVersion >= 10)
@@ -3346,8 +3348,8 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				else
 					sDemSavAndCAHP = ",,,,,,,,,,,,,";
 
-				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sPropMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,", sGridHarmCred = ",,,,";
-				if (iResultsFormatVersion >= 12)		// SAC 9/15/17 - additional PV scaling, target EDR & proposed mixed fuel run results
+				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sStdMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,", sGridHarmCred = ",,,,";
+				if (iResultsFormatVersion >= 12)		// SAC 9/15/17 - additional PV scaling, target EDR & standard mixed fuel run results
 				{
 					//BEMObject* pObjResultSummary = NULL;    int iEUSObjIdx=-1;
 					//if (BEMPX_GetObject( BEMPX_GetDatabaseID( "Proj:ResultSummary" ), pObjResultSummary ) && pObjResultSummary && pObjResultSummary->getClass())
@@ -3400,19 +3402,19 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						sTargetEDR = QString( "%1,%2," ).arg( QString::number( dTargetEDR ), sTEDRResult );
 					}
 
-					// Standard Design PV kW = (-1 * ResultSummary[1]:PropMixedFuelkWh / ResultSummary[1]:PropMixedFuelPV)
+					// Standard Design PV kW = (-1 * ResultSummary[1]:StdMixedFuelkWh / ResultSummary[1]:StdMixedFuelPV)
 					if (iEUseSummaryObjIdx >= 0)
-					{	double dPropMixedFuelkWh=-1, dPropMixedFuelPV=0;
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelkWh" ), dPropMixedFuelkWh, -1, BEMP_Flt, iEUseSummaryObjIdx );
-						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropMixedFuelPV"  ), dPropMixedFuelPV,  -1, BEMP_Flt, iEUseSummaryObjIdx );
-						if (dPropMixedFuelkWh > 0 && dPropMixedFuelPV != 0.0)
-							sPropMixedFuel = QString( "%1,%2," ).arg( QString::number( dPropMixedFuelkWh ), QString::number( (-1*dPropMixedFuelkWh/dPropMixedFuelPV) ) );
+					{	double dStdMixedFuelkWh=-1, dStdMixedFuelPV=0;
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdMixedFuelkWh" ), dStdMixedFuelkWh, -1, BEMP_Flt, iEUseSummaryObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdMixedFuelPV"  ), dStdMixedFuelPV,  -1, BEMP_Flt, iEUseSummaryObjIdx );
+						if (dStdMixedFuelkWh > 0 && dStdMixedFuelPV != 0.0)
+							sStdMixedFuel = QString( "%1,%2," ).arg( QString::number( dStdMixedFuelkWh ), QString::number( (-1*dStdMixedFuelkWh/dStdMixedFuelPV) ) );
 					}
 
 					// Carbon Emissions - SAC 10/6/17
 					if (iResultsFormatVersion >= 13 && iEUseSummaryObjIdx >= 0)
 					{	double dPCarbSelfCons, dPCarbExport, dPCarbFinal, dSCarbSelfCons, dSCarbExport, dSCarbFinal;
-						int iPArrIdx = (lAllOrientations > 0 && lWorstOrientation > 0) ? lWorstOrientation : 0;
+						int iPArrIdx = (iOrientIdx > 0) ? iOrientIdx : (lAllOrientations > 0 && lWorstOrientation > 0) ? lWorstOrientation : 0;
 						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropSelfConsCarbon" )+iPArrIdx, dPCarbSelfCons, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
 							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropExportCarbon"   )+iPArrIdx, dPCarbExport  , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
 							 BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropFinalCarbon"    )+iPArrIdx, dPCarbFinal   , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
@@ -3503,7 +3505,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
 										sStdEnergy.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sVersionFields.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
 										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
-										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sPropMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(), sCompEDRMargs.toLocal8Bit().constData(),
+										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sStdMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(), sCompEDRMargs.toLocal8Bit().constData(),
 										sGridHarmCred.toLocal8Bit().constData(), sStdPVResults.toLocal8Bit().constData() );
 				else 
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), 
@@ -4589,15 +4591,23 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 			   //      	   csvFile.SeekToEnd();
 
 							char pszCSVResultSummary[ 2560 ];
-
-							int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, 2560, NULL /*pszRunOrientation*/, -1 /*iResFormatVer*/, sProjPathFile.c_str() );
-							if (iCSVResVal == 0)
-			   	      {	csvFile.write( pszCSVResultSummary );
-			   	      	csvFile.write( "\n" );
-			   	      }
-							else
-								sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  unable to retrieve results summary data.  CMX_PopulateCSVResultSummary_CECRes() returned %d" ) % (iRun+1) % iaBatchRecNums[iRun] % iCSVResVal );
-
+							// SAC 1/17/18 - code to cause batch runs to write all 5 orientations records to results CSV (tic #943)
+							long lAllOrientations=0;
+							if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations ))
+								lAllOrientations = 0;
+							const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
+							bool bAllOrientationsResultsCSV =	(GetCSVOptionValue( "AllOrientationsResultsCSV", 1, saCSVOptions ) > 0);  // default to always writing all 5 orientaiton results for All Orients runs
+							int iMaxCSVOrient = (lAllOrientations > 0 && bAllOrientationsResultsCSV ? 4 : 0);
+							for (int iO=0; iO<=iMaxCSVOrient; iO++)
+							{
+								int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, 2560, pszOrientation[iO] /*pszRunOrientation*/, -1 /*iResFormatVer*/, sProjPathFile.c_str() );
+								if (iCSVResVal == 0)
+				   	      {	csvFile.write( pszCSVResultSummary );
+				   	      	csvFile.write( "\n" );
+			   		      }
+								else
+									sErrMsg = boost::str( boost::format( "Error:  Processing batch run %d, record %d:  unable to retrieve results summary data.  CMX_PopulateCSVResultSummary_CECRes( orientation %d ) returned %d" ) % (iRun+1) % iaBatchRecNums[iRun] % (iO+1) % iCSVResVal );
+							}
 							csvFile.flush();
 							csvFile.close();
 							bThisRunGood = true;

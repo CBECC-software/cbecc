@@ -684,8 +684,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,26,0,988		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2019,26,0,988	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2019,26,0,994		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2019,26,0,994	//   examples:  2019,107,0,### => 2019.1.0 RC (###) / 2019,110,0,### => 2019.1.1 (###) / 2019,124,0,### => 2019.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -703,7 +703,7 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "FileVersion", "2019.0.2 RV (988)\0"
+            VALUE "FileVersion", "2019.0.2 RV (994)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2018, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
@@ -711,7 +711,7 @@ BEGIN
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (commercial 2019)\0"
             VALUE "ProductVersion", "2019.0.2 RV\0"
-            VALUE "SpecialBuild", "build 988\0"
+            VALUE "SpecialBuild", "build 994\0"
         END
     END
     BLOCK "VarFileInfo"
