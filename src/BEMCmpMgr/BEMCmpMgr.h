@@ -105,7 +105,8 @@ int  BEMCMPMGR_API __cdecl CMX_LoadModel( const char* pszBEMBinPathFile, const c
 typedef void (CALLBACK* PLogMsgCallbackFunc) ( int iClassification, const char* pszErrorMsg, const char* pszHelpKey );
 BOOL BEMCMPMGR_API __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog=FALSE, BOOL bTagDataAsUserDefined=FALSE,
 														BOOL bVerboseOutput=FALSE, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL,
-														PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL, void* pCompRuleDebugInfo=NULL ); 
+														PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL, void* pCompRuleDebugInfo=NULL,
+														QStringList* psaWarningMsgs=NULL );		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
 
 int  BEMCMPMGR_API __cdecl CMX_SaveAnalysisResultsToTempFiles( QVector<QString>& saProjEUseSumObjs, QVector<QString>& saUniqueEUseSumObjs, 
 																					QVector<QString>& saTempPathFiles );
@@ -179,6 +180,10 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_SimModelInitError		63		//  Error initializing analysis model
 #define  BEMAnal_CECRes_AnalResWriteError		64		//  Unable to overwrite analysis results XML file
 #define  BEMAnal_CECRes_EvalPrelimRunError	65		//  Error evaluating ApplyPrelimRunResults rules
+#define  BEMAnal_CECRes_CF1RXMLWriteError		66		//  Unable to overwrite CF1RPRF01E report XML file
+#define  BEMAnal_CECRes_CF1RXMLPropError		67		//  Error evaluating CF1RPRF01E Proposed model rules
+#define  BEMAnal_CECRes_CF1RXMLFinalError		68		//  Error evaluating CF1RPRF01E final/results rules
+#define  BEMAnal_CECRes_CF1RXMLCompIDError	69		//  Main CF1RPRF01E object type invalid
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report

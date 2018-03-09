@@ -866,7 +866,8 @@ BOOL CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog, BOOL bTagDataA
 						        BOOL bVerboseOutput /*=FALSE*/,    // SAC 8/23/11
 								  long* plNumRuleEvals /*=NULL*/, double* pdNumSeconds /*=NULL*/,   // SAC 10/12/11 - added to facilitate rule evaluation duration stats
                           PLogMsgCallbackFunc pLogMsgCallbackFunc /*=NULL*/,
-								  void* pCompRuleDebugInfo /*=NULL*/ )  // SAC 12/12/13 - added pCompRuleDebugInfo argument
+								  void* pCompRuleDebugInfo /*=NULL*/,   // SAC 12/12/13 - added pCompRuleDebugInfo argument
+								  QStringList* psaWarningMsgs /*=NULL*/ )		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
 {
 	QString sRLName = rulelistName;
 	// SAC 7/11/12 - KLUDGE to convert ProposedInput rulelist name to rl_DEFAULT for DataModel rulesets
@@ -884,8 +885,7 @@ BOOL CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog, BOOL bTagDataA
 	int iInitErrCount = BEMPX_GetRulesetErrorCount();
    BOOL bRetVal = BEMPX_EvaluateRuleList( sRLName.toLocal8Bit().constData(), bTagDataAsUserDefined, 0 /*iEvalOnlyClass*/,
 												-1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerboseOutput, pCompRuleDebugInfo,
-												plNumRuleEvals, pdNumSeconds, pLogMsgCallbackFunc );
-
+												plNumRuleEvals, pdNumSeconds, pLogMsgCallbackFunc, psaWarningMsgs );
    if (bReportToLog)
    {
       QString sMsg;
@@ -1017,7 +1017,8 @@ double DeltaTime( boost::posix_time::ptime& tmStart )
 	return ((double) td.total_microseconds()) / 1000000.0;
 }
 
-int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* pszRulelistName, BOOL bVerbose, void* pCompRuleDebugInfo )
+int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* pszRulelistName, BOOL bVerbose, void* pCompRuleDebugInfo,
+								  QStringList* psaWarningMsgs /*=NULL*/ )		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
 {
 	int iRetVal = 0;
 			            //BOOL __declspec(dllexport) __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog=FALSE, BOOL bTagDataAsUserDefined=FALSE,
@@ -1026,7 +1027,7 @@ int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* pszRulel
 							//																		  PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL,
 							//																		  void* pCompRuleDebugInfo=NULL );  // SAC 12/12/13 - added pCompRuleDebugInfo argument - void pointer to BEMCompNameTypePropArray object
 	if (!CMX_EvaluateRuleset( pszRulelistName, bVerbose /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, bVerbose /*bVerboseOutput*/,
-										NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc*/, pCompRuleDebugInfo ))
+										NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc*/, pCompRuleDebugInfo, psaWarningMsgs ))
 	{	assert( FALSE );
 		sErrMsg = QString( "ERROR:  Error encountered evaluating rulelist '%1'" ).arg( pszRulelistName );
 		iRetVal = iErrRetVal;

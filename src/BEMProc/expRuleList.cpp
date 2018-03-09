@@ -282,12 +282,18 @@ bool BEMPX_RulelistExists( LPCSTR listName )		// SAC 2/27/17
 {	return (ruleSet.getRuleList( listName ) != NULL);
 }
 
+void BEMPX_DeleteTrailingRuleLists( int iNumListsToDelete /*=1*/ )	// SAC 1/29/18
+{	ruleSet.deleteTrailingRuleLists( iNumListsToDelete );
+	return;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 
 bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined /*=FALSE*/, int iEvalOnlyClass /*=0*/,
 														int iEvalOnlyObjIdx /*=-1*/, int iEvalOnlyObjType /*=0*/, BOOL bVerboseOutput /*=FALSE*/,
 														void* pvTargetedDebugInfo /*=NULL*/, long* plNumRuleEvals /*=NULL*/, double* pdNumSeconds /*=NULL*/, 
-														PLogMsgCallbackFunc pLogMsgCallbackFunc /*=NULL*/ )
+														PLogMsgCallbackFunc pLogMsgCallbackFunc /*=NULL*/,
+														QStringList* psaWarningMsgs /*=NULL*/ )		// SAC 3/2/18 - added to enable Warning message tracking during normal list evaluation
 {
    std::vector<int>* pivEvalOnlyObjs = NULL;  // SAC 8/11/02 - Added code to enable BEMPX_EvaluateRuleList() to specify a single component to evaluate
    std::vector<int> ivEvalOnlyObjs;
@@ -307,7 +313,7 @@ bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined /*=FALS
 	long lRuleEvalCount=0;
 	ptime t1(microsec_clock::local_time());
    bool bRetVal = ruleSet.EvaluateRuleList( listName, bTagDataAsUserDefined, iEvalOnlyClass, (BEM_ObjType) iEvalOnlyObjType,
-										pivEvalOnlyObjs, bVerboseOutput, (BEMCompNameTypePropArray*) pvTargetedDebugInfo, &lRuleEvalCount ); 
+										pivEvalOnlyObjs, bVerboseOutput, (BEMCompNameTypePropArray*) pvTargetedDebugInfo, &lRuleEvalCount, psaWarningMsgs );
 	ptime t2(microsec_clock::local_time());
 
 	if (plNumRuleEvals && pdNumSeconds)  // return number of rules evaluated & approximate duration of rule evaluation
@@ -1874,6 +1880,73 @@ void ExpPostParserMsg(const char* msg)
 		spErrFile->write( msg, strlen(msg) );
 }
 
+bool Rule::Parse( QFile& errorFile, const char* pszRLName )  // SAC 1/29/18 - similar to Write() but doesn't write rule to file, just keeps it in memory for direct use/evaluation
+{
+   ExpError error;
+
+   // parse the left side of the rule (must befre setting up crntCompID)
+	spErrFile = &errorFile;		// SAC 8/31/16
+   bool bRetVal = ParseLeft( errorFile );
+
+   // set the current component type ID to the leftmost component of the component/parameter string
+	QString sCompID = m_dbId.left( m_dbId.indexOf(':') );
+	if (ruleSet.DataModelRuleActive())   // SAC 7/8/12		// SAC 5/26/16 - revised for conventional rulelists in DataModel rulesets
+	{	int iLastColon = m_dbId.lastIndexOf(':');				assert( iLastColon > 0 );
+		if (iLastColon > 0)
+		{	QString sLeftMinusProp = m_dbId.left( iLastColon );
+			iLastColon = sLeftMinusProp.lastIndexOf(':');
+			if (iLastColon > 0)
+				sCompID = sLeftMinusProp.right( sLeftMinusProp.length() - iLastColon );
+			else
+				sCompID = sLeftMinusProp;
+		}
+	}
+	int iPrimCompID = BEMPX_GetDBComponentID( sCompID.toLocal8Bit().constData() ); 
+   crntCompID.SetCurrentCompID( iPrimCompID );  // (int)BEMPX_GetDBComponentID( sCompID ) ); 
+   crntCompID.SetCurrentLocalDBID( (m_numIndirections > 0 ? m_databaseID[ m_numIndirections-1 ] : 0) );
+   crntCompID.SetCurrentRulelistName( pszRLName );  // SAC 9/25/13
+
+   // parse right side (expression portion) of the rule
+   ExpParse( m_textExpression.toLocal8Bit().constData(), &m_parsedExpression, GetNodeType, SelectFunctionByArgument, &error );  /* SAC 8/14/12 */
+										assert( eiParseCount_IfValidAnd == 0 && eiParseCount_ValidOr == 0 );		// SAC 1/30/15 - should always be 0 following expression parse (unless error occurred...)
+										eiParseCount_IfValidAnd = 0;		eiParseCount_ValidOr = 0;  // just in case...
+	spErrFile = NULL;		// SAC 8/31/16
+
+   // if parsing OK, then write it to the encrypted output file
+   bool bError = FALSE;
+//   bool bError = TRUE;
+//   if ( EXP_ERRORCODE( error ) == EXP_None )
+//   {
+//   	...  blob and writing code
+//   }
+
+   if (bError)
+   {  // an error occurred parsing the right sides of the rule expression,
+      // OR converting the expression to a "blob"
+      // so write out the left portion like normal w/ no right side, then
+      // write an error message to the error file and return FALSE
+
+// SAC 1/5/02 - Revised file output to flag errors w/ "*** ERROR ***" string for easier _DEBUG mode searching
+#ifdef _DEBUG
+      errorFile.write( "\n*** ERROR ***  parsing: ", 26 );
+#endif
+
+      // create and write error message to errorFile
+      QString msg = m_id + QString("\n") + m_dbId;
+      msg += QString("\n\t");
+      if ( EXP_ERRORCODE( error ) != EXP_None )
+         msg += EXP_ERRORMSG( error );
+      else
+         msg += "Error translating expression to 'blob'";
+      msg += QString("\n") + QString("Full expression:") + QString("\n");    // SAC 3/14/13 - added full text expression following error message
+		msg += m_textExpression;
+      msg += QString("\n") + QString("\n");
+      errorFile.write( msg.toLocal8Bit().constData(), msg.length() );
+      bRetVal = FALSE;  // return FALSE
+   }
+   return bRetVal;
+}
+
 bool Rule::Write( CryptoFile& file, QFile& errorFile, const char* pszRLName )
 {                                                            
    ExpError error;
@@ -2291,6 +2364,31 @@ bool RuleList::Write( CryptoFile& file, QFile& errorFile )
    return bRetVal;
 }
 
+bool RuleList::Parse( QFile& errorFile )    // SAC 1/29/18 - similar to Write() but doesn't write rule to file, just keeps it in memory for direct use/evaluation
+{
+   bool bRetVal = TRUE;
+	ruleSet.setDataModelRuleActive( (ruleSet.IsDataModel() && getName().left(3).compare("rl_")==0) );  // SAC 5/26/16 - added to enable combination of data model and procedural rule parsing within a data model ruleset
+
+    // then write the number of rules contained in the rulelist
+   int size = (int) m_rules.size();
+ 	for (int i = 0; i < size; i++)
+	{	Rule* rule= m_rules.at(i);			assert( rule );
+		if (rule)
+		{
+#ifdef _DEBUG
+			QString dbgMsg = QString( "      Rule: %1 '%2'\n" ).arg( QString::number(i+1), rule->getID() );		// SAC 8/31/16 - added '\n' so as not to interfere w/ YYDEBUG messages
+			errorFile.write( dbgMsg.toLocal8Bit().constData(), dbgMsg.length() );
+#endif
+			bRetVal = (rule->Parse( errorFile, m_name.toLocal8Bit().constData() ) && bRetVal);
+		}
+		else
+			bRetVal = FALSE;
+	}
+	ruleSet.setDataModelRuleActive( (ruleSet.IsDataModel() != FALSE) );  // SAC 5/26/16 - re-default before return
+
+   return bRetVal;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -2415,6 +2513,19 @@ void RuleListList::RemoveAll()
 			delete m_rules.at(i);
 	}
 	m_rules.clear();
+}
+
+void RuleListList::RemoveTrailing( int iNumListsToDelete )
+{	int iLastIdx = (iNumListsToDelete < (int) m_rules.size() ? m_rules.size()-iNumListsToDelete : 0 );
+	for (int i = (int) m_rules.size()-1; i >= iLastIdx; i--)
+	{	assert( m_rules.at(i) );
+		if (m_rules.at(i))
+			delete m_rules.at(i);
+	}
+	if (iLastIdx==0)
+		m_rules.clear();
+	else
+		m_rules.resize(iLastIdx);
 }
 
 
@@ -2543,7 +2654,8 @@ bool RuleListList::EvalList( LPCSTR listName, BOOL bTagDataAsUserDefined,
                               std::vector<int>* piaEvalOnlyObjs /*=NULL*/,      // SAC 5/26/00
                               BOOL bVerboseOutput /*=FALSE*/,             // SAC 9/25/02
                               BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/,        // SAC 8/5/10 - added pvTargetedDebugInfo argument
-										long* plRuleEvalCount /*=NULL*/ )           // SAC 10/12/11 - to facilitate summing of each individual rule evaluation
+										long* plRuleEvalCount /*=NULL*/,            // SAC 10/12/11 - to facilitate summing of each individual rule evaluation
+										QStringList* psaWarningMsgs /*=NULL*/ )     // SAC 3/2/18 - added to enable Warning message tracking during normal list evaluation
 {
    int iRound = 1;
    RuleList* list = getRuleList( listName );  // get the desired rulelist
@@ -2563,6 +2675,12 @@ bool RuleListList::EvalList( LPCSTR listName, BOOL bTagDataAsUserDefined,
 			setAbortRuleEvaluationFlag( true );  // Critical error - all further processing should be aborted
 	   	list = NULL;  // prevent evaluation of this rulelist
 		}
+	}
+
+	bool bWarningMsgTracking = false;	// SAC 3/2/18
+	if (list && pssaWarningMsgs == NULL && psaWarningMsgs)
+	{	pssaWarningMsgs = psaWarningMsgs;
+		bWarningMsgTracking = true;
 	}
 
    while (list && iRound > 0 && !getAbortRuleEvaluation())
@@ -2898,6 +3016,9 @@ bool RuleListList::EvalList( LPCSTR listName, BOOL bTagDataAsUserDefined,
 
 	m_iNestedListEvalCount--;  // SAC 8/6/13 - added to prevent recursive rulelist evaluations from bombing system
 			assert( m_iNestedListEvalCount >= 0 );
+
+	if (bWarningMsgTracking)	// SAC 3/2/18
+		pssaWarningMsgs = NULL;
 
    return (list != NULL);
 }

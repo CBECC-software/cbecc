@@ -164,6 +164,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(IDM_PERFORMAPIANALYSIS, OnUpdatePerformAPIAnalysis)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE, OnUpdateFileSave)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, OnUpdateFileSaveAs)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_APPLYCUSTOMRULES, OnUpdateApplyCustomRules)
+	ON_COMMAND(IDM_TOOLS_APPLYCUSTOMRULES, OnToolsApplyCustomRules)
 	ON_COMMAND(IDM_TOOLS_EVALLIST, OnToolsEvalRulelist)
 	ON_UPDATE_COMMAND_UI(IDM_REVIEWRESULTS, OnUpdateToolsReviewResults)
 	ON_COMMAND(IDM_REVIEWRESULTS, OnToolsReviewResults)
@@ -542,6 +544,7 @@ CMainFrame::CMainFrame()
    m_bDoingWizard = FALSE;
    m_bDoingSummaryReport = FALSE;  // SAC 6/19/13
    m_bPerformingAnalysis = FALSE;	// SAC 4/1/15
+   m_bDoingCustomRuleEval = FALSE;	// SAC 1/28/18
 }
 
 CMainFrame::~CMainFrame()
@@ -1189,7 +1192,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				{}
 			}
 		}
-		else if (wAction >= 3051 && wAction <= 3055)
+		else if (wAction >= 3051 && wAction <= 3056)
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1206,7 +1209,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 			{	sBrowsePath  = sCurrentProjPath;
 				sFileDescrip = _T("EnergyPlus input file (*.idf)|*.idf||");
 				sFileExt	    = _T("idf");
-				lDBID_File	 = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Proj );			ASSERT( lDBID_File > 0 );
+				lDBID_File	 = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Proj );		ASSERT( lDBID_File > 0 );
 			}
 			else if (wAction == 3052 || wAction == 3053)
 			{	bOpenDlg = FALSE;
@@ -1234,6 +1237,12 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				sFileExt	    = _T("exe");
 				lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:Comparison" );				ASSERT( lDBID_File > 0 );
 			}
+			else if (wAction == 3056)	// SAC 1/28/18 - Browse (file-open) dialog to select Custom Rule File (hijacks ExcptDsgnModelFile)
+			{	sBrowsePath  = sCurrentProjPath;
+				sFileDescrip = _T("Custom rules file (*.rule)|*.rule||");
+				sFileExt	    = _T("rule");
+				lDBID_File	 = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Proj );		ASSERT( lDBID_File > 0 );
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1254,6 +1263,8 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 					if (iSetDataRetVal >= 0)
 					{	if (pDoc)
 							pDoc->SetModifiedFlag();
+						if (wAction == 3056 && m_bDoingCustomRuleEval)
+							ProcessCustomRulelistFile();
 						lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}
 		}
@@ -2424,6 +2435,8 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 				BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iCartPtParentPolyLpObjIdx );
 		}	}
 	}
+	else if (lDBID == elDBID_Proj_ExcptDsgnModelFile && m_bDoingCustomRuleEval)	// SAC 1/28/18
+		ProcessCustomRulelistFile();
 #elif UI_CARES
 	if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName || lDBID == elDBID_BatchRuns_ProjDirectory ||
 		 lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir )
@@ -2728,6 +2741,16 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 /*default*/ );		// SAC 1/11/18
 		if (iAllowNegativeDesignRatings > 0)
 		{	sOptTemp.Format( "AllowNegativeDesignRatings,%d,", iAllowNegativeDesignRatings );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iEnableCO2DesignRatings = ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ );		// SAC 1/27/18
+		if (iEnableCO2DesignRatings > 0)
+		{	sOptTemp.Format( "EnableCO2DesignRatings,%d,", iEnableCO2DesignRatings );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iWriteCF1RXML = ReadProgInt( "options", "WriteCF1RXML", 0 /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML
+		if (iWriteCF1RXML > 0)
+		{	sOptTemp.Format( "WriteCF1RXML,%d,", iWriteCF1RXML );
 			sOptionsCSVString += sOptTemp;
 		}
       if (ReadProgInt( "options",   "BypassValidFileChecks",     0 /*default*/ ) > 0)		// SAC 5/3/14
@@ -4493,7 +4516,7 @@ static char BASED_CODE szPerfErr3[]   = "Save the building data by selecting Fil
 static char BASED_CODE szPerfWthr1[]  = "Weather File '";
 static char BASED_CODE szPerfWthr2[]  = "' Not Found.";
 
-#define  CSV_RESULTSLENGTH  2560
+#define  CSV_RESULTSLENGTH  3072
 static char pszCSVResultSummary[ CSV_RESULTSLENGTH ];
 
 afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
@@ -4511,32 +4534,33 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	BOOL bContinue = TRUE;
 
 #ifdef UI_CARES
-	long lEnergyCodeYearNum, lRunScope=0, lIsAddAlone=0, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
-	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
-	if (bContinue && BEMPX_GetUIActiveFlag() && 
-		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
-		 ( ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
-		 	  ( lRunScope == 2 ||    // add or alter
-		 	   (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) ) ||   // addition alone
-		   ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
-		 	  BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
-		 	  lAllOrientations > 0 ) ))
-	{	CString sUnsupportMsg = "The following model characteristics are present in this project but not fully supported in this release:\n"; 
-		if (lRunScope == 2)
-			sUnsupportMsg += "> Run Scope of Addition and/or Alteration\n";
-		else if (lRunScope == 1 && lIsAddAlone > 0)
-			sUnsupportMsg += "> Run Scope of Addition Alone\n";
-		if (lSpecifyTargetDRtg > 0 && dTargetDesignRtgInp > -200 && lAllOrientations > 0)
-			sUnsupportMsg += "> Combination of Multiple Orientation and Target EDR analysis\n";
-		sUnsupportMsg += "\nCalculations can be performed, but the results are likely invalid.";
-		sUnsupportMsg += "\nWould you like to continue performing analysis?";
+	long lEnergyCodeYearNum, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+//	long lRunScope=0, lIsAddAlone=0;
+//	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
+//	if (bContinue && BEMPX_GetUIActiveFlag() && 
+//		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
+//		 ( //( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&   - SAC 2/19/18 - removed warning and replaced w/ ruleset check preventing analysis for EAA or AA (tic #984)
+//		 	//  ( lRunScope == 2 ||    // add or alter
+//		 	//   (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) ) ||   // addition alone
+//		   ( BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) && lSpecifyTargetDRtg > 0 && 
+//		 	  BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 &&
+//		 	  lAllOrientations > 0 ) ))
+//	{	CString sUnsupportMsg = "The following model characteristics are present in this project but not fully supported in this release:\n"; 
+//		if (lRunScope == 2)
+//			sUnsupportMsg += "> Run Scope of Addition and/or Alteration\n";
+//		else if (lRunScope == 1 && lIsAddAlone > 0)
+//			sUnsupportMsg += "> Run Scope of Addition Alone\n";
+//		if (lSpecifyTargetDRtg > 0 && dTargetDesignRtgInp > -200 && lAllOrientations > 0)
+//			sUnsupportMsg += "> Combination of Multiple Orientation and Target EDR analysis\n";
+//		sUnsupportMsg += "\nCalculations can be performed, but the results are likely invalid.";
+//		sUnsupportMsg += "\nWould you like to continue performing analysis?";
+//
+//		if (BEMMessageBox( sUnsupportMsg, "Compliance Analysis", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
+//	   	bContinue = FALSE;
+//	}
 
-		if (BEMMessageBox( sUnsupportMsg, "Compliance Analysis", 4 /*question*/, (QMessageBox::Yes | QMessageBox::No) ) == QMessageBox::No)
-	   	bContinue = FALSE;
-	}
-
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
-		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) && lEnergyCodeYearNum == 2019 &&
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) &&   // lEnergyCodeYearNum == 2019 &&  - removed to enable TDR confirmation in 2016 analysis - SAC 2/7/18
 		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0 &&
 		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) &&
 		 ( ( lSpecifyTargetDRtg > 0 && BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 ) ||
@@ -4671,6 +4695,9 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
+			long lEnergyCodeYear, lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers & data for run containing CO2 design ratings vs. not
+			BOOL bHaveCDRs = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"    ), lEnergyCodeYear       ) && lEnergyCodeYear >= 2019 &&
+									BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0);
 			const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
 			int iAllOrientationsResultsCSV = ReadProgInt( "options", "AllOrientationsResultsCSV", 1 /*default*/ );
 			int iMaxCSVOrient = (lAllOrientations > 0 && (iAllOrientationsResultsCSV > 0) ? 4 : 0);
@@ -4679,13 +4706,14 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			{	// SAC 11/15/13 - results format #2  - SAC 8/24/14 - fmt 2->3  - SAC 11/24/14 - fmt 3->4  - SAC 3/31/15 - fmt 4->5  - SAC 2/2/16 - 5->6  - SAC 3/16/16 - 6->7
 				// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
 				// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
-				CString sDfltResFN = "AnalysisResults-v16.csv";
+				// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944,3776 & 2904 chars
+				CString sDfltResFN = (bHaveCDRs ? "AnalysisResults-v17cdr.csv" : "AnalysisResults-v17.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						16 /*iResFormatVer*/, sOriginalFileName );
+																						17 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
-					char pszCSVColLabel1[1536], pszCSVColLabel2[3072], pszCSVColLabel3[2560];
-					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 1536, pszCSVColLabel2, 3072, pszCSVColLabel3, 2560 ) == 0 );	// SAC 5/10/15
+					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3072];
+					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 2048, pszCSVColLabel2, 4096, pszCSVColLabel3, 3072 ) == 0 );	// SAC 5/10/15
 					const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 					CString sCSVResultSummary = pszCSVResultSummary;
 					// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
@@ -4823,12 +4851,13 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			{	bSimResultsDisplayed = TRUE;
 				if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary object is ALWAYS the active obejct as dialog presented
 					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
+		      int iMaxTabs = (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
 				CString sDialogCaption;
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 				CWnd* pWnd = GetFocus();
 				CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-				                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
+				                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -5564,12 +5593,13 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary obejct is ALWAYS the active obejct as dialog presented
 			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 
+      int iMaxTabs = (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
 		CString sDialogCaption;
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -7770,6 +7800,280 @@ void CMainFrame::OnToolsEvalRulelist()
 {
    CDlgEvaluateRulelist dlg( this );
    dlg.DoModal();
+
+				// re-default building model (regardless of whether rules successfully evaluated)
+			   CDocument* pDoc = GetActiveDocument();
+   			if (pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))
+				{	SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+					pDoc->SetModifiedFlag( TRUE );
+		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
+		         if (pMainView != NULL)            // update main view's tree control(s)
+		         {	pMainView->SendMessage( WM_UPDATETREE );
+		            pMainView->SendMessage( WM_DISPLAYDATA );
+				}	}
+}
+
+
+int CMainFrame::RefreshCustomRulelistEnum( QString qsSelectedRulelist )
+{
+#ifdef UI_CANRES
+	long lRuleFileDBID = elDBID_Proj_ExcptDsgnModelFile;
+	long lRLDBID = BEMPX_GetDatabaseID( "Proj:ExcptCondCompleteBldg" );
+#elif UI_CARES
+	long lRuleFileDBID = 0;
+	long lRLDBID = 0;
+#endif
+	int iRetVal = 0;
+   void* pBDBSL = BEMPX_OverwriteSymbolList( lRLDBID );
+   if (pBDBSL)
+	{
+      void* pBDBSDL = BEMPX_AddSymbolDepList( pBDBSL, 0, 0, -1.0, 0, -1.0 );
+      if (pBDBSDL)
+      {
+         VERIFY( BEMPX_AddSymbol( pBDBSDL , 0, "- select rulelist to evaluate -" ) );
+
+			int iStatus_RuleFile, iSpecialVal, iError, iSelIdx=-1;
+			QString qsRuleFile = BEMPX_GetStringAndStatus( lRuleFileDBID, iStatus_RuleFile, iSpecialVal, iError );
+			if (!qsRuleFile.isEmpty() && FileExists( qsRuleFile ))
+			{
+				CString sRLLogFilename = qsRuleFile.toLocal8Bit().constData();
+				int iLastDotIdx = sRLLogFilename.ReverseFind( '.' );
+				if (iLastDotIdx > 0)
+					sRLLogFilename = sRLLogFilename.Left( iLastDotIdx );
+				sRLLogFilename += ".log";
+				QStringList qslRuleListNames;		QString qsRuleCompileMsg;
+				int iNumRLs = BEMPX_ParseRuleListFile(	qsRuleFile.toLocal8Bit().constData(), qslRuleListNames,
+																	sRLLogFilename, &qsRuleCompileMsg );
+	         for (int i=0; i<iNumRLs; i++)
+	         {
+	            if (!BEMPX_AddSymbol( pBDBSDL , ++iRetVal, qslRuleListNames[i].toLocal8Bit().constData() ))
+	               iRetVal--;
+	            else if (iSelIdx < 0 && qslRuleListNames[i].compare( qsSelectedRulelist, Qt::CaseInsensitive )==0)
+	            {	iSelIdx = i;
+	            	qsSelectedRulelist = qslRuleListNames[i];
+	            }
+	         }
+	         if (iNumRLs > 0)
+					BEMPX_DeleteTrailingRuleLists( iNumRLs );
+	      }
+
+			// select predefined rulelist OR re-default
+			bool bRLSelected = false;
+			if (iSelIdx >= 0 && !qsSelectedRulelist.isEmpty())
+			{	BEMPX_SetBEMData( lRLDBID, BEMP_QStr, (void*) &qsSelectedRulelist );
+				bRLSelected = true;
+			}
+			if (!bRLSelected)
+				BEMPX_DefaultProperty( lRLDBID, iError );
+	}	}
+	return iRetVal;
+}
+
+void CMainFrame::ProcessCustomRulelistFile()
+{
+#ifdef UI_CANRES
+	long lRuleFileDBID      = elDBID_Proj_ExcptDsgnModelFile;
+	long lRuleFileValidDBID = BEMPX_GetDatabaseID( "Proj:UseExcptDsgnModel" );
+#elif UI_CARES
+	long lRuleFileDBID      = 0;
+	long lRuleFileValidDBID = 0;
+#endif
+	int iStatus_RuleFile, iSpecialVal, iError;
+	QString qsRuleFile = BEMPX_GetStringAndStatus(  lRuleFileDBID, iStatus_RuleFile, iSpecialVal, iError );
+	if (!qsRuleFile.isEmpty() && FileExists( qsRuleFile ) &&
+			 qsRuleFile[qsRuleFile.length()-1] != '/' &&
+			 qsRuleFile[qsRuleFile.length()-1] != '\\' )
+	{
+		RefreshCustomRulelistEnum( "" );
+
+		long lOne = 1;
+		BEMPX_SetBEMData( lRuleFileValidDBID, BEMP_Int, (void*) &lOne );
+	}
+}
+
+void CMainFrame::OnUpdateApplyCustomRules(CCmdUI* pCmdUI) 
+{
+#ifdef UI_CANRES
+   CDocument* pDoc = GetActiveDocument();
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnToolsApplyCustomRules() 	// SAC 1/28/18 - ability to import & evaluate custom/user-defined rules on building model
+{	// first ensure project file is saved
+   CDocument* pDoc = GetActiveDocument();
+   if (!pDoc || (!pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))
+		AfxMessageBox( "A valid building model (project) must be loaded before custom rules can be applied." );
+   else if (((CComplianceUIDoc*) pDoc)->CUISaveModified( "custom rule evaluation" ))
+   {	m_bDoingCustomRuleEval = TRUE;
+#ifdef UI_CANRES
+		long lRuleFileDBID      = elDBID_Proj_ExcptDsgnModelFile;
+		long lRuleFileValidDBID = BEMPX_GetDatabaseID( "Proj:UseExcptDsgnModel" );
+		long lRuleListDBID      = BEMPX_GetDatabaseID( "Proj:ExcptCondCompleteBldg" );
+#elif UI_CARES
+		long lRuleFileDBID      = 0;
+		long lRuleFileValidDBID = 0;
+		long lRuleListDBID      = 0;
+#endif
+		// store values set to properties we will be hijacking & re-default (blast) values
+		int iStatus_RuleFileValid, iStatus_RuleFile, iSpecialVal, iError;
+		long lRuleFileValid = BEMPX_GetIntegerAndStatus( lRuleFileValidDBID, iStatus_RuleFileValid, iSpecialVal, iError );
+		QString qsRuleFile  = BEMPX_GetStringAndStatus(  lRuleFileDBID     , iStatus_RuleFile     , iSpecialVal, iError );
+
+		// initialize properties to be collected in UI
+		CString sInitCustomRuleFile = ReadProgString( "files",   "LastCustomRuleFile", NULL, TRUE  /*bGetPath=FALSE*/ );
+		CString sInitCustomRulelist = ReadProgString( "options", "LastCustomRulelist", NULL, FALSE /*bGetPath=FALSE*/ );
+		if (!sInitCustomRuleFile.IsEmpty() && sInitCustomRuleFile.CompareNoCase( esDataPath ) && FileExists( sInitCustomRuleFile ) &&
+			 sInitCustomRuleFile[sInitCustomRuleFile.GetLength()-1] != '/' &&
+			 sInitCustomRuleFile[sInitCustomRuleFile.GetLength()-1] != '\\' )
+		{	// pre-select last custom rule file and rulelist (if defined in INI)
+			long lFileLoaded = 1;
+			BEMPX_SetBEMData( lRuleFileValidDBID, BEMP_Int, (void*) &lFileLoaded );
+			BEMPX_SetBEMData( lRuleFileDBID     , BEMP_Str, (void*) ((const char*) sInitCustomRuleFile) );
+		}
+		else
+		{	// default rule file data
+			BEMPX_DefaultProperty( lRuleFileValidDBID, iError );
+			BEMPX_DefaultProperty( lRuleFileDBID     , iError );
+		}
+		// refresh enumerations associated w/ Proj:ExcptCondCompleteBldg (enum property being hijacked to select user rulelist name)
+		RefreshCustomRulelistEnum( (const char*) sInitCustomRulelist );
+
+
+//long    BEMPROC_API __cdecl BEMPX_GetIntegerAndStatus( long lDBID, int& iStatus, int& iSpecialVal, int& iError, 
+//                                                   int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+//QString BEMPROC_API __cdecl BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, int& iError, 
+//                                                   int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1,
+//                                                   BOOL bAddCommas=TRUE, int iPrecision=0, const char* pszDefault=NULL, long lDBID2=0 );
+
+//#define  BEMP_Int  0		// types of property (BEMPropertyType)
+//#define  BEMP_Flt  1
+//#define  BEMP_Sym  2
+//#define  BEMP_Str  3
+//#define  BEMP_Obj  4
+//#define  BEMP_QStr 5		// NOT unique storage type in database, only used in conjunction w/ BEMPX_SetBEMData() to pass QString directly in (since casting to const char* blasts special characters)
+//int  BEMPROC_API __cdecl BEMPX_SetBEMData(   long lDBID, int iDataType, void* pData, BEM_ObjType eObjFrom=BEMO_User,
+//                                                     int iOccur=-1, BEM_PropertyStatus eStatus=BEMS_UserDefined,
+//                                                     BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1,
+//																	  int iImportUniqueRuleLibObjOption=2,  // SAC 3/10/13	// SAC 4/25/14
+//																	  const char* pszImportRuleLibParentName=NULL,   // SAC 3/17/13 - name of parent of rule lib object to import
+//																	  char* pszErrMsg=NULL, int iErrMsgLen=0 );  // SAC 4/10/13 - error message return
+
+
+		// present dialog to enable rule file & rulelist selection
+		//CString sDialogCaption;
+		//GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
+      CSACDlg dlg( this, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, 140 /* lDBID_ScreenID */, 0, 0, 0,
+                        NULL /*esDataModRulelist*/ /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Apply Custom Rules" /*pszDialogCaption*/,
+								180 /*Ht*/, 600 /*Wd*/, 10 /*iBaseMarg*/,
+                        0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+								0 /*lDBID_CtrlDBIDOffset*/, "&Evaluate" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+								0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                        FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                        // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                        FALSE /*bBypassChecksOnCancel*/, TRUE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 120 /*iFinishBtnWd*/,
+								ebIncludeLongCompParamStrInToolTip );
+      if (dlg.DoModal() == IDOK)
+		{
+			int iRuleFileStatus, iRuleListStatus;
+			QString qsNewRuleFile = BEMPX_GetStringAndStatus( lRuleFileDBID, iRuleFileStatus, iSpecialVal, iError );
+			QString qsNewRuleList = BEMPX_GetStringAndStatus( lRuleListDBID, iRuleListStatus, iSpecialVal, iError );
+			if (!qsNewRuleFile.isEmpty() && FileExists( qsNewRuleFile ) &&
+				 !qsNewRuleList.isEmpty() && qsNewRuleList.indexOf( "- select" ) < 0)
+			{
+				CString sRLLogFilename = qsNewRuleFile.toLocal8Bit().constData();
+				int iLastDotIdx = sRLLogFilename.ReverseFind( '.' );
+				if (iLastDotIdx > 0)
+					sRLLogFilename = sRLLogFilename.Left( iLastDotIdx );
+				sRLLogFilename += ".log";
+				QStringList qslRuleListNames;		QString qsRuleCompileMsg;
+				int iNumRLs = BEMPX_ParseRuleListFile(	qsNewRuleFile.toLocal8Bit().constData(), qslRuleListNames,
+																	sRLLogFilename, &qsRuleCompileMsg, true /*bParseRules*/ );
+				int iSelIdx = -1;
+	         for (int i=0; i<iNumRLs; i++)
+	         {
+	            //if (!BEMPX_AddSymbol( pBDBSDL , ++iRetVal, qslRuleListNames[i].toLocal8Bit().constData() ))
+	            //   iRetVal--;
+	            if (iSelIdx < 0 && qslRuleListNames[i].compare( qsNewRuleList, Qt::CaseInsensitive )==0)
+	            {	iSelIdx = i;
+	            	qsNewRuleList = qslRuleListNames[i];
+	            }
+	         }
+
+	         if (iSelIdx >= 0)
+	         {
+			// rulelist eval based on CDlgEvaluateRulelist
+					BOOL bLogRuleEvaluation = (ReadProgInt( "options", "LogRuleEvaluation", 0 /*default*/ ) > 0);   // SAC 8/22/11
+			      CWaitCursor wait;
+			      CTime tStart = CTime::GetCurrentTime();
+					BOOL bMarkRuleDataUserDefined = (ReadProgInt( "options", "MarkRuleDataUserDefined", 0 /*default*/ ) > 0);  // SAC 3/17/13
+			      BOOL bEvalSuccessful = CMX_EvaluateRuleset( qsNewRuleList.toLocal8Bit().constData(), bLogRuleEvaluation, bMarkRuleDataUserDefined /*bTagDataAsUserDefined*/, bLogRuleEvaluation /*bVerboseOutput*/, NULL, NULL, NULL, epInpRuleDebugInfo );
+			      CTime tEnd = CTime::GetCurrentTime();
+
+			      // Construct message to display
+			      int iDeltaT = (int) (tEnd.GetTime() - tStart.GetTime());
+			      CString sDeltaT;
+			      sDeltaT.Format( "\n\nTime Elapsed (min:sec):  %2d:%s%d", iDeltaT/60, (iDeltaT%60 < 10 ? "0" : ""), iDeltaT%60 );
+			      CString sMsg = (bEvalSuccessful ? "Rulelist Evaluated Successfully." : "Rulelist Evaluation Failed.");
+			      sMsg += sDeltaT;
+			      MessageBox( sMsg );
+
+				// SAC 7/16/12 - added code to store IBD & XML details files following File Open operation
+		//			if (ReadProgInt( "options", "StoreBEMDetails", 0) > 0)
+		//		   {	CWnd* pMainWnd = AfxGetMainWnd();
+		//			   if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
+		//				{	CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
+		//				   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
+		//					{	CString sInputFile = pDoc->GetPathName();
+		//						if (sInputFile.ReverseFind('.') > 0)
+		//						{	CString sDbgFileName;
+		//							sDbgFileName.Format( "%s - %s.ibd-Detail", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist );
+		//							BEMPX_WriteProjectFile( sDbgFileName, BEMFM_DETAIL /*FALSE*/ );
+		//							sDbgFileName.Format( "%s - %s.xml", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist );
+		//							VERIFY( BEMPX_WriteProjectFile( sDbgFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/,
+		//																		FALSE /*bSupressAllMessageBoxes*/, BEMFT_XML /*iFileType*/ ) );
+		//						// SAC 3/17/13 - added writing of file immediately following rule evaluation that includes ALL data and COULE by imported back into -Com/-Res program
+		//							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, pszCUIFileExt[0] );
+		//							BEMPX_WriteProjectFile( sDbgFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/ );
+		//						}
+		//			}	}	}
+
+					// store rule file & rulelist to INI as last selected
+					WriteProgString( "files",   "LastCustomRuleFile", qsNewRuleFile.toLocal8Bit().constData() ); 
+					WriteProgString( "options", "LastCustomRulelist", qsNewRuleList.toLocal8Bit().constData() ); 
+				}
+
+	         if (iNumRLs > 0)
+				{
+					BEMPX_DeleteTrailingRuleLists( iNumRLs );
+
+				// re-default building model (regardless of whether rules successfully evaluated)
+					SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+					pDoc->SetModifiedFlag( TRUE );
+		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
+		         if (pMainView != NULL)            // update main view's tree control(s)
+		         {	pMainView->SendMessage( WM_UPDATETREE );
+		            pMainView->SendMessage( WM_DISPLAYDATA );
+					}
+			}	}
+		}
+
+		// restore original ExcptDsgnModel data
+		if (iStatus_RuleFileValid > 0)
+			BEMPX_SetBEMData(  lRuleFileValidDBID , BEMP_Int, (void*) &lRuleFileValid, BEMO_User, -1, (BEM_PropertyStatus) iStatus_RuleFileValid );
+		else
+			BEMPX_DefaultProperty(  lRuleFileValidDBID , iError );
+		if (iStatus_RuleFile > 0)
+			BEMPX_SetBEMData(  lRuleFileDBID , BEMP_QStr, (void*) &qsRuleFile, BEMO_User, -1, (BEM_PropertyStatus) iStatus_RuleFile );
+		else
+			BEMPX_DefaultProperty( lRuleFileDBID, iError );
+		BEMPX_DefaultProperty( lRuleListDBID, iError );
+
+		m_bDoingCustomRuleEval = FALSE;
+	}
+
 }
 
 

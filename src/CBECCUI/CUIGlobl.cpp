@@ -2325,6 +2325,7 @@ long elDBID_Proj_WeatherPath = 0;
 long elDBID_Proj_WeatherStation = 0;    
 long elDBID_Proj_DDWeatherFile = 0;     
 long elDBID_Proj_AnnualWeatherFile = 0; 
+long elDBID_Proj_ExcptDsgnModelFile = 0; 
 long elDBID_PolyLp_Area = 0;
 long elDBID_CartesianPt_Coord = 0;
 long elDBID_ThrmlZn_ClgSys = 0;             // "AirSys", 
@@ -2615,7 +2616,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
-	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
+	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
 	else if (iBDBClass == eiBDBCID_SCSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_DHWSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
@@ -2870,13 +2871,14 @@ void InitBEMDBIDs()
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
 	eiBDBCID_WtrHtr             = BEMPX_GetDBComponentID( "WtrHtr" );        
 
-   elDBID_Proj_Name              = BEMPX_GetDatabaseID( "Name",              eiBDBCID_Project );
-   elDBID_Proj_RunDate           = BEMPX_GetDatabaseID( "RunDate",           eiBDBCID_Project );
-   elDBID_Proj_SoftwareVersion   = BEMPX_GetDatabaseID( "SoftwareVersion",   eiBDBCID_Project );
-	elDBID_Proj_WeatherPath       = BEMPX_GetDatabaseID( "WeatherPath",       eiBDBCID_Project );       
-	elDBID_Proj_WeatherStation    = BEMPX_GetDatabaseID( "WeatherStation",    eiBDBCID_Project );    
-	elDBID_Proj_DDWeatherFile     = BEMPX_GetDatabaseID( "DDWeatherFile",     eiBDBCID_Project );     
-	elDBID_Proj_AnnualWeatherFile = BEMPX_GetDatabaseID( "AnnualWeatherFile", eiBDBCID_Project ); 
+   elDBID_Proj_Name               = BEMPX_GetDatabaseID( "Name",               eiBDBCID_Project );
+   elDBID_Proj_RunDate            = BEMPX_GetDatabaseID( "RunDate",            eiBDBCID_Project );
+   elDBID_Proj_SoftwareVersion    = BEMPX_GetDatabaseID( "SoftwareVersion",    eiBDBCID_Project );
+	elDBID_Proj_WeatherPath        = BEMPX_GetDatabaseID( "WeatherPath",        eiBDBCID_Project );       
+	elDBID_Proj_WeatherStation     = BEMPX_GetDatabaseID( "WeatherStation",     eiBDBCID_Project );    
+	elDBID_Proj_DDWeatherFile      = BEMPX_GetDatabaseID( "DDWeatherFile",      eiBDBCID_Project );     
+	elDBID_Proj_AnnualWeatherFile  = BEMPX_GetDatabaseID( "AnnualWeatherFile",  eiBDBCID_Project ); 
+	elDBID_Proj_ExcptDsgnModelFile = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Project ); 
 
 	elDBID_PolyLp_Area            = BEMPX_GetDatabaseID( "Area",  eiBDBCID_PolyLp );			// SAC 5/29/14 
 	elDBID_CartesianPt_Coord      = BEMPX_GetDatabaseID( "Coord", eiBDBCID_CartesianPt );	// SAC 5/29/14 

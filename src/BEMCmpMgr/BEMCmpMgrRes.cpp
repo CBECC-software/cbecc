@@ -226,6 +226,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
    long iDHWCalcMethodAnalOpt		=  GetCSVOptionValue( "DHWCalcMethod"         ,  -1,  saCSVOptions );		// SAC 7/15/15
    long lEnableResearchMode		=  GetCSVOptionValue( "EnableResearchMode"    ,   0,  saCSVOptions );		// SAC 5/14/16
    long lAllowNegativeDesignRatings = GetCSVOptionValue( "AllowNegativeDesignRatings",   0,  saCSVOptions );		// SAC 1/11/18
+   long lEnableCO2DesignRatings  =  GetCSVOptionValue( "EnableCO2DesignRatings",   0,  saCSVOptions );		// SAC 1/30/18
 
 	int  iLogWritingMode  			=	GetCSVOptionValue( "LogWritingMode"        , 100,  saCSVOptions );		// SAC 5/20/14
 	int  iSimLoggingOption			=	GetCSVOptionValue( "SimLoggingOption"      ,   0,  saCSVOptions );		// SAC 1/12/15
@@ -234,6 +235,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bLogEachFileHashError = (bVerbose || sbLogCSECallbacks || bLogDHWSim);
 	int  iSimReportDetailsOption	=	GetCSVOptionValue( "SimReportDetailsOption",   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE reports / 1: user-specified reports / 2: entire .rpt file
 	int  iSimErrorDetailsOption	=	GetCSVOptionValue( "SimErrorDetailsOption" ,   1,  saCSVOptions );		// SAC 11/5/16 - 0: no CSE errors / 1: always list CSE errors
+	bool bWriteCF1RXML				= (GetCSVOptionValue( "WriteCF1RXML"          ,   0,  saCSVOptions ) > 0);		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML
 
 	bool bCSEIncludeFileUsed = false;	// SAC 12/23/14
 
@@ -390,6 +392,12 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		sXMLResultsFileName  = sXMLResultsFileName.left( sXMLResultsFileName.lastIndexOf('.') );
 	sXMLResultsFileName += " - AnalysisResults.xml";
 
+	QString sCF1RXMLFileName = sModelPathFile;	// SAC 3/5/18
+	if (sCF1RXMLFileName.lastIndexOf('.'))
+		sCF1RXMLFileName  = sCF1RXMLFileName.left( sCF1RXMLFileName.lastIndexOf('.') );
+	sCF1RXMLFileName += " - CF1RPRF01E.xml";
+	int iCF1RXMLClassID = 0;
+
 	QString sCSESimRptOutputFileName, sCSESimErrOutputFileName;	// SAC 11/7/16
 	if (iSimReportDetailsOption > 0)
 	{	sCSESimRptOutputFileName = sModelPathFile;
@@ -523,6 +531,22 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMXMLWriter xmlResultsFile( ((ResRetVal_ContinueProcessing( iRetVal ) && !sXMLResultsFileName.isEmpty()) ? sXMLResultsFileName.toLocal8Bit().constData() : NULL) );
 		bool bFirstModelCopyCreated = false;
 
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && FileExists( sCF1RXMLFileName ))	// SAC 3/5/18
+		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+							 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "CF1RPRF01E report XML", sCF1RXMLFileName.toLocal8Bit().constData(), "analysis" );
+			if (!OKToWriteOrDeleteFile( sCF1RXMLFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
+			{	sErrorMsg = QString( "ERROR:  Analysis aborting - user chose not to overwrite the CF1RPRF01E report XML file:  %1" ).arg( sCF1RXMLFileName );
+				iRetVal = BEMAnal_CECRes_CF1RXMLWriteError;		// Unable to overwrite CF1RPRF01E report XML file
+		}	}
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty())	// SAC 3/6/18
+		{	iCF1RXMLClassID = BEMPX_GetDBComponentID( "cf1rComplianceDocumentPackage" );
+			if (iCF1RXMLClassID < 1)
+			{	sErrorMsg = "ERROR:  Primary CF1RPRF01E object type 'cf1rComplianceDocumentPackage' not defined in database";
+				iRetVal = BEMAnal_CECRes_CF1RXMLCompIDError;		// Main CF1RPRF01E object type invalid
+		}	}
+		BEMXMLWriter xmlCF1RPRF01EFile( ((ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty()) ? sCF1RXMLFileName.toLocal8Bit().constData() : NULL), -1, BEMFT_CF1RXML );
+
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bLoadModelFile)
 		{	// assumes BEMBase cleared out and ruleset re-loaded
 			if (sModelPathFile.isEmpty() || !FileExists( sModelPathFile.toLocal8Bit().constData() ))
@@ -654,6 +678,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			// handle AllowNegativeDesignRatings option - SAC 1/11/18
 				if (lAllowNegativeDesignRatings > 0)	
 				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), BEMP_Int, (void*) &lAllowNegativeDesignRatings );
+
+			// handle EnableCO2DesignRatings option - SAC 1/30/18
+				if (lEnableCO2DesignRatings > 0)	
+				   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), BEMP_Int, (void*) &lEnableCO2DesignRatings );
 
 				if (ResRetVal_ContinueProcessing( iRetVal ))
 				{	iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
@@ -845,6 +873,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lAllowNegativeDesignRatings > 0)
 		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), BEMP_Int, (void*) &lAllowNegativeDesignRatings );
 		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllowNegativeDesignRatings" ), lAllowNegativeDesignRatings, 0 );
+
+	// SAC 1/30/18 - 
+		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && lEnableCO2DesignRatings > 0)
+		   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), BEMP_Int, (void*) &lEnableCO2DesignRatings );
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lEnableCO2DesignRatings, 0 );
 
 	// SAC 1/14/15 - added handling of new SimSpeedOption property/option - when >= 0 should force use of the specified selection
 		if (ResRetVal_ContinueProcessing( iRetVal ) && !bLoadModelFile && iSimSpeedOption > 0)
@@ -1100,6 +1133,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			{	QString sDbgFileName = QString( "%1%2 - Report.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt );
 	      	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
 		}	}
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - CF1RPRF01E Proposed model setup
+		{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_CF1RXMLPropError, "CF1RPRF01E_Proposed",	bVerbose, pCompRuleDebugInfo );
+			if (iRV2 > 0)
+				iRetVal = iRV2;
+		}
 						dTimeToWriteResultsXML += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// SAC 1/9/13 - added calls to rulelists that CHECK user input model prior to further analysis to catch mandatory minimum (code) & error/omission user errors
@@ -2045,6 +2083,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			}	}
 
 		// loop over ALL runs, simulating only Prop but processing results for ALL
+			int iLastSimRunIdx = 0;
 			for (iRunIdx2 = iNumPrelimRuns; (iRunIdx2 < iNumRuns && ResRetVal_ContinueProcessing( iRetVal )); iRunIdx2++)
 			{
 				const CSERun& cseRun2 = cseRunMgr.GetRun(iRunIdx2-iNumPrelimRuns);
@@ -2060,7 +2099,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					BOOL bIsStdDesign2 = cseRun2.GetIsStdDesign();
 					BOOL bIsDesignRtg2 = cseRun2.GetIsDesignRtg();
 
-					if (iRunIdx2 == iNumPrelimRuns)
+			//		if (iRunIdx2 == iNumPrelimRuns)
+					if (iRunType[iRunIdx2] >= CRM_Prop && iRunType[iRunIdx2] <= CRM_WOrientProp)  // revised logic from above to accommodate TDR for AllOrientation models
 					{
 					// COPY PVWDCSizeMultiplier into Proposed model for use in simulation
 						BEMPX_SetBEMData( laTDR_DBIDs[1], BEMP_Flt, &daTDR_Data[1], BEMO_User, -1, BEMS_ProgDefault );
@@ -2106,52 +2146,42 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 							// re-init data used to track simulation progress
 								ClearCSEProgressMap();	// SAC 1/12/18
 						//iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, (sCSECopyExt.length() < 1 ? NULL : (const char*) sCSECopyExt.toLocal8Bit().constData()) );		assert( iRetVal == 0 );
-						iRetVal = cseRunMgr.SetupRunFinish( 0, sErrorMsg, NULL );		assert( iRetVal == 0 );
+						iRetVal = cseRunMgr.SetupRunFinish( iRunIdx2-iNumPrelimRuns, sErrorMsg, NULL );		assert( iRetVal == 0 );
 							if (bStoreBEMProcDetails)	// SAC 4/16/17 - store TDR details AFTER all CSE defaulting/prep
 							{	QString sDbg2FileName = QString( "%1%2%3 TDR%4.ibd-Detail" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile2, QString::number(laTDR_Data[0]) );
 							  	BEMPX_WriteProjectFile( sDbg2FileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
 							}
-						if (iRetVal == 0)
-						{	cseRunMgr.DoRun(0);
-									dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-						}
-						if (!ResRetVal_ContinueProcessing( iRetVal ))
-							break;
-					}
+						iLastSimRunIdx = iRunIdx2 - iNumPrelimRuns;
+					}	// end of if (run requires sim)
+			}	// end of run setup loop
+
+		// SAC 3/3/18 - mods to accommodate MULTIPLE TDR re-simulations (for AllOrientation models)
+			if (ResRetVal_ContinueProcessing( iRetVal ) && iRetVal == 0)
+			{	//cseRunMgr.DoRun(0);
+				cseRunMgr.DoRunRange( 0, iLastSimRunIdx );
+					dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+			}
+
+			if (ResRetVal_ContinueProcessing( iRetVal ))
+			for (iRunIdx2 = iNumPrelimRuns; (iRunIdx2 < iNumRuns && ResRetVal_ContinueProcessing( iRetVal )); iRunIdx2++)
+			{
+				const CSERun& cseRun2 = cseRunMgr.GetRun(iRunIdx2-iNumPrelimRuns);
+				const QString& sRunID2 = cseRun2.GetRunID();
+				const QString& sRunIDProcFile2 = cseRun2.GetRunIDProcFile();
+				const QString& sRunAbbrev2 = cseRun2.GetRunAbbrev();
+				long lRunNumber2 = (lAnalysisType < 1 ? 1 : cseRun2.GetRunNumber());
+
+					//BEMPX_SetActiveModel( iRunIdx2+1 );
+					BEMPX_SetActiveModel( iBEMPIdx[iRunType[iRunIdx2]] );
+
+				//	BOOL bLastRun = cseRun.GetLastRun();
+					BOOL bIsStdDesign2 = cseRun2.GetIsStdDesign();
+					BOOL bIsDesignRtg2 = cseRun2.GetIsDesignRtg();
 
 					if (iRunIdx2 > iNumPrelimRuns)
 					{
 					// Copy results objects from PREVIOUS MODEL to CURRENT MODEL
 						CopyResResultsObjectsAcrossRuns( iRetVal, sRunAbbrev2.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx2-1]], iBEMPIdx[iRunType[iRunIdx2]], sErrorMsg );
-//						int iResCopyRetVal = 0;
-//						if (ResRetVal_ContinueProcessing( iRetVal ))
-//						{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
-//	// DELETE results objects before copying them ??
-//
-//							QString sResCopyErrMsg;
-//							iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, sRunAbbrev2.toLocal8Bit().constData(), iBEMPIdx[iRunType[iRunIdx2-1]], iBEMPIdx[iRunType[iRunIdx2]] );
-//							assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
-//							if (iResCopyRetVal > 0)
-//							{	if (sErrorMsg.isEmpty())
-//									sErrorMsg = sResCopyErrMsg;
-//								switch (iResCopyRetVal)
-//								{	case 34 :  iRetVal = BEMAnal_CECRes_BadResultsObjTypes;	break;
-//									case 35 :  iRetVal = BEMAnal_CECRes_ResultsCopyError  ;	break;
-//									default :	assert( FALSE );	break;
-//								}
-//						}	}
-//					// now results objects from previous run are in place, now ensure that references to those objects are also valid
-//						char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-//						int iRORPIdx = -1;
-//						while (pszaResObjRefProps[++iRORPIdx] != NULL)
-//						{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-//							int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-//							QString sROR;
-//							for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-//							{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iRunIdx2 /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-//								{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-//	               	                                      //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-//						}	}	}
 								assert( iRunIdx2 < MAX_TimeArray_Res );
 								dTimeToProcResults[iRunIdx2] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 					}
@@ -2352,6 +2382,20 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						{	sLogMsg = QString( "      Writing of XML project %1 model data successful: %2" ).arg( sRunID, (bXMLWriteOK ? "True" : "False") );
 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}	}
+					if (iRunIdx == (iNumRuns-1) && ResRetVal_ContinueProcessing( iRetVal ) && bWriteCF1RXML && !sCF1RXMLFileName.isEmpty() && lAnalysisType > 0)		// SAC 3/5/18 - CF1RPRF01E Final results storage
+					{	iRV2 = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_CF1RXMLFinalError, "CF1RPRF01E_Final",	bVerbose, pCompRuleDebugInfo );
+						if (iRV2 > 0)
+							iRetVal = iRV2;
+						else
+						{	BOOL bXMLWriteOK = xmlCF1RPRF01EFile.WriteCF1RPRF01E( iCF1RXMLClassID, TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, -1 /*iBEMProcIdx*/,		// SAC 3/6/18
+																					false /*bOnlyValidInputs*/, true /*bWritePropertiesDefinedByRuleset*/, false /*bUseReportPrecisionSettings*/, BEMFT_CF1RXML /*iFileType*/ );
+																	assert( bXMLWriteOK );
+							if (bVerbose)  // SAC 1/31/13
+							{	sLogMsg = QString( "      Writing of CF1RPRF01E report XML file successful: %1" ).arg( (bXMLWriteOK ? "True" : "False") );
+								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}	}
+					}
+
 					if (bStoreBEMProcDetails)	// SAC 12/21/17 - added export of additional "detail" file to help isolate results storage/analysis issues
 					{	QString sDbgFileName = QString( "%1%2%3.ibd-PostSim" ).arg( sProcessPath, sModelFileOnlyNoExt, sRunIDProcFile );
 				     	BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
@@ -2372,8 +2416,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 #endif		// IF/NOT CSE_MULTI_RUN
 
 		if (ResRetVal_ContinueProcessing( iRetVal ))
-			xmlResultsFile.Close();
-						dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+		{	xmlResultsFile.Close();
+			if (bWriteCF1RXML)
+				xmlCF1RPRF01EFile.Close();
+		}				dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 		// SAC 2/7/17 - moved some results code up here to enable Pass/Fail result to impact bSendRptSignature (tic #803)
 		bHaveResult = (	iRetVal != BEMAnal_CECRes_RuleProcAbort && ResRetVal_ContinueProcessing( iRetVal ) &&
@@ -2824,8 +2870,9 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  16		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
+#define  CSVFmtVer_CECRes  17		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
 											// SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13  - SAC 10/6/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
+											// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - est. max rec length now 3072 chars
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -2834,6 +2881,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 	QString sRunTitle, sAnalysisType, sPassFail;  //, sRuleSetID, sRuleSetVer;
 	BOOL bExpectStdDesResults = TRUE;
 	BOOL bExpectDesignRatingResults = FALSE;		// SAC 3/31/15
+	BOOL bExpectCO2DesignRatingResults = FALSE;		// SAC 1/29/18
 
 	if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), lAnalysisType    ) ||
 			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType    ) ||
@@ -3017,6 +3065,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 		//double fPropKWH_PV=0, fPropKW_PV=0;		// SAC 10/7/16 - added in proposed PV KWH & KW w/ format 8 mods to support 2019 analysis
 		double fDRPropKWH_Batt=0, fDRPropKW_Batt=0, fDRPropTDV_Batt=0;		// SAC 6/7/17 - added in proposed Battery KWH & KW w/ format 10 mods
 		double fStdDRtg_NoPV=0, fStdDRtg_StdDsgnPV=0;		// SAC 6/7/17 - added DR of Std Design w/ No PV
+		double faPropElecCO2[14], faPropNGasCO2[10], faPropOthrCO2[10], faStdElecCO2[14], faStdNGasCO2[10], faStdOthrCO2[10], faDRtgElecCO2[14], faDRtgNGasCO2[10], faDRtgOthrCO2[10];	// SAC 1/29/18 - CO2 emissions
 		double  faCmpTDVbyFuel[4][3] = { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } };  // SAC 2/13/17
 		QString sCmpTDVbyFuel_Prop=",,", sCmpTDVbyFuel_Std=",,", sCmpTDVbyFuel_DRProp=",,", sCmpTDVbyFuel_DRRef=",,";
       long lDBID_EnergyUse_CompMarginTDV    = BEMPX_GetDatabaseID( "EnergyUse:CompMarginTDV"    );
@@ -3046,6 +3095,20 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
       long lDBID_EnergyUse_DRtgElecTDV     = BEMPX_GetDatabaseID( "EnergyUse:DRtgElecTDV"    );
       long lDBID_EnergyUse_DRtgNatGasTDV   = BEMPX_GetDatabaseID( "EnergyUse:DRtgNatGasTDV"  );
       long lDBID_EnergyUse_DRtgOtherTDV    = BEMPX_GetDatabaseID( "EnergyUse:DRtgOtherTDV"   );
+
+      long lDBID_EnergyUse_PropElecCarbon     = BEMPX_GetDatabaseID( "EnergyUse:PropElecCarbon"    );	// SAC 1/29/18 - added to report CO2 Emissions By Run, Fuel & Enduse
+      long lDBID_EnergyUse_PropNatGasCarbon   = BEMPX_GetDatabaseID( "EnergyUse:PropNatGasCarbon"  );
+      long lDBID_EnergyUse_PropOtherCarbon    = BEMPX_GetDatabaseID( "EnergyUse:PropOtherCarbon"   );
+      long lDBID_EnergyUse_StdElecCarbon      = BEMPX_GetDatabaseID( "EnergyUse:StdElecCarbon"     );
+      long lDBID_EnergyUse_StdNatGasCarbon    = BEMPX_GetDatabaseID( "EnergyUse:StdNatGasCarbon"   );
+      long lDBID_EnergyUse_StdOtherCarbon     = BEMPX_GetDatabaseID( "EnergyUse:StdOtherCarbon"    );
+      long lDBID_EnergyUse_DRtgElecCarbon     = BEMPX_GetDatabaseID( "EnergyUse:DRtgElecCarbon"    );
+      long lDBID_EnergyUse_DRtgNatGasCarbon   = BEMPX_GetDatabaseID( "EnergyUse:DRtgNatGasCarbon"  );
+      long lDBID_EnergyUse_DRtgOtherCarbon    = BEMPX_GetDatabaseID( "EnergyUse:DRtgOtherCarbon"   );
+		long lCalcCO2DesignRatings;	// SAC 1/30/18
+		if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ))
+			lCalcCO2DesignRatings = 0;
+		bExpectCO2DesignRatingResults = (lCalcCO2DesignRatings > 0 && lEnergyCodeYear >= 2019 && iResultsFormatVersion >= 17);
 
 		if (iRetVal==0)
 		{	if (!bExpectStdDesResults)
@@ -3111,7 +3174,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 									BEMPX_GetFloat(	lDBID_EnergyUse_PropNatGasEnergy+1, faDRPropTherms[iEU], 0, BEMP_Flt, iObjIdx );		faDRPropTherms[iEU] = faDRPropTherms[iEU] * fCondFloorArea / 100  ;
 									BEMPX_GetFloat(	lDBID_EnergyUse_PropOtherEnergy +1,  faDRPropOther[iEU], 0, BEMP_Flt, iObjIdx );		 faDRPropOther[iEU] =  faDRPropOther[iEU] * fCondFloorArea / 1000 ;
 								}
-							}
+								if (bExpectCO2DesignRatingResults)		// SAC 1/29/18
+								{	BEMPX_GetFloat(	lDBID_EnergyUse_PropElecCarbon   ,   faPropElecCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faPropElecCO2[iEU] = faPropElecCO2[iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_PropNatGasCarbon ,   faPropNGasCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faPropNGasCO2[iEU] = faPropNGasCO2[iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_PropOtherCarbon  ,   faPropOthrCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faPropOthrCO2[iEU] = faPropOthrCO2[iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_StdElecCarbon    ,   faStdElecCO2[ iEU], 0, BEMP_Flt, iObjIdx );		  faStdElecCO2[ iEU] = faStdElecCO2[ iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_StdNatGasCarbon  ,   faStdNGasCO2[ iEU], 0, BEMP_Flt, iObjIdx );		  faStdNGasCO2[ iEU] = faStdNGasCO2[ iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_StdOtherCarbon   ,   faStdOthrCO2[ iEU], 0, BEMP_Flt, iObjIdx );		  faStdOthrCO2[ iEU] = faStdOthrCO2[ iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_DRtgElecCarbon   ,   faDRtgElecCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faDRtgElecCO2[iEU] = faDRtgElecCO2[iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_DRtgNatGasCarbon ,   faDRtgNGasCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faDRtgNGasCO2[iEU] = faDRtgNGasCO2[iEU] * fCondFloorArea * 1000  ;
+									BEMPX_GetFloat(	lDBID_EnergyUse_DRtgOtherCarbon  ,   faDRtgOthrCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faDRtgOthrCO2[iEU] = faDRtgOthrCO2[iEU] * fCondFloorArea * 1000  ;
+							}	}
 							else if (iEU==10 && bExpectStdDesResults)
 								BEMPX_GetFloat( lDBID_EnergyUse_CompMarginTDV, fCompMargin, 0, BEMP_Flt, iObjIdx );
 
@@ -3179,6 +3252,11 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 									BEMPX_GetFloat( 		lDBID_EnergyUse_ProposedTDV   +1,   fDRPropTDV_Batt, 0, BEMP_Flt, iObjIdx );
 								}
 							}
+							if (bExpectCO2DesignRatingResults)		// SAC 1/29/18
+							{	BEMPX_GetFloat(	lDBID_EnergyUse_PropElecCarbon   ,   faPropElecCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faPropElecCO2[iEU] = faPropElecCO2[iEU] * fCondFloorArea * 1000  ;
+								BEMPX_GetFloat(	lDBID_EnergyUse_StdElecCarbon    ,   faStdElecCO2[ iEU], 0, BEMP_Flt, iObjIdx );		  faStdElecCO2[ iEU] = faStdElecCO2[ iEU] * fCondFloorArea * 1000  ;
+								BEMPX_GetFloat(	lDBID_EnergyUse_DRtgElecCarbon   ,   faDRtgElecCO2[iEU], 0, BEMP_Flt, iObjIdx );		  faDRtgElecCO2[iEU] = faDRtgElecCO2[iEU] * fCondFloorArea * 1000  ;
+							}
 						}
 					}
 					else
@@ -3240,7 +3318,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 					{	sRunTitle += " - ";	sRunTitle += qsEUseSummaryName;
 				}	}
 
-				QString sBeginFields, sPropEnergy, sStdEnergy, sVersionFields, sPropDemand, sStdDemand, sDemSavAndCAHP, sDRtgEnergyDemand;
+				QString sBeginFields, sPropEnergy, sStdEnergy, sVersionFields, sPropDemand, sStdDemand, sDemSavAndCAHP, sDRtgEnergyDemand, sPropCO2, sStdCO2, sDRtgCO2;
 		// SAC 3/31/15 - revisions to populate return string is sections to avoid excessively numerous & long individual format statements
 				if (iResultsFormatVersion >= 10)
 					sBeginFields.sprintf( "\"%s\",%s\"%s\",%ld,%ld,%g,\"%s\",\"%s\",%s%s", timeStamp.toLocal8Bit().constData(), sProjPathFile.toLocal8Bit().constData(), 
@@ -3326,6 +3404,21 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						sStdDemand = ",,,,,,,,,,,";
 				}
 
+				if (bExpectCO2DesignRatingResults)		// SAC 1/29/18 - CO2 Emissions
+				{	sPropCO2.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",	// 32 doubles
+										faPropElecCO2[0], faPropElecCO2[1], faPropElecCO2[2], faPropElecCO2[3], faPropElecCO2[4], faPropElecCO2[12/*PV*/], faPropElecCO2[13/*Batt*/], faPropElecCO2[5], faPropElecCO2[6], faPropElecCO2[7], faPropElecCO2[8], faPropElecCO2[9], 
+										faPropNGasCO2[0], faPropNGasCO2[1], faPropNGasCO2[2], faPropNGasCO2[3], faPropNGasCO2[4], faPropNGasCO2[5], faPropNGasCO2[6], faPropNGasCO2[7], faPropNGasCO2[8], faPropNGasCO2[9], 
+										faPropOthrCO2[0], faPropOthrCO2[1], faPropOthrCO2[2], faPropOthrCO2[3], faPropOthrCO2[4], faPropOthrCO2[5], faPropOthrCO2[6], faPropOthrCO2[7], faPropOthrCO2[8], faPropOthrCO2[9] );
+					sStdCO2.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",	// 32 doubles
+										faStdElecCO2[0], faStdElecCO2[1], faStdElecCO2[2], faStdElecCO2[3], faStdElecCO2[4], faStdElecCO2[12/*PV*/], faStdElecCO2[13/*Batt*/], faStdElecCO2[5], faStdElecCO2[6], faStdElecCO2[7], faStdElecCO2[8], faStdElecCO2[9], 
+										faStdNGasCO2[0], faStdNGasCO2[1], faStdNGasCO2[2], faStdNGasCO2[3], faStdNGasCO2[4], faStdNGasCO2[5], faStdNGasCO2[6], faStdNGasCO2[7], faStdNGasCO2[8], faStdNGasCO2[9], 
+										faStdOthrCO2[0], faStdOthrCO2[1], faStdOthrCO2[2], faStdOthrCO2[3], faStdOthrCO2[4], faStdOthrCO2[5], faStdOthrCO2[6], faStdOthrCO2[7], faStdOthrCO2[8], faStdOthrCO2[9] );
+					sDRtgCO2.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",	// 32 doubles
+										faDRtgElecCO2[0], faDRtgElecCO2[1], faDRtgElecCO2[2], faDRtgElecCO2[3], faDRtgElecCO2[4], faDRtgElecCO2[12/*PV*/], faDRtgElecCO2[13/*Batt*/], faDRtgElecCO2[5], faDRtgElecCO2[6], faDRtgElecCO2[7], faDRtgElecCO2[8], faDRtgElecCO2[9], 
+										faDRtgNGasCO2[0], faDRtgNGasCO2[1], faDRtgNGasCO2[2], faDRtgNGasCO2[3], faDRtgNGasCO2[4], faDRtgNGasCO2[5], faDRtgNGasCO2[6], faDRtgNGasCO2[7], faDRtgNGasCO2[8], faDRtgNGasCO2[9], 
+										faDRtgOthrCO2[0], faDRtgOthrCO2[1], faDRtgOthrCO2[2], faDRtgOthrCO2[3], faDRtgOthrCO2[4], faDRtgOthrCO2[5], faDRtgOthrCO2[6], faDRtgOthrCO2[7], faDRtgOthrCO2[8], faDRtgOthrCO2[9] );
+				}
+
 				if (iResultsFormatVersion >= 11)	// SAC 7/19/17 - CAHP update
 				{	if (bExpectStdDesResults)
 						sDemSavAndCAHP.sprintf( "%g,%g,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,",
@@ -3348,7 +3441,7 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				else
 					sDemSavAndCAHP = ",,,,,,,,,,,,,";
 
-				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sStdMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,", sGridHarmCred = ",,,,";
+				QString sPropPVScaling = ",,,", sTargetEDR = ",,", sStdMixedFuel = ",,", sCarbonEmissions = ",,,,,,", sCompEDRMargs = ",,", sGridHarmCred = ",,,,", sCO2DsgnRtgs = ",,,,,,";
 				if (iResultsFormatVersion >= 12)		// SAC 9/15/17 - additional PV scaling, target EDR & standard mixed fuel run results
 				{
 					//BEMObject* pObjResultSummary = NULL;    int iEUSObjIdx=-1;
@@ -3442,6 +3535,19 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffElec" ),     dGHCElec   , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
 						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:GHCEnergyEffBattFrac" ), dGHCBattRat, -1, BEMP_Flt, iEUseSummaryObjIdx ))
 							sGridHarmCred = QString( "%1,%2,%3,%4," ).arg( QString::number( dGHCTDVCap ), QString::number( dGHCTDV ), QString::number( dGHCElec ), QString::number( dGHCBattRat ) );
+					}
+
+					// CO2 Design Ratings - SAC 1/29/18
+					if (iResultsFormatVersion >= 17 && iEUseSummaryObjIdx >= 0 && bExpectCO2DesignRatingResults)
+					{	double dPropFinCDR, dPropEffCDR, dPropPVFCDR, dStdFinCDR, dStdEffCDR, dStdPVFCDR;
+						if (BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtg"          ), dPropFinCDR, -1, BEMP_Flt, iEUseSummaryObjIdx ) && 
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtgNoPV"      ), dPropEffCDR, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtgPVOnly"    ), dPropPVFCDR, -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtgStd"       ), dStdFinCDR , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtgStdNoPV"   ), dStdEffCDR , -1, BEMP_Flt, iEUseSummaryObjIdx ) &&
+						    BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:CO2DesignRtgStdPVOnly" ), dStdPVFCDR , -1, BEMP_Flt, iEUseSummaryObjIdx ))
+							sCO2DsgnRtgs = QString( "%1,%2,%3,%4,%5,%6," ).arg( QString::number( dPropFinCDR ), QString::number( dPropEffCDR ), QString::number( dPropPVFCDR ),
+																								 QString::number( dStdFinCDR  ), QString::number( dStdEffCDR  ), QString::number( dStdPVFCDR  ) );
 				}	}
 
 				sDRtgEnergyDemand = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
@@ -3502,11 +3608,12 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 
 			// concatenate individual strings into complete CSV record
 				if (iResultsFormatVersion >= 10)	// SAC 6/7/17 - Re-ordered string groups, spliting up Prop & Std demand results
-					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
+					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(),
 										sStdEnergy.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sVersionFields.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
 										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
 										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sStdMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(), sCompEDRMargs.toLocal8Bit().constData(),
-										sGridHarmCred.toLocal8Bit().constData(), sStdPVResults.toLocal8Bit().constData() );
+										sGridHarmCred.toLocal8Bit().constData(), sStdPVResults.toLocal8Bit().constData(), sCO2DsgnRtgs.toLocal8Bit().constData(),
+										sPropCO2.toLocal8Bit().constData(), sStdCO2.toLocal8Bit().constData(), sDRtgCO2.toLocal8Bit().constData() );
 				else 
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), 
 										sVersionFields.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(), sDemSavAndCAHP.toLocal8Bit().constData(), sDRtgEnergyDemand.toLocal8Bit().constData(),
@@ -3525,11 +3632,11 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 #define  HrlyExport_NumEUGroups  5
 static const char* pszMeters[HrlyExport_NumMeters+1]			= { "MtrElec",     "MtrNatGas",  "MtrOther",  NULL };
 static const char* pszEnduses[HrlyExport_NumEUGroups][HrlyExport_NumEnduses] =
-												{	{ "Htg" ,  "Clg" , "FanV",  NULL , "Dhw" , "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV" , "BT"  },		// SAC 7/7/15 - SHW -> DHW  - SAC 1/29/16 - added PV  - SAC 12/15/16 - added BT (battery)
-													{ "HPHtg", "FanC",  NULL ,  NULL , "DhwBU", NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
-													{ "FanH",   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Dry" ,  NULL ,  NULL,  NULL,  NULL },
-													{ "Aux" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Wash",  NULL ,  NULL,  NULL,  NULL },
-													{ "Fan" ,   NULL ,  NULL ,  NULL ,  NULL ,  NULL   ,  NULL , "Cook",  NULL ,  NULL,  NULL,  NULL }  };
+												{	{ "Htg" ,  "Clg" , "FanV",  NULL , "Dhw" ,  "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV" , "BT"  },		// SAC 7/7/15 - SHW -> DHW  - SAC 1/29/16 - added PV  - SAC 12/15/16 - added BT (battery)
+													{ "HPHtg", "FanC",  NULL ,  NULL , "DhwBU",  NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
+													{ "FanH",   NULL ,  NULL ,  NULL , "DhwMFL", NULL   ,  NULL , "Dry" ,  NULL ,  NULL,  NULL,  NULL },		// SAC 2/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
+													{ "Aux" ,   NULL ,  NULL ,  NULL ,  NULL ,   NULL   ,  NULL , "Wash",  NULL ,  NULL,  NULL,  NULL },
+													{ "Fan" ,   NULL ,  NULL ,  NULL ,  NULL ,   NULL   ,  NULL , "Cook",  NULL ,  NULL,  NULL,  NULL }  };
 // SAC 7/14/16 - replaced following w/ above (moving Other HVAC into Spc Htg) to be consistent w/ reporting of summary results - based on changes to rules back on 10/16/13 by MJB
 //												{	{ "Htg" ,  "Clg" , "FanV", "Aux" , "Dhw" , "DHWPmp", "Lit" , "Refr", "Rcp" , "Ext", "PV"  },		// SAC 7/7/15 - SHW -> DHW   	- SAC 1/29/16 - added PV
 //													{ "HPHtg", "FanC",  NULL , "Fan" , "DhwBU", NULL   ,  NULL , "Dish",  NULL ,  NULL,  NULL },		// SAC 3/23/16 - DHW -> Dhw & added DhwBU
@@ -3540,7 +3647,7 @@ static const char* pszEnduses[HrlyExport_NumEUGroups][HrlyExport_NumEnduses] =
 
 //		Return Values:		0 =>	SUCCESS
 //							 > 0 =>	Error Code
-//											 1 : Error retrieving Proj:AnalysisType, AllOrientations, CondFloorArea, ClimateZone and/or NatGasAvailable
+//											 1 : Error retrieving Proj:AnalysisType, AllOrientations, CondFloorArea and/or ClimateZone
 //											 2 : Unable to open and/or write hourly CSV results file
 //											 3 : Error encountered opening hourly CSV results file
 //											 4 : Unknown error writing hourly CSV results file
@@ -3551,7 +3658,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 													char* pszErrMsgBuffer/*=NULL*/, int iErrMsgBufferLen /*=0*/, bool bSilent /*=false*/, int iBEMProcIdx /*=-1*/ )
 {	int iRetVal = 0;
 	QString sErrMsg;
-	long lAnalysisType, lAllOrientations, lClimateZone=0, lNatGasAvailable=0;
+	long lAnalysisType, lAllOrientations, lClimateZone=0, lNatGasAvailable=0, lGasType=1;
 	double /*fCompMargin=0.0,*/ fCondFloorArea=0.0;
 	QString sRunTitle, sFuelTDVLabel;		// , sPassFail;   // , sAnalysisType;  //, sRuleSetID, sRuleSetVer;
 	BOOL bExpectStdDesResults = TRUE;
@@ -3559,15 +3666,16 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 		//	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType    ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations" ), lAllOrientations ) ||
 			!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Proj:CondFloorArea"   ), fCondFloorArea   ) ||
-			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone"     ), lClimateZone     ) ||
-			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvailable" ), lNatGasAvailable ) )
+			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone"     ), lClimateZone     ) )
 	{	iRetVal = 1;
-		sErrMsg = "Error retrieving Proj:AnalysisType, AllOrientations, CondFloorArea, ClimateZone and/or NatGasAvailable";
+		sErrMsg = "Error retrieving Proj:AnalysisType, AllOrientations, CondFloorArea and/or ClimateZone";
 	}
 	else
 	{	bExpectStdDesResults = (lAnalysisType > 12);  // (sAnalysisType.indexOf( "Standard" ) > 0 || sAnalysisType.indexOf( "Compliance" ) > 0);
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunTitle"     ), sRunTitle );
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:FuelTDVLabel" ), sFuelTDVLabel );
+		BEMPX_GetString( BEMPX_GetDatabaseID(  "Proj:RunTitle"        ), sRunTitle );
+		BEMPX_GetString( BEMPX_GetDatabaseID(  "Proj:FuelTDVLabel"    ), sFuelTDVLabel );
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvailable" ), lNatGasAvailable );
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"         ), lGasType );		// 1-NatGas, 2-Propane
 
 //		if (iRetVal==0 && lAnalysisType == 13)
 //		{	BEMObject* pObjResultSummary = NULL;
@@ -3617,15 +3725,22 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 		//BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RulesetVersion"   ),	sRuleVer );
 		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompMgrVersion"   ),	sRuleVer );		// SAC 6/7/17 - replaced RulesetVersion w/ more informative CompMgrVersion
 		QString qsCSEName;	// SAC 12/4/17
-		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSENme"  ),	qsCSEName  );
+		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CSEName" ),	qsCSEName  );
 
 		bool bExportPV = (sRuleVer.indexOf( "2013" ) < 1);	// SAC 1/29/16 - prevent export of PV for 2013 ruleset
 		QString sPV = "PV";
 
+		bool bNatGas = true;		// SAC 2/28/18 - revised determination of NatGas vs. Other/Propane for 2019+ analysis (tic #992)
+		if (sRuleVer.indexOf( "2013" ) < 1 && sRuleVer.indexOf( "2016" ) < 1)
+			bNatGas = (lGasType==1);				// ExEDR or 2019+
+		else
+			bNatGas = (lNatGasAvailable > 0);	// 2013 or 2016
+
 		long lEnergyCodeYearNum;
 		if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYearNum ))
 			lEnergyCodeYearNum = 2013;
-		bool bExportBT = (lEnergyCodeYearNum >= 2016);	// SAC 12/15/16 - prevent export of BT for 2013-16 analysis   - SAC 7/13/17 - expanded to export Battery for 2016 as well
+		bool bExportBT  = (lEnergyCodeYearNum >= 2016);	// SAC 12/15/16 - prevent export of BT for 2013-16 analysis   - SAC 7/13/17 - expanded to export Battery for 2016 as well
+		bool bExportCO2 = (lEnergyCodeYearNum >= 2019);	// SAC 1/29/18
 		QString sBT = "BT";
 
 		FILE *fp_CSV;
@@ -3655,7 +3770,16 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 				fprintf( fp_CSV, "\n" );
 
 					// SAC 8/23/14 - updated to include electric demand multipliers
-				if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT 
+				if (bExportCO2)		// SAC 1/29/18 - added CO2 exports for 2019+ analysis
+            {	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,TDV Multipliers,,Elec Demand,CO2 Emissions,,\n" );		// INCLUDING PV
+	            fprintf( fp_CSV,  ",,,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,Battery,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
+												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Electric,Fuel,Multipliers,Electric,Fuel,\n" );
+         	   fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
+														"(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(TDV/Btu),(TDV/Btu),(frac),(ton/MWh),(ton/therm),\n" );
+				}
+				else if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT 
             {	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,Site Other Fuel Use,,,,,,,,,,,TDV Multipliers,,Elec Demand,\n" );		// INCLUDING PV
 	            fprintf( fp_CSV,  ",,,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,PV,Battery,TOTAL,"
 												"Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,WtrHt Pump,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,"
@@ -3710,7 +3834,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 						}
 				}
 
-				int iFuelTDVCol = (lNatGasAvailable > 0 ? 2 : 3);
+				int iFuelTDVCol = (bNatGas ? 2 : 3);
 				double daTDVMults[2][8760];
 				double* daTDVData[2] = { &daTDVMults[0][0], &daTDVMults[1][0] };
 				if (BEMPX_GetTableColumn( &daTDVMults[0][0], 8760, "TDVTable", ((lClimateZone-1) * 3) + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
@@ -3737,7 +3861,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 				bHaveSecTDV[0] = ( BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Elec" ), qsTDVSecTbl[0] ) && 
 										  qsTDVSecTbl[0].length() > 0 && qsTDVSecTbl[0].compare( "none", Qt::CaseInsensitive ) && 
 										  BEMPX_GetTableColumn( &daTDVSec[0][0], 8760, qsTDVSecTbl[0].toLocal8Bit().constData(), lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
-				if (lNatGasAvailable > 0)
+				if (bNatGas)
 					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_NGas" ), qsTDVSecTbl[1] );
 				else
 					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Othr" ), qsTDVSecTbl[1] );
@@ -3759,6 +3883,19 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 					daElDmndData = &daZero[0];
 				}
 
+				double daElecCO2Emis[8760], dFuelCO2Emis;		// SAC 1/29/18
+				double* daElecCO2Data = &daElecCO2Emis[0];
+				if (bExportCO2)
+				{	if (bNatGas)
+						BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:NatGasCarbonEmis" ), dFuelCO2Emis );
+					else
+						BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:OtherCarbonEmis"  ), dFuelCO2Emis );
+					if (BEMPX_GetTableColumn( &daElecCO2Emis[0], 8760, "CA19_Carbon_Elec", lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					{	assert( FALSE );
+						daElecCO2Data = &daZero[0];
+					}
+				}
+
 			// EXPORT hourly results records
 				iYrHr = -1;
 				int iMo, iDa, iHr;
@@ -3766,7 +3903,44 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 					for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
 						for (iHr=1; iHr<25; iHr++)
 						{	iYrHr++;
-							if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT
+							if (bExportCO2)		// SAC 1/29/18 - added CO2 exports for 2019+ analysis
+			    		        fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
+					(daMtrEUData[0][0][0][iYrHr] + daMtrEUData[0][0][1][iYrHr] + daMtrEUData[0][0][2][iYrHr] + daMtrEUData[0][0][3][iYrHr] + daMtrEUData[0][0][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][1][0][iYrHr] + daMtrEUData[0][1][1][iYrHr] + daMtrEUData[0][1][2][iYrHr] + daMtrEUData[0][1][3][iYrHr] + daMtrEUData[0][1][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][2][0][iYrHr] + daMtrEUData[0][2][1][iYrHr] + daMtrEUData[0][2][2][iYrHr] + daMtrEUData[0][2][3][iYrHr] + daMtrEUData[0][2][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][3][0][iYrHr] + daMtrEUData[0][3][1][iYrHr] + daMtrEUData[0][3][2][iYrHr] + daMtrEUData[0][3][3][iYrHr] + daMtrEUData[0][3][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][4][0][iYrHr] + daMtrEUData[0][4][1][iYrHr] + daMtrEUData[0][4][2][iYrHr] + daMtrEUData[0][4][3][iYrHr] + daMtrEUData[0][4][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][5][0][iYrHr] + daMtrEUData[0][5][1][iYrHr] + daMtrEUData[0][5][2][iYrHr] + daMtrEUData[0][5][3][iYrHr] + daMtrEUData[0][5][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][6][0][iYrHr] + daMtrEUData[0][6][1][iYrHr] + daMtrEUData[0][6][2][iYrHr] + daMtrEUData[0][6][3][iYrHr] + daMtrEUData[0][6][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][7][0][iYrHr] + daMtrEUData[0][7][1][iYrHr] + daMtrEUData[0][7][2][iYrHr] + daMtrEUData[0][7][3][iYrHr] + daMtrEUData[0][7][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][8][0][iYrHr] + daMtrEUData[0][8][1][iYrHr] + daMtrEUData[0][8][2][iYrHr] + daMtrEUData[0][8][3][iYrHr] + daMtrEUData[0][8][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][9][0][iYrHr] + daMtrEUData[0][9][1][iYrHr] + daMtrEUData[0][9][2][iYrHr] + daMtrEUData[0][9][3][iYrHr] + daMtrEUData[0][9][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][10][0][iYrHr] + daMtrEUData[0][10][1][iYrHr] + daMtrEUData[0][10][2][iYrHr] + daMtrEUData[0][10][3][iYrHr] + daMtrEUData[0][10][4][iYrHr]) / 3.412,
+					(daMtrEUData[0][11][0][iYrHr] + daMtrEUData[0][11][1][iYrHr] + daMtrEUData[0][11][2][iYrHr] + daMtrEUData[0][11][3][iYrHr] + daMtrEUData[0][11][4][iYrHr]) / 3.412, daMtrTotals[0][iYrHr] / 3.412,
+					(daMtrEUData[1][0][0][iYrHr] + daMtrEUData[1][0][1][iYrHr] + daMtrEUData[1][0][2][iYrHr] + daMtrEUData[1][0][3][iYrHr] + daMtrEUData[1][0][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][1][0][iYrHr] + daMtrEUData[1][1][1][iYrHr] + daMtrEUData[1][1][2][iYrHr] + daMtrEUData[1][1][3][iYrHr] + daMtrEUData[1][1][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][2][0][iYrHr] + daMtrEUData[1][2][1][iYrHr] + daMtrEUData[1][2][2][iYrHr] + daMtrEUData[1][2][3][iYrHr] + daMtrEUData[1][2][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][3][0][iYrHr] + daMtrEUData[1][3][1][iYrHr] + daMtrEUData[1][3][2][iYrHr] + daMtrEUData[1][3][3][iYrHr] + daMtrEUData[1][3][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][4][0][iYrHr] + daMtrEUData[1][4][1][iYrHr] + daMtrEUData[1][4][2][iYrHr] + daMtrEUData[1][4][3][iYrHr] + daMtrEUData[1][4][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][5][0][iYrHr] + daMtrEUData[1][5][1][iYrHr] + daMtrEUData[1][5][2][iYrHr] + daMtrEUData[1][5][3][iYrHr] + daMtrEUData[1][5][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][6][0][iYrHr] + daMtrEUData[1][6][1][iYrHr] + daMtrEUData[1][6][2][iYrHr] + daMtrEUData[1][6][3][iYrHr] + daMtrEUData[1][6][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][7][0][iYrHr] + daMtrEUData[1][7][1][iYrHr] + daMtrEUData[1][7][2][iYrHr] + daMtrEUData[1][7][3][iYrHr] + daMtrEUData[1][7][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][8][0][iYrHr] + daMtrEUData[1][8][1][iYrHr] + daMtrEUData[1][8][2][iYrHr] + daMtrEUData[1][8][3][iYrHr] + daMtrEUData[1][8][4][iYrHr]) / 100.0,
+					(daMtrEUData[1][9][0][iYrHr] + daMtrEUData[1][9][1][iYrHr] + daMtrEUData[1][9][2][iYrHr] + daMtrEUData[1][9][3][iYrHr] + daMtrEUData[1][9][4][iYrHr]) / 100.0, daMtrTotals[1][iYrHr] / 100.0,
+					(daMtrEUData[2][0][0][iYrHr] + daMtrEUData[2][0][1][iYrHr] + daMtrEUData[2][0][2][iYrHr] + daMtrEUData[2][0][3][iYrHr] + daMtrEUData[2][0][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][1][0][iYrHr] + daMtrEUData[2][1][1][iYrHr] + daMtrEUData[2][1][2][iYrHr] + daMtrEUData[2][1][3][iYrHr] + daMtrEUData[2][1][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][2][0][iYrHr] + daMtrEUData[2][2][1][iYrHr] + daMtrEUData[2][2][2][iYrHr] + daMtrEUData[2][2][3][iYrHr] + daMtrEUData[2][2][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][3][0][iYrHr] + daMtrEUData[2][3][1][iYrHr] + daMtrEUData[2][3][2][iYrHr] + daMtrEUData[2][3][3][iYrHr] + daMtrEUData[2][3][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][4][0][iYrHr] + daMtrEUData[2][4][1][iYrHr] + daMtrEUData[2][4][2][iYrHr] + daMtrEUData[2][4][3][iYrHr] + daMtrEUData[2][4][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][5][0][iYrHr] + daMtrEUData[2][5][1][iYrHr] + daMtrEUData[2][5][2][iYrHr] + daMtrEUData[2][5][3][iYrHr] + daMtrEUData[2][5][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][6][0][iYrHr] + daMtrEUData[2][6][1][iYrHr] + daMtrEUData[2][6][2][iYrHr] + daMtrEUData[2][6][3][iYrHr] + daMtrEUData[2][6][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][7][0][iYrHr] + daMtrEUData[2][7][1][iYrHr] + daMtrEUData[2][7][2][iYrHr] + daMtrEUData[2][7][3][iYrHr] + daMtrEUData[2][7][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][8][0][iYrHr] + daMtrEUData[2][8][1][iYrHr] + daMtrEUData[2][8][2][iYrHr] + daMtrEUData[2][8][3][iYrHr] + daMtrEUData[2][8][4][iYrHr]) / 1000.0,
+					(daMtrEUData[2][9][0][iYrHr] + daMtrEUData[2][9][1][iYrHr] + daMtrEUData[2][9][2][iYrHr] + daMtrEUData[2][9][3][iYrHr] + daMtrEUData[2][9][4][iYrHr]) / 1000.0, daMtrTotals[2][iYrHr] / 1000.0,
+					daTDVData[0][iYrHr], daTDVData[1][iYrHr], daElDmndData[iYrHr], daElecCO2Data[iYrHr], dFuelCO2Emis );
+							else if (bExportPV && bExportBT)		// SAC 12/15/16 - include PV & BT
 			    		        fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																		"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
@@ -4094,35 +4268,132 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
 										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(metric ton/yr),(metric ton/yr),(metr"
 										"ic ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(EDR),(EDR),(kTDV/ft2-yr),(kTDV/ft2-yr),(kWh),Ratio,(kWh),(kTDV/ft2-yr),(kW),\n";
 
+// SAC 1/29/18 - added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944, 3776 & 2904 chars
+static char szCECResCDRCSV1[]	=	",,,,Number of,Conditioned,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,Proposed Model Site Natural Gas Use,,,,,,,,,,Proposed Model Site"
+										" Other Fuel Use,,,,,,,,,,Proposed Model TDV,,,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,"
+										",,,Standard Model Site Natural Gas Use,,,,,,,,,,Standard Model Site Other Fuel Use,,,,,,,,,,Standard Model TDV,,,,,,,,,,,Standard Model El"
+										"ectric Demand,,,,,,,,,,,Software Versions,,,Savings Results,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,,Proposed Design Rating Model Site Elect"
+										"ric Use,,,,,,,,,,,,Proposed  Design Rating Model Site Natural Gas Use,,,,,,,,,,Proposed  Design Rating Model Site Other Fuel Use,,,,,,,,,,"
+										"Proposed  Design Rating Model TDV,,,,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,Reference Design Rating Model Site El"
+										"ectric Use,,,,,,,,,,Reference Design Rating Model Site Natural Gas Use,,,,,,,,,,Reference Design Rating Model Site Other Fuel Use,,,,,,,,,"
+										",Reference Design Rating Model TDV (fuel multiplier adjusted),,,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,,Energy Desig"
+										"n Ratings,,,,,Compliance Total TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Proposed PV Scaling,,,Target EDR,,Standard Design PV,,Proposed Des"
+										"ign CO2 Emissions,,,Standard Design CO2 Emissions,,,Compliance EDR Margins,,Grid Harmonization Credit,,,,Standard Design PV Results,,,CO2 "
+										"Emission Design Ratings,,,,,,Proposed Model Site Electric CO2 Emissions,,,,,,,,,,,,Proposed Model Site Natural Gas CO2 Emissions,,,,,,,,,,"
+										"Proposed Model Site Other Fuel CO2 Emissions,,,,,,,,,,Standard Model Site Electric CO2 Emissions,,,,,,,,,,,,Standard Model Site Natural Ga"
+										"s CO2 Emissions,,,,,,,,,,Standard Model Site Other Fuel CO2 Emissions,,,,,,,,,,Reference Design Rating Model Site Electric CO2 Emissions,,"
+										",,,,,,,,,,Reference Design Rating Model Site Natural Gas CO2 Emissions,,,,,,,,,,Reference Design Rating Model Site Other Fuel CO2 Emissions,,,,,,,,,,\n";   // 1944 chars
+static char szCECResCDRCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,Compliance,Design,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,"
+										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ"
+										" Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Ligh"
+										"t,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,"
+										"Exterior,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,I"
+										"AQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & "
+										"Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc H"
+										"eat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Compliance,,End User,Total Demand,Compl"
+										"iance Demand,Total TDV,Compliance TDV,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone Kicker,High Perfor"
+										"mance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ Kicker,DOE Zero "
+										"Energy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Incentive,CAHP Total "
+										"Incentive,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Ve"
+										"nt,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,"
+										"Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV Credit,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc"
+										" Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC"
+										",Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exte"
+										"rior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other H"
+										"VAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,E"
+										"xterior,TOTAL,Proposed,Proposed,Standard,Standard,Standard,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design "
+										"Rating Model,,Max PV,PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Std Design,Self Consumed Solar,Grid Exported Solar,CO2 Generated,Self Cons"
+										"umed Solar,Grid Exported Solar,CO2 Generated,Efficiency,Final,TDV Cap,TDV,Elec Use,Battery,Elec Use,TDV,Demand,Proposed Model,,,Standard M"
+										"odel,,,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,"
+										"Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plu"
+										"g Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc "
+										"Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,A"
+										"ppl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,PV,Battery,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL"
+										",Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Other HVAC,Wtr He"
+										"at,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,\n";   // 3776 chars
+static char szCECResCDRCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,Margin,Rating,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+										"(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu"
+										"),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTD"
+										"V/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW)"
+										",(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Th"
+										"erms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-y"
+										"r),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW)"
+										",(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Ruleset,CSE,Application,(kW),(kW),(%),(%),(int),(int),($),($),($),($),($),($),($),($),($),($"
+										"),($),($),($),($),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Th"
+										"erms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(k"
+										"TDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),"
+										"(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(The"
+										"rms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMBtu),(MMB"
+										"tu),(MMBtu),(MMBtu),(MMBtu),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr"
+										"),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Excl. PV+Batt,PV+Batt Only,Final EDR,Excl. PV,Min Reqd PV,"
+										"Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(metric ton/yr),(metric ton/yr),(metr"
+										"ic ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(EDR),(EDR),(kTDV/ft2-yr),(kTDV/ft2-yr),(kWh),Ratio,(kWh),(kTDV/ft2-yr),(kW),Fi"
+										"nal CDR,Efficiency CDR,PV+Flex Only CDR,Final CDR,Efficiency CDR,PV Only CDR,(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),("
+										"kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg)"
+										",(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(k"
+										"g),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),\n";   // 2904 chars
+
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;
 #pragma warning(disable:4996)
-	if (pszHdr1 && iHdr1Len > 0)
-	{	strncpy( pszHdr1, szCECResCSV1, iHdr1Len-1 );
-		if (strlen( pszHdr1 ) < strlen( szCECResCSV1 ))
-			iRetVal = 1;
-	}
-	if (pszHdr2 && iHdr2Len > 0)
-	{	strncpy( pszHdr2, szCECResCSV2, iHdr2Len-1 );
-		if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( szCECResCSV2 ))
-			iRetVal = 2;
-	}
-	if (pszHdr3 && iHdr3Len > 0)
-	{	strncpy( pszHdr3, szCECResCSV3, iHdr3Len-1 );
-		if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( szCECResCSV3 ))
-			iRetVal = 3;
-	}
+	long lEnergyCodeYear, lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers for run containing CO2 design ratings vs. not
+	if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"    ), lEnergyCodeYear       ) && lEnergyCodeYear >= 2019 &&
+		 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0)
+	{
+		if (pszHdr1 && iHdr1Len > 0)
+		{	strncpy( pszHdr1, szCECResCDRCSV1, iHdr1Len-1 );
+			if (strlen( pszHdr1 ) < strlen( szCECResCDRCSV1 ))
+				iRetVal = 1;
+		}
+		if (pszHdr2 && iHdr2Len > 0)
+		{	strncpy( pszHdr2, szCECResCDRCSV2, iHdr2Len-1 );
+			if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( szCECResCDRCSV2 ))
+				iRetVal = 2;
+		}
+		if (pszHdr3 && iHdr3Len > 0)
+		{	strncpy( pszHdr3, szCECResCDRCSV3, iHdr3Len-1 );
+			if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( szCECResCDRCSV3 ))
+				iRetVal = 3;
+	}	}
+	else
+	{
+		if (pszHdr1 && iHdr1Len > 0)
+		{	strncpy( pszHdr1, szCECResCSV1, iHdr1Len-1 );
+			if (strlen( pszHdr1 ) < strlen( szCECResCSV1 ))
+				iRetVal = 1;
+		}
+		if (pszHdr2 && iHdr2Len > 0)
+		{	strncpy( pszHdr2, szCECResCSV2, iHdr2Len-1 );
+			if (iRetVal == 0 && strlen( pszHdr2 ) < strlen( szCECResCSV2 ))
+				iRetVal = 2;
+		}
+		if (pszHdr3 && iHdr3Len > 0)
+		{	strncpy( pszHdr3, szCECResCSV3, iHdr3Len-1 );
+			if (iRetVal == 0 && strlen( pszHdr3 ) < strlen( szCECResCSV3 ))
+				iRetVal = 3;
+	}	}
 #pragma warning(default:4996)
 	return iRetVal;
 }
 
 const char* GetResultsCSVHeader_Res( int i1HdrIdx )
 {	const char* pszRetVal = NULL;
-	switch (i1HdrIdx)
-	{	case  2 :	pszRetVal = szCECResCSV2;			break;
-		case  3 :	pszRetVal = szCECResCSV3;			break;
-		default :	pszRetVal = szCECResCSV1;			break;
-	}
+	long lEnergyCodeYear, lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers for run containing CO2 design ratings vs. not
+	if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"    ), lEnergyCodeYear       ) && lEnergyCodeYear >= 2019 &&
+		 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0)
+	{
+		switch (i1HdrIdx)
+		{	case  2 :	pszRetVal = szCECResCDRCSV2;			break;
+			case  3 :	pszRetVal = szCECResCDRCSV3;			break;
+			default :	pszRetVal = szCECResCDRCSV1;			break;
+	}	}
+	else
+	{
+		switch (i1HdrIdx)
+		{	case  2 :	pszRetVal = szCECResCSV2;			break;
+			case  3 :	pszRetVal = szCECResCSV3;			break;
+			default :	pszRetVal = szCECResCSV1;			break;
+	}	}
 	return pszRetVal;
 }
 

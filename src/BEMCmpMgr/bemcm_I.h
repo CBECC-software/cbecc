@@ -72,7 +72,8 @@ extern int  GetBEMBaseCompID( QString& sErr, const char* szComp );
 extern long GetBEMBaseDBID(   QString& sErr, const char* szProp, int iCompID );
 
 extern int LocalEvaluateRuleset( QString& sErrMsg, int iErrRetVal, const char* pszRulelistName,
-											BOOL bVerbose, void* pCompRuleDebugInfo );
+											BOOL bVerbose, void* pCompRuleDebugInfo,
+											QStringList* psaWarningMsgs=NULL );		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
 
 extern BOOL CM_EvaluateModelRules(	LPCSTR sShortTransformName, BOOL bReportToLog=FALSE,
 	  									BOOL bVerboseOutput=FALSE, const char* pszBEMBaseDetailsPathFile=NULL,

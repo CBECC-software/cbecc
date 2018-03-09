@@ -157,6 +157,15 @@ static void SetAtGrow( QStringList* psl, int idx, QString& str )
 }
 
 
+static inline int IndexInArray( std::vector<int>& iArray, int iVal )
+{	int i=0; 
+	for (; i < (int) iArray.size(); i++)
+		if (iArray[i] == iVal)
+			return i;
+	return -1;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //	CProjectFile
 //    This class is used to read and write BEM project files.
@@ -1715,7 +1724,7 @@ bool CProjectFile::StatusRequiresWrite( BEMProperty* pProp, bool bWritePrimaryDe
 	   	   bRetVal = TRUE;
 			else
 		   	bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15
+								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15
 	   		            (m_bWriteLibData && (pProp->getDataStatus() == BEMS_RuleLibrary ||
 	   	   	                              pProp->getDataStatus() == BEMS_UserLibrary) ) );
 	   }
@@ -1871,8 +1880,8 @@ bool CProjectFile::UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int
    {
       pProp = pObj->getProperty(iProp);
       //if ( pProp->m_iCritDefIdx > 0 || ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 9/12/16 - critical default comments not implemented
-      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15
-		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
+      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType ) ||  BEMPX_IsCF1RXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15
+		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType ) && !BEMPX_IsCF1RXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
          return FALSE;
       iProp++;
       iNumLeft--;
@@ -2021,7 +2030,7 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
    }
    else if (iDataType == BEMP_Flt)
    {  // float => simple format
-		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15
+		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15
 			FloatToString_NoExpNotation( sData, pProp->getDouble() );
 		else
       	sData = QString( "%1" ).arg( QString::number(pProp->getDouble()) );
@@ -3720,7 +3729,7 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
       }
    }
 
-   if (iFileType == BEMFT_XML || BEMPX_IsHPXML( iFileType ))   // SAC 10/26/11
+   if (BEMPX_IsXML( iFileType ))   // SAC 10/26/11
    	bRetVal = WriteXMLFile( sFileName.toLocal8Bit().constData(), iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bSupressAllMessageBoxes,
 										bAppend, pszModelName, bWriteTerminator, iBEMProcIdx, bOnlyValidInputs );		// SAC 2/19/13 - added trailing arguments to facilitate writing of multiple models into a single XML file
 	else
@@ -4131,7 +4140,7 @@ bool StatusRequiresWrite_XML( BEMProperty* pProp, int iFileMode /*bool bIsInputM
 
 	assert( (iFileMode != BEMFM_SIM || !bWriteAllProperties) );
    bool bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || iFileMode != BEMFM_INPUT /*!bIsInputMode*/)) );		// SAC 12/2/15
+	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || BEMPX_IsCF1RXML( iFileType ) || iFileMode != BEMFM_INPUT /*!bIsInputMode*/)) );		// SAC 12/2/15
 	if (iFileMode == BEMFM_SIM)  // SAC 5/22/12 - added logic to further specify when properties are to be written to SIMULATION export files
 	{	switch (pProp->getType()->getWriteSimulationFlag())
 		{	case  0 :  bRetVal = false;   break;
@@ -4319,6 +4328,13 @@ void WriteBracketPropertyArray_XML( QXmlStreamWriter& stream, BEMObject* pObj, B
    }
 }
 
+void XMLPropertyNameReplacements( QString& sPropName )	// SAC 3/7/18
+{  sPropName.replace( "xmlns_", "xmlns:" );
+   sPropName.replace( "xsi_",   "xsi:" );
+   sPropName.replace( "comp_",  "comp:" );
+   return;
+}
+
 void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
 									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/ )
 {
@@ -4328,19 +4344,47 @@ void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMo
 		if (sClassName.left(3).compare("hpx") == 0)
 			sClassName = sClassName.right( sClassName.length()-3 );
 	}
+	else if (BEMPX_IsCF1RXML( iFileType ))
+	{	assert( sClassName.left(4).compare("cf1r") == 0 );
+		if (sClassName.left(10).compare("cf1rtblRow") == 0)
+			sClassName = "Row";
+		else if (sClassName.left(4).compare("cf1r") == 0)
+			sClassName = sClassName.right( sClassName.length()-4 );
+	}
  	stream.writeStartElement( QString(sClassName) );
-
-	if (pObj->getClass()->getWriteAsSingleRecord())  // SAC 1/24/12 - toggle OFF auto-formatting if this component is to be written into a single record of the XML file
-		stream.setAutoFormatting(false);
 
 	int iFirstProp = 0;
 	if (!pObj->getClass()->getXMLIgnoreName())   // SAC 1/24/12 - prevent writing of component names to XML for certain component types
 	{	if (BEMPX_IsHPXML( iFileType ))		// SAC 12/2/15 - different method of writing object Name
 		{	BEMProperty* pProp = (pObj->getPropertiesSize() < 1 ? NULL : pObj->getProperty(0));
 			if (pProp && pProp->getType() && pProp->getType()->getDescription().compare("Name", Qt::CaseInsensitive) == 0)
-			{	iFirstProp++;
+				iFirstProp++;
+	}	}
+
+	int iProp;   std::vector<int> iAttribProps;
+   // Write Properties in the form of XML attributes included in opening object type element - SAC 3/7/18
+   for (iProp=iFirstProp; iProp<pObj->getPropertiesSize(); iProp++)
+   {  BEMProperty* pProp = pObj->getProperty(iProp);
+      // if property valid and should be written
+      if ( pProp != NULL && pProp->getType()->getShortName().indexOf("attrib_")==0 && pProp->getType()->getNumValues() == 1 && pProp->getType()->getShortName().length() > 7 &&
+      	  MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
+      {	iAttribProps.push_back(iProp);
+         QString sData;
+         PropertyToString_XML( pObj, pProp, sData, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
+         if (sData.length() > 0 && (bWriteAllProperties || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
+         {	QString sPropName = pProp->getType()->getShortName().right( pProp->getType()->getShortName().length()-7 );
+				XMLPropertyNameReplacements( sPropName );
+				stream.writeAttribute( sPropName, sData );
+	}	}	}
+
+	if (pObj->getClass()->getWriteAsSingleRecord())  // SAC 1/24/12 - toggle OFF auto-formatting if this component is to be written into a single record of the XML file
+		stream.setAutoFormatting(false);
+
+	if (!pObj->getClass()->getXMLIgnoreName())   // SAC 1/24/12 - prevent writing of component names to XML for certain component types
+	{	if (BEMPX_IsHPXML( iFileType ))		// SAC 12/2/15 - different method of writing object Name
+		{	BEMProperty* pProp = (pObj->getPropertiesSize() < 1 ? NULL : pObj->getProperty(0));
+			if (pProp && pProp->getType() && pProp->getType()->getDescription().compare("Name", Qt::CaseInsensitive) == 0)
 				stream.writeStartElement( ((const char*) pProp->getType()->getShortName().toLocal8Bit().constData()) );
-			}
 			else
 				stream.writeStartElement("SystemIdentifier");
 			stream.writeAttribute("id", QString(pObj->getName()));
@@ -4351,10 +4395,11 @@ void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMo
 	}
 
    // Write Properties in the form: "   <PropType Name> = <Property Value>"
-   for (int iProp=iFirstProp; iProp<pObj->getPropertiesSize(); iProp++)
+   for (iProp=iFirstProp; iProp<pObj->getPropertiesSize(); iProp++)
    {  BEMProperty* pProp = pObj->getProperty(iProp);
-      // if property valid and should be written
-      if ( pProp != NULL && MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
+      // if property valid and should be written (and wasn't already written above as an attribute of the object)
+      if ( pProp != NULL && IndexInArray( iAttribProps, iProp ) < 0 &&
+      	  MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
       {
          // if pProp IS NOT array, just write it out
          if (pProp->getType()->getNumValues() == 1)
@@ -4362,8 +4407,9 @@ void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMo
             QString sData;
             PropertyToString_XML( pObj, pProp, sData, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
             if (sData.length() > 0 && (bWriteAllProperties || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
-            {
-			   	stream.writeTextElement( QString(pProp->getType()->getShortName()), QString(sData) );
+            {	QString sPropName = pProp->getType()->getShortName();
+					XMLPropertyNameReplacements( sPropName );
+			   	stream.writeTextElement( QString(sPropName), QString(sData) );
             }
    	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
  		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
@@ -4509,6 +4555,9 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 				stream.writeAttribute("xmlns", "http://hpxmlonline.com/2014/6");
 				stream.writeAttribute("schemaVersion", "2.1");
 			}
+			else if (BEMPX_IsCF1RXML( iFileType ))		// SAC 3/6/18
+			{	// no specific starting elements for CF1R XML files...
+			}
 			else
 			{
 				stream.writeStartElement("SDDXML");
@@ -4542,6 +4591,7 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	   BEMClass* pClass = BEMPX_GetClass( i1Class, iError, iBEMProcIdx );
    	   if ( (iError >= 0) && (pClass != NULL) &&
    	   	  (!BEMPX_IsHPXML( iFileType ) || pClass->getShortName().indexOf("hpx")==0) &&		// SAC 12/2/15 - when in HPXML writing mode, only write objects whose class name begins w/ "hpx"
+   	   	  (!BEMPX_IsCF1RXML( iFileType ) || pClass->getShortName().indexOf("cf1r")==0) &&		// SAC 3/6/18 - when in CF1RXML writing mode, only write objects whose class name begins w/ "cf1r"
    	          // don't write class objects tagged as AutoCreate to INPUT file
    	        ( (iFileMode != BEMFM_INPUT /*!bIsInputMode*/) || (!pClass->getAutoCreate()) ) )
    	   {
@@ -4590,7 +4640,7 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 
 ////////////////////////////////////////////////////////////
 
-BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /*=-1*/ )
+BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /*=-1*/, int iFileType /*=-1*/ )
 {
 	bool bFileOK = false;
 	if (pszFileName && strlen( pszFileName ) > 0)
@@ -4608,26 +4658,31 @@ BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /
       	
 		mp_stream->writeStartDocument();
 		//mp_stream->writeDTD("<?xml  version=\"1.0\"  encoding=\"utf-8\" ?>");
-		mp_stream->writeStartElement("SDDXML");
-		mp_stream->writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-		mp_stream->writeAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
-		//mp_stream->writeAttribute("version", "1.0");
 
-		if (iBEMProcIdx < 0)  // SAC 3/18/13
-			iBEMProcIdx = eActiveBEMProcIdx;
-	   BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
-		if (pBEMProc == NULL)
-		{	assert( FALSE );
+		if (BEMPX_IsCF1RXML( iFileType ))
+		{	// SAC 3/6/18 - when in CF1RXML writing mode, don't write SDD and ruleset stuff
 		}
-		else if (pBEMProc->getType() == BEMT_CBECC)
-   	{	// first thing to write is the ruleset filename
-		   QString sRulesetFilename;
-			RetrieveRulesetFilename( sRulesetFilename, iBEMProcIdx );
-//			QString qsRulesetFilename = sRulesetFilename
-			mp_stream->writeStartElement("RulesetFilename");
-			mp_stream->writeAttribute("file", QString(sRulesetFilename));
-			mp_stream->writeEndElement();
-		}
+		else
+		{	mp_stream->writeStartElement("SDDXML");
+			mp_stream->writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			mp_stream->writeAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+			//mp_stream->writeAttribute("version", "1.0");
+
+			if (iBEMProcIdx < 0)  // SAC 3/18/13
+				iBEMProcIdx = eActiveBEMProcIdx;
+		   BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
+			if (pBEMProc == NULL)
+			{	assert( FALSE );
+			}
+			else if (pBEMProc->getType() == BEMT_CBECC)
+   		{	// first thing to write is the ruleset filename
+			   QString sRulesetFilename;
+				RetrieveRulesetFilename( sRulesetFilename, iBEMProcIdx );
+//				QString qsRulesetFilename = sRulesetFilename
+				mp_stream->writeStartElement("RulesetFilename");
+				mp_stream->writeAttribute("file", QString(sRulesetFilename));
+				mp_stream->writeEndElement();
+		}	}
 	}
 	else
 		mp_stream = NULL;
@@ -4716,6 +4771,59 @@ bool BEMXMLWriter::WriteModel(	bool bWriteAllProperties, BOOL /*bSupressAllMessa
 
 		if (bModelNameWritten)
 			mp_stream->writeEndElement();
+	}
+
+	return bRetVal;
+}
+
+
+bool BEMXMLWriter::WriteCF1RPRF01E(	int iBEMClassID, bool bWriteAllProperties, BOOL bSupressAllMessageBoxes,
+							int iBEMProcIdx /*=-1*/, bool bOnlyValidInputs /*=false*/,
+							bool bWritePropertiesDefinedByRuleset /*=true*/, bool bUseReportPrecisionSettings /*=false*/, int iFileType /*=BEMFT_XML*/ )
+{	bool bRetVal = (mp_file && mp_stream);
+	if (bRetVal)
+	{	int iFileMode = BEMFM_INPUT;
+
+   	// --NO-- loop over all classes, writing out the components for each class, one by one
+
+   		bool bProcessClass = true;  //(iNumClassIDsToIgnore < 1 || !piClassIDsToIgnore || IndexOfIntInArray( iBEMClassID, iNumClassIDsToIgnore, piClassIDsToIgnore ) < 0);
+   	   int iError;
+   	   BEMClass* pClass = BEMPX_GetClass( iBEMClassID, iError, iBEMProcIdx );
+   	   if ( (iError >= 0) && (pClass != NULL) && bProcessClass &&
+   	          // don't write class objects tagged as AutoCreate to INPUT file
+   	        ( (iFileMode != BEMFM_INPUT /*!bIsInputMode*/) || (!pClass->getAutoCreate()) ) )
+   	   {	// if storing input and m_bOnlyValidInputs = true, then check to confirm that there are valid input properties before writing file
+				bool bWriteClass = (iFileMode == BEMFM_INPUT && bOnlyValidInputs) ? false : true;
+				if (!bWriteClass)
+				{	for (int iP1=0; (!bWriteClass && iP1 < eBEMProc.getClass( iBEMClassID-1 )->getNumProps()); iP1++)
+   	   	   {  int iPropDataType = BEMPX_GetCompDataType( BEMPX_GetDBID( iBEMClassID, (iP1+1), 1 /*i1Array*/ ) );
+						if (iPropDataType < BEMD_NotInput)
+							bWriteClass = true;
+				}	}
+
+				if (bWriteClass)
+				{	for (int ib=0; ib < pClass->ObjectCount(BEMO_User); ib++)
+					{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
+   	      	   if (pObj != NULL)
+   	      	   {  // only write the component if it doesn't have a parent.
+   	      	      // if it DOES have a parent, then it will be written automatically during the
+   	      	      // course of its parent being written.
+   	      	      if ( pObj->getParent() == NULL &&
+									(iFileMode != BEMFM_SIM || MustWriteComponent_XML( pObj, iFileMode, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset )) )  // SAC 2/28/13
+   	      	      {
+   	      	         WriteComponent_XML( *mp_stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx,
+   	      	         							0 /*iNumClassIDsToIgnore*/, NULL /*piClassIDsToIgnore*/, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+   	      	      }
+   	      	   }
+   	      	   else
+   	      	   {  assert( FALSE );
+   	      	   }
+   	      }	}
+   	   }
+   	   else if ((iError < 0) && (pClass == NULL))
+   	   {  assert( FALSE );
+   	   }
+
 	}
 
 	return bRetVal;

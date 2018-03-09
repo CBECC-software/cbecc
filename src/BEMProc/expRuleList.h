@@ -163,6 +163,7 @@ public:
    bool ParseLeft( QFile& errorFile );
    void ThrowBEMPError( QFile& errorFile, QString sParam );
    bool Write( CryptoFile& file, QFile& errorFile, const char* pszRLName = NULL );
+	bool Parse( QFile& errorFile, const char* pszRLName = NULL );  // SAC 1/29/18
 
    void Read( CryptoFile& file );
    bool Eval( ExpEvalStruct* pEval, BOOL bTagDataAsUserDefined=FALSE, BOOL bPerformSetBEMDataResets=TRUE );  // SAC 9/18/05 - added bPerformSetBEMDataResets argument to facilitate no-reset data setting
@@ -213,6 +214,7 @@ public:
    ~RuleList();
 
    bool Write( CryptoFile& file, QFile& errorFile );
+   bool Parse( QFile& errorFile );  // SAC 1/29/18
    void Read( CryptoFile& file, int iFileStructVer=1 );
    void RemoveAll();
 
@@ -257,6 +259,7 @@ public:
    void NewList( LPCSTR name, bool bSetAllData=TRUE, bool bAllowMultipleEvaluations=TRUE, bool bTagAllDataAsUserDefined=FALSE,
                  int iLineNumber=0, const char* pszFileName=NULL, bool bPerformSetBEMDataResets=TRUE );  // SAC 9/18/05
    void RemoveAll();
+	void RemoveTrailing( int iNumListsToDelete=1 );
    RuleList* getRuleList( LPCSTR name );
    RuleList* getRuleList( int i )							{	return ((i>=0 && i<(int)m_rules.size()) ? m_rules.at(i) : NULL);  }
    bool IsFirstRuleList( RuleList* list );
@@ -270,7 +273,8 @@ public:
                   std::vector<int>* piaEvalOnlyObjs=NULL,   // SAC 5/26/00
                   BOOL bVerboseOutput=FALSE,          // SAC 9/25/02
                   BEMCompNameTypePropArray* pTargetedDebugInfo=NULL,    // SAC 8/5/10 - added pvTargetedDebugInfo argument
-						long* plRuleEvalCount=NULL );       // SAC 10/12/11 - to facilitate summing of each individual rule evaluation
+						long* plRuleEvalCount=NULL,         // SAC 10/12/11 - to facilitate summing of each individual rule evaluation
+						QStringList* psaWarningMsgs=NULL );		// SAC 3/2/18 - added to enable Warning message tracking during normal list evaluation
 
 // SAC 5/21/01 - Added function similar to EvalList(), only the rules therein are designed to populate the error and warning message lists
    bool EvalErrorCheckList( LPCSTR listName, QStringList& saErrorMsgs, QStringList& saWarningMsgs,
@@ -703,10 +707,11 @@ public:
                   std::vector<int>* piaEvalOnlyObjs=NULL,
                   BOOL bVerboseOutput=FALSE,
                   BEMCompNameTypePropArray* pTargetedDebugInfo=NULL,
-						long* plRuleEvalCount=NULL )
+						long* plRuleEvalCount=NULL,
+						QStringList* psaWarningMsgs=NULL )		// SAC 3/2/18 - added to enable Warning message tracking during normal list evaluation
    						{	return m_ruleListList.EvalList( listName, bTagDataAsUserDefined,
    											iEvalOnlyClass, eEvalOnlyObjType, piaEvalOnlyObjs,
-   											bVerboseOutput, pTargetedDebugInfo, plRuleEvalCount );  }
+   											bVerboseOutput, pTargetedDebugInfo, plRuleEvalCount, psaWarningMsgs );  }
 
    int  getNumRuleLists()												{	return m_ruleListList.getNumRuleLists();  }
 	void addNewRuleList( LPCSTR name, bool bSetAllData=TRUE, bool bAllowMultipleEvaluations=TRUE,
@@ -722,6 +727,7 @@ public:
    void addRuleToCurrentList( QString& sRuleID, QString& sDbID, QString& sExp,
    				int i1RuleFileIdx=0, int iRuleLineNum=0 )		{	m_ruleListList.AddRule( sRuleID, sDbID, sExp,
    																												i1RuleFileIdx, iRuleLineNum );  return;  }
+	void deleteTrailingRuleLists( int iNumListsToDelete=1 )	{	m_ruleListList.RemoveTrailing( iNumListsToDelete );  return;  }
 
 	int							getNumTransformations()				{ return m_transformations.size();  }
 	RuleSetTransformation*	getTransformation( int idx )		{ return m_transformations.at(idx);  }

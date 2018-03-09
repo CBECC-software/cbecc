@@ -1244,17 +1244,21 @@ void CSERunMgr::DoRuns()
 	MonitorRuns();
 }		// CSERunMgr::DoRuns
 
-void CSERunMgr::DoRun( int iRunIdx )
+void CSERunMgr::DoRunRange( int iFirstRunIdx, int iLastRunIdx )
 {
-	CSERun* pCSERun = (iRunIdx < (int) m_vCSERun.size() ? m_vCSERun[iRunIdx] : NULL);
-	if (pCSERun)
-	{	m_iNumProgressRuns = 1;
-		StartRun( *pCSERun);
-		m_vCSEActiveRun.push_back( pCSERun);
-	}
+	CSERun* pCSERun = NULL;		int iNumRuns=0;
+	for(size_t iRun = (size_t) iFirstRunIdx; iRun < m_vCSERun.size() && iRun <= (size_t) iLastRunIdx; ++iRun)
+	{	pCSERun = m_vCSERun[iRun];
+		if (pCSERun)
+		{	StartRun( *pCSERun);
+			m_vCSEActiveRun.push_back( pCSERun);
+			iNumRuns++;
+	}	}		assert( iNumRuns > 0 );
+	if (iNumRuns > 0)
+		m_iNumProgressRuns = 1;
 	MonitorRuns();
 	m_iNumProgressRuns = -1;
-}		// CSERunMgr::DoRun
+}		// CSERunMgr::DoRunRange
 
 void CSERunMgr::MonitorRuns()
 {
@@ -1288,7 +1292,7 @@ void CSERunMgr::MonitorRuns()
 			}
 		}
 	}
-}		// CSERunMgr::DoRuns
+}		// CSERunMgr::MonitorRuns
 
 bool CSERunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstException)
 {
@@ -1329,7 +1333,7 @@ void CSERunMgr::StartRun(CSERun& cseRun)
 	{	std::string sLogMsg=e.what();
 		BEMPX_WriteLogFile( sLogMsg.c_str(), NULL, FALSE, TRUE, FALSE );
 	}
-}		// CSERunMgr::DoRun
+}		// CSERunMgr::StartRun
 
 QString CSERunMgr::GetVersionInfo()
 {	QString sVersion;

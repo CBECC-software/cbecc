@@ -148,7 +148,7 @@ public:
 	int GetNumRuns() const { return m_iNumRuns; }
 	int GetNumProgressRuns() const { return (m_iNumProgressRuns > 0 ? m_iNumProgressRuns : m_iNumRuns); }
 	void DoRuns();
-	void DoRun( int iRunIdx );
+	void DoRunRange( int iFirstRunIdx, int iLastRunIdx );
 	void MonitorRuns();
 	bool ArchiveSimOutput( int iRunIdx, QString sSimOutputPathFile, int iOutFileType );		// SAC 11/7/16 - process CSE errors and/or reports into file for user review
 	void IncNumOpenGLErrors() { m_iNumOpenGLErrors++; }

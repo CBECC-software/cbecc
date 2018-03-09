@@ -1859,7 +1859,10 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 		// SAC 6/28/17 - added evaluation of rulelist to handle 1-time LoadModel processing
 			if (BEMPX_RulelistExists( "LoadModelAdjustments" ))
 			{	QString sLMAErrMsg;
-				int iLMAEvalRetVal = LocalEvaluateRuleset( sLMAErrMsg, 7, "LoadModelAdjustments", FALSE /*bVerbose*/, NULL /*pCompRuleDebugInfo*/ );
+				QStringList saWarningMsgs;		// SAC 3/2/18 - added to enable Warning message tracking during 'LoadModelAdjustments' rulelist evaluation
+				int iLMAEvalRetVal = LocalEvaluateRuleset( sLMAErrMsg, 7, "LoadModelAdjustments", FALSE /*bVerbose*/, NULL /*pCompRuleDebugInfo*/, &saWarningMsgs );
+				for (int iW=0; (psaWarningsForUser && iW < saWarningMsgs.size()); iW++)
+					psaWarningsForUser->push_back( saWarningMsgs[iW] );
 				if (iLMAEvalRetVal != 0)
 				{	iRetVal = 7;
 					if (psaWarningsForUser)

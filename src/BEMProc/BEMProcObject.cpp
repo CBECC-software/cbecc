@@ -2210,6 +2210,81 @@ BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFil
 	return bRetVal;
 }
 
+/////////////////////////////////////////////////////////////////////////////
+
+int BEMPX_ParseRuleListFile(	const char* sRuleListFileName, QStringList& saRuleListNames,
+										const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg/*=NULL*/, bool bParseRules /*=false*/ )
+{
+	int iRetVal = 0;
+
+// shouldn't blast current ruleset data when parsing a single rulelist file
+//   // blast any current ruleset data
+//   ruleSet.clear();
+//   if (!eBEMProc.decompileBinBEMProc( sBEMBinFileName ))
+//   	return FALSE;
+
+	QFile fileLog( sLogFileName );
+	try
+	{
+		if (fileLog.open( QIODevice::Text | QIODevice::WriteOnly | QIODevice::Truncate ))
+		{                             
+			// create "Reading..." message and write to error file
+			QString readMsg = QString( "Reading rulelist file:  %1\n\n" ).arg( sRuleListFileName );
+			fileLog.write( readMsg.toLocal8Bit().constData(), readMsg.length() );
+
+			QString fileNameString = sRuleListFileName;
+			RuleFile file( fileNameString );   // create and open ruleset file
+
+// no need to switch current path when parsing only a single rulelist file
+//			fileNameString.replace('\\', '/');
+//			int iPathLen = fileNameString.lastIndexOf('/');
+//			if (iPathLen > 0)
+//			{	bool bCurPathOK = QDir::setCurrent( fileNameString.left(iPathLen) );		assert( bCurPathOK );
+//			}
+
+			//file.lFileStructVer = ruleSet.getFileStructVersion()();
+//			bRetVal = file.Read( fileLog );   // read ASCII rules into memory
+
+				int ruleListIndex = ruleSet.getNumRuleLists();
+				int iNumOrigRuleLists = ruleListIndex;
+				int iNumRuleFiles = 1;
+				if (file.ReadRuleFile( fileNameString.toLocal8Bit().constData(), iNumRuleFiles++, ruleListIndex, fileLog, ruleSet.getFileStructVersion() ))
+					iRetVal = ruleSet.getNumRuleLists() - iNumOrigRuleLists;
+				for (int i=iNumOrigRuleLists; (iRetVal > 0 && i < (iNumOrigRuleLists+iRetVal)); i++)
+				{	RuleList* pRL = ruleSet.getRuleList( i );		assert( pRL != NULL );
+					if (pRL)
+					{	if (bParseRules)
+						{	if (!pRL->Parse( fileLog ))
+							{	ruleSet.deleteTrailingRuleLists( iRetVal );		// blast newly added rulelists
+								iRetVal = 0;
+						}	}
+						if (iRetVal > 0)
+							saRuleListNames.push_back( pRL->getName() );
+				}	}
+
+//			if (bRetVal)
+//				bRetVal = WriteCompiledRuleset( sCompiledRuleFileName, fileLog );
+
+			fileLog.close();                  // close log file
+		}
+		else
+			BEMMessageBox( QString( "Unable to open rulelist parsing log file:\n  %1" ).arg( sLogFileName ), "", 3 /*error*/ );
+	}
+	catch (std::exception& e)
+	{
+		QString sErrMsg = QString( "Error writing rulelist parsing log file: %1\n\t - cause: %2\n" ).arg( sLogFileName, e.what() );
+		std::cout << sErrMsg.toLocal8Bit().constData();
+		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+	}
+ 	catch (...)
+  	{
+		QString sErrMsg = QString( "Error writing rulelist parsing log file: %1\n" ).arg( sLogFileName );
+		std::cout << sErrMsg.toLocal8Bit().constData();
+		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+  	}
+	return iRetVal;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 

@@ -576,6 +576,7 @@ extern long elDBID_Proj_WeatherPath;
 extern long elDBID_Proj_WeatherStation;    
 extern long elDBID_Proj_DDWeatherFile;     
 extern long elDBID_Proj_AnnualWeatherFile; 
+extern long elDBID_Proj_ExcptDsgnModelFile; 
 
 extern long elDBID_PolyLp_Area;			// SAC 5/29/14 
 extern long elDBID_CartesianPt_Coord;	// SAC 5/29/14 

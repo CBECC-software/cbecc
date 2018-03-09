@@ -287,13 +287,15 @@ bool BEMPROC_API __cdecl BEMPX_ReadProjectFile(  const char* fileName, int iFile
 
 // SAC 1/15/03 - Added argument to re-enable output of Undefined data when writing non-user input mode files (for backward compatibility)
 // SAC 8/30/11 - added new argument to facilitate the writing of CSE input files directly from BEMProc databases
-#define  BEMFT_Std    0
-#define  BEMFT_CSE    1
-#define  BEMFT_XML    2    // SAC 10/26/11
-#define  BEMFT_HPXML1 3    // SAC 12/2/15
-#define  BEMFT_HPXML2 4    // SAC 12/2/15
-#define BEMPX_IsHPXML( iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
-#define BEMPX_IsXML(   iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 || iFileType == BEMFT_XML)
+#define  BEMFT_Std     0
+#define  BEMFT_CSE     1
+#define  BEMFT_XML     2    // SAC 10/26/11
+#define  BEMFT_HPXML1  3    // SAC 12/2/15
+#define  BEMFT_HPXML2  4    // SAC 12/2/15
+#define  BEMFT_CF1RXML 5    // SAC 3/6/18
+#define BEMPX_IsHPXML(   iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
+#define BEMPX_IsCF1RXML( iFileType )  (int)  (iFileType == BEMFT_CF1RXML)
+#define BEMPX_IsXML(     iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 ||  iFileType == BEMFT_CF1RXML || iFileType == BEMFT_XML)
 bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInputMode*/, bool bUseLogFileName=false, bool bWriteAllProperties=false,
                                                           BOOL bSupressAllMessageBoxes=FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 																			 int iFileType = 0,    // SAC 8/30/11 - added iFileType argument
@@ -613,12 +615,14 @@ double BEMPROC_API __cdecl BEMPX_GetDurationSinceMark( int i1SinceMarkIdx, bool 
 // SAC 5/27/00 - added to retrieve the names of each rulelist in the ruleset
 int    BEMPROC_API __cdecl BEMPX_GetRulelistNames( QVector<QString>& sRulelistNames );		// was: RuleProcGetRulelistNames()
 bool   BEMPROC_API __cdecl BEMPX_RulelistExists( LPCSTR listName );		// SAC 2/27/17
+void   BEMPROC_API __cdecl BEMPX_DeleteTrailingRuleLists( int iNumListsToDelete=1 );	// SAC 1/29/18
 
 /* called to evaluate rule lists */
 bool   BEMPROC_API __cdecl BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,		// was: RuleProcEvalList()
 														int iEvalOnlyObjIdx=-1, int iEvalOnlyObjType=0, BOOL bVerboseOutput=FALSE,
 														void* pvTargetedDebugInfo=NULL, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL, 
-														PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL );
+														PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL,
+														QStringList* psaWarningMsgs=NULL );		// SAC 3/2/18 - added to enable Warning message tracking during normal list evaluation
 
 // SAC 5/21/01 - Added function similar to RuleProcEvalList(), only the rules therein are designed to populate the error and warning message lists
 bool   BEMPROC_API __cdecl BEMPX_EvalErrorCheckList( LPCSTR listName, QStringList& saErrorMsgs, QStringList& saWarningMsgs,		// was: RuleProcEvalErrorCheckList()
@@ -640,6 +644,9 @@ double BEMPROC_API __cdecl BEMPX_RuleTableLookupFloat( const char* pszTableAndCo
 
 double BEMPROC_API __cdecl BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableName,	// was: RuleProcApplyHourlyMultipliersFromTable()
 														int iTableColumn, bool bVerbose=false );
+
+int    BEMPROC_API __cdecl BEMPX_ParseRuleListFile( const char* sRuleListFileName, QStringList& saRuleListNames,
+														const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL, bool bParseRules=false );
 
 // Functions to retrieve Help IDs
 UINT   BEMPROC_API __cdecl BEMPX_GetItemHelpID(  long lDBID );
@@ -763,7 +770,7 @@ class  QXmlStreamWriter;
 class BEMPROC_API BEMXMLWriter
 {
 public:
-   BEMXMLWriter( const char* pszFileName=NULL, int iBEMProcIdx=-1 );
+   BEMXMLWriter( const char* pszFileName=NULL, int iBEMProcIdx=-1, int iFileType=-1 );
    ~BEMXMLWriter();
 
 public:
@@ -774,6 +781,8 @@ public:
 	bool WriteModel(	bool bWriteAllProperties, BOOL bSupressAllMessageBoxes, const char* pszModelName, int iBEMProcIdx=-1, bool bOnlyValidInputs=false,
 							int iNumClassIDsToIgnore=0, int* piClassIDsToIgnore=NULL, bool bWritePropertiesDefinedByRuleset=true, bool bUseReportPrecisionSettings=false,
 							int iFileType=BEMFT_XML );
+	bool WriteCF1RPRF01E(	int iBEMClassID, bool bWriteAllProperties, BOOL bSupressAllMessageBoxes, int iBEMProcIdx=-1, bool bOnlyValidInputs=false,
+									bool bWritePropertiesDefinedByRuleset=true, bool bUseReportPrecisionSettings=false, int iFileType=BEMFT_XML );
 	void Close();
 };
 

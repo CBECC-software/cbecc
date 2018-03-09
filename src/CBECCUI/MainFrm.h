@@ -66,6 +66,7 @@ public:
    BOOL  m_bDoingWizard;
    BOOL  m_bDoingSummaryReport;
    BOOL  m_bPerformingAnalysis;	// SAC 4/1/15
+   BOOL  m_bDoingCustomRuleEval;	// SAC 1/28/18
 
 	int   m_iNumFileListMenuItems;  // SAC 11/19/13
 	CStringArray m_saFileListPathFiles;
@@ -182,6 +183,8 @@ protected:
 	afx_msg void OnUpdatePerformAPIAnalysis(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileSave(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFileSaveAs(CCmdUI* pCmdUI);
+	afx_msg void OnToolsApplyCustomRules();
+	afx_msg void OnUpdateApplyCustomRules(CCmdUI* pCmdUI); 
 	afx_msg void OnToolsEvalRulelist();
 	afx_msg void OnAnalysisRangeChecks();
 	afx_msg void OnUpdateAnalysisRangeChecks(CCmdUI* pCmdUI);
@@ -541,6 +544,8 @@ protected:
 										CString sBtn3File, CString sBtn3Label, CString sBtn4File, CString sBtn4Label,
 										CString sAllLabel, UINT uiIcon = MB_DEFBUTTON1 | MB_ICONQUESTION );
 	void OnINISettings( int iDlgIDOffset, int iDlgWd, int iDlgHt, CString sDlgCaption, CString sINISection );
+	int  RefreshCustomRulelistEnum( QString qsSelectedRulelist );
+	void ProcessCustomRulelistFile();
 
 	DECLARE_MESSAGE_MAP()
 };

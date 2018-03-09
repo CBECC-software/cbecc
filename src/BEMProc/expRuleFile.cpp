@@ -1446,10 +1446,13 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 }
 
 
+static bool ReadLibraryObject( const char* fileName, BEMTextIO &file, QString sObjType, BEM_ObjType eFileType, QFile* pErrorFile );  // SAC 2/4/18
+
 bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx, int& ruleListIndex, QFile& errorFile, int iFileStructVer )
 {
 	bool bRetVal = true;
 	QString sRulePathFileName = pszRulePathFileName;
+	int iNumLibObjectsRead = 0;
 
    try
    {  // open file
@@ -1465,11 +1468,20 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx,
      	      bRetVal = ((ReadRuleList( ruleListIndex++, errorFile, iFileStructVer /*ruleSet.m_iFileStructVersion*/, 
      	      									i1RuleFileIdx, &file, pszRulePathFileName )) && (bRetVal));
 			else
-			{	assert( FALSE );
-				QString sErr = QString( "\n\tRule syntax error on/near '%1' line: %2\n" ).arg( token, QString::number(file.GetLineCount()) );
-				errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
-				bRetVal = false;
-			}
+			{	int i1Class = BEMPX_GetDBComponentID( token.toLocal8Bit().constData() );	// SAC 2/4/18 - enable specification of library objects within rulelist files
+            if (i1Class > 0)
+            {	// assumption is that this is a LIBRARY object
+					if (ReadLibraryObject( pszRulePathFileName, file, token, BEMO_RuleLib, &errorFile ))	// SAC 2/4/18
+						iNumLibObjectsRead++;
+					else
+						bRetVal = false;
+				}
+				else
+				{	assert( FALSE );
+					QString sErr = QString( "\n\tRule syntax error on/near '%1' line: %2\n" ).arg( token, QString::number(file.GetLineCount()) );
+					errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+					bRetVal = false;
+			}	}
 			token = file.ReadToken();  // read token beginning next RULE (or perhaps end of file...)
 		}
 
@@ -1509,6 +1521,11 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx,
 		bRetVal = FALSE;
       BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
   	}
+
+	if (bRetVal && iNumLibObjectsRead > 0)	// SAC 2/4/18
+	{	int iNumObjsNotFound = BEMP_ResolveAllReferences( BEMO_RuleLib, &errorFile );
+		bRetVal = (iNumObjsNotFound == 0);
+	}
 
 	return bRetVal;
 }
@@ -1582,31 +1599,13 @@ void LogLibDataSetError( BEMPropertyType* pPropType, int iSetRetVal, void* pData
 // end-of-file marker
 static char szEnd[] = "END_OF_INPUT";
 
-bool ReadLibraryText( const char* fileName, BEM_ObjType eFileType, QFile* pErrorFile )
-{
-   bool bRetVal = TRUE;
+// SAC 2/4/18 - split out individual library object read/parse into separate routine to enable reading of library obejcts from rulelist files
+bool ReadLibraryObject( const char* fileName, BEMTextIO &file, QString sObjType, BEM_ObjType eFileType, QFile* pErrorFile )
+{	bool bRetVal = TRUE;
+      BEM_PropertyStatus eDataStatus = ((eFileType == BEMO_RuleLib) ? BEMS_RuleLibrary : BEMS_UserLibrary);
 
-   // create and open library file
-//   CLibFile* file = new CLibFile( fileName, eFileType );
-   try
-   {  // open file
-      BEMTextIO file( fileName, BEMTextIO::load );
       try
       {
-
-
-      // read library file into the building database
-      bool bHitEnd = FALSE;
-      BEM_PropertyStatus eDataStatus = ((eFileType == BEMO_RuleLib) ? BEMS_RuleLibrary : BEMS_UserLibrary);
-      // continue reading component definitions until the end-of-file marker is encountered
-      while ( !bHitEnd )
-      {
-         // read component type (or end-of-file marker)
-         QString sObjType = file.ReadToken();
-         if (sObjType.compare( szEnd ) == 0)
-            bHitEnd = TRUE;  // end-of-file marker is encountered
-         else
-         {
             // read component name, get object class and create new instance of that object type
             QString sObjName = file.ReadString();
             int i1Class = BEMPX_GetDBComponentID( sObjType.toLocal8Bit().constData() );
@@ -1688,6 +1687,52 @@ bool ReadLibraryText( const char* fileName, BEM_ObjType eFileType, QFile* pError
                   sPropType = LibFile_ReadNextPropType( file );
                }
             }
+      }
+		catch (std::exception& e)
+		{
+			QString msg = QString( "Error reading ruleset library data from File: %1\n\t - cause: %2\n" ).arg( fileName, e.what() );
+			std::cout << msg.toLocal8Bit().constData();
+         BEMMessageBox( msg, "", 2 /*warning*/ );
+         bRetVal = FALSE;
+		}
+	 	catch (...)
+	  	{
+			QString msg = QString( "Error reading ruleset library data from File: %1\n" ).arg( fileName );
+			std::cout << msg.toLocal8Bit().constData();
+         BEMMessageBox( msg, "", 2 /*warning*/ );
+         bRetVal = FALSE;
+	  	}
+	return bRetVal;
+}
+
+
+bool ReadLibraryText( const char* fileName, BEM_ObjType eFileType, QFile* pErrorFile )
+{
+   bool bRetVal = TRUE;
+
+   // create and open library file
+//   CLibFile* file = new CLibFile( fileName, eFileType );
+   try
+   {  // open file
+      BEMTextIO file( fileName, BEMTextIO::load );
+      try
+      {
+
+
+      // read library file into the building database
+      bool bHitEnd = FALSE;
+      // continue reading component definitions until the end-of-file marker is encountered
+      while ( !bHitEnd )
+      {
+         // read component type (or end-of-file marker)
+         QString sObjType = file.ReadToken();
+         if (sObjType.compare( szEnd ) == 0)
+            bHitEnd = TRUE;  // end-of-file marker is encountered
+         else
+         {
+
+				bRetVal = ReadLibraryObject( fileName, file, sObjType, eFileType, pErrorFile );	// SAC 2/4/18
+
          }
       }
       // resolve all object references - this is necessary because all object assignments are
@@ -1695,10 +1740,9 @@ bool ReadLibraryText( const char* fileName, BEM_ObjType eFileType, QFile* pError
       // This function resolves those object names to actual object pointers.
       // This object resolving cannot happen during the reading process, since an object
       // can be assigned PRIOR to its definition in the file.
+      assert( bRetVal );   // should always be true following read of each object
       int iNumObjsNotFound = BEMP_ResolveAllReferences( eFileType, pErrorFile );
-      bRetVal = (iNumObjsNotFound == 0);
-
-
+      bRetVal = (iNumObjsNotFound != 0 ? FALSE : bRetVal);
 
 
       }
