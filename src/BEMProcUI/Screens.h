@@ -47,53 +47,13 @@
 #define __BEMPUISCREENS_H__
 
 #include "textio.h"
+#include "BEMCondition.h"
 
 
 struct CBEMPUIControl;
 struct CBEMPUIPage;
 
-
-///////////////////////////////////////////////////////////////
-// CBEMCondition
-///////////////////////////////////////////////////////////////
-
-#define  MAX_BEM_CONDITIONS  5
-
-struct CBEMCondition
-{
-   // Constructor
-   CBEMCondition();
-
-   // Data
-   int    m_iNumConditions;
-   BOOL   m_bConditionsAND;
-
-   long   m_lConditionalDBID[ MAX_BEM_CONDITIONS ];
-   int    m_iCondition[       MAX_BEM_CONDITIONS ];
-   float  m_fConditionValue[  MAX_BEM_CONDITIONS ];
-
-   // SAC 3/2/99 - added to enable DBID offsets for a single page control to allow access to an array of values
-   long   m_lCondDBIDOffset[  MAX_BEM_CONDITIONS ];
-
-   // SAC 3/3/99 - added to enable specific DB class instance references
-   int    m_iCondDBInstance[  MAX_BEM_CONDITIONS ];
-
-   // SAC 3/4/99 - Added second array of DBIDs to enable access to referenced component data
-   long   m_lCondDBID2[       MAX_BEM_CONDITIONS ];
-   long   m_lCondDBIDOffset2[ MAX_BEM_CONDITIONS ];
-
-   // Functions
-   void   Init();
-   BOOL   Read( CTextIO& file, CBEMPUIPage* pPage, const char* psCondType );
-   BOOL   MissingOrTrue();
-   BOOL   Present();
-
-   // SAC 3/2/99 - added to enable DBID offsets for a single page control to allow access to an array of values
-   void SetupDBIDOffsets( int iClassID, long lDBIDOffset );
-};
-
-inline BOOL CBEMCondition::Present()
-   {  return (m_iNumConditions > 0);  }
+extern void PostReadError( CBEMPUIPage* pPage, const char* psText1, const char* psText2, int iLine );
 
 
 ///////////////////////////////////////////////////////////////

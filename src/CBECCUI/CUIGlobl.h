@@ -81,6 +81,7 @@ extern BOOL ebIncludeCompParamStrInToolTip;   // SAC 1/19/12
 extern BOOL ebIncludeLongCompParamStrInToolTip;   // SAC 8/13/13
 extern BOOL ebIncludeStatusStrInToolTip;      // SAC 1/19/12
 extern BOOL ebVerboseInputLogging;       // SAC 3/5/12
+extern BOOL ebLogProjectOpen;		// SAC 4/15/18
 
 extern int eiCurrentTab;
 
@@ -284,6 +285,15 @@ extern BOOL LoadVersionInfoString( CString& sReturnString, const char* pszInfoID
 
 
 /////////////////////////////////////////////////////////////////////////////
+// QT UI initialization
+
+extern QApplication* sq_app;	// SAC 3/8/18
+extern bool sbQtAppInited;
+extern bool QAppInitialized();
+extern void BlastQApp();
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Numeric String Comma insertion and removal
 
 //extern void  AddCommaToStringLong(  CString& string, long lNum );
@@ -346,6 +356,8 @@ extern const char* GetCompDataTypeString( long lDBID );
 #define  NUM_RESERVED_TEXT_COLORS   1
 #define  RANGEERROR_TEXT_COLOR_IDX  0
 extern COLORREF GetCUITextColor( int iDS );
+extern int      GetCUITextRGB(   int iDS, int idxRGB );		// SAC 3/23/18 - for grid text colors
+extern QBrush*  BEMTextQBrush(   int iDS );		// SAC 3/23/18 - for grid text colors
 extern void SetBDBWTextColors();
 
 extern BOOL ObjectIsFromLibrary( long lDBID );
@@ -403,6 +415,22 @@ extern int eiBDBCID_BEMVersion;			// SAC 9/17/12
 extern long elDBID_Proj_BEMVersion;		// SAC 9/17/12
 extern int eiBDBCID_INISettings;			// SAC 5/31/14
 extern long elDBID_Proj_StdsVersion;	// SAC 8/15/14
+extern long elDBID_Proj_DefaultOptionInp;		// SAC 4/11/18
+extern long elDBID_Proj_DefaultOptionObj;
+extern long elDBID_Proj_DefaultOptionDone;
+
+// BEM Defaulting Options...
+#define  DefaultOption_Nothing   0
+#define  DefaultOption_Object    1
+#define  DefaultOption_Family    2  // NYI
+#define  DefaultOption_Model     3
+extern long elDefaultOptionInp;
+extern long elDefaultOptionObj;
+extern long elDefaultOptionDone;
+#define  DefaultAction_DataMod   	1
+#define  DefaultAction_OpenDialog   2
+#define  DefaultAction_CloseDialog  3
+#define  DefaultAction_InitAnalysis	4
 
 #ifdef UI_ASHRAE901E
 extern int eiBDBCID_Run;

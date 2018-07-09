@@ -201,7 +201,7 @@ protected:
 
    int  GetScreenID( BOOL bPrevious, BOOL bSetBEMData );
    void ActivateButtons();
-   void EvaluateRules(UINT uiList=0);
+   void EvaluateRules(UINT uiList=0, long lDBID=0, int iDefaultAction=DefaultAction_DataMod);
 
 // SAC 2/10/01 - added this function to handle dynamic (ruleset-defined) dialog height resetting
    void ResetHeight( BOOL bRePaint=TRUE );

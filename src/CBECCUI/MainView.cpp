@@ -204,6 +204,13 @@ int CMainView::GetTabID( int iTabIdx )
 }
 
 
+BEMObject* CMainView::GetSelectedObjectInTree()		// SAC 4/24/18
+{	if (m_bTabInitialized)
+		return m_BDBTree.DataToBEMObject(0);
+	return NULL;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CMainView message handlers
 

@@ -106,7 +106,8 @@ typedef void (CALLBACK* PLogMsgCallbackFunc) ( int iClassification, const char* 
 BOOL BEMCMPMGR_API __cdecl CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog=FALSE, BOOL bTagDataAsUserDefined=FALSE,
 														BOOL bVerboseOutput=FALSE, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL,
 														PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL, void* pCompRuleDebugInfo=NULL,
-														QStringList* psaWarningMsgs=NULL );		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
+														QStringList* psaWarningMsgs=NULL,		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
+								 						int iEvalOnlyClass=0, int iEvalOnlyObjIdx=-1, int iEvalOnlyObjType=0 );	// SAC 4/3/18 - added to enable targeted model defaulting
 
 int  BEMCMPMGR_API __cdecl CMX_SaveAnalysisResultsToTempFiles( QVector<QString>& saProjEUseSumObjs, QVector<QString>& saUniqueEUseSumObjs, 
 																					QVector<QString>& saTempPathFiles );

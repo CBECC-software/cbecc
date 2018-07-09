@@ -238,6 +238,7 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_HrlyResMltNEM, /* 165 */  /* SAC 1/23/17 - added */
    BF_HrlyResMltNeg, /* 166 */  /* SAC 10/4/17 - added */
    BF_CopyHrlyRes,   /* 167 */  /* SAC 10/5/17 - added */
+   BF_GlobRefSymStr, /* 168 */  /* SAC 4/4/18 - added */
 } OpTypes;
 
 typedef enum fmerrorcode_

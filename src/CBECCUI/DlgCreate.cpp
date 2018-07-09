@@ -593,11 +593,14 @@ void CDlgCreate::OnOK()
          }
       }
 
-      if ( bOK && pNewObj )
-         // execute compliance rulelist #1
-         // must do this even if primary data entered because some of the 
-         // primary data may have been user defaulted
-         GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+	// SAC 5/16/18 - moved up into MainFrm to evaluate rules only once after both creation AND assigning of new object to another object/property
+   //   if ( bOK && pNewObj )
+   //   {  // execute compliance rulelist #1
+   //      // must do this even if primary data entered because some of the 
+   //      // primary data may have been user defaulted
+	//		BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+   //      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, m_i1Class );		// SAC 5/16/18 - switched from DefaultAction_OpenDialog to DefaultAction_InitAnalysis to ensure evaluation
+   //   }
 
       // finish up
       if (bOK)

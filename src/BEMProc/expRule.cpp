@@ -1206,8 +1206,8 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 							//		iFuncOpType = BF_Global;	// process as Global() function
 							//	}
 							// SAC 5/9/13 - allow for GlobalRef()
-							{	assert( (!bSymStr || !bPathIncludesObjRef) );	// DON'T have GlobalRefSymbolString() (yet)
-								iFuncOpType = (bSymStr ? BF_GlobSymStr : (bEnsureValidData ? BF_GlobalVal : (bPathIncludesObjRef ? BF_GlobalRef : BF_Global)));   // SAC 2/13/14
+							{	//assert( (!bSymStr || !bPathIncludesObjRef) );	// DON'T have GlobalRefSymbolString() (yet)  - GlobalRefSymbolString() added 4/4/18
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_GlobRefSymStr : BF_GlobSymStr) : (bEnsureValidData ? BF_GlobalVal : (bPathIncludesObjRef ? BF_GlobalRef : BF_Global)));   // SAC 2/13/14
 							}
 							else
 							{	BEMClass* pCls = BEMPX_GetClass( (int) iLocalCompID, iError );								assert( pCls );
@@ -1611,13 +1611,13 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 		case BF_ListRevRefIf :  // SAC 1/26/15 - ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
       case BF_CompIdx      :  // SAC 11/14/16 - moved here since "ComponentIndex" can now include an object reference property argument
       case BF_AddCSERptCol :  // SAC 11/14/16 - added "AddCSEReportCol" w/ second argument that may be object cseReportCol reference property
+      case BF_GlobRefSymStr : // SAC 4/4/18
          {
             int iCompType = 0;  // SAC 1/4/01 - added to facilitate parsing of new BF_CountNoRefs func
             if (crntFunc == BF_CountNoRefs)
                iCompType = iCompID;
             else if (crntFunc == BF_BitMatchCmp || crntFunc == BF_BitMatchCnt || crntFunc == BF_SumToArray || crntFunc == BF_CompIdx)  // SAC 4/2/02  // SAC 7/20/06  // SAC 11/15/16
-            {
-               if (temp.indexOf(':') < 0)
+            {  if (temp.indexOf(':') < 0)
                   iCompType = iCompID;  // only set iCompID when no component type is specified (enables both local and referenced properties)
             }
 
@@ -3507,6 +3507,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_ParRefSymStr  :  // SAC 4/10/14
 		case BF_Par2RefSymStr :  // SAC 4/10/14
 		case BF_Par3RefSymStr :  // SAC 4/10/14
+      case BF_GlobRefSymStr :   // SAC 4/4/18
                             if (nArgs < 1)
 										 ExpSetErr( error, EXP_RuleProc, QString( "Missing %1() function argument(s)" ).arg( ExpGetFuncTableNameByOpType( op ) ) );  // SAC 5/3/17
                             else
@@ -6184,11 +6185,11 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 	vector<bool> baArgNumeric, baArgUndef;
 	vector<long> laDBID;
 	vector<int> iaPropType;
-	string sCompName, sErrMsg;
+	string sCompName, sErrMsg;		// SAC 5/15/18 - fixed bug where sErrMsg not actually SET when formatting error messages below
 	int iObjCID=0, iNumDBIDArgPairs=0, iArgPairIdx, iArg, iError;
 
 	if (nArgs < 4 || (nArgs % 2) > 0)
-		boost::str( boost::format( "AssignOrCreateComp() Error:  Expecting >= 4 and an even number of arguments (%d arguments supplied)" ) % nArgs );
+		sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Expecting >= 4 and an even number of arguments (%d arguments supplied)" ) % nArgs );
 	else
 	{	// size arrays to store variable arguments
 		iNumDBIDArgPairs = (nArgs-2) / 2;					assert( iNumDBIDArgPairs > 0 );
@@ -6207,16 +6208,16 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 		{	if (iArg == 1)
 			{	// object type node
 				if (pNode->type != EXP_Value)
-					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created ('%s' supplied)" ) % (char*) pNode->pValue );
+					sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created ('%s' supplied)" ) % (char*) pNode->pValue );
 				else if (pNode->fValue < 1 || pNode->fValue > BEMPX_GetNumClasses())
-					boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created (%g supplied)" ) % pNode->fValue );
+					sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  First argument must be object type to be created (%g supplied)" ) % pNode->fValue );
 				else
 					iObjCID = (int) pNode->fValue;
 			}
 			else if (iArg == 2)
 			{	// object name
 				if (pNode->type != EXP_String)
-					boost::str( boost::format( "AssignOrCreateComp() Error:  Second argument must be name of object to be created (%g supplied)" ) % pNode->fValue );
+					sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Second argument must be name of object to be created (%g supplied)" ) % pNode->fValue );
 				else if (pNode->pValue == NULL || (strlen( (char*) pNode->pValue ) == 1 && ((char*) pNode->pValue)[0] == ' '))
 					sCompName = "";
 				else
@@ -6238,7 +6239,7 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 				else
 				{	// DBID
 					if (pNode->type != EXP_String)
-						boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to (%g supplied instead)" ) % iArg % pNode->fValue );
+						sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to (%g supplied instead)" ) % iArg % pNode->fValue );
 					else
 						saDBIDs[iArgPairIdx] = (char*) pNode->pValue;
 		}	}	}
@@ -6248,32 +6249,40 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 	{	int iFuncArg = 3 + (iArg * 2);
 		long lDBID = BEMPX_GetDatabaseID( saDBIDs[iArg].c_str(), iObjCID );
 		if (lDBID < BEM_COMP_MULT)
-			boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to ('%s' supplied instead)" ) % iFuncArg % saDBIDs[iArg].c_str() );
+			sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Expected argument #%d to be name of property that subsequent value/string is to be set to ('%s' supplied instead)" ) % iFuncArg % saDBIDs[iArg].c_str() );
 		else
 		{	laDBID[iArg] = lDBID;
 			BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( lDBID, iError );
 			if (pPropType == NULL)
-				boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to retrieve BEMPropertyType for argument #%d ('%s' supplied, DBID = %ld)" ) % iFuncArg % saDBIDs[iArg].c_str() % lDBID );
+			{	if (BEMPX_GetPropertyID( lDBID ) == 0 && BEMPX_GetArrayID( lDBID ) == BEM_PARAM0_PARENT)	// SAC 5/15/18 - enable specification of 'Parent' as a property to check/set
+				{	// reserved 'Parent' property
+					iaPropType[iArg] = BEMP_Str;
+					if (baArgNumeric[iArg] && !baArgUndef[iArg])
+						sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
+				}
+				else
+					sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to retrieve BEMPropertyType for argument #%d ('%s' supplied, DBID = %ld)" ) % iFuncArg % saDBIDs[iArg].c_str() % lDBID );
+			}
 			else
 			{	switch (pPropType->getPropType())
 				{	case  BEMP_Int :	iaPropType[iArg] = BEMP_Int;
 											if (!baArgNumeric[iArg] && !baArgUndef[iArg])
-												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
+												sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Flt :	iaPropType[iArg] = BEMP_Flt;
 											if (!baArgNumeric[iArg] && !baArgUndef[iArg])
-												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
+												sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be numeric)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Sym :	iaPropType[iArg] = (baArgNumeric[iArg] ? BEMP_Int : BEMP_Str);		break;
 					case  BEMP_Str :	iaPropType[iArg] = BEMP_Str;
 											if (baArgNumeric[iArg] && !baArgUndef[iArg])
-												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
+												sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
 					case  BEMP_Obj :	iaPropType[iArg] = BEMP_Str;
 											if (baArgNumeric[iArg] && !baArgUndef[iArg])
-												boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
+												sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unexpected BEMPropertyType for argument #%d ('%s' supplied, expecting arg #%d to be a string)" ) % iFuncArg % saDBIDs[iArg].c_str() % (iFuncArg+1) );
 											break;
-					default :	boost::str( boost::format( "AssignOrCreateComp() Error:  Invalid BEMPropertyType for argument #%d ('%s' supplied, type = %ld)" ) % iFuncArg % saDBIDs[iArg].c_str() % pPropType->getPropType() );	break;
+					default :	sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Invalid BEMPropertyType for argument #%d ('%s' supplied, type = %ld)" ) % iFuncArg % saDBIDs[iArg].c_str() % pPropType->getPropType() );	break;
 		}	}	}
 	}
 
@@ -6331,7 +6340,7 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 				if (bObjFound)
 				{	// make sure that sCompName reflects ACTUAL OBJECT name
 					if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iObjCID ), sData, FALSE, 0, -1, iaObjIdx[iObj] ) || sData.isEmpty())
-						boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to retrieve name of object matching function arguments (CID = %d, iObjIdx = %d)" ) % iObjCID % iaObjIdx[iObj] );
+						sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to retrieve name of object matching function arguments (CID = %d, iObjIdx = %d)" ) % iObjCID % iaObjIdx[iObj] );
 					else
 						sCompName = sData.toLocal8Bit().constData();
 		}	}	}
@@ -6340,21 +6349,24 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 	if (sErrMsg.size() < 1 && !bObjFound)
 	{	// need to CREATE NEW object w/ the properties defined in the function arguments
 		if (!BEMPX_CanCreateAnotherUserObject( iObjCID, 1 ))
-			boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to create new object (CID = %d)" ) % iObjCID );
+			sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to create new object (CID = %d)" ) % iObjCID );
 		else
 		{	BEMObject* pParentObj = NULL;
-			int i1ParentClass = BEMPX_GetClassID( pEval->lPrimDBID );
+			int i1PrimClass = BEMPX_GetClassID( pEval->lPrimDBID );
 			BEMClass* pCr8Class = BEMPX_GetClass( iObjCID, iError );
-			if (pCr8Class  &&  pCr8Class->ClassInParentList( (int) i1ParentClass ))
-				pParentObj = BEMPX_GetObjectByClass( i1ParentClass, iError, pEval->iPrimObjIdx, pEval->ePrimObjType );
+			if (pCr8Class  &&  pCr8Class->ClassInParentList( (int) i1PrimClass ))
+				pParentObj = BEMPX_GetObjectByClass( i1PrimClass, iError, pEval->iPrimObjIdx, pEval->ePrimObjType );
+			else if (pCr8Class && i1PrimClass == iObjCID && pEval->iPrimPar1Class > 0 &&		// SAC 5/15/18 - added default parent if PrimDBID class same as that being created
+						pEval->iPrimParObjIdx >= 0 && pCr8Class->ClassInParentList( pEval->iPrimPar1Class ))
+				pParentObj = BEMPX_GetObjectByClass( pEval->iPrimPar1Class, iError, pEval->iPrimParObjIdx, pEval->ePrimParObjType );
 
 			QString sNewCompName = sCompName.c_str();
 			if (!BEMPX_GetDefaultComponentName( iObjCID, sNewCompName ))
-				boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to load new object name (CID = %d)" ) % iObjCID );
+				sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to load new object name (CID = %d)" ) % iObjCID );
 			else
 			{	BEMObject* pNewObj = BEMPX_CreateObject( iObjCID, sNewCompName.toLocal8Bit().constData(), pParentObj, BEMO_User, FALSE );
 				if (pNewObj == NULL)
-					boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to create new object (CID = %d, '%s')" ) % iObjCID % sNewCompName.toLocal8Bit().constData() );
+					sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to create new object (CID = %d, '%s')" ) % iObjCID % sNewCompName.toLocal8Bit().constData() );
 				else
 				{	sCompName = sNewCompName.toLocal8Bit().constData();
 					for (iArg=0; (sErrMsg.size() < 1 && iArg < iNumDBIDArgPairs); iArg++)
@@ -6362,16 +6374,16 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 							switch( iaPropType[iArg] )
 							{	case  BEMP_Int :	lData = (long) faArgs[iArg];
 														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Int, (void*) &lData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set int to new object (DBID '%s'/%ld, value %ld)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % lData );
+															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set int to new object (DBID '%s'/%ld, value %ld)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % lData );
 														break;
 								case  BEMP_Flt :	fData = faArgs[iArg];
 														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Flt, (void*) &fData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set float to new object (DBID '%s'/%ld, value %g)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % fData );
+															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set float to new object (DBID '%s'/%ld, value %g)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % fData );
 														break;
 								case  BEMP_Str :	sData = saArgs[iArg].c_str();
 														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_QStr, (void*) &sData,  // BEMP_Str, (void*) sData.toLocal8Bit().constData(), 
 																							BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
-															boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set string to new object (DBID '%s'/%ld, string '%s')" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % sData.toLocal8Bit().constData() );
+															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set string to new object (DBID '%s'/%ld, string '%s')" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % sData.toLocal8Bit().constData() );
 														break;
 					}		}
 
@@ -6485,7 +6497,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 {
 	bool bRetMustBeValid = (op == BF_GlobalVal || op == BF_LocalVal || op == BF_ParentVal || op == BF_Parent2Val || op == BF_Parent3Val);  // SAC 2/13/14
 	bool bGetSymStr = (ruleSet.IsDataModel() || op == BF_LocSymStr || op == BF_GlobSymStr || op == BF_Par2SymStr || op == BF_Par3SymStr || op == BF_LocRefSymStr ||
-															  op == BF_ParSymStr || op == BF_ParRefSymStr || op == BF_Par2RefSymStr || op == BF_Par3RefSymStr );  // SAC 4/10/14
+								 op == BF_ParSymStr || op == BF_ParRefSymStr || op == BF_Par2RefSymStr || op == BF_Par3RefSymStr || op == BF_GlobRefSymStr );  // SAC 4/10/14  // SAC 4/4/18
    // First grab trailing child index (if ChildRef())
    int iChildIdx = -1;
    if (op == BF_ChildRef)	// pop trailing numeric value to compare the Local* value to
@@ -6524,22 +6536,21 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
         ( op == BF_ParentRef  || op == BF_Parent2Ref  || op == BF_Parent3Ref  || op == BF_Parent2Val  || op == BF_Parent3Val || op == BF_Par2SymStr  || op == BF_Par3SymStr   || op == BF_Par2RefSymStr  || op == BF_Par3RefSymStr   ||
           op == BF_PIsDefault || op == BF_ParStatus   || op == BF_PCompAssign || op == BF_ParStrAElem || op == BF_ParentVal  || op == BF_ParSymStr   || op == BF_ParRefSymStr ||    // SAC 11/20/09
 			 op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus   || op == BF_LocalVal   || op == BF_LocSymStr   || op == BF_LocRefSymStr ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
-   		 op == BF_ChildRef   || op == BF_GlobalRef   || op == BF_GlobStatus  || bRetMustBeValid  ) )   // SAC 8/28/12   // SAC 2/13/14
+   		 op == BF_ChildRef   || op == BF_GlobalRef   || op == BF_GlobStatus  || op == BF_GlobRefSymStr || bRetMustBeValid  ) )   // SAC 8/28/12   // SAC 2/13/14   // SAC 4/4/18
    {  // must PARSE ParentRef() argument -> multiple comp:param ID Args
 		bParseAsWeEvaluate = TRUE;
 		sParseArg = (char*) pNode->pValue;								assert( !sParseArg.isEmpty() );
 		if (op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus || op == BF_LocalVal ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
 			 op == BF_LocSymStr || op == BF_LocRefSymStr )		// SAC 5/19/17 - added Loc*SymStr checks
 			i1ParsedClass = BEMPX_GetClassID( pEval->lPrimDBID );
-		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal )  // SAC 8/28/12  // SAC 2/13/14
+		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal || op == BF_GlobRefSymStr )  // SAC 8/28/12  // SAC 2/13/14  // SAC 4/4/18
 		{	// first portion of argument string identifies the object type to start with
 			int iColon = sParseArg.indexOf(':');									assert( iColon > 0 );
 			if (iColon > 0)
 			{	QString sObjType = sParseArg.left( iColon );
 				i1ParsedClass = BEMP_GetDBComponentID( sObjType );		assert( i1ParsedClass > 0 );
 				sParseArg = sParseArg.right( sParseArg.length() - iColon - 1 );  // remove leading child/global object type name
-			}
-		}
+		}	}
 		else
       	i1ParsedClass = (op == BF_ParentRef || op == BF_PCompAssign || op == BF_PIsDefault || op == BF_ParStatus || op == BF_ParStrAElem || op == BF_ParentVal || op == BF_ParSymStr || op == BF_ParRefSymStr ? pEval->iPrimPar1Class :    // SAC 11/20/09
                                              (op == BF_Parent2Ref || op == BF_Parent2Val || op == BF_Par2SymStr || op == BF_Par2RefSymStr ? pEval->iPrimPar2Class : pEval->iPrimPar3Class));
@@ -6655,7 +6666,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
       iOccur = BEMPX_GetChildObjectIndex( i1ParClass, i1ChildClass, iError, eObjType, iChildIdx,
                                         pEval->iPrimObjIdx, pEval->ePrimObjType );
    }
-   else if (op == BF_GlobalRef || op == BF_GlobStatus || op == BF_GlobalVal)  // SAC 1/22/07  // SAC 2/13/14
+   else if (op == BF_GlobalRef || op == BF_GlobStatus || op == BF_GlobalVal || op == BF_GlobRefSymStr)  // SAC 1/22/07  // SAC 2/13/14  // SAC 4/4/18
    {
       iOccur = 0;
       eObjType = BEMPX_GetCurrentObjectType( BEMPX_GetClassID( (bParseAsWeEvaluate ? lParsedDBID : plParams[ 0 ]) ), iOccur,
@@ -9022,9 +9033,10 @@ double ConsAssmUFactor( int /*iCalcMethod*/, int iConsAssmObjIdx, BEM_ObjType /*
 	else if (pPropType_MatRef == NULL)
 		sUFactorErr = QString( "ConsAssmUFactor Error:  unable to retrieve %1 property type pointer." ).arg( "ConsAssm:MatRef" );
 	else
-	{	int i=0, iNumMatLayers = 0, iStatus=0, iStatus2=0, iSpecialVal;
+	{	// SAC 5/30/18 - revisions to accommodate up to 2 COmposite material layers (Com tic #2753)
+		int i=0, iNumMatLayers = 0, iStatus=0, iStatus2=0, iSpecialVal, iNumCompositeMats=0;
 		double fNonCompositeRVal = 0, fMatRVal=0;
-		int iCompositeMatObjIdx = -1;
+		int iCompositeMatObjIdx[2] = {-1,-1};
 		BEMObject* pMatObj;
 		int iMaxNumLayers = pPropType_MatRef->getNumValues();
 		int iFirstBlankIdx = -1;
@@ -9053,10 +9065,12 @@ double ConsAssmUFactor( int /*iCalcMethod*/, int iConsAssmObjIdx, BEM_ObjType /*
 							}
 							else
 							{	// this layer is a Composite layer that requires parallel path calcs
-								if (iCompositeMatObjIdx >= 0)
-									sUFactorErr = QString( "ConsAssmUFactor Error:  Multiple composite material layers found for ConsAssm '%1' (layers %2 & %3)." ).arg( sConsAssmName, QString::number( iCompositeMatObjIdx+1 ), QString::number( i+1 ) );
+								iNumCompositeMats++;
+								if (iNumCompositeMats > 2)
+									sUFactorErr = QString( "ConsAssmUFactor Error:  More than 2 composite material layers found for ConsAssm '%1' (layers %2, %3 & %4)." ).arg(
+																			sConsAssmName, QString::number( iCompositeMatObjIdx[0]+1 ), QString::number( iCompositeMatObjIdx[1]+1 ), QString::number( i+1 ) );
 								else
-									iCompositeMatObjIdx = iMatObjIdx;
+									iCompositeMatObjIdx[iNumCompositeMats-1] = iMatObjIdx;
 							}
 						}
 					}
@@ -9087,10 +9101,10 @@ double ConsAssmUFactor( int /*iCalcMethod*/, int iConsAssmObjIdx, BEM_ObjType /*
 		}
 
 		if (sUFactorErr.isEmpty() && fNonCompositeRVal > 0)  // no errors (yet)
-		{	if (iCompositeMatObjIdx < 0)
+		{	if (iNumCompositeMats < 1)
 				dUFactor = 1.0 / fNonCompositeRVal;
 			else
-			{	// Take into account COMPOSITE material layer
+			{	// Take into account COMPOSITE material layer(s)
 				long lDBID_Proj_WoodFrmRPerIn = BEMPX_GetDatabaseID( "WoodFrmRPerIn", iCID_Proj );
 				if (lDBID_Proj_WoodFrmRPerIn < 1)
 					sUFactorErr = QString( "ConsAssmUFactor Error:  unable to retrieve %1 property ID." ).arg( "Proj:WoodFrmRPerIn" );
@@ -9106,75 +9120,108 @@ double ConsAssmUFactor( int /*iCalcMethod*/, int iConsAssmObjIdx, BEM_ObjType /*
 					if (*plaMatPropDBID[idx] < 1)
 						sUFactorErr = QString( "ConsAssmUFactor Error:  unable to retrieve Mat:%1 property ID." ).arg( pszaMatProps[idx] );
 				}
-				if (sUFactorErr.isEmpty())
-				{	QString sFrmMat;
-					BEMPX_GetString( lDBID_Mat_Name, sMatName, FALSE, 0, -1, iCompositeMatObjIdx );		assert( !sMatName.isEmpty() );
-              	if (!BEMPX_GetString( lDBID_Mat_FrmMat, sFrmMat, FALSE, 0, -1, iCompositeMatObjIdx ) || sFrmMat.isEmpty())
+				QString sFrmMat[2];
+				int iParrallelPathMatIdx[2] = {-1,-1}, iNumParrallelPathMatLayers=0;
+				double fFrmDepthVal[2]={0,0}, fWoodFrmRPerIn=0, fFrmFacCav[2]={0,0}, fFrmFacMembers[2]={0,0}, fFrmFacHeaders[2]={0,0}, fCavityIns[2]={0,0}, fHeaderIns[2]={0,0};
+				dUFactor = 0.0;
+				for (int ic=0; (sUFactorErr.isEmpty() && ic < iNumCompositeMats); ic++)
+				{
+					BEMPX_GetString( lDBID_Mat_Name, sMatName, FALSE, 0, -1, iCompositeMatObjIdx[ic] );		assert( !sMatName.isEmpty() );
+              	if (!BEMPX_GetString( lDBID_Mat_FrmMat, sFrmMat[ic], FALSE, 0, -1, iCompositeMatObjIdx[ic] ) || sFrmMat[ic].isEmpty())
 						sUFactorErr = QString( "ConsAssmUFactor Error:  Errant or missing composite material framing selection for ConsAssm '%1', layer %2 (%3)." ).arg( sConsAssmName, QString::number( i+1 ), sMatName );
-					else if (sFrmMat.compare("Wood", Qt::CaseInsensitive))
+					else if (sFrmMat[ic].compare("Wood", Qt::CaseInsensitive))
 					{	// for framing materials OTHER THAN Wood, R-value should already be set via table look-up (in previous rules)
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_RVal, fMatRVal, -1, -1, iCompositeMatObjIdx ) || fMatRVal < 0)
-						fMatRVal = BEMPX_GetFloatAndStatus( lDBID_Mat_RVal, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
+						fMatRVal = BEMPX_GetFloatAndStatus( lDBID_Mat_RVal, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
 						if (iStatus < 1 || fMatRVal < 0)
 							sUFactorErr = QString( "ConsAssmUFactor Error:  Errant or missing composite material layer R-value for ConsAssm '%1', material layer %2." ).arg( sConsAssmName, sMatName );
 						else
 						{	fNonCompositeRVal += fMatRVal;
-							dUFactor = 1.0 / fNonCompositeRVal;
+				//			dUFactor = 1.0 / fNonCompositeRVal;   - moved down below initial loop over composite layers
 						}
 					}
 					else
 					{	// Calculate Parallel Path Overall U-factor for Wood framed surface
-						double fFrmDepthVal, fWoodFrmRPerIn, fFrmFacCav, fFrmFacMembers, fFrmFacHeaders, fCavityIns, fHeaderIns;
+						iNumParrallelPathMatLayers++;		int iPPIdx = iNumParrallelPathMatLayers-1;
+						iParrallelPathMatIdx[iPPIdx] = iCompositeMatObjIdx[ic];
 						QString sBadProp, sBadProps;
-				//		if (!BEMPX_SetDataFloat( lDBID_Proj_WoodFrmRPerIn, fWoodFrmRPerIn, -1, -1, -1 )  ||  fWoodFrmRPerIn <= 0 )
-						fWoodFrmRPerIn = BEMPX_GetFloatAndStatus( lDBID_Proj_WoodFrmRPerIn, iStatus, iSpecialVal, iError, 0 );
-						if (iStatus < 1  ||  fWoodFrmRPerIn <= 0 )
-						{	sBadProp = QString( " & Proj:WoodFrmRPerIn (%1 must be > 0)" ).arg( QString::number( fWoodFrmRPerIn )	);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_FrmDepthVal  ,				fFrmDepthVal  , -1, -1, iCompositeMatObjIdx )  ||  fFrmDepthVal   <= 0 )
-						fFrmDepthVal = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmDepthVal, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
-						if (iStatus < 1  ||  fFrmDepthVal   <= 0 )
-						{	sBadProp = QString( " & FrmDepthVal (%1 must be > 0)" ).arg(		QString::number( fFrmDepthVal )	);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_FrmFacCav    ,				fFrmFacCav    , -1, -1, iCompositeMatObjIdx )  ||  fFrmFacCav     <  0 )
-						fFrmFacCav = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacCav, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
-						if (iStatus < 1  ||  fFrmFacCav     <  0 )
-						{	sBadProp = QString( " & FrmFacCav (%1 must be >= 0)" ).arg(			QString::number( fFrmFacCav )		);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_FrmFacMembers,				fFrmFacMembers, -1, -1, iCompositeMatObjIdx )  ||  fFrmFacMembers <  0 )
-						fFrmFacMembers = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacMembers, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
-						if (iStatus < 1  ||  fFrmFacMembers <  0 )
-						{	sBadProp = QString( " & FrmFacMembers (%1 must be >= 0)" ).arg(	QString::number( fFrmFacMembers )	);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_FrmFacHeaders,				fFrmFacHeaders, -1, -1, iCompositeMatObjIdx )  ||  fFrmFacHeaders <  0 )
-						fFrmFacHeaders = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacHeaders, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
-						if (iStatus < 1  ||  fFrmFacHeaders <  0 )
-						{	sBadProp = QString( " & FrmFacHeaders (%1 must be >= 0)" ).arg(	QString::number( fFrmFacHeaders )	);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_CavityIns    ,				fCavityIns    , -1, -1, iCompositeMatObjIdx )  ||  fCavityIns     <  0 )
-						fCavityIns = BEMPX_GetFloatAndStatus( lDBID_Mat_CavityIns, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
-						if (iStatus < 1 ||  fCavityIns     <  0 )
-						{	sBadProp = QString( " & CavityIns (%1 must be >= 0)" ).arg(			QString::number( fCavityIns )		);		sBadProps += sBadProp;		}
-				//		if (!BEMPX_SetDataFloat( lDBID_Mat_HeaderIns    ,				fHeaderIns    , -1, -1, iCompositeMatObjIdx )  )
-						fHeaderIns = BEMPX_GetFloatAndStatus( lDBID_Mat_HeaderIns, iStatus, iSpecialVal, iError, iCompositeMatObjIdx );
+						if (iNumParrallelPathMatLayers==1)
+						{	fWoodFrmRPerIn = BEMPX_GetFloatAndStatus( lDBID_Proj_WoodFrmRPerIn, iStatus, iSpecialVal, iError, 0 );
+							if (iStatus < 1  ||  fWoodFrmRPerIn <= 0 )
+							{	sBadProp = QString( " & Proj:WoodFrmRPerIn (%1 must be > 0)" ).arg( QString::number( fWoodFrmRPerIn )	);		sBadProps += sBadProp;		}
+						}
+						fFrmDepthVal[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmDepthVal, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
+						if (iStatus < 1  ||  fFrmDepthVal[iPPIdx]   <= 0 )
+						{	sBadProp = QString( " & FrmDepthVal (%1 must be > 0)" ).arg(		QString::number( fFrmDepthVal[iPPIdx] )	);		sBadProps += sBadProp;		}
+						fFrmFacCav[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacCav, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
+						if (iStatus < 1  ||  fFrmFacCav[iPPIdx]     <  0 )
+						{	sBadProp = QString( " & FrmFacCav (%1 must be >= 0)" ).arg(			QString::number( fFrmFacCav[iPPIdx] )		);		sBadProps += sBadProp;		}
+						fFrmFacMembers[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacMembers, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
+						if (iStatus < 1  ||  fFrmFacMembers[iPPIdx] <  0 )
+						{	sBadProp = QString( " & FrmFacMembers (%1 must be >= 0)" ).arg(	QString::number( fFrmFacMembers[iPPIdx] )	);		sBadProps += sBadProp;		}
+						fFrmFacHeaders[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_FrmFacHeaders, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
+						if (iStatus < 1  ||  fFrmFacHeaders[iPPIdx] <  0 )
+						{	sBadProp = QString( " & FrmFacHeaders (%1 must be >= 0)" ).arg(	QString::number( fFrmFacHeaders[iPPIdx] )	);		sBadProps += sBadProp;		}
+						fCavityIns[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_CavityIns, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
+						if (iStatus < 1 ||  fCavityIns[iPPIdx]     <  0 )
+						{	sBadProp = QString( " & CavityIns (%1 must be >= 0)" ).arg(			QString::number( fCavityIns[iPPIdx] )		);		sBadProps += sBadProp;		}
+						fHeaderIns[iPPIdx] = BEMPX_GetFloatAndStatus( lDBID_Mat_HeaderIns, iStatus, iSpecialVal, iError, iCompositeMatObjIdx[ic] );
 						if (iStatus < 1)
-						{	sBadProp = QString( " & HeaderIns (%1 must be >= 0)" ).arg(			QString::number( fHeaderIns )		);		sBadProps += sBadProp;		}
+						{	sBadProp = QString( " & HeaderIns (%1 must be >= 0)" ).arg(			QString::number( fHeaderIns[iPPIdx] )		);		sBadProps += sBadProp;		}
 
 						if (!sBadProps.isEmpty())
 							sUFactorErr = QString( "ConsAssmUFactor Error:  Errant layer value(s) for ConsAssm '%1', Mat '%2':  %3." ).arg( sConsAssmName, sMatName, sBadProps.right( sBadProps.length()-3 ) );
-						else if (!WithinMargin(    (fFrmFacCav + fFrmFacMembers + fFrmFacHeaders), 1.0, 0.01 ))
+						else if (!WithinMargin(    (fFrmFacCav[iPPIdx] + fFrmFacMembers[iPPIdx] + fFrmFacHeaders[iPPIdx]), 1.0, 0.01 ))
 							sUFactorErr = QString( "ConsAssmUFactor Error:  Sum of framing, cavity & header fractions (%1) not = 1.0 for ConsAssm '%2' & Wood composite material layer '%3'." ).arg(
-															QString::number( (fFrmFacCav + fFrmFacMembers + fFrmFacHeaders) ), sConsAssmName, sMatName );
-						else
-						{	double dFracAdj = 1.0 / (fFrmFacCav + fFrmFacMembers + fFrmFacHeaders);
-							dUFactor = 0.0;
-							if (fFrmFacCav > 0 && fCavityIns >= 0)
-								dUFactor += ((1.0 / (fNonCompositeRVal + fCavityIns)) * fFrmFacCav * dFracAdj);
-							if (fFrmFacMembers > 0 && (fFrmDepthVal * fWoodFrmRPerIn) >= 0)
-								dUFactor += ((1.0 / (fNonCompositeRVal + (fFrmDepthVal * fWoodFrmRPerIn))) * fFrmFacMembers * dFracAdj);
-							if (fFrmFacHeaders > 0 && fHeaderIns >= 0)
-								dUFactor += ((1.0 / (fNonCompositeRVal + fHeaderIns)) * fFrmFacHeaders * dFracAdj);
-							assert( dUFactor < (1 / fNonCompositeRVal) );
-						}
-					}
+															QString::number( (fFrmFacCav[iPPIdx] + fFrmFacMembers[iPPIdx] + fFrmFacHeaders[iPPIdx]) ), sConsAssmName, sMatName );
+				}	}
+
+				if (iNumParrallelPathMatLayers < 1)
+					dUFactor = 1.0 / fNonCompositeRVal;   // only metal composite layer(s)
+				else if (iNumParrallelPathMatLayers < 2)
+				{	double dFracAdj = 1.0 / (fFrmFacCav[0] + fFrmFacMembers[0] + fFrmFacHeaders[0]);
+					if (fFrmFacCav[0] > 0 && fCavityIns[0] >= 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + fCavityIns[0])) * fFrmFacCav[0] * dFracAdj);
+					if (fFrmFacMembers[0] > 0 && (fFrmDepthVal[0] * fWoodFrmRPerIn) >= 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + (fFrmDepthVal[0] * fWoodFrmRPerIn))) * fFrmFacMembers[0] * dFracAdj);
+					if (fFrmFacHeaders[0] > 0 && fHeaderIns[0] >= 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + fHeaderIns[0])) * fFrmFacHeaders[0] * dFracAdj);
+					assert( dUFactor < (1 / fNonCompositeRVal) );
 				}
-			}
-		}
+				else
+				{	// more complex parallel path assuming 2 composite layers where headers align but framing members DO NOT - SAC 5/30/18 (Com tic #2753)
+					double dDblHdrFrac    = std::min( fFrmFacHeaders[0], fFrmFacHeaders[1] ), dDblHdrIns = fHeaderIns[0] + fHeaderIns[1];
+					double dRemainHdrFrac = fabs( fFrmFacHeaders[0] - fFrmFacHeaders[1] ), dRemainHdrIns = (fFrmFacHeaders[1] > fFrmFacHeaders[0] ? fHeaderIns[1] : fHeaderIns[0]),
+										dRemainHdrFrmDp = (fFrmFacHeaders[1] > fFrmFacHeaders[0] ? fFrmDepthVal[1] : fFrmDepthVal[0]), dRemainHdrCavIns = (fFrmFacHeaders[1] > fFrmFacHeaders[0] ? fCavityIns[0] : fCavityIns[1]);
+					double dRemainHdrFrmFrac=0, dRemainHdrFrmIns=0;
+					if (dRemainHdrFrac > 0)
+					{	if (fFrmFacHeaders[1] > fFrmFacHeaders[0])
+						{	dRemainHdrFrmFrac = dRemainHdrFrac * fFrmFacMembers[0];
+							fFrmFacMembers[0] -= dRemainHdrFrmFrac;
+							dRemainHdrFrmIns = fHeaderIns[1];
+						}
+						else
+						{	dRemainHdrFrmFrac = dRemainHdrFrac * fFrmFacMembers[1];
+							fFrmFacMembers[1] -= dRemainHdrFrmFrac;
+							dRemainHdrFrmIns = fHeaderIns[0];
+					}	}
+					double dDblCavFrac = std::max( 0.0, (1.0-dDblHdrFrac-dRemainHdrFrac-dRemainHdrFrmFrac-fFrmFacMembers[0]-fFrmFacMembers[1]) ), dDblCavIns = (fCavityIns[0] + fCavityIns[1]);
+					double dFracAdj = 1.0 / (dDblHdrFrac+dRemainHdrFrac+dRemainHdrFrmFrac+dDblCavFrac+fFrmFacMembers[0]+fFrmFacMembers[1]);
+
+					if (dDblHdrFrac > 0 && dDblHdrIns >= 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + dDblHdrIns + ((fFrmDepthVal[0] + fFrmDepthVal[1]) * fWoodFrmRPerIn))) * dDblHdrFrac * dFracAdj);
+					if (dRemainHdrFrac > 0 && (dRemainHdrCavIns > 0 || dRemainHdrIns >= 0))
+						dUFactor += ((1.0 / (fNonCompositeRVal + dRemainHdrIns + dRemainHdrCavIns + (dRemainHdrFrmDp * fWoodFrmRPerIn))) * dRemainHdrFrac * dFracAdj);
+					if (dRemainHdrFrmFrac > 0 && dRemainHdrFrmIns >= 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + dRemainHdrFrmIns + ((fFrmDepthVal[0] + fFrmDepthVal[1]) * fWoodFrmRPerIn))) * dRemainHdrFrmFrac * dFracAdj);
+					if (dDblCavFrac > 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + fCavityIns[0] + fCavityIns[1])) * dDblCavFrac * dFracAdj);
+
+					if (fFrmFacMembers[0] > 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + (fFrmDepthVal[0] * fWoodFrmRPerIn) + fCavityIns[1])) * fFrmFacMembers[0] * dFracAdj);
+					if (fFrmFacMembers[1] > 0)
+						dUFactor += ((1.0 / (fNonCompositeRVal + (fFrmDepthVal[1] * fWoodFrmRPerIn) + fCavityIns[0])) * fFrmFacMembers[1] * dFracAdj);
+					assert( dUFactor < (1 / fNonCompositeRVal) );
+		}	}	}
 	}
 
 	if (!sUFactorErr.isEmpty())

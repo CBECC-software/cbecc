@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -166,9 +166,11 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BEMCondition.cpp" />
     <ClCompile Include="BEMProcCtrlBtnST.cpp" />
     <ClCompile Include="BEMProcCtrlCheckListBox.cpp" />
     <ClCompile Include="BEMProcCtrlHelpBtn.cpp" />
+    <ClCompile Include="BEMProcCtrlIconBtn.cpp" />
     <ClCompile Include="BEMProcCtrlList.cpp" />
     <ClCompile Include="BEMProcCtrlRTF.cpp" />
     <ClCompile Include="BEMProcDialog.cpp" />
@@ -206,9 +208,11 @@
     <ResourceCompile Include="BEMProcUI16r.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BEMCondition.h" />
     <ClInclude Include="BEMProcCtrlBtnST.h" />
     <ClInclude Include="BEMProcCtrlCheckListBox.h" />
     <ClInclude Include="BEMProcCtrlHelpBtn.h" />
+    <ClInclude Include="BEMProcCtrlIconBtn.h" />
     <ClInclude Include="BEMProcCtrlList.h" />
     <ClInclude Include="BEMProcCtrlRTF.h" />
     <ClInclude Include="BEMProcDialog.h" />

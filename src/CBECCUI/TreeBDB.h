@@ -167,7 +167,7 @@ public:
    BOOL ItemIsExpanded( HTREEITEM hItem );
    BOOL DBIDInList( long lCheckDBID, long** plDBID );
    HTREEITEM BDBObjectToTreeItem( BEMObject* pObj );
-   BEMObject* DataToBDBObject( DWORD dwData );
+   BEMObject* DataToBEMObject( DWORD dwData );
 
    void AddReverseReferencingChildren( HTREEITEM hParent, BEMObject* pParentObj,
                                        int i1ChildClass, long lChildDBID, int iChildSource );

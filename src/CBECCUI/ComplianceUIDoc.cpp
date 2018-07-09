@@ -771,7 +771,7 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 
 
 // SAC 9/5/14 - MOVED code from OpenTheFile() to here to ensure consistent checking and defaulting for models that are opened via command line specification
-BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog )
+BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLog*/ )
 {	BOOL bRetVal = TRUE;
 	bool bLogProjectOpen = (ReadProgInt( "options", "LogProjectOpen", 0) > 0);
 	CString sLogMsg;
@@ -842,37 +842,42 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
 #endif
 
+		long lNumFileOpenDefaultingRounds = ReadProgInt( "options", "NumFileOpenDefaultingRounds", 3 );		// SAC 4/11/18
       if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame)))
       {
-         if (eInterfaceMode == IM_INPUT)  // execute compliance rulelist #1
+         if (eInterfaceMode == IM_INPUT && lNumFileOpenDefaultingRounds > 0)  // execute compliance rulelist #1
          {
 								if (bLogProjectOpen)     // SAC 10/22/13
 								{	t1 = microsec_clock::local_time();
 					   			BEMPX_SetDurationMark( 4 );
 								}
-				pMainWnd->SendMessage( WM_EVALPROPOSED, (!bWriteToLog) );
+				for (int iDR=1; iDR <= lNumFileOpenDefaultingRounds; iDR++)
+				{	pMainWnd->SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 								if (bLogProjectOpen)     // SAC 10/22/13
 								{	t2 = microsec_clock::local_time();
 									td = t2-t1;
-									sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round 1 elapsed time: %s", to_simple_string(td).c_str() );
+									sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round %d elapsed time: %s", iDR, to_simple_string(td).c_str() );
 								   BEMPX_WriteLogFile( sLogMsg );
-					   			BEMPX_SetDurationMark( 4 );
+								   if (iDR < lNumFileOpenDefaultingRounds)
+						   			BEMPX_SetDurationMark( 4 );
+					   			t1 = t2;
 								}
-         	pMainWnd->SendMessage( WM_EVALPROPOSED, (!bWriteToLog) );	// SAC 4/16/13 - triple eval DEFAULT rules to overcome rule order issues -- TEMPORARILY - TO DO
-								if (bLogProjectOpen)     // SAC 10/22/13
-								{	t1 = microsec_clock::local_time();
-									td = t1-t2;
-									sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round 2 elapsed time: %s", to_simple_string(td).c_str() );
-								   BEMPX_WriteLogFile( sLogMsg );
-					   			BEMPX_SetDurationMark( 4 );
-								}
-         	pMainWnd->SendMessage( WM_EVALPROPOSED, (!bWriteToLog) );
-								if (bLogProjectOpen)     // SAC 10/22/13
-								{	t2 = microsec_clock::local_time();
-									td = t2-t1;
-									sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round 3 elapsed time: %s", to_simple_string(td).c_str() );
-								   BEMPX_WriteLogFile( sLogMsg );
-								}
+				}
+         	//pMainWnd->SendMessage( WM_EVALPROPOSED, (!bWriteToLog) );	// SAC 4/16/13 - triple eval DEFAULT rules to overcome rule order issues -- TEMPORARILY - TO DO
+				//				if (bLogProjectOpen)     // SAC 10/22/13
+				//				{	t1 = microsec_clock::local_time();
+				//					td = t1-t2;
+				//					sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round 2 elapsed time: %s", to_simple_string(td).c_str() );
+				//				   BEMPX_WriteLogFile( sLogMsg );
+				//	   			BEMPX_SetDurationMark( 4 );
+				//				}
+         	//pMainWnd->SendMessage( WM_EVALPROPOSED, (!bWriteToLog) );
+				//				if (bLogProjectOpen)     // SAC 10/22/13
+				//				{	t2 = microsec_clock::local_time();
+				//					td = t2-t1;
+				//					sLogMsg.Format( "   CComplianceUIDoc::CheckAndDefaultModel() - Project defaulting round 3 elapsed time: %s", to_simple_string(td).c_str() );
+				//				   BEMPX_WriteLogFile( sLogMsg );
+				//				}
 			}
 
 			((CMainFrame*)pMainWnd)->SetStatusBarStrings( "", 2 );		// SAC 10/29/15 - display ruleset ID in third status bar pane
@@ -893,6 +898,15 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL bWriteToLog 
       else
          // even if frame is not available, still evaluate proposed rulelist
          CMX_EvaluateRuleset( esDataModRulelist, ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
+
+		elDBID_Proj_DefaultOptionInp  = BEMPX_GetDatabaseID( "DefaultOptionInp",  eiBDBCID_Proj );	// SAC 4/11/18
+		elDBID_Proj_DefaultOptionObj  = BEMPX_GetDatabaseID( "DefaultOptionObj",  eiBDBCID_Proj );
+		elDBID_Proj_DefaultOptionDone = BEMPX_GetDatabaseID( "DefaultOptionDone", eiBDBCID_Proj );
+		int iSpecVal, iErr;		// SAC 4/11/18
+		elDefaultOptionInp  = (elDBID_Proj_DefaultOptionInp  < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionInp , iSpecVal, iErr ));
+		elDefaultOptionObj  = (elDBID_Proj_DefaultOptionObj  < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionObj , iSpecVal, iErr ));
+		elDefaultOptionDone = (elDBID_Proj_DefaultOptionDone < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionDone, iSpecVal, iErr ));
+		BEMPX_InitModsSinceModelDefaulted();
 
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 

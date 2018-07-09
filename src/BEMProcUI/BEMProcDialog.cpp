@@ -51,6 +51,7 @@
 #include "BEMProcCtrlRTF.h"
 #include "DlgRangeError.h"
 //#include "memLkRpt.h"
+#include "BEMProcCtrlIconBtn.h"	// SAC 4/18/18
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -101,7 +102,8 @@ int BEMPUIX_DoBEMProcDialog(
 	DWORD* dwaNonEditableDBIDs/*=NULL*/, int iNumNonEditableDBIDs/*=0*/,
 	const char* pszExitingRulelist/*=NULL*/, const char* pszDataModRulelist/*=NULL*/,
 	BOOL bPostHelpMessageToParent/*=FALSE*/,
-	BOOL bIncludeCompParamStrInToolTip/*=FALSE*/, BOOL bIncludeStatusStrInToolTip/*=TRUE*/, BOOL bIncludeLongCompParamStrInToolTip/*=FALSE*/ )
+	BOOL bIncludeCompParamStrInToolTip/*=FALSE*/, BOOL bIncludeStatusStrInToolTip/*=TRUE*/, BOOL bIncludeLongCompParamStrInToolTip/*=FALSE*/,
+	BOOL bShowRefreshDefaultsBtn /*=FALSE*/ )		// SAC 4/18/18
 {
 	CSACBEMProcDialog dlg(
 		iBEMClass, iUIMode, bDisplayAllUIControls, bAllowEdits,
@@ -109,7 +111,7 @@ int BEMPUIX_DoBEMProcDialog(
 		pszCaptionText, pszCloseBtnText,
 		dwaNonEditableDBIDs, iNumNonEditableDBIDs, pszExitingRulelist,
 		pszDataModRulelist, bPostHelpMessageToParent,
-		bIncludeCompParamStrInToolTip, bIncludeStatusStrInToolTip, bIncludeLongCompParamStrInToolTip );
+		bIncludeCompParamStrInToolTip, bIncludeStatusStrInToolTip, bIncludeLongCompParamStrInToolTip, bShowRefreshDefaultsBtn );
 	return dlg.DoModal();
 }
 
@@ -131,7 +133,7 @@ CSACBEMProcDialog::CSACBEMProcDialog(int iBEMClass, int iUIMode, BOOL bDisplayAl
                              const char* pszExitingRulelist /*=NULL*/, const char* pszDataModRulelist /*=NULL*/,
                              BOOL bPostHelpMessageToParent /*=FALSE*/,
                              BOOL bIncludeCompParamStrInToolTip /*=FALSE*/, BOOL bIncludeStatusStrInToolTip /*=TRUE*/,    // SAC 1/19/12
-									  BOOL bIncludeLongCompParamStrInToolTip /*=FALSE*/ )   // SAC 8/13/13
+									  BOOL bIncludeLongCompParamStrInToolTip /*=FALSE*/, BOOL bShowRefreshDefaultsBtn /*=FALSE*/ )   // SAC 8/13/13  // SAC 4/18/18
 	: CDialog(CSACBEMProcDialog::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CSACBEMProcDialog)
@@ -180,7 +182,8 @@ CSACBEMProcDialog::CSACBEMProcDialog(int iBEMClass, int iUIMode, BOOL bDisplayAl
    m_bIncludeCompParamStrInToolTip = bIncludeCompParamStrInToolTip;   // SAC 1/19/12
    m_bIncludeLongCompParamStrInToolTip = bIncludeLongCompParamStrInToolTip;   // SAC 8/13/13
    m_bIncludeStatusStrInToolTip = bIncludeStatusStrInToolTip;   // SAC 1/19/12
-
+	m_bShowRefreshDefaultsBtn = bShowRefreshDefaultsBtn;		// SAC 4/18/18
+	m_pRefreshDefaultsBtn = NULL;
 }
 
 
@@ -235,6 +238,8 @@ HBRUSH CSACBEMProcDialog::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 BOOL CSACBEMProcDialog::OnInitDialog() 
 {
 	CDialog::OnInitDialog();
+
+   GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMClass );		// SAC 4/15/18
 
 	// Get pointer to Close button, then get its dimensions
    int iBtnWd, iBtnHt;
@@ -301,6 +306,19 @@ BOOL CSACBEMProcDialog::OnInitDialog()
    }
 
    InitControls();
+
+	if (m_bShowRefreshDefaultsBtn && m_pRefreshDefaultsBtn==NULL && iBtnWd > 0)		// SAC 4/18/18
+	{	int iRDBLeft = btnRect.left + dlgRect.right  - btnRect.right  - eiTabDlgCtrlMarg  - FontX(50);
+		int iRDBTop  = btnRect.top  + dlgRect.bottom - btnRect.bottom - eiTabDlgCtrlMarg  + FontX( 2);
+		m_pRefreshDefaultsBtn = new CBEMProcCtrlIconBtn();
+		if (m_pRefreshDefaultsBtn)
+		{	m_pRefreshDefaultsBtn->Create( this, iRDBLeft, iRDBTop, FontX(20), FontX(20), 200 /*uiCtrlID*/, "Refresh Defaults", 10 /*iIconID*/,
+												 3065 /*lActionID*/, (WORD) m_iBEMClass /*wSecNavID*/, NULL /*pEditableCondition*/, TRUE /*bDrawFlatFocus*/,
+												 FALSE /*bTabbedDlgShift*/, TRUE /*calledNew*/, FALSE /*scaleToSysFont*/, FALSE /*scaleToScreenRes*/ );
+         m_pRefreshDefaultsBtn->EnableWindow( TRUE );
+         m_pRefreshDefaultsBtn->ShowWindow( SW_SHOW );
+         m_pRefreshDefaultsBtn->PostMessage( WM_DISPLAYDATA );  //SendMessage( WM_DISPLAYDATA );
+	}	}
 
    EnableToolTips(TRUE);
 
@@ -487,7 +505,7 @@ LONG CSACBEMProcDialog::OnDataModified( UINT wEval, LONG lDBID )
       GetParentFrame()->SendMessage( WM_DATAMODIFIED, 0, lDBID );
 
       // execute compliance rulelist #1
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_DataMod, lDBID );
    }
 
    // send a message to the main view's tree control via CMainFrame in case the tree requires updating
@@ -1213,6 +1231,8 @@ void CSACBEMProcDialog::OnOK()
 {
    if (RuleBasedErrorCheck())
    {
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
+
 //      EvaluateRules( 1 );
       CDialog::OnOK();	
    }
@@ -1227,6 +1247,8 @@ void CSACBEMProcDialog::OnCancel()
 
       if (!RuleBasedErrorCheck())
          return;
+
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
       
 //      if ( !OKToExit() &&
 //           MessageBox( "Do you wish to leave this dialog without fixing the error(s)?",

@@ -462,6 +462,8 @@ int CComplianceUIApp::ExitInstance()
 //   if (hWndCUIRpt)
 //      ::PostMessage( hWndCUIRpt, WM_CLOSE, 0, 0L );
 
+	BlastQApp();	// SAC 3/8/18
+
 //	// Clear out building database & ruleset
 //	BEMPX_CloseBEMProc();
 //	// Closes down Qt app (if created via CBECC-* analysis)

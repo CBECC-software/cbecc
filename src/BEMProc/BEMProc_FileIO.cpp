@@ -2257,6 +2257,10 @@ void CProjectFile::WriteComment( QString sDescrip, QString sUnits, int iStartChr
 
 
 /////////////////////////////////////////////////////////////////////////////
+
+#define  MAX_CSE_NAMELENGTH  63		// SAC 6/1/18 (Com tic #2452)
+
+/////////////////////////////////////////////////////////////////////////////
 //
 // CProjectFile Class Function:  WriteProperties()
 //
@@ -2305,7 +2309,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 			}
 	   }
 	
-	   if (m_iFileType == BEMFT_CSE && pObj->getName().length() > 63)   // SAC 8/30/11    // SAC 2/18/12 - updated name len limit from 15 to 63
+	   if (m_iFileType == BEMFT_CSE && pObj->getName().length() > MAX_CSE_NAMELENGTH)   // SAC 8/30/11    // SAC 2/18/12 - updated name len limit from 15 to 63
 		{	bAbortObjectWrite = TRUE;	// SAC 1/19/13 - added code to ABORT CSE writing of objects w/ names tool long for CSE to handle
 			sObjType = "ERROR: CSE object name too long:  " + sObjType;
 			sObjType += pObj->getName();
@@ -2637,7 +2641,7 @@ void CProjectFile::AppendCSEObjectType( QString& sPartial, BEMObject* pObj )  //
 }
 
 void CProjectFile::WriteObjectName( QString& sRec, BEMObject* pObj )
-{	AppendCSEObjectType( sRec, pObj );		sRec += "   ";					assert( pObj->getName().length() <= 63 );
+{	AppendCSEObjectType( sRec, pObj );		sRec += "   ";					assert( pObj->getName().length() <= MAX_CSE_NAMELENGTH );
 	m_file.WriteToken( sRec.toLocal8Bit().constData(), sRec.length() );
 	m_file.WriteQuotedString( pObj->getName().toLocal8Bit().constData(), pObj->getName().length() );
 	m_file.NewLine();
@@ -3728,6 +3732,27 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
             BEMPX_SetBEMData( lCr8DBID, BEMP_Int, (void*) &lTime, BEMO_User, -1, BEMS_UserDefined, BEMO_User, TRUE, iBEMProcIdx );
       }
    }
+
+	if (iFileType == BEMFT_CSE)	// SAC 6/1/18 - loop over ALL CSE objects and rename any that have names > 63 chars long (Com tic #2452)
+	{
+		int iNumClasses = BEMPX_GetNumClasses();
+		for (int i1Class=1; i1Class<=iNumClasses; i1Class++)
+		{	int iError;
+			BEMClass* pClass = BEMPX_GetClass( i1Class, iError, iBEMProcIdx );
+			if (iError >= 0 && pClass && (iFileMode != BEMFM_INPUT || !pClass->getAutoCreate()))
+			{	QString sObjType = pClass->getShortName();
+				if (sObjType.indexOf( "cse" ) == 0)
+				{	int iNumObjs = (int) pClass->ObjectCount( BEMO_User );
+					for (int ib=0; ib < iNumObjs; ib++)
+					{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
+						QString sObjName = (pObj==NULL ? "" : pObj->getName());
+      	   	   if (pObj && sObjName.length() > MAX_CSE_NAMELENGTH)
+         		   {	QString sAppend = QString( "-%1.%2" ).arg( QString::number(i1Class), QString::number(ib+1) );
+         		   	sObjName = sObjName.left( MAX_CSE_NAMELENGTH-sAppend.length() );
+         		   	sObjName += sAppend;
+         		   	pObj->setName(sObjName);
+   	}	}	}	}	}
+	}
 
    if (BEMPX_IsXML( iFileType ))   // SAC 10/26/11
    	bRetVal = WriteXMLFile( sFileName.toLocal8Bit().constData(), iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bSupressAllMessageBoxes,

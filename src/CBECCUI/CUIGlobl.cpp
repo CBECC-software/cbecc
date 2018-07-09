@@ -71,6 +71,10 @@
 #include <io.h>
 #include "Shlwapi.h"
 
+#include <QtWidgets/qapplication.h>
+#include <QtGui/QBrush>
+
+
 /////////////////////////////////////////////////////////////////////////////
 // Application wide externals
 
@@ -99,6 +103,7 @@ BOOL ebIncludeCompParamStrInToolTip = FALSE;   // SAC 1/19/12
 BOOL ebIncludeLongCompParamStrInToolTip = FALSE;   // SAC 8/13/13
 BOOL ebIncludeStatusStrInToolTip = TRUE;       // SAC 1/19/12
 BOOL ebVerboseInputLogging = FALSE;       // SAC 3/5/12
+BOOL ebLogProjectOpen = FALSE;		// SAC 4/15/18
 
 int eiCurrentTab = 0;
 
@@ -268,6 +273,8 @@ void SetExternals( CWnd* pWnd )
    spMainWnd = pWnd;
 
    euiBDBObjClipFormat = ::RegisterClipboardFormat("BEMProc Object");
+
+	ebLogProjectOpen = (ReadProgInt( "options", "LogProjectOpen", 0 ) > 0);		// SAC 4/15/18
 
    appXScreenBase = 640;
    appYScreenBase = 480;
@@ -516,6 +523,34 @@ BOOL LoadVersionInfoString( CString& sReturnString, const char* pszInfoID, const
 //
 //   pDC->RestoreDC( tempDC );
 //}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// QT UI initialization
+
+QApplication* sq_app = NULL;	// SAC 3/8/18
+bool sbQtAppInited = false;
+
+bool QAppInitialized()
+{
+	if (!sbQtAppInited)
+	{
+		int argc = 0;
+		sq_app = new QApplication( argc, NULL );
+		if (sq_app)
+			sbQtAppInited = true;
+		ASSERT( sbQtAppInited );
+	}
+	return sbQtAppInited;
+}
+
+void BlastQApp()
+{
+	if (sbQtAppInited)
+	{	delete sq_app;
+		sq_app = NULL;
+	}
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1488,7 +1523,7 @@ static char BASED_CODE szDSTCUserDefau[] = "UserDefault%s";
 static char BASED_CODE szDSTCUserLibra[] = "UserLibrary%s";
 static char BASED_CODE szDSTCUserDefin[] = "UserDefined%s";
 static char BASED_CODE szDSTCSimResult[] = "SimResult%s";
-static const char* pszTC[] = {  szTCRangeError,
+static const char* pszTC[] = {  szTCRangeError,		// NUM_RESERVED_TEXT_COLORS listed before those that map to BEMBase data status values
                                 szDSTCUndefined, szDSTCProgDefau, szDSTCRuleDefau,
                                 szDSTCRuleLibra, szDSTCRuleDefin, szDSTCUserDefau,
                                 szDSTCUserLibra, szDSTCUserDefin, szDSTCSimResult };
@@ -1503,6 +1538,8 @@ static int iaTextG[ NUM_INI_TEXT_COLORS ];
 static int iaTextB[ NUM_INI_TEXT_COLORS ];
 static int* iaTextColors[3] = { iaTextR, iaTextG, iaTextB };
 static COLORREF iaTextRGB[ NUM_INI_TEXT_COLORS ];
+static QBrush qbaBEMText[  NUM_INI_TEXT_COLORS ];		// SAC 3/23/18 - for grid text colors
+static QBrush qbBlack;
 
 void LoadDefaultTextColors()
 {
@@ -1515,7 +1552,9 @@ void LoadDefaultTextColors()
          iaTextColors[j][i] = ReadProgInt(szTextColors, entry, 0);
       }
       iaTextRGB[i] = RGB( iaTextColors[0][i], iaTextColors[1][i], iaTextColors[2][i] );
+      qbaBEMText[i].setColor( QColor( iaTextColors[0][i], iaTextColors[1][i], iaTextColors[2][i] ) );
    }
+   qbBlack.setColor( QColor(0,0,0) );
 }
 
 COLORREF GetCUITextColor( int iDS )
@@ -1526,9 +1565,23 @@ COLORREF GetCUITextColor( int iDS )
    return RGB(0,0,0);
 }
 
+int GetCUITextRGB( int iDS, int idxRGB )
+{
+	if (iDS >= 0 && iDS < NUM_INI_TEXT_COLORS && idxRGB >= 0 && idxRGB < 3)
+		return iaTextColors[idxRGB][iDS];
+	return 0;
+}
+
+QBrush* BEMTextQBrush( int iDS )
+{
+   if (iDS >= 0 && iDS < NUM_INI_TEXT_COLORS)
+      return &qbaBEMText[iDS];
+   return &qbBlack;
+}
+
 void SetBDBWTextColors()
 {
-   BEMPUIX_SetTextColors( &iaTextRGB[1], NUM_DS_TEXT_COLORS );
+   BEMPUIX_SetTextColors( &iaTextRGB[NUM_RESERVED_TEXT_COLORS], NUM_DS_TEXT_COLORS );
 }
 
 
@@ -2131,6 +2184,14 @@ int eiBDBCID_BEMVersion = 0;			// SAC 9/17/12
 long elDBID_Proj_BEMVersion = 0;		// SAC 9/17/12
 int eiBDBCID_INISettings = 0;			// SAC 5/31/14
 long elDBID_Proj_StdsVersion = 0;	// SAC 8/15/14
+long elDBID_Proj_DefaultOptionInp = 0;		// SAC 4/11/18
+long elDBID_Proj_DefaultOptionObj = 0;
+long elDBID_Proj_DefaultOptionDone = 0;
+
+// BEM Defaulting Options...
+long elDefaultOptionInp = DefaultOption_Model;
+long elDefaultOptionObj = DefaultOption_Model;
+long elDefaultOptionDone = DefaultOption_Model;
 
 #ifdef UI_ASHRAE901E
 int eiBDBCID_Run = 0;
@@ -2802,6 +2863,9 @@ void InitBEMDBIDs()
 	elDBID_Proj_BEMVersion	= BEMPX_GetDatabaseID( "BldgEngyModelVersion", eiBDBCID_Proj );		// SAC 9/17/12
 	eiBDBCID_INISettings		= BEMPX_GetDBComponentID( "INISettings" );					// SAC 5/31/14
 	elDBID_Proj_StdsVersion = BEMPX_GetDatabaseID( "StdsVersion", eiBDBCID_Proj );	// SAC 8/15/14		// SAC 11/22/15
+	elDBID_Proj_DefaultOptionInp  = BEMPX_GetDatabaseID( "DefaultOptionInp",  eiBDBCID_Proj );	// SAC 4/11/18
+	elDBID_Proj_DefaultOptionObj  = BEMPX_GetDatabaseID( "DefaultOptionObj",  eiBDBCID_Proj );
+	elDBID_Proj_DefaultOptionDone = BEMPX_GetDatabaseID( "DefaultOptionDone", eiBDBCID_Proj );
 
    eiBDBCID_Project            = BEMPX_GetDBComponentID( "Project" );
    eiBDBCID_SchDay             = BEMPX_GetDBComponentID( "SchDay" );

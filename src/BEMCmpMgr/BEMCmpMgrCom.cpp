@@ -1851,7 +1851,8 @@ typedef struct nrfilepruneinfo_
 } NRFilePruneInfo;
 
 
-void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int& iRetVal, bool bVerbose, void* pCompRuleDebugInfo, int iDontAbortOnErrorsThruStep )
+void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int& iRetVal, bool bVerbose, void* pCompRuleDebugInfo,
+										int iDontAbortOnErrorsThruStep, int iNumFileOpenDefaultingRounds )	// SAC 4/11/18
 {
 	BEMPX_SetAbortRuleEvaluationFlag( false );		// SAC 8/6/13 - set flag indicating that rule processing should be aborted
 
@@ -1864,16 +1865,16 @@ void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int&
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SoftwareVersion" ), BEMP_QStr, (void*) &sUIVersionString );
 
 // TRIM TO SINGLE EVALUATION once ordered rule evaluation implemented
-   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo ); // SAC 4/16/13 - triple eval DEFAULT rules to overcome rule order issues -- TEMPORARILY - TO DO
+	if (iNumFileOpenDefaultingRounds > 0)
+	   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo ); // SAC 4/16/13 - triple eval DEFAULT rules to overcome rule order issues -- TEMPORARILY - TO DO
 	if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs && iDontAbortOnErrorsThruStep < 1)  // check flag to bypass errors
 	{
 //										 9 : Errors encountered evaluating input model defaulting rules
 			iRetVal = (iRetVal > 0 ? iRetVal : 9);		// don't abort (?)
 	}
 	else
-	{
-   	CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
-   	CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
+	{	for (int iDR=2; iDR <= iNumFileOpenDefaultingRounds; iDR++)
+	   	CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
 
 		if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs && iDontAbortOnErrorsThruStep < 1)  // check flag to bypass errors
 		{
@@ -2084,6 +2085,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 #elif  CODEYEAR2019
 	    iDLLCodeYear = 2019;
 #endif
+
+	int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );		// SAC 4/11/18
 
 	QString sProxyServerAddress, sProxyServerCredentials, sProxyServerType, sNetComLibrary;
 	GetCSVOptionString( "ProxyServerAddress"    , sProxyServerAddress    , saCSVOptions );
@@ -2931,7 +2934,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int iCID_PolyLp = (!bAbort && !BEMPX_AbortRuleEvaluation()) ? BEMPX_GetDBComponentID( "PolyLp" ) : -1;
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && bLoadModelFile)
    	// SAC 4/4/14 - added call to defaulting stuff for models just loaded to ensure all defaults present prior to PolyLp generation
-		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep );
+		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
 	{	long lIsDetailedGeom=1;
 		if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "IsDetailedGeometry", iCID_Proj ), lIsDetailedGeom ) && lIsDetailedGeom == 0)
@@ -2972,7 +2975,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 				else if (!bAbort && !BEMPX_AbortRuleEvaluation() && BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumWinsHavingShades", iCID_Proj ), lNumWinsHavingShades ) && lNumWinsHavingShades > 0)
 					// RE-default model if window shades are to be generated, to ensure that all PolyLp obejcts are fully defaulted
-					DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep );
+					DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 																		if (bStoreBEMDetails)
 																		{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(".ibd-Detail-postPolys");
    																		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
@@ -3048,7 +3051,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
    {	// moved defaulting stuff to subordinate routine to enable multiple calls
-		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep );
+		DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 
 	// SAC 10/3/14 - mod to delete any EUseSummary objects from user model to avoid having them written to the results' user model
 		int iNumEUseSUmObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "EUseSummary" ) );
@@ -3357,7 +3360,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												(!sExcptDsgnModelFile.isEmpty()),			// user specification of alternative proposed simulation IDF file";
 												(!sCSEIncludeFileDBID.isEmpty()),			// user specification of CSE include file(s): %s", sCSEIncludeFileDBID );
 												(lNumSpaceWithDefaultedDwellingUnitArea > 0),  	// # dwelling unit areas have not been entered by the user
-												(lDisableMandUFacChecks > 0)  };			// mandatory U-factor checks disabled by the user - SAC 2/7/17
+												(lDisableMandUFacChecks > 0),  			// mandatory U-factor checks disabled by the user - SAC 2/7/17
+												(iNumFileOpenDefaultingRounds != 3)  };	// number of model defaulting rounds overridden by user - SAC 4/11/18 
 				for (iRF=0; iRF < NumRptSecOff; iRF++)
 				{	if (bRptSecOff[iRF])
 						iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -3396,6 +3400,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 						//		case 13 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 //	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 								case 14 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
+								case 15 :	sLogMsg.sprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
 								default :	sLogMsg.clear();		break;
 							}
 							if (!sLogMsg.isEmpty())
@@ -3484,7 +3489,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 		if (!bAbort && !BEMPX_AbortRuleEvaluation() && bReDefaultModel)		// SAC 11/8/14
-			DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep );
+			DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 
 		if (bBypassInputChecks)
 			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing input (range and required input) checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -5330,7 +5335,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 /////////////////////////////////////////////////////////////////////////////
 
-#define  CM_MAX_BATCH_VER  2
+#define  CM_MAX_BATCH_VER  3		// SAC 6/21/18 - 2->3 (CSE path)
 
 int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
@@ -5381,14 +5386,15 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 	int iaBatchFieldsPerRecordByVer[] = {	 9,	// ver 1
 														10,	// ver 2
+														11,	// ver 3 - CSE path - SAC 6/21/18
 														-1  };
 	std::string line;
 	int iMode = 0;		// <0-Error Code / 0-Reading Header / 1-Reading Run Records
 	int iBatchVer = 1, iRunRecord = 0, iBatchRecNum = 0, iRunsToPerform = 0;
 	std::string sBatchResultsFN, sBatchLogFN, sOverwriteResultsFileMsg, sLogMsg, sErrMsg;
-	std::string sRecProjInFN, sRecProjOutFN, sRecRunTitle, sRecOutput, sRecOptionCSV, sRecCopySimXMLToPath;
+	std::string sRecProjInFN, sRecProjOutFN, sRecRunTitle, sRecOutput, sRecOptionCSV, sRecCopySimXMLToPath, sRecCopyCSEToPath;
 	int iRecAutosizeP=0, iRecAutosizeBZ=0, iRecAutosizeB=0;
-	std::vector<std::string> saProjInFN, saProjOutFN, saRunTitle, saOutput, saOptionCSV, saCopySimXMLToPath, saBEMBaseFN, saRulesetFN;
+	std::vector<std::string> saProjInFN, saProjOutFN, saRunTitle, saOutput, saOptionCSV, saCopySimXMLToPath, saCopyCSEToPath, saBEMBaseFN, saRulesetFN;
 	std::vector<int> iaBatchRecNums;
 	while (iMode >= 0 && iRunRecord > -1 && getline( in, line ))
 	{	iBatchRecNum++;
@@ -5413,8 +5419,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 					iBatchVer = atoi( lines[0][0].c_str() );
 					if (iBatchVer < 1 || iBatchVer > CM_MAX_BATCH_VER)
 					{				iMode = -2;
-									sErrMsg = boost::str( boost::format( "Error:  Invalid batch version number (%d) specified in record %d" )
-																						% iBatchVer % iBatchRecNum );
+									sErrMsg = boost::str( boost::format( "Error:  Invalid batch version number (%d) specified in record %d, expected value 1-%d" )
+																						% iBatchVer % iBatchRecNum % CM_MAX_BATCH_VER );
 					}
 					else
 					{
@@ -5515,6 +5521,22 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						}
 
 						if (iMode > 0)
+						{	if (iBatchVer < 3)
+								sRecCopyCSEToPath.erase();
+							else
+							{	sRecCopyCSEToPath = lines[0][iFld++];
+								PrependPathIfNecessary( sRecCopyCSEToPath, sProjPath );
+								if (sRecCopyCSEToPath.size() > 0 && !DirectoryExists( sRecCopyCSEToPath.c_str() ))
+								{	boost::filesystem::create_directories( sRecCopyCSEToPath.c_str() );
+									if (!DirectoryExists( sRecCopyCSEToPath.c_str() ))
+									{	iMode = -11;
+										sErrMsg = boost::str( boost::format( "Error:  Path to copy CSE simulation files to (specified in record %d) not found:  '%s'" )
+																							% iBatchRecNum % sRecCopyCSEToPath.c_str() );
+								}	}
+							}
+						}
+
+						if (iMode > 0)
 						{	sRecRunTitle = lines[0][iFld++];
 							if (lines[0][iFld++].size() < 1)
 								iRecAutosizeP = -1;
@@ -5573,7 +5595,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 								sRecOptionCSV += sRecRunTitle;
 								sRecOptionCSV += "\",";
 							}
-							if (lines[0][8].size() > 0)
+							if (lines[0][iFld].size() > 0)
 								sRecOptionCSV += lines[0][iFld++];
 							if (iLenOptionsCSVArg > 0)
 								sRecOptionCSV += pszOptionsCSV;
@@ -5590,6 +5612,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							saOptionCSV.push_back( sRecOptionCSV );
 							iaBatchRecNums.push_back( iBatchRecNum );
 							saCopySimXMLToPath.push_back( sRecCopySimXMLToPath );  // ver 2
+							saCopyCSEToPath.push_back( sRecCopyCSEToPath );  // ver 3
 							saBEMBaseFN.push_back( sThisBEMBaseFN );
 							saRulesetFN.push_back( sThisProjRulesetFN );
 
@@ -5707,9 +5730,11 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						{
 					// SAC 7/26/16 - fixed bug where lack of defaulting of building model was causing errors in final project file writing due to enum dependencies not being valid
 							bool bVerboseInputLogging = (GetCSVOptionValue( "VerboseInputLogging", 0, saCSVOptions ) > 0);
-						   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
-						   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
-						   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
+							int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );
+							for (int iDR=1; iDR <= iNumFileOpenDefaultingRounds; iDR++)
+							   CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
+						   //CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
+						   //CMX_EvaluateRuleset( "rl_DEFAULT", FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, bVerboseInputLogging, NULL, NULL, NULL, NULL /*epInpRuleDebugInfo*/ );
 
 							CMX_RestoreAnalysisResultsFromTempFiles( saUniqueEUseSumObjs, saTempPathFiles );
 
@@ -5807,6 +5832,63 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 									else if (!CopyFile( sSimSDDXMLSrc.c_str(), sFileToWrite.c_str(), FALSE ))
 									{	// DON'T ABORT ANALYSIS - simply report copy issue to log file
 										sLogMsg = boost::str( boost::format( "Error encountered copying simulation SDD XML file (run %d, record %d) from '%s' to '%s'" ) % (iRun+1) % iaBatchRecNums[iRun] % sSimSDDXMLSrc.c_str() % sFileToWrite.c_str() );
+										BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									}
+							}	}
+					}	}
+
+				// COPY CSE files to specified location
+					if (sErrMsg.size() < 1 && saCopyCSEToPath[iRun].size() > 0)
+					{	int iProjOutPathLen    = sProjPathFile.rfind('\\') + 1;										assert( iProjOutPathLen > 3 );
+						int iProjOutFileExtLen = sProjPathFile.length() - sProjPathFile.rfind('.');			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
+						std::string sOutFileOnly = sProjPathFile.substr( iProjOutPathLen, (sProjPathFile.length()-iProjOutPathLen-iProjOutFileExtLen) );
+						std::string sCSESrcBase = sProcessingPath;
+						sCSESrcBase += sOutFileOnly;
+						for (int iCSEFileIdx=0; (!bAbort && sErrMsg.size() < 1 && iCSEFileIdx < 8); iCSEFileIdx++)
+						{	std::string sCSESrc = sCSESrcBase;
+							std::string sFileToWrite = saCopyCSEToPath[iRun];
+							sFileToWrite  += sOutFileOnly;
+								switch (iCSEFileIdx)
+								{	case  0 :	sCSESrc += " - zp-cse.cse";		sFileToWrite += " - zp-cse.cse";		break;
+									case  1 :	sCSESrc += " - zb-cse.cse";		sFileToWrite += " - zb-cse.cse";		break;
+									case  2 :	sCSESrc += " - ap-cse.cse";		sFileToWrite += " - ap-cse.cse";		break;
+									case  3 :	sCSESrc += " - ab-cse.cse";		sFileToWrite += " - ab-cse.cse";		break;
+									case  4 :	sCSESrc += " - zp-cse.rep";		sFileToWrite += " - zp-cse.rep";		break;
+									case  5 :	sCSESrc += " - zb-cse.rep";		sFileToWrite += " - zb-cse.rep";		break;
+									case  6 :	sCSESrc += " - ap-cse.rep";		sFileToWrite += " - ap-cse.rep";		break;
+									case  7 :	sCSESrc += " - ab-cse.rep";		sFileToWrite += " - ab-cse.rep";		break;
+									default :	sCSESrc  = "";					sFileToWrite  = "";					break;
+								}
+							if (sCSESrc.length() > 1)
+							{
+//		std::string sTempDbgCopy = boost::str( boost::format( "sProjPathFile = %s\niProjOutPathLen = %d   iProjOutFileExtLen = %d   sOutFileOnly = %s\nsCSESrcBase = %s\nsCSESrc = %s\nsFileToWrite = %s" )
+//										% sProjPathFile % iProjOutPathLen % iProjOutFileExtLen % sOutFileOnly % sCSESrcBase % sCSESrc % sFileToWrite );
+//		::MessageBox( hWnd, sTempDbgCopy.c_str(), "CSE Copying info", MB_ICONSTOP );
+								if (boost::iequals( sCSESrc.c_str(), sFileToWrite.c_str() ))   // only copy IN to OUT file if they are different
+								{	// no problem - simply do nothing
+								}
+								else if (!FileExists( sCSESrc.c_str() ))
+								{	// DON'T ABORT ANALYSIS - simply report copy issue to log file
+					// don't report missing CSE files - to be expected
+					//				sLogMsg = boost::str( boost::format( "Unable to find CSE file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sCSESrc );
+					//				BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								}
+								else
+								{	std::string sOverwriteCSEMsg = boost::str( boost::format( "The CSE file '%s' is opened in another application.  This file must be closed in that "
+																				"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+																				"(once the file is closed), or \n'Abort' to abort the batch processing." ) % sFileToWrite.c_str() );
+									if (!OKToWriteOrDeleteFile( sFileToWrite.c_str(), sOverwriteCSEMsg.c_str() ))
+									{	sLogMsg = boost::str( boost::format( "Unable to overwrite CSE file (run %d, record %d).\n\nWould you like to abort remaining %d runs?" ) % (iRun+1) % iaBatchRecNums[iRun] % (iRunsToPerform - iRun - 1) );
+										if (::MessageBox( hWnd, sLogMsg.c_str(), "Confirm Batch Abort", MB_YESNO|MB_DEFBUTTON2|MB_ICONSTOP ) == IDYES)
+											bAbort = true;
+										else
+										{	sLogMsg = boost::str( boost::format( "User chose not to overwrite CSE file (run %d, record %d):  %s" ) % (iRun+1) % iaBatchRecNums[iRun] % sFileToWrite.c_str() );
+											BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+									}
+									else if (!CopyFile( sCSESrc.c_str(), sFileToWrite.c_str(), FALSE ))
+									{	// DON'T ABORT ANALYSIS - simply report copy issue to log file
+										sLogMsg = boost::str( boost::format( "Error encountered copying CSE file (run %d, record %d) from '%s' to '%s'" ) % (iRun+1) % iaBatchRecNums[iRun] % sCSESrc.c_str() % sFileToWrite.c_str() );
 										BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
 							}	}

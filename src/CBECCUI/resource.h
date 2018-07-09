@@ -156,6 +156,15 @@
 #define IDC_START_BLANK                 320
 #define IDC_RESOLVENOTINPUTS            321
 #define IDC_START_BATCH                 322
+#define IDI_MENU                        323
+#define IDB_HELP20                      324
+#define IDB_HELP20G                     325
+#define IDB_HELP24                      326
+#define IDB_HELP24G                     327
+#define IDB_DEFAULT20                   328
+#define IDB_DEFAULT20G                  329
+#define IDB_DEFAULT24                   330
+#define IDB_DEFAULT24G                  331
 #define IDS_VER_INFO_LANG               999
 #define IDC_MAINTAB                     1000
 #define IDC_COMPTYPE                    1002
@@ -446,14 +455,18 @@
 #define ID_FILE_IMPORTRESGEOM           33031
 #define ID_TOOL_RESULTS                 33032
 #define IDM_TOOLS_APPLYCUSTOMRULES      33033
+#define IDM_TOOLS_SHOWGRID              33034
+#define IDQM_REFRESHDFLT_OBJECT         33035
+#define IDQM_REFRESHDFLT_MODEL          33036
+#define ID_REFRESH_DEFAULTS             33037
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        322
-#define _APS_NEXT_COMMAND_VALUE         33034
+#define _APS_NEXT_RESOURCE_VALUE        332
+#define _APS_NEXT_COMMAND_VALUE         33038
 #define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           106
 #endif

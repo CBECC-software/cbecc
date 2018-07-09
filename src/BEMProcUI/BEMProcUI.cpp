@@ -264,6 +264,69 @@ int BEMPUIX_GetFirstDialogTabID( int iBEMClass, int iUIMode )	// SAC 1/5/17
 //}
 
 
+BOOL BEMPUIX_GetUIControlDataByDBID( long lDBID, int& iWd, int& iHt, long& lVal, QString& sLabel, QString& sToolTip,
+												 void*& pBEMEditableCondition, void*& pBEMDisplayCondition )
+{	BOOL bRetVal = FALSE;
+	int iBEMClass = BEMPX_GetClassID( lDBID );
+   int iNumPages = eScreenData.GetNumPagesByClass( iBEMClass, 0 /*iUIMode*/ );
+   for (int i=0; (i < iNumPages && !bRetVal); i++)
+	{	CBEMPUIPage* pPage = eScreenData.GetPageByClassAndIndex( iBEMClass, i, 0 /*iUIMode*/ );
+		if (pPage)
+		{	for (int i2=pPage->m_iFirstCtrlIdx; (i2<=pPage->m_iLastCtrlIdx && !bRetVal); i2++)
+			{	CBEMPUIControl* pCtrl = eScreenData.GetControlByIndex(i2);
+				if (pCtrl && pCtrl->m_lDBID == lDBID)
+				{	iWd      = pCtrl->m_iWidth;
+					iHt      = pCtrl->m_iHeight;
+					lVal     = pCtrl->m_lValue;
+					sLabel   = (const char*) pCtrl->m_sLbl;
+					sToolTip = (const char*) pCtrl->m_sStatusMsg;
+					pBEMEditableCondition = &pCtrl->m_cEditableCondition;
+					pBEMDisplayCondition  = &pCtrl->m_cDisplayCondition;
+					bRetVal = TRUE;
+	}	}	}	}
+	return bRetVal;
+}
+
+BOOL BEMPUIX_GetUIControlDataByIndex( int iCtrlIdx, int& iCtrlType, long& lDBID, int& iWd, int& iHt, long& lVal, QString& sLabel,
+												  QString& sToolTip, void*& pBEMEditableCondition, void*& pBEMDisplayCondition )
+{	BOOL bRetVal = FALSE;
+	CBEMPUIControl* pCtrl = eScreenData.GetControlByIndex(iCtrlIdx);
+	if (pCtrl)
+	{
+		iCtrlType = (int) pCtrl->m_uiCtrlType;
+		lDBID    = pCtrl->m_lDBID;
+		iWd      = pCtrl->m_iWidth;
+		iHt      = pCtrl->m_iHeight;
+		lVal     = pCtrl->m_lValue;
+		sLabel   = (const char*) pCtrl->m_sLbl;
+		sToolTip = (const char*) pCtrl->m_sStatusMsg;
+		pBEMEditableCondition = &pCtrl->m_cEditableCondition;
+		pBEMDisplayCondition  = &pCtrl->m_cDisplayCondition;
+		bRetVal = TRUE;
+	}
+	return bRetVal;
+}
+
+// SAC 3/23/18 - added to facilitate CBECC grid UI
+BOOL BEMPUIX_GetUIPageData( int iClass, int iClassTabIdx, int iUIMode, BOOL bOnlyIfActiveControls,
+									 QString& qsCaption, int& iPageID, int& iModules, int& iNumControls,
+									 int& iFirstCtrlIdx, int& iLastCtrlIdx )
+{	BOOL bRetVal = FALSE;
+   CBEMPUIPage* pPage = eScreenData.GetPageByClassAndIndex( iClass, iClassTabIdx, iUIMode );
+   if (pPage && (!bOnlyIfActiveControls || eScreenData.PageHasActiveControls( pPage )))
+   {
+		qsCaption = (const char*) pPage->m_sCaption;
+		iPageID   = pPage->m_iPageId;
+		iModules  = pPage->m_iModules;
+		iNumControls  = pPage->m_iNumCtrls;
+		iFirstCtrlIdx = pPage->m_iFirstCtrlIdx;
+		iLastCtrlIdx  = pPage->m_iLastCtrlIdx;
+		bRetVal = TRUE;
+	}
+	return bRetVal;
+}
+
+
 // SAC 10/19/02 - Added new export to retrieve info included in new help button stuff
 int  BEMPUIX_GetHelpGroupItemInfo( CDWordArray& dwaHelpItemIDs, CStringArray& saHelpItemStrings, int iHelpGroupIdx )
 {

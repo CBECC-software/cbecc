@@ -41,6 +41,10 @@
 #include "..\BEMCmpMgr\BEMCmpMgr.h"
 #include "CUIGlobl.h"
 
+#ifdef UI_CANRES
+#include "BEMGridDialog.h"
+#endif
+
 // Quick Menu Flag IDs
 #define QMI_ITEMHELP    0x0001
 #define QMI_TOPICHELP   0x0002
@@ -111,7 +115,7 @@ public:
 
 	void CheckBuildingModel( BOOL bReportModelOK=TRUE, BOOL bPerformRangeChecks=TRUE );	// SAC 5/1/14 
 
-	BOOL PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool bBatchMode=false );		// SAC 1/29/14
+	BOOL PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool bBatchMode=false, const char* pszAltOptsName=NULL );		// SAC 1/29/14  // SAC 6/21/18
 
 	int CheckWhichReportsToGenerate( CString& sRptList );	// SAC 2/19/15
 
@@ -133,9 +137,17 @@ public:
 
 	virtual void WinHelp(DWORD dwData, UINT nCmd = HELP_CONTEXT);
 
+	long DataModified(long lDBID, int iObjIdx=-1);
+
+   void PostBEMGridClose( UINT wClass=0, LONG l1Occur=0);
+   void PostBEMGridUpdate(UINT wClass=0, LONG l1Occur=0);
+
 protected:  // control bar embedded members
 	CStatusBar  m_wndStatusBar;
 	CToolBar    m_wndToolBar;
+#ifdef UI_CANRES
+	BEMGridDialog* gridDialog;		// SAC 3/9/18
+#endif
 
 // Generated message map functions
 protected:
@@ -185,6 +197,8 @@ protected:
 	afx_msg void OnUpdateFileSaveAs(CCmdUI* pCmdUI);
 	afx_msg void OnToolsApplyCustomRules();
 	afx_msg void OnUpdateApplyCustomRules(CCmdUI* pCmdUI); 
+	afx_msg void OnToolsShowModelGrid();
+	afx_msg void OnUpdateShowModelGrid(CCmdUI* pCmdUI); 
 	afx_msg void OnToolsEvalRulelist();
 	afx_msg void OnAnalysisRangeChecks();
 	afx_msg void OnUpdateAnalysisRangeChecks(CCmdUI* pCmdUI);
@@ -515,8 +529,12 @@ protected:
    afx_msg void OnQuickCreate();
    afx_msg void OnQuickEdit();
    afx_msg void OnQuickDelete();
+   afx_msg void OnQuickRefreshDefaults_Object();
+   afx_msg void OnQuickRefreshDefaults_Model();
+	afx_msg void OnToolbarRefreshDefaults();
+	afx_msg void OnUpdateToolbarRefreshDefaults(CCmdUI* pCmdUI);
 	afx_msg BOOL OnEditSwitchRuleset(UINT nID);
-   afx_msg LONG OnEvaluateProposedRules(UINT uiDontSwitchToLog, LONG);
+   afx_msg LONG OnEvaluateProposedRules(UINT uiDefaultAction, LONG lDBID);		// SAC 4/12/18 - first arg was: uiDontSwitchToLog
    afx_msg LONG OnDataModified(UINT wEval, LONG lDBID);
    afx_msg LONG OnUpdateTree(UINT wParam, LONG lDBIDModified);
    afx_msg LONG OnPopulateLibraryTree(UINT uiTreeMode, LONG);
@@ -527,6 +545,9 @@ protected:
    afx_msg LONG OnCreateBldgComponent( UINT wParam, LONG );
    afx_msg LONG OnButtonPressed( UINT wParam, LONG lParam );
    afx_msg LRESULT OnLoadScreenData( WPARAM, LPARAM );
+   afx_msg LONG OnBEMGridOpen(  UINT wClass, LONG l1Occur);   // SAC 3/15/18
+   afx_msg LONG OnBEMGridClose( UINT wClass, LONG l1Occur);
+   afx_msg LONG OnBEMGridUpdate(UINT wClass, LONG l1Occur);
 
    BOOL DetailedFileOK( CString& sFileName, BOOL bProposed, BOOL bPromptUser );
    void UpdateViewOption(InterfaceMode eIntMode, CCmdUI* pCmdUI);
@@ -546,6 +567,8 @@ protected:
 	void OnINISettings( int iDlgIDOffset, int iDlgWd, int iDlgHt, CString sDlgCaption, CString sINISection );
 	int  RefreshCustomRulelistEnum( QString qsSelectedRulelist );
 	void ProcessCustomRulelistFile();
+	void EvalProposedRules( int iEvalOnlyClass, int iEvalOnlyObjIdx, CString* pDurationStr );
+	void RefreshDefaultsButtonPressed( int iBEMClassID, CWnd* pButton );
 
 	DECLARE_MESSAGE_MAP()
 };

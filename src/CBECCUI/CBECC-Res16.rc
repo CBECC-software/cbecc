@@ -74,6 +74,7 @@ IDR_MAINFRAME           ICON    DISCARDABLE     "res\\CBECC-Res.ico"
 IDR_MAINFRAMEDEV        ICON    DISCARDABLE     "res\\CBECC-ResDev.ico"
 IDR_COMCHKTYPE          ICON    DISCARDABLE     "res\\CBECC-ResDoc.ico"
 IDI_WIZARD              ICON    DISCARDABLE     "res\\wizard.ico"
+IDI_MENU                ICON    DISCARDABLE     "res\\menu.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -200,6 +201,14 @@ IDB_TREEHXA             BITMAP  DISCARDABLE     "res\\t_htexa_1.bmp"
 IDB_TREEHXA2            BITMAP  DISCARDABLE     "res\\t_htexa_2.bmp"
 IDB_TREETESC            BITMAP  DISCARDABLE     "res\\t_tesc_1.bmp"
 IDB_TREETESC2           BITMAP  DISCARDABLE     "res\\t_tesc_2.bmp"
+IDB_HELP20              BITMAP                  "res\\Help20.bmp"
+IDB_HELP20G             BITMAP                  "res\\Help20G.bmp"
+IDB_HELP24              BITMAP                  "res\\Help24.bmp"
+IDB_HELP24G             BITMAP                  "res\\Help24G.bmp"
+IDB_DEFAULT20           BITMAP                  "res\\Default20.bmp"
+IDB_DEFAULT20G          BITMAP                  "res\\Default20G.bmp"
+IDB_DEFAULT24           BITMAP                  "res\\Default24.bmp"
+IDB_DEFAULT24G          BITMAP                  "res\\Default24G.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -217,6 +226,8 @@ BEGIN
     BUTTON      ID_EDIT_PASTE
     SEPARATOR
     BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_REFRESH_DEFAULTS
     SEPARATOR
     BUTTON      ID_TOOL_WIZARD
     BUTTON      ID_TOOL_ANALYSIS
@@ -237,6 +248,8 @@ BEGIN
     BUTTON      ID_EDIT_PASTE
     SEPARATOR
     BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_REFRESH_DEFAULTS
     SEPARATOR
     BUTTON      ID_TOOL_WIZARD
     BUTTON      ID_TOOL_ANALYSIS
@@ -685,8 +698,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2016,309,0,1007		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2016,309,0,1007	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
+ FILEVERSION 2016,310,0,1019		// minor # maps to major#/minor#/test portion of version:  XYZ -> X.Y is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2016,310,0,1019	//   examples:  2016,107,0,### => 2016.1.0 RC (###) / 2016,110,0,### => 2016.1.1 (###) / 2016,124,0,### => 2016.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -704,15 +717,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "FileVersion", "2016.3.0 (1007)\0"
+            VALUE "FileVersion", "2016.3.1 (1019)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2018, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-Res16.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (residential 2016)\0"
-            VALUE "ProductVersion", "2016.3.0\0"
-            VALUE "SpecialBuild", "build 1007\0"
+            VALUE "ProductVersion", "2016.3.1\0"
+            VALUE "SpecialBuild", "build 1019\0"
         END
     END
     BLOCK "VarFileInfo"
@@ -892,6 +905,12 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
+    IDQM_REFRESHDFLT_OBJECT "Refresh defaults for selected object."
+    IDQM_REFRESHDFLT_MODEL  "Refresh defaults for the entire model."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
     IDM_PERFORMANALYSIS     "Perform compliance analysis"
     ID_EDIT_SWITCHRULESET_1 "Select this compliance ruleset"
     ID_EDIT_SWITCHRULESET_2 "Select this compliance ruleset"
@@ -910,6 +929,7 @@ BEGIN
     ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
     ID_FILE_PRINT           "Print the active document\nPrint"
     ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+    ID_REFRESH_DEFAULTS     "Refresh model defaults\nRefresh Defaults"
 END
 
 STRINGTABLE DISCARDABLE 

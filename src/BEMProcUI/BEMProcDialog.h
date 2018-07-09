@@ -59,7 +59,8 @@ int __declspec(dllexport) __cdecl BEMPUIX_DoBEMProcDialog(
 	DWORD* dwaNonEditableDBIDs=NULL, int iNumNonEditableDBIDs=0,
 	const char* pszExitingRulelist=NULL, const char* pszDataModRulelist=NULL,
 	BOOL bPostHelpMessageToParent=FALSE,
-	BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE );
+	BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE,
+	BOOL bShowRefreshDefaultsBtn=FALSE );		// SAC 4/18/18
 
 #ifdef __cplusplus
 }
@@ -69,6 +70,7 @@ int __declspec(dllexport) __cdecl BEMPUIX_DoBEMProcDialog(
 // CSACBEMProcDialog dialog
 
 struct CBEMPUIPage;
+class CBEMProcCtrlIconBtn;
 
 class __declspec(dllexport) CSACBEMProcDialog : public CDialog
 {
@@ -80,7 +82,8 @@ public:
                  DWORD* dwaNonEditableDBIDs=NULL, int iNumNonEditableDBIDs=0,   // SAC 9/10/00 - added non-editable DBID stuff
                  const char* pszExitingRulelist=NULL, const char* pszDataModRulelist=NULL,  // SAC 6/17/01
                  BOOL bPostHelpMessageToParent=FALSE,  // SAC 7/6/01
-                 BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE );   // SAC 1/19/12
+                 BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE,    // SAC 1/19/12
+                 BOOL bShowRefreshDefaultsBtn=FALSE );	// SAC 4/18/18
 
 // Dialog Data
 	//{{AFX_DATA(CSACBEMProcDialog)
@@ -122,6 +125,9 @@ public:
    BOOL  m_bIncludeCompParamStrInToolTip;   // SAC 1/19/12
    BOOL  m_bIncludeLongCompParamStrInToolTip;   // SAC 8/13/13
    BOOL  m_bIncludeStatusStrInToolTip;   // SAC 1/19/12
+
+	BOOL  m_bShowRefreshDefaultsBtn;		// SAC 4/18/18
+	CBEMProcCtrlIconBtn* m_pRefreshDefaultsBtn;
 
    void DeleteControls();
    BOOL InitControls();

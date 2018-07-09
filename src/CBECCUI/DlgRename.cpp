@@ -255,7 +255,8 @@ void CDlgRename::OnOK()
             {
                if (BEMPX_CopyComponent( pNewObj, pObj, -1, true /*bCopyPrimaryDefaultDataAsUserDefined*/ ))		// SAC 6/8/15 - CBECC issue 1061
                {  // execute compliance rulelist #1
-                  GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+						BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+                  GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_i1Class );
                }
                else
                {

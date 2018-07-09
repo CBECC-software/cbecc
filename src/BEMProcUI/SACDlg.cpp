@@ -299,6 +299,8 @@ BOOL CSACDlg::OnInitDialog()
 
       m_bInitializeDialog = FALSE;
 
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMCID_Wizard );		// SAC 4/15/18
+
       CreateUIControls( FALSE );
       bRetVal = FALSE;  // return FALSE if WE set the focus already
    }
@@ -506,7 +508,7 @@ void CSACDlg::CreateUIControls( BOOL bResetEntireScreen, long lFocusDBID )
       EraseControlArea();
 
       // then evaluate the wizard rulelist
-      EvaluateRules();
+      EvaluateRules( 0, m_iBEMCID_Wizard, DefaultAction_OpenDialog );
    }
 
 //   int iDT, iSV, iError;
@@ -790,7 +792,7 @@ LONG CSACDlg::OnDataModified( UINT wEval, LONG lDBID )
 {
    if (wEval == 1)
       // execute compliance rulelist #1
-      EvaluateRules();
+      EvaluateRules( 0, lDBID, DefaultAction_DataMod );
 
    // SAC 2/1/00 - Special handling for m_lDBID_ScreenIDArrIdx
    if (lDBID == m_lDBID_ScreenIdx  &&  m_lDBID_ScreenIDArray > 0)
@@ -835,7 +837,7 @@ LONG CSACDlg::OnDataModified( UINT wEval, LONG lDBID )
    // perform re-defaulting and display to support custom footprint shapes & zoning patterns
    if (iFrameRetVal > 0)
    {  // re-evaluate ruleset and display mods
-      EvaluateRules();
+      EvaluateRules( 0, 0, DefaultAction_DataMod );
       DisplayMods(0,0);
    }
 
@@ -843,11 +845,18 @@ LONG CSACDlg::OnDataModified( UINT wEval, LONG lDBID )
 }
 
 
-void CSACDlg::EvaluateRules(UINT uiList)
+void CSACDlg::EvaluateRules(UINT uiList, long lDBID /*=0*/, int iDefaultAction /*=DefaultAction_DataMod*/)
 {
    CWaitCursor wait;
-   BOOL bEvalOK = ( uiList == 0 ? (m_sMidProcRulelist.GetLength()  > 0 && BEMPX_EvaluateRuleList( m_sMidProcRulelist  ))
-                                : (m_sPostProcRulelist.GetLength() > 0 && BEMPX_EvaluateRuleList( m_sPostProcRulelist )) );
+   BOOL bEvalOK = FALSE;
+   if (uiList == 0 && m_sMidProcRulelist.CompareNoCase("default")==0)
+   {	bEvalOK = TRUE;
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, iDefaultAction, lDBID );
+	//   GetParentFrame()->SendMessage( WM_UPDATETREE, 0, lDBID );
+	}
+   else
+   	bEvalOK = ( uiList == 0 ? (m_sMidProcRulelist.GetLength()  > 0 && BEMPX_EvaluateRuleList( m_sMidProcRulelist  ))
+                              : (m_sPostProcRulelist.GetLength() > 0 && BEMPX_EvaluateRuleList( m_sPostProcRulelist )) );
    if (bEvalOK && uiList == 0)
    {
       ActivateButtons();
@@ -863,7 +872,7 @@ LONG CSACDlg::OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID )
    if (iError >= 0)
    {
       // execute compliance rulelist #1
-      EvaluateRules();
+      EvaluateRules( 0, lDBID, DefaultAction_DataMod );
 
       // redisplay all currently displayed database data
       DisplayMods(0,0);
@@ -874,7 +883,7 @@ LONG CSACDlg::OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID )
       // perform re-defaulting and display to support custom footprint shapes & zoning patterns
       if (iFrameRetVal > 0)
       {  // re-evaluate ruleset and display mods
-         EvaluateRules();
+         EvaluateRules( 0, 0, DefaultAction_DataMod );
          DisplayMods(0,0);
       }
    }
@@ -1789,7 +1798,7 @@ void CSACDlg::OnFinishWizard()
    if (EditControlValuesInRange( 2 ) && OKToExit())
 //   if (EditControlValuesInRange( 2 ) && RuleBasedErrorCheck() && OKToExit())
    {
-      EvaluateRules( 1 );
+      EvaluateRules( 1, 0, DefaultAction_CloseDialog );
       CDialog::OnOK();	
    }
 }
@@ -1811,7 +1820,7 @@ void CSACDlg::OnCancelWizard()
          return;
    }
       
-   EvaluateRules( 1 );
+   EvaluateRules( 1, 0, DefaultAction_CloseDialog );
    CDialog::OnCancel();
 }
 

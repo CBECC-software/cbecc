@@ -88,6 +88,17 @@ void __declspec(dllexport) __cdecl BEMPUIX_AddAutoSymbolListRefreshDBIDs( long l
 
 int  __declspec(dllexport) __cdecl BEMPUIX_GetHelpGroupItemInfo( CDWordArray& dwaHelpItemIDs, CStringArray& saHelpItemStrings, int iHelpGroupIdx );
 
+BOOL __declspec(dllexport) __cdecl BEMPUIX_BEMConditionMissingOrTrue( void* pBEMCondition, int iClass, int iOccur );   // SAC 3/9/18
+
+BOOL __declspec(dllexport) __cdecl BEMPUIX_GetUIControlDataByDBID( long lDBID, int& iWd, int& iHt, long& lVal, QString& sLabel, QString& sToolTip,
+																						 void*& pBEMEditableCondition, void*& pBEMDisplayCondition );
+BOOL __declspec(dllexport) __cdecl BEMPUIX_GetUIControlDataByIndex( int iCtrlIdx, int& iCtrlType, long& lDBID, int& iWd, int& iHt, long& lVal, QString& sLabel,
+																						  QString& sToolTip, void*& pBEMEditableCondition, void*& pBEMDisplayCondition );
+
+BOOL __declspec(dllexport) __cdecl BEMPUIX_GetUIPageData( int iClass, int iClassTabIdx, int iUIMode, BOOL bOnlyIfActiveControls,
+																			 QString& qsCaption, int& iPageID, int& iModules, int& iNumControls,
+																			 int& iFirstCtrlIdx, int& iLastCtrlIdx );
+
 #ifdef __cplusplus
 }
 #endif

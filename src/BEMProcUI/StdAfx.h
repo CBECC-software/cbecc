@@ -77,6 +77,15 @@ inline double Divide(double n,double d)
 
 
 /////////////////////////////////////////////////////////////////////////////
+// Data used in triggering BEM defaulting
+
+#define  DefaultAction_DataMod   	1
+#define  DefaultAction_OpenDialog   2
+#define  DefaultAction_CloseDialog  3
+#define  DefaultAction_InitAnalysis	4
+
+
+/////////////////////////////////////////////////////////////////////////////
 // Program Private Messages
 //
 
@@ -156,6 +165,11 @@ inline double Divide(double n,double d)
 // Message to handle help button processing
 // THIS VALUES MUST MATCH IDENTICAL MESSAGES IN application's STDAFX.H & PD2'S MESSAGES.H
 #define WM_HELP_BTN_PRESSED  WM_APP+54   // SAC 10/19/02
+
+// Messages sent between MainFrame & GridDialog - SAC 3/15/18
+#define WM_BEMGRID_OPEN      WM_APP+55
+#define WM_BEMGRID_CLOSE     WM_APP+56
+#define WM_BEMGRID_UPDATE    WM_APP+57
 
 // SAC 2/7/00 - added message to have wizard dialog post message to parent to handle help system calls
 #define WM_PARENTHELP        WM_APP+1001

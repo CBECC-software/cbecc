@@ -146,7 +146,7 @@ void CDlgBDBErrors::OnResolveNotInputs()
 		{
 			SetDataModifiedFlag( TRUE );
 			// execute compliance rulelist #1
-			GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+			GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 		}
 
 		CWnd* pRNI = GetDlgItem( IDC_RESOLVENOTINPUTS );

@@ -83,6 +83,9 @@
 #include <QtWidgets/QMessageBox>
 #include <QtCore/QDirIterator>
 
+#include "boost/date_time/posix_time/posix_time.hpp" //include all types plus i/o
+using namespace boost::posix_time;
+
 #ifdef UI_CARES
 #include "XMLParse.h"
 #endif
@@ -166,6 +169,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_FILE_SAVE_AS, OnUpdateFileSaveAs)
 	ON_UPDATE_COMMAND_UI(IDM_TOOLS_APPLYCUSTOMRULES, OnUpdateApplyCustomRules)
 	ON_COMMAND(IDM_TOOLS_APPLYCUSTOMRULES, OnToolsApplyCustomRules)
+	ON_UPDATE_COMMAND_UI(IDM_TOOLS_SHOWGRID, OnUpdateShowModelGrid)
+	ON_COMMAND(IDM_TOOLS_SHOWGRID, OnToolsShowModelGrid)
 	ON_COMMAND(IDM_TOOLS_EVALLIST, OnToolsEvalRulelist)
 	ON_UPDATE_COMMAND_UI(IDM_REVIEWRESULTS, OnUpdateToolsReviewResults)
 	ON_COMMAND(IDM_REVIEWRESULTS, OnToolsReviewResults)
@@ -512,6 +517,12 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
    ON_UPDATE_COMMAND_UI( IDQM_EDIT,      OnUpdateQuickMenu )
    ON_UPDATE_COMMAND_UI( IDQM_DELETE,    OnUpdateQuickMenu )
 
+   ON_COMMAND( IDQM_REFRESHDFLT_OBJECT, OnQuickRefreshDefaults_Object )
+   ON_COMMAND( IDQM_REFRESHDFLT_MODEL,  OnQuickRefreshDefaults_Model  )
+
+	ON_UPDATE_COMMAND_UI(ID_REFRESH_DEFAULTS, OnUpdateToolbarRefreshDefaults)
+	ON_COMMAND(ID_REFRESH_DEFAULTS, OnToolbarRefreshDefaults)
+
    ON_MESSAGE( WM_DATAMODIFIED, OnDataModified )
    ON_MESSAGE( WM_UPDATETREE,   OnUpdateTree )
    ON_MESSAGE( WM_POPLIBTREE,   OnPopulateLibraryTree )
@@ -524,6 +535,10 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
    ON_MESSAGE( WM_CREATECOMPONENT,  OnCreateBldgComponent )
    ON_MESSAGE( WM_LOADSCREENFILES,  OnLoadScreenData )
    ON_MESSAGE( WM_CHECKCOMPAT,      OnCheckCompat )
+
+   ON_MESSAGE( WM_BEMGRID_OPEN,   OnBEMGridOpen )
+   ON_MESSAGE( WM_BEMGRID_CLOSE,  OnBEMGridClose )
+   ON_MESSAGE( WM_BEMGRID_UPDATE, OnBEMGridUpdate )
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -545,10 +560,14 @@ CMainFrame::CMainFrame()
    m_bDoingSummaryReport = FALSE;  // SAC 6/19/13
    m_bPerformingAnalysis = FALSE;	// SAC 4/1/15
    m_bDoingCustomRuleEval = FALSE;	// SAC 1/28/18
+#ifdef UI_CANRES
+	gridDialog = NULL;
+#endif
 }
 
 CMainFrame::~CMainFrame()
 {
+	OnBEMGridClose( 0, 0 );
 }
 
 int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -987,7 +1006,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
    {
 // SAC 6/22/00 - added split of wParam into Action & Secondary to enable more flexible processing
       WORD wAction = LOWORD( wParam );
-      //WORD wSecID  = HIWORD( wParam );
+      WORD wSecID  = HIWORD( wParam );		// SAC 4/18/18 - restored for class ID used in refresh defaults
 		CWnd* pDlg = (CWnd*) lParam;
 
       if (wAction == 999)
@@ -1268,7 +1287,7 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 						lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}
 		}
-		else if (wAction >= 3060 && wAction <= 3061)
+		else if (wAction >= 3060 && wAction <= 3063)
 		{
 			QString qsInitPath;
 			long lDBID_Path = 0;
@@ -1279,6 +1298,10 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 			}
 			else if (wAction == 3061)
 				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:OutputProjDir" );
+			else if (wAction == 3062)
+				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:SDDXMLFilePath" );
+			else if (wAction == 3063)
+				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:CSEFilePath" );
 
 			ASSERT( lDBID_Path > 0 );
 			CDocument* pDoc = GetActiveDocument();
@@ -1336,6 +1359,13 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 							BatchUIDefaulting();
 					}	}
 			}	}
+		}
+		else if (wAction == 3065)
+		{
+			RefreshDefaultsButtonPressed( (int) wSecID, (CWnd*) LongToPtr( lParam ) );  // SAC 4/18/18
+			//	CString sRefreshDfltMsg;	sRefreshDfltMsg.Format( "Refresh Defaults for class ID: %d", wSecID );
+			//	MessageBox( sRefreshDfltMsg );
+         lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
 
 #ifdef UI_CARES
@@ -1445,6 +1475,138 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 
    }
    return lRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// CMainFrame message handlers - Refresh Defaults Menu Stuff
+
+static int siRefreshDefaultsComID=0;
+static int siRefreshDefaultsObjIdx=0;
+
+void CMainFrame::RefreshDefaultsButtonPressed( int iBEMClassID, CWnd* pButton )  // SAC 4/18/18
+{
+	BOOL bEvalEntireModel = FALSE;
+	int iModsSinceModelDefaulted = BEMPX_GetNumModsSinceModelDefaulted();
+	if (iModsSinceModelDefaulted < 1)
+      AfxMessageBox( "All defaults are current." );
+	else if (iBEMClassID < 1)
+		bEvalEntireModel = TRUE;
+	else if (pButton == NULL)
+      AfxMessageBox( "RefreshDefaultsButtonPressed() Error: unable to determine menu position." );
+	else
+	{	siRefreshDefaultsComID  = iBEMClassID;
+		siRefreshDefaultsObjIdx = BEMPX_GetActiveObjectIndex( iBEMClassID /*int iBEMProcIdx=-1*/ );		ASSERT( siRefreshDefaultsObjIdx >= 0 );
+		int iErr;
+		BEMClass* pClass = BEMPX_GetClass( iBEMClassID, iErr );			ASSERT( pClass );
+		if (siRefreshDefaultsObjIdx >= 0 && pClass)
+		{
+	      CRect cRect;
+	      pButton->GetWindowRect( cRect );
+	      CMenu menu;
+	      if (menu.CreatePopupMenu())
+	      {	CString sQMItem;
+	      	if (pClass->getMaxDefinable() == 1)
+	      		sQMItem.Format( "%s Object", pClass->getShortName().toLatin1().constData() );
+	      	else
+	      		sQMItem.Format( "Selected %s", pClass->getShortName().toLatin1().constData() );
+            if (!menu.AppendMenu( MF_STRING, IDQM_REFRESHDFLT_OBJECT, sQMItem ))
+			      AfxMessageBox( "Error loading REFRESHDFLT_OBJECT menu item." );
+            else if (!menu.AppendMenu( MF_STRING, IDQM_REFRESHDFLT_MODEL, "Entire Model" ))
+			      AfxMessageBox( "Error loading REFRESHDFLT_MODEL menu item." );
+				else
+            {  //int iHalfCXFullScreen = GetSystemMetrics( SM_CXFULLSCREEN ) / 2;
+               int iX       = cRect.left    ;   // (cRect.right > iHalfCXFullScreen ? cRect.left     : cRect.right );
+               UINT fuFlags = TPM_RIGHTALIGN;   // (cRect.right > iHalfCXFullScreen ? TPM_RIGHTALIGN : TPM_LEFTALIGN );
+               menu.TrackPopupMenu( fuFlags | TPM_RIGHTBUTTON, iX, cRect.top, this );
+		}	}	}
+		else
+		{	bEvalEntireModel = TRUE;
+			siRefreshDefaultsComID  = 0;
+			siRefreshDefaultsObjIdx = -1;
+	}	}
+
+	if (bEvalEntireModel)
+		OnQuickRefreshDefaults_Model();
+
+	return;
+}
+
+void CMainFrame::OnQuickRefreshDefaults_Object()	// SAC 4/20/18
+{  CWnd* pWnd = GetFocus();
+
+	int iModsSinceModelDefaulted = (ebLogProjectOpen ? BEMPX_GetNumModsSinceModelDefaulted() : 0);
+	CString sLogMsg, sEvalDuration;
+	if (iModsSinceModelDefaulted >= 0)
+	{	CWaitCursor wait;
+		EvalProposedRules( siRefreshDefaultsComID /*iEvalOnlyClass*/, siRefreshDefaultsObjIdx /*iEvalOnlyObjIdx*/, (ebLogProjectOpen ? &sEvalDuration : NULL) );
+	}
+	if (ebLogProjectOpen)
+	{	int iErr;
+		BEMClass* pClass = BEMPX_GetClass( siRefreshDefaultsComID, iErr );												ASSERT( pClass );
+		BEMObject* pObj = BEMPX_GetObjectByClass( siRefreshDefaultsComID, iErr, siRefreshDefaultsObjIdx );		ASSERT( pObj );
+		sLogMsg.Format( "   CMainFrame::OnQuickRefreshDefaults_Object() for %s '%s' (%d mods since last defaulting) - elapsed time: %s",
+									(pClass ? pClass->getShortName().toLatin1().constData() : "???"), (pObj ? pObj->getName().toLatin1().constData() : "???"), iModsSinceModelDefaulted, sEvalDuration );
+	   BEMPX_WriteLogFile( sLogMsg );
+	}
+
+   if (pWnd)
+   {
+      pWnd->GetParent()->PostMessage( WM_DISPLAYMODS );
+      pWnd->SetFocus();
+   }
+}
+
+void CMainFrame::OnQuickRefreshDefaults_Model()		// SAC 4/20/18
+{  CWnd* pWnd = GetFocus();
+
+	int iModsSinceModelDefaulted = (ebLogProjectOpen ? BEMPX_GetNumModsSinceModelDefaulted() : 0);
+	CString sLogMsg, sEvalDuration;
+	if (iModsSinceModelDefaulted >= 0)
+	{	CWaitCursor wait;
+		EvalProposedRules( 0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, (ebLogProjectOpen ? &sEvalDuration : NULL) );
+	}
+	if (ebLogProjectOpen)
+	{	sLogMsg.Format( "   CMainFrame::OnQuickRefreshDefaults_Model() (%d mods since last defaulting) - elapsed time: %s", iModsSinceModelDefaulted, sEvalDuration );
+	   BEMPX_WriteLogFile( sLogMsg );
+	}
+
+   if (pWnd)
+   {
+      pWnd->GetParent()->PostMessage( WM_DISPLAYMODS );
+      pWnd->SetFocus();
+   }
+}
+
+void CMainFrame::OnToolbarRefreshDefaults()		// SAC 4/20/18
+{
+	int iModsSinceModelDefaulted = (ebLogProjectOpen ? BEMPX_GetNumModsSinceModelDefaulted() : 0);
+	CString sLogMsg, sEvalDuration;
+	if (iModsSinceModelDefaulted >= 0)
+	{	CWaitCursor wait;
+		BEMObject* pSelTreeObj = NULL;
+		CMainView* pView = (CMainView*) m_wndSplitter.GetPane(0,0);
+		if (pView)
+			pSelTreeObj = pView->GetSelectedObjectInTree();
+
+		EvalProposedRules( 0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, (ebLogProjectOpen ? &sEvalDuration : NULL) );
+
+		if (pView)		// update mainview's tree
+			pView->PostMessage( WM_DISPLAYDATA, (pSelTreeObj ? pSelTreeObj->getClass()->get1BEMClassIdx() : 0) /*i1BDBClass*/ );
+	}
+	if (ebLogProjectOpen)
+	{	sLogMsg.Format( "   CMainFrame::OnToolbarRefreshDefaults() (%d mods since last defaulting) - elapsed time: %s", iModsSinceModelDefaulted, sEvalDuration );
+	   BEMPX_WriteLogFile( sLogMsg );
+	}
+}
+
+void CMainFrame::OnUpdateToolbarRefreshDefaults(CCmdUI* pCmdUI)		// SAC 4/20/18
+{
+	bool bEnableRefreshDefaults = false;
+#ifdef UI_CANRES
+	bEnableRefreshDefaults = (BEMPX_GetNumModsSinceModelDefaulted() > 0);
+#endif
+   pCmdUI->Enable( (bEnableRefreshDefaults && eInterfaceMode == IM_INPUT) );
 }
 
 
@@ -1680,27 +1842,6 @@ void CMainFrame::OnQuickDefault()
    CWnd* pWnd = GetFocus();
    if (pWnd && slQuickDBID > 0)
       pWnd->GetParent()->PostMessage( WM_QMRESTOREDEFAULT, siQuickDBInstance+1, slQuickDBID );
-
-//   int iError;
-//   BEMPX_DefaultProperty( slQuickDBID, iError );
-//   if (iError >= 0)
-//   {
-//      SetDataModifiedFlag( TRUE );
-//
-//      // execute compliance rulelist #1
-//      SendMessage( WM_EVALPROPOSED );
-//
-//      // send a message to the main view's tree control via CMainFrame in case the tree requires updating
-//      SendMessage( WM_UPDATETREE, 0, slQuickDBID );
-//
-//      // redisplay all currently displayed database data
-//      CWnd* pWnd = GetFocus();
-//      if (pWnd)
-//         pWnd->GetParent()->PostMessage( WM_DISPLAYMODS );
-////         pWnd->SetFocus();
-//
-//      SetStatusBarStrings( "", slQuickDBID );
-//   }
 }
 
 void CMainFrame::OnQuickComment()
@@ -2376,8 +2517,13 @@ void CMainFrame::OnFileSaveAs()
 // CMainFrame message handlers - Ruleset Evaluation & Analysis
 
 afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
+{	return DataModified( lDBID );
+}
+
+long CMainFrame::DataModified(long lDBID, int iObjIdx /*=-1*/)
 {
 	BOOL bSetDataModifiedFlag = TRUE;
+	long lRetVal = 0;		// return val > 0 causes RE-evaluation of rules to handle special cases needing 2 rounds of defaulting - SAC 4/15/18
 
 	// INI setting stuff that spans all UIs
 	if (eiBDBCID_INISettings > 0 && lDBID > 0 && BEMPX_GetClassID( lDBID ) == eiBDBCID_INISettings)
@@ -2422,12 +2568,25 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 			{	ASSERT( FALSE );	// unexpected INISettings property type (BEMP_Flt or BEMP_Obj) - unsure how to map to program INI settings...
 		}	}
 	}
+	else if (lDBID > 0 && (lDBID == elDBID_Proj_DefaultOptionInp || lDBID == elDBID_Proj_DefaultOptionObj || lDBID == elDBID_Proj_DefaultOptionDone))
+	{	int iSpecVal, iErr;		// SAC 4/11/18
+		elDefaultOptionInp  = (elDBID_Proj_DefaultOptionInp  < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionInp , iSpecVal, iErr ));
+		elDefaultOptionObj  = (elDBID_Proj_DefaultOptionObj  < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionObj , iSpecVal, iErr ));
+		elDefaultOptionDone = (elDBID_Proj_DefaultOptionDone < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionDone, iSpecVal, iErr ));
+	}
+	else if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName || lDBID == elDBID_BatchRuns_ProjDirectory ||
+				lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir )
+	{	BatchUIDefaulting();		// SAC 11/10/17
+		lRetVal = 1;		// need to return > 0 to cause batch dialog refresh - SAC 5/16/18
+	}
+	else if (lDBID > 0 && BEMPX_GetClassID( lDBID ) > 0)	// SAC 4/11/18
+		BEMPX_IncrementModsSinceModelDefaulted();
 
 #ifdef UI_CANRES
 	// SAC 5/29/14 - added logic to blast PolyLp:Area whenever CartesianPt:Coord[*] modified for any of its children - enabling subsequent rule evaluation to update Area and other PolyLp data
 	if (lDBID >= elDBID_CartesianPt_Coord && lDBID < (elDBID_CartesianPt_Coord+4))
 	{	int iError;
-		BEMObject* pCartPtObj = BEMPX_GetObjectByClass( eiBDBCID_CartesianPt, iError, -1 /*iObjIdx*/ );			ASSERT( pCartPtObj && pCartPtObj->getParent() && pCartPtObj->getParent()->getClass() );
+		BEMObject* pCartPtObj = BEMPX_GetObjectByClass( eiBDBCID_CartesianPt, iError, iObjIdx );			ASSERT( pCartPtObj && pCartPtObj->getParent() && pCartPtObj->getParent()->getClass() );
 		if (pCartPtObj && pCartPtObj->getParent() && pCartPtObj->getParent()->getClass())
 		{	int iCartPtParentPolyLpObjIdx = BEMPX_GetObjectIndex( pCartPtObj->getParent()->getClass(), pCartPtObj->getParent() );		ASSERT( iCartPtParentPolyLpObjIdx >= 0 );
 			if (iCartPtParentPolyLpObjIdx >= 0)
@@ -2437,19 +2596,15 @@ afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
 	}
 	else if (lDBID == elDBID_Proj_ExcptDsgnModelFile && m_bDoingCustomRuleEval)	// SAC 1/28/18
 		ProcessCustomRulelistFile();
-#elif UI_CARES
-	if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName || lDBID == elDBID_BatchRuns_ProjDirectory ||
-		 lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir )
-	{
-		BatchUIDefaulting();		// SAC 11/10/17
-	}
+#else
+	iObjIdx;  // SAC 6/21/18 - prevent not argument not referenced warning
 #endif
 
    // set flag indicating project has been modified
 	if (bSetDataModifiedFlag)
 		SetDataModifiedFlag( TRUE );
 
-   return 1;
+   return lRetVal;
 }
 
 afx_msg LONG CMainFrame::OnUpdateTree(UINT wParam, LONG lDBIDModified)
@@ -2510,10 +2665,12 @@ typedef struct
    int         iDefaultVal;
 } AnalysisOption;
 
-BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool bBatchMode )		// SAC 1/29/14
+BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool bBatchMode, const char* pszAltOptsName /*=NULL*/ )		// SAC 1/29/14  // SAC 6/21/18
 {	BOOL bRetVal = TRUE;
 	sOptionsCSVString.Empty();
 	CString sOptTemp;
+	BOOL bFromAltSection = (pszAltOptsName && strlen(pszAltOptsName) > 0);	// flag indicating no default settings should be returned, only those actually defined in the INI
+	CString sOptsSec = (bFromAltSection ? pszAltOptsName : "options");
 
 	// SAC 9/5/13 - added proxy server INI options (spanning both -Res & -Com versions
 		CString sProxyServerAddress, sProxyServerCredentials, sProxyServerType;
@@ -2541,8 +2698,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sProxyINIOptions += sProxyTemp;
 		}
 
-		CString sDebugRuleEvalCSV = ReadProgString( "options", "DebugRuleEvalCSV", "", TRUE );		// SAC 12/12/13 - added ability to specify targeted rule eval debug info
-		CString sDebugRuleEvalCSVNoPath = ReadProgString( "options", "DebugRuleEvalCSV", "", FALSE );	// SAC 12/4/14 - mod to prevent path-only file references from showing up in analysis options
+		CString sDebugRuleEvalCSV = ReadProgString( sOptsSec, "DebugRuleEvalCSV", "", TRUE );		// SAC 12/12/13 - added ability to specify targeted rule eval debug info
+		CString sDebugRuleEvalCSVNoPath = ReadProgString( sOptsSec, "DebugRuleEvalCSV", "", FALSE );	// SAC 12/4/14 - mod to prevent path-only file references from showing up in analysis options
 		if (!sDebugRuleEvalCSVNoPath.IsEmpty() && !sDebugRuleEvalCSV.IsEmpty() && FileExists( sDebugRuleEvalCSV ))
 			sDebugRuleEvalCSV = "DebugRuleEvalCSV,\"" + sDebugRuleEvalCSV + CString("\",");
 		else
@@ -2555,6 +2712,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 	// SAC 4/5/15 - added new option to disable analysis Abort button
 		if (!BEMPX_GetUIActiveFlag())
 			sOptionsCSVString = "AllowAnalysisAbort,0,";
+
+		int iNumFileOpenDefaultingRounds = ReadProgInt( sOptsSec, "NumFileOpenDefaultingRounds", -1 );		// SAC 4/11/18
+		if (iNumFileOpenDefaultingRounds > 0)
+		{	sOptTemp.Format( "NumFileOpenDefaultingRounds,%d,", iNumFileOpenDefaultingRounds );
+			sOptionsCSVString += sOptTemp;
+		}
 
 #ifdef UI_CANRES
 		AnalysisOption saCECNonResAnalOpts[] =	{	{  "LogRuleEvaluation"           ,  "Verbose"                     ,    0   },
@@ -2611,17 +2774,20 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 
 		int iAnalOptIdx = -1;
 		while (saCECNonResAnalOpts[++iAnalOptIdx].sINIOptionName != NULL)
-		{	int iOpt = ReadProgInt( "options", saCECNonResAnalOpts[iAnalOptIdx].sINIOptionName, saCECNonResAnalOpts[iAnalOptIdx].iDefaultVal );
-			if (iOpt != saCECNonResAnalOpts[iAnalOptIdx].iDefaultVal)
+		{	int iDefault = (bFromAltSection ? -999 : saCECNonResAnalOpts[iAnalOptIdx].iDefaultVal);		// SAC 6/21/18 - ensure storage/use of options even if the default when bFromAltSection
+			int iOpt = ReadProgInt( sOptsSec, saCECNonResAnalOpts[iAnalOptIdx].sINIOptionName, iDefault );
+			if (iOpt != iDefault)
 			{	sOptTemp.Format( "%s,%d,", saCECNonResAnalOpts[iAnalOptIdx].sOptionName, iOpt );
 				sOptionsCSVString += sOptTemp;
 			}
 		}
-      if (ReadProgInt( "options",   "PromptUserUMLHWarning",   1 /*default*/ ) > 0)		// SAC 3/11/15 - special handling since CBECC-Com default = 1 while CompMgr analysis routine default is 0
-         sOptionsCSVString +=       "PromptUserUMLHWarning,1,";
+		if (bFromAltSection)
+         sOptionsCSVString +=         "PromptUserUMLHWarning,0,";		// SAC 6/21/18 - always set this flag to '0' for bFromAltSection
+      else if (ReadProgInt( sOptsSec, "PromptUserUMLHWarning",   1 /*default*/ ) > 0)		// SAC 3/11/15 - special handling since CBECC-Com default = 1 while CompMgr analysis routine default is 0
+         sOptionsCSVString +=         "PromptUserUMLHWarning,1,";
 	// new, valid, temporary (?) option:  WriteUMLHViolationsToFile - default to 1		// SAC 3/18/15
 
-      int iCompReportWarningOption = ReadProgInt( "options", "CompReportWarningOption", (bBatchMode ? 0 : 5) /*default*/ );
+      int iCompReportWarningOption = ReadProgInt( sOptsSec, "CompReportWarningOption", (bFromAltSection ? -999 : (bBatchMode ? 0 : 5)) /*default*/ );
       if (iCompReportWarningOption >= 0)		// SAC 7/5/16 - pass regardless of value, since default varies by mode
 			{	sOptTemp.Format( "CompReportWarningOption,%d,", iCompReportWarningOption );
 				sOptionsCSVString += sOptTemp;
@@ -2641,7 +2807,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 				{	QString qstr;
 					BEMPX_GetSymbolData( iSymValue, qstr, pSymDepSet, iSymIdx );
 					if (qstr.length() > 0)
-					{	int iOpt = ReadProgInt( "options", qstr.toLatin1().constData(), 0 );
+					{	int iOpt = ReadProgInt( sOptsSec, qstr.toLatin1().constData(), 0 );
 						if (iOpt > 0)
 						{	sOptTemp.Format( "%s,%d,", qstr.toLatin1().constData(), iOpt );
 							sOptionsCSVString += sOptTemp;
@@ -2654,8 +2820,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString += sDebugRuleEvalCSV;
 
 	// SAC 1/25/14 - added new INI option to force simulation of a certain IDF file, regardless of the model/OSM(s) generated during analysis
-		CString sIDFToSimulate, sIDFToSimfromINI = ReadProgString( "options", "IDFToSimulate", "", TRUE );
-		CString sIDFToSimfromININoPath = ReadProgString( "options", "IDFToSimulate", "", FALSE );		// SAC 12/4/14 - mod to prevent path-only file references from getting passed as analyis options
+		CString sIDFToSimulate, sIDFToSimfromINI = ReadProgString( sOptsSec, "IDFToSimulate", "", TRUE );
+		CString sIDFToSimfromININoPath = ReadProgString( sOptsSec, "IDFToSimulate", "", FALSE );		// SAC 12/4/14 - mod to prevent path-only file references from getting passed as analyis options
 		if (!sIDFToSimfromININoPath.IsEmpty() && !sIDFToSimfromINI.IsEmpty() && FileExists( sIDFToSimfromINI ))
 		{	sIDFToSimulate.Format( "IDFToSimulate,\"%s\",", sIDFToSimfromINI );
 			sOptionsCSVString += sIDFToSimulate;
@@ -2677,8 +2843,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 				sOptionsCSVString += "FullComplianceAnalysis,0,";
 		}
 
-		int iVerbose = ReadProgInt( "options", "LogRuleEvaluation", 0 /*default*/ );
-		BOOL bStoreBEMProcDetails = (ReadProgInt( "options", "StoreBEMDetails", 0) > 0);
+		int iVerbose = ReadProgInt( sOptsSec, "LogRuleEvaluation", 0 /*default*/ );
+		BOOL bStoreBEMProcDetails = (ReadProgInt( sOptsSec, "StoreBEMDetails", 0) > 0);
 		//BOOL bPerformSimulations = (m_bDoingSummaryReport == FALSE);  // SAC 6/19/13
 
 		//if (!bInitHourlyResults)
@@ -2696,105 +2862,105 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		//if (bDurationStats)
 		//	sOptionsCSVString += "DurationStats,1,";
       // more recent options:
-		if (ReadProgInt( "options",	"BypassCSE", 0 /*default*/ ) > 0)
+		if (ReadProgInt( sOptsSec,	"BypassCSE", 0 /*default*/ ) > 0)
 			sOptionsCSVString +=			"BypassCSE,1,";
-		if (ReadProgInt( "options",	"BypassDHW", 0 /*default*/ ) > 0)
+		if (ReadProgInt( sOptsSec,	"BypassDHW", 0 /*default*/ ) > 0)
 			sOptionsCSVString +=			"BypassDHW,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_All",   0 /*default*/ ) > 0)		// SAC 9/5/13
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_All",   0 /*default*/ ) > 0)		// SAC 9/5/13
          sOptionsCSVString +=       "ExportHourlyResults_All,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_u",   0 /*default*/ ) > 0)		// SAC 8/5/13
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_u",   0 /*default*/ ) > 0)		// SAC 8/5/13
          sOptionsCSVString +=       "ExportHourlyResults_u,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p",   0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_p",   0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p_N", 0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_p_N", 0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p_N,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p_E", 0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_p_E", 0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p_E,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p_S", 0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_p_S", 0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p_S,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_p_W", 0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_p_W", 0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_p_W,1,";
-      if (ReadProgInt( "options",   "ExportHourlyResults_s",   0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ExportHourlyResults_s",   0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ExportHourlyResults_s,1,";
-      if (ReadProgInt( "options",   "ComplianceReportPDF",     0 /*default*/ ) > 0)		// SAC 8/14/13
+      if (ReadProgInt( sOptsSec,   "ComplianceReportPDF",     0 /*default*/ ) > 0)		// SAC 8/14/13
          sOptionsCSVString +=       "ComplianceReportPDF,1,";
-      if (ReadProgInt( "options",   "ComplianceReportXML",     0 /*default*/ ) > 0)
+      if (ReadProgInt( sOptsSec,   "ComplianceReportXML",     0 /*default*/ ) > 0)
          sOptionsCSVString +=       "ComplianceReportXML,1,";
-      if (ReadProgInt( "options",   "SendRptSignature",        1 /*default*/ ) < 1)		// SAC 9/12/13
+      if (ReadProgInt( sOptsSec,   "SendRptSignature",        1 /*default*/ ) < 1)		// SAC 9/12/13
          sOptionsCSVString +=       "SendRptSignature,0,";
 		if (!sProxyINIOptions.IsEmpty())		// SAC 9/5/13 - add proxy server settings
 			sOptionsCSVString += sProxyINIOptions;
 		if (!sDebugRuleEvalCSV.IsEmpty())  // SAC 1/9/14 - mods to share rule debug CSV INI option accross res & com
 			sOptionsCSVString += sDebugRuleEvalCSV;
-    //  if (ReadProgInt( "options",   "BypassRuleLimits",     0 /*default*/ ) > 0)		// SAC 3/11/14 - when =1 should cause certain rule-based compliance checks/limits to be bypassed
+    //  if (ReadProgInt( sOptsSec,   "BypassRuleLimits",     0 /*default*/ ) > 0)		// SAC 3/11/14 - when =1 should cause certain rule-based compliance checks/limits to be bypassed
     //     sOptionsCSVString +=       "BypassRuleLimits,1,";
-      int iBypassRuleLimits = ReadProgInt( "options", "BypassRuleLimits", 0 /*default*/ );	// SAC 4/20/15 - switched BypassRuleLimits from boolean to integer (to allow values > 1)
+      int iBypassRuleLimits = ReadProgInt( sOptsSec, "BypassRuleLimits", 0 /*default*/ );	// SAC 4/20/15 - switched BypassRuleLimits from boolean to integer (to allow values > 1)
 		if (iBypassRuleLimits > 0)
 		{	sOptTemp.Format( "BypassRuleLimits,%d,", iBypassRuleLimits );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iEnableResearchMode = ReadProgInt( "options", "EnableResearchMode", 0 /*default*/ );	// SAC 5/14/16 - 
+      int iEnableResearchMode = ReadProgInt( sOptsSec, "EnableResearchMode", 0 /*default*/ );	// SAC 5/14/16 - 
 		if (iEnableResearchMode > 0)
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 /*default*/ );		// SAC 1/11/18
+      int iAllowNegativeDesignRatings = ReadProgInt( sOptsSec, "AllowNegativeDesignRatings", 0 /*default*/ );		// SAC 1/11/18
 		if (iAllowNegativeDesignRatings > 0)
 		{	sOptTemp.Format( "AllowNegativeDesignRatings,%d,", iAllowNegativeDesignRatings );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iEnableCO2DesignRatings = ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ );		// SAC 1/27/18
+      int iEnableCO2DesignRatings = ReadProgInt( sOptsSec, "EnableCO2DesignRatings", 0 /*default*/ );		// SAC 1/27/18
 		if (iEnableCO2DesignRatings > 0)
 		{	sOptTemp.Format( "EnableCO2DesignRatings,%d,", iEnableCO2DesignRatings );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iWriteCF1RXML = ReadProgInt( "options", "WriteCF1RXML", 0 /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML
+      int iWriteCF1RXML = ReadProgInt( sOptsSec, "WriteCF1RXML", 0 /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML
 		if (iWriteCF1RXML > 0)
 		{	sOptTemp.Format( "WriteCF1RXML,%d,", iWriteCF1RXML );
 			sOptionsCSVString += sOptTemp;
 		}
-      if (ReadProgInt( "options",   "BypassValidFileChecks",     0 /*default*/ ) > 0)		// SAC 5/3/14
+      if (ReadProgInt( sOptsSec,   "BypassValidFileChecks",     0 /*default*/ ) > 0)		// SAC 5/3/14
          sOptionsCSVString +=       "BypassValidFileChecks,1,";
 		if (!ebAnalysisRangeChecks)
          sOptionsCSVString +=       "PerformRangeChecks,0,";
-      if (ReadProgInt( "options",   "PerformDupObjNameCheck",     1 /*default*/ ) < 1)		// SAC 2/23/15
+      if (ReadProgInt( sOptsSec,   "PerformDupObjNameCheck",     1 /*default*/ ) < 1)		// SAC 2/23/15
          sOptionsCSVString +=       "PerformDupObjNameCheck,0,";
-      int iSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 /*default*/ );	// SAC 1/14/15
+      int iSimSpeedOption = ReadProgInt( sOptsSec, "SimSpeedOption", -1 /*default*/ );	// SAC 1/14/15
 		if (iSimSpeedOption >= 0)
 		{	sOptTemp.Format( "SimSpeedOption,%d,", iSimSpeedOption );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iLogWritingMode = ReadProgInt( "options", "LogWritingMode", 1000 /*default*/ );		// SAC 5/20/14
+      int iLogWritingMode = ReadProgInt( sOptsSec, "LogWritingMode", 1000 /*default*/ );		// SAC 5/20/14
 		if (iLogWritingMode != 1000)
 		{	sOptTemp.Format( "LogWritingMode,%d,", iLogWritingMode );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iSimLoggingOption = ReadProgInt( "options", "SimLoggingOption", 0 /*default*/ );	// SAC 1/12/15
+      int iSimLoggingOption = ReadProgInt( sOptsSec, "SimLoggingOption", 0 /*default*/ );	// SAC 1/12/15
 		if (iSimLoggingOption > 0)
 		{	sOptTemp.Format( "SimLoggingOption,%d,", iSimLoggingOption );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iSimReportDetailsOption = ReadProgInt( "options", "SimReportDetailsOption", 1 /*default*/ );	// SAC 1/12/15
+      int iSimReportDetailsOption = ReadProgInt( sOptsSec, "SimReportDetailsOption", 1 /*default*/ );	// SAC 1/12/15
 		if (iSimReportDetailsOption != 1)
 		{	sOptTemp.Format( "SimReportDetailsOption,%d,", iSimReportDetailsOption );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iSimErrorDetailsOption = ReadProgInt( "options", "SimErrorDetailsOption", 1 /*default*/ );	// SAC 1/12/15
+      int iSimErrorDetailsOption = ReadProgInt( sOptsSec, "SimErrorDetailsOption", 1 /*default*/ );	// SAC 1/12/15
 		if (iSimErrorDetailsOption != 1)
 		{	sOptTemp.Format( "SimErrorDetailsOption,%d,", iSimErrorDetailsOption );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iEnableRptGenStatusChecks = ReadProgInt( "options", "EnableRptGenStatusChecks", 1 /*default*/ );	// SAC 2/20/15
+      int iEnableRptGenStatusChecks = ReadProgInt( sOptsSec, "EnableRptGenStatusChecks", 1 /*default*/ );	// SAC 2/20/15
 		if (iEnableRptGenStatusChecks < 1)
 		{	sOptTemp.Format( "EnableRptGenStatusChecks,%d,", iEnableRptGenStatusChecks );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iStoreResultsToModelInput = ReadProgInt( "options", "StoreResultsToModelInput", 1 /*default*/ );	// SAC 5/12/15
+      int iStoreResultsToModelInput = ReadProgInt( sOptsSec, "StoreResultsToModelInput", 1 /*default*/ );	// SAC 5/12/15
 		if (iStoreResultsToModelInput > 0)
 		{	sOptTemp.Format( "StoreResultsToModelInput,%d,", iStoreResultsToModelInput );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iDHWCalcMethod = ReadProgInt( "options", "DHWCalcMethod", -1 /*default*/ );	// SAC 7/14/15
+      int iDHWCalcMethod = ReadProgInt( sOptsSec, "DHWCalcMethod", -1 /*default*/ );	// SAC 7/14/15
 		if (iDHWCalcMethod >= 0)
 		{	sOptTemp.Format( "DHWCalcMethod,%d,", iDHWCalcMethod );
 			sOptionsCSVString += sOptTemp;
@@ -2875,6 +3041,78 @@ void CMainFrame::OnToolsBatchProcessing()		// SAC 5/22/13
 	}
 }
 
+static void InitBatchRunsFromINI()
+{
+	long lAdditionalInputs = ReadProgInt( "options", "Batch_AdditionalInputs", 0 );
+	if (lAdditionalInputs > 0)
+		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), BEMP_Int, (void*) &lAdditionalInputs );
+	const char* pszBRProps[] = {  "IncludeSubdirs",  "StoreProjToSepDir",  "ProjFileNames",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  NULL  };
+	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {       1          ,   lAdditionalInputs ,         1       ,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	int iPropIdx = -1;
+	while (pszBRProps[++iPropIdx] != NULL)
+		if (iaProcessProp[iPropIdx])
+		{	CString sBEMProp = "BatchRuns:";		sBEMProp += pszBRProps[iPropIdx];
+			long lDBID = BEMPX_GetDatabaseID( sBEMProp );
+			if (lDBID > 0)
+			{	CString sINIOpt  = "Batch_";		sINIOpt  += pszBRProps[iPropIdx];
+				if (iaBRPropType[iPropIdx] == BEMP_Int)
+				{	long lTemp = ReadProgInt( "options", sINIOpt, -999 );
+					if (lTemp != -999)
+						BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lTemp );
+				}
+				else
+				{	CString sTemp = ReadProgString( "options", sINIOpt, NULL, FALSE );
+					if (!sTemp.IsEmpty())
+					{	if (iaProcessPropStr[iPropIdx] > 0)
+						{	if (iaProcessPropStr[iPropIdx] == 1 && sTemp[sTemp.GetLength()-1] != '\\')
+								sTemp += '\\';  // add trailing '\' to path (if not present)
+							if (sTemp.Find(':') < 0 && sTemp.Find('\\') != 0 && sTemp.Find('/') != 0) 
+								sTemp = esProjectsPath + sTemp;
+							if (sTemp.Find("\\..") >= 0)
+								VERIFY( ResolvePathIndirections( sTemp ) );
+						}
+						BEMPX_SetBEMData( lDBID, BEMP_Str, (void*) ((const char*) sTemp) );
+		}	}	}	}
+}
+						
+static void WriteBatchRunDataToINI()
+{
+	int iStatus, iSpecVal, iErr;
+	int iAdditionalInputs = (int) BEMPX_GetIntegerAndStatus( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), iStatus, iSpecVal, iErr );
+	if (iStatus > 6)
+		WriteProgInt( "options", "Batch_AdditionalInputs", iAdditionalInputs );
+	const char* pszBRProps[] = {  "IncludeSubdirs",  "StoreProjToSepDir",  "ProjFileNames",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  NULL  };
+	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	int iPropIdx = -1;
+	while (pszBRProps[++iPropIdx] != NULL)
+		if (iaProcessProp[iPropIdx])
+		{	CString sBEMProp = "BatchRuns:";		sBEMProp += pszBRProps[iPropIdx];
+			long lDBID = BEMPX_GetDatabaseID( sBEMProp );
+			if (lDBID > 0)
+			{	CString sINIOpt  = "Batch_";		sINIOpt  += pszBRProps[iPropIdx];
+				if (iaBRPropType[iPropIdx] == BEMP_Int)
+				{	int iTemp = (int) BEMPX_GetIntegerAndStatus( lDBID, iStatus, iSpecVal, iErr );
+					if (iStatus > 6)
+						WriteProgInt( "options", sINIOpt, iTemp );
+				}
+				else
+				{	QString qsTemp = BEMPX_GetStringAndStatus( lDBID, iStatus, iSpecVal, iErr );
+					if (iStatus > 6)
+					{	// trim ProjDir from value if matches
+						if (iaProcessPropStr[iPropIdx] > 0 && qsTemp.length() > esProjectsPath.GetLength())
+						{	QString qsUpTemp = qsTemp.toUpper();
+							CString sProjUp = esProjectsPath;		sProjUp.MakeUpper();
+							if (qsUpTemp.indexOf( ((const char*) sProjUp) ) == 0)
+								qsTemp = qsTemp.left( qsTemp.length()-esProjectsPath.GetLength() );
+						}
+						WriteProgString( "options", sINIOpt, qsTemp.toLatin1().constData() );
+		}	}	}	}
+}
+
 void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 {
 	// proxy server INI options (spanning both -Res & -Com versions
@@ -2934,10 +3172,11 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 				sBatchPathFile = dlg.GetPathName();
 		}
 		else
-		{	// new method to enable simplified batch UI via BatchRuns object
+		{	InitBatchRunsFromINI();		// SAC 6/21/18
+			// new method to enable simplified batch UI via BatchRuns object
 			BatchUIDefaulting();
 	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
-			int iTabCtrlWd = 610, iTabCtrlHt = 560;
+			int iTabCtrlWd = 610, iTabCtrlHt = 630;
 			CWnd* pWnd = GetFocus();
 			//CWnd* pWnd = GetTopLevelParent();
          CSACDlg dlgBatchRun( pWnd /*this*/, iCID_BatchRuns, 0 /* lDBID_ScreenIdx */, 5010 /*iDlgID*/, 0, 0, 0,
@@ -2965,8 +3204,10 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 							 sFullIn.CompareNoCase( sFullOut ) != 0 )
 							// create command line for direcotry comparison between input & output processing directories
 							sCompareCommandLine.Format( "\"%s\" \"%s\" \"%s\"", sCompare, sFullIn, sFullOut );
-				}	}
-		}	}
+					}
+					// store various inputs to INI for later use
+					WriteBatchRunDataToINI();		// SAC 6/21/18
+		}	}	}
 
 		if (!sBatchPathFile.IsEmpty() && FileExists( sBatchPathFile ))
 		{	CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
@@ -3075,7 +3316,8 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 				sBatchPathFile = dlg.GetPathName();
 		}
 		else
-		{	// new method to enable simplified batch UI via BatchRuns object
+		{	InitBatchRunsFromINI();		// SAC 6/21/18
+			// new method to enable simplified batch UI via BatchRuns object
 			BatchUIDefaulting();
 	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
 			int iTabCtrlWd = 610, iTabCtrlHt = 560;
@@ -3106,8 +3348,10 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 							 sFullIn.CompareNoCase( sFullOut ) != 0 )
 							// create command line for direcotry comparison between input & output processing directories
 							sCompareCommandLine.Format( "\"%s\" \"%s\" \"%s\"", sCompare, sFullIn, sFullOut );
-				}	}
-		}	}
+					}
+					// store various inputs to INI for later use
+					WriteBatchRunDataToINI();		// SAC 6/21/18
+		}	}	}
 
 		if (!sBatchPathFile.IsEmpty() && FileExists( sBatchPathFile ))
 		{	CString sBEMPathFile = ReadProgString( "files", "BEMFile", "", TRUE );
@@ -3197,7 +3441,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 {
 	BOOL bRetVal = TRUE;
-#ifdef UI_CARES
+//#ifdef UI_CARES
 	CString sTemp;		int iSV, iErr;
 	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:DefaultProjPath" ), sTemp ) || sTemp.IsEmpty())
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:DefaultProjPath" ), BEMP_Str,
@@ -3268,6 +3512,9 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 //QString sTestMsg = QString( "%1 files found" ).arg( QString::number( iNumProjFiles ) );
 //BEMMessageBox( sTestMsg );
 	}
+//CString sLogMsg;	sLogMsg.Format( "IncludeSubdirs = %ld / NumProjInputs being set to: %ld / FullProjDirectory = %s", lIncludeSubdirs, iNumProjFiles, qsFullProjDir.toLatin1().constData() );
+//BEMPX_WriteLogFile( sLogMsg );
+
 	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:NumProjInputs" ), BEMP_Int,
 							(void*) &iNumProjFiles, BEMO_User, -1, BEMS_ProgDefault );
 
@@ -3282,14 +3529,28 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 //	{	sTemp.Format( "NumProjFiles = %d\n\n%s", iNumProjFiles, sDbg );
 //		BEMMessageBox( sTemp );
 //	}
-#endif
+//#endif
 
 	return bRetVal;
 }
 
+
+#ifdef UI_CARES
+static int siBatchDefsFileVer = 1;
+static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11,12\n";
+static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,,,,,Multiple,Front,Program,Processing\n";
+static const char* pszBatchDefsColLabel3 = "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Output,Options\n";
+#elif UI_CANRES
+static int siBatchDefsFileVer = 3;
+static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11\n";
+static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,Path to Copy,Path to Copy,,Override AutoSize Flag,,,Program,Processing\n";
+static const char* pszBatchDefsColLabel3 = "; Record,Project or File Name (full path or relative to \\Projects),Project or File Name,SDD XML files to,CSE files to,Run Title,p,bz,b,Output,Options\n";
+#endif
+
 BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile ) 	// SAC 11/10/17
 {	QString qsErrMsg;
-#ifdef UI_CARES
+//#ifdef UI_CARES
+#if defined(UI_CARES) || defined(UI_CANRES)
 	if (!BatchUIDefaulting())
 		qsErrMsg = "Error performing batch defaulting.";
 	else
@@ -3304,6 +3565,12 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 			QString qsResultsCSVFN  = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName"   ), iSV, iErr );
 			QString qsOutputLogFN   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:LogFileName"       ), iSV, iErr );
 			QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
+			QString qsSDDXMLFilePath, qsCSEFilePath, qsAnalOptsINI;
+#ifdef UI_CANRES
+			qsSDDXMLFilePath = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:SDDXMLFilePath"    ), iSV, iErr );
+			qsCSEFilePath    = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:CSEFilePath"       ), iSV, iErr );
+			qsAnalOptsINI    = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:AnalOptsINISection"), iSV, iErr );
+#endif
 
 			CString sCompareApp;
 			if (lStoreProjToSepDir > 0 && !qsOutputProjDir.isEmpty() && qsOutputProjDir.compare( qsFullProjDir, Qt::CaseInsensitive ) != 0 && 
@@ -3404,26 +3671,34 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 		      if (!ok)
 		      	qsErrMsg = QString( "Error encountered attempting to open batch definitions CSV file:\n   %s" ).arg( (const char*) sBatchDefsPathFile );
 	   	   else
-				{	CString str;
-					defsFile.WriteString( "; Fmt Ver,Summary Results File\n" );
-					str.Format( "1,\"%s\"\n", qsResultsCSVFN.toLatin1().constData() );		defsFile.WriteString( str );
-					defsFile.WriteString( ";\n" );
-					defsFile.WriteString( ";   1,2,3,4,5,6,7,8,9,10,11,12\n" );
-					defsFile.WriteString( "; Process,Existing,New or Save As,,,,,Multiple,Front,Program,Processing\n" );
-					defsFile.WriteString( "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Output,Options\n" );
+				{	CString sBatchAnalOpts;
+					if (qsAnalOptsINI.length() > 0)
+						VERIFY( PopulateAnalysisOptionsString( sBatchAnalOpts, false /*bBatchMode*/, qsAnalOptsINI.toLatin1().constData() ) );		// SAC 1/29/14
 
+					CString str, str2;
+					defsFile.WriteString( "; Fmt Ver,Summary Results File\n" );
+					str.Format( "%d,\"%s\"\n", siBatchDefsFileVer, qsResultsCSVFN.toLatin1().constData() );		defsFile.WriteString( str );
+					defsFile.WriteString( ";\n" );
+					defsFile.WriteString( pszBatchDefsColLabel1 );
+					defsFile.WriteString( pszBatchDefsColLabel2 );
+					defsFile.WriteString( pszBatchDefsColLabel3 );
 					int iRunNum=0;
 					QStringList filters;
 					filters << qsProjFileNames;
 					QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
-					QString qsFile;
+					QString qsFile, qsOutDir;
 					while (it.hasNext())
 					{	qsFile = it.next();
+						qsOutDir.clear();
 						iRunNum++;
 						if (bOutDirSameAsIn)
-							str.Format( "1,\"%s\",\"%s\",,,,,,,,CumCSV,,\n", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+						{	str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+							int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+							if (iLastSlash > 0)
+								qsOutDir = qsFile.left( iLastSlash+1 );
+						}
 						else
-						{	QString qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+						{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
 							int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
 							if (iLastSlash > qsOutputProjDir.length())
 							{	QDir dir( qsOutDir.left( iLastSlash ) );
@@ -3432,9 +3707,19 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 								if (!dir.exists() && qsErrMsg.isEmpty())
 									qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
 							}
-							str.Format( "1,\"%s\",\"%s%s\",,,,,,,,CumCSV,,\n", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
-																							   qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+							str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+																		 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+							if (iLastSlash > 0)
+								qsOutDir = qsOutDir.left( iLastSlash+1 );
 						}
+
+#ifdef UI_CARES
+						str2 = ",,,,,,,CumCSV,,\n";
+#elif UI_CANRES
+						str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+														qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );
+#endif
+						str += str2;
 						defsFile.WriteString( str );
 					}
 
@@ -3732,7 +4017,8 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 						}	}
 
 						if (bInstallOverwrite || bInstallAppend)
-						{	SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );  // default model...
+						{	BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+							SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );  // default model...
 							// first toggle PVWInputs to 'Detailed' (if necessary)
 							if (lPVWInps == 0)
 							{	lPVWInps = 1;
@@ -3771,7 +4057,8 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 						}
 					}
 
-					SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+					BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+					SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 					pDoc->SetModifiedFlag( TRUE );
 		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
 		         if (pMainView != NULL)            // update main view's tree control(s)
@@ -4185,8 +4472,10 @@ void CMainFrame::OnToolsGenerateModel()
 		if (bGenModel)
       {
          CMX_EvaluateRuleset( "GenerateModel", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );  // epszRLs[0] );
-			SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
-			SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+			SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
+			BEMPX_IncrementModsSinceModelDefaulted();
+			SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 			pDoc->SetModifiedFlag( TRUE );
 
 			//SetStatusBarStrings( "", 2 );		// SAC 10/29/15 - display ruleset ID in third status bar pane
@@ -4414,10 +4703,79 @@ static int StringInArray( CStringArray& saStrs, CString& sStr )
 
 /////////////////////////////////////////////////////////////////////////////
 
-afx_msg LONG CMainFrame::OnEvaluateProposedRules(UINT /*uiDontSwitchToLog*/, LONG)
+const char* pszDefaultAction[] = { "0", "DataMod", "OpenDialog", "CloseDialog", "InitAnalysis", "5", "6", "7" };	// SAC 4/15/18
+
+afx_msg LONG CMainFrame::OnEvaluateProposedRules(UINT uiDefaultAction, LONG lDBID)
 {
-//   CMX_EvaluateRuleset( (m_bDoingWizard ? epszWRLs[0] : epszRLs[0]), FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging );
-   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo );
+	int iEvalOnlyClass = 0;		// SAC 4/12/18 - added variables and logic to choose when and what gets defaulted based on new EvalProposed arguments
+	int iEvalOnlyObjIdx = -1;
+	int iModsSinceModelDefaulted = BEMPX_GetNumModsSinceModelDefaulted();
+	bool bEvalRules = ( uiDefaultAction == DefaultAction_InitAnalysis ||
+							 (uiDefaultAction == DefaultAction_DataMod && elDefaultOptionInp == DefaultOption_Model) );
+	if (!bEvalRules && iModsSinceModelDefaulted > 0)
+	{	if (uiDefaultAction == DefaultAction_CloseDialog)
+		{	if (elDefaultOptionDone > DefaultOption_Nothing && elDefaultOptionInp < elDefaultOptionDone)
+			{	bEvalRules = true;
+				if (elDefaultOptionDone == DefaultOption_Object)
+					iEvalOnlyClass = (lDBID > BEM_COMP_MULT ? BEMPX_GetClassID(lDBID) : (lDBID <= BEMPX_GetNumClasses() ? lDBID : 0));
+		}	}
+		else
+		{	ASSERT( lDBID > 0 );		// should have class or DBID for uiDefaultAction of DefaultAction_DataMod or DefaultAction_OpenDialog
+			ASSERT( elDefaultOptionInp != DefaultOption_Family && elDefaultOptionObj != DefaultOption_Family );	// DefaultOption_Family NYI
+			if (uiDefaultAction == DefaultAction_DataMod && elDefaultOptionInp > DefaultOption_Nothing)
+			{	iEvalOnlyClass = (lDBID > BEM_COMP_MULT ? BEMPX_GetClassID(lDBID) : (lDBID <= BEMPX_GetNumClasses() ? lDBID : 0));
+				bEvalRules = (elDefaultOptionInp == DefaultOption_Object && iEvalOnlyClass > 0);
+			}
+			else if (uiDefaultAction == DefaultAction_OpenDialog && elDefaultOptionInp != DefaultOption_Model &&
+						elDefaultOptionObj > DefaultOption_Nothing)
+			{	if (elDefaultOptionObj == DefaultOption_Model)
+					bEvalRules = true;
+				else
+				{	iEvalOnlyClass = (lDBID > BEM_COMP_MULT ? BEMPX_GetClassID(lDBID) : (lDBID <= BEMPX_GetNumClasses() ? lDBID : 0));
+					bEvalRules = (elDefaultOptionObj == DefaultOption_Object && iEvalOnlyClass > 0);
+			}	}
+	}	}
+	if (bEvalRules && iEvalOnlyClass > 0)
+	{	iEvalOnlyObjIdx = BEMPX_GetActiveObjectIndex( iEvalOnlyClass /*int iBEMProcIdx=-1*/ );  // SAC 4/12/18
+		ASSERT( iEvalOnlyObjIdx >= 0 );
+	}
+					//	//					GetParentFrame()->SendMessage( WM_DATAMODIFIED, 0, lDBID );		// SAC 4/12/18
+					//	//					BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+					//	//         GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, pNewObj->getClass()->get1BEMClassIdx() );
+					//	//#define  DefaultAction_DataMod   	1
+					//	//#define  DefaultAction_OpenDialog   2
+					//	//#define  DefaultAction_CloseDialog  3
+					//	//#define  DefaultAction_InitAnalysis	4
+					//	void BEMPROC_API     __cdecl BEMPX_InitModsSinceModelDefaulted();
+					//	void BEMPROC_API     __cdecl BEMPX_IncrementModsSinceModelDefaulted();
+					//	long BEMPROC_API     __cdecl BEMPX_GetNumModsSinceModelDefaulted();
+					//	// BEM Defaulting Options...
+					//	#define  DefaultOption_Nothing   0
+					//	#define  DefaultOption_Object    1
+					//	#define  DefaultOption_Family    2  // NYI
+					//	#define  DefaultOption_Model     3
+					//	extern long elDefaultOptionInp;
+					//	extern long elDefaultOptionObj;
+					//	extern long elDefaultOptionDone;
+
+	CString sEvalDuration;
+	if (bEvalRules)
+		EvalProposedRules( iEvalOnlyClass, iEvalOnlyObjIdx, (ebLogProjectOpen ? &sEvalDuration : NULL) );
+
+	CString sLogMsg;
+	if (ebLogProjectOpen)
+	{	if (bEvalRules)
+		{	if (iEvalOnlyClass > 0)
+			{	int iErr;
+				BEMClass* pClass = BEMPX_GetClass( iEvalOnlyClass, iErr );
+				sLogMsg.Format( "   CMainFrame::OnEvaluateProposedRules( %s, %ld ) (%d mods since last defaulting) on %s #%d - elapsed time: %s", pszDefaultAction[uiDefaultAction], lDBID, iModsSinceModelDefaulted, (pClass ? pClass->getShortName().toLatin1().constData() : "<unknown>"), iEvalOnlyObjIdx+1, sEvalDuration );
+			}  else
+				sLogMsg.Format( "   CMainFrame::OnEvaluateProposedRules( %s, %ld ) (%d mods since last defaulting) - elapsed time: %s", pszDefaultAction[uiDefaultAction], lDBID, iModsSinceModelDefaulted, sEvalDuration );
+		}
+		else
+			sLogMsg.Format( "   CMainFrame::OnEvaluateProposedRules( %s, %ld ) (%d mods since last defaulting) - skipped", pszDefaultAction[uiDefaultAction], lDBID, iModsSinceModelDefaulted );
+	   BEMPX_WriteLogFile( sLogMsg );
+	}
 
 //CString sEvalMsg;		sEvalMsg.Format( "OnEvaluateProposedRules() -> '%s' rulelist", esDataModRulelist );
 //AfxMessageBox( sEvalMsg );
@@ -4427,6 +4785,31 @@ afx_msg LONG CMainFrame::OnEvaluateProposedRules(UINT /*uiDontSwitchToLog*/, LON
 
    return 0;
 }
+
+
+void CMainFrame::EvalProposedRules( int iEvalOnlyClass, int iEvalOnlyObjIdx, CString* pDurationStr )
+{
+	ptime t1, t2;
+	time_duration td;
+
+								if (pDurationStr)     // SAC 4/15/18
+									t1 = microsec_clock::local_time();
+//	   CMX_EvaluateRuleset( (m_bDoingWizard ? epszWRLs[0] : epszRLs[0]), FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging );
+	   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+	   							NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+	   							iEvalOnlyClass, iEvalOnlyObjIdx, 0 /*iEvalOnlyObjType*/ );		// SAC 4/3/18 - added to enable targeted model defaulting
+								if (pDurationStr)     // SAC 4/15/18
+								{	t2 = microsec_clock::local_time();
+									td = t2-t1;
+									pDurationStr->Format( "%s", to_simple_string(td).c_str() );
+								}
+
+	if (iEvalOnlyClass == 0)		// SAC 4/12/18
+		BEMPX_InitModsSinceModelDefaulted();
+
+	return;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -4579,6 +4962,8 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
          bContinue = (dlgProj.DoModal() == IDOK);
 	}
 #endif
+
+	SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, 0 );		// SAC 4/15/18
 
    CDocument* pDoc = GetActiveDocument();
    if ( bContinue && pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) &&
@@ -6405,8 +6790,16 @@ void CMainFrame::CreateBuildingComponent( int i1BDBClass, long lAssignmentDBID, 
       {
          BEMObject* pNewObj = BEMPX_GetObjectByClass( i1BDBClass, iError );
          if (pNewObj && (BEMPX_SetBEMData( lAssignmentDBID, BEMP_Obj, (void*) pNewObj, BEMO_User, iAssignmentObjIdx ) >= 0) )
-            SendMessage( WM_EVALPROPOSED );
-      }
+         {	// SAC 5/16/18 - defaulting done only once immediatley below
+         	//BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+         	//SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, i1BDBClass );
+		}	}
+
+         // execute compliance rulelist #1
+         // must do this even if primary data entered because some of the 
+         // primary data may have been user defaulted
+			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+         SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, i1BDBClass );		// SAC 5/16/18 - switched from DefaultAction_OpenDialog to DefaultAction_InitAnalysis to ensure evaluation
 
       // then go edit the new component
       if (bEditNewComponent)
@@ -6604,7 +6997,9 @@ bool CMainFrame::ConvertBuildingComponent( int iFromBEMClass, int iFromObjIdx, i
 
 	// default building model & display dialog allowing view/edit of conversion
 		if (sErrMsg.IsEmpty())
-		{	SendMessage( WM_EVALPROPOSED );
+		{	
+			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+			SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, iToBEMClass );
 
          CSACDlg dlgNewObj( this, iFromBEMClass, 0 /* lDBID_ScreenIdx */, iDlgID, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDlgCaption,
@@ -6751,8 +7146,9 @@ BOOL CMainFrame::DeleteBuildingComponent( BEMObject* pObj, CWnd* pParentWnd )
           bRetVal = TRUE;
  
           // SAC 8/7/00 - Added call to re-evaluate ruleset
-          SendMessage( WM_EVALPROPOSED );
- 
+          BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/12/18
+          SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
+
           CView* pView = (CView*) m_wndSplitter.GetPane(0,0);
           if (pView != NULL)            // update main view's tree control(s)
              pView->SendMessage( WM_DISPLAYDATA, iClass );
@@ -6783,6 +7179,21 @@ void CMainFrame::OnEditComponent()
 									NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 									NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
 									ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+
+//										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
+//										(elDefaultOptionInp < DefaultOption_Model) );	// SAC 4/18/18
+//
+//	CSACBEMProcDialog(int iBEMClass=0, int iUIMode=0, BOOL bDisplayAllUIControls=FALSE, BOOL bAllowEdits=TRUE,
+//                 CWnd* pParent = NULL, int iDlgMode=0, int iTabCtrlWd=600, int iTabCtrlHt=350, int iMaxTabs=99,
+//                 const char* pszCaptionText=NULL, const char* pszCloseBtnText=NULL,
+//                 DWORD* dwaNonEditableDBIDs=NULL, int iNumNonEditableDBIDs=0,   // SAC 9/10/00 - added non-editable DBID stuff
+//                 const char* pszExitingRulelist=NULL, const char* pszDataModRulelist=NULL,  // SAC 6/17/01
+//                 BOOL bPostHelpMessageToParent=FALSE,  // SAC 7/6/01
+//                 BOOL bIncludeCompParamStrInToolTip=FALSE, BOOL bIncludeStatusStrInToolTip=TRUE, BOOL bIncludeLongCompParamStrInToolTip=FALSE,    // SAC 1/19/12
+//                 BOOL bShowRefreshDefaultsBtn=FALSE );	// SAC 4/18/18
+
+
+
          if (td.DoModal() == IDOK)
          {}
 
@@ -7510,6 +7921,8 @@ void CMainFrame::OnWriteInputDetails()
 		if (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:ModDate" ), lModDate ))
 			lModDate = -1;
 
+      SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, 0 );		// SAC 4/15/18
+
       //BEMPX_WriteProjectFile( sFileName, BEMFM_DETAIL /*FALSE*/ );
       BEMPX_WriteProjectFile( sFileName, BEMFM_DETAIL /*FALSE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMsgBoxes*/,
 												0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, lModDate );
@@ -7804,7 +8217,9 @@ void CMainFrame::OnToolsEvalRulelist()
 				// re-default building model (regardless of whether rules successfully evaluated)
 			   CDocument* pDoc = GetActiveDocument();
    			if (pDoc && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))
-				{	SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+				{
+					BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/11/18
+					SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 					pDoc->SetModifiedFlag( TRUE );
 		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
 		         if (pMainView != NULL)            // update main view's tree control(s)
@@ -8050,7 +8465,8 @@ void CMainFrame::OnToolsApplyCustomRules() 	// SAC 1/28/18 - ability to import &
 					BEMPX_DeleteTrailingRuleLists( iNumRLs );
 
 				// re-default building model (regardless of whether rules successfully evaluated)
-					SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+					BEMPX_IncrementModsSinceModelDefaulted();		// SAC 4/11/18
+					SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis );
 					pDoc->SetModifiedFlag( TRUE );
 		         CMainView* pMainView = (CMainView*) m_wndSplitter.GetPane(0,0);
 		         if (pMainView != NULL)            // update main view's tree control(s)
@@ -8074,6 +8490,95 @@ void CMainFrame::OnToolsApplyCustomRules() 	// SAC 1/28/18 - ability to import &
 		m_bDoingCustomRuleEval = FALSE;
 	}
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+afx_msg LONG CMainFrame::OnBEMGridOpen(  UINT wClass, LONG l1Occur)   // SAC 3/15/18
+{
+#ifdef UI_CANRES
+	if (gridDialog)
+		gridDialog->show();
+   else if (ReadProgInt( "options", "EnableGrid", 0 ) > 0)
+   {
+		//QDialog dlgGrid;
+	//	BEMGridDialog dlgGrid;
+	//	dlgGrid.exec();
+		gridDialog = new BEMGridDialog( this, (wClass > 0 ? (int) wClass : -1), l1Occur-1 );
+		gridDialog->exec();
+	}
+#else
+	wClass;	l1Occur;
+#endif
+	return 1;
+}
+
+afx_msg LONG CMainFrame::OnBEMGridClose( UINT /*wClass*/, LONG /*l1Occur*/)
+{
+#ifdef UI_CANRES
+	if (gridDialog)  // && !m_bShuttingDown)
+	{	delete gridDialog;
+		gridDialog = NULL;
+   }
+#endif
+	return 1;
+}
+
+afx_msg LONG CMainFrame::OnBEMGridUpdate(UINT /*wClass*/, LONG /*l1Occur*/)
+{
+	return 1;
+}
+
+void CMainFrame::PostBEMGridClose( UINT wClass, LONG l1Occur)
+{	PostMessage( WM_BEMGRID_CLOSE, wClass, l1Occur );
+}
+void CMainFrame::PostBEMGridUpdate(UINT wClass, LONG l1Occur)
+{	PostMessage( WM_BEMGRID_UPDATE, wClass, l1Occur );
+}
+
+
+void CMainFrame::OnUpdateShowModelGrid(CCmdUI* pCmdUI) 
+{
+#ifdef UI_CANRES
+   CDocument* pDoc = NULL;
+	if (ReadProgInt( "options", "EnableGrid", 0 ) > 0)
+		pDoc = GetActiveDocument();
+   pCmdUI->Enable( (eInterfaceMode == IM_INPUT && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) );
+#else
+   pCmdUI->Enable( FALSE );
+#endif
+}
+
+void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid testing
+{
+   CDocument* pDoc = GetActiveDocument();
+   if (!pDoc || (!pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))))
+		AfxMessageBox( "A valid building model (project) must be loaded before accessing the model grid." );
+	else if (!QAppInitialized())
+		AfxMessageBox( "Error encountered initializing QT Application." );
+#ifdef UI_CANRES
+	else if (ReadProgInt( "options", "EnableGrid", 0 ) < 1)	// SAC 6/21/18
+		AfxMessageBox( "Model Grid not available." );
+	else
+		PostMessage( WM_BEMGRID_OPEN, BEMPX_GetDBComponentID( "Space" ), 0L );
+//	else if (gridDialog)
+//		gridDialog->show();
+//   else
+//   {
+//		//QDialog dlgGrid;
+//	//	BEMGridDialog dlgGrid;
+//	//	dlgGrid.exec();
+//		gridDialog = new BEMGridDialog( BEMPX_GetDBComponentID( "Space" ) );
+//		gridDialog->exec();
+//		//if (gridDialog && !m_bShuttingDown)
+//		//{	delete gridDialog;
+//		//	gridDialog = NULL;
+//   }	//}
+#else
+	else
+		AfxMessageBox( "Error Model Grid access restricted to CBECC-Com." );
+#endif
 }
 
 

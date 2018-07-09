@@ -48,10 +48,11 @@ static char THIS_FILE[] = __FILE__;
 // #define IDI_BPUI_HELP32G     575
 // #define IDI_BPUI_HELP16      576
 // #define IDI_BPUI_HELP16G     577
-#define IDB_BPUI_HELP20      578
-#define IDB_BPUI_HELP20G     579
-#define IDB_BPUI_HELP24      590
-#define IDB_BPUI_HELP24G     591
+#define IDB_BPUI_HELP20      324
+#define IDB_BPUI_HELP20G     325
+#define IDB_BPUI_HELP24      326
+#define IDB_BPUI_HELP24G     327
+
 
 IMPLEMENT_DYNAMIC( CBEMProcCtrlHelpBtn, CButtonST )
 

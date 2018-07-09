@@ -156,7 +156,20 @@ inline float Divide(float n,float d)
 #define WM_ENDFTPDOWNLOAD    WM_APP+31
 #define WM_DISPLAYFTPSTATUS  WM_APP+32
 
+// Message sent from UI Control to Parent Dialog to retrieve DBID based on control ID
+// THIS VALUE MUST MATCH IDENTICAL MESSAGES IN application's STDAFX.H & PD2'S MESSAGES.H
+#define WM_CTRLIDTODBID      WM_APP+52   // SAC 2/19/01
+
 // Message sent from UI Control to Parent Frame to confirm/report compatibility issues
-#define WM_CHECKCOMPAT       WM_APP+53   // SAC 9/4/15
+#define WM_CHECKCOMPAT       WM_APP+53   // SAC 6/7/01
+
+// Message to handle help button processing
+// THIS VALUES MUST MATCH IDENTICAL MESSAGES IN application's STDAFX.H & PD2'S MESSAGES.H
+#define WM_HELP_BTN_PRESSED  WM_APP+54   // SAC 10/19/02
+
+// Messages sent between MainFrame & GridDialog - SAC 3/15/18
+#define WM_BEMGRID_OPEN      WM_APP+55
+#define WM_BEMGRID_CLOSE     WM_APP+56
+#define WM_BEMGRID_UPDATE    WM_APP+57
 
 #endif // !defined(AFX_STDAFX_H__245352C7_5683_11D1_9002_0080C732DDC2__INCLUDED_)

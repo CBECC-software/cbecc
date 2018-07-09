@@ -1069,6 +1069,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			QString sRunDateFmt;
 			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunDate" ), sRunDateFmt, FALSE, -1 /*iPrecision*/ );
 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateFmt" ), BEMP_QStr, (void*) &sRunDateFmt );
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:RunDate" ), sRunDateFmt, FALSE, -3 /*iPrecision*/ );	// SAC 5/16/18 - added new '-3' format to handle output as ISO (xsd:datetime) string
+			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:RunDateISO" ), BEMP_QStr, (void*) &sRunDateFmt );
 		}
 
 	// Retrieve report info designed to export summaries of each building model during analysis  - SAC 6/10/13
@@ -4736,6 +4738,11 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 									sErrMsg = boost::str( boost::format( "Error:  Unable to copy project file (run %d, record %d):  '%s'  to:  '%s'" )
 																						% (iRun+1) % iaBatchRecNums[iRun] % saProjInFN[iRun].c_str() % sProjPathFile.c_str() );
 			}
+
+		   // write run initiation message to log file - SAC 4/25/18
+			BEMPX_WriteLogFile( "-----------------------------------------------------------------------------", NULL, FALSE, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			sLogMsg = boost::str( boost::format( "Initiating batch run %d of %d:   %s" ) % (iRun+1) % iRunsToPerform % sProjPathFile );
+			BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 		// copy CSE include file from referenced location into project directory - SAC 5/28/17
 			std::string sRptIncFile = saSimReportFile[iRun];

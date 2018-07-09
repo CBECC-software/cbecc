@@ -781,33 +781,39 @@ BOOL BEMPX_PurgeUnreferencedComponents( int iBEMProcIdx /*=-1*/, int* piNumObjec
 //      else
 //      {
 
-   // initialize each CBEMClass' m_iFirstPropID & other stuff
-	for (int i1Class=1; i1Class <= pBEMProc->getNumClasses(); i1Class++)
-   {
-      if (pBEMProc->getClass( i1Class-1 )->getPurgeUnrefCompsBeforeSim())
-      {
-         // loop over all user-defined objects of this type
-         int iError;
-         for (int iObj = BEMPX_GetNumObjects( i1Class, BEMO_User, iBEMProcIdx )-1; iObj >= 0; iObj--)
-         {
-            // get pointer to object and confirm that it is OK & check for # assignments
-            BEMObject* pObj = BEMPX_GetObjectByClass( i1Class, iError, iObj, BEMO_User, iBEMProcIdx );
-            if ( iError == 0 && pObj &&
-                 CountObjectAssignments( pObj, FALSE, TRUE, TRUE, FALSE, FALSE, iBEMProcIdx, false ) == 0 )
-            {
+	int iMaxLoops = 5;	// SAC 6/6/18 - added outer loop to ensure that groups of referenced objects (Sch/WkSch/DaySch) cleaned up entirely (Com tic #2499)
+	int iNumObjsDeletedThisloop = 1;
+	for (int iLp=1; (iLp <= iMaxLoops && iNumObjsDeletedThisloop > 0); iLp++)
+	{
+		iNumObjsDeletedThisloop = 0;
+	   // initialize each CBEMClass' m_iFirstPropID & other stuff
+		for (int i1Class=1; i1Class <= pBEMProc->getNumClasses(); i1Class++)
+	   {
+	      if (pBEMProc->getClass( i1Class-1 )->getPurgeUnrefCompsBeforeSim())
+	      {
+	         // loop over all user-defined objects of this type
+	         int iError;
+	         for (int iObj = BEMPX_GetNumObjects( i1Class, BEMO_User, iBEMProcIdx )-1; iObj >= 0; iObj--)
+	         {
+	            // get pointer to object and confirm that it is OK & check for # assignments
+	            BEMObject* pObj = BEMPX_GetObjectByClass( i1Class, iError, iObj, BEMO_User, iBEMProcIdx );
+	            if ( iError == 0 && pObj &&
+	                 CountObjectAssignments( pObj, FALSE, TRUE, TRUE, FALSE, FALSE, iBEMProcIdx, false ) == 0 )
+	            {
 // vvv TEMPORARY vvv
 //         CString sMsg;
 //         sMsg.Format( "Purging %s Object '%s'.", pszPurgeClasses[idx-1], pObj->m_sObjectName );
 //         BEMMessageBox( sMsg, "BEMPX_PurgeUnreferencedComponents()", 3 /*error*/ );
 // ^^^ TEMPORARY ^^^
-               BEMPX_DeleteObject( pObj, iBEMProcIdx );
+	               BEMPX_DeleteObject( pObj, iBEMProcIdx );
 
-					if (piNumObjectsDeleted)		// SAC 9/18/13
-						*piNumObjectsDeleted += 1;
-            }
-         }
-      }
-   }
+						iNumObjsDeletedThisloop++;
+						if (piNumObjectsDeleted)		// SAC 9/18/13
+							*piNumObjectsDeleted += 1;
+	            }
+	         }
+	      }
+   }	}
    return bRetVal;
 }
 
@@ -2040,6 +2046,18 @@ void BEMPX_SetActiveObjectIndex( int i1Class, int i0ObjIdx, BEM_ObjType objType,
 }
 
 
+/////////////////////////////////////////////////////////////////////////////
+int BEMPX_GetActiveObjectIndex( int i1Class, int iBEMProcIdx /*=-1*/ )	// SAC 4/12/18
+{	int iRetVal = -1;
+	BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
+	if (pBEMProc)
+	{	assert( pBEMProc->getClass( i1Class-1 )->getCurrentBEMObjType() == BEMO_User );
+		iRetVal = pBEMProc->getClass( i1Class-1 )->getCurrentBEM0ObjIdx();
+	}
+	return iRetVal;
+}
+
+
 long BEMPX_GetClassMaxDefinable( int i1Class, int iBEMProcIdx /*=-1*/ )		// SAC 7/10/12
 {	int iError;
    BEMClass* pClass = BEMPX_GetClass( i1Class, iError, iBEMProcIdx );
@@ -2484,6 +2502,7 @@ BEMObject* BEMPX_GetObjectByClass( int i1BEMClass, int& iError, int iObjIdx, BEM
 //   iError is set to:  0 : OK
 //                     -1 : invalid class
 //                     -2 : no objects of this type exist
+//                     -3 : invalid BEMProcObject
 //   
 // Notes --------------------------------------------------------------------
 //   
@@ -2500,26 +2519,32 @@ BEMObject* BEMPX_GetObjectByNameQ(	int i1BEMClass, int& iError, QString& qsObjNa
 {
    BEMObject* pRetVal = NULL;
    iError = 0;
-   // get the total number of objects of this class and type
-   int iCount = BEMPX_GetNumObjects( i1BEMClass, eObjType, iBEMProcIdx );
-   if (iCount < 0)
-      iError = iCount;
-   else if (iCount == 0)
-      iError = -2;
-   else
-   {  BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
-   	//QString qsObjName = pObjName;
-
-      // i1BEMClass must be valid and there are at least one object of the desired type
-		int iNumObjs = pBEMProc->getClass( i1BEMClass-1 )->ObjectCount( eObjType );
-		for (int ib=0; (pRetVal == NULL && ib < iNumObjs); ib++)
-		{	BEMObject* pObj = pBEMProc->getClass( i1BEMClass-1 )->GetObject( eObjType, ib );			assert( pObj );
-         // check for object valid and name match
-         if ( pObj != NULL  &&
-              ( (!bNameIsPrefix && qsObjName.compare( pObj->getName(), Qt::CaseInsensitive ) == 0) ||
-                ( bNameIsPrefix && qsObjName.compare( pObj->getName().left( qsObjName.length() ), Qt::CaseInsensitive ) == 0) ) )
-            pRetVal = pObj;  // set return value to object pointer
-      }
+// SAC 3/28/18 - revised to allow i1BEMClass == 0 to search ALL object types for the named object
+   BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
+   if (pBEMProc == NULL)
+   	iError = -3;
+   else if (i1BEMClass > 0)
+   {  // get the total number of objects of this class and type
+	   int iCount = BEMPX_GetNumObjects( i1BEMClass, eObjType, iBEMProcIdx );
+	   if (iCount < 0)
+	      iError = iCount;
+	   else if (iCount == 0)
+	      iError = -2;
+	}
+   if (iError == 0)
+   {	int iFirstClass = (i1BEMClass > 0 ? i1BEMClass : 1);
+   	int iLastClass  = (i1BEMClass > 0 ? i1BEMClass : pBEMProc->getNumClasses());
+   	for (int iCls=iFirstClass; (pRetVal == NULL && iCls <= iLastClass); iCls++)
+      {	// i1BEMClass must be valid and there are at least one object of the desired type
+			int iNumObjs = pBEMProc->getClass( iCls-1 )->ObjectCount( eObjType );
+			for (int ib=0; (pRetVal == NULL && ib < iNumObjs); ib++)
+			{	BEMObject* pObj = pBEMProc->getClass( iCls-1 )->GetObject( eObjType, ib );			assert( pObj );
+      	   // check for object valid and name match
+      	   if ( pObj != NULL  &&
+      	        ( (!bNameIsPrefix && qsObjName.compare( pObj->getName(), Qt::CaseInsensitive ) == 0) ||
+      	          ( bNameIsPrefix && qsObjName.compare( pObj->getName().left( qsObjName.length() ), Qt::CaseInsensitive ) == 0) ) )
+      	      pRetVal = pObj;  // set return value to object pointer
+      }	}
    }
 
    return pRetVal;  
@@ -3300,7 +3325,7 @@ QString BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, i
 											else
 												sRetVal.clear();
 											break;
-					case BEMP_Int : 	if (iPrecision == -1 || iPrecision == -2)  // format value as DATE
+					case BEMP_Int : 	if (iPrecision <= -1 && iPrecision >= -3)  // format value as DATE
 											{	if (pProp->getInt() > 0)
 												{
 													time_t time = (time_t) pProp->getInt();
@@ -3309,7 +3334,16 @@ QString BEMPX_GetStringAndStatus(  long lDBID, int& iStatus, int& iSpecialVal, i
 											//		strftime( timeStr, 31, (iPrecision == -1 ? "%H:%M, %a, %b %d, %Y" : "%m/%d/%y"), pTM );
 											//		sRetVal = timeStr;
 													QDateTime dt;	dt.setTime_t( time );
-													sRetVal = dt.toString( (iPrecision == -1 ? "HH:mm, ddd, MMM dd, yyyy" : "MM/dd/yy") );
+													if (iPrecision == -3)		// SAC 5/16/18 - added new '-3' format to handle output as xsd:datetime string
+													{	//sRetVal = dt.toTimeSpec(Qt::OffsetFromUTC).toString(Qt::ISODate);
+														QDateTime utc = dt.toUTC();
+														utc.setTimeSpec(Qt::LocalTime);
+														int utcOffset = utc.secsTo(dt);
+														dt.setUtcOffset(utcOffset);
+														sRetVal = dt.toString(Qt::ISODate);
+													}
+													else
+														sRetVal = dt.toString( (iPrecision == -1 ? "HH:mm, ddd, MMM dd, yyyy" : "MM/dd/yy") );
 													iStatus = pProp->getDataStatus();
 											}	}
 											else // not a date/time precision value
@@ -3960,7 +3994,7 @@ int BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur,
    BOOL bDataModified = FALSE;
    if (iSpecialVal > 0)
    {
-      pProp = BEMPX_GetProperty( lDBID, iRetVal, iOccur, eObjType );
+      pProp = BEMPX_GetProperty( lDBID, iRetVal, iOccur, eObjType, iBEMProcIdx );
       if ((iRetVal >= 0) && (pProp != NULL) && (pProp->getSpecialValue() == 0))
       {
          int iPropType = pProp->getType()->getPropType();
@@ -4008,6 +4042,51 @@ int BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur,
 
    return iRetVal;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////
+// tracking for BEM data mods since last full model defaulting - SAC 4/11/18
+static long slNumModsSinceModelDefaulted = 0;
+void BEMPX_InitModsSinceModelDefaulted()
+{	slNumModsSinceModelDefaulted = 0;
+}
+void BEMPX_IncrementModsSinceModelDefaulted()
+{	slNumModsSinceModelDefaulted++;
+}
+long BEMPX_GetNumModsSinceModelDefaulted()
+{	return slNumModsSinceModelDefaulted;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Exported Function:  BEMPX_SetDataStatus()
+//
+// Purpose ------------------------------------------------------------------
+//   Set the status of a database property to a particular value.
+//   
+// Arguments ----------------------------------------------------------------
+//   long              lDBID       : 6 digit database ID CCPPAA (comp/property/array)
+//   int               iOccur      : (default = -1) occurrence index of object beign edited
+//   BD_PropertyStatus eStatus     : (default = BDS_UserDefined) status flag indicating origin of this value
+//   BD_ObjType        eObjType    : (default = BDO_User) type of object being edited
+//   
+// Return Value -------------------------------------------------------------
+//   integer value:  >= 0  : OK
+//                   <  0  : error value returned from BEMPX_GetProperty()
+//   
+// Notes --------------------------------------------------------------------
+//   
+/////////////////////////////////////////////////////////////////////////////
+int BEMPX_SetDataStatus( long lDBID, int iOccur /*=-1*/, BEM_PropertyStatus eStatus /*=BEMS_UserDefined*/,
+									BEM_ObjType eObjType /*=BEMO_User*/, int iBEMProcIdx /*=-1*/ )
+{	int iError = 0;
+	BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, iOccur, eObjType, iBEMProcIdx );
+	if (iError >= 0 && pProp)
+		pProp->setDataStatus( (int) eStatus );
+	return iError;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 

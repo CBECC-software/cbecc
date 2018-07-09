@@ -1181,7 +1181,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 																					}
 																				}	break;
 											case DMRuleReserved_Units :		// token == "UNITS")
-																				{	token2 = file.ReadToNextToken( saReservedStrs );
+																				{	token2 = file.ReadToNextToken( saReservedStrs, FALSE /*bReadPastEOL*/ );  // SAC 6/10/18 - don't read past EOL to prevent capturing comment lines following units 
 																					if (pNewRuleProp)
 																					{	assert( (pNewRuleProp->getPropType() < 0 || pNewRuleProp->getPropType() == BEMP_Flt) );
 																						if (pNewRuleProp->getPropType() >= 0 && pNewRuleProp->getPropType() != BEMP_Flt)

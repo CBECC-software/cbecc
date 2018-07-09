@@ -272,7 +272,8 @@ BOOL CButtonCtl::ButtonSelected()
             SetDataModifiedFlag( TRUE );
 
             // execute compliance rulelist #1
-            GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+				GetParentFrame()->SendMessage( WM_DATAMODIFIED, 0, m_lDBID );		// SAC 4/12/18
+            GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_DataMod, m_lDBID );
 
             // send a message to the main view's tree control via CMainFrame in case the tree requires updating
             GetParentFrame()->SendMessage( WM_UPDATETREE, 0, m_lDBID );

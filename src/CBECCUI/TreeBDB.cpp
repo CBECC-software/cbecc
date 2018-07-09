@@ -1696,8 +1696,13 @@ void CTreeBDB::PopulateBDBTree( int iTreeMode, int iBDBClassToHighlight, BOOL bO
 }
 
 
-BEMObject* CTreeBDB::DataToBDBObject( DWORD dwData )
+BEMObject* CTreeBDB::DataToBEMObject( DWORD dwData )
 {
+	if (dwData==0)		// SAC 4/24/18 - code to return BEMObject* for selected object (w/o specifying dwData argument)
+   {	HTREEITEM htiSelItem = GetSelectedItem();
+		if (htiSelItem)
+			dwData = GetItemData( htiSelItem );
+	}
    int iBDBClass = TreeRefToComponent( dwData );
    if (iBDBClass > 0 && iBDBClass <= BEMPX_GetNumClasses())
    {
@@ -1723,7 +1728,7 @@ void CTreeBDB::OnTVNItemExpanded(NMHDR* pNMHDR, LRESULT* pResult)
    if (pNMTreeView->itemNew.lParam >= (long) m_dwMinValidRef &&
        pNMTreeView->itemNew.lParam <= (long) m_dwMaxValidRef)
    {
-      BEMObject* pObj = DataToBDBObject( (DWORD) pNMTreeView->itemNew.lParam );
+      BEMObject* pObj = DataToBEMObject( (DWORD) pNMTreeView->itemNew.lParam );
       if (pObj)
          pObj->SetTreeState( m_iTreeMode, ItemIsExpanded(pNMTreeView->itemNew.hItem) );
    }
@@ -1965,7 +1970,7 @@ void CTreeBDB::BeginOleDrag(NMHDR* pNMHDR, LRESULT* pResult, int iButton)
    NM_TREEVIEW *pnmtv = (NM_TREEVIEW *)pNMHDR;
    if ( pnmtv->itemNew.lParam ) 
    {
-      BEMObject* pObj = DataToBDBObject( pnmtv->itemNew.lParam );
+      BEMObject* pObj = DataToBEMObject( pnmtv->itemNew.lParam );
       if ( pObj ) 
       {
          COleDataSource *pDataSource = new COleDataSource;
@@ -2242,7 +2247,7 @@ void CTreeBDB::DropItemBeingDragged( COleDataObject* pDataObject )
    {
       // Set modified flag and evaluate proposed ruleset
       SetDataModifiedFlag( TRUE );
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, iDropClass );
    }
 
    if (!m_bTreeCurrent)
@@ -2315,14 +2320,14 @@ BOOL CTreeBDB::DropOK( HTREEITEM hitem )
          {
             m_iDropIdx = ( IsCopying() &&
                            ( (m_eDragDropCode[ m_iDragDropIdx ] != TDC_Child) ||
-                             (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBDBObject(dwData))) ) )
+                             (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBEMObject(dwData))) ) )
                           ? m_iDragDropIdx : -1;
          }
          else
          {  // Possible drop target is NOT the original drag item's parent
             if ( (iBDBClass == m_dragInfo.iParentBDBClass) &&
                  ( (m_eDragDropCode[ m_iDragDropIdx ] != TDC_Child) ||
-                   (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBDBObject(dwData))) ) )
+                   (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBEMObject(dwData))) ) )
                // If this drop target is of the same class as the drag parent, then set
                // m_iDropIdx such that the assignment to this drop target will be via the
                // exact same mechanism (lDBID) as that which defines the relationship between
@@ -2340,7 +2345,7 @@ BOOL CTreeBDB::DropOK( HTREEITEM hitem )
                for (int i=0; (m_iDropIdx == -1) && (i < m_iDragDropNumber); i++)
                   m_iDropIdx = ( (m_iDragDropClass[i] == iBDBClass) &&
                                  ( (m_eDragDropCode[i] != TDC_Child) ||
-                                   (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBDBObject(dwData))) ) )
+                                   (BEMPX_CanCreateAnotherChildObject(m_dragInfo.iBDBClass, DataToBEMObject(dwData))) ) )
                                 ? i : -1;
          }
       }
@@ -2515,7 +2520,7 @@ void CTreeBDB::PresentQuickMenu( HTREEITEM htiSelItem )
                   MessageBox( "AppendMenu( Separator ) Failed." );
 
 				// SAC 7/23/14 - added items to allow user to move objects up/down in list
-					BEMObject* pObj = DataToBDBObject( dwData );
+					BEMObject* pObj = DataToBEMObject( dwData );
 					bool bCanMoveUp=false, bCanMoveDown=false;
 					if (pObj && pObj->getParent() && pObj->getParent()->getClass() && pObj->getParent()->getClass()->get1BEMClassIdx() > 1)
 					{	// parent exists and it is NOT the topmost Proj object...
@@ -2908,7 +2913,8 @@ void CTreeBDB::OnQuickEdit()
                               (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
-										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip );   // SAC 1/19/12
+										ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip, ebIncludeLongCompParamStrInToolTip,    // SAC 1/19/12
+										(elDefaultOptionInp < DefaultOption_Model) );	// SAC 4/18/18
             if (td.DoModal() == IDOK)
             {}
 
@@ -3292,7 +3298,7 @@ void CTreeBDB::OnEditCopy()
    if (htiSelItem)
    {
       DWORD dwData = GetItemData( htiSelItem );
-      BEMObject* pObj = DataToBDBObject( dwData );
+      BEMObject* pObj = DataToBEMObject( dwData );
       if ( pObj ) 
       {
          std::auto_ptr<COleDataSource> apDataSource( new COleDataSource );
@@ -3311,7 +3317,7 @@ void CTreeBDB::OnUpdateEditCopy(CCmdUI* pCmdUI)
    if (htiSelItem)
    {
       DWORD dwData = GetItemData( htiSelItem );
-      BEMObject* pObj = DataToBDBObject( dwData );
+      BEMObject* pObj = DataToBEMObject( dwData );
       if ( pObj ) 
       {
          bEnable = TRUE;
@@ -3377,7 +3383,7 @@ BOOL CTreeBDB::OKToPaste( DWORD dwData )
 {
    BOOL bOK = FALSE;
 
-   BEMObject* pObj = DataToBDBObject( dwData );
+   BEMObject* pObj = DataToBEMObject( dwData );
    if ( pObj ) 
    {
       UINT uiCF = EnumClipboardFormats( 0 );  // specifies a known available clipboard format 
@@ -3429,7 +3435,8 @@ void CTreeBDB::DoPasteItem(HTREEITEM /*hItem*/, COleDataObject * pDataObject)
       {
          // Set modified flag and evaluate proposed ruleset
          SetDataModifiedFlag( TRUE );
-         GetParentFrame()->SendMessage( WM_EVALPROPOSED );
+			BEMPX_IncrementModsSinceModelDefaulted();		// SAC 5/30/18
+         GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis /*DefaultAction_OpenDialog*/, pNewObj->getClass()->get1BEMClassIdx() );
 
          PopulateBDBTree( m_iTreeMode, pNewObj->getClass()->get1BEMClassIdx() );
       }

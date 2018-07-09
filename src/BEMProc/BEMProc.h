@@ -318,6 +318,7 @@ int BEMPROC_API __cdecl BEMPX_GetClassIndexByLongName(LPCSTR lpszName);
 bool BEMPROC_API __cdecl BEMPX_CanCreateAnotherUserObject(  int i1Class, int iNumObjs=1, int iBEMProcIdx=-1 );
 bool BEMPROC_API __cdecl BEMPX_CanCreateAnotherChildObject( int i1Class, BEMObject* pParObj, int iNumChildren=1, int iBEMProcIdx=-1 );
 void BEMPROC_API __cdecl BEMPX_SetActiveObjectIndex(			int i1Class, int i0ObjIdx, BEM_ObjType objType=BEMO_User, int iBEMProcIdx=-1 );
+int  BEMPROC_API __cdecl BEMPX_GetActiveObjectIndex( int i1Class, int iBEMProcIdx=-1 );  // SAC 4/12/18
 long BEMPROC_API __cdecl BEMPX_GetClassMaxDefinable( int i1Class, int iBEMProcIdx=-1 );  // SAC 7/10/12
 		// fourth argument to enable naming index to begin with something other than the current component index
 		// final three arguments to facilitate default naming to ensure BOTH name uniqueness for new component AND subordinate components
@@ -439,8 +440,8 @@ BEMProperty*     __cdecl BEMPX_GetProperty(		long lDBID, int& iError, int iOccur
 bool BEMPROC_API __cdecl BEMPX_DefaultProperty(	long lDBID, int& iError, int iOccur=-1,
 																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 
-//int BEMPROC_API __cdecl BEMPX_SetBEMDataStatus( long lDBID, int iOccur=-1, BEM_PropertyStatus eStatus=BEMS_UserDefined,
-//																BEM_ObjType eObjType=BEMO_User );
+int  BEMPROC_API __cdecl BEMPX_SetDataStatus( long lDBID, int iOccur=-1, BEM_PropertyStatus eStatus=BEMS_UserDefined,
+																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 int  BEMPROC_API __cdecl BEMPX_GetDataStatus( long lDBID, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );	// was: BEMPX_GetBEMDataStatus()
 int  BEMPROC_API __cdecl BEMPX_GetDataType( long lDBID );
 
@@ -496,6 +497,11 @@ int  BEMPROC_API __cdecl BEMPX_SetBEMData(   long lDBID, int iDataType, void* pD
 int  BEMPROC_API __cdecl BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur=-1,
                                                            BEM_PropertyStatus eStatus=BEMS_UserDefined,
                                                            BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+
+// tracking for BEM data mods since last full model defaulting - SAC 4/11/18
+void BEMPROC_API     __cdecl BEMPX_InitModsSinceModelDefaulted();
+void BEMPROC_API     __cdecl BEMPX_IncrementModsSinceModelDefaulted();
+long BEMPROC_API     __cdecl BEMPX_GetNumModsSinceModelDefaulted();
 
 // SAC 12/19/01 - Added to facilitate more intelligent rule parsing by allowing Parent*() functions to be parsed at compile time
 int  BEMPROC_API __cdecl BEMPX_GetParentComponentType( int i1Class, int iNumGenerations=1, int iBEMProcIdx=-1 );

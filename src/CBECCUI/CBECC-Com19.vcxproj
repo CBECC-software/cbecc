@@ -85,7 +85,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;..\..\bin\Release_VC12\BEMProc19c.lib;..\..\bin\Release_VC12\BEMCmpMgr19c.lib;..\..\bin\Release_VC12\BEMProcUI19c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Core.lib;Qt5Widgets.lib;Qt5Gui.lib;Qt5WinExtras.lib;..\..\bin\Release_VC12\BEMProc19c.lib;..\..\bin\Release_VC12\BEMCmpMgr19c.lib;..\..\bin\Release_VC12\BEMProcUI19c.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(IntDir)CBECC-Com19.pdb</ProgramDatabaseFile>
@@ -96,6 +96,12 @@
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19c.cpp</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>
+    </PreBuildEvent>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(IntDir)CBECC-Com19.bsc</OutputFile>
@@ -139,7 +145,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;..\..\bin\Debug_VC12\BEMProc19c.lib;..\..\bin\Debug_VC12\BEMCmpMgr19c.lib;..\..\bin\Debug_VC12\BEMProcUI19c.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;lz32.lib;Qt5Cored.lib;Qt5Widgetsd.lib;Qt5Guid.lib;Qt5WinExtrasd.lib;..\..\bin\Debug_VC12\BEMProc19c.lib;..\..\bin\Debug_VC12\BEMCmpMgr19c.lib;..\..\bin\Debug_VC12\BEMProcUI19c.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\bin\vendor\boost_1_55_0\stage\lib;..\..\bin\vendor\Qt_5.3\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -151,6 +157,12 @@
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>..\..\vendor\qt_5.3\bin\moc.exe BEMGridDialog.h -o moc_BEMGridDialog19c.cpp</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>generate moc_ source for BEMGridDialog Q_OBJECT</Message>
+    </PreBuildEvent>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(IntDir)CBECC-Com19.bsc</OutputFile>
@@ -205,6 +217,19 @@
     <ClCompile Include="TextProgressCtrl.cpp" />
     <ClCompile Include="TreeBDB.cpp" />
     <ClCompile Include="XMessageBox.cpp" />
+    <ClCompile Include="BEMGridDialog.cpp" />
+    <ClCompile Include="moc_BEMGridDialog19c.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeaderOutputFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeaderOutputFile>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="CBECC-Com19.rc" />
@@ -236,6 +261,7 @@
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="TreeBDB.h" />
     <ClInclude Include="XMessageBox.h" />
+    <ClInclude Include="BEMGridDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="hlp\AppExit.bmp" />

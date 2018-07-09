@@ -867,7 +867,8 @@ BOOL CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog, BOOL bTagDataA
 								  long* plNumRuleEvals /*=NULL*/, double* pdNumSeconds /*=NULL*/,   // SAC 10/12/11 - added to facilitate rule evaluation duration stats
                           PLogMsgCallbackFunc pLogMsgCallbackFunc /*=NULL*/,
 								  void* pCompRuleDebugInfo /*=NULL*/,   // SAC 12/12/13 - added pCompRuleDebugInfo argument
-								  QStringList* psaWarningMsgs /*=NULL*/ )		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
+								  QStringList* psaWarningMsgs /*=NULL*/, 		// SAC 3/2/18 - added to enable Warning message tracking during rulelist evaluation
+								  int iEvalOnlyClass /*=0*/, int iEvalOnlyObjIdx /*=-1*/, int iEvalOnlyObjType /*=0*/ )	// SAC 4/3/18 - added to enable targeted model defaulting
 {
 	QString sRLName = rulelistName;
 	// SAC 7/11/12 - KLUDGE to convert ProposedInput rulelist name to rl_DEFAULT for DataModel rulesets
@@ -883,8 +884,8 @@ BOOL CMX_EvaluateRuleset( LPCSTR rulelistName, BOOL bReportToLog, BOOL bTagDataA
    }
 
 	int iInitErrCount = BEMPX_GetRulesetErrorCount();
-   BOOL bRetVal = BEMPX_EvaluateRuleList( sRLName.toLocal8Bit().constData(), bTagDataAsUserDefined, 0 /*iEvalOnlyClass*/,
-												-1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerboseOutput, pCompRuleDebugInfo,
+   BOOL bRetVal = BEMPX_EvaluateRuleList( sRLName.toLocal8Bit().constData(), bTagDataAsUserDefined, iEvalOnlyClass,
+												iEvalOnlyObjIdx, iEvalOnlyObjType, bVerboseOutput, pCompRuleDebugInfo,
 												plNumRuleEvals, pdNumSeconds, pLogMsgCallbackFunc, psaWarningMsgs );
    if (bReportToLog)
    {

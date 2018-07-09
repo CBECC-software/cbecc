@@ -68,6 +68,7 @@ public:
 
 // Attributes
 public:
+	BEMObject* GetSelectedObjectInTree();
 
 // Operations
 public:

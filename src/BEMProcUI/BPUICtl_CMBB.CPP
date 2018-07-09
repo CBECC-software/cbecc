@@ -1497,7 +1497,9 @@ LONG CComboBoxCtl::OnUpdateData( UINT, LONG )
                                                   (BEM_ObjType) iObjFrom );
 
                   if (m_iComboMode == CM_ACTIVE)
-                     bEvalRules = FALSE;
+                  {  bEvalRules = FALSE;
+							GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, i1Class );
+						}
                }
             }
          }
