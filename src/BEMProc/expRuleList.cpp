@@ -1142,16 +1142,18 @@ double BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyVals, LPCSTR sTableNa
 			dRetVal = -2;  // ExpSetErr( error, EXP_RuleProc, "Table column specified in ApplyHourlyResultMultipliers() function argument too high." );
 		else
 		{	double dTblVal;
-			for (int iHr=0; (dRetVal > -1 && iHr < 8760); iHr++)
+			for (int iHr=0; (dRetVal != -9999 && iHr < 8760); iHr++)
 			{	if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal, true /*bIgnoreIndepCols*/ ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
 					dRetVal += (dHrlyVals[iHr] * dTblVal);  // APPLY hourly multiplier factors
 				else
-				{	dRetVal = -3;
+				{	dRetVal = -9999;	// SAC 6/25/18 - revised balance check to prevent minor negative use from erroring out (Com tic #2145)
 					//ExpSetErr( error, EXP_RuleProc, "Error retrieving hourly table multiplier in ApplyHourlyResultMultipliers() function." );
 					break;
 				}
 			}
 	}	}
+	if (dRetVal == -9999)
+		dRetVal = -3;	// SAC 6/25/18 - retain original '-3' retval indicating table value retrieval failure
 	return dRetVal;
 }
 

@@ -380,8 +380,8 @@
 // IddEnums.hxx,BBE53FC9
 // IddFactory.cxx,C30E412C
 // IddFactory.hxx,0C27D6B3
-// IddFactory_EnergyPlus.cxx,7C20F7BD
-// IddFactory_OpenStudio.cxx,411E6B64
+// IddFactory_EnergyPlus.cxx,21BDFEED
+// IddFactory_OpenStudio.cxx,66CB28F8
 // IddFieldEnums.hxx,BFE51027
 // IddFieldEnums.ixx,44A543B0
 // InternalMass_FieldEnums.hxx,AA583A64
@@ -624,7 +624,7 @@
 // OS_PlantEquipmentOperation_OutdoorRelativeHumidity_FieldEnums.hxx,8767B373
 // OS_PlantEquipmentOperation_OutdoorWetBulbDifference_FieldEnums.hxx,81DC37C5
 // OS_PlantEquipmentOperation_OutdoorWetBulb_FieldEnums.hxx,8F17CE23
-// OS_PlantLoop_FieldEnums.hxx,AD7EB6B0
+// OS_PlantLoop_FieldEnums.hxx,4B2F995B
 // OS_PortList_FieldEnums.hxx,D2036528
 // OS_ProgramControl_FieldEnums.hxx,979403C1
 // OS_Pump_ConstantSpeed_FieldEnums.hxx,94079BDE

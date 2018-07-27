@@ -23,13 +23,13 @@ We recommend that you read through and download (& unzip) the vendor binaries be
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.815*:  https://drive.google.com/file/d/0B8fX6euIT5rfYUVsNHhqWE5WMUk/view?usp=sharing (~1.7 MB)  
+*CSE v0.836*:  https://drive.google.com/file/d/1J3tNCYhP0PX3h22aWYHVqtREb3fXRmJl/view?usp=sharing (~3.4 MB, updated 7/27 for 2016 releases)  
 - Project site:  https://github.com/cse-sim  
-- Files needed for CBECC:  bin\Debug_VC12\CSE\csed.exe & bin\Debug_VC12\CSE\csed.exe
+- Files needed for CBECC:  bin\Debug_VC12\CSE\cse.exe & bin\Release_VC12\CSE\cse.exe
 
-*OpenStudio / EnergyPlus v8.5*:  https://drive.google.com/file/d/0B8fX6euIT5rfUU54Z1Z4ZDV3cXM/view?usp=sharing (~76 MB)  
+*OpenStudio / EnergyPlus v8.5*:  https://drive.google.com/file/d/1wHOdwVaddrhO4iiwpOJ3--EA7eRTAGYe/view?usp=sharing (~76 MB, updated 7/27/18)  
 - OpenStudio project site:  https://github.com/NREL/OpenStudio  
-- Link to [OpenStudio branch CBECC-8-5 commit](https://github.com/NREL/OpenStudio/commit/954bb0db10d17b80ea4c6badd9053f012c3a1938) currently used by CBECC.  
+- Link to [OpenStudio branch CBECC-8-5 commit]https://github.com/NREL/OpenStudio/commit/a1601dc2c12058eb1b34327072caedd02fb18bd1) used by CBECC 2016.3.0 SP2.  
 - OS files needed for CBECC:  subset of OpenStudio DLLs in bin\Debug_VC12 & bin\Release_VC12  
 - EnergyPlus project site:  https://github.com/NREL/EnergyPlus  
 - E+ files needed for CBECC:  EnergyPlus.exe and some supporting files in bin\Debug_VC12\EPlus & bin\Release_VC12\EPlus
@@ -38,7 +38,7 @@ Executable and library files for each of these tools can either be compiled by y
 - Project site:  http://www.boost.org/
 - Files needed for CBECC:  (all Boost libraries integrated into program executables)
 
-*Qt v5.3.2*:  https://drive.google.com/file/d/0B8fX6euIT5rfdUp2cDUwNmNLOWc/view?usp=sharing (~61 MB)  
+*Qt v5.3.2*:  https://drive.google.com/file/d/1ee-VGrN_cErDbwlQSCueal43daXI1gQh/view?usp=sharing (~61 MB, updated 7/27/18 to include Qt5WinExtras)  
 - Project site:  https://www.qt.io/  
 - Files needed for CBECC:  Qt5Core/Gui/Network/Sql/Webkit/Wdigets/Xml in bin\Debug_VC12 & bin\Release_VC12  
 

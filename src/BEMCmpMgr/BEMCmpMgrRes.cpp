@@ -4404,6 +4404,15 @@ const char* GetResultsCSVHeader_Res( int i1HdrIdx )
 
 #define  CM_MAX_RESBATCH_VER  2		// SAC 5/3/17 - 1->2
 
+int path_len( std::string& str )
+{	int iPathLen = -1, iPathLen2 = -1;
+	if (str.rfind('\\') != std::string::npos)
+		iPathLen  = str.rfind('\\');
+	if (str.rfind('/' ) != std::string::npos)
+		iPathLen2 = str.rfind('/' );
+	return std::max( iPathLen, iPathLen2 );
+}
+
 int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 													const char* pszCSEEXEPath, const char* pszCSEWeatherPath, const char* pszDHWDLLPath, const char* pszDHWWeatherPath,
 													const char* pszLogPathFile, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
@@ -4422,17 +4431,19 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 
 	std::string sBatchPathFile = pszBatchPathFile;
 	std::string sBatchPath, sBatchFileOnly;
-	if (sBatchPathFile.rfind('\\') != std::string::npos)
-	{	sBatchPath = sBatchPathFile.substr( 0, sBatchPathFile.rfind('\\')+1 );
-		sBatchFileOnly = sBatchPathFile.substr( sBatchPathFile.rfind('\\')+1 );
+	int iTempPathLen = path_len( sBatchPathFile );
+	if (iTempPathLen > 0)
+	{	sBatchPath = sBatchPathFile.substr( 0, iTempPathLen+1 );
+		sBatchFileOnly = sBatchPathFile.substr( iTempPathLen+1 );
 	}
 	std::string sProjPath = pszProjectPath;
 	int iLenOptionsCSVArg = (pszOptionsCSV ? strlen( pszOptionsCSV ) : 0);
 
 	std::string sRulesetPathFile = pszRulesetPathFile;
 	std::string sRulesetPath;
-	if (sRulesetPathFile.rfind('\\') != std::string::npos)
-		sRulesetPath = sRulesetPathFile.substr( 0, sRulesetPathFile.rfind('\\')+1 );
+	iTempPathLen = path_len( sRulesetPathFile );
+	if (iTempPathLen > 0)
+		sRulesetPath = sRulesetPathFile.substr( 0, iTempPathLen+1 );
 
 	std::string sBatchLogPathFile;
 	if (pszLogPathFile && strlen( pszLogPathFile ) > 0)
@@ -4726,7 +4737,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 			sErrMsg.erase();
 			std::string sProjPathFile = saProjOutFN[iRun];
 			int iLastDotIdx   = sProjPathFile.rfind('.');			assert( iLastDotIdx   > 0 );
-			int iLastSlashIdx = sProjPathFile.rfind('\\');			assert( iLastSlashIdx > 0 );
+			int iLastSlashIdx = path_len( sProjPathFile );			assert( iLastSlashIdx > 0 );
 			std::string sProcessingPath = sProjPathFile.substr( 0, iLastDotIdx );
 			sProcessingPath += " - batch\\";
 			std::string sProjPath = sProjPathFile.substr( 0, iLastSlashIdx+1 );
@@ -4748,10 +4759,10 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 			std::string sRptIncFile = saSimReportFile[iRun];
 			if (sErrMsg.size() < 1 && sRptIncFile.size() > 0 && !boost::iequals( saProjInFN[iRun].c_str(), sProjPathFile.c_str() ))   // only copy report include file if the IN & OUT project files are different
 				{	std::string sRptIncFileFrom = sRptIncFile;
-					int iLastRptIncSlashIdx = sRptIncFile.rfind('\\');
+					int iLastRptIncSlashIdx = path_len( sRptIncFile );
 					if (iLastRptIncSlashIdx < 0)
 					{	// prepend IN project path to RptInc file
-						int iLastProjInSlashIdx = saProjInFN[iRun].rfind('\\');			assert( iLastProjInSlashIdx > 0 );
+						int iLastProjInSlashIdx = path_len( saProjInFN[iRun] );			assert( iLastProjInSlashIdx > 0 );
 						sRptIncFileFrom = saProjInFN[iRun].substr( 0, iLastProjInSlashIdx+1 ) + sRptIncFileFrom;
 					}
 					else

@@ -226,9 +226,10 @@ BOOL CDlgStartLoad::OnInitDialog()
 
 // SAC 11/20/17 - removed code to hide batch processing option when developer menu option not set
 	int iEnableBatchProc = 1;
-#ifdef UI_CANRES
-	iEnableBatchProc = 0;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
-#endif
+// SAC 7/7/18 - toggle ON batch processing option by default for CBECC-Com 2016.3.0 SP2
+//#ifdef UI_CANRES
+//	iEnableBatchProc = 0;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
+//#endif
 	bool bEnableBatchProc = (ReadProgInt( "options", "EnableBatchProcessing", iEnableBatchProc ) > 0 ||
 									 ReadProgInt( "options", "DeveloperMenu", 0 ) > 0);
 	if (!bEnableBatchProc && m_iOption == -4)

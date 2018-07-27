@@ -5337,6 +5337,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 #define  CM_MAX_BATCH_VER  3		// SAC 6/21/18 - 2->3 (CSE path)
 
+int path_len( std::string& str )
+{	int iPathLen = -1, iPathLen2 = -1;
+	if (str.rfind('\\') != std::string::npos)
+		iPathLen  = str.rfind('\\');
+	if (str.rfind('/' ) != std::string::npos)
+		iPathLen2 = str.rfind('/' );
+	return std::max( iPathLen, iPathLen2 );
+}
+
 int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char* pszProjectPath, const char* pszBEMBasePathFile, const char* pszRulesetPathFile,
 														const char* pszSimWeatherPath, const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath,
 														const char* /*pszLogPathFile*/, const char* pszUIVersionString, const char* pszOptionsCSV /*=NULL*/,
@@ -5355,15 +5364,17 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 	std::string sBatchPathFile = pszBatchPathFile;
 	std::string sBatchPath;
-	if (sBatchPathFile.rfind('\\') != std::string::npos)
-		sBatchPath = sBatchPathFile.substr( 0, sBatchPathFile.rfind('\\')+1 );
+	int iTempPathLen = path_len( sBatchPathFile );
+	if (iTempPathLen > 0)
+		sBatchPath = sBatchPathFile.substr( 0, iTempPathLen+1 );
 	std::string sProjPath = pszProjectPath;
 	int iLenOptionsCSVArg = (pszOptionsCSV ? strlen( pszOptionsCSV ) : 0);
 
 	std::string sRulesetPathFile = pszRulesetPathFile;
 	std::string sRulesetPath;
-	if (sRulesetPathFile.rfind('\\') != std::string::npos)
-		sRulesetPath = sRulesetPathFile.substr( 0, sRulesetPathFile.rfind('\\')+1 );
+	iTempPathLen = path_len( sRulesetPathFile );
+	if (iTempPathLen > 0)
+		sRulesetPath = sRulesetPathFile.substr( 0, iTempPathLen+1 );
 
 	std::string sBatchLogPathFile = (sBatchPathFile.rfind('.') != std::string::npos ? sBatchPathFile.substr( 0, sBatchPathFile.rfind('.') ) : sBatchPathFile);
 	sBatchLogPathFile += ".log";
@@ -5646,7 +5657,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 			sErrMsg.erase();
 			std::string sProjPathFile = saProjOutFN[iRun];
 			int iLastDotIdx   = sProjPathFile.rfind('.');			assert( iLastDotIdx   > 0 );
-			int iLastSlashIdx = sProjPathFile.rfind('\\');			assert( iLastSlashIdx > 0 );
+			int iLastSlashIdx = path_len( sProjPathFile );			assert( iLastSlashIdx > 0 );
 			std::string sProcessingPath = sProjPathFile.substr( 0, iLastDotIdx );
 			sProcessingPath += " - batch\\";
 			std::string sProjPath = sProjPathFile.substr( 0, iLastSlashIdx+1 );
@@ -5778,7 +5789,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 				// COPY Sim SDD XML files to specified location
 					if (sErrMsg.size() < 1 && saCopySimXMLToPath[iRun].size() > 0)
-					{	int iProjOutPathLen    = sProjPathFile.rfind('\\') + 1;										assert( iProjOutPathLen > 3 );
+					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;										assert( iProjOutPathLen > 3 );
 						int iProjOutFileExtLen = sProjPathFile.length() - sProjPathFile.rfind('.');			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
 						std::string sOutFileOnly = sProjPathFile.substr( iProjOutPathLen, (sProjPathFile.length()-iProjOutPathLen-iProjOutFileExtLen) );
 						std::string sSimSDDXMLSrcBase = sProcessingPath;
@@ -5839,7 +5850,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 				// COPY CSE files to specified location
 					if (sErrMsg.size() < 1 && saCopyCSEToPath[iRun].size() > 0)
-					{	int iProjOutPathLen    = sProjPathFile.rfind('\\') + 1;										assert( iProjOutPathLen > 3 );
+					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;										assert( iProjOutPathLen > 3 );
 						int iProjOutFileExtLen = sProjPathFile.length() - sProjPathFile.rfind('.');			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
 						std::string sOutFileOnly = sProjPathFile.substr( iProjOutPathLen, (sProjPathFile.length()-iProjOutPathLen-iProjOutFileExtLen) );
 						std::string sCSESrcBase = sProcessingPath;

@@ -742,6 +742,10 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 	//	if (!sRuleFNGetError.IsEmpty())		- SAC 11/17/15 - this string is now a user prompt/message, not a log message
 	//	   BEMPX_WriteLogFile( sRuleFNGetError );
 
+	// SAC 6/28/18 - added evaluation of generic rulelist to perform checks/warnings and/or changes specific to use of the CBECC interface
+	if (BEMPX_RulelistExists( "CBECCInterfacePrep" ))
+		CMX_EvaluateRuleset( "CBECCInterfacePrep", ebVerboseInputLogging, FALSE, ebVerboseInputLogging, NULL, NULL, NULL, epInpRuleDebugInfo ); 
+
       SetPathName( sInputFile );
       SetModifiedFlag( FALSE );
 

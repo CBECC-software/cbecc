@@ -41,7 +41,7 @@ class OS_PlantLoopFields: public ::EnumBase<OS_PlantLoopFields> {
  public: 
   enum domain 
   {
-Handle, Name, FluidType, UserDefinedFluidType, PlantEquipmentOperationHeatingLoad, PlantEquipmentOperationCoolingLoad, PrimaryPlantEquipmentOperationScheme, LoopTemperatureSetpointNodeName, MaximumLoopTemperature, MinimumLoopTemperature, MaximumLoopFlowRate, MinimumLoopFlowRate, PlantLoopVolume, PlantSideInletNodeName, PlantSideOutletNodeName, PlantSideBranchListName, DemandSideInletNodeName, DemandSideOutletNodeName, DemandSideBranchListName, DemandSideConnectorListName, LoadDistributionScheme, AvailabilityManagerListName, PlantLoopDemandCalculationScheme, CommonPipeSimulation, PressureSimulationType,   };
+Handle, Name, FluidType, UserDefinedFluidType, PlantEquipmentOperationHeatingLoad, PlantEquipmentOperationCoolingLoad, PrimaryPlantEquipmentOperationScheme, LoopTemperatureSetpointNodeName, MaximumLoopTemperature, MinimumLoopTemperature, MaximumLoopFlowRate, MinimumLoopFlowRate, PlantLoopVolume, PlantSideInletNodeName, PlantSideOutletNodeName, PlantSideBranchListName, DemandSideInletNodeName, DemandSideOutletNodeName, DemandSideBranchListName, DemandSideConnectorListName, LoadDistributionScheme, AvailabilityManagerListName, PlantLoopDemandCalculationScheme, CommonPipeSimulation, PressureSimulationType, PlantEquipmentOperationHeatingLoadSchedule, PlantEquipmentOperationCoolingLoadSchedule, PrimaryPlantEquipmentOperationSchemeSchedule, ComponentSetpointOperationSchemeSchedule,   };
   OS_PlantLoopFields()
    : EnumBase<OS_PlantLoopFields>(Handle) {} 
   OS_PlantLoopFields(const std::string &t_name) 
@@ -88,6 +88,10 @@ Handle, Name, FluidType, UserDefinedFluidType, PlantEquipmentOperationHeatingLoa
 { OS_PlantLoopFields::PlantLoopDemandCalculationScheme, "PlantLoopDemandCalculationScheme", "Plant Loop Demand Calculation Scheme"},
 { OS_PlantLoopFields::CommonPipeSimulation, "CommonPipeSimulation", "Common Pipe Simulation"},
 { OS_PlantLoopFields::PressureSimulationType, "PressureSimulationType", "Pressure Simulation Type"},
+{ OS_PlantLoopFields::PlantEquipmentOperationHeatingLoadSchedule, "PlantEquipmentOperationHeatingLoadSchedule", "Plant Equipment Operation Heating Load Schedule"},
+{ OS_PlantLoopFields::PlantEquipmentOperationCoolingLoadSchedule, "PlantEquipmentOperationCoolingLoadSchedule", "Plant Equipment Operation Cooling Load Schedule"},
+{ OS_PlantLoopFields::PrimaryPlantEquipmentOperationSchemeSchedule, "PrimaryPlantEquipmentOperationSchemeSchedule", "Primary Plant Equipment Operation Scheme Schedule"},
+{ OS_PlantLoopFields::ComponentSetpointOperationSchemeSchedule, "ComponentSetpointOperationSchemeSchedule", "Component Setpoint Operation Scheme Schedule"},
         { 0,0,0 }
       };
       VecType v;

@@ -1232,8 +1232,11 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 			}
 			else if (wAction == 3052 || wAction == 3053)
 			{	bOpenDlg = FALSE;
+				CString sBatchFile;
 				if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sBrowsePath ) || sBrowsePath.IsEmpty())
 					sBrowsePath = esProjectsPath;
+				else if (!DirectoryExists( sBrowsePath ))
+					CreateAndChangeDirectory( sBrowsePath );	// SAC 6/29/18 - add output path directory if doesn't exist - otherwise File-Open dialog will not present below
 				if (wAction == 3052)
 				{	sFileDescrip = _T("Summary results file (*.csv)|*.csv||");
 					sFileExt	    = _T("csv");
@@ -1243,6 +1246,12 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				{	sFileDescrip = _T("Processing log file (*.log)|*.log||");
 					sFileExt	    = _T("log");
 					lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:LogFileName" );			ASSERT( lDBID_File > 0 );
+				}
+				if (BEMPX_SetDataString( lDBID_File, sBatchFile ) && !sBatchFile.IsEmpty())
+				{	if (sBatchFile.Find(':') >= 0 || sBatchFile[0] == '\\' || sBatchFile[0] == '/')
+						sInitString = sBatchFile;
+					else
+						sInitString = sBrowsePath + sBatchFile;
 			}	}
 			else if (wAction == 3054)
 			{	sBrowsePath = esProjectsPath;
@@ -1290,24 +1299,40 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 		else if (wAction >= 3060 && wAction <= 3063)
 		{
 			QString qsInitPath;
+			CString sDlgCaption;
 			long lDBID_Path = 0;
 			UINT uiBrowseFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 			if (wAction == 3060)
 			{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:ProjDirectory" );
 				uiBrowseFlags = uiBrowseFlags | BIF_NONEWFOLDERBUTTON;
+				sDlgCaption = "Batch Project Directory Selection";
 			}
 			else if (wAction == 3061)
-				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:OutputProjDir" );
-			else if (wAction == 3062)
-				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:SDDXMLFilePath" );
-			else if (wAction == 3063)
-				lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:CSEFilePath" );
+			{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:OutputProjDir" );
+				sDlgCaption = "Output Project Directory Selection";
+			}
+			else
+			{	if (wAction == 3062)
+				{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:SDDXMLFilePath" );
+					sDlgCaption = "SDD XML File Directory Selection";
+				}
+				else if (wAction == 3063)
+				{	lDBID_Path = BEMPX_GetDatabaseID( "BatchRuns:CSEFilePath" );
+					sDlgCaption = "CSE File Directory Selection";
+				}
+				CString sBrowsePath;
+				if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), sBrowsePath ) || sBrowsePath.IsEmpty())
+					sBrowsePath = esProjectsPath;
+				//else if (!DirectoryExists( sBrowsePath ))
+					CreateAndChangeDirectory( sBrowsePath );	// SAC 6/29/18 - add output path directory if doesn't exist - otherwise File-Open dialog will not present below
+				qsInitPath = sBrowsePath;
+			}
 
 			ASSERT( lDBID_Path > 0 );
 			CDocument* pDoc = GetActiveDocument();
 			if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)) && lDBID_Path > 0)
 			{
-				if (BEMPX_GetString( lDBID_Path, qsInitPath ) && !qsInitPath.isEmpty())
+				if (qsInitPath.isEmpty() && BEMPX_GetString( lDBID_Path, qsInitPath ) && !qsInitPath.isEmpty())
 				{	if (qsInitPath.indexOf(':') < 0 && qsInitPath.indexOf('\\') != 0 && qsInitPath.indexOf('/') != 0)
 						// if InitPath not a complete path, then PREpend 
 						qsInitPath = QString( "%1%2" ).arg( (const char*) esProjectsPath, qsInitPath );
@@ -1317,31 +1342,39 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 				if (!qsInitPath.isEmpty() && qsInitPath.lastIndexOf('\\') == qsInitPath.length()-1)
 					qsInitPath = qsInitPath.left( qsInitPath.length()-1 );	// trim trailing '\'
 
-				TCHAR path[_MAX_PATH];
-				std::string saved_path = qsInitPath.toLatin1().constData();
-				//const char * path_param = saved_path.c_str();
-				std::wstring wsaved_path(saved_path.begin(),saved_path.end());
-				const wchar_t * path_param = wsaved_path.c_str();
-
-				BROWSEINFO bi = { 0 };
-				bi.lpszTitle  = ("Browse for folder...");
-				bi.ulFlags    = uiBrowseFlags;   // was: BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-				bi.lpfn       = BrowseCallbackProc;
-				if (!qsInitPath.isEmpty())
-					bi.lParam  = (LPARAM) path_param;
-
-				LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
-				if ( pidl != 0 )
-				{	//get the name of the folder and put it in path
-					SHGetPathFromIDList ( pidl, path );
-					//free memory used
-					IMalloc * imalloc = 0;
-					if ( SUCCEEDED( SHGetMalloc ( &imalloc )) )
-					{	imalloc->Free ( pidl );
-						imalloc->Release ( );
-					}
-
-					qsInitPath = (LPSTR) path;
+				CFolderPickerDialog m_dlgFolder;
+				CString folder = qsInitPath.toLatin1().constData();
+				m_dlgFolder.m_ofn.lpstrTitle = sDlgCaption;
+				m_dlgFolder.m_ofn.lpstrInitialDir = folder;  //_T("C:\\");
+				if (m_dlgFolder.DoModal() == IDOK)
+				{	folder = m_dlgFolder.GetPathName(); 
+		//			folder += _T("\\");	// as there is no '\' on the returned name
+		// SAC 6/29/18 - replaced QT folder selection mechanism (below) w/ MFC version (above)
+		//		TCHAR path[_MAX_PATH];
+		//		std::string saved_path = qsInitPath.toLatin1().constData();
+		//		//const char * path_param = saved_path.c_str();
+		//		std::wstring wsaved_path(saved_path.begin(),saved_path.end());
+		//		const wchar_t * path_param = wsaved_path.c_str();
+		//
+		//		BROWSEINFO bi = { 0 };
+		//		bi.lpszTitle  = ("Browse for folder...");
+		//		bi.ulFlags    = uiBrowseFlags;   // was: BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+		//		bi.lpfn       = BrowseCallbackProc;
+		//		if (!qsInitPath.isEmpty())
+		//			bi.lParam  = (LPARAM) path_param;
+		//
+		//		LPITEMIDLIST pidl = SHBrowseForFolder ( &bi );
+		//		if ( pidl != 0 )
+		//		{	//get the name of the folder and put it in path
+		//			SHGetPathFromIDList ( pidl, path );
+		//			//free memory used
+		//			IMalloc * imalloc = 0;
+		//			if ( SUCCEEDED( SHGetMalloc ( &imalloc )) )
+		//			{	imalloc->Free ( pidl );
+		//				imalloc->Release ( );
+		//			}
+		//			qsInitPath = (LPSTR) path;
+					qsInitPath = (const char*) folder;
 					if (!qsInitPath.isEmpty())
 					{	qsInitPath.replace('/','\\');
 						if (!qsInitPath.isEmpty() && qsInitPath.lastIndexOf('\\') != qsInitPath.length()-1)
@@ -3046,10 +3079,10 @@ static void InitBatchRunsFromINI()
 	long lAdditionalInputs = ReadProgInt( "options", "Batch_AdditionalInputs", 0 );
 	if (lAdditionalInputs > 0)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), BEMP_Int, (void*) &lAdditionalInputs );
-	const char* pszBRProps[] = {  "IncludeSubdirs",  "StoreProjToSepDir",  "ProjFileNames",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  NULL  };
-	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {       1          ,   lAdditionalInputs ,         1       ,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3083,10 +3116,14 @@ static void WriteBatchRunDataToINI()
 	int iAdditionalInputs = (int) BEMPX_GetIntegerAndStatus( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), iStatus, iSpecVal, iErr );
 	if (iStatus > 6)
 		WriteProgInt( "options", "Batch_AdditionalInputs", iAdditionalInputs );
-	const char* pszBRProps[] = {  "IncludeSubdirs",  "StoreProjToSepDir",  "ProjFileNames",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  NULL  };
-	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+//	const char* pszBRProps[] = {  "IncludeSubdirs",  "StoreProjToSepDir",  "ProjFileNames",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  NULL  };
+//	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+//	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+//	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])

@@ -2908,7 +2908,7 @@ void InitBEMDBIDs()
    
    eiBDBCID_ThrmlZn            = BEMPX_GetDBComponentID( "ThrmlZn" );
    eiBDBCID_AirSys             = BEMPX_GetDBComponentID( "AirSys" );
-   eiBDBCID_VRFSys             = BEMPX_GetDBComponentID( "VRFSys" );
+//   eiBDBCID_VRFSys             = BEMPX_GetDBComponentID( "VRFSys" );     - SAC 6/28/18 - comment out VRFSys for Com 16.3.0 SP2
    eiBDBCID_ZnSys              = BEMPX_GetDBComponentID( "ZnSys" );
    eiBDBCID_AirSeg             = BEMPX_GetDBComponentID( "AirSeg" );
    eiBDBCID_EvapClr            = BEMPX_GetDBComponentID( "EvapClr" );

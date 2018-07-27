@@ -24011,12 +24011,24 @@ IddObject createOS_PlantLoopIddObject() {
     ss << "\\key CommonPipe\n";
     ss << "\\key TwoWayCommonPipe\n";
     ss << "\\key None\n";
-    ss << "A19; \\field Pressure Simulation Type\n";
+    ss << "A19, \\field Pressure Simulation Type\n";
     ss << "\\type choice\n";
     ss << "\\default None\n";
     ss << "\\key PumpPowerCorrection\n";
     ss << "\\key LoopFlowCorrection\n";
     ss << "\\key None\n";
+    ss << "A20, \\field Plant Equipment Operation Heating Load Schedule\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A21, \\field Plant Equipment Operation Cooling Load Schedule\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A22, \\field Primary Plant Equipment Operation Scheme Schedule\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A23; \\field Component Setpoint Operation Scheme Schedule\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
 
     IddObjectType objType(IddObjectType::OS_PlantLoop);
     OptionalIddObject oObj = IddObject::load("OS:PlantLoop",
@@ -27788,6 +27800,7 @@ IddObject createOS_ZoneHVAC_FourPipeFanCoilIddObject() {
     ss << "\\required-field\n";
     ss << "\\type object-list\n";
     ss << "\\object-list HeatingCoilsWater\n";
+    ss << "\\object-list HeatingCoilName\n";
     ss << "N8 , \\field Maximum Hot Water Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\autosizable\n";
@@ -29615,7 +29628,7 @@ IddObject createOS_WaterHeater_HeatPumpIddObject() {
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\required-field\n";
-    ss << "\\minimum 5\n";
+    ss << "\\minimum -5\n";
     ss << "\\note Heat pump compressor will not operate when the inlet air dry-bulb temperature\n";
     ss << "\\note is below this value.\n";
     ss << "A13, \\field Compressor Location\n";

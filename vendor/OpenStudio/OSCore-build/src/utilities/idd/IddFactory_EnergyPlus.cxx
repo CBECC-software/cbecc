@@ -53891,7 +53891,7 @@ IddObject createWaterHeater_HeatPump_PumpedCondenserIddObject() {
     ss << "N5 , \\field Maximum Inlet Air Temperature for Compressor Operation\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
-    ss << "\\default 48.88888888889\n";
+    ss << "\\default 94\n";
     ss << "\\minimum 26\n";
     ss << "\\maximum 94\n";
     ss << "\\note Heat pump compressor will not operate when the inlet air dry-bulb temperature\n";

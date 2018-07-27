@@ -469,11 +469,12 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 			}
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
 			{
+//BEMPX_WriteLogFile( QString( "   Process hourly results for Fuel %1 (%2)" ).arg( QString::number( iFl ), (iFl==0 ? "Elec" : (iFl==1 ? "Gas" : "Other" )) ) );
 				InitHrlyRes( dHrlyResCompTot );
 				InitHrlyRes( dHrlyResTot );
 				iEUIdx = -1;
 				while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
-				{	
+				{
 					InitHrlyRes( dHrlyRes );
 					double dEUTot = 0.0;
 					int iEU2Idx = -1;
@@ -486,6 +487,8 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 								dHrlyRes[hr] += pdaHrlyOSRes->at(hr);
 						}
 					}
+//BEMPX_WriteLogFile( QString( "      Enduse: %1 (%2) - Total use: %3" ).arg( esEUMap_CECNonRes[iEUIdx].sEnduseAbbrev, QString::number( iEUIdx ), QString::number( esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] ) ) );
+//"Space Cooling"      ,  "Spc Cool"  ,  OSEU_Cooling,           OSEU_ClgCoils,         OSEU_HtRecov_Clg,        -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
 					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] > 0)
 					{
 							esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
@@ -518,6 +521,7 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 						if (esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] > 0)
 			//				dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes, "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
 							dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
+//BEMPX_WriteLogFile( QString( "         iTableCol %1 - dTDVSum %2" ).arg( QString::number( iTableCol ), QString::number( dTDVSum ) ) );
 						if (dTDVSum < 0)
 						{	// ERROR
 							assert( FALSE );
@@ -529,6 +533,7 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 							if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 						}
+//BEMPX_WriteLogFile( QString( "         dTDVSum %1 - fTotBldgFlrArea %2 - esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] %3" ).arg( QString::number( dTDVSum ), QString::number( fTotBldgFlrArea ), QString::number( esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] ) ) );
 
 					// SAC 10/8/16 - elec demand calc
 						if (iFl==0 && !sHrlyElecDemMultTblCol.isEmpty() && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
