@@ -2326,6 +2326,10 @@ int eiBDBCID_CrvQuad = 0;
 int eiBDBCID_CrvCubic = 0;
 int eiBDBCID_CrvDblQuad = 0;
 int eiBDBCID_EUseSummary = 0;
+int eiBDBCID_PVArray = 0;
+int eiBDBCID_PVArrayGeom = 0;
+int eiBDBCID_PVArrayShade = 0;
+int eiBDBCID_Battery = 0;
 
 int eiBDBCID_Building = 0;
 int eiBDBCID_Story = 0;
@@ -2442,6 +2446,10 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd =  730;    iTabCtrlHt = 535;   }
 	else if (iBDBClass == eiBDBCID_ThrmlZn )				{  iTabCtrlWd =  900;    iTabCtrlHt = 570;   }	// SAC 10/29/14
 //	else if (iBDBClass == eiBDBCID_CoilClg )				{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_PVArray      )		{  iTabCtrlWd =  770;    iTabCtrlHt = 620;   }	// SAC 7/13/18
+	else if (iBDBClass == eiBDBCID_PVArrayGeom  )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2883,6 +2891,10 @@ void InitBEMDBIDs()
    eiBDBCID_CrvCubic           = BEMPX_GetDBComponentID( "CrvCubic" );
    eiBDBCID_CrvDblQuad         = BEMPX_GetDBComponentID( "CrvDblQuad" );
 	eiBDBCID_EUseSummary        = BEMPX_GetDBComponentID( "EUseSummary" );
+	eiBDBCID_PVArray            = BEMPX_GetDBComponentID( "PVArray"      );
+	eiBDBCID_PVArrayGeom        = BEMPX_GetDBComponentID( "PVArrayGeom"  );
+	eiBDBCID_PVArrayShade       = BEMPX_GetDBComponentID( "PVArrayShade" );
+	eiBDBCID_Battery            = BEMPX_GetDBComponentID( "Battery"      );
 
    eiBDBCID_Building           = BEMPX_GetDBComponentID( "Building" );
    eiBDBCID_Story              = BEMPX_GetDBComponentID( "Story" );
@@ -2908,7 +2920,7 @@ void InitBEMDBIDs()
    
    eiBDBCID_ThrmlZn            = BEMPX_GetDBComponentID( "ThrmlZn" );
    eiBDBCID_AirSys             = BEMPX_GetDBComponentID( "AirSys" );
-//   eiBDBCID_VRFSys             = BEMPX_GetDBComponentID( "VRFSys" );     - SAC 6/28/18 - comment out VRFSys for Com 16.3.0 SP2
+   eiBDBCID_VRFSys             = BEMPX_GetDBComponentID( "VRFSys" );     // SAC 6/28/18 - comment out VRFSys for Com 16.3.0 SP2 - restored 7/13/18
    eiBDBCID_ZnSys              = BEMPX_GetDBComponentID( "ZnSys" );
    eiBDBCID_AirSeg             = BEMPX_GetDBComponentID( "AirSeg" );
    eiBDBCID_EvapClr            = BEMPX_GetDBComponentID( "EvapClr" );

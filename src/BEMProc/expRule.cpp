@@ -2451,7 +2451,16 @@ static bool ProcessFormatStatement( QString& sRetStr, QString sFormat, ExpNode**
                            if (pNode[i]->type == EXP_String)
                            {	bRetVal = StringFormatValid( sFormatThis, iPctIdx, error );		// SAC 4/25/16 - added to verify valid format for string output
                            	if (bRetVal)
+		//// investigating bug where formatting string containing special characters like '°' does not preserve these chars - SAC 7/13/18
+		//{	QString sDbgMsg = "   Formatting string: '";
+		//	sDbgMsg += sFormatThis;
+		//	sDbgMsg += "' w/ '";
+		//	sDbgMsg += (char*) pNode[i]->pValue;
+		//	sDbgMsg += "' =>  ";
                               	sTemp.sprintf( sFormatThis.toLocal8Bit().constData(), (char*) pNode[i]->pValue );
+		//	sDbgMsg += sTemp;
+		//   BEMPX_WriteLogFile( sDbgMsg );
+		//}
                            }
 								// experiment w/ using '%c' to insert individual ASCII characters - SAC 3/18/12
                            else if (cNext == 'c')

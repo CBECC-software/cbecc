@@ -542,6 +542,8 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
 			m_lDBID_PolyLp_VectorPLen   = GetPropertyDBID_LogError( "PolyLp", "VectorPLen",   m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
 			m_lDBID_PolyLp_UnitVectorPi = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPi", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
 			m_lDBID_PolyLp_UnitVectorPj = GetPropertyDBID_LogError( "PolyLp", "UnitVectorPj", m_iOID_PolyLp, iNumInitErrors, sFirstInitError );
+			m_lDBID_PolyLp_Azimuth      = BEMPX_GetDatabaseID(                "Azimuth",      m_iOID_PolyLp );		// SAC 7/12/18 - added w/ NO error checking (used when present)
+			m_lDBID_PolyLp_TiltAngle    = BEMPX_GetDatabaseID(                "TiltAngle",    m_iOID_PolyLp );
 		}
 
    	m_iOID_CartesianPt	= GetObjectID_LogError( "CartesianPt", iNumInitErrors, sFirstInitError );

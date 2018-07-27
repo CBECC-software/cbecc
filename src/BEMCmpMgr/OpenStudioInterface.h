@@ -1,8 +1,8 @@
 // OpenStudioInterface.h : 
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -46,9 +46,9 @@ typedef struct
 	double      daTDVTotal[3];
 	double      dElecDemand;		// SAC 10/8/16
 } EndUseMap;
-#define  NUM_T24_NRES_EndUses     13
+#define  NUM_T24_NRES_EndUses     15	// SAC 7/14/18 - 13->15 for PV/Batt
 #define  IDX_T24_NRES_EU_CompTot   7
-#define  IDX_T24_NRES_EU_Total    12
+#define  IDX_T24_NRES_EU_Total    14	// SAC 7/15/18 - 12->14 for PV/Batt
 extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 
 #define  NUM_T24_NRES_Fuels        3
@@ -181,5 +181,25 @@ class COSRunInfo
 		bool		m_bSimOutVarsCSV;		// SAC 4/12/16
 };
 
+// SAC 7/23/18 - new routine to enable split of results processing needed for integration of PV/Battery simulation via CSE
+extern int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
+															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
+															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+													// other general args
+															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose=FALSE, // BOOL bPerformRangeChecks=TRUE,
+                          							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
+															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
+															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+
+extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
+															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
+															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+													// other general args
+															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose=FALSE, // BOOL bPerformRangeChecks=TRUE,
+                          							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
+															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
+															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 
 #endif  // _OPENSTUDIOINTERFACE_H

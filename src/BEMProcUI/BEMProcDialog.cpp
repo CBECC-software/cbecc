@@ -239,7 +239,8 @@ BOOL CSACBEMProcDialog::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-   GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMClass );		// SAC 4/15/18
+	if (GetParentFrame())
+		GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMClass );		// SAC 4/15/18
 
 	// Get pointer to Close button, then get its dimensions
    int iBtnWd, iBtnHt;
@@ -1231,7 +1232,8 @@ void CSACBEMProcDialog::OnOK()
 {
    if (RuleBasedErrorCheck())
    {
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
+		if (GetParentFrame())
+			GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
 
 //      EvaluateRules( 1 );
       CDialog::OnOK();	
@@ -1248,7 +1250,8 @@ void CSACBEMProcDialog::OnCancel()
       if (!RuleBasedErrorCheck())
          return;
 
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
+	if (GetParentFrame())
+		GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_CloseDialog, m_iBEMClass );
       
 //      if ( !OKToExit() &&
 //           MessageBox( "Do you wish to leave this dialog without fixing the error(s)?",

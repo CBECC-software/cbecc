@@ -50,21 +50,21 @@
 using namespace OS_Wrap;
 
 
-const char* pszEPlusEndUseCategs[] = {	"Heating",         // 0
-													"Cooling",         // 1
-													"Int Lights",      // 2
-													"Ext Lights",      // 3
-													"Int Equipment",   // 4
-													"Ext Equipment",   // 5
-													"Fans",            // 6
-													"Pumps",           // 7
-													"HeatRejection",   // 8
-													"Humidifier",      // 9
-													"HeatRecovery",    // 10
-													"WaterSystems",    // 11
-													"Refrigeration",   // 12
-													"Generators" };    // 13
-static int siEndUsesToReport[] = { 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, -1 };
+// const char* pszEPlusEndUseCategs[] = {	"Heating",         // 0   - SAC 7/20/18 - never referenced
+// 													"Cooling",         // 1
+// 													"Int Lights",      // 2
+// 													"Ext Lights",      // 3
+// 													"Int Equipment",   // 4
+// 													"Ext Equipment",   // 5
+// 													"Fans",            // 6
+// 													"Pumps",           // 7
+// 													"HeatRejection",   // 8
+// 													"Humidifier",      // 9
+// 													"HeatRecovery",    // 10
+// 													"WaterSystems",    // 11
+// 													"Refrigeration",   // 12
+// 													"Generators" };    // 13
+// static int siEndUsesToReport[] = { 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, -1 };   - SAC 7/20/18 - never referenced
 //	const char* pszEndusePropNames[] = {	"Enduse1",   
 //														"Enduse2",   
 //														"Enduse3",   
@@ -96,18 +96,6 @@ static int siEndUsesToReport[] = { 0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, -1 };
 // 	OSEU_Boilers,       //  ((Boilers))                     17    - Process (and/or Spc Htg)
 // 	OSEU_Baseboard,     //  ((Baseboard))                   18    - Spc Heating (???)
 
-// typedef struct
-// {
-//    char*       sEnduseName;
-//    int         iaEndUseIdx[6];
-//    int         iSumIntoCompliance;
-// 	double      daEnduseTotal[3];
-// 	double      daTDVTotal[3];
-// 	double      dElecDemand;		// SAC 10/8/16
-// } EndUseMap;
-//#define  NUM_T24_NRES_EndUses     12
-//#define  IDX_T24_NRES_EU_CompTot   7
-//#define  IDX_T24_NRES_EU_Total    11
 // SAC 10/13/15 - switched 'Process Ltg' to 'Other Ltg'
 													                                                                                                                // SumInto
 EndUseMap esEUMap_CECNonRes[] =           // enduses...                                                                                                   Compliance   daEnduseTotal    daTDVTotal
@@ -125,6 +113,8 @@ EndUseMap esEUMap_CECNonRes[] =           // enduses...                         
 	{  "Process"            ,  "Process"   ,  OSEU_IntEquip_Process,  OSEU_IntEquip_Refrig,  OSEU_Refrig,       OSEU_IntEquip_IntTrans,   -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 8/19/14 - added OSEU_IntEquip_IntTrans to capture elevator/escalator energy use
 	{  "Other Ltg"          ,  "Othr Ltg"  ,  OSEU_IntLights_NonComp,       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
 	{  "Process Motors"     ,  "Proc Mtrs" ,  OSEU_Fans_ProcMtrs,           -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 2/1/17 - added Process Motors to capture parking garage exhaust fans (tic #2033)  // SAC 8/14/17 - switched OSEU_Fans_PrkgGar to OSEU_Fans_ProcMtrs
+	{  "Photovoltaics"      ,  "PV"        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 7/14/18
+	{  "Battery"            ,  "Battery"   ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },		// SAC 7/14/18
 	{  "TOTAL"              ,  "TOTAL"     ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
 	{  NULL                 ,  NULL        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   }  };
                                                                                                 // FINAL enduse index must be '-1' for each record
@@ -419,39 +409,20 @@ static inline double RoundVal( double dVal, int iDecPrec )
 
 
 // SAC 4/17/14 - moved ALL results processing to this subordinate routine
-BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir, BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath )
+// SAC 7/23/18 - split ProcessSimulationResults() into two separate routines:
+//						RetrieveSimulationResults() to retrieve hourly results and process ReadVarsESO requests, and
+//						ProcessNonresSimulationResults() to perform TDV calcs, UMLH checks, cr8/edit EnergyUse and EUseSummary objects, etc.
+//BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir, BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath )
+BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir, BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath )
 {
 	BOOL bRetVal = TRUE;
 	QString sLogMsg, sTemp;
-
-		double fBldgNonResFlrArea = 0, fBldgResFlrArea = 0, fTotBldgFlrArea=0;
-		long lCliZnNum=0;
-		if (BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:NonResFlrArea" ), fBldgNonResFlrArea, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  // SAC 3/13/13 - CondFlrArea -> res/nonres...
-			 BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:ResFlrArea"    ), fBldgResFlrArea   , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  (fBldgNonResFlrArea > 0 || fBldgResFlrArea > 0) &&
-			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"      ), lCliZnNum         , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  lCliZnNum > 0 )
-			fTotBldgFlrArea = fBldgNonResFlrArea + fBldgResFlrArea;
-
-		int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
-		long lDBID_EUseSummary_ZoneUMLHsLoaded  = BEMPX_GetDatabaseID( "ZoneUMLHsLoaded", iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHsLoaded > 0 );
-		long lDBID_EUseSummary_ZoneUMLHs        = BEMPX_GetDatabaseID( "ZoneUMLHs"      , iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHs > 0 );
-
-		QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
-		if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
-			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
-
-		int iOrientNum = 0;
-		if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
-		{	QString sRunID = osRunInfo.RunID();
-			if (sRunID.length() == 3)
-			{	sRunID = sRunID[2];
-				iOrientNum = atoi( sRunID.toLocal8Bit().constData() );
-		}	}
 
 		if (osRunInfo.StoreHourlyResults() && iRetVal == 0)
 		{							if (bVerbose)
 										BEMPX_WriteLogFile( "  PerfSim_E+ - Pulling/grouping/summing hourly results from OSWrap", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
-			int iEUIdx, iFl, hr, iError;
+			int iEUIdx, iFl, hr /*, iError*/;
 			QString sEUPropNameBase = (osRunInfo.IsStdRun() ? "Std" : "Prop"), sPropName;
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
 			{	iEUIdx = -1;
@@ -489,7 +460,7 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 					}
 //BEMPX_WriteLogFile( QString( "      Enduse: %1 (%2) - Total use: %3" ).arg( esEUMap_CECNonRes[iEUIdx].sEnduseAbbrev, QString::number( iEUIdx ), QString::number( esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] ) ) );
 //"Space Cooling"      ,  "Spc Cool"  ,  OSEU_Cooling,           OSEU_ClgCoils,         OSEU_HtRecov_Clg,        -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
-					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] > 0)
+					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0)  // SAC 7/15/18 - '>0' -> '!=0' to allow for negative (PV/Batt) enduses
 					{
 							esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
 						if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
@@ -505,11 +476,223 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 					//		break;
 					//	}
 					}
+				}	// end of: while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
+			}	// end of: for iFl=0-OSF_NumFuels
+		}	// end of: if (osRunInfo.StoreHourlyResults()
+
+
+	// SAC 4/11/16 - implemented new SimOutputVariablesToCSV feature to make simulation results more accessible (csv vs. sql)
+		if (osRunInfo.SimulateModel() && iRetVal == 0 && osRunInfo.SimOutVarsCSV())
+		{	std::string sEPlusProcDir, sRVEexeFrom, sRVEexeTo, sRVErviFrom, sRVErviTo, sEPlusESOfile, sWarnMsg;
+			sRVEexeFrom		= boost::str( boost::format( "%sReadVarsESO.exe" ) % pszEPlusPath );
+			sRVErviFrom		= boost::str( boost::format( "%sSimOutVarsToCSV.rvi" ) % pszSimProcessDir );
+			bool bDirChangedToEPlus = false;
+			if (!FileExists( sRVEexeFrom.c_str() ))
+				sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to missing file:  %s" ) % sRVEexeFrom );
+			else if (!FileExists( sRVErviFrom.c_str() ))
+				sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to missing file:  %s" ) % sRVErviFrom );
+			else
+			{	sEPlusProcDir = boost::str( boost::format( "%s%s\\EnergyPlus\\"    ) % pszSimProcessDir % osRunInfo.RunID().toLocal8Bit().constData() );
+				sRVEexeTo     = boost::str( boost::format( "%sReadVarsESO.exe"     ) % sEPlusProcDir );
+				sRVErviTo     = boost::str( boost::format( "%sSimOutVarsToCSV.rvi" ) % sEPlusProcDir );
+				if (!CopyFile( sRVEexeFrom.c_str(), sRVEexeTo.c_str(), FALSE ))
+				{	assert( FALSE );
+					sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to error copying '%s' to '%s'" ) % sRVEexeFrom % sRVEexeTo );
+				}
+				if (!CopyFile( sRVErviFrom.c_str(), sRVErviTo.c_str(), FALSE ))
+				{	assert( FALSE );
+					sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to error copying '%s' to '%s'" ) % sRVErviFrom % sRVErviTo );
+				}
+				else
+				{	QString sSimOutVarsFreq;
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SimVarsInterval" ), sSimOutVarsFreq, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+					if (!sSimOutVarsFreq.isEmpty() && (sSimOutVarsFreq.compare("Monthly", Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Timestep" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Daily", Qt::CaseInsensitive)==0
+															  || sSimOutVarsFreq.compare("Hourly" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("RunPeriod", Qt::CaseInsensitive)==0))
+						sSimOutVarsFreq = " " + sSimOutVarsFreq;
+					else
+						sSimOutVarsFreq.clear();
+					sRVErviTo = "SimOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
+					if (!sSimOutVarsFreq.isEmpty())
+						sRVErviTo += sSimOutVarsFreq.toLocal8Bit().constData();
+	            _chdir( sEPlusProcDir.c_str() );
+					bDirChangedToEPlus = true;
+					exec_stream_t es;
+					try
+					{	es.start( sRVEexeTo, sRVErviTo, CREATE_NO_WINDOW );
+						while (es.running())
+							Sleep( 100 );
+					}
+					catch(exec_stream_t::error_t &e)
+					{	sWarnMsg = boost::str( boost::format( "Warning:  Execution of ReadVarsESO reported error: %s" ) % e.what() );
+					}
+			}	}
+
+	//		QString sEPlusOutPath;		sEPlusOutPath.sprintf( "%s%s\\EnergyPlus\\", sProcessingPath, osSimInfo[iSimRun].pszRunID );
+	//		QString sSimOutVarsCSVPathFile = sProcessingPath;
+	//		sSimOutVarsCSVPathFile += osRunInfo[iSimRun].SDDFile();								assert( sSimOutVarsCSVPathFile.lastIndexOf('.') > 0 );
+	//		if (sSimOutVarsCSVPathFile.lastIndexOf('.') > 0)
+	//			sSimOutVarsCSVPathFile = sSimOutVarsCSVPathFile.left( sSimOutVarsCSVPathFile.lastIndexOf('.') );
+	//		sSimOutVarsCSVPathFile += " - OutputVars.csv";
+	//		QString sOverwriteMsg;
+	//		sLogMsg.clear();
+	//		sOverwriteMsg.sprintf( "The CSV file '%s' is opened in another application.  This file must be closed in that "
+	//										"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+	//										"(once the file is closed), or \n'Cancel' to abort the analysis.", sSimOutVarsCSVPathFile );
+	//		if (!OKToWriteOrDeleteFile( sSimOutVarsCSVPathFile, sOverwriteMsg, bSilent ))
+	//		{	if (bSilent)
+	//				sLogMsg.sprintf( "Warning:  Unable to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
+	//			else
+	//				sLogMsg.sprintf( "Warning:  User chose not to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
+	//		}
+	//		else
+	//		{
+	//			QString sRVEexeTo = sEPlusOutPath + QString("ReadVarsESO.exe");
+	//			QString sRVErviTo = sEPlusOutPath + QString("SimOutVarsToCSV.rvi");
+	//			if (!CopyFile( sReadVarsESOexe, sRVEexeTo, FALSE ))
+	//			{	assert( FALSE );
+	//			}
+	//			if (!CopyFile( sReadVarsESOrvi, sRVErviTo, FALSE ))
+	//			{	assert( FALSE );
+	//			}
+	//			else
+	//			{	sRVErviTo = "SimOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
+	//				exec_stream_t es;
+	//				try
+	//				{	es.start( (const char*)sRVEexeTo, (const char*)sRVErviTo );  //, CREATE_NO_WINDOW );
+	//					while (es.running())
+	//					{	Sleep( 100 );
+	//					}
+	//					// ReadVarsESO execution done - now copy output over to final file
+	//					QString sOutCSV = sEPlusOutPath + QString("eplusout.csv");
+	//					if (!FileExists( sOutCSV ))
+	//						sLogMsg = "Warning:  SimOutVarsToCSV ouput file not found";
+	//					else if (!CopyFile( sOutCSV, sSimOutVarsCSVPathFile, FALSE ))
+	//						sLogMsg.sprintf( "Warning:  Unable to copy SimOutVarsToCSV file from '%s' to '%s'", sOutCSV, sSimOutVarsCSVPathFile );
+	//					else
+	//					{	int iGotHere = 1;
+	//						iGotHere;
+	//					}
+	//				}
+	//				catch(exec_stream_t::error_t &e)
+	//				{	sLogMsg.sprintf( "Warning:  Execution of ReadVarsESO reported error: %s", e.what() );
+	//				}
+	//		}	}
+	//		if (!sLogMsg.isEmpty())
+	//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+			if (bDirChangedToEPlus)
+            _chdir( pszSimProcessDir );
+			if (sWarnMsg.size() > 0)
+				BEMPX_WriteLogFile( sWarnMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+
+
+	return bRetVal;
+}
+
+
+BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir, BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath )
+{
+	BOOL bRetVal = TRUE;
+	QString sLogMsg, sTemp;
+
+		double fBldgNonResFlrArea = 0, fBldgResFlrArea = 0, fTotBldgFlrArea=0;
+		long lCliZnNum=0;
+		if (BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:NonResFlrArea" ), fBldgNonResFlrArea, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  // SAC 3/13/13 - CondFlrArea -> res/nonres...
+			 BEMPX_GetFloat(   BEMPX_GetDatabaseID( "Bldg:ResFlrArea"    ), fBldgResFlrArea   , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  (fBldgNonResFlrArea > 0 || fBldgResFlrArea > 0) &&
+			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"      ), lCliZnNum         , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() ) &&  lCliZnNum > 0 )
+			fTotBldgFlrArea = fBldgNonResFlrArea + fBldgResFlrArea;
+
+		int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
+		long lDBID_EUseSummary_ZoneUMLHsLoaded  = BEMPX_GetDatabaseID( "ZoneUMLHsLoaded", iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHsLoaded > 0 );
+		long lDBID_EUseSummary_ZoneUMLHs        = BEMPX_GetDatabaseID( "ZoneUMLHs"      , iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHs > 0 );
+
+		QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
+		if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
+		int iOrientNum = 0;
+		if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
+		{	QString sRunID = osRunInfo.RunID();
+			if (sRunID.length() == 3)
+			{	sRunID = sRunID[2];
+				iOrientNum = atoi( sRunID.toLocal8Bit().constData() );
+		}	}
+
+		if (osRunInfo.StoreHourlyResults() && iRetVal == 0)
+		{							if (bVerbose)
+										BEMPX_WriteLogFile( "  PerfSim_E+ - Summing hourly simulation results, TDV calcs, etc.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
+			int iEUIdx, iFl, /*hr,*/ iError;
+			QString sEUPropNameBase = (osRunInfo.IsStdRun() ? "Std" : "Prop"), sPropName;
+			for (iFl=0; iFl < OSF_NumFuels; iFl++)
+			{	iEUIdx = -1;
+				while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
+				{	// initialize result to contain hourly results sum already stored (via previous simulation of this run, such as CEC-T24 DHW)
+					double dExistResult = BEMPX_GetHourlyResultSum( NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, NULL, NULL, NULL, NULL, NULL, NULL, NULL, osRunInfo.BEMProcIdx() );
+					if (dExistResult != -99999.0)
+						esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] = dExistResult;
+					else
+						esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daTDVTotal[   iFl] = 0.0;
+					if (iFl==0)  // SAC 10/8/16
+						esEUMap_CECNonRes[iEUIdx].dElecDemand = 0.0;
+				}
+			}
+			for (iFl=0; iFl < OSF_NumFuels; iFl++)
+			{
+// SAC 7/23/18 - moved E+ hourly results retrieval OUT of here and into RetrieveSimulationResults() (above)
+////BEMPX_WriteLogFile( QString( "   Process hourly results for Fuel %1 (%2)" ).arg( QString::number( iFl ), (iFl==0 ? "Elec" : (iFl==1 ? "Gas" : "Other" )) ) );
+//				InitHrlyRes( dHrlyResCompTot );
+//				InitHrlyRes( dHrlyResTot );
+				esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] = esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daEnduseTotal[iFl] = 0.0;  // SAC 7/23/18 - to be re-calced in following loop
+				iEUIdx = -1;
+				while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
+				{
+// SAC 7/23/18 - moved E+ hourly results retrieval OUT of here and into RetrieveSimulationResults() (above)
+//					InitHrlyRes( dHrlyRes );
+//					double dEUTot = 0.0;
+//					int iEU2Idx = -1;
+//					while (esEUMap_CECNonRes[iEUIdx].iaEndUseIdx[++iEU2Idx] >= 0)
+//					{	dEUTot = 0.0;
+//						std::vector<double>* pdaHrlyOSRes = osWrap.GetHourlyResultArray( osRunInfo.OSRunIdx(), iFl, esEUMap_CECNonRes[iEUIdx].iaEndUseIdx[iEU2Idx], &dEUTot );
+//						if (pdaHrlyOSRes)
+//						{	esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] += dEUTot;
+//							for (hr=0; hr<8760; hr++)
+//								dHrlyRes[hr] += pdaHrlyOSRes->at(hr);
+//						}
+//					}
+////BEMPX_WriteLogFile( QString( "      Enduse: %1 (%2) - Total use: %3" ).arg( esEUMap_CECNonRes[iEUIdx].sEnduseAbbrev, QString::number( iEUIdx ), QString::number( esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] ) ) );
+////"Space Cooling"      ,  "Spc Cool"  ,  OSEU_Cooling,           OSEU_ClgCoils,         OSEU_HtRecov_Clg,        -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0   },
+//					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0)  // SAC 7/15/18 - '>0' -> '!=0' to allow for negative (PV/Batt) enduses
+//					{
+//							esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
+//						if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+//							esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
+//					}
+//	
+//					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total)
+//					//{	double dResult = BEMPX_AddHourlyResultArray( dHrlyRes, pszLongRunID, pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, -1 /*iBEMProcIdx*/, TRUE /*bAddIfNoExist*/ );
+//					{	double dResult = BEMPX_SumIntoHourlyResultArray( dHrlyRes, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, osRunInfo.BEMProcIdx(), TRUE /*bAddIfNoExist*/ );		dResult;
+//						// not the case when preliminary simulation results in some simulation results being populated prior to retrieval of these -- assert( WithinMargin( dResult, esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl], (max( fabs(dResult), fabs(esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl]) )/1000.0) ) );  // dResult == esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] );
+//					//	if (dResult == -99999)
+//					//	{	ExpSetErr( error, EXP_RuleProc, "Error adding hourly result array within ApplyHourlyResultMultipliers() function." );
+//					//		break;
+//					//	}
+//					}
 
 			// SAC 8/18/14 - fixed bug where DHW simulation results NOT being accounted for when applying TDV multipliers to hourly results
 					double* pdBEMHrlyRes	= NULL;
 					int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, osRunInfo.BEMProcIdx() );
-					bool bBEMHrlyResPtrOK = (pdBEMHrlyRes && iBEMHrlyResPtrRV==0);
+					bool bBEMHrlyResPtrOK = (pdBEMHrlyRes && iBEMHrlyResPtrRV==0);			assert( bBEMHrlyResPtrOK );  // needs to be valid following split of results processing routine? - SAC 7/23/18
+
+				// SAC 7/23/18 - repeat summing for CompTot and Total enduses done preliminarily above
+					if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0)  // SAC 7/15/18 - '>0' -> '!=0' to allow for negative (PV/Batt) enduses
+					{
+							esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
+						if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+							esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daEnduseTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl];
+					}
 	
 				// we now have all hourly results for this ruleset enduse and fuel (Elec/NatGas/Other) combination...
 				// NOW grab the hourly TDV Factors (from ruleset table), apply them to the hourly results and sum the totals into annual TDV results (by fuel and enduse) 
@@ -518,17 +701,17 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 						int iTableCol = ((lCliZnNum-1) * 3) + iFl + 2;
 	// TO DO - move table name OUT of source code
 						double dTDVSum = 0.0;
-						if (esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] > 0)
+						if (esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0)  // SAC 7/15/18 - '>0' -> '!=0' to allow for negative (PV/Batt) enduses
 			//				dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes, "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
 							dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
 //BEMPX_WriteLogFile( QString( "         iTableCol %1 - dTDVSum %2" ).arg( QString::number( iTableCol ), QString::number( dTDVSum ) ) );
-						if (dTDVSum < 0)
-						{	// ERROR
-							assert( FALSE );
-						}
-						else if (fTotBldgFlrArea > 0)
+				//		if (dTDVSum < 0)
+				//		{	// ERROR
+				//			assert( FALSE );
+				//		}
+				//		else if (fTotBldgFlrArea > 0)
+						if (fTotBldgFlrArea > 0)
 						{		esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] = dTDVSum / fTotBldgFlrArea;
-	
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 							if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
@@ -541,7 +724,6 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 							double dEDem = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sHrlyElecDemMultTblCol.toLocal8Bit().constData(), -1, (bVerbose != FALSE) );
 							if (dEDem != 0.0)
 							{		esEUMap_CECNonRes[iEUIdx].dElecDemand = dEDem;
-
 									esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].dElecDemand += dEDem;
 								if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
 									esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].dElecDemand += dEDem;
@@ -857,8 +1039,6 @@ BOOL ProcessSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iR
 //						BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fEUTot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
 
-
-
 /*
 
 static inline double RoundVal( double dVal, int iDecPrec )
@@ -937,10 +1117,6 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
   </EnergyUse>
 
 */	
-
-
-
-
 
 			if (iCID_EUseSummary > 0 && fTotBldgFlrArea > 0)
 			{						if (bVerbose)
@@ -1460,110 +1636,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			}
 		}
 
-	// SAC 4/11/16 - implemented new SimOutputVariablesToCSV feature to make simulation results more accessible (csv vs. sql)
-		if (osRunInfo.SimulateModel() && iRetVal == 0 && osRunInfo.SimOutVarsCSV())
-		{	std::string sEPlusProcDir, sRVEexeFrom, sRVEexeTo, sRVErviFrom, sRVErviTo, sEPlusESOfile, sWarnMsg;
-			sRVEexeFrom		= boost::str( boost::format( "%sReadVarsESO.exe" ) % pszEPlusPath );
-			sRVErviFrom		= boost::str( boost::format( "%sSimOutVarsToCSV.rvi" ) % pszSimProcessDir );
-			bool bDirChangedToEPlus = false;
-			if (!FileExists( sRVEexeFrom.c_str() ))
-				sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to missing file:  %s" ) % sRVEexeFrom );
-			else if (!FileExists( sRVErviFrom.c_str() ))
-				sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to missing file:  %s" ) % sRVErviFrom );
-			else
-			{	sEPlusProcDir = boost::str( boost::format( "%s%s\\EnergyPlus\\"    ) % pszSimProcessDir % osRunInfo.RunID().toLocal8Bit().constData() );
-				sRVEexeTo     = boost::str( boost::format( "%sReadVarsESO.exe"     ) % sEPlusProcDir );
-				sRVErviTo     = boost::str( boost::format( "%sSimOutVarsToCSV.rvi" ) % sEPlusProcDir );
-				if (!CopyFile( sRVEexeFrom.c_str(), sRVEexeTo.c_str(), FALSE ))
-				{	assert( FALSE );
-					sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to error copying '%s' to '%s'" ) % sRVEexeFrom % sRVEexeTo );
-				}
-				if (!CopyFile( sRVErviFrom.c_str(), sRVErviTo.c_str(), FALSE ))
-				{	assert( FALSE );
-					sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to error copying '%s' to '%s'" ) % sRVErviFrom % sRVErviTo );
-				}
-				else
-				{	QString sSimOutVarsFreq;
-					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SimVarsInterval" ), sSimOutVarsFreq, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
-					if (!sSimOutVarsFreq.isEmpty() && (sSimOutVarsFreq.compare("Monthly", Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Timestep" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Daily", Qt::CaseInsensitive)==0
-															  || sSimOutVarsFreq.compare("Hourly" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("RunPeriod", Qt::CaseInsensitive)==0))
-						sSimOutVarsFreq = " " + sSimOutVarsFreq;
-					else
-						sSimOutVarsFreq.clear();
-					sRVErviTo = "SimOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
-					if (!sSimOutVarsFreq.isEmpty())
-						sRVErviTo += sSimOutVarsFreq.toLocal8Bit().constData();
-	            _chdir( sEPlusProcDir.c_str() );
-					bDirChangedToEPlus = true;
-					exec_stream_t es;
-					try
-					{	es.start( sRVEexeTo, sRVErviTo, CREATE_NO_WINDOW );
-						while (es.running())
-							Sleep( 100 );
-					}
-					catch(exec_stream_t::error_t &e)
-					{	sWarnMsg = boost::str( boost::format( "Warning:  Execution of ReadVarsESO reported error: %s" ) % e.what() );
-					}
-			}	}
-
-	//		QString sEPlusOutPath;		sEPlusOutPath.sprintf( "%s%s\\EnergyPlus\\", sProcessingPath, osSimInfo[iSimRun].pszRunID );
-	//		QString sSimOutVarsCSVPathFile = sProcessingPath;
-	//		sSimOutVarsCSVPathFile += osRunInfo[iSimRun].SDDFile();								assert( sSimOutVarsCSVPathFile.lastIndexOf('.') > 0 );
-	//		if (sSimOutVarsCSVPathFile.lastIndexOf('.') > 0)
-	//			sSimOutVarsCSVPathFile = sSimOutVarsCSVPathFile.left( sSimOutVarsCSVPathFile.lastIndexOf('.') );
-	//		sSimOutVarsCSVPathFile += " - OutputVars.csv";
-	//		QString sOverwriteMsg;
-	//		sLogMsg.clear();
-	//		sOverwriteMsg.sprintf( "The CSV file '%s' is opened in another application.  This file must be closed in that "
-	//										"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-	//										"(once the file is closed), or \n'Cancel' to abort the analysis.", sSimOutVarsCSVPathFile );
-	//		if (!OKToWriteOrDeleteFile( sSimOutVarsCSVPathFile, sOverwriteMsg, bSilent ))
-	//		{	if (bSilent)
-	//				sLogMsg.sprintf( "Warning:  Unable to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
-	//			else
-	//				sLogMsg.sprintf( "Warning:  User chose not to overwrite SimOutputVariablesToCSV file:  %s", sSimOutVarsCSVPathFile );
-	//		}
-	//		else
-	//		{
-	//			QString sRVEexeTo = sEPlusOutPath + QString("ReadVarsESO.exe");
-	//			QString sRVErviTo = sEPlusOutPath + QString("SimOutVarsToCSV.rvi");
-	//			if (!CopyFile( sReadVarsESOexe, sRVEexeTo, FALSE ))
-	//			{	assert( FALSE );
-	//			}
-	//			if (!CopyFile( sReadVarsESOrvi, sRVErviTo, FALSE ))
-	//			{	assert( FALSE );
-	//			}
-	//			else
-	//			{	sRVErviTo = "SimOutVarsToCSV.rvi unlimited";		// convert sRVErviTo into command line for ReadVarsESO
-	//				exec_stream_t es;
-	//				try
-	//				{	es.start( (const char*)sRVEexeTo, (const char*)sRVErviTo );  //, CREATE_NO_WINDOW );
-	//					while (es.running())
-	//					{	Sleep( 100 );
-	//					}
-	//					// ReadVarsESO execution done - now copy output over to final file
-	//					QString sOutCSV = sEPlusOutPath + QString("eplusout.csv");
-	//					if (!FileExists( sOutCSV ))
-	//						sLogMsg = "Warning:  SimOutVarsToCSV ouput file not found";
-	//					else if (!CopyFile( sOutCSV, sSimOutVarsCSVPathFile, FALSE ))
-	//						sLogMsg.sprintf( "Warning:  Unable to copy SimOutVarsToCSV file from '%s' to '%s'", sOutCSV, sSimOutVarsCSVPathFile );
-	//					else
-	//					{	int iGotHere = 1;
-	//						iGotHere;
-	//					}
-	//				}
-	//				catch(exec_stream_t::error_t &e)
-	//				{	sLogMsg.sprintf( "Warning:  Execution of ReadVarsESO reported error: %s", e.what() );
-	//				}
-	//		}	}
-	//		if (!sLogMsg.isEmpty())
-	//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-
-			if (bDirChangedToEPlus)
-            _chdir( pszSimProcessDir );
-			if (sWarnMsg.size() > 0)
-				BEMPX_WriteLogFile( sWarnMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		}
+	// moved ReadVarsESO / SimOutVarsToCSV.rvi processing from here into RetrieveSimulationResults()
 
 	// SAC 1/24/14 - added code to address simultion file deletion & movement
 		if (iSimulationStorage >= 0 && iRetVal == 0)
@@ -1801,7 +1874,8 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 		}
 	}
 
-	ProcessSimulationResults( osWrap, osRunInfo, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+	//ProcessSimulationResults( osWrap, osRunInfo, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+	RetrieveSimulationResults( osWrap, osRunInfo, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );		// SAC 7/23/18 - replaced w/ subset routine that performs only hourly results retrieval
 
 	if (bHaveSecondRun)
 	{	int iResCopyRetVal = 0;
@@ -1817,7 +1891,8 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 			}
 		}
       if (iResCopyRetVal == 0)
-			ProcessSimulationResults( osWrap, osRunInfo2, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/18/14
+			//ProcessSimulationResults( osWrap, osRunInfo2, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/18/14
+			RetrieveSimulationResults( osWrap, osRunInfo2, iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );		// SAC 7/23/18 - replaced w/ subset routine that performs only hourly results retrieval
 	}
 
 								if (bVerbose && iRetVal != OSI_SimEPlus_UserAbortedAnalysis)
@@ -1829,6 +1904,30 @@ int CMX_PerformSimulation_EnergyPlus(	QString& sErrMsg, const char* pszEPlusPath
 
 // SAC 8/18/15
 int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
+															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+													// other general args
+															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose /*=FALSE*/, // BOOL bPerformRangeChecks=TRUE,
+                          							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
+															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
+															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+{
+	OSWrapLib osWrap;
+	COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
+	int iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sErrMsg, pszEPlusPath, NULL /*pszWthrPath*/, pszSimProcessDir,
+															pSimInfo, iNumSimInfo, bVerbose, FALSE /*bDurationStats*/, pdTranslationTime, pdSimulationTime,
+															iSimulationStorage, dEPlusVer, pszEPlusVerStr, iEPlusVerStrLen, pszOpenStudioVerStr,
+															iOpenStudioVerStrLen, iCodeType, bIncludeOutputDiagnostics, iProgressType );
+	if (iSimRetVal == 0)
+		iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sErrMsg, pszEPlusPath, NULL /*pszWthrPath*/, pszSimProcessDir,
+															pSimInfo, iNumSimInfo, bVerbose, FALSE /*bDurationStats*/, pdTranslationTime, pdSimulationTime,
+															iSimulationStorage, dEPlusVer, pszEPlusVerStr, iEPlusVerStrLen, pszOpenStudioVerStr,
+															iOpenStudioVerStrLen, iCodeType, bIncludeOutputDiagnostics, iProgressType );
+	return iSimRetVal;
+}
+
+int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
+															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
 															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
 													// other general args
 															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose /*=FALSE*/, // BOOL bPerformRangeChecks=TRUE,
@@ -1861,8 +1960,9 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 	}
 
 //	OS_Wrap::OSWrapLib osWrap;
-	OSWrapLib osWrap;
-	COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
+// SAC 7/23/18 - moved into function arguments
+//	OSWrapLib osWrap;
+//	COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
 	OSWrap_SimInfo oswSimInfo[MultEPlusSim_MaxSims];
 	OSWrap_SimInfo* poswSimInfo[MultEPlusSim_MaxSims];
 #define  EPLUS_EUMult  14
@@ -2029,8 +2129,57 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 		}
 	}
 
-	bool bCopyHourlyResultsToNextModel = false;
+//	bool bCopyHourlyResultsToNextModel = false;
+//	for (iRun=0; iRun < iNumSimInfo; iRun++)
+//	{
+//		if (osRunInfo[iRun].StoreHourlyResults())
+//			bCopyHourlyResultsToNextModel = true;
+//		int iResCopyRetVal = 0;
+//		if (iRun > 0 && bCopyHourlyResultsToNextModel && iRetVal == 0)
+//		{	// copy EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+//			QString sResCopyErrMsg;
+//			iResCopyRetVal = CM_CopyAnalysisResultsObjects_CECNonRes( sResCopyErrMsg, osRunInfo[iRun].RunID().toLocal8Bit().constData(), osRunInfo[iRun-1].BEMProcIdx(), osRunInfo[iRun].BEMProcIdx() );
+//			assert( iResCopyRetVal == 0 || !sResCopyErrMsg.isEmpty() );
+//			if (iResCopyRetVal > 0)
+//			{	if (sErrMsg.isEmpty())
+//				{	sErrMsg = sResCopyErrMsg;
+//					sTempErr = QString( " (from run %1 to %2 (of %3))" ).arg( QString::number(iRun), QString::number(iRun+1), QString::number(iNumSimInfo) );
+//					sErrMsg += sTempErr;
+//				}
+//				iRetVal = iResCopyRetVal;
+//		}	}
+//		if (iResCopyRetVal == 0)
+//			ProcessSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+//	}
+// SAC 7/23/18 - replaced above w/ below to ONLY retrieve E+ hourly results here - shifting remaining results processing into 
 	for (iRun=0; iRun < iNumSimInfo; iRun++)
+	{	if (osRunInfo[iRun].StoreHourlyResults())
+			RetrieveSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+	}
+
+								if (bVerbose && iRetVal != OSI_SimEPlus_UserAbortedAnalysis)
+									BEMPX_WriteLogFile( "  PerfSim_E+ - returning", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	
+	return iRetVal;
+}
+
+
+// SAC 7/23/18 - split out later portion of CMX_PerformSimulation_EnergyPlus_Multiple() to handle results processing following multiple engine simulations
+int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
+															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
+															OS_SimInfo** pSimInfo, int iNumSimInfo,		// SAC 8/19/15
+													// other general args
+															/*PUICallbackFunc lpfnCallback,*/ BOOL bVerbose /*=FALSE*/, // BOOL bPerformRangeChecks=TRUE,
+                          							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
+															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
+															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+{
+	int iRetVal = 0;
+	QString sTempErr;
+
+	bool bCopyHourlyResultsToNextModel = false;
+	for (int iRun=0; iRun < iNumSimInfo; iRun++)
 	{
 		if (osRunInfo[iRun].StoreHourlyResults())
 			bCopyHourlyResultsToNextModel = true;
@@ -2049,12 +2198,9 @@ int CMX_PerformSimulation_EnergyPlus_Multiple(	QString& sErrMsg, const char* psz
 				iRetVal = iResCopyRetVal;
 		}	}
 		if (iResCopyRetVal == 0)
-			ProcessSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
 	}
 
-								if (bVerbose && iRetVal != OSI_SimEPlus_UserAbortedAnalysis)
-									BEMPX_WriteLogFile( "  PerfSim_E+ - returning", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	
 	return iRetVal;
 }
 

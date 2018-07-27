@@ -299,7 +299,8 @@ BOOL CSACDlg::OnInitDialog()
 
       m_bInitializeDialog = FALSE;
 
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMCID_Wizard );		// SAC 4/15/18
+		if (GetParentFrame())
+	      GetParentFrame()->SendMessage( WM_EVALPROPOSED, DefaultAction_OpenDialog, m_iBEMCID_Wizard );		// SAC 4/15/18
 
       CreateUIControls( FALSE );
       bRetVal = FALSE;  // return FALSE if WE set the focus already
@@ -851,7 +852,8 @@ void CSACDlg::EvaluateRules(UINT uiList, long lDBID /*=0*/, int iDefaultAction /
    BOOL bEvalOK = FALSE;
    if (uiList == 0 && m_sMidProcRulelist.CompareNoCase("default")==0)
    {	bEvalOK = TRUE;
-      GetParentFrame()->SendMessage( WM_EVALPROPOSED, iDefaultAction, lDBID );
+		if (GetParentFrame())
+	      GetParentFrame()->SendMessage( WM_EVALPROPOSED, iDefaultAction, lDBID );
 	//   GetParentFrame()->SendMessage( WM_UPDATETREE, 0, lDBID );
 	}
    else

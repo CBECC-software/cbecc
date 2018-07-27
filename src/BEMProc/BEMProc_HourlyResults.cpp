@@ -67,9 +67,13 @@ BOOL BEMPX_SetupResultRun( int iRunIdx, const char* pszRunName, const char* pszR
 // SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 int BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char* pszRunName, const char* pszRunAbbrev, int iBEMProcIdx /*=-1*/,
 											const char** ppResMeters /*=NULL*/, const char** ppMetersMap /*=NULL*/, double* pdMetersMult /*=NULL*/,
-											const char** ppResEnduses /*=NULL*/, const char** ppEnduseMap /*=NULL*/ )
+											const char** ppResEnduses /*=NULL*/, const char** ppEnduseMap /*=NULL*/, bool bInitResults /*=true*/ )
 {	int iRetVal = -1;
    BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );			assert( pBEMProc );
+				//	// debugging
+				//	QString sLogMsg = QString( "Call to BEMPX_ReadCSEHourlyResults() / run: %1, runID: %2, runAbrv: %3, file: %4, BEMProcIdx: %5" ).arg(
+				//												QString::number(iRunIdx), pszRunName, pszRunAbbrev, pszFilename, QString::number(iBEMProcIdx) );
+				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	if (!pBEMProc)
 		iRetVal = -2;
 	else if (iRunIdx < 0 || iRunIdx >= BEMRun_MaxNumRuns)
@@ -79,7 +83,15 @@ int BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char
 	else if (strlen( pszRunAbbrev ) >= BEMRun_RunAbbrevLen)
 		iRetVal = -5;
 	else
-		iRetVal = pBEMProc->readCSEHourlyResults( iRunIdx, pszRunName, pszRunAbbrev, pszFilename, ppResMeters, ppMetersMap, pdMetersMult, ppResEnduses, ppEnduseMap );
+	{			//	BEMPX_WriteLogFile( "calling pBEMProc->readCSEHourlyResults()...", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		iRetVal = pBEMProc->readCSEHourlyResults( iRunIdx, pszRunName, pszRunAbbrev, pszFilename, ppResMeters,
+																ppMetersMap, pdMetersMult, ppResEnduses, ppEnduseMap, bInitResults );
+		if (iRetVal < 0)
+			iRetVal -= 10;  // to differentiate errors here from errors within pBEMProc->readCSEHourlyResults() - SAC 7/23/18
+				//	// debugging
+				//	QString sLogMsg = QString( "pBEMProc->readCSEHourlyResults() returned %1" ).arg( QString::number(iRetVal) );
+				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	}
 	return iRetVal;
 }
 

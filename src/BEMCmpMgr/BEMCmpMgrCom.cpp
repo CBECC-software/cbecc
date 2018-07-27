@@ -1892,8 +1892,8 @@ static const char* pszMeters[Com_NumCSEMeters+1]			= { "MtrElec",     "MtrNatGas
 static const char* pszMeters_ComMap[Com_NumCSEMeters+1]	= { "Electricity", "NaturalGas", "OtherFuel", NULL };		// SAC 5/31/16 - added to enable retrieval of CSE results to -Com analysis
 double         sdaMeterMults_ComMap[Com_NumCSEMeters+1]	= {    0.293,         0.01,         0.01,     0.0  };		// SAC 6/1/16 - added to convert units of CSE results to -Com analysis (1/3.412 for elec)  // SAC 6/29/16 - inc NG & Oth fuel mults by 10 fixing MBtu->therms
 
-static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1", "User2", "PV", */ NULL };	// "DHWPmp", ??
-static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,  vNULL , v NULL ,  NULL,*/ NULL }; 
+static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1", "User2",*/ "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt
+static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,  vNULL , v NULL ,*/ "Photovoltaics", "Battery", NULL }; 
 
 
 static int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, long lDBID_ReportFileAppend, int iObjIdx, bool /*bProcessCurrentSelection*/,
@@ -1947,7 +1947,7 @@ static QString sDbgFileName;
 //											38 : Error:  EnergyPlus simulation engine not found.
 //											39 : Error:  Version of EnergyPlus installed not compatible with analysis.
 //											40 : Error setting up check of weather & design day file hashes
-//											41 : DHW simulation not successful
+//											41 : CSE (ResDHW/PV/Battery) simulation not successful
 //											42 : Error encountered in creating building geometry
 //											43 : Error encountered initializing building geometry DBIDs
 //											44 : Error initializing Proposed model
@@ -1960,7 +1960,7 @@ static QString sDbgFileName;
 //											51 : Window(s) and/or Door(s) are overlapping on ExtWalls with window shades defined
 //											52 : Analysis aborted via callback function in calling application
 //											53 : Input model contains one or more objects with the same name
-//											54 : CSE (residential DHW simulation engine) executable not found
+//											54 : CSE (residential DHW, PV & Battery simulation engine) executable not found
 //											55 : CSE (residential DHW simulation engine) use profile file not found
 //											56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
 //											57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
@@ -2048,7 +2048,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bWriteRulePropsToResultsXML	=  (GetCSVOptionValue( "WriteRulePropsToResultsXML" ,   0,  saCSVOptions ) > 0);	// SAC 1/12/15		// SAC 2/18/15 - toggled default to 0
 	int  iEnableRptGenStatusChecks	=	 GetCSVOptionValue( "EnableRptGenStatusChecks"   ,   1,  saCSVOptions );		// SAC 2/20/15
 	bool bWriteUMLHViolationsToFile	=  (GetCSVOptionValue( "WriteUMLHViolationsToFile"  ,   1,  saCSVOptions ) > 0);	// SAC 3/18/15
-	bool bLogRecircDHWSimulation		=  (GetCSVOptionValue( "LogRecircDHWSimulation"     ,   0,  saCSVOptions ) > 0);	// SAC 6/4/15
+	bool bLogCSESimulation	         =  (GetCSVOptionValue( "LogRecircDHWSimulation"     ,   0,  saCSVOptions ) > 0) ||	// SAC 6/4/15
+	                                    (GetCSVOptionValue( "LogCSESimulation"           ,   0,  saCSVOptions ) > 0);	// SAC 7/13/18
 	bool bPromptUserUMLHWarning		=  (GetCSVOptionValue( "PromptUserUMLHWarning"      ,   0,  saCSVOptions ) > 0);	// SAC 3/11/15
 	bool bPerformDupObjNameCheck		=  (GetCSVOptionValue( "PerformDupObjNameCheck"     ,   1,  saCSVOptions ) > 0);	// SAC 6/12/15
 	int  iCompReportWarningOption		=	 GetCSVOptionValue( "CompReportWarningOption"    ,   0,  saCSVOptions );		// SAC 7/5/16
@@ -2140,7 +2141,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
 
 	QString sCSEIncludeFileDBID;	// SAC 5/18/16
-	sbLogCSECallbacks = bLogRecircDHWSimulation;
+	sbLogCSECallbacks = bLogCSESimulation;
 	QString sCSEexe, sMissing;
 	siCallbackCount = 0;		// SAC 11/17/13 - reset CSE message callback counter between each analysis run
 	bool bStoreAllowCallbackAbort = sbAllowCallbackAbort;		// SAC 4/5/15
@@ -3949,188 +3950,216 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	//		SIMULATE MODEL
 	// ----------------------
 
-			// SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
-						if (bSimulateModel && bStoreHourlyResults)
-						{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ) );
-							if (!bBypassRecircDHW && iNumRecircDHWSysObjs > 0)
-							{
-					// DHW SIMULATION
-								BOOL bDHWSimOK = TRUE;		QString sDHWErrMsg;
-									// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
-		// --- CSE DHW simulation based on CECRes analysis ---
-									QString sCSE_DHWUseMthd;
-									BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd );
-									if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
-									{	sErrMsg.sprintf( "%s (residential DHW simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
-//											54 : CSE (recirculation DHW simulation engine) executable(s) not found
-													// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
-										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
-									}
-									else if (sCSE_DHWUseMthd.isEmpty())
-									{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
-//											56 : CSE (recirculation DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
-										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-									}
-									else if (sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
-									{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
-										QString sDHWUseIncFile = "DHWDUMF.txt";
-										QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
-										if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
-										{	sErrMsg.sprintf( "%s (recirculation DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
-//												55 : CSE (recirculation DHW simulation engine) use profile file not found
-											ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-										}
-										else
-										{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
-											if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
-											{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
-//													57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
-												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-											}
-											assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
-											// RE-check DHW incl file hash ??
-									}	}
 
-									int iDHWSimRetVal = 0;
-									if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
-									{
-									// Check for specification of Report Include file - and if found, prevent secure report
-										long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
-										QString sChkRptIncFile;
-										if (lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile ) && !sChkRptIncFile.isEmpty())
-											sCSEIncludeFileDBID = "Proj:CSE_RptIncFile";
-									// DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
-										bool bAllowReportIncludeFile = true;
-										if (!sCSEIncludeFileDBID.isEmpty() && iCodeType == CT_T24N && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) &&
-												!sXMLResultsFileName.isEmpty() && iAnalysisThruStep >= 8 && sIDFToSimulate.isEmpty() && iDLLCodeYear == iRulesetCodeYear && !bBypassInputChecks &&
-												!pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] && !bBypassUMLHChecks && !bBypassCheckSimRules && 
-												plOverrideAutosize[0] == -1 && plOverrideAutosize[1] == -1 && plOverrideAutosize[2] == -1 && plOverrideAutosize[3] == -1 && !bBypassCheckCodeRules && 
-												lQuickAnalysis <= 0 && !bIgnoreFileReadErrors && !bBypassValidFileChecks && sDevOptsNotDefaulted.isEmpty() && sExcptDsgnModelFile.isEmpty() &&
-												lNumSpaceWithDefaultedDwellingUnitArea < 1)
-										{	bAllowReportIncludeFile = false;
-											sCSEIncludeFileDBID.clear();
-																sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
-																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-										}
-
-										QString sT24DHWEnduse = "T24DHW", sT24DHWPumpEnduse = "T24DHWPmp";			assert( FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) );
-										bool bFullComplianceAnalysis = (!bResearchMode && !bProposedOnly);
-										long lAnalysisType = (bResearchMode ? 0 : (bProposedOnly ? 12 : 13));  // based on CBECC-Res options: 0-Research / 12-Proposed Only / 13-Proposed and Standard
-										CSERunMgr cseRunMgr(
-													sCSEexe, sAnnualWeatherFile, sModelPathOnly, sModelFileOnly, sProcessingPath, bFullComplianceAnalysis,
-													false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
-													bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-													0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
-						//								dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-						//				QString sMsg;
-										int iRunType[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-										iRunType[0] = (lAnalysisType < 1 ? CRM_User :
-															(((iCodeType == CT_T24N && iRun == 3) || (iCodeType != CT_T24N && iRun >  5)) ? CRM_StdDesign : CRM_Prop));
-						//				siNumProgressRuns = 1;
-						//				int iRunIdx = 0;
-						//				for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-						//				{
-						//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
-						//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
-											iDHWSimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
-																							sRunIDLong.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), &sCSEVersion );
-						//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-						//				}
-
-										if (iRetVal == 0 && iDHWSimRetVal == 0)		// && bPerformSimulations && !bBypassCSE)
-										{	bool bSaveFreezeProg = sbFreezeProgress;
-											sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
-											cseRunMgr.DoRuns();
-											sbFreezeProgress = bSaveFreezeProg;
-										}
-						//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-
-						//				for (iRunIdx = 0; (iRetVal == 0 && iDHWSimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-						//				{
-						//					// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
-						//					BEMPX_SetActiveModel( iRunIdx+1 );
-								
-											const CSERun& cseRun = cseRunMgr.GetRun(0/*iRunIdx*/);
-											const QString& sRunID = cseRun.GetRunID();
-						//					const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
-											const QString& sRunAbbrev = cseRun.GetRunAbbrev();
-											long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
-										//	BOOL bLastRun = cseRun.GetLastRun();
-						//					BOOL bIsStdDesign = cseRun.GetIsStdDesign();
-						//					BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
-								
-											if (iRetVal == 0 && iDHWSimRetVal == 0)
-											{
-												int iCSERetVal = cseRun.GetExitCode();
-												if (bVerbose)  // SAC 1/31/13
-												{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
-													BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-												}
-												BEMPX_RefreshLogFile();	// SAC 5/19/14
-								
-												if (iCSERetVal != 0)
-												{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
-													iDHWSimRetVal = BEMAnal_CECRes_CSESimError;
-													BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-												}
-						//						if (iRetVal == 0 && iDHWSimRetVal == 0 && BEMPX_AbortRuleEvaluation())
-						//							iDHWSimRetVal = BEMAnal_CECRes_RuleProcAbort;
-								
-												// Retrieve CSE simulation results
-												if (iRetVal == 0 && iDHWSimRetVal == 0)
-												{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
-													int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, sRunID.toLocal8Bit().constData(),
-																								sRunAbbrev.toLocal8Bit().constData(), -1, pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap );	// SAC 5/31/16
-													if (iHrlyResRetVal < 0)  // SAC 6/12/17
-													{	switch (iHrlyResRetVal)
-														{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																													qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																													qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-															case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-																													qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-														}
-														if (sLogMsg.size() > 0)
-															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
-													else if (bVerbose)  // SAC 1/31/13
-													{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
-														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-													}
-												// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
-						//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
-												}
-											}
-						//				}
-
-									}
-									bDHWSimOK = (iDHWSimRetVal == 0);
-									if (sDHWErrMsg.isEmpty() && iDHWSimRetVal != 0)
-										sDHWErrMsg.sprintf( "error code %d", iDHWSimRetVal );
-
-								if (!bDHWSimOK)
-								{	sErrMsg.sprintf( "DHW simulation not successful:  %s", sDHWErrMsg.toLocal8Bit().constData() );
-//										41 : DHW simulation not successful
-									ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-								}
-								BEMPX_RefreshLogFile();	// SAC 5/19/14
-							}
-							else if (iNumRecircDHWSysObjs > 0)
-							{	if (bVerbose)
-									BEMPX_WriteLogFile( "      Skipping DHW simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//								CSE_MsgCallback( 0 /*level*/, "Skipping DHW simulation" );
-						}	}
-			// END OF Recird/Res DHW simulation
+// SAC 7/23/18 - CSE simulation moved DOWN, INSIDE if() statement launching E+ simulations, so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
+//			// SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
+//						if (bSimulateModel && bStoreHourlyResults)
+//						{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ) );
+//							int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray" ) );
+//							if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
+//							{
+//					// CSE (DHW &/or PVArray/Battery) SIMULATION
+//								BOOL bCSESimOK = TRUE;		QString sCSEErrMsg;
+//									// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
+//		// --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
+//									QString sCSE_DHWUseMthd;
+//									BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd );
+//									if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
+//									{	sErrMsg.sprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
+////											54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
+//													// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
+//										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
+//									}
+//									else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.isEmpty())
+//									{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
+////											56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
+//										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+//									}
+//									else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
+//									{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
+//										QString sDHWUseIncFile = "DHWDUMF.txt";
+//										QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
+//										if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
+//										{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
+////												55 : CSE (residential DHW simulation engine) use profile file not found
+//											ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+//										}
+//										else
+//										{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
+//											if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
+//											{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
+////													57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
+//												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+//											}
+//											assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
+//											// RE-check DHW incl file hash ??
+//									}	}
+//
+//				// WRITE TDV FILE FOR BATTERY SIM (tdvElec only)
+//
+//									int iCSESimRetVal = 0;
+//									if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
+//									{
+//									// Check for specification of Report Include file - and if found, prevent secure report
+//										long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
+//										QString sChkRptIncFile;
+//										if (lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile ) && !sChkRptIncFile.isEmpty())
+//											sCSEIncludeFileDBID = "Proj:CSE_RptIncFile";
+//									// DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
+//										bool bAllowReportIncludeFile = true;
+//										if (!sCSEIncludeFileDBID.isEmpty() && iCodeType == CT_T24N && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) &&
+//												!sXMLResultsFileName.isEmpty() && iAnalysisThruStep >= 8 && sIDFToSimulate.isEmpty() && iDLLCodeYear == iRulesetCodeYear && !bBypassInputChecks &&
+//												!pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] && !bBypassUMLHChecks && !bBypassCheckSimRules && 
+//												plOverrideAutosize[0] == -1 && plOverrideAutosize[1] == -1 && plOverrideAutosize[2] == -1 && plOverrideAutosize[3] == -1 && !bBypassCheckCodeRules && 
+//												lQuickAnalysis <= 0 && !bIgnoreFileReadErrors && !bBypassValidFileChecks && sDevOptsNotDefaulted.isEmpty() && sExcptDsgnModelFile.isEmpty() &&
+//												lNumSpaceWithDefaultedDwellingUnitArea < 1)
+//										{	bAllowReportIncludeFile = false;
+//											sCSEIncludeFileDBID.clear();
+//																sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
+//																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//										}
+//
+//										/*QString sT24DHWEnduse = "T24DHW", sT24DHWPumpEnduse = "T24DHWPmp";*/			assert( FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) );
+//										bool bFullComplianceAnalysis = (!bResearchMode && !bProposedOnly);
+//										long lAnalysisType = (bResearchMode ? 0 : (bProposedOnly ? 12 : 13));  // based on CBECC-Res options: 0-Research / 12-Proposed Only / 13-Proposed and Standard
+//										CSERunMgr cseRunMgr(
+//													sCSEexe, sAnnualWeatherFile, sModelPathOnly, sModelFileOnly, sProcessingPath, bFullComplianceAnalysis,
+//													false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
+//													bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
+//													0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
+//						//								dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//
+//						//				QString sMsg;
+//										int iRunType[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+//										iRunType[0] = (lAnalysisType < 1 ? CRM_User :
+//															(((iCodeType == CT_T24N && iRun == 3) || (iCodeType != CT_T24N && iRun >  5)) ? CRM_StdDesign : CRM_Prop));
+//						//				siNumProgressRuns = 1;
+//						//				int iRunIdx = 0;
+//						//				for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+//						//				{
+//						//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
+//						//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
+//											iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
+//																							sRunIDLong.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), &sCSEVersion );
+//						//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//						//				}
+//
+//	//	if (iRetVal == 0)
+//	//	{
+//	//				QMessageBox msgBox;
+//	//				msgBox.setWindowTitle( "CSE" );
+//	//				msgBox.setIcon( QMessageBox::Warning ); 
+//	//				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+//	//				msgBox.setText( "About to launch CSE simulation(s)" );
+//	//		//		msgBox.setDetailedText( qsRptIssuesDlgDetails );
+//	//				msgBox.setStandardButtons( QMessageBox::Ok );
+//	//				msgBox.addButton( QMessageBox::Abort );
+//	//				msgBox.setDefaultButton( QMessageBox::Ok );
+//	//				msgBox.exec();
+//	//	}
+//
+//										if (iRetVal == 0 && iCSESimRetVal == 0)		// && bPerformSimulations && !bBypassCSE)
+//										{	bool bSaveFreezeProg = sbFreezeProgress;
+//											sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
+//											cseRunMgr.DoRuns();
+//											sbFreezeProgress = bSaveFreezeProg;
+//										}
+//						//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+//
+//						//				for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+//						//				{
+//						//					// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
+//						//					BEMPX_SetActiveModel( iRunIdx+1 );
+//								
+//											const CSERun& cseRun = cseRunMgr.GetRun(0/*iRunIdx*/);
+//											const QString& sRunID = cseRun.GetRunID();
+//						//					const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
+//											const QString& sRunAbbrev = cseRun.GetRunAbbrev();
+//											long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
+//										//	BOOL bLastRun = cseRun.GetLastRun();
+//						//					BOOL bIsStdDesign = cseRun.GetIsStdDesign();
+//						//					BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
+//								
+//											if (iRetVal == 0 && iCSESimRetVal == 0)
+//											{
+//												int iCSERetVal = cseRun.GetExitCode();
+//												if (bVerbose)  // SAC 1/31/13
+//												{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+//													BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//												}
+//												BEMPX_RefreshLogFile();	// SAC 5/19/14
+//								
+//												if (iCSERetVal != 0)
+//												{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+//													iCSESimRetVal = BEMAnal_CECRes_CSESimError;
+//													BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//												}
+//						//						if (iRetVal == 0 && iCSESimRetVal == 0 && BEMPX_AbortRuleEvaluation())
+//						//							iCSESimRetVal = BEMAnal_CECRes_RuleProcAbort;
+//								
+//												// Retrieve CSE simulation results
+//												if (iRetVal == 0 && iCSESimRetVal == 0)
+//												{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
+//													int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, sRunID.toLocal8Bit().constData(),
+//																								sRunAbbrev.toLocal8Bit().constData(), -1, pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap );	// SAC 5/31/16
+//													if (iHrlyResRetVal < 0)  // SAC 6/12/17
+//													{	switch (iHrlyResRetVal)
+//														{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+//																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+//															case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+//																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+//															case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+//																													qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+//															case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+//																													qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+//															case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+//																													qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
+//														}
+//														if (sLogMsg.size() > 0)
+//															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//													}
+//													else if (bVerbose)  // SAC 1/31/13
+//													{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
+//														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//													}
+//												// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
+//						//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
+//												}
+//											}
+//						//				}
+//
+//									}
+//									bCSESimOK = (iCSESimRetVal == 0);
+//									if (sCSEErrMsg.isEmpty() && iCSESimRetVal != 0)
+//										sCSEErrMsg.sprintf( "error code %d", iCSESimRetVal );
+//
+//								if (!bCSESimOK)
+//								{	sErrMsg.sprintf( "CSE (ResDHW/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
+////										41 : CSE (ResDHW/PV/Battery) simulation not successful
+//									ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+//								}
+//								BEMPX_RefreshLogFile();	// SAC 5/19/14
+//							}
+//							else if (iNumRecircDHWSysObjs > 0 || iNumPVArrayObjs > 0)
+//							{	if (bVerbose)
+//									BEMPX_WriteLogFile( "      Skipping CSE ResDHW/PV/Battery simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+////								CSE_MsgCallback( 0 /*level*/, "Skipping CSE ResDHW/PV/Battery simulation" );
+//						}	}
+//			// END OF CSE ResDHW/PV/Battery simulation
 
 					bool baSimPassesUMLHLimits[] = { true, true };
 					if (!bCallOpenStudio)
 					{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing OpenStudio (and simulation) for %s model", sRunID.toLocal8Bit().constData() );
 						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+						// SAC 7/23/18 - additional message if bypassing OS will also result in CSE sim being bypassed
+						if (bSimulateModel && bStoreHourlyResults)
+						{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ) );
+							int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray" ) );
+							if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
+							{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing CSE simulation as well (due to OpenStudio bypass) for %s model", sRunID.toLocal8Bit().constData() );
+								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}	}
 					}
 					else
 					{			if (bVerbose)
@@ -4218,27 +4247,271 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										iNumDsgnSims += (iSimRunIdx + 1);
 								else	iNumAnnSims  += (iSimRunIdx + 1);
 
-								iSimRetVal = CMX_PerformSimulation_EnergyPlus_Multiple(	sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
+								OSWrapLib osWrap;		// SAC 7/23/18 - added when spliting results processing allowing for CSE simulations following E+
+								COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
+
+							//	iSimRetVal = CMX_PerformSimulation_EnergyPlus_Multiple(	sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
+								iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
 																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
 																		// remaining general arguments
 																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																				false /*bIncludeOutputDiagnostics*/, iProgressType );		// SAC 5/27/15
+
+							// moved some post-E+ processing into if (bSimRunsNow) statement
+								tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
+										if (bVerbose)
+										{	sLogMsg.sprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal );
+											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+
+								if (/*bSimRunsNow &&*/ iSimRetVal == 0 && bIsDsgnSim)		// SAC 4/1/14
+									for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
+										bSizingRunSimulated[osSimInfo[iSimRun].iRunIdx] = TRUE;
+
+								if (/*bSimRunsNow &&*/ (iSimRetVal == 0 || iSimRetVal == OSI_SimEPlus_UserAbortedAnalysis))
+									for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
+										saSimulatedRunIDs.push_back( osRunInfo[iSimRun].RunID() );
+
+
+
+						// CSE Simulation Loop -----
+								for (int iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs just simulated in E+ above
+								{
+								// SAC 7/23/18 - CSE simulation moved down HERE so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
+								// SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
+									if (osSimInfo[iSR].bSimulateModel && bStoreHourlyResults)
+									{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
+										int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray"   ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
+										if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
+										{
+								// CSE (DHW &/or PVArray/Battery) SIMULATION
+											BOOL bCSESimOK = TRUE;		QString sCSEErrMsg;
+												// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
+					// --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
+												QString sCSE_DHWUseMthd;
+												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );
+												if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
+												{	sErrMsg.sprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
+//														54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
+																// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
+													ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
+												}
+												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.isEmpty())
+												{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
+//														56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
+													ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+												}
+												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
+												{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
+													QString sDHWUseIncFile = "DHWDUMF.txt";
+													QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
+													if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
+													{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
+//															55 : CSE (residential DHW simulation engine) use profile file not found
+														ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+													}
+													else
+													{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
+														if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
+														{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
+//																57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
+															ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+														}
+														assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
+														// RE-check DHW incl file hash ??
+												}	}
+
+												int iCSESimRetVal = 0;
+												if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
+												{
+												// Check for specification of Report Include file - and if found, prevent secure report
+													long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
+													QString sChkRptIncFile;
+													if (lProjReportIncludeFileDBID > 0 &&
+														 BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx ) && !sChkRptIncFile.isEmpty())
+														sCSEIncludeFileDBID = "Proj:CSE_RptIncFile";
+												// DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
+													bool bAllowReportIncludeFile = true;
+													if (!sCSEIncludeFileDBID.isEmpty() && iCodeType == CT_T24N && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) &&
+															!sXMLResultsFileName.isEmpty() && iAnalysisThruStep >= 8 && sIDFToSimulate.isEmpty() && iDLLCodeYear == iRulesetCodeYear && !bBypassInputChecks &&
+															!pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] && !bBypassUMLHChecks && !bBypassCheckSimRules && 
+															plOverrideAutosize[0] == -1 && plOverrideAutosize[1] == -1 && plOverrideAutosize[2] == -1 && plOverrideAutosize[3] == -1 && !bBypassCheckCodeRules && 
+															lQuickAnalysis <= 0 && !bIgnoreFileReadErrors && !bBypassValidFileChecks && sDevOptsNotDefaulted.isEmpty() && sExcptDsgnModelFile.isEmpty() &&
+															lNumSpaceWithDefaultedDwellingUnitArea < 1)
+													{	bAllowReportIncludeFile = false;
+														sCSEIncludeFileDBID.clear();
+																			sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
+																			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+													}
+
+													/*QString sT24DHWEnduse = "T24DHW", sT24DHWPumpEnduse = "T24DHWPmp";*/			assert( FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) );
+													bool bFullComplianceAnalysis = (!bResearchMode && !bProposedOnly);
+													long lAnalysisType = (bResearchMode ? 0 : (bProposedOnly ? 12 : 13));  // based on CBECC-Res options: 0-Research / 12-Proposed Only / 13-Proposed and Standard
+													CSERunMgr cseRunMgr(
+																sCSEexe, sAnnualWeatherFile, sModelPathOnly, sModelFileOnly, sProcessingPath, bFullComplianceAnalysis,
+																false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
+																bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
+																0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
+									//								dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+									//				QString sMsg;
+													int iRunType[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+													iRunType[0] = (lAnalysisType < 1 ? CRM_User :
+																		(((iCodeType == CT_T24N && osSimInfo[iSR].iRunIdx == 3) || (iCodeType != CT_T24N && osSimInfo[iSR].iRunIdx >  5)) ? CRM_StdDesign : CRM_Prop));
+
+									//				siNumProgressRuns = 1;
+									//				int iRunIdx = 0;
+									//				for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+									//				{
+									//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
+									//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
+														iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
+																										osSimInfo[iSR].pszLongRunID, osSimInfo[iSR].pszRunID, &sCSEVersion, osSimInfo[iSR].iBEMProcIdx );
+									//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+									//				}
+
+				//	if (iRetVal == 0)
+				//	{
+				//				QMessageBox msgBox;
+				//				msgBox.setWindowTitle( "CSE" );
+				//				msgBox.setIcon( QMessageBox::Warning ); 
+				//				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+				//				msgBox.setText( "About to launch CSE simulation(s)" );
+				//		//		msgBox.setDetailedText( qsRptIssuesDlgDetails );
+				//				msgBox.setStandardButtons( QMessageBox::Ok );
+				//				msgBox.addButton( QMessageBox::Abort );
+				//				msgBox.setDefaultButton( QMessageBox::Ok );
+				//				msgBox.exec();
+				//	}
+
+													if (iRetVal == 0 && iCSESimRetVal == 0)		// && bPerformSimulations && !bBypassCSE)
+													{	bool bSaveFreezeProg = sbFreezeProgress;
+														sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
+														cseRunMgr.DoRuns();
+														sbFreezeProgress = bSaveFreezeProg;
+													}
+									//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+									//				for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
+									//				{
+									//					// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
+									//					BEMPX_SetActiveModel( iRunIdx+1 );
+								
+														const CSERun& cseRun = cseRunMgr.GetRun(0/*iRunIdx*/);
+														const QString& sRunID = cseRun.GetRunID();
+									//					const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
+														const QString& sRunAbbrev = cseRun.GetRunAbbrev();
+														long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
+													//	BOOL bLastRun = cseRun.GetLastRun();
+									//					BOOL bIsStdDesign = cseRun.GetIsStdDesign();
+									//					BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
+								
+														if (iRetVal == 0 && iCSESimRetVal == 0)
+														{
+															int iCSERetVal = cseRun.GetExitCode();
+			if (lAnalysisType > 0) // debugging												if (bVerbose)  // SAC 1/31/13
+															{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+															}
+															BEMPX_RefreshLogFile();	// SAC 5/19/14
+								
+															if (iCSERetVal != 0)
+															{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+																iCSESimRetVal = BEMAnal_CECRes_CSESimError;
+																BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+															}
+									//						if (iRetVal == 0 && iCSESimRetVal == 0 && BEMPX_AbortRuleEvaluation())
+									//							iCSESimRetVal = BEMAnal_CECRes_RuleProcAbort;
+								
+															// Retrieve CSE simulation results
+															if (iRetVal == 0 && iCSESimRetVal == 0)
+															{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
+																int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1,
+																											sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx /*-1*/,
+																											pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
+			sLogMsg.sprintf( "      BEMPX_ReadCSEHourlyResults( %s, BEMProc %d) returned %d", sRunID.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx, iHrlyResRetVal );
+			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																if (iHrlyResRetVal < 0)  // SAC 6/12/17
+																{	switch (iHrlyResRetVal)
+																	{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+																																qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );		break;
+																		case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
+																																qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );		break;
+																		case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );		break;
+																		case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );		break;
+																		case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-5) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -11:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / Invalid RunNumber / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -12:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / too many enduses found in results file / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -13:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / enduse name too long / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -14:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / incorrect number of fields encountered while reading meter hourly results / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -15:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / meter name too long / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -16:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / error opening CSE hourly results file / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -17:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / error parsing CSE hourly results file / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -18:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / CSE hourly results file not found / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		case -19:  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / too many meters found in results file / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																		default :  sLogMsg = QString( "Error retrieving hourly %1 results (%2) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
+																																qsCSEName, QString::number(iHrlyResRetVal), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );	break;
+																	}
+																	if (sLogMsg.size() > 0)
+																		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																}
+																else if (bVerbose)  // SAC 1/31/13
+																{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
+																	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																}
+															// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
+									//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
+															}
+														}
+									//				}
+
+												}
+												bCSESimOK = (iCSESimRetVal == 0);
+												if (sCSEErrMsg.isEmpty() && iCSESimRetVal != 0)
+													sCSEErrMsg.sprintf( "error code %d", iCSESimRetVal );
+
+											if (!bCSESimOK)
+											{	sErrMsg.sprintf( "CSE (ResDHW/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
+//													41 : CSE (ResDHW/PV/Battery) simulation not successful
+												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+											}
+											BEMPX_RefreshLogFile();	// SAC 5/19/14
+										}
+										else if (iNumRecircDHWSysObjs > 0 || iNumPVArrayObjs > 0)
+										{	if (bVerbose)
+												BEMPX_WriteLogFile( "      Skipping CSE ResDHW/PV/Battery simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//											CSE_MsgCallback( 0 /*level*/, "Skipping CSE ResDHW/PV/Battery simulation" );
+									}	}
+
+								}	// end of: for (iSR=0-iSimRunIdx)
+			// END OF CSE ResDHW/PV/Battery simulation
+
+
+
+							// processing of analysis results foillowing ALL simulations - SAC 7/23/18
+								if (iSimRetVal == 0)
+									iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
+																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
+																		// remaining general arguments
+																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
+																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
+																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
+																				false /*bIncludeOutputDiagnostics*/, iProgressType );
 							}
-							tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
-									if (bVerbose)
-									{	sLogMsg.sprintf( "  PerfAnal_NRes - Back from PerfSim_E+ (%s model, %d return value)", sRunID.toLocal8Bit().constData(), iSimRetVal );
-										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-									}
-
-							if (bSimRunsNow && iSimRetVal == 0 && bIsDsgnSim)		// SAC 4/1/14
-								for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
-									bSizingRunSimulated[osSimInfo[iSimRun].iRunIdx] = TRUE;
-
-							if (bSimRunsNow && (iSimRetVal == 0 || iSimRetVal == OSI_SimEPlus_UserAbortedAnalysis))
-								for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
-									saSimulatedRunIDs.push_back( osRunInfo[iSimRun].RunID() );
 
 						// SAC 8/21/14 - added export of hourly results CSV
 							if (bSimRunsNow && iSimRetVal == 0 && !bIsDsgnSim)
@@ -5042,7 +5315,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			sRuleVer = "???";
 		}
 
-		double fEnergyResults[2][5][13];		// Prop/Std -- Elec/NGas/Othr/TDV/ElecKW -- SpcHtg/SpcClg...ProcLtg/ProcMtrs/TOTAL		- SAC 10/10/16 - added elec demand  - SAC 2/7/17 - added ProcMtrs
+		double fEnergyResults[2][5][NUM_T24_NRES_EndUses];		// Prop/Std -- Elec/NGas/Othr/TDV/ElecKW -- SpcHtg/SpcClg...ProcLtg/ProcMtrs/PV/Battery/TOTAL		- SAC 10/10/16 - added elec demand  - SAC 2/7/17 - added ProcMtrs  - SAC 7/20/18 - added PV&Batt & switched to use of NUM_T24_NRES_EndUses
 		double fEnergyCosts[2][4] = { {0,0,0,0}, {0,0,0,0} };	// Prop/Std -- Elec/NGas/Othr/TOTAL
 		long lDBID_Res[2][5]		= { {	BEMPX_GetDatabaseID( "EnergyUse:PropElecEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropNatGasEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:PropOtherEnergy" ), BEMPX_GetDatabaseID( "EnergyUse:ProposedTDV" ), BEMPX_GetDatabaseID( "EnergyUse:PropElecDemand" ) },
 											 { BEMPX_GetDatabaseID( "EnergyUse:StdElecEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdNatGasEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StdOtherEnergy"  ), BEMPX_GetDatabaseID( "EnergyUse:StandardTDV" ), BEMPX_GetDatabaseID( "EnergyUse:StdElecDemand"  ) } };
@@ -5054,7 +5327,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		int iNumBadResults=0, iNumResAttempts=0,  iNumBadEDResults=0, iNumEDResAttempts=0;
 		for (int iRR=0; iRR<2; iRR++)
 			for (int iRF=0; iRF<5; iRF++)
-			{	int iMaxREU = 12;   // SAC 2/19/17 - was: (iRF==3 ? 7 : 12);
+			{	int iMaxREU = NUM_T24_NRES_EndUses-1;   // SAC 2/19/17 - was: (iRF==3 ? 7 : 12);  - SAC 7/20/18 - 12->NUM_T24_NRES_EndUses-1
 				for (int iREU=0; iREU<=iMaxREU; iREU++)
 				{	if (iCodeType == CT_T24N || iRF != 3)	// SAC 10/7/14 - store TDV results only for T24 runs
 					{	if (iRF==4)	// elec demand
@@ -5073,10 +5346,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 			// storage of energy COST results
 				if (iRF<4 && (iCodeType == CT_S901G || iCodeType == CT_ECBC))
-					BEMPX_GetFloat(  lDBID_Costs[iRR][iRF], fEnergyCosts[iRR][iRF], 0, -1, 12 /*index of Total enduse*/ );
+					BEMPX_GetFloat(  lDBID_Costs[iRR][iRF], fEnergyCosts[iRR][iRF], 0, -1, iMaxREU /*index of Total enduse*/ );	// SAC 7/20/18 - Tot EU idx 12->iMaxREU following addition of PV & Battery
 			// storage of TDV by Fuel results  - SAC 2/19/17
 				if (iRF<3 && iCodeType == CT_T24N)
-					BEMPX_GetFloat(  lDBID_TDVbF[iRR][iRF], fTDVbyFuel[iRR][iRF], 0, -1, 12 /*index of Total enduse*/ );
+					BEMPX_GetFloat(  lDBID_TDVbF[iRR][iRF], fTDVbyFuel[iRR][iRF], 0, -1, iMaxREU /*index of Total enduse*/ );	// SAC 7/20/18 - Tot EU idx 12->iMaxREU following addition of PV & Battery
 			}
 			if (bExpectValidResults && iNumBadResults >= iNumResAttempts)
 			{	assert( FALSE );	// was expecting valid results, but NONE were retrievable
@@ -5144,16 +5417,16 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		QString sElecDemandResults;
 		if (bHaveElecDemandResults && iCodeType == CT_T24N)	// SAC 10/11/16
-		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
+		{	sElecDemandResults.sprintf( "%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,",
 				// Proposed model electric demand
-						fEnergyResults[0][4][ 0], fEnergyResults[0][4][ 1], fEnergyResults[0][4][ 2], fEnergyResults[0][4][ 3], fEnergyResults[0][4][ 4], fEnergyResults[0][4][ 5],
-						fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7], fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11], fEnergyResults[0][4][12],
+						fEnergyResults[0][4][ 0], fEnergyResults[0][4][ 1], fEnergyResults[0][4][ 2], fEnergyResults[0][4][ 3], fEnergyResults[0][4][ 4], fEnergyResults[0][4][ 5], fEnergyResults[0][4][ 6], fEnergyResults[0][4][ 7],
+						fEnergyResults[0][4][ 8], fEnergyResults[0][4][ 9], fEnergyResults[0][4][10], fEnergyResults[0][4][11], fEnergyResults[0][4][12], fEnergyResults[0][4][13], fEnergyResults[0][4][14],
 				// Standard model electric demand
-						fEnergyResults[1][4][ 0], fEnergyResults[1][4][ 1], fEnergyResults[1][4][ 2], fEnergyResults[1][4][ 3], fEnergyResults[1][4][ 4], fEnergyResults[1][4][ 5],
-						fEnergyResults[1][4][ 6], fEnergyResults[1][4][ 7], fEnergyResults[1][4][ 8], fEnergyResults[1][4][ 9], fEnergyResults[1][4][10], fEnergyResults[1][4][11], fEnergyResults[1][4][12]  );
+						fEnergyResults[1][4][ 0], fEnergyResults[1][4][ 1], fEnergyResults[1][4][ 2], fEnergyResults[1][4][ 3], fEnergyResults[1][4][ 4], fEnergyResults[1][4][ 5], fEnergyResults[1][4][ 6], fEnergyResults[1][4][ 7],
+						fEnergyResults[1][4][ 8], fEnergyResults[1][4][ 9], fEnergyResults[1][4][10], fEnergyResults[1][4][11], fEnergyResults[1][4][12], fEnergyResults[1][4][13], fEnergyResults[1][4][14]  );
 		}
 		else
-			sElecDemandResults = ",,,,,,,,,,,,,,,,,,,,,,,,,,";
+			sElecDemandResults = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
 
 // SAC 5/5/15 - ResultSummary Logging
 	sLogMsg.sprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
@@ -5167,37 +5440,37 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 #pragma warning(disable:4996)
 		if (iCodeType == CT_T24N)		// SAC 10/7/14 - export of TDV results needed only for T24 analysis
-			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",%g,%g,\"%s\",%d:%.2d,%s,%s,"				// begin thru CompMargin
-							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // prop
-							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // std
-							"%s"                                                                                               // prop & std kW
+			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",%g,%g,\"%s\",%d:%.2d,%s,%s,"					// begin thru CompMargin
+							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop      - SAC 7/20/18 - addition of PV & Batt Elec enduses
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // prop
+							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // std
+							"%s"                                                                                                     // prop & std kW
 							"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\n",
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(), dRptCndArea, dRptTotArea,  // SAC 2/18/17
 						sAnalType.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)), sResTemp1.toLocal8Bit().constData() /*PassFail*/, sResTemp2.toLocal8Bit().constData() /*CompMargin*/,
 				// Proposed model
 						"--", "--", sPropSimSummary.toLocal8Bit().constData(),
 						fEnergyResults[0][0][ 0], fEnergyResults[0][0][ 1], fEnergyResults[0][0][ 2], fEnergyResults[0][0][ 3], fEnergyResults[0][0][ 4], fEnergyResults[0][0][ 5],
-						fEnergyResults[0][0][ 6], fEnergyResults[0][0][ 7], fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12],
+						fEnergyResults[0][0][ 6], fEnergyResults[0][0][ 7], fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12], fEnergyResults[0][0][13], fEnergyResults[0][0][14],
 						fEnergyResults[0][1][ 0], fEnergyResults[0][1][ 1], fEnergyResults[0][1][ 2], fEnergyResults[0][1][ 3], fEnergyResults[0][1][ 4], fEnergyResults[0][1][ 5],
-						fEnergyResults[0][1][ 6], fEnergyResults[0][1][ 7], fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][12],
+						fEnergyResults[0][1][ 6], fEnergyResults[0][1][ 7], fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][14],
 						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],
-						fEnergyResults[0][2][ 6], fEnergyResults[0][2][ 7], fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][12],
+						fEnergyResults[0][2][ 6], fEnergyResults[0][2][ 7], fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][14],
 						fEnergyResults[0][3][ 0], fEnergyResults[0][3][ 1], fEnergyResults[0][3][ 2], fEnergyResults[0][3][ 3], fEnergyResults[0][3][ 4], fEnergyResults[0][3][ 5],
-						fEnergyResults[0][3][ 6], fEnergyResults[0][3][ 7], fEnergyResults[0][3][ 8], fEnergyResults[0][3][ 9], fEnergyResults[0][3][10], fEnergyResults[0][3][11], fEnergyResults[0][3][12],
+						fEnergyResults[0][3][ 6], fEnergyResults[0][3][ 7], fEnergyResults[0][3][ 8], fEnergyResults[0][3][ 9], fEnergyResults[0][3][10], fEnergyResults[0][3][11], fEnergyResults[0][3][12], fEnergyResults[0][3][13], fEnergyResults[0][3][14],
 						fTDVbyFuel[0][0],	fTDVbyFuel[0][1],	fTDVbyFuel[0][2],	// TDV results: Prop - Elec/NGas/Othr  - SAC 2/19/17
 						sPropClgUMLHData.toLocal8Bit().constData(), sPropHtgUMLHData.toLocal8Bit().constData(),			// UMLHs
 				// Standard model
 						"--", "--", sStdSimSummary.toLocal8Bit().constData(),
 						fEnergyResults[1][0][ 0], fEnergyResults[1][0][ 1], fEnergyResults[1][0][ 2], fEnergyResults[1][0][ 3], fEnergyResults[1][0][ 4], fEnergyResults[1][0][ 5],
-						fEnergyResults[1][0][ 6], fEnergyResults[1][0][ 7], fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12],
+						fEnergyResults[1][0][ 6], fEnergyResults[1][0][ 7], fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12], fEnergyResults[1][0][13], fEnergyResults[1][0][14],
 						fEnergyResults[1][1][ 0], fEnergyResults[1][1][ 1], fEnergyResults[1][1][ 2], fEnergyResults[1][1][ 3], fEnergyResults[1][1][ 4], fEnergyResults[1][1][ 5],
-						fEnergyResults[1][1][ 6], fEnergyResults[1][1][ 7], fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][12],
+						fEnergyResults[1][1][ 6], fEnergyResults[1][1][ 7], fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][14],
 						fEnergyResults[1][2][ 0], fEnergyResults[1][2][ 1], fEnergyResults[1][2][ 2], fEnergyResults[1][2][ 3], fEnergyResults[1][2][ 4], fEnergyResults[1][2][ 5],
-						fEnergyResults[1][2][ 6], fEnergyResults[1][2][ 7], fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][12],
+						fEnergyResults[1][2][ 6], fEnergyResults[1][2][ 7], fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][14],
 						fEnergyResults[1][3][ 0], fEnergyResults[1][3][ 1], fEnergyResults[1][3][ 2], fEnergyResults[1][3][ 3], fEnergyResults[1][3][ 4], fEnergyResults[1][3][ 5], 
-						fEnergyResults[1][3][ 6], fEnergyResults[1][3][ 7], fEnergyResults[1][3][ 8], fEnergyResults[1][3][ 9], fEnergyResults[1][3][10], fEnergyResults[1][3][11], fEnergyResults[1][3][12],
+						fEnergyResults[1][3][ 6], fEnergyResults[1][3][ 7], fEnergyResults[1][3][ 8], fEnergyResults[1][3][ 9], fEnergyResults[1][3][10], fEnergyResults[1][3][11], fEnergyResults[1][3][12], fEnergyResults[1][3][13], fEnergyResults[1][3][14],
 						fTDVbyFuel[1][0],	fTDVbyFuel[1][1],	fTDVbyFuel[1][2],	// TDV results: Std - Elec/NGas/Othr  - SAC 2/19/17
 						sStdClgUMLHData.toLocal8Bit().constData(), sStdHtgUMLHData.toLocal8Bit().constData(),				// UMLHs
 				// Proposed & Standard model electric demand
@@ -5209,30 +5482,30 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14 - export of Energy Cost results needed only for 90.1 analysis
 			_snprintf( pszResultsSummary, iResultsSummaryLen, "%s,\"%s\",\"%s\",\"%s\",\"%s\",%d:%.2d,%s,%s,"
-							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                 // prop
+							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop      - SAC 7/20/18 - addition of PV & Batt Elec enduses
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                           // prop
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                                 // std
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"                                           // std
 							"\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\n",
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(), 
 						sAnalType.toLocal8Bit().constData(), int(dTimeOverall/60), int(fmod(dTimeOverall, 60.0)), sResTemp1.toLocal8Bit().constData() /*PassFail*/, sResTemp2.toLocal8Bit().constData() /*CompMargin*/,
 				// Proposed model
 						"--", "--", sPropSimSummary.toLocal8Bit().constData(),  fEnergyCosts[0][0], fEnergyCosts[0][1], fEnergyCosts[0][2], fEnergyCosts[0][3],
 						fEnergyResults[0][0][ 0], fEnergyResults[0][0][ 1], fEnergyResults[0][0][ 2], fEnergyResults[0][0][ 3], fEnergyResults[0][0][ 4], fEnergyResults[0][0][ 5],
-						fEnergyResults[0][0][ 6],                           fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12],
+						fEnergyResults[0][0][ 6],                           fEnergyResults[0][0][ 8], fEnergyResults[0][0][ 9], fEnergyResults[0][0][10], fEnergyResults[0][0][11], fEnergyResults[0][0][12], fEnergyResults[0][0][13], fEnergyResults[0][0][14],
 						fEnergyResults[0][1][ 0], fEnergyResults[0][1][ 1], fEnergyResults[0][1][ 2], fEnergyResults[0][1][ 3], fEnergyResults[0][1][ 4], fEnergyResults[0][1][ 5],                          
-						fEnergyResults[0][1][ 6],                           fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][12],
+						fEnergyResults[0][1][ 6],                           fEnergyResults[0][1][ 8], fEnergyResults[0][1][ 9], fEnergyResults[0][1][10], fEnergyResults[0][1][11], fEnergyResults[0][1][14],
 						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],                          
-						fEnergyResults[0][2][ 6],                           fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][12],
+						fEnergyResults[0][2][ 6],                           fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][14],
 						sPropClgUMLHData.toLocal8Bit().constData(), sPropHtgUMLHData.toLocal8Bit().constData(),			// UMLHs
 				// Standard model
 						"--", "--", sStdSimSummary.toLocal8Bit().constData(),  fEnergyCosts[1][0], fEnergyCosts[1][1], fEnergyCosts[1][2], fEnergyCosts[1][3],
 						fEnergyResults[1][0][ 0], fEnergyResults[1][0][ 1], fEnergyResults[1][0][ 2], fEnergyResults[1][0][ 3], fEnergyResults[1][0][ 4], fEnergyResults[1][0][ 5],
-						fEnergyResults[1][0][ 6],                           fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12],
+						fEnergyResults[1][0][ 6],                           fEnergyResults[1][0][ 8], fEnergyResults[1][0][ 9], fEnergyResults[1][0][10], fEnergyResults[1][0][11], fEnergyResults[1][0][12], fEnergyResults[1][0][13], fEnergyResults[1][0][14],
 						fEnergyResults[1][1][ 0], fEnergyResults[1][1][ 1], fEnergyResults[1][1][ 2], fEnergyResults[1][1][ 3], fEnergyResults[1][1][ 4], fEnergyResults[1][1][ 5],                          
-						fEnergyResults[1][1][ 6],                           fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][12],
+						fEnergyResults[1][1][ 6],                           fEnergyResults[1][1][ 8], fEnergyResults[1][1][ 9], fEnergyResults[1][1][10], fEnergyResults[1][1][11], fEnergyResults[1][1][14],
 						fEnergyResults[1][2][ 0], fEnergyResults[1][2][ 1], fEnergyResults[1][2][ 2], fEnergyResults[1][2][ 3], fEnergyResults[1][2][ 4], fEnergyResults[1][2][ 5],                          
-						fEnergyResults[1][2][ 6],                           fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][12],
+						fEnergyResults[1][2][ 6],                           fEnergyResults[1][2][ 8], fEnergyResults[1][2][ 9], fEnergyResults[1][2][10], fEnergyResults[1][2][11], fEnergyResults[1][2][14],
 						sStdClgUMLHData.toLocal8Bit().constData(), sStdHtgUMLHData.toLocal8Bit().constData(),				// UMLHs
 				// final version labels & paths
 						//sAppVer, sCmpMgrVer, sRuleVer, sOSVer, sEPlusVer, "-", sAnnWthrFile, pszModelPathFile );
@@ -6226,15 +6499,15 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 	QString sAnalysisType, sWeatherStation, sRunTitle;
 	BOOL bExpectStdDesResults = TRUE;
 	if (	!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:AnalysisType"    ), sAnalysisType   , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) ||
-			!BEMPX_GetFloat(	  BEMPX_GetDatabaseID( "Bldg:TotCondFlrArea"  ), fCondFloorArea  ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
+			!BEMPX_GetFloat(	 BEMPX_GetDatabaseID( "Bldg:TotCondFlrArea"  ), fCondFloorArea  ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
 			!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"        ), lCliZnNum       ,       0, -1, 0, BEMO_User,          iBEMProcIdx ) ||
 			!BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:WeatherStation"  ), sWeatherStation , TRUE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx ) )
 	{	iRetVal = 1;
 		sErrMsg = "Error retrieving Proj:AnalysisType, CliZnNum, WeatherStation and/or Bldg:TotCondFlrArea";
 	}
-	else if (NUM_T24_NRES_EndUses != 13 || IDX_T24_NRES_EU_Total != 12)	// SAC 2/1/17 - added error check to prevent bomb below
+	else if (NUM_T24_NRES_EndUses != 15 || IDX_T24_NRES_EU_Total != 14)	// SAC 2/1/17 - added error check to prevent bomb below  // SAC 7/15/18 - updated expected total to 15 (for PV & Batt)
 	{	iRetVal = 5;
-		sErrMsg = QString("Unexpected enduse count (%1) or total index (%2) (expecting 13 and 12 respectively)").arg(QString::number(NUM_T24_NRES_EndUses), QString::number(IDX_T24_NRES_EU_Total));
+		sErrMsg = QString("Unexpected enduse count (%1) or total index (%2) (expecting 15 and 14 respectively)").arg(QString::number(NUM_T24_NRES_EndUses), QString::number(IDX_T24_NRES_EU_Total));
 	}
 	else
 	{	bExpectStdDesResults = (sAnalysisType.indexOf( "Compl" ) >= 0);
@@ -6311,42 +6584,45 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				fprintf( fp_CSV,    "Model File:,,,\"%s\"\n", pszModelPathFile );
 				fprintf( fp_CSV, "\n" );
 
-	// ASSUMES:  NUM_T24_NRES_EndUses = 13  -AND-  IDX_T24_NRES_EU_CompTot = 7  -AND-  IDX_T24_NRES_EU_Total = 12
-		int iEUO[] = { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 7, 12 };		// SAC 2/1/17 - updated to include Process Motors
+	// ASSUMES:  NUM_T24_NRES_EndUses = 15  -AND-  IDX_T24_NRES_EU_CompTot = 7  -AND-  IDX_T24_NRES_EU_Total = 14
+		int iEUO[2][NUM_T24_NRES_EndUses] = { { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 7, 14       },		// SAC 2/1/17 - updated to include Process Motors
+														  { 0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11,         7, 14, 0, 0 } };	// SAC 7/20/18 - divided into two sets - Elec vs. Other (in adding PV & Batt)
 		int iNumEUs = NUM_T24_NRES_EndUses;
-		if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
-		{	iNumEUs = NUM_T24_NRES_EndUses-1;
-			iEUO[NUM_T24_NRES_EndUses-2] = IDX_T24_NRES_EU_Total;		iEUO[NUM_T24_NRES_EndUses-1] = 0;		// bypass reporting of CompTotal enduse
+		if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14   // SAC 7/15/18 - further revs to ignoree PV & Batt
+		{	iNumEUs = NUM_T24_NRES_EndUses-3;
+			iEUO[0][iNumEUs-1] = IDX_T24_NRES_EU_Total;		iEUO[0][iNumEUs] = 0;		// bypass reporting of CompTotal enduse
+			iEUO[1][iNumEUs-1] = IDX_T24_NRES_EU_Total;		iEUO[1][iNumEUs] = 0;		// bypass reporting of CompTotal enduse
 		}
 
 				if (iCodeType == CT_T24N)		// SAC 10/7/14
-				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,TDV Multipliers,\n" );		// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
-   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel\n",
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[12]].sEnduseAbbrev );
-	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
+				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Propane Use,,,,,,,,,,,,,TDV Multipliers,\n" );		// SAC 10/28/15 - 'Other Fuel' -> 'Propane'
+   	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,Electric,NatGas,OtherFuel\n",
+												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[0][12]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][13]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][14]].sEnduseAbbrev,  // SAC 7/15/18 - added PV & Battery
+												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][12]].sEnduseAbbrev );
+	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
 														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),"		// SAC 10/28/15 - 'therms' -> 'kBtu'
 														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kTDV/kWh),(kTDV/MBtu),(kTDV/MBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' and 'kTDV/thrm' -> 'kTDV/MBtu'
 				}
 				else if (iCodeType == CT_S901G || iCodeType == CT_ECBC)		// SAC 10/7/14
 				{	fprintf( fp_CSV,  ",,,Site Electric Use,,,,,,,,,,,,,Site Natural Gas Use,,,,,,,,,,,,,Site Other Fuel Use,\n" );
    	         fprintf( fp_CSV,  ",,,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev,
-												esEUMap_CECNonRes[iEUO[ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 3]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 7]].sEnduseAbbrev, 
-												esEUMap_CECNonRes[iEUO[ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[11]].sEnduseAbbrev );
+												esEUMap_CECNonRes[iEUO[0][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[0][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[0][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[0][11]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev,
+												esEUMap_CECNonRes[iEUO[1][ 0]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 1]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 2]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 3]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 4]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 5]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 6]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 7]].sEnduseAbbrev, 
+												esEUMap_CECNonRes[iEUO[1][ 8]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][ 9]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][10]].sEnduseAbbrev, esEUMap_CECNonRes[iEUO[1][11]].sEnduseAbbrev );
 	            fprintf( fp_CSV,  "Mo,Da,Hr,(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),"
 														"(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),"
 														"(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu),(kBtu)\n" );		// SAC 10/28/15 - 'therms' -> 'kBtu' for Other Fuel use
@@ -6365,20 +6641,21 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				for (; iMtr < NUM_T24_NRES_Fuels; iMtr++)
 				{	//	for (iYrHr=0; iYrHr<8760; iYrHr++)
 					//		daMtrTotals[iMtr][iYrHr] = 0.0;
+					int iEUOM = (iMtr==0 ? 0 : 1);
 					int iEUCmpTot=-1, iEUTot=-1;	// SAC 2/1/17
 					for (iEU=0; iEU < iNumEUs; iEU++)
 					{	if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
-	 																esEUMap_CECNonRes[iEUO[iEU]].sEnduseName, iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU] != NULL)
+	 																esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sEnduseName, iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU] != NULL)
 						{	// OK - do nothing
 						}
 						else
-						{	if (iEUO[iEU] == IDX_T24_NRES_EU_CompTot)		// SAC 2/1/17 - used to sum CompTot & Tot results, as they are NOT represented in the meter results retrieved above
+						{	if (iEUO[iEUOM][iEU] == IDX_T24_NRES_EU_CompTot)		// SAC 2/1/17 - used to sum CompTot & Tot results, as they are NOT represented in the meter results retrieved above
 							{	iEUCmpTot = iEU;
 								daMtrEUData[iMtr][iEU] = &daMtrCTotData[iMtr][0];
 								for (iYrHr=0; iYrHr<8760; iYrHr++)
 									daMtrCTotData[iMtr][iYrHr] = 0.0;
 							}
-							else if (iEUO[iEU] == IDX_T24_NRES_EU_Total)
+							else if (iEUO[iEUOM][iEU] == IDX_T24_NRES_EU_Total)
 							{	iEUTot = iEU;
 								daMtrEUData[iMtr][iEU] = &daMtrTotData[iMtr][0];
 								for (iYrHr=0; iYrHr<8760; iYrHr++)
@@ -6393,7 +6670,7 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 						if (iEU != iEUCmpTot && iEU != iEUTot)
 						{	for (iYrHr=0; iYrHr<8760; iYrHr++)
 								daMtrEUData[iMtr][iEUTot][iYrHr] += daMtrEUData[iMtr][iEU][iYrHr];
-							if (esEUMap_CECNonRes[iEUO[iEU]].iSumIntoCompliance)
+							if (esEUMap_CECNonRes[iEUO[iEUOM][iEU]].iSumIntoCompliance)
 							{	for (iYrHr=0; iYrHr<8760; iYrHr++)
 									daMtrEUData[iMtr][iEUCmpTot][iYrHr] += daMtrEUData[iMtr][iEU][iYrHr];
 						}	}
@@ -6427,11 +6704,11 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 						for (iDa=1; iDa <= iNumDaysInMonth[iMo-1]; iDa++)
 							for (iHr=1; iHr<25; iHr++)
 							{	iYrHr++;
-				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+				            fprintf( fp_CSV,  "%d,%d,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
 																	"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,\n",		iMo, iDa, iHr,
 						daMtrEUData[0][ 0][iYrHr], daMtrEUData[0][ 1][iYrHr], daMtrEUData[0][ 2][iYrHr], daMtrEUData[0][ 3][iYrHr], daMtrEUData[0][ 4][iYrHr], daMtrEUData[0][ 5][iYrHr],
-						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr], daMtrEUData[0][11][iYrHr], daMtrEUData[0][12][iYrHr],
+						daMtrEUData[0][ 6][iYrHr], daMtrEUData[0][ 7][iYrHr], daMtrEUData[0][ 8][iYrHr], daMtrEUData[0][ 9][iYrHr], daMtrEUData[0][10][iYrHr], daMtrEUData[0][11][iYrHr], daMtrEUData[0][12][iYrHr], daMtrEUData[0][13][iYrHr], daMtrEUData[0][14][iYrHr],		// SAC 7/15/18 - added PV & Battery
 						daMtrEUData[1][ 0][iYrHr]*dFUMlt, daMtrEUData[1][ 1][iYrHr]*dFUMlt, daMtrEUData[1][ 2][iYrHr]*dFUMlt, daMtrEUData[1][ 3][iYrHr]*dFUMlt, daMtrEUData[1][ 4][iYrHr]*dFUMlt, daMtrEUData[1][ 5][iYrHr]*dFUMlt,
 						daMtrEUData[1][ 6][iYrHr]*dFUMlt, daMtrEUData[1][ 7][iYrHr]*dFUMlt, daMtrEUData[1][ 8][iYrHr]*dFUMlt, daMtrEUData[1][ 9][iYrHr]*dFUMlt, daMtrEUData[1][10][iYrHr]*dFUMlt, daMtrEUData[1][11][iYrHr]*dFUMlt, daMtrEUData[1][12][iYrHr]*dFUMlt,
 						daMtrEUData[2][ 0][iYrHr]*dFUMlt, daMtrEUData[2][ 1][iYrHr]*dFUMlt, daMtrEUData[2][ 2][iYrHr]*dFUMlt, daMtrEUData[2][ 3][iYrHr]*dFUMlt, daMtrEUData[2][ 4][iYrHr]*dFUMlt, daMtrEUData[2][ 5][iYrHr]*dFUMlt,
@@ -6490,46 +6767,47 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 // SAC 10/10/16 - updated T24N CSV summary results header strings to include prop & std model electric demand
 // SAC 2/7/17 - added Proc Mtrs enduse (tic #2033)
 // SAC 2/18/17 - added total & cond floor area + TDV results for unregulated enduses and TDV totals by fuel (for 2019.0.1 release)
-static char szT24NCSV1[]	 =	",,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Pr"
-										"oposed Model,,,Proposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Mode"
-										"l,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szT24NCSV2[]	 =	",,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,Natural Gas Energy Consumption (therm"
-										"s),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling Unmet"
-										" Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,"
-										",,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling Unmet Load Hours,,"
-										",Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,Application,Manag"
-										"er,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+// SAC 7/20/18 - added PV & Battery enduses (for A2030 & 2019.0.3 releases)
+static char szT24NCSV1[]	 =	",,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,"
+										",,Proposed Model,,,Proposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standar"
+										"d Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Calling,Compliance,,,,Secondary,,\n";
+static char szT24NCSV2[]	 =	",,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (the"
+										"rms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling U"
+										"nmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,"
+										",,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling Unmet Load"
+										" Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Appli"
+										"cation,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
 static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Statu"
 										"s,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Oth"
-										"er Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,"
-										"Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Proce"
-										"ss,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Pr"
-										"ocess,Other Ltg,Proc Mtrs,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,R"
-										"ule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Lighting,Comp Total,Receptacle,Proc"
-										"ess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,P"
-										"rocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacl"
-										"e,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Recept"
-										"acle,Process,Other Ltg,Proc Mtrs,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max"
-										",Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TO"
-										"TAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs"
-										",TOTAL,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
+										"er Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptac"
+										"le,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Recep"
+										"tacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Re"
+										"ceptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Z"
+										"ones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Lighting,Comp"
+										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor"
+										" Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Ind"
+										"oor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,"
+										"Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed"
+										" Max,Zone Max,Zone Name,Num Zones Exceed Max,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Tot"
+										"al,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lig"
+										"hting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
 
-static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed"
-										" Model,,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Mode"
-										"l,,,,,,Calling,Compliance,,,,Secondary,,\n";
-static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms"
-										"),,,,,,,,,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs"		// SAC 10/28/15 - 'MMBtu' -> 'MBtu'
-										" ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMB"
-										"tu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
-static char szS901GCSV3[]	=	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation "
-										"Status,Electricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptac"
-										"le,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other "
-										"Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Zone Max,"
-										"Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Electricity,Natural Gas,O"
-										"ther Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc"
-										" Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Coolin"
-										"g,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Z"
-										"one Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Version,Weather File Path,Project Path\n";
+static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
+										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";
+static char szS901GCSV2[]	=	",,,,,,Pass /,Compliance,Elapsed,,,Energy Costs ($),,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,"
+										",,,,,Other Fuel Energy Consumption (MBtu),,,,,,,,,,,,Cooling Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Energy Costs ($),,,,Electric E"
+										"nergy Consumption (kWh),,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,,,,,,,,,Other Fuel Energy Consumption (MMBtu),,,,,,,,,,,,Cooling Un"
+										"met Load Hours,,,Heating Unmet Load Hours,,,Application,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,\n";
+static char szS901GCSV3[]	=	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Analysis Type,Elapsed Time,Fail,Margin,Time,Rule Eval Status,Simulation Status,Elec"
+										"tricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proce"
+										"ss,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Pr"
+										"ocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,Ot"
+										"her Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Ele"
+										"ctricity,Natural Gas,Other Fuel,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Proc"
+										"ess,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,P"
+										"rocess,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Receptacle,Process,O"
+										"ther Ltg,Proc Mtrs,TOTAL,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zone Name,Num Zones Exceed Max,Version,Version,Version,Version,Version,Ve"
+										"rsion,Weather File Path,Project Path\n";
 
 int CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )	// SAC 5/16/14
 {	return CMX_PopulateResultsHeader_NonRes( pszHdr1, iHdr1Len, pszHdr2, iHdr2Len, pszHdr3, iHdr3Len, CT_T24N );

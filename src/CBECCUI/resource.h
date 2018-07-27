@@ -134,7 +134,15 @@
 #define IDB_TREEHXA2                    247
 #define IDB_TREETESC                    248
 #define IDB_TREETESC2                   249
-#define IDB_TREELAST                    249
+#define IDB_TREEPVA                     250
+#define IDB_TREEPVA2                    251
+#define IDB_TREEBATT                    252
+#define IDB_TREEBATT2                   253
+#define IDB_TREEPVAS                    254
+#define IDB_TREEPVAS2                   255
+#define IDB_TREEPVAG                    256
+#define IDB_TREEPVAG2                   257
+#define IDB_TREELAST                    257
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303

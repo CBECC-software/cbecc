@@ -37,6 +37,9 @@
 #include "exec-stream.h"
 #include "CSERunMgr.h"
 #include "memLkRpt.h"
+#ifdef OSWRAPPER
+#include "OpenStudioInterface.h"
+#endif
 
 const char* pszRunAbbrev_u  = "u";
 const char* pszRunAbbrev_pp  = "pp";  
@@ -892,9 +895,14 @@ int CSERunMgr::SetupRunFinish(
 }		// CSERunMgr::SetupRunFinish
 
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
-											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/ )
+											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/ )
 {
 	int iRetVal = 0;
+	int iPrevBEMProcIdx = -1;	// SAC 7/23/18
+	if (iBEMProcIdx >= 0)
+	{	iPrevBEMProcIdx = BEMPX_GetActiveModel();
+		BEMPX_SetActiveModel( iBEMProcIdx );
+	}
 	CSERun* pCSERun = new CSERun;
 	m_vCSERun.push_back( pCSERun);
 	QString sMsg, sLogMsg;
@@ -1178,6 +1186,246 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 					BEMPX_SetBEMData( lDBID_CSEwfName, BEMP_QStr, (void*) &sWthrFN );
 		}	}	}
 
+	// SAC 7/16/18 - ported writing of TDV CSV file from Res setup to support BATTERY simulation
+		// SAC 3/18/17 - storage of TDV CSV file to be made available to the CSE input file
+		pCSERun->SetTDVFName( "" );		// SAC 4/16/17
+		QString sTDVFile;
+		if (iRetVal == 0)
+		{	long lCSE_WriteTDV;
+			if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_WriteTDV" ), lCSE_WriteTDV ) && lCSE_WriteTDV > 0)
+			{	sTDVFile = sProjFileAlone + "-tdv.csv";
+				QString sFullTDVFile = m_sProcessPath + sTDVFile;
+				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+								 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "TDV", sFullTDVFile, "compliance report generation" );
+				if (!OKToWriteOrDeleteFile( sFullTDVFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+				{	if (m_bSilent)
+						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file (required for CSE simulation):  %2" ).arg( "TDV", sFullTDVFile );
+					else
+						sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file (required for CSE simulation):  %2" ).arg( "TDV", sFullTDVFile );
+					iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+				}
+				else
+				{	double daTDVElec[8760], daTDVFuel[8760];  //, daTDVSecElec[8760], daTDVSecFuel[8760];
+					long lCZ=0, lGas=0;
+					bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
+					if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum" ), lCZ  ) || lCZ  < 1 || lCZ > 16 ||
+							!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas ) || lGas < 1 || lGas > 2 ||
+							BEMPX_GetTableColumn( &daTDVElec[0], 8760, "TDVbyCZandFuel", ((lCZ-1) * 3) + 2       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
+							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, "TDVbyCZandFuel", ((lCZ-1) * 3) + 2 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 )
+					{	assert( false );
+						sErrorMsg = QString( "ERROR:  Unable to retrieve Electric TDV data for CZ %1 (required for CSE simulation)" ).arg( QString::number(lCZ) );
+						iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+					}
+					else
+					{	QDateTime locTime = QDateTime::currentDateTime();
+						QString timeStamp = locTime.toString("ddd dd-MMM-yy  hh:mm:ss ap");   // "Wed 14-Dec-16  12:30:29 pm"
+
+		//				// SAC 9/23/17 - added code to summ GHG TDV adders to TDV data stored to 
+		//				QString qsTDVSecTblElec, qsTDVSecTblFuel;
+		//				bHaveSecTDVElec = ( BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Elec" ), qsTDVSecTblElec ) && 
+		//										  qsTDVSecTblElec.length() > 0 && qsTDVSecTblElec.compare( "none", Qt::CaseInsensitive ) && 
+		//										  BEMPX_GetTableColumn( &daTDVSecElec[0], 8760, qsTDVSecTblElec.toLocal8Bit().constData(), lCZ, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+		//				if (lGas == 1)
+		//					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_NGas" ), qsTDVSecTblFuel );
+		//				else
+		//					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVSecTbl_Othr" ), qsTDVSecTblFuel );
+		//				bHaveSecTDVFuel = ( qsTDVSecTblFuel.length() > 0 && qsTDVSecTblFuel.compare( "none", Qt::CaseInsensitive ) && 
+		//										  BEMPX_GetTableColumn( &daTDVSecFuel[0], 8760, qsTDVSecTblFuel.toLocal8Bit().constData(), lCZ, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) == 0 );
+		      		QString qsVer, qsGas;
+						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompManagerVersion" ), qsVer ) || qsVer.length() < 1)
+							qsVer = "(unknown version)";
+						switch (lGas)
+						{	case  1 :	qsGas = "NatGas";   break;
+							case  2 :	qsGas = "Propane";  break;
+							default :	qsGas = "(unknown)";  break;
+						}
+
+						FILE *fp_CSV;
+						int iErrorCode;
+						try
+						{	iErrorCode = fopen_s( &fp_CSV, sFullTDVFile.toLocal8Bit().constData(), "wb" );
+							if (iErrorCode != 0 || fp_CSV == NULL)
+							{	assert( false );
+								sErrorMsg = QString( "ERROR:  Unable to write TDV data file (required for CSE simulation):  %1" ).arg( sFullTDVFile );
+								iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+							}
+							else
+							{	fprintf( fp_CSV, "\"TDV Data (TDV/Btu)\",\"001\"\n" );
+								fprintf( fp_CSV, "\"%s\"\n", timeStamp.toLocal8Bit().constData() );
+		//						fprintf( fp_CSV, "\"%s, CZ%ld, Fuel Elec-only\",\"Hour\"\n", qsVer.toLocal8Bit().constData(), lCZ );
+		//						fprintf( fp_CSV, "\"tdvElec\"\n" );
+								fprintf( fp_CSV, "\"%s, CZ%ld, Fuel %s\",\"Hour\"\n", qsVer.toLocal8Bit().constData(), lCZ, qsGas.toLocal8Bit().constData() );
+								fprintf( fp_CSV, "\"tdvElec\",\"tdvFuel\"\n" );
+								for (int hr=0; hr<8760; hr++)
+		//							fprintf( fp_CSV, "%g\n", daTDVElec[hr] );
+		//						{	if (bHaveSecTDVElec)
+		//								daTDVElec[hr] += (daTDVSecElec[hr] / 3.413);
+		//							if (bHaveSecTDVFuel)
+		//								daTDVFuel[hr] += (daTDVSecFuel[hr] / 100);
+									fprintf( fp_CSV, "%g,%g\n", daTDVElec[hr], daTDVFuel[hr] );
+		//						}
+								fflush( fp_CSV );
+								fclose( fp_CSV );
+							}
+						}
+						catch( ... )
+						{	assert( false );
+							sErrorMsg = QString( "ERROR:  Exception thrown writing TDV data file (required for CSE simulation):  %1" ).arg( sFullTDVFile );
+							iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+					// how to handle error writing to TDV CSV file ??
+						}
+				}	}
+				if (iRetVal == 0)
+					pCSERun->SetTDVFName( sTDVFile );		// SAC 4/16/17
+			}
+			if (sTDVFile.length() > 0)
+				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), BEMP_QStr, (void*) &sTDVFile );
+			else
+				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), m_iError );
+		}
+
+	// WRITE CSV FILE of E+ElecUse - SAC 7/25/18
+		if (iRetVal == 0)
+		{	int iSpecialVal, iError;
+			BEMObject* pCSE_ElecUseImpFile = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "Proj:CSE_ElecUseIMPORTFILE" ), iSpecialVal, iError );
+		 	if (pCSE_ElecUseImpFile && pCSE_ElecUseImpFile->getClass())
+		 	{	int iCSE_ElecUseImpFileObjIdx = BEMPX_GetObjectIndex( pCSE_ElecUseImpFile->getClass(), pCSE_ElecUseImpFile );		assert( iCSE_ElecUseImpFileObjIdx >= 0 );
+				double* pdHrlyElecUse[ NUM_T24_NRES_EndUses ];
+				int iNumHrlyElecUsePtrs = 0, iHrlyElecUsePtrRV, iEU;
+				for (iEU=0; iEU < NUM_T24_NRES_EndUses; iEU++)
+				{	pdHrlyElecUse[iEU] = NULL;
+					if (iEU != IDX_T24_NRES_EU_CompTot && iEU != IDX_T24_NRES_EU_Total)
+					{	iHrlyElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyElecUse[iNumHrlyElecUsePtrs], NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
+																							esEUMap_CECNonRes[iEU].sEnduseName, iBEMProcIdx );
+						if (pdHrlyElecUse[iNumHrlyElecUsePtrs] && iHrlyElecUsePtrRV==0)
+							iNumHrlyElecUsePtrs++;
+				}	}
+
+		//		double* pdHrlyTotElecUse = NULL;
+		//		int iHrlyTotElecUsePtrRV = BEMPX_GetHourlyResultArrayPtr( &pdHrlyTotElecUse, NULL, 0, pszRunID, pszaEPlusFuelNames[0/*elec*/],
+		//																						esEUMap_CECNonRes[IDX_T24_NRES_EU_Total].sEnduseName, iBEMProcIdx );
+		//		bool bHrlyTotElecUsePtrOK = (pdHrlyTotElecUse && iHrlyTotElecUsePtrRV==0);			assert( bHrlyTotElecUsePtrOK );  // needs to be valid following split of results processing routine? - SAC 7/23/18
+		//		if (!bHrlyTotElecUsePtrOK)
+				if (iNumHrlyElecUsePtrs < 1)
+				{	assert( false );
+					sErrorMsg = QString( "ERROR:  Unable to retrieve E+ Electric Use hourly results (required for CSE PV/Battery simulation):  %1, %2, %3" ).arg( 
+																		pszRunID, pszaEPlusFuelNames[0/*elec*/], QString::number(iBEMProcIdx) );
+					iRetVal = 70;		// BEMAnal_CECRes_ (no error ID for this to date)
+				}
+				else
+				{	QString sEUseFile = sProjFileAlone + "-elecuse.csv";
+					QString sFullEUseFile = m_sProcessPath + sEUseFile;
+					sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+					             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+									 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "Building Electric Use", sFullEUseFile, "CSE PV/Battery simulation" );
+					if (!OKToWriteOrDeleteFile( sFullEUseFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+					{	if (m_bSilent)
+							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file (required for PV/Battery CSE simulation):  %2" ).arg( "Building Electric Use", sFullEUseFile );
+						else
+							sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file (required for PV/Battery CSE simulation):  %2" ).arg( "Building Electric Use", sFullEUseFile );
+						iRetVal = 70;		// BEMAnal_CECRes_ (no error ID for this to date)
+					}
+					else
+					{	QDateTime locTime = QDateTime::currentDateTime();
+						QString timeStamp = locTime.toString("ddd dd-MMM-yy  hh:mm:ss ap");   // "Wed 14-Dec-16  12:30:29 pm"
+		      		QString qsVer;
+						if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:CompManagerVersion" ), qsVer ) || qsVer.length() < 1)
+							qsVer = "(CompManagerVersion unknown)";
+
+						FILE *fp_CSV;
+						int iErrorCode;
+						try
+						{	iErrorCode = fopen_s( &fp_CSV, sFullEUseFile.toLocal8Bit().constData(), "wb" );
+							if (iErrorCode != 0 || fp_CSV == NULL)
+							{	assert( false );
+								sErrorMsg = QString( "ERROR:  Unable to write E+ Electric Use CSV file (required for CSE PV/Battery simulation):  %1" ).arg( sFullEUseFile );
+								iRetVal = 70;		// BEMAnal_CECRes_ (no error ID for this to date)
+							}
+							else
+							{	fprintf( fp_CSV, "\"E+ Electric Use (kWh) - %s\",1\n", qsVer.toLocal8Bit().constData() );
+								fprintf( fp_CSV, "\"%s\"\n", timeStamp.toLocal8Bit().constData() );
+							//	fprintf( fp_CSV, "\"%s\",Hour\n", qsVer.toLocal8Bit().constData() );
+								fprintf( fp_CSV, "\"EplusElecUse\",Hour\n", qsVer.toLocal8Bit().constData() );	// first column string must be consistent w/ cseIMPORTFILE:imTitle in CSE input
+								fprintf( fp_CSV, "\"EplusTotalKWH\"\n" );
+								double dVal;
+								for (int hr=0; hr<8760; hr++)
+								{	dVal = 0;
+									for (iEU=0; iEU < iNumHrlyElecUsePtrs; iEU++)
+										dVal += pdHrlyElecUse[iEU][hr];
+									fprintf( fp_CSV, "%g\n", dVal );
+								}
+								fprintf( fp_CSV, "\n" );
+								fflush( fp_CSV );
+								fclose( fp_CSV );
+							}
+						}
+						catch( ... )
+						{	assert( false );
+							sErrorMsg = QString( "ERROR:  Exception thrown writing E+ Electric Use CSV file (required for CSE PV/Battery simulation):  %1" ).arg( sFullEUseFile );
+							iRetVal = 70;		// BEMAnal_CECRes_ (no error ID for this to date)
+					// how to handle error writing to EUse CSV file ??
+						}
+						if (iRetVal == 0)
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseIMPORTFILE:imFileName" ), BEMP_QStr, (void*) &sEUseFile );
+					}
+
+// A2030 Example,1
+// 5/24/2018 11:35
+// EnergyPlusExport,Hour
+// Mon,Day,Hr,Spc Heat,Spc Cool,Indr Fans,Heat Rej,Pump&Misc,Dom HW,Lighting,Recept,Process,Othr Ltg,Proc Mtrs,Comp Tot,TotElec kWh,Spc Heat,Spc Cool,Indr Fans,Heat Rej,Pump&Misc,Dom HW,Lighting,Recept,Process,Othr Ltg,Proc Mtrs,Comp Tot,TotNG kBtu,Spc Heat,Spc Cool,Indr Fans,Heat Rej,Pump&Misc,Dom HW,Lighting,Recept,Process,Othr Ltg,Proc Mtrs,Comp Tot,TotProp kBtu,Electric,NatGas,OtherFuel
+// 1,1,1,0,0,2.03769,0,0.122414,0.124335,0.57115,1.76452,0,1.36356,0,2.85559,5.98367,0,0,0,0,0,17.5678,0,0,0,0,0,17.5678,17.5678,0,0,0,0,0,0,0,0,0,0,0,0,0,16.28,1712.5,3217.1
+// 1,1,2,0,0.0151643,1.82452,0,0.122414,0.124335,0.57115,1.76452,0,1.36356,0,2.65758,5.78566,0,0,0,0,0,24.4135,0,0,0,0,0,24.4135,24.4135,0,0,0,0,0,0,0,0,0,0,0,0,0,15.96,1712.5,3217.1
+
+
+//	   Proj:CSE_ElecUseIMPORTFILE	= {  CreateComp( cseIMPORTFILE, "EplusElecUseImportFile", "" )  }
+//IMPORTFILE "EnergyPlusHourly" 
+//   imFileName = "A2030_EnergyPlusExport.csv"
+//column name:  "EplusTotalKWH"
+
+				}
+
+//double BEMPROC_API __cdecl BEMPX_GetHourlyResultArray( char* pszErrMsgBuffer, int iErrMsgBufferLen, double* pDbl, const char* pszRunName,
+//																					  const char* pszMeterName,    const char* pszEnduse1,      const char* pszEnduse2=NULL,
+//																					  const char* pszEnduse3=NULL, const char* pszEnduse4=NULL, const char* pszEnduse5=NULL,
+//																					  const char* pszEnduse6=NULL, const char* pszEnduse7=NULL, const char* pszEnduse8=NULL, int iBEMProcIdx=-1 );
+//int    BEMPROC_API __cdecl BEMPX_GetHourlyResultArrayPtr( double** ppDbl, char* pszErrMsgBuffer, int iErrMsgBufferLen, const char* pszRunName,
+//																						  const char* pszMeterName, const char* pszEnduse, int iBEMProcIdx=-1 );
+
+//int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
+//											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/ )
+
+//			// SAC 8/18/14 - fixed bug where DHW simulation results NOT being accounted for when applying TDV multipliers to hourly results
+//					double* pdBEMHrlyRes	= NULL;
+//					int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, osRunInfo.BEMProcIdx() );
+//					bool bBEMHrlyResPtrOK = (pdBEMHrlyRes && iBEMHrlyResPtrRV==0);			assert( bBEMHrlyResPtrOK );  // needs to be valid following split of results processing routine? - SAC 7/23/18
+//
+//				double* daMtrEUData[NUM_T24_NRES_Fuels][NUM_T24_NRES_EndUses];
+//				double  daMtrCTotData[NUM_T24_NRES_Fuels][8760], daMtrTotData[NUM_T24_NRES_Fuels][8760];
+//				int iMtr=0, iEU;
+//				for (; iMtr < NUM_T24_NRES_Fuels; iMtr++)
+//				{	//	for (iYrHr=0; iYrHr<8760; iYrHr++)
+//					//		daMtrTotals[iMtr][iYrHr] = 0.0;
+//					int iEUOM = (iMtr==0 ? 0 : 1);
+//					int iEUCmpTot=-1, iEUTot=-1;	// SAC 2/1/17
+//					for (iEU=0; iEU < iNumEUs; iEU++)
+//					{	if (BEMPX_GetHourlyResultArrayPtr( &daMtrEUData[iMtr][iEU], NULL, 0, pszModelName, pszaEPlusFuelNames[iMtr],
+//	 																esEUMap_CECNonRes[iEUO[iEUOM][iEU]].sEnduseName, iBEMProcIdx ) == 0 && daMtrEUData[iMtr][iEU] != NULL)
+//						{	// OK - do nothing
+//						}
+//						else
+//						{	if (iEUO[iEUOM][iEU] == IDX_T24_NRES_EU_CompTot)		// SAC 2/1/17 - used to sum CompTot & Tot results, as they are NOT represented in the meter results retrieved above
+//							{	iEUCmpTot = iEU;
+//								daMtrEUData[iMtr][iEU] = &daMtrCTotData[iMtr][0];
+//								for (iYrHr=0; iYrHr<8760; iYrHr++)
+//									daMtrCTotData[iMtr][iYrHr] = 0.0;
+//							}
+//							else if (iEUO[iEUOM][iEU] == IDX_T24_NRES_EU_Total)
+
+
+		}	}
+
+
 		QString sProjCSEFile;
 		if (iRetVal == 0)
 		{	// Write CSE input file  (and store BEM details file)
@@ -1194,7 +1442,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			}
 			else if (!BEMPX_WriteProjectFile( sProjCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, FALSE /*bWriteAllProperties*/,
 										FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
-										NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+										NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,   // SAC 7/23/18 - added iBEMProcIdx
 										true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/ ))			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 			{	sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "CSE input", sProjCSEFile );
 				iRetVal = 59;		//	59 : Error writing simulation input (.cse) file
@@ -1230,6 +1478,10 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			pCSERun->SetArgs( sParams);
 		}
 	}
+
+	if (iPrevBEMProcIdx > 0)	// SAC 7/23/18
+		BEMPX_SetActiveModel( iPrevBEMProcIdx );
+
 	return iRetVal;
 }
 

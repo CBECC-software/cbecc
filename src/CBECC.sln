@@ -101,6 +101,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CBECC-Res19", "CBECCUI\CBEC
 		{3B1568FE-5373-421D-B37B-2B0C916D2BB7} = {3B1568FE-5373-421D-B37B-2B0C916D2BB7}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XSD2BEM", "XSD2BEM\XSD2BEM.vcxproj", "{614C37C6-2B91-49B3-8692-B8F5E4470301}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -191,6 +193,10 @@ Global
 		{E18291F4-F66C-45A6-BE33-275FC8BF4192}.Debug|Win32.Build.0 = Debug|Win32
 		{E18291F4-F66C-45A6-BE33-275FC8BF4192}.Release|Win32.ActiveCfg = Release|Win32
 		{E18291F4-F66C-45A6-BE33-275FC8BF4192}.Release|Win32.Build.0 = Release|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Debug|Win32.ActiveCfg = Debug|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Debug|Win32.Build.0 = Debug|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Release|Win32.ActiveCfg = Release|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

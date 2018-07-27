@@ -201,12 +201,13 @@ public:
 	BEMRun*	getRun( int i )	{	if (i < 0 || i >= BEMRun_MaxNumRuns)
 												return NULL;
 											return &m_runs[i];  }
-	int		readCSEHourlyResults( int i, const char* pszName, const char* pszAbbrev,
-										const char* pszFilename, const char** ppResMeters=NULL, const char** ppMetersMap=NULL,
-										double* pdMetersMult=NULL, const char** ppResEnduses=NULL, const char** ppEnduseMap=NULL )
+	int		readCSEHourlyResults( int i, const char* pszName, const char* pszAbbrev, const char* pszFilename,
+										const char** ppResMeters=NULL, const char** ppMetersMap=NULL, double* pdMetersMult=NULL,
+										const char** ppResEnduses=NULL, const char** ppEnduseMap=NULL, bool bInitResults=true )	// SAC 7/23/18 - added bInitResults
 										{	if (i < 0 || i >= BEMRun_MaxNumRuns)
 												return -1;
-											m_runs[i].init( pszName, pszAbbrev );
+											if (bInitResults)
+												m_runs[i].init( pszName, pszAbbrev );
 											m_numRuns = std::max( m_numRuns, i+1 );
 				//	/* DEBUGGING */	QString qsRunAdded = QString( "   reading run #%1 CSE results: %2 / %3" ).arg( QString::number( m_numRuns ), pszAbbrev, pszName );  BEMPX_WriteLogFile( qsRunAdded );
 											return m_runs[i].readCSEHourlyResults( pszFilename, ppResMeters, ppMetersMap,

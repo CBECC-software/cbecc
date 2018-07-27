@@ -589,7 +589,7 @@ void BEMPROC_API __cdecl BEMPX_InitializeHourlyResults( int iBEMProcIdx=-1 );
 BOOL BEMPROC_API __cdecl BEMPX_SetupResultRun( int iRunIdx, const char* pszRunName, const char* pszRunAbbrev, int iBEMProcIdx=-1 );
 int  BEMPROC_API __cdecl BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char* pszRunName, const char* pszRunAbbrev, int iBEMProcIdx=-1,
 																const char** ppResMeters=NULL, const char** ppMetersMap=NULL, double* pdMetersMult=NULL,  // SAC 6/1/16
-																const char** ppResEnduses=NULL, const char** ppEnduseMap=NULL );	// SAC 5/31/16
+																const char** ppResEnduses=NULL, const char** ppEnduseMap=NULL, bool bInitResults=true );	// SAC 5/31/16  // SAC 7/23/18
 double BEMPROC_API __cdecl BEMPX_GetHourlyResultSum( char* pszErrMsgBuffer, int iErrMsgBufferLen, const char* pszRunName, const char* pszMeterName,
 																					const char* pszEnduse1,      const char* pszEnduse2=NULL, const char* pszEnduse3=NULL,
 																					const char* pszEnduse4=NULL, const char* pszEnduse5=NULL, const char* pszEnduse6=NULL,

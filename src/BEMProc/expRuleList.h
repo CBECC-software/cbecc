@@ -545,6 +545,8 @@ public:
    long  m_lDBID_PolyLp_VectorPLen;     // Flt,  1,  NInp, "ft",    0,   "VectorPLength"   
    long  m_lDBID_PolyLp_UnitVectorPi;   // Flt,  1,  NInp, "ft",    0,   "UnitVectorPi"    
    long  m_lDBID_PolyLp_UnitVectorPj;   // Flt,  1,  NInp, "ft",    0,   "UnitVectorPj"    
+	long  m_lDBID_PolyLp_Azimuth;        // Flt,  1,  NInp, "deg"  SAC 7/12/18 - added w/ NO error checking (used when present)
+	long  m_lDBID_PolyLp_TiltAngle;      // Flt,  1,  NInp, "deg"  
 
    int   m_iOID_CartesianPt;         // Typ  NV   US     UL     NO    OC   CV   CP    LName                 
    long  m_lDBID_CartesianPt_Coord;  // Flt,  3,  Opt,  "ft",    0,                  "Coordinate"		; "X, Y, Z coordinates of polyloop vertex" 

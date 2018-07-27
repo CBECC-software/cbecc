@@ -3345,6 +3345,43 @@ double InitPolyLoop( int iPolyLpObjIdx, ExpEvalStruct* /*pEval*/, ExpError* /*pE
 					BEMPX_SetBEMData( ruleSet.getGeomIDs()->m_lDBID_PolyLp_UnitVectorPi, BEMP_Flt, (void*) &fUnitVectorPi , BEMO_User, iPolyLpObjIdx, BEMS_ProgDefault ) < 0  ||
 					BEMPX_SetBEMData( ruleSet.getGeomIDs()->m_lDBID_PolyLp_UnitVectorPj, BEMP_Flt, (void*) &fUnitVectorPj , BEMO_User, iPolyLpObjIdx, BEMS_ProgDefault ) < 0 )
 				dPolyLpArea = -4;
+			else
+			{	if (ruleSet.getGeomIDs()->m_lDBID_PolyLp_TiltAngle > 0)
+				{	double dTiltAngle=-999.0;
+					if (fVectorOLen <= 0)
+					   dTiltAngle = -999;
+					else if (fUnitVectorOk == 1)
+					   dTiltAngle =    0;
+					else if (fUnitVectorOk == -1)
+					   dTiltAngle =  180;
+					else 
+					   dTiltAngle = acos( fUnitVectorOk ) * 180/3.14159265395;
+					if (dTiltAngle != -999.0)
+						BEMPX_SetBEMData( ruleSet.getGeomIDs()->m_lDBID_PolyLp_TiltAngle, BEMP_Flt, (void*) &dTiltAngle , BEMO_User, iPolyLpObjIdx, BEMS_ProgDefault );
+				}
+				if (ruleSet.getGeomIDs()->m_lDBID_PolyLp_Azimuth > 0)
+				{	double dAzimuth=-999.0;
+					double fBldgUnitVectorNi = 0.0;   // Bldg:UnitVectorNi in Com - X coordinate of unit vector defining true north
+					double fBldgUnitVectorNj = 1.0;   // Bldg:UnitVectorNj in Com - Y coordinate of unit vector defining true north
+					if (fVectorPLen <= 0)
+						dAzimuth = -999.0;
+					// NOTE - this Azimuth does not adjust for BUILDING Azimuth
+					else if (( fUnitVectorPi * fBldgUnitVectorNi +
+								  fUnitVectorPj * fBldgUnitVectorNj ) == 1 )
+						dAzimuth =    0;		// due north
+					else if (( fUnitVectorPi * fBldgUnitVectorNi +
+								  fUnitVectorPj * fBldgUnitVectorNj ) == -1 )
+						dAzimuth =  180;		// due south
+					else if (( fBldgUnitVectorNi * fUnitVectorPj -
+								  fBldgUnitVectorNj * fUnitVectorPi ) < 0 )
+						dAzimuth = acos( fUnitVectorPi * fBldgUnitVectorNi +
+											  fUnitVectorPj * fBldgUnitVectorNj ) * 180/3.14159265359;	// postive rotation 
+					else
+						dAzimuth = 360 - ( acos( fUnitVectorPi * fBldgUnitVectorNi +
+														 fUnitVectorPj * fBldgUnitVectorNj ) * 180/3.14159265359 );	// negative rotation
+					if (dAzimuth != -999.0)
+						BEMPX_SetBEMData( ruleSet.getGeomIDs()->m_lDBID_PolyLp_Azimuth, BEMP_Flt, (void*) &dAzimuth , BEMO_User, iPolyLpObjIdx, BEMS_ProgDefault );
+			}	}
 		}
 
 		}

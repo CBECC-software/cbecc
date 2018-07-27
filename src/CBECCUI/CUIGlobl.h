@@ -546,6 +546,10 @@ extern int eiBDBCID_CrvQuad;
 extern int eiBDBCID_CrvCubic;
 extern int eiBDBCID_CrvDblQuad;
 extern int eiBDBCID_EUseSummary;
+extern int eiBDBCID_PVArray;
+extern int eiBDBCID_PVArrayGeom;
+extern int eiBDBCID_PVArrayShade;
+extern int eiBDBCID_Battery;
 
 extern int eiBDBCID_Building;
 extern int eiBDBCID_Story;

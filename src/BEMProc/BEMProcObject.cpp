@@ -353,12 +353,24 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
 
 													if (iRetVal >= 0)
 													{	iNumEUs = iNumFields-5;
-														if (sMtr.isEmpty()) // Meter NOT added => no need to RE-initialize enduse list
-														{	if (iNumFields >= (m_hourlyResults[ iThisMtrIdx ].getNumEnduses() + 5))		// was: != - switched to enable ignoring certain enduses
-															{	assert( FALSE );
-																iRetVal = -4;
-														}	}
-														else if (!sMtr.isEmpty()) // new Meter added
+									//					if (sMtr.isEmpty()) // Meter NOT added => no need to RE-initialize enduse list
+									//					{	if (iNumFields >= (m_hourlyResults[ iThisMtrIdx ].getNumEnduses() + 5))		// was: != - switched to enable ignoring certain enduses
+									//						{	//assert( FALSE );
+									//							//iRetVal = -4;
+			//		//2018-07-23 23:48:45 - BEMRun::readCSEHourlyResults() returning -4:  iNumFields = 30 / iThisMtrIdx = 0 / m_hourlyResults[ iThisMtrIdx ].getNumEnduses() = 13
+			//		// debugging
+			//		QString sLogMsg = QString( "BEMRun::readCSEHourlyResults() previously would have returned -4:  iNumFields = %1 / iThisMtrIdx = %2 / m_hourlyResults[ iThisMtrIdx ].getNumEnduses() = %3" ).arg(
+			//														QString::number(iNumFields), QString::number(iThisMtrIdx), QString::number(m_hourlyResults[ iThisMtrIdx ].getNumEnduses()) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+									//					}	}
+									//					else if (!sMtr.isEmpty()) // new Meter added
+
+														bool bResFieldsValid = false;		// SAC 7/24/18
+														for (iFld=0; (!bResFieldsValid && iFld < BEMRun_NumEnduses); iFld++)	
+															bResFieldsValid = (iaResFieldIdx[iFld] >= 0);
+
+														if (!sMtr.isEmpty() || !bResFieldsValid) // new Meter added -OR- ResFields needing initialization
 														{	
 															for (iFld=0; (iRetVal>=0 && iFld < iNumEUs); iFld++)
 															{	if (saColTitles[iFld+5].length() >= BEMRun_EnduseNameLen)
@@ -372,7 +384,12 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
 																	else
 																	{	int iEUFldIdx = m_hourlyResults[ iThisMtrIdx ].getHourlyResultEnduseIndex( sEU.toLocal8Bit().constData() );
 																		if (iEUFldIdx >= 0)
+			//	{
 																			iaResFieldIdx[iFld] = iEUFldIdx;
+			//		// debugging
+			//		QString sLogMsg = QString( "      iEUFldIdx = %1" ).arg( QString::number(iEUFldIdx) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			//	}
 																		else if (m_hourlyResults[ iThisMtrIdx ].getNumEnduses() >= (BEMRun_NumEnduses-1))
 																		{	assert( FALSE );
 																			iRetVal = -2;
@@ -381,16 +398,36 @@ int BEMRun::readCSEHourlyResults( const char* pszFilename, const char** ppResMet
 																		{	assert( sEU.length() < BEMRun_EnduseNameLen );
 																			iaResFieldIdx[iFld] = m_hourlyResults[ iThisMtrIdx ].getNumEnduses();
 																			m_hourlyResults[ iThisMtrIdx ].addHourlyResultEnduse( sEU.toLocal8Bit().constData() );  // saColTitles[iFld+5] );
+			//		// debugging
+			//		QString sLogMsg = QString( "      iaResFieldIdx[iFld] = %1  /  addHourlyResultEnduse( %2 )" ).arg( QString::number(iaResFieldIdx[iFld]), sEU );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 																}	}	}
 															}
 														}
-												}	}
+													}
+			//		// debugging
+			//		QString sLogMsg = QString( "      iThisMtrIdx = %1  /  dMult = %2  /  sMtr = %3" ).arg(
+			//										QString::number(iThisMtrIdx), QString::number(dMult), sMtr );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+												}
 
 												if (iThisMtrIdx >= 0)
 												{	for (iFld=0; iFld < iNumEUs /*m_hourlyResults[ iMeterIdx ].getNumEnduses()*/; iFld++)
-													{	if (iaResFieldIdx[iFld] >= 0 && iaResFieldIdx[iFld] < m_hourlyResults[ iThisMtrIdx ].getNumEnduses())
+													{
+			//	if (iHour == 0) {
+			//		// debugging
+			//		QString sLogMsg = QString( "          iFld %1  /  iaResFieldIdx[iFld] %2  /  m_hourlyResults[ iThisMtrIdx ].getNumEnduses() %3" ).arg(
+			//												QString::number(iFld), QString::number(iaResFieldIdx[iFld]), QString::number(m_hourlyResults[ iThisMtrIdx ].getNumEnduses()) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			//	}
+														if (iaResFieldIdx[iFld] >= 0 && iaResFieldIdx[iFld] < m_hourlyResults[ iThisMtrIdx ].getNumEnduses())
 														{	data = atof( saCSVFields[iFld+5].toLocal8Bit().constData() ) * dMult;
 															m_hourlyResults[ iThisMtrIdx ].getEnduse( iaResFieldIdx[iFld] )->addIntoHourly( iHour, data );
+			//	if (iHour < 12) {
+			//		// debugging
+			//		QString sLogMsg = QString( "             hr %1 = %2" ).arg( QString::number(iHour), QString::number(data) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			//	}
 												}	}	}
 												iHour++;
 												if (iHour == 8760)

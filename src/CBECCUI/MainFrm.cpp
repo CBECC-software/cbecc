@@ -3054,9 +3054,10 @@ int CMainFrame::CheckWhichReportsToGenerate( CString& sRptList )	// SAC 2/19/15	
 void CMainFrame::OnUpdateToolsBatchProcessing(CCmdUI* pCmdUI)		// SAC 5/22/13
 {
 	int iEnableBatchProc = 1;
-#ifdef UI_CANRES
-	iEnableBatchProc = 0;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
-#endif
+// SAC 7/11/18 - toggle ON batch processing option by default in CBECC-Com
+//#ifdef UI_CANRES
+//	iEnableBatchProc = 1;		// SAC 12/3/17 - default to toggling OFF batch processing option for NRes
+//#endif
 	bool bEnableBatchProc = (ReadProgInt( "options", "EnableBatchProcessing", iEnableBatchProc ) > 0 ||
 									 ReadProgInt( "options", "DeveloperMenu", 0 ) > 0);
    pCmdUI->Enable( (bEnableBatchProc && eInterfaceMode == IM_INPUT) );
@@ -5472,8 +5473,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 		//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
 			QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 
-			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[2048];
-			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 2048, iCodeType ) == 0 );	// SAC 12/3/14
+			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[2304];	// SAC 7/20/18 - inc #3 2048->2304 due to truncation
+			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 2304, iCodeType ) == 0 );	// SAC 12/3/14
 			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 			if (!sCSVLogFN.IsEmpty())
 			{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
@@ -5487,7 +5488,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			// SAC 10/10/16 - updated default T24N CSVResultsLog filename adding '-v2' for new CSV format that includes electric demand results
 			// SAC 2/7/17 - updated default T24N CSVResultsLog filename adding '-v3' for new CSV format that includes process motors results
 			// SAC 2/19/17 - updated default T24N CSVResultsLog filename adding '-v4' for new CSV format that includes total & cond flr areas, unregulated TDV results plus TDV by fuel type (for 2019.0.1 release)
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v4.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v4.csv" : "AnalysisResults-v4.csv"));
+			// SAC 7/20/18 - updated default T24N CSVResultsLog filename adding '-v5' for new CSV format that includes PV & Battery enduses (for A2030 & 2019.0.3 releases)
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v5.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v5.csv" : "AnalysisResults-v5.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 		}
