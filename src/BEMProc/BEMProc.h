@@ -195,7 +195,8 @@ void BEMPROC_API __cdecl BEMPX_SetUIActiveFlag( bool bActiveUI );
 //  26 -> 27 : SAC 2/4/15  - (no text file upd) Addition of integer m_iReportPrecision member to CBEMPropertyType to round values for output to compliance reports (export to analysis results XML files)
 //  27 -> 28 : SAC 8/6/15  - (no text file upd) Addition of CStringArray member m_saPreviousNames of CBEMPropertyType to facilitate data model backward compatibility by tracking previous property names
 //  28 -> 29 : SAC 12/29/16- (no text file upd) Addition of flag near beginning of file documenting whether BEMBroc was compiled by a "secure" version of code
-#define  BEMPROC_VERSION  29
+//  29 -> 30 : SAC 9/11/18 - (text file ver 7) Increased max # class parent types from 15 to 20
+#define  BEMPROC_VERSION  30
 
 
 class  BEMClass;
@@ -658,7 +659,8 @@ int    BEMPROC_API __cdecl BEMPX_ParseRuleListFile( const char* sRuleListFileNam
 UINT   BEMPROC_API __cdecl BEMPX_GetItemHelpID(  long lDBID );
 UINT   BEMPROC_API __cdecl BEMPX_GetTopicHelpID( long lDBID );
 
-int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx=-1, int iWhatToPlot=1 );  // SAC 11/27/13
+int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx=-1, int iWhatToPlot=1,  // SAC 11/27/13
+															int iDayltMethod=1 );  // SAC 7/29/18
 
 
 /////////////////////////////////////////////////////////////////////////////

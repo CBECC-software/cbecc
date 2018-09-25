@@ -104,6 +104,8 @@ public:
 	bool copySelectionToClipboard();
 	bool pasteSelectionFromClipboard();
 
+	void setCmbxData( QString sData );  // SAC 8/27/18
+
 	// 0-"Nothing"  1-"Modified Object"  (future? 2-"Object Family")  3-"Entire Model"
 	void setDefaultOptionInp(  long data );
 	void setDefaultOptionObj(  long data );
@@ -171,6 +173,9 @@ public:
 
 	void gridMessageBox( bool beep, QMessageBox::Icon icon, const QString &title, const QString &text,
 								QMessageBox::StandardButtons buttons = QMessageBox::NoButton );
+
+	int objIdx()		{	return iObjIdx;  }
+	long dbid()			{	return lDBID;  }
 
 protected:
 	void keyPressEvent(QKeyEvent *event);  // to enable clipboard copy/paste

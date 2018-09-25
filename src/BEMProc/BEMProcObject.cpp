@@ -780,6 +780,21 @@ BEMRun* BEMProcObject::getRun( const char* pszRunName )
 	return NULL;
 }
 
+int BEMProcObject::getRunIdx( const char* pszRunName )	// SAC 7/28/18
+{	if (pszRunName && strlen( pszRunName ) > 0)
+	{	int iRun=0;
+		for (; iRun < m_numRuns; iRun++)  // first check argument vs. long run names
+		{	if (m_runs[iRun].nameEqual( pszRunName ))
+				return iRun;
+		}
+		for (iRun=0; iRun < m_numRuns; iRun++)  // then charg arg vs. run abbreviations
+		{	if (m_runs[iRun].abbrevEqual( pszRunName ))
+				return iRun;
+		}
+	}
+	return -1;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 

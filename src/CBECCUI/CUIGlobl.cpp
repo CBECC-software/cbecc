@@ -2447,8 +2447,8 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_ThrmlZn )				{  iTabCtrlWd =  900;    iTabCtrlHt = 570;   }	// SAC 10/29/14
 //	else if (iBDBClass == eiBDBCID_CoilClg )				{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	else if (iBDBClass == eiBDBCID_PVArray      )		{  iTabCtrlWd =  770;    iTabCtrlHt = 620;   }	// SAC 7/13/18
-	else if (iBDBClass == eiBDBCID_PVArrayGeom  )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }
-	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }
+	else if (iBDBClass == eiBDBCID_PVArrayGeom  )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
+	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;

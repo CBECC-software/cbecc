@@ -46,7 +46,7 @@ class BEMTextIO;
 //    An instance of this class is created ...
 /////////////////////////////////////////////////////////////////////////////
 
-#define  BEM_MAX_PARENT_TYPES  15   // SAC 1/24/12 - increased to 15 from 5
+#define  BEM_MAX_PARENT_TYPES  20   // SAC 1/24/12 - increased to 15 from 5 / SAC 9/11/18 - 15->20
 #define  BEM_MAX_CHILD_TYPES   50	// SAC 6/14/12 - increased 10->15 / SAC 9/1/16 - 15->25 / SAC 5/12/18 - 25->50 (for Res cf1rCF1RPRF01E)
 
 // enums to denote values for the new m_iObjectCopyFlag CBEMClass member

@@ -2071,6 +2071,10 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 			// LogDuration() - all string or numeric arguments not needing parsing
          break;
 
+      case BF_SchSum :   // SAC 8/17/18 - ScheduleSum( #Scheds, SchedRef1, SchedRef2, ... SchedRef#, <MultOrMultSchRef1>, <MultOrMultSchRef2>, ... <MultOrMultSchRef#> )
+			// ScheduleSum() - all object reference or numeric arguments not needing parsing
+         break;
+
       default : 
          // If we're not looking up a function arg, we MAY be looking up a table id.
          dbId = ruleSet.getTableID( name );
@@ -3033,8 +3037,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												ExpSetErr( error, EXP_RuleProc, "Invalid DaylightableArea() argument, expecting calculation method (1 - CBECC-Com2013 (no other options at this time))" );
 											else
                             		{  iCalcMethod = (int) pNode->fValue;
-												if (iCalcMethod < 1 || iCalcMethod > 1)
-												{  sErrMsg = QString( "Invalid DaylightableArea() calculation method (%1, expecting 1 (CBECC-Com2013) (no other options available at this time))" ).arg( QString::number( iCalcMethod ) );
+												if (iCalcMethod < 1 || iCalcMethod > 2)	// SAC 7/29/18 - increased max CalcMethod to 2
+												{  sErrMsg = QString( "Invalid DaylightableArea() calculation method (%1, expecting 1 (CBECC-Com2013/16) or 2 (2019 (Win:DisableDayltgImpact)) (no other options available at this time))" ).arg( QString::number( iCalcMethod ) );
 												   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 													iCalcMethod = 1;
 												}
@@ -5463,6 +5467,72 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									else
                            {	pNode->type = EXP_Value;
 										pNode->fValue = dResult;
+                           }
+                           // Push result argument node back onto the stack to serve as return value
+                           ExpxStackPush( stack, pNode );
+                           break; }
+
+      case BF_SchSum :   // SAC 8/17/18 - ScheduleSum( "SchedNamePrefix", #Scheds, SchedRef1, SchedRef2, ... SchedRef#, <MultOrMultSchRef1>, <MultOrMultSchRef2>, ... <MultOrMultSchRef#>, <MinSchValue>, <MaxSchValue> )
+      						 // SAC 8/27/18 - expanded arguments to include Min & Max values
+                        {  ExpNode* pNode = NULL;
+									QString sSumSchName;
+                           if (nArgs < 4 || nArgs > 24)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ScheduleSum() arguments (must be 4-24: \"SchedNamePrefix\", #Scheds, SchedRef1, SchedRef2, ... SchedRef#, <MultOrMultSchRef1>, <MultOrMultSchRef2>, ... <MultOrMultSchRef#>, <MinSchValue>, <MaxSchValue>)" );
+										if (nArgs < 1)
+											pNode = new ExpNode;
+										else
+                              {	for ( int arg = nArgs; arg > 0; arg-- )
+	                              {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
+   	                              if (arg > 1)  // don't delete last argument - used to store return value
+      	                              ExpxNodeDelete( pNode );
+         	                        else if (pNode && pNode->type == EXP_String)
+            	                     {  free( pNode->pValue );
+               	                     pNode->pValue = NULL;
+                           }	}	}	}
+                        	else
+                        	{	ExpNode* pNodeList[22] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                        											NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+										BOOL bArgsOK = TRUE;
+                           	// valid # of arguments
+										QString sSchNamePrefix;
+										int arg, iNumScheds = 0;
+                              for (arg = nArgs; (bArgsOK && arg > 0); arg--)
+                              {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
+											if (arg > 2 && (pNode->type == EXP_String || pNode->type == EXP_Value))
+												pNodeList[arg-3] = pNode;
+											else
+											{	if (arg == 1 && pNode->type == EXP_String)
+													sSchNamePrefix = (char*) pNode->pValue;
+												else if (arg == 2 && pNode->type == EXP_Value && pNode->fValue >= 2 && pNode->fValue <= 10)
+													iNumScheds = (int) pNode->fValue;
+												else
+	                           	   {	bArgsOK = FALSE;
+	                           	   	switch (arg)
+	                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #1: expecting string (merged schedule name prefix)." ) );
+	                           	   		case  2 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #2: expecting integer # of schedules to merege (2-10)." ) );
+	                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid ScheduleSum() function argument #%1: expecting schedule reference, multiplier or min/max value." ).arg( QString::number(arg) ) );
+      	                           }	}
+      	                           if (arg > 1)
+      	                              ExpxNodeDelete( pNode );
+         	                        else if (pNode && pNode->type == EXP_String)
+            	                     {  free( pNode->pValue );
+               	                     pNode->pValue = NULL;
+										}	}	}
+										if (bArgsOK)
+										{	sSumSchName = ScheduleSum( iNumScheds, sSchNamePrefix, pNodeList, pEvalData, error );
+											for (arg = 0; arg < 22; arg++)
+												if (pNodeList[arg])
+													ExpxNodeDelete( pNodeList[arg] );
+									}	}
+
+									if (sSumSchName.isEmpty())
+									{  pNode->type = EXP_Invalid;
+	                           pNode->fValue = 0;
+									}
+									else
+                           {	pNode->type = EXP_String;
+                              pNode->pValue = malloc( sSumSchName.length() + 1 );
+                              strcpy( (char*) pNode->pValue, (const char*) sSumSchName.toLocal8Bit().constData() );
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );

@@ -428,6 +428,21 @@ int GetCSVOptionString( const char* pszOptName, QString& sOptString, QVector<QSt
 	return iRetVal;
 }
 
+int StripOutCSVOptions( QString& sRecOptionCSV, QVector<QString>* psaClrOptions, QString sReplace )
+{	int iNumReplaced = 0;
+	QVector<QString> saOptions;
+	if (!sRecOptionCSV.isEmpty() && ParseCSVRecord( sRecOptionCSV.toLocal8Bit().constData(), &saOptions ) >= 2)
+		for (int i=0; i<psaClrOptions->size(); i++)
+		{	QString sFind;
+			GetCSVOptionString( psaClrOptions->at(i).toLocal8Bit().constData(), sFind, saOptions );
+			if (!sFind.isEmpty())
+			{	sRecOptionCSV = sRecOptionCSV.replace( sFind, sReplace );
+				if (!sRecOptionCSV.isEmpty())
+					iNumReplaced++;
+		}	}
+	return iNumReplaced;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1272,7 +1287,23 @@ int CopyAnalysisResultsObjects( QString& sErrMsg, const char* pszRunID, int iBEM
 }
 
 int CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRunID, int iBEMProcIdxSrc, int iBEMProcIdxDest )
-{	return CopyAnalysisResultsObjects( sErrMsg, pszRunID, iBEMProcIdxSrc, iBEMProcIdxDest, true );
+{	int iRetVal = CopyAnalysisResultsObjects( sErrMsg, pszRunID, iBEMProcIdxSrc, iBEMProcIdxDest, true );
+	// added portion of routine copying Proj:RunResults* & ResultSummary object references for NonRes analysis
+	if (iRetVal == 0)
+	{	// now results objects from previous run are in place, now ensure that references to those objects are also valid
+		char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
+		int iRORPIdx = -1;
+		while (pszaResObjRefProps[++iRORPIdx] != NULL)
+		{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );
+			int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
+			QString sROR;
+			for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
+			{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iBEMProcIdxSrc /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
+				{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
+                                               //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
+		}	}	}
+	}
+	return iRetVal;
 }
 
 /////////////////////////////////////////////////////////////////////////////

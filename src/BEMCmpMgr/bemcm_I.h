@@ -67,6 +67,7 @@ extern int  StringInArray( QVector<QString>& saStrs, QString& sStr );
 extern bool AppendMessage( char* pszMsg, int iMsgLen, const char* pszMsgToAppend );
 
 extern void ParseCSV(const std::string& csvSource, std::vector<std::vector<std::string> >& lines);
+extern int  StripOutCSVOptions( QString& sRecOptionCSV, QVector<QString>* psaClrOptions, QString sReplace );
 
 extern int  GetBEMBaseCompID( QString& sErr, const char* szComp );
 extern long GetBEMBaseDBID(   QString& sErr, const char* szProp, int iCompID );

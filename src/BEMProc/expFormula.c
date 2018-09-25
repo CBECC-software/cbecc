@@ -484,6 +484,8 @@ static FuncTable functable[] =
    {                "#CHR",        EXP_BEMPFunc, BF_CopyHrlyRes,   6 },         /* SAC 10/5/17 - added */
    { "GlobalRefSymbolString",      EXP_BEMPFunc, BF_GlobRefSymStr, VAR_ARGS },  /* SAC 4/4/18 - added */
    {                "#GRSS",       EXP_BEMPFunc, BF_GlobRefSymStr, VAR_ARGS },  /* SAC 4/4/18 - added */
+   { "ScheduleSum",                EXP_BEMPFunc, BF_SchSum,        VAR_ARGS },  /* SAC 8/17/18 - added */
+   {                "#SS",         EXP_BEMPFunc, BF_SchSum,        VAR_ARGS },  /* SAC 8/17/18 - added */
    { NULL,                         0,           0,              0 }
 };
 

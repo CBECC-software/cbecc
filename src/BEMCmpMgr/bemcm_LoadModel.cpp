@@ -1856,6 +1856,26 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 				}	}
 			}	// if the model needs to be converted from old (<= v2) to new (v3+) dwelling unit inputs
 
+		// SAC 9/9/18 - store certain path and filenames to BEMBase for reference during input/analysis (ported from Res analysis)
+			if (iRetVal == 0)
+			{	//QString sBatchPath, sBatchFile, sModelFile;
+				QString sModelFile = sInputFile.right( sInputFile.length()-sInpPath.length() );
+				if (sModelFile.lastIndexOf('.') > 0)
+					sModelFile = sModelFile.left( sModelFile.lastIndexOf('.') );
+				//GetCSVOptionString( "BatchPath", sBatchPath, saCSVOptions );
+				//GetCSVOptionString( "BatchFile", sBatchFile, saCSVOptions );
+				//if (sBatchPath.isEmpty())
+				//	sBatchPath = sProcessPath;
+				//if (sBatchFile.isEmpty())
+				//	sBatchFile = sModelFile + QString(" - analysis");
+
+				//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchPath"      ), BEMP_QStr, (void*) &sBatchPath    , BEMO_User, 0, BEMS_ProgDefault );
+				//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:BatchFile"      ), BEMP_QStr, (void*) &sBatchFile    , BEMO_User, 0, BEMS_ProgDefault );
+				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelPath"      ), BEMP_QStr, (void*) &sInpPath  ,  BEMO_User, 0, BEMS_ProgDefault );
+				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ModelFile"      ), BEMP_QStr, (void*) &sModelFile,  BEMO_User, 0, BEMS_ProgDefault );
+				//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProcessingPath" ), BEMP_QStr, (void*) &sProcessingPath, BEMO_User, 0, BEMS_ProgDefault );
+			}
+
 		// SAC 6/28/17 - added evaluation of rulelist to handle 1-time LoadModel processing
 			if (BEMPX_RulelistExists( "LoadModelAdjustments" ))
 			{	QString sLMAErrMsg;

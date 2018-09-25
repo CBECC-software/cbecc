@@ -267,6 +267,8 @@ protected:
 	afx_msg void OnFileImportModel();
 	afx_msg void OnUpdateFileImportResGeometry(CCmdUI* pCmdUI);
 	afx_msg void OnFileImportResGeometry();
+	afx_msg void OnUpdateFileImportNonResGeometry(CCmdUI* pCmdUI);
+	afx_msg void OnFileImportNonResGeometry();
    afx_msg void OnHelpMandatoryRequirementsForAssemblies();
    afx_msg void OnUpdateHelpMandatoryRequirementsForAssemblies(CCmdUI* pCmdUI);
    afx_msg void OnHelpCSEDocumentation();

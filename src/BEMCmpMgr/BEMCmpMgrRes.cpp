@@ -93,18 +93,6 @@ void CopyResResultsObjectsAcrossRuns( int& iRetVal, const char* pszRunAbbrev, in
 					default :	assert( FALSE );	break;
 				}
 		}	}
-	// now results objects from previous run are in place, now ensure that references to those objects are also valid
-		char* pszaResObjRefProps[] = { "Proj:RunResults",  "Proj:RunResultsN",  "Proj:RunResultsE",  "Proj:RunResultsS",  "Proj:RunResultsW",  "Proj:ResultSummary", NULL };
-		int iRORPIdx = -1;
-		while (pszaResObjRefProps[++iRORPIdx] != NULL)
-		{	long lRORPDBID = BEMPX_GetDatabaseID( pszaResObjRefProps[iRORPIdx] );			assert( lRORPDBID > 0 );
-			int iRORPLen = (lRORPDBID < 1 ? 0 : BEMPX_GetNumPropertyTypeElements( BEMPX_GetClassID( lRORPDBID ), BEMPX_GetPropertyID( lRORPDBID ) /*, iBEMProcIdx*/ ));
-			QString sROR;
-			for (int iPAIdx=0; iPAIdx < iRORPLen; iPAIdx++)
-			{	if (BEMPX_GetString( lRORPDBID+iPAIdx, sROR, TRUE, 0, -1, 0 /*iOccur*/, BEMO_User, NULL, 0, iSrcBEMPIdx /*iRunIdx*/ /*iBEMProcIdx*/ ) && !sROR.isEmpty())
-				{	int iRORRetVal = BEMPX_SetBEMData( lRORPDBID+iPAIdx, BEMP_QStr, (void*) &sROR, BEMO_User, 0, BEMS_RuleDefined );		iRORRetVal;
-                                               //BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1, ... );
-		}	}	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4694,12 +4682,16 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 							saBEMBaseFN.push_back( sThisBEMBaseFN );
 							saRulesetFN.push_back( sThisProjRulesetFN );
 
+							QVector<QString> saClrOptions;  saClrOptions.push_back("ProxyServerAddress");  saClrOptions.push_back("ProxyServerCredentials");  // SAC 8/21/18
+							QString qsRecOptionCSV = sRecOptionCSV.c_str();
+							StripOutCSVOptions( qsRecOptionCSV, &saClrOptions, "***" );
+
 							sLogMsg = boost::str( boost::format( "  Run %d / record %d / in:  %s\n                                            / out:  %s\n"
 																			"                                            / title: '%s' / CZ: '%s' / anal-type: '%s' / stds-ver: '%s' / rpt-file: '%s' / pv: %g / batt: %g / TEDR: %g\n"
 																			"                                            / mult-orient: '%s' / front: '%s' / results: '%s' / options: '%s'\n"
 																			"                                            / bembase file: '%s' / ruleset file: '%s'" )
 											% iRunsToPerform % iBatchRecNum % sRecProjInFN % sRecProjOutFN % sRecRunTitle % sRecClimateZone % sRecAnalysisType % sRecStdsVersion % sRecSimReportFile
-											% dRecPVSize % dRecBatterySize % dRecTargetEDR % iRecMultipleOrientation % iRecFrontOrientation % sRecOutput % sRecOptionCSV % sThisBEMBaseFN % sThisProjRulesetFN );
+											% dRecPVSize % dRecBatterySize % dRecTargetEDR % iRecMultipleOrientation % iRecFrontOrientation % sRecOutput % qsRecOptionCSV.toLocal8Bit().constData() % sThisBEMBaseFN % sThisProjRulesetFN );
 							BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						}
 					}

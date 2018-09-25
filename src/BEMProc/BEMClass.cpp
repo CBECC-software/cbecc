@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -512,7 +512,8 @@ void BEMClass::ReadText( BEMTextIO& file, int iFileVersion )
 //   }
 
    for (int i=0; i<BEM_MAX_PARENT_TYPES; i++)
-   {	if (i < 5 || iFileVersion >= 2)	// SAC 1/24/12 - maintain compatibility w/ BEMBase.txt files that list only 5 parent types
+   {	if ( (i < 5  || iFileVersion >= 2) &&	// SAC 1/24/12 - maintain compatibility w/ BEMBase.txt files that list only 5 parent types
+   		  (i < 15 || iFileVersion >= 7) )	// SAC 9/11/18 - expanded parent types to 20 for PVArray PolyLps in Com
       {	m_parentTypeStr[i] = file.ReadString();
       	file.PostReadToken();
 		}

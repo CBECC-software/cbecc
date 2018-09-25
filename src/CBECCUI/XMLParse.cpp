@@ -104,11 +104,20 @@ int ProcessXMLElement_Shade( int /*iSchema*/, QDomElement& elem, int lvl, QStrin
 		if (bFamInclPV)
 			sName += (bFamInclSite ? " (site pv)" : (sFamNm.indexOf("Building") >= 0 ? " (bldg pv)" : " (pv)"));
 
-		BEMObject* pShadeObj = BEMPX_CreateObject( (bFamInclPV ? eiBDBCID_PVArrayGeom : eiBDBCID_Shade), sName.toLatin1().constData() );		assert( pShadeObj );
+#ifdef UI_CARES
+		int iBDBCID_Shade = eiBDBCID_Shade;
+		long lDBID_Shade_Type = elDBID_Shade_Type;
+		long lDBID_PVArrayGeom_IsBldgAttached = elDBID_PVArrayGeom_IsBldgAttached;
+#else
+		int iBDBCID_Shade = eiBDBCID_PVArrayShade;
+		long lDBID_Shade_Type                 = BEMPX_GetDatabaseID( "PVArrayShade:Type" );
+		long lDBID_PVArrayGeom_IsBldgAttached = BEMPX_GetDatabaseID( "PVArrayGeom:IsBldgAttached" );
+#endif
+		BEMObject* pShadeObj = BEMPX_CreateObject( (bFamInclPV ? eiBDBCID_PVArrayGeom : iBDBCID_Shade), sName.toLatin1().constData() );		assert( pShadeObj );
 		if (pShadeObj)
 		{	sName = pShadeObj->getName();
 			int iShadeObjIdx = BEMPX_GetObjectIndex( pShadeObj->getClass(), pShadeObj );						assert( iShadeObjIdx >= 0 );
-			BEMPX_SetBEMData( (bFamInclPV ? elDBID_PVArrayGeom_IsBldgAttached : elDBID_Shade_Type), BEMP_Int, &iShadeType, BEMO_User, iShadeObjIdx );
+			BEMPX_SetBEMData( (bFamInclPV ? lDBID_PVArrayGeom_IsBldgAttached : lDBID_Shade_Type), BEMP_Int, &iShadeType, BEMO_User, iShadeObjIdx );
 
 			int iCPIdx = -1;
 			BEMObject* pPLObj = NULL;

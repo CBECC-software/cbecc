@@ -198,6 +198,7 @@ public:
 											return FALSE;  }
 	int		getNumRuns()		{	return m_numRuns;  }
 	BEMRun*	getRun( const char* pszRunName );
+	int		getRunIdx( const char* pszRunName );	// SAC 7/28/18
 	BEMRun*	getRun( int i )	{	if (i < 0 || i >= BEMRun_MaxNumRuns)
 												return NULL;
 											return &m_runs[i];  }

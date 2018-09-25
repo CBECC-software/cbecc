@@ -76,22 +76,25 @@ int BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char
 				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	if (!pBEMProc)
 		iRetVal = -2;
-	else if (iRunIdx < 0 || iRunIdx >= BEMRun_MaxNumRuns)
-		iRetVal = -3;
 	else if (strlen( pszRunName ) >= BEMRun_RunNameLen)
 		iRetVal = -4;
 	else if (strlen( pszRunAbbrev ) >= BEMRun_RunAbbrevLen)
 		iRetVal = -5;
 	else
-	{			//	BEMPX_WriteLogFile( "calling pBEMProc->readCSEHourlyResults()...", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		iRetVal = pBEMProc->readCSEHourlyResults( iRunIdx, pszRunName, pszRunAbbrev, pszFilename, ppResMeters,
-																ppMetersMap, pdMetersMult, ppResEnduses, ppEnduseMap, bInitResults );
-		if (iRetVal < 0)
-			iRetVal -= 10;  // to differentiate errors here from errors within pBEMProc->readCSEHourlyResults() - SAC 7/23/18
-				//	// debugging
-				//	QString sLogMsg = QString( "pBEMProc->readCSEHourlyResults() returned %1" ).arg( QString::number(iRetVal) );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	}
+	{	if (iRunIdx == -1)	// SAC 7/28/18 - enable calc of iRunIDx based on pszRunName
+			iRunIdx = pBEMProc->getRunIdx( pszRunName );
+		if (iRunIdx < 0 || iRunIdx >= BEMRun_MaxNumRuns)
+			iRetVal = -3;
+		else
+		{			//	BEMPX_WriteLogFile( "calling pBEMProc->readCSEHourlyResults()...", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			iRetVal = pBEMProc->readCSEHourlyResults( iRunIdx, pszRunName, pszRunAbbrev, pszFilename, ppResMeters,
+																	ppMetersMap, pdMetersMult, ppResEnduses, ppEnduseMap, bInitResults );
+			if (iRetVal < 0)
+				iRetVal -= 10;  // to differentiate errors here from errors within pBEMProc->readCSEHourlyResults() - SAC 7/23/18
+					//	// debugging
+					//	QString sLogMsg = QString( "pBEMProc->readCSEHourlyResults() returned %1" ).arg( QString::number(iRetVal) );
+					//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	}	}
 	return iRetVal;
 }
 

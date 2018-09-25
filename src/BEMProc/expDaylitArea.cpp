@@ -2107,12 +2107,14 @@ int PolyLpToBEMPoly( BEMPoly& bemPoly, double& dAvgZ, double& dZRange, BEMPoint&
 }
 
 
-double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, const char* pszSpcName, QString& sErrMsg )
+double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, const char* pszSpcName, QString& sErrMsg, int iDayltMethod )  // SAC 7/29/18 - added iDayltMethod for 2019 (Win/Skylt:DisableDayltgImpact)
 {
 	double dDaylitArea = 0.0;
 	double dDLAreaByType[3] = { 0.0, 0.0, 0.0 };		// Top / PrimSide / SecSide
 	int iError;
 	BEM_ObjType eObjType = BEMO_User;
+// debugging
+//QString qsDbgMsg = QString( "   SetupSpaceDaylighting( spc '%1', iDayltMethod %2, pGeomIDs->m_lDBID_Win_DisableDayltgImpact %3 )" ).arg( pszSpcName, QString::number(iDayltMethod), QString::number(pGeomIDs->m_lDBID_Win_DisableDayltgImpact) );	BEMPX_WriteLogFile( qsDbgMsg );
 
 	// start by checking for existence of a single, child PolyLp for this Spc
 	int iNumSpcPolyLps = (int) BEMPX_GetNumChildren( pGeomIDs->m_iOID_Spc, spcDLAs.m_iSpcObjIdx, BEMO_User, pGeomIDs->m_iOID_PolyLp );
@@ -2181,6 +2183,13 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 			// create daylit area objects for each child window
 					for (int iWin=1; (fDegFromS > -0.01 && iWin <= iNumWinChildren); iWin++)
 					{	int iWinObjIdx = BEMPX_GetChildObjectIndex( pGeomIDs->m_iOID_ExtWall, pGeomIDs->m_iOID_Win, iError, eObjType, iWin, iEWallObjIdx );		assert( iWinObjIdx >= 0 );
+						if (iWinObjIdx >= 0 && iDayltMethod >= 2 && pGeomIDs->m_lDBID_Win_DisableDayltgImpact > 0)
+						{	long lDisableDayltgImpact=0;
+							if (BEMPX_GetInteger( pGeomIDs->m_lDBID_Win_DisableDayltgImpact, lDisableDayltgImpact, 0, BEMP_Int, iWinObjIdx ) && lDisableDayltgImpact > 0)
+								iWinObjIdx = -1;  // SAC 7/29/18 - skip this window if Win:DisableDayltgImpact flag set (iff iDayltMethod >= 2)
+										// debugging
+										//QString qsDbgMsg = QString( "      win %1 / lDisableDayltgImpact %2" ).arg( QString::number(iWinObjIdx), QString::number(lDisableDayltgImpact) );	BEMPX_WriteLogFile( qsDbgMsg );
+						}
 						if (iWinObjIdx >= 0)
 						{	BEMDaylitArea winDaylitArea( &spcDLAs, pGeomIDs, pGeomIDs->m_iOID_Win, iWinObjIdx, dSpcAvgZ );
 							if (winDaylitArea.IsValid())
@@ -2215,6 +2224,11 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 			// create daylit area objects for each child skylight
 					for (int iSkylt=1; iSkylt <= iNumSkyltChildren; iSkylt++)
 					{	int iSkyltObjIdx = BEMPX_GetChildObjectIndex( pGeomIDs->m_iOID_Roof, pGeomIDs->m_iOID_Skylt, iError, eObjType, iSkylt, iRoofObjIdx );		assert( iSkyltObjIdx >= 0 );
+						if (iSkyltObjIdx >= 0 && iDayltMethod >= 2 && pGeomIDs->m_lDBID_Skylt_DisableDayltgImpact > 0)
+						{	long lDisableDayltgImpact=0;
+							if (BEMPX_GetInteger( pGeomIDs->m_lDBID_Skylt_DisableDayltgImpact, lDisableDayltgImpact, 0, BEMP_Int, iSkyltObjIdx ) && lDisableDayltgImpact > 0)
+								iSkyltObjIdx = -1;  // SAC 7/29/18 - skip this skylt if Skylt:DisableDayltgImpact flag set (iff iDayltMethod >= 2)
+						}
 						if (iSkyltObjIdx >= 0)
 						{	BEMDaylitArea skyltDaylitArea( &spcDLAs, pGeomIDs, pGeomIDs->m_iOID_Skylt, iSkyltObjIdx, dSpcAvgZ );
 							if (skyltDaylitArea.IsValid())
@@ -2646,10 +2660,10 @@ double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName
 	QString sErrMsg;
 	int iError;
 
-	assert( iDayltMethod == 1 );			iDayltMethod;
+	assert( (iDayltMethod == 1 || iDayltMethod == 2) );			iDayltMethod;
 	BEMSpaceDaylitArea spcDLAs;  // moved daylit area arrays to parent class
 	spcDLAs.m_iSpcObjIdx = iSpcObjIdx;
-	dDaylitArea = SetupSpaceDaylighting( spcDLAs, ruleSet.getGeomIDs(), pszSpcName, sErrMsg );
+	dDaylitArea = SetupSpaceDaylighting( spcDLAs, ruleSet.getGeomIDs(), pszSpcName, sErrMsg, iDayltMethod );
 
 	if (dDaylitArea >= 0 && spcDLAs.m_daylitAreas.size() > 0)
 	{
@@ -2851,7 +2865,8 @@ double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName
 //			 -1 : Error initializing GeomDBIDs data
 //			 -2 : Unrecognized object type (expecting Story or Spc)
 //			 -3 : No space footprint data found
-int BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx /*=-1*/, int iWhatToPlot /*=1*/ )  //, ExpEvalStruct* pEval, ExpError* /*pError*/ )
+int BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx /*=-1*/, int iWhatToPlot /*=1*/,   //, ExpEvalStruct* pEval, ExpError* /*pError*/ )
+							int iDayltMethod /*=1*/ )
 {	int iRetVal = 0;
 	GeomDBIDs	geomIDs;
 	int iError;
@@ -2897,7 +2912,7 @@ int BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx /*=-
 				BEMSpaceDaylitArea spcDLA;  // moved daylit area arrays to parent class
 				spcDLA.m_iSpcObjIdx = iSpcObjIdx;
 				BEMPX_GetString( BEMPX_GetDatabaseID( "Name", geomIDs.m_iOID_Spc ), sSpcName, FALSE, 0, -1, iSpcObjIdx );		assert( !sSpcName.isEmpty() );
-				if (SetupSpaceDaylighting( spcDLA, &geomIDs, sSpcName.toLocal8Bit().constData(), sErrMsg ) >= 0)
+				if (SetupSpaceDaylighting( spcDLA, &geomIDs, sSpcName.toLocal8Bit().constData(), sErrMsg, iDayltMethod ) >= 0)
 				{
 					if (spcDLA.m_daSpaceExtremes[0] < dMinXY[0])
 						dMinXY[0] = spcDLA.m_daSpaceExtremes[0];

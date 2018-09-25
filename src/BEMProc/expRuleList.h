@@ -518,10 +518,12 @@ public:
    long  m_lDBID_Win_RightFinDistanceAbove;   // Flt,  1,  Opt,  "ft",    0,                               "RightFinDistanceAbove",  ""
    long  m_lDBID_Win_RightFinDistanceBelow;   // Flt,  1,  Opt,  "ft",    0,                               "RightFinDistanceBelow",  ""
    long  m_lDBID_Win_RightFinAngle;           // Flt,  1,  Opt,  "deg",   0,                               "RightFinAngle",   ""
+   long  m_lDBID_Win_DisableDayltgImpact;     // Int,  1,  - RuleNew added for 2019 analysis - SAC 7/29/18
 
    int   m_iOID_Skylt;               // Typ  NV   US     UL     NO    OC            CV  CP         LName                 
    long  m_lDBID_Skylt_FenConsRef;   // Obj,  1,  Opt,  "",      1, "FenCons",     2, "FenType",  "FenestrationConstructionReference"
    long  m_lDBID_Skylt_Area;         // Flt,  1,  Opt,  "ft2",   0,                               "Area"     
+   long  m_lDBID_Skylt_DisableDayltgImpact;   // Int,  1,  - RuleNew added for 2019 analysis - SAC 7/29/18
 
    int   m_iOID_PolyLp;                 // Typ  NV   US     UL     NO     LName                 
    long  m_lDBID_PolyLp_Area;           // Flt,  1,  NInp, "ft2",   0,   "Area"            

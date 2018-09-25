@@ -172,6 +172,7 @@
     <ClCompile Include="expRuleFile.cpp" />
     <ClCompile Include="expRuleList.cpp" />
     <ClCompile Include="expRulePropTypeMod.cpp" />
+    <ClCompile Include="expSchedule.cpp" />
     <ClCompile Include="expSymbols.cpp" />
     <ClCompile Include="expTable.cpp" />
     <ClCompile Include="expTextIO.cpp" />

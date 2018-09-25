@@ -358,29 +358,19 @@ static int** ClassToConvertList( int iBDBClass )
 // { # Root Classes, # Compatible Classes That MAY Be Root If Have No Parent or Are Not Assigned To Anything, # Total Classes }
 
 static int siZero = 0;
-#ifdef UI_PROGYEAR2019
-static int  siNumArchComps = 32;
-static int  siNumArchFolders = 12;
-static int  siaMode0[]  = { 3, siNumArchComps-siNumArchFolders, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
-									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
-									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
-									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
-									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
-										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
-//static int  siNumArchFolders = 13;
-//static int  siaMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
-//static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
+//#ifdef UI_PROGYEAR2019
+//static int  siNumArchComps = 32;
+//static int  siNumArchFolders = 12;
+//static int  siaMode0[]  = { 3, siNumArchComps-siNumArchFolders, siNumArchComps };
+//static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, &eiBDBCID_Story, &eiBDBCID_Space, &eiBDBCID_IntLtgSys, /*&eiBDBCID_DayltgCtrl,*/ &eiBDBCID_Ceiling, &eiBDBCID_CeilingBelowAttic,
 //									 &eiBDBCID_ExtFlr, &eiBDBCID_ExtWall, &eiBDBCID_FlrAboveCrawlSpc, &eiBDBCID_IntFlr, &eiBDBCID_IntWall,
 //									 &eiBDBCID_Roof, &eiBDBCID_UndgrFlr, &eiBDBCID_UndgrWall, &eiBDBCID_Window, &eiBDBCID_Skylight, &eiBDBCID_Door,
 //									 &eiBDBCID_ExtShdgObj, /*&eiBDBCID_PolyLp, &eiBDBCID_CartesianPoint,*/
-//									 &eiBDBCID_PVArray, &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+//									 &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 //									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-//static int* siapFolder0[] = { &eiBDBCID_PVArray, &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
+//static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 //										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
-#else
+//#else
 static int  siNumArchComps = 28;
 static int  siNumArchFolders = 10;
 static int  siaMode0[]  = { 1, siNumArchComps-siNumArchFolders, siNumArchComps };
@@ -392,10 +382,23 @@ static int* siapMode0[] = { &eiBDBCID_Building, &eiBDBCID_Story, &eiBDBCID_Space
 									 &eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum };
 static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_SchDay, &eiBDBCID_ThrmlEngyStorModeSchDay,
 										&eiBDBCID_ConsAssm, &eiBDBCID_Mat, &eiBDBCID_FenCons, &eiBDBCID_DrCons, &eiBDBCID_SpcFuncDefaults, &eiBDBCID_Lum, NULL };
-#endif
+//#endif
 
+#ifdef UI_PROGYEAR2019	// SAC 7/28/18 - shifted PV & Battery objects from Envelope to Mechanical tabs
+static int  siNumHVACComps = 32;
+static int  siNumHVACFolders = 6;
+static int  siaMode1[]  = { 5, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
+static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
+                            &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
+									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
+									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl,
+									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
+static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+#else
 static int  siNumHVACComps = 28;
-static int  siaMode1[]  = { 3, siNumHVACComps-4, siNumHVACComps };
+static int  siNumHVACFolders = 4;
+static int  siaMode1[]  = { 3, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
@@ -403,6 +406,7 @@ static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_B
 									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad };
 static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, NULL };
+#endif
 
 static int*  siaModes[]  = { siaMode0,  siaMode1 };
 static int** siapModes[] = { siapMode0, siapMode1 };
@@ -3809,7 +3813,18 @@ void CTreeBDB::OnViewFootprint()
 							if (OKToWriteOrDeleteFile( sSZGFN, sMsg ))
 							{	sMsg.Empty();
 								int iWhatToPlot = ReadProgInt( "options", "ViewFootprintOption", 1 );
-								int iNumExpObjs = BEMPX_ExportSVG( sSZGFN, iBEMClass, iObjIdx, iWhatToPlot );
+
+								int iDayltMethod = 1;	// SAC 7/29/18 - added to fluctuate between 2013/16 & 2019 Dayltg (taking into account Win/Skylt:DisableDayltgImpact)
+								long lEnergyCodeYr = 0;
+//#ifdef UI_CARES
+//								BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+//#elif UI_CANRES
+								BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum"   ), lEnergyCodeYr );
+//#endif
+								if (lEnergyCodeYr >= 2019)
+									iDayltMethod = 2;
+
+								int iNumExpObjs = BEMPX_ExportSVG( sSZGFN, iBEMClass, iObjIdx, iWhatToPlot, iDayltMethod );
 								if (iNumExpObjs <= 0)
 								{	QString qsObjName;
 									VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iBEMClass ), qsObjName, FALSE, 0, -1, iObjIdx ) && !qsObjName.isEmpty() );

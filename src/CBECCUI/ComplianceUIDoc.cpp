@@ -627,6 +627,8 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 	   BEMPX_WriteLogFile( sLogMsg );
 	}
 
+// debugging
+//CString sDbgMsg;	sDbgMsg.Format( "bRulesetBeingSwitched = %s\npszNewRulesetFile = '%s'\nlRulesetSymVal = %ld\nelDBID_Proj_Ruleset = %ld", (bRulesetBeingSwitched ? "true" : "false"), (pszNewRulesetFile ? pszNewRulesetFile : "null"), lRulesetSymVal, elDBID_Proj_Ruleset );	AfxMessageBox( sDbgMsg );
 	long lBEMBaseDBIDErrorToIgnore[2] = {-1,-1};	// SAC 8/15/14 - added to ensure that error in reading Proj:StandardsVersion (which is expected) will not be reported in the UI
 	if ((bRulesetBeingSwitched || (pszNewRulesetFile && strlen( pszNewRulesetFile ) > 0 && lRulesetSymVal >= 0)) &&
 			eiBDBCID_Proj > 0 && elDBID_Proj_Ruleset > 0 && BEMPX_GetNumObjects( (int) eiBDBCID_Proj ) > 0)
@@ -647,8 +649,11 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 		if (lDBID_Proj_StdsVersion > 0)
 			BEMPX_DefaultProperty( lDBID_Proj_StdsVersion, iError );
 #endif
+// debugging
+//CString sDbgMsg;	sDbgMsg.Format( "Setting elDBID_Proj_Ruleset (%ld) to lRulesetSymVal = %ld", elDBID_Proj_Ruleset, lRulesetSymVal );	AfxMessageBox( sDbgMsg );
 		// SAC 8/14/14 - moved from MenuRulesetSelection()
-		BEMPX_SetBEMData( elDBID_Proj_Ruleset, BEMP_Sym, (void*) &lRulesetSymVal );  // must be UserDefined or won't stick!...  , BEMO_User, -1, BEMS_ProgDefault );	// SAC 4/23/15 - modified to specify ProgDefault as data status to avoid having it written to project files
+		if (lRulesetSymVal >= 0)	// prevent overriding valid (new) ruleset selection (can happen when bRulesetBeingSwitched = true) - SAC 9/20/18
+			BEMPX_SetBEMData( elDBID_Proj_Ruleset, BEMP_Sym, (void*) &lRulesetSymVal );  // must be UserDefined or won't stick!...  , BEMO_User, -1, BEMS_ProgDefault );	// SAC 4/23/15 - modified to specify ProgDefault as data status to avoid having it written to project files
 		lBEMBaseDBIDErrorToIgnore[0] = elDBID_Proj_StdsVersion;
 		lBEMBaseDBIDErrorToIgnore[1] = lDBID_Proj_StdDesignBase;
 		SetDataModifiedFlag( TRUE );

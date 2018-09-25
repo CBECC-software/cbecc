@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -74,6 +74,10 @@ private:
 };
 
 extern CCompID crntCompID;  // declare an instance of this class which will be referenced throughout this module
+//////////////////////////////////////////////////////////////////////
+
+extern QString ScheduleSum( int iNumScheds, QString sSchNamePrefix, ExpNode** pNodeList, void* pEvalData, ExpError* pError );
+
 //////////////////////////////////////////////////////////////////////
 
 #endif // __EXPRULE_H__

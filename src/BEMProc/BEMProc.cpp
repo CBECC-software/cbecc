@@ -2901,8 +2901,8 @@ bool BEMPX_DefaultProperty(	long lDBID, int& iError, int iOccur,
    // get class index from lDBID
    int i1Class = BEMPX_GetClassID( lDBID );
    // get object pointer from class and occurrence indices
-   BEMObject* pObj = BEMPX_GetObjectByClass( i1Class, iError, iOccur, eObjType, iBEMProcIdx );
-   if (iError >= 0)
+   BEMObject* pObj = (i1Class > 0 ? BEMPX_GetObjectByClass( i1Class, iError, iOccur, eObjType, iBEMProcIdx ) : NULL);	// SAC 8/14/18 - prevent bomb when lDBID invalid
+   if (iError >= 0 && pObj)
    {
       // get property pointer from lDBID and occurrence index
       BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, iOccur, eObjType, iBEMProcIdx );

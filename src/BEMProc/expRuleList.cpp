@@ -623,12 +623,14 @@ bool GeomDBIDs::Init( QString& sErrMsg )	// SAC 2/25/14 - added to facilitate ca
 			m_lDBID_Win_RightFinDistanceAbove  = GetPropertyDBID_LogError( "Win", "RightFinDistanceAbove",  m_iOID_Win, iNumInitErrors, sFirstInitError );
 			m_lDBID_Win_RightFinDistanceBelow  = GetPropertyDBID_LogError( "Win", "RightFinDistanceBelow",  m_iOID_Win, iNumInitErrors, sFirstInitError );
 			m_lDBID_Win_RightFinAngle          = GetPropertyDBID_LogError( "Win", "RightFinAngle",          m_iOID_Win, iNumInitErrors, sFirstInitError );
+			m_lDBID_Win_DisableDayltgImpact    = BEMPX_GetDatabaseID(             "DisableDayltgImpact",    m_iOID_Win );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
 		}
 
    	m_iOID_Skylt	= GetObjectID_LogError( "Skylt", iNumInitErrors, sFirstInitError );
 		if (m_iOID_Skylt > 0)
    	{	m_lDBID_Skylt_FenConsRef = GetPropertyDBID_LogError( "Skylt", "FenConsRef", m_iOID_Skylt, iNumInitErrors, sFirstInitError );
    		m_lDBID_Skylt_Area       = GetPropertyDBID_LogError( "Skylt", "Area",       m_iOID_Skylt, iNumInitErrors, sFirstInitError );
+			m_lDBID_Skylt_DisableDayltgImpact  = BEMPX_GetDatabaseID(     "DisableDayltgImpact",  m_iOID_Skylt );		// SAC 7/29/18 - added w/ NO error checking (used when present for 2019 DayLtg)
 		}
 
    	m_iOID_FenCons	= GetObjectID_LogError( "FenCons", iNumInitErrors, sFirstInitError );

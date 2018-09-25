@@ -44,6 +44,8 @@ typedef struct
    int         iSumIntoCompliance;
 	double      daEnduseTotal[3];
 	double      daTDVTotal[3];
+	double      daTDSTotal[3];		// SAC 8/26/18 - A2030
+	double      daSupply[3];		// SAC 9/7/18 - A2030 [Elec,TDV,TDS]
 	double      dElecDemand;		// SAC 10/8/16
 } EndUseMap;
 #define  NUM_T24_NRES_EndUses     15	// SAC 7/14/18 - 13->15 for PV/Batt

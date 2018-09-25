@@ -434,6 +434,8 @@ bool BEMGridMod::apply( QString& sSetMsg )
 
 
 /////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 // BEMGrid
 
 // dark gray sample
@@ -1759,16 +1761,54 @@ void BEMGrid::itemChangedLocal(QTableWidgetItem *item)
 	}
 }
 
-void BEMGrid::cmbxIndexChanged(int index)
+void BEMGrid::setCmbxData( QString sData )
 {
-	if (!beingInitialized)
-		MessageBeep( MB_OK );
+	if (!beingInitialized && idClass && cmbxCol >= 0 && cmbxRow >= 0 && cmbx && !sData.isEmpty())
+	{	int iCol = cmbxCol;  //item->column();
+		if (iCol < 0 || iCol >= (int) colData.size())
+		{	ASSERT( FALSE );
+			MessageBeep( MB_OK );
+			return;
+		}
+		int iNumModsApplied = 0;
+		BEMGridColumn* pGC = colData[iCol];											ASSERT( pGC );
+		if (pGC)
+		{
+			//int iObjIdx = item->data( Qt::UserRole ).toInt();					ASSERT( iObjIdx >= 0 && iObjIdx < BEMPX_GetNumObjects( idClass ) );
+			int iObjIdx = cmbx->objIdx();												ASSERT( iObjIdx >= 0 && iObjIdx < BEMPX_GetNumObjects( idClass ) );
+			if (iObjIdx < 0 || iObjIdx >= BEMPX_GetNumObjects( idClass ))
+			{	ASSERT( FALSE );
+				MessageBeep( MB_OK );
+				return;
+			}
+
+			int iArray = BEMPX_GetArrayID( cmbx->dbid() );  //pGC->getDBID() );
+			//QString sData = cmbx->currentText();  //item->data(Qt::DisplayRole).toString();
+
+			clearModData();
+			BEMGridMod* pMod = addMod( cmbxRow /*item->row()*/, iCol, sData, pGC, iObjIdx );
+			if (confirmMods())
+				iNumModsApplied = applyMods();
+			else
+			{	//itemDisplayData( item, pGC );
+				MessageBeep( MB_OK );
+			}
+	}	}
+}
+
+void BEMGrid::cmbxIndexChanged(int /*index*/)
+{
+//	if (!beingInitialized)
+//		MessageBeep( MB_OK );
+	if (!beingInitialized && idClass && cmbxCol >= 0 && cmbxRow >= 0 && cmbx)
+		setCmbxData( cmbx->currentText() );
 }
 
 void BEMGrid::cmbxIndexChanged(const QString &text)
 {
 	if (!text.isEmpty() && !beingInitialized)
-		MessageBeep( MB_OK );
+		setCmbxData( text );
+//		MessageBeep( MB_OK );
 }
 
 
@@ -2521,7 +2561,9 @@ void BEMGridDialog::initObjectTypeList( int bemClass )
 		for (int ic=1; ic <= iNumClasses; ic++)
 		{	int iNumObjs = BEMPX_GetNumObjects( ic );  //, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 			BEMClass* pClass = BEMPX_GetClass( ic, iError );
-			if (iNumObjs > 1 && pClass)
+			//if (iNumObjs > 1 && pClass)
+			if (iNumObjs > 0 && pClass)
+			//if (iNumObjs > 0 && pClass && (pClass->getMaxDefinable()==0 || pClass->getMaxDefinable() > 1))  // SAC 8/8/18 - revised to include classes w/ only 1 object defined (as long as more can be created)
 			{	if (bemClass < 0)
 					bemClass = ic;
 				if (bemClass == ic)

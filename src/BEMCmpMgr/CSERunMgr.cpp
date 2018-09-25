@@ -898,6 +898,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/ )
 {
 	int iRetVal = 0;
+#ifdef OSWRAPPER
 	int iPrevBEMProcIdx = -1;	// SAC 7/23/18
 	if (iBEMProcIdx >= 0)
 	{	iPrevBEMProcIdx = BEMPX_GetActiveModel();
@@ -1192,7 +1193,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 		QString sTDVFile;
 		if (iRetVal == 0)
 		{	long lCSE_WriteTDV;
-			if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_WriteTDV" ), lCSE_WriteTDV ) && lCSE_WriteTDV > 0)
+			long lDBID_CSEtdvfName = BEMPX_GetDatabaseID( "cseTOP:tdvfName" );	// SAC 8/14/18
+			if (lDBID_CSEtdvfName > 0 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_WriteTDV" ), lCSE_WriteTDV ) && lCSE_WriteTDV > 0)
 			{	sTDVFile = sProjFileAlone + "-tdv.csv";
 				QString sFullTDVFile = m_sProcessPath + sTDVFile;
 				sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
@@ -1280,9 +1282,9 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 					pCSERun->SetTDVFName( sTDVFile );		// SAC 4/16/17
 			}
 			if (sTDVFile.length() > 0)
-				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), BEMP_QStr, (void*) &sTDVFile );
-			else
-				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "cseTOP:tdvfName" ), m_iError );
+				BEMPX_SetBEMData( lDBID_CSEtdvfName, BEMP_QStr, (void*) &sTDVFile );
+			else if (lDBID_CSEtdvfName > 0)
+				BEMPX_DefaultProperty( lDBID_CSEtdvfName, m_iError );
 		}
 
 	// WRITE CSV FILE of E+ElecUse - SAC 7/25/18
@@ -1481,6 +1483,9 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	if (iPrevBEMProcIdx > 0)	// SAC 7/23/18
 		BEMPX_SetActiveModel( iPrevBEMProcIdx );
+#else
+			iRunIdx;  iRunType;  sErrorMsg;  bAllowReportIncludeFile;  pszRunID;  pszRunAbbrev;  psCSEVer;  iBEMProcIdx;
+#endif
 
 	return iRetVal;
 }
