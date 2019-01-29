@@ -596,7 +596,10 @@ extern int eiBDBCID_PrehtCoil;
 extern int eiBDBCID_ThrmlEngyStor;
 extern int eiBDBCID_HX;
 extern int eiBDBCID_ResDHWSys;
+extern int eiBDBCID_ResDWHRSys;	// SAC 1/24/19
 extern int eiBDBCID_ResWtrHtr;
+extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
+
 extern int eiBDBCID_ProcLd;
 extern int eiBDBCID_StorTank;
 extern int eiBDBCID_WtrHtr;
@@ -612,6 +615,8 @@ extern long elDBID_Proj_ExcptDsgnModelFile;
 
 extern long elDBID_PolyLp_Area;			// SAC 5/29/14 
 extern long elDBID_CartesianPt_Coord;	// SAC 5/29/14 
+
+extern long elDBID_Spc_ResSpcDHWFeaturesRef;		// SAC 1/23/19
 
 //extern long elDBID_ThermalZone_ThermalZoneCoolingSystem;                // "AirSystem",  
 //extern long elDBID_ThermalZone_ThermalZoneSupplementalCoolingSystem;    // "AirSystem",  
@@ -670,6 +675,7 @@ extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating w
 extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
 extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
 extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
 
 #endif   // UI_CANRES
 
@@ -711,6 +717,7 @@ extern int eiBDBCID_HVACFan;
 extern int eiBDBCID_IAQFan;
 extern int eiBDBCID_ClVentFan;
 extern int eiBDBCID_DHWSys;
+extern int eiBDBCID_DWHRSys;	// SAC 12/23/18  // SAC 1/5/19 - renamed (was DWHX)
 extern int eiBDBCID_DHWHeater;
 extern int eiBDBCID_SCSysRpt;
 extern int eiBDBCID_DHWSysRpt;
@@ -819,6 +826,7 @@ extern long elDBID_BatchRuns_IncludeSubdirs;      // BEMP_Int "Flag indicating w
 extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string identifying projects to be processed (including wildcard '*')" 
 extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
 extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
+extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
 #endif   // UI_CARES
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions

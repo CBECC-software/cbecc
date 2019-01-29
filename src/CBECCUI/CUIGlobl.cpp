@@ -961,8 +961,9 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 #elif  UI_PROGYEAR2019
 		//CString sCodeYr = "2019";
 	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
-		int iMiddleNum = (int) floor( minor / 100.0 );
-		int iMinorNum = (int) floor( minor / 10.0 ) - (iMiddleNum * 10);
+	// SAC 11/27/18 - altered to allow 2-digit iMinorNum (by increasing iMiddleNum multiplier *10)
+		int iMiddleNum = (int) floor( minor / 1000.0 );
+		int iMinorNum = (int) floor( minor / 10.0 ) - (iMiddleNum * 100);
 		int iAlphBeta = minor % 10;
 		CString sAlphBeta;
 		switch (iAlphBeta)
@@ -2377,7 +2378,9 @@ int eiBDBCID_PrehtCoil = 0;
 int eiBDBCID_ThrmlEngyStor = 0;
 int eiBDBCID_HX = 0;
 int eiBDBCID_ResDHWSys = 0;
+int eiBDBCID_ResDWHRSys = 0;
 int eiBDBCID_ResWtrHtr = 0;
+int eiBDBCID_ResSpcDHWFeatures = 0;
 int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
 int eiBDBCID_WtrHtr = 0;
@@ -2393,6 +2396,7 @@ long elDBID_Proj_AnnualWeatherFile = 0;
 long elDBID_Proj_ExcptDsgnModelFile = 0; 
 long elDBID_PolyLp_Area = 0;
 long elDBID_CartesianPt_Coord = 0;
+long elDBID_Spc_ResSpcDHWFeaturesRef = 0;		// SAC 1/23/19
 long elDBID_ThrmlZn_ClgSys = 0;             // "AirSys", 
 long elDBID_ThrmlZn_SuppClgSys = 0;         // "AirSys", 
 long elDBID_ThrmlZn_HtgSys = 0;             // "AirSys", 
@@ -2429,6 +2433,7 @@ long elDBID_BatchRuns_IncludeSubdirs = 0;
 long elDBID_BatchRuns_ProjFileNames = 0;     
 long elDBID_BatchRuns_StoreProjToSepDir = 0; 
 long elDBID_BatchRuns_OutputProjDir = 0;     
+long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19 
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2450,6 +2455,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PVArrayGeom  )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
+	else if (iBDBClass == eiBDBCID_ResDWHRSys)	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2552,6 +2558,7 @@ int eiBDBCID_HVACFan    = 0;
 int eiBDBCID_IAQFan     = 0;
 int eiBDBCID_ClVentFan  = 0;
 int eiBDBCID_DHWSys     = 0;
+int eiBDBCID_DWHRSys       = 0;	// SAC 12/23/18
 int eiBDBCID_DHWHeater  = 0;
 int eiBDBCID_SCSysRpt   = 0;
 int eiBDBCID_DHWSysRpt  = 0;
@@ -2660,6 +2667,7 @@ long elDBID_BatchRuns_IncludeSubdirs = 0;
 long elDBID_BatchRuns_ProjFileNames = 0;     
 long elDBID_BatchRuns_StoreProjToSepDir = 0; 
 long elDBID_BatchRuns_OutputProjDir = 0;     
+long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19 
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2685,7 +2693,8 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
-	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)
+	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 610;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)
+	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
 	else if (iBDBClass == eiBDBCID_SCSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_DHWSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
@@ -2695,32 +2704,42 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	return TRUE;
 }
 
-void GetDialogCaption( int /*iBDBClass*/, CString& sDialogCaption )
+void GetDialogCaption( int iBDBClass, CString& sDialogCaption )
 {
 	sDialogCaption.Empty();
-	// first portion of caption = project filename (excluding path & file extension)
-	CWnd* pMainWnd = AfxGetMainWnd();
-   if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
-	{	CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
-	   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
-		{	CString sProjFile = pDoc->GetPathName();
-			if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('\\') > 0)
-			{	sProjFile = sProjFile.Right( sProjFile.GetLength() - sProjFile.ReverseFind('\\') - 1 );
-				if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('.') > 0)
-					sProjFile = sProjFile.Left( sProjFile.ReverseFind('.') );
-				sDialogCaption = sProjFile;
+
+	if (iBDBClass <= eiBDBCID_Proj || iBDBClass == eiBDBCID_EUseSummary) // SAC 12/20/18 - revised to use project file naming for EUSummary dialog (per KN request)
+	{	// first portion of caption = project filename (excluding path & file extension)
+		CWnd* pMainWnd = AfxGetMainWnd();
+	   if (pMainWnd && pMainWnd->IsKindOf(RUNTIME_CLASS(CFrameWnd)))
+		{	CDocument* pDoc = ((CFrameWnd*)pMainWnd)->GetActiveDocument();
+		   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CDocument)))
+			{	CString sProjFile = pDoc->GetPathName();
+				if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('\\') > 0)
+				{	sProjFile = sProjFile.Right( sProjFile.GetLength() - sProjFile.ReverseFind('\\') - 1 );
+					if (!sProjFile.IsEmpty() && sProjFile.ReverseFind('.') > 0)
+						sProjFile = sProjFile.Left( sProjFile.ReverseFind('.') );
+					sDialogCaption = sProjFile;
+				}
 			}
 		}
+		// second portion of caption = Proj:RunTitle
+		CString sRunTitle;
+	   BEMPX_SetDataString( elDBID_Proj_RunTitle, sRunTitle );
+		if (!sRunTitle.IsEmpty())
+		{	if (!sDialogCaption.IsEmpty())
+				sDialogCaption += " - ";
+			sDialogCaption += sRunTitle;
+		}
 	}
-
-	// second portion of caption = Proj:RunTitle
-	CString sRunTitle;
-   BEMPX_SetDataString( elDBID_Proj_RunTitle, sRunTitle );
-	if (!sRunTitle.IsEmpty())
-	{	if (!sDialogCaption.IsEmpty())
-			sDialogCaption += " - ";
-		sDialogCaption += sRunTitle;
-	}
+	else	// SAC 12/5/18 - revised routine to label non-Proj dialogs using object type and name data
+	{	int iErr;
+		BEMClass* pBEMClass = BEMPX_GetClass( iBDBClass, iErr );
+		if (pBEMClass)
+		{	QString qsObjName;
+			VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", iBDBClass ), qsObjName, FALSE, 0, -1 ) && !qsObjName.isEmpty() );
+			sDialogCaption.Format( "%s:  %s", pBEMClass->getLongName().toLatin1().constData(), qsObjName.toLatin1().constData() );
+	}	}
 
 	// default string if neither project filename nor RunTitle are defined
 	if (sDialogCaption.IsEmpty())
@@ -2941,8 +2960,10 @@ void InitBEMDBIDs()
 	eiBDBCID_PrehtCoil          = BEMPX_GetDBComponentID( "PrehtCoil" );     
 	eiBDBCID_ThrmlEngyStor      = BEMPX_GetDBComponentID( "ThrmlEngyStor" );		// SAC 2/21/17
 	eiBDBCID_HX                 = BEMPX_GetDBComponentID( "HX" );            
-	eiBDBCID_ResDHWSys       = BEMPX_GetDBComponentID( "ResDHWSys" );
-	eiBDBCID_ResWtrHtr       = BEMPX_GetDBComponentID( "ResWtrHtr" );
+	eiBDBCID_ResDHWSys          = BEMPX_GetDBComponentID( "ResDHWSys" );
+	eiBDBCID_ResDWHRSys         = BEMPX_GetDBComponentID( "ResDWHRSys" );	// SAC 1/24/19
+	eiBDBCID_ResWtrHtr          = BEMPX_GetDBComponentID( "ResWtrHtr" );
+	eiBDBCID_ResSpcDHWFeatures  = BEMPX_GetDBComponentID( "ResSpcDHWFeatures" );
 	eiBDBCID_ProcLd             = BEMPX_GetDBComponentID( "ProcLd" );        
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
 	eiBDBCID_WtrHtr             = BEMPX_GetDBComponentID( "WtrHtr" );        
@@ -2958,6 +2979,8 @@ void InitBEMDBIDs()
 
 	elDBID_PolyLp_Area            = BEMPX_GetDatabaseID( "Area",  eiBDBCID_PolyLp );			// SAC 5/29/14 
 	elDBID_CartesianPt_Coord      = BEMPX_GetDatabaseID( "Coord", eiBDBCID_CartesianPt );	// SAC 5/29/14 
+
+	elDBID_Spc_ResSpcDHWFeaturesRef    = BEMPX_GetDatabaseID( "ResSpcDHWFeaturesRef", eiBDBCID_Space );	// SAC 1/23/19
 
 	elDBID_ThrmlZn_ClgSys              = BEMPX_GetDatabaseID( "ClgSys",             eiBDBCID_ThrmlZn  ); 
 	elDBID_ThrmlZn_SuppClgSys          = BEMPX_GetDatabaseID( "SuppClgSys",         eiBDBCID_ThrmlZn  ); 
@@ -2997,6 +3020,7 @@ void InitBEMDBIDs()
 	elDBID_BatchRuns_ProjFileNames      = BEMPX_GetDatabaseID( "ProjFileNames",      eiBDBCID_BatchRuns );     
 	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
 	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_RunsSpanClimates   = BEMPX_GetDatabaseID( "RunsSpanClimates",   eiBDBCID_BatchRuns );    // SAC 1/4/19 
 
 // SAC 5/13/14 - revised to keep this property characterized as Required (but still marked as Primary)
 	// make adjustments to the InputClass of certain properties to ensure proper UI functionality
@@ -3053,6 +3077,7 @@ void InitBEMDBIDs()
    eiBDBCID_IAQFan     = BEMPX_GetDBComponentID( "IAQFan" );
    eiBDBCID_ClVentFan  = BEMPX_GetDBComponentID( "ClVentFan" );
 	eiBDBCID_DHWSys     = BEMPX_GetDBComponentID( "DHWSys" );
+	eiBDBCID_DWHRSys    = BEMPX_GetDBComponentID( "DWHRSys" );			// SAC 12/23/18
 	eiBDBCID_DHWHeater  = BEMPX_GetDBComponentID( "DHWHeater" );
 	eiBDBCID_SCSysRpt   = BEMPX_GetDBComponentID( "SCSysRpt" );
 	eiBDBCID_DHWSysRpt  = BEMPX_GetDBComponentID( "DHWSysRpt" );
@@ -3175,6 +3200,7 @@ void InitBEMDBIDs()
 	elDBID_BatchRuns_ProjFileNames      = BEMPX_GetDatabaseID( "ProjFileNames",      eiBDBCID_BatchRuns );     
 	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
 	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
+	elDBID_BatchRuns_RunsSpanClimates   = BEMPX_GetDatabaseID( "RunsSpanClimates",   eiBDBCID_BatchRuns );    // SAC 1/4/19 
 
 	BEMPUIX_AddPasswordDBIDPair( elDBID_INISettings_ProxyServerCredentials, elDBID_INISettings_ShowProxyServerCredentials, TRUE );	// SAC 1/9/17
 #endif   // UI_CARES

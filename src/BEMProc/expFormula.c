@@ -2199,11 +2199,18 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
    {
       if ( node1->type != node2->type )  /* Can't operate on 2 different types, return 0. */
       {
+			char sNode1[90], sNode2[90], sOper[20], sFuncErr[280];	/* SAC 12/10/18 */
+			NodeToString( node1, sNode1, 90 );
+			NodeToString( node2, sNode2, 90 );
+			OperatorToString( op, sOper, 20 );
+			_snprintf( sFuncErr, 280, "Error: operator cannot be applied to data of different types:  %s %s %s", sNode1, sOper, sNode2 );
+
          if (node1->type == EXP_String)
             free( node1->pValue );
          node1->fValue = 0;
          node1->type = EXP_Value;
-         ExpSetError( error, EXP_RuleProc, "Error: operator cannot be applied to data of different types" );  // SAC 8/12/12 - added error descriptor to plug into error message
+         //ExpSetError( error, EXP_RuleProc, "Error: operator cannot be applied to data of different types" );  // SAC 8/12/12 - added error descriptor to plug into error message
+         ExpSetError( error, EXP_RuleProc, sFuncErr );  // SAC 12/10/18 - revised further to echo attempted operation itself
       }
       else if ( node1->type == EXP_String && node2->type == EXP_String ) /* 2 Strings */
       {
@@ -2635,6 +2642,82 @@ void NodeToValue( ExpNode* node, double fVal )
 
    node->type = EXP_Value;
    node->fValue = fVal;
+}
+
+
+/* SAC 12/10/18 - routine to populate string with description of an ExpNode */
+static const char* pszExpNodeTypeDescrip[] = {
+            "(invalid node)",       // EXP_Invalid,     
+            "(value node)",         // EXP_Value,       
+            "(string node)",        // EXP_String,      
+            "(index node)",         // EXP_Index,       
+            "(keyword node)",       // EXP_Keyword,     
+            "(BldgRule node)",      // EXP_BldgRule,    
+            "(expression node)",    // EXP_Expression,  
+            "(function node)",      // EXP_Function,    
+            "(LookupFunc node)",    // EXP_LookupFunc,  
+            "(If node)",            // EXP_If,          
+            "(Else node)",          // EXP_Else,        
+            "(Endif node)",         // EXP_Endif,       
+            "(Switch node)",        // EXP_Switch,      
+            "(Default node)",       // EXP_Default,     
+            "(Case node)",          // EXP_Case,        
+            "(EndSwitch node)"  };  // EXP_EndSwitch    
+void NodeToString( ExpNode* node, char* str, int iStrLen )
+{	switch (node->type)
+	{	case EXP_Value       :  _snprintf( str, iStrLen, "%g %s",   node->fValue, pszExpNodeTypeDescrip[node->type] );   break;
+		case EXP_String      :  _snprintf( str, iStrLen, "'%s' %s", node->pValue, pszExpNodeTypeDescrip[node->type] );   break;
+	//	case EXP_Invalid     :
+	//	case EXP_Index       :
+	//	case EXP_Keyword     :
+	//	case EXP_BldgRule    :
+	//	case EXP_Expression  :
+	//	case EXP_Function    :
+	//	case EXP_LookupFunc  :
+	//	case EXP_If          :
+	//	case EXP_Else        :
+	//	case EXP_Endif       :
+	//	case EXP_Switch      :
+	//	case EXP_Default     :
+	//	case EXP_Case        :
+	//	case EXP_EndSwitch   :
+		default              :  _snprintf( str, iStrLen, "%s", pszExpNodeTypeDescrip[node->type] );   break;
+	}
+}
+
+void OperatorToString( int oper, char* str, int iStrLen )
+{	switch (oper)
+	{	case  EXP_ERROR :  _snprintf( str, iStrLen, "<error>" );   break;
+		case  IFF       :  _snprintf( str, iStrLen, "<if>" );   break;
+		case  THEN      :  _snprintf( str, iStrLen, "<then>" );   break;
+		case  ELSE      :  _snprintf( str, iStrLen, "<else>" );   break;
+		case  ENDIF     :  _snprintf( str, iStrLen, "<endif>" );   break;
+		case  SWITCH    :  _snprintf( str, iStrLen, "<switch>" );   break;
+		case  CASE      :  _snprintf( str, iStrLen, "<case>" );   break;
+		case  DEFAULT   :  _snprintf( str, iStrLen, "<default>" );   break;
+		case  ENDSWITCH :  _snprintf( str, iStrLen, "<endswitch>" );   break;
+		case  OR        :  _snprintf( str, iStrLen, "<or>" );   break;
+		case  AND       :  _snprintf( str, iStrLen, "<and>" );   break;
+		case  EQ        :  _snprintf( str, iStrLen, "=" );   break;
+		case  NEQ       :  _snprintf( str, iStrLen, "!=" );   break;
+		case  LT        :  _snprintf( str, iStrLen, "<" );   break;
+		case  GT        :  _snprintf( str, iStrLen, ">" );   break;
+		case  LE        :  _snprintf( str, iStrLen, "<=" );   break;
+		case  GE        :  _snprintf( str, iStrLen, ">=" );   break;
+		case  POW       :  _snprintf( str, iStrLen, "<power>" );   break;
+		case  NOT       :  _snprintf( str, iStrLen, "<not>" );   break;
+		case  POS       :  _snprintf( str, iStrLen, "<pos>" );   break;
+		case  NEG       :  _snprintf( str, iStrLen, "<neg>" );   break;
+		case  CONSTANT  :  _snprintf( str, iStrLen, "<constant>" );   break;
+		case  STRING    :  _snprintf( str, iStrLen, "<string>" );   break;
+		case  KEYWORD   :  _snprintf( str, iStrLen, "<keyword>" );   break;
+		case  FUNCTION  :  _snprintf( str, iStrLen, "<function>" );   break;
+		case  REFFUNC   :  _snprintf( str, iStrLen, "<ref function>" );   break;
+		case  BEMVAR    :  _snprintf( str, iStrLen, "<BEM var>" );   break;
+		case  BEMPELEM  :  _snprintf( str, iStrLen, "<BEMP element>" );   break;
+		case  BEMPTABLE :  _snprintf( str, iStrLen, "<BEMP table>" );   break;
+		default         :  _snprintf( str, iStrLen, "<??>" );   break;
+	}
 }
 
 #pragma warning(default : 4996)

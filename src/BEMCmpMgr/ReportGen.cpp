@@ -545,10 +545,11 @@ bool SignXML(char *szXmldata, char **signature_hex, const char* pszPrvKeyFN, boo
 //											 (see below)
 int CMX_GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
-										const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/ )
+										const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSchemaBasedRptGen /*=false*/ )   // SAC 11/20/18
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2,
-										pszSignature, pszPublicKey, NULL /*pszRptPrvKey*/, NULL, NULL, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false );
+										pszSignature, pszPublicKey, NULL /*pszRptPrvKey*/, NULL, NULL, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
+										NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, true, bSchemaBasedRptGen );
 }
 
 //		Return Values:		0 =>	SUCCESS
@@ -560,11 +561,11 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 												const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/,
 												const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 												const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,
-												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/ )	// SAC 11/5/15
+												const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, bool bSchemaBasedRptGen /*=false*/ )	// SAC 11/5/15   // SAC 11/20/18
 {
 	return GenerateReport_CEC(	pszXMLResultsPathFile, pszCACertPath, pszReportName, pszAuthToken1, pszAuthToken2, pszSignature, 
 										pszPublicKey, NULL /*pszRptPrvKey*/, pszProxyAddress, pszProxyCredentials, "true" /*pszPDFOnlyBool*/, pszDebugBool, bVerbose, bSilent, false,
-										pszCompRptID, pszRptGenServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary );
+										pszCompRptID, pszRptGenServer, pszRptGenApp, pszRptGenService, pszSecKeyRLName, pszOutputPathFile, pszProxyType, pszNetComLibrary, 0, true, bSchemaBasedRptGen );
 }
 
 
@@ -596,552 +597,6 @@ int  CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char
 //											24 : CACertPath not a valid or found directory
 //											25 : Error converting results file signature to hexidecimal
 //											26 : Error extracting PDF from compliance report XML
-//int main(int argc, char *argv[], char **envp)
-int GenerateReport_CEC_OLD(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
-										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, const char* pszPrivateKey, 
-										const char* pszProxyAddress, const char* pszProxyCredentials, 		// pass NULLs for no proxy 
-										const char* pszPDFOnlyBool, const char* pszDebugBool, bool bVerbose /*=false*/, bool bSilent /*=false*/, bool bSendSignature /*=false*/,
-										const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
-										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
-										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/ )	// SAC 11/5/15   // SAC 1/10/17
-{ 
-//				sParams.sprintf( "\"%s\" \"%s\" pdf \"%s\"", sProjPath, sResFN.left( sResFN.length()-4 ), sCACertPath );
-	//	bVerbose = true;  
-				if (bVerbose)
-				{	QString sFuncArgMsg;
-					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s )",
-							(pszXMLResultsPathFile ? pszXMLResultsPathFile : "(null)"), (pszCACertPath ? pszCACertPath : "(null)"), (pszReportName ? pszReportName : "(null)"), (pszAuthToken1 ? pszAuthToken1 : "(null)"), (pszAuthToken2 ? pszAuthToken2 : "(null)"),
-							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? "<PubKey>"/*pszPublicKey*/ : "(null)"), (pszPrivateKey ? "<PrvKey>"/*pszPrivateKey*/ : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
-							(pszPDFOnlyBool ? pszPDFOnlyBool : "(null)"), (pszDebugBool ? pszDebugBool : "(null)"), (bVerbose ? "true" : "false"), (bSilent ? "true" : "false"), (bSendSignature ? "true" : "false"), (pszCompRptID ? pszCompRptID : "(null)"),
-							(pszRptGenServer ? pszRptGenServer : "(null)"), (pszRptGenApp ? pszRptGenApp : "(null)"), (pszRptGenService ? pszRptGenService : "(null)"), (pszSecKeyRLName ? pszSecKeyRLName : "(null)"),
-							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)"), (iSecurityKeyIndex==0 ? "0" : ">0") );
-					BEMPX_WriteLogFile( sFuncArgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-	int iRetVal = 0;
-
-	FILE *fp_xml = NULL;
-	FILE *fp_Out = NULL;
-  
-	char FileOutName[MAX_PATH+1];		// SAC 9/25/16 - was: 256];  //, FileInName[256], CACertPath[256];
-	int ErrorCode;  //, count;
-	char buff[ChunkSize];
-	char *postthis = NULL; // need to malloc (gasp!) to the filesize
-	long int FileInSize = 0;
-	long int nread = 0;
-	int npost = 0;	// index into postthis
-	//int FullFlag = 0;
-	int i;	// loop counter
-	bool bFileWritten = false;
-	QString sLogMsg;
-
-	QString sReportName = pszReportName;
-	QString sPDFOnlyBool = pszPDFOnlyBool;
-	QString sDebugBool = pszDebugBool;
-
-	QString sCompRptID     = ((pszCompRptID      != NULL && strlen( pszCompRptID     ) > 0) ? pszCompRptID     : "BEES" );		// SAC 6/2/14
-	QString sRptGenServer  = ((pszRptGenServer   != NULL && strlen( pszRptGenServer  ) > 0) ? pszRptGenServer  : "t24docs.com" );
-	QString sRptGenApp     = ((pszRptGenApp      != NULL && strlen( pszRptGenApp     ) > 0) ? pszRptGenApp     : (sReportName.indexOf( "NRCC_" )==0 ? "ReportGeneratorCom" : "ReportGeneratorRes") );  // SAC 1/5/15 - was: "T24SoftwareReportingServiceDev" );
-	QString sRptGenService = ((pszRptGenService  != NULL && strlen( pszRptGenService ) > 0) ? pszRptGenService : "ReportingService.svc" );
-	QString sSecKeyRLName  = ((pszSecKeyRLName   != NULL && strlen( pszSecKeyRLName  ) > 0) ? pszSecKeyRLName  : (sReportName.indexOf( "NRCC_" )==0 ? "rl_SECURITYKEYS" : "SetReportKeys") );
-	if (sReportName.indexOf("STD") > 0)		// SAC 11/13/15 - tweak output report filename for 'Std' reports
-		sCompRptID += "-Std";
-
-	bool bNetComCURL = false;	// SAC 11/5/15
-	if (pszNetComLibrary && strlen( pszNetComLibrary ) > 0)
-	{	std::string sNetComLibrary = pszNetComLibrary;
-		bNetComCURL = (boost::iequals( sNetComLibrary, "CURL" ));
-	}			assert( !bNetComCURL );		// CURL not implemented in open source version
-
-	QString sXMLPathFile = pszXMLResultsPathFile;
-	sXMLPathFile.replace( "\\", "/" );
-	QString sCACertPathFile, sCACertPath = pszCACertPath;
-	sCACertPath.replace( "\\", "/" );
-
-//BEMMessageBox( QString( "Checking existence of results file: %1" ).arg( (sXMLPathFile.isEmpty() ? "(missing)" : sXMLPathFile) ) );
-
-	if (sXMLPathFile.isEmpty())
-	{	iRetVal = 22;				assert( FALSE );			//	22 : XMLResultsPathFile not specified
-	}
-	else if (!FileExists( sXMLPathFile ))
-	{	iRetVal = 1;			assert( FALSE );			//	1 : XML file not found
-	}
-//CURL 	else if (bNetComCURL && sCACertPath.isEmpty())
-//CURL 	{	iRetVal = 23;				assert( FALSE );			//	23 : CACert path not specified (required for NetComLibrary = CURL)
-//CURL 	}
-//CURL 	else if (bNetComCURL)
-//CURL 	{	if (sCACertPath[sCACertPath.length()-1] == '/')
-//CURL 			sCACertPath = sCACertPath.left( sCACertPath.length()-1 );
-//CURL    	if (!DirectoryExists( sCACertPath ))
-//CURL 		{	iRetVal = 24;				assert( FALSE );			//	24 : CACertPath not a valid or found directory
-//CURL 		}
-//CURL 		else
-//CURL 		{	sCACertPathFile.sprintf( "%s/curl-ca-bundle.crt", sCACertPath );
-//CURL 			if (!FileExists( sCACertPathFile ))
-//CURL 			{	iRetVal = 2;			assert( FALSE );			//	2 : CACert file not found
-//CURL 			}
-//CURL 		}
-//CURL 	}
-
-
-	if (iRetVal != 0)
-	{	// do nothing
-	}
-	else if (sReportName.isEmpty())
-		iRetVal = 12;
-	else if (sPDFOnlyBool.isEmpty() || (sPDFOnlyBool.compare("true", Qt::CaseInsensitive)!=0 && sPDFOnlyBool.compare("false", Qt::CaseInsensitive)!=0))
-		iRetVal = 13;
-	else if (sDebugBool.isEmpty() || (sDebugBool.compare("true", Qt::CaseInsensitive)!=0 && sDebugBool.compare("false", Qt::CaseInsensitive)!=0))
-		iRetVal = 14;
-	else if (pszAuthToken1 == NULL || strlen( pszAuthToken1 ) < 1)
-		iRetVal = 15;
-	else if (pszAuthToken2 == NULL || strlen( pszAuthToken2 ) < 1)
-		iRetVal = 16;
-	else if (pszSignature == NULL || strlen( pszSignature ) < 1)
-		iRetVal = 17;
-	else if (pszPublicKey == NULL || strlen( pszPublicKey ) < 1)
-		iRetVal = 18;
-	else
-	{	bool bPDFOnly = (sPDFOnlyBool.compare("true", Qt::CaseInsensitive) == 0 ? true : false);
-		try
-		{
-	// code to collect private/public keys to perform digital signing...
-			bool bSignData = false;
-			QString sRptPrvKey, sRptPubKey, sRptPubHexKey, sPrvKeyPathFile;
-//			if (false)
-//			if (true)
-			if (bSendSignature && (pszSignature == NULL || strlen( pszSignature ) < 6))
-			{	if (!pszPrivateKey || strlen( pszPrivateKey ) < 70)
-			//	{	QString sRptName = pszReportName;
-			//		//int iError;
-			//		if (!sRptName.isEmpty() &&  (	sRptName.compare( "CF1R_NCB_PRF", Qt::CaseInsensitive ) == 0 || sRptName.compare( "CF1R_ALT_PRF", Qt::CaseInsensitive ) == 0 ||
-			//												sRptName.compare( "NRCC_PRF_01" , Qt::CaseInsensitive ) == 0 ) )
-			//		{	// load private/public keys from residential data model
-			//			bool bCARes = (sRptName.compare( "CF1R_NCB_PRF", Qt::CaseInsensitive ) == 0 || sRptName.compare( "CF1R_ALT_PRF", Qt::CaseInsensitive ) == 0);
-			//			QString sSecKeyRulelistName = (bCARes ? "SetReportKeys" : "rl_SECURITYKEYS");
-				{	if (!sSecKeyRLName.isEmpty())
-					{
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:SecurityKeyIdx" ), BEMP_Int, (void*) &iSecurityKeyIndex );   // SAC 1/11/17
-						QString sKeyErrMsg;
-						sRptPrvKey = pszPrivateKey;  // now expected as input - SAC 1/10/17
-						if (!RetrievePublicPrivateKeys( sSecKeyRLName, sRptPubKey, sRptPrvKey, &sRptPubHexKey, NULL, sKeyErrMsg, &sPrvKeyPathFile ))
-						{	if (!sKeyErrMsg.isEmpty())
-								sLogMsg.sprintf( "GenerateReport_CEC():  %s", sKeyErrMsg.toLocal8Bit().constData() );
-							else
-								sLogMsg = "GenerateReport_CEC():  Error retrieving public/private keys from BEMBase.";
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-						}
-//#ifdef _DEBUG
-//			sLogMsg.sprintf( "GenerateReport_CEC():  Public Key:\n%s", sRptPubKey );
-//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//			sLogMsg.clear();
-//#endif
-					}
-				}
-
-				if (!sRptPrvKey.isEmpty() && !sRptPubKey.isEmpty())
-				{	bSignData = true;  // sign data w/ supplied public/private keys
-					if (bVerbose)
-						BEMPX_WriteLogFile( "GenerateReport_CEC():  Public/private keys necessary to sign results transmission successfully loaded.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-				else if (bVerbose)
-					BEMPX_WriteLogFile( "GenerateReport_CEC():  Unable to retrieve public/private keys necessary to sign results transmission.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
-
-		/* XML file as input */
-			ErrorCode = fopen_s( &fp_xml, sXMLPathFile.toLocal8Bit().constData(), "rb");		// SAC 6/4/13 - switched open flag to 'binary' mode to fix file size issue (in text mode, file size can be bogus)
-			if (iRetVal == 0 && ErrorCode != 0)
-			{	iRetVal = 3;
-	//		// SAC 8/14/13 - replaced above w/ below due to sharing violations (which resulted in ErrorCode=13)
-	//		fp_xml = _fsopen( sXMLPathFile, "rb", _SH_DENYNO /*_SH_DENYWR*/ );	// SAC 6/4/13 - switched open flag to 'binary' mode to fix file size issue (in text mode, file size can be bogus)
-	//		if (iRetVal == 0 && fp_xml==NULL) 
-	//		{	iRetVal = 3;
-		//	  printf_s("errno (%d):  cannot open %s for reading - check full path and try again\n", ErrorCode, sXMLPathFile); 
-		//	/* wait for a response from the keyboard */
-		//	printf("Press any key to continue...");
-		//    _getch();
-		//	  exit(-2);
-			}
-		// NOTE:  fstat would be so cool - but not avaiable for this environment
-			if (iRetVal == 0)  // && bVerbose)
-			{	ErrorCode = fseek(fp_xml, 0L, SEEK_END);  // seek to the end for filesize info
-				if (ErrorCode <0) {
-					iRetVal = 3;
-		//			fprintf(stderr,"Oops:  fseek returns %d\n", ErrorCode); 
-		//			/* wait for a response from the keyboard */
-		//			printf("Press any key to continue...");
-		//			 _getch();
-		//			return (-5);
-				}  // fseek error
-				FileInSize=ftell(fp_xml);
-				fseek (fp_xml,0L, SEEK_SET);	// go back to the beginning
-			}
-
-//CURL 			if (iRetVal == 0 && bVerbose && bNetComCURL)
-//CURL 			{	sLogMsg.sprintf( "GenerateReport_CEC():  File: '%s' (%d bytes)  CACert: '%s'", sXMLPathFile, FileInSize, sCACertPathFile );
-//CURL 				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//CURL 			}
-		// // Debug
-		//    printf_s("FileIn: %s has %d bytes\n", sXMLPathFile, FileInSize);
-
-			if (iRetVal == 0)
-	//		{  postthis = (char *) malloc(FileInSize*sizeof(char) + 1);
-			{  postthis = (char *) malloc( (FileInSize)*sizeof(char) + 1);
-			  if (postthis == NULL) {
-					iRetVal = 4;
-			//	  		fprintf(stderr,"Oops:  Asked for %d bytes but malloc returned NULL!\n", FileInSize); 
-			//		/* wait for a response from the keyboard */
-			//		printf("Press any key to continue...");
-			//		 _getch();
-			//		return (-6);
-			  }
-			}
- 
-		/* Create the Output File for response */
-		// Shouldn't assume input is xml and output is .pdf
-		// Debug
-			if (iRetVal == 0)
-			{
-				QString sResPathFileNotExt = sXMLPathFile;
-				if (sResPathFileNotExt.lastIndexOf('.') > 0)
-					sResPathFileNotExt = sResPathFileNotExt.left( sResPathFileNotExt.lastIndexOf('.') );
-				QString sRptFileExt = (bPDFOnly ? "pdf" : "xml");
-		//		if (sReportName.compare( "CF1R_NCB_PRF", Qt::CaseInsensitive ) == 0 || sReportName.compare( "CF1R_ALT_PRF", Qt::CaseInsensitive ) == 0 ||
-		//			 sReportName.compare( "NRCC_PRF_01", Qt::CaseInsensitive ) == 0)
-		//			sprintf_s( FileOutName, "%s-BEES.%s", sResPathFileNotExt, sRptFileExt );  //argv[1], argv[2]);
-		//		else
-		//			sprintf_s( FileOutName, "%s-%s.%s", sResPathFileNotExt, sReportName, sRptFileExt );  //argv[1], argv[2]);
-				if (pszOutputPathFile && strlen( pszOutputPathFile ) > 0)	// SAC 10/9/14
-					_snprintf_s( FileOutName, MAX_PATH+1, MAX_PATH, "%s", pszOutputPathFile );
-				else
-					_snprintf_s( FileOutName, MAX_PATH+1, MAX_PATH, "%s-%s.%s", sResPathFileNotExt.toLocal8Bit().constData(),
-															sCompRptID.toLocal8Bit().constData(), sRptFileExt.toLocal8Bit().constData() );
-
-				//	if (pszReportType && (pszReportType[0] == 'f' || pszReportType[0] == 'F')) {    // (argv[3])[0]=='f') {
-				//		//printf_s("Full Output\n");
-				//		sprintf_s(FileOutName, "%s/%s-BEES.xml", pszXMLPath, pszXMLFileNoExt );  //argv[1], argv[2]);
-				//		FullFlag=1;}
-				//	else {
-				//		//printf_s("Short Output\n");
-				//		sprintf_s(FileOutName, "%s/%s-BEES.pdf", pszXMLPath, pszXMLFileNoExt );  //argv[1], argv[2]);
-				//		FullFlag=0;}
-			//// Debug
-			//	printf_s("FileOutName: %s\n", FileOutName);
-			}
-
-//	BEMMessageBox( QString( "about to write rpt file:  %1" ).arg( FileOutName ) );
-			if (iRetVal == 0)
-			{	sLogMsg.sprintf( "The XML file '%s' is opened in another application.  This file must be closed in that "
-			                "application before an updated file can be written.\n\nSelect 'Retry' to proceed "
-								 "(once the file is closed), or \n'Abort' to abort the analysis.", FileOutName );
-				if (!OKToWriteOrDeleteFile( FileOutName, sLogMsg, bSilent ))
-				{	//sErrorMsg.sprintf( "ERROR:  User chose not to overwrite %s file:  %s", pszOutFileDescs[i], sOutFiles[i] );
-					iRetVal = 5;
-				}
-			}
-
-			if (iRetVal == 0)
-			{	//	Here is where you read in the file chunk by chunk
-				// build up the postthis array
-				npost = 0;	// postthis index
-				nread=fread(buff, sizeof(char), ChunkSize, fp_xml);
-				if (nread <=0) {
-					iRetVal = 7;
-				//	fprintf(stderr,"Oops: input file read %d bytes\n", nread);
-				}
-				else {
-					for (i=0;i<nread;i++) { 
-							postthis[i+npost] = buff[i];}
-					}
-				npost += nread;	//; update index into postthis
-				// if we have more to read
-				while (iRetVal == 0 && npost < FileInSize) { // we have more to read	
-					nread=fread(buff, sizeof(char), ChunkSize, fp_xml);
-					if (nread <= 0) {
-					//	fprintf(stderr,"input file read %d bytes - oops\n", nread);
-						iRetVal = 8;
-							// SAC 6/4/13 - (PERHAPS IN FUTURE) before we throw an error here, check to see if the file has a valid XML end marker and adjust FileInSize
-					}
-					 else {
-						for (i=0;i<nread;i++) { 
-							postthis[i+npost] = buff[i];
-						}
-					}
-				 npost += nread;	// update index into postthis
-				 postthis[npost]='\0';	// postthis needs to be NULL terminated; later usage in SignXML uses strlen() when calling SHA1
-				}	// end while npost < FileInSize
-			// Debug
-			//	printf_s("size of postthis: %d bytes\n", npost);
-			}
-
-			assert( fp_xml || iRetVal > 0 );
-			if (fp_xml)
-				fclose( fp_xml );  // close XML file (finished reading it)
-			fp_xml = NULL;
-
-			QString sURL;
-			if (iRetVal == 0)
-			{
-			// final step of signature/public key prep
-				QString sSignHex;
-
-	// SAC 10/14/13 - latest XMl signing/security stuff from RS ->
-				char *signature_hex = 0; // rsa signature
-				if (bSignData && SignXML( postthis, &signature_hex, sPrvKeyPathFile.toLocal8Bit().constData() /*sRptPrvKey*/, bVerbose ))
-				{
-					sSignHex = signature_hex;
-				// now simple Bin->Hex of public key...
-					int iRptPubKeyLen = sRptPubKey.length();
-					char* pszRptPubKeyHex = (char *)malloc( iRptPubKeyLen * 2 + 1 );
-#pragma warning(disable:4996)
-					if(pszRptPubKeyHex)
-					{	for(int iH = 0; iH < iRptPubKeyLen; iH++)
-							sprintf( pszRptPubKeyHex + iH * 2, "%02x", sRptPubKey[iH] );
-						sRptPubHexKey = pszRptPubKeyHex;
-						delete [] pszRptPubKeyHex;
-					}
-#pragma warning(default:4996)
-				}
-				if (signature_hex)
-					delete [] signature_hex;
-
-				if (!sPrvKeyPathFile.isEmpty())  // delete private key file
-				{	if( remove( sPrvKeyPathFile.toLocal8Bit().constData() ) != 0 )
-   					{	assert( FALSE );	// error deleting file
-					}
-				}
-
-				//if (bVerbose)
-				//{	if (!sRptPubHexKey.isEmpty())
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key:\n%s", sRptPubHexKey.toLocal8Bit().constData() );
-				//	else
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded public key NOT COMPUTED" );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				//	if (!sSignHex.isEmpty())
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature:\n%s", sSignHex.toLocal8Bit().constData() );
-				//	else
-				//		sLogMsg.sprintf( "GenerateReport_CEC():  hex-encoded signature NOT COMPUTED" );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				//	sLogMsg.clear();
-				//}
-
-				if (sSignHex.isEmpty())
-				{
-					if (pszSignature && strlen( pszSignature ) > 0 && pszPublicKey && strlen( pszPublicKey ) > 0)
-					{	sSignHex      = pszSignature;
-						sRptPubHexKey = pszPublicKey;			assert( false );  // shouldn't be here ??
-					}
-					else
-					{	sSignHex      = "none";
-						sRptPubHexKey = "none";
-				}	}
-
-				if (TRUE)	//bVerbose)
-				{
-					sLogMsg.sprintf( "  Generating report '%s' %s %s", pszReportName, (bPDFOnly ? "pdf" : "xml"), (sSignHex.length() > 5 ? "(signed)" : " ") );
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					sLogMsg.clear();
-				}
-
-         // URL setting moved down here from above
-	// SAC 10/18/13 - for now, send ALL traffic to ...T24SoftwareReportingServiceDev address
-	//			if (sSignHex.length() > 4)
-					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
-										pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
-	//			else
-	//				sURL.sprintf( "https://t24docs.com/T24SoftwareReportingService/ReportingService.svc/%s/%s/%s/%s/%s/%s", 
-	//									pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, "false" /*sIsEncrypted*/ );
-		// SAC 9/27/13 - replaced above version which encrypted the results file itself w/ following which passes UN-encrypted file w/ BinHex signature and public key
-		//		sURL.sprintf( "https://t24docs.com/T24SoftwareReportingServiceDev/ReportingService.svc/%s/%s/%s/%s/%s/%s/%s", 
-		//							pszReportName, pszAuthToken1, pszAuthToken2, pszPDFOnlyBool, pszDebugBool, sSignHex, sRptPubHexKey );
-				if (bVerbose)
-				{	sLogMsg.sprintf( "GenerateReport_CEC():  web server URI:  %s", sURL.toLocal8Bit().constData() );
-					BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				}
-
-// --------------------------
-// --  CURL Communication  --
-// --------------------------
-				if (bNetComCURL)
-				{
-//CURL 							if (TRUE)	//bVerbose)
-//CURL 								BEMPX_WriteLogFile( "    Communicating w/ report generator using CURL", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//CURL 					ErrorCode = fopen_s(&fp_Out,FileOutName, "wb");
-//CURL 					if (ErrorCode != 0)
-//CURL 					{	iRetVal = 6;
-//CURL 				//		printf_s("errno (%d):  cannot open %s for writing - check full path and try again\n", ErrorCode, FileOutName); 
-//CURL 				//// Debug
-//CURL 				///* wait for a response from the keyboard */
-//CURL 				//		printf("Press any key to continue...");
-//CURL 				//		_getch();
-//CURL 				//		exit(-2);}
-//CURL 					}
-//CURL 					else
-//CURL 					{
-//CURL 					CURL *curl;
-//CURL 					CURLcode res;
-//CURL 
-//CURL 					curl = curl_easy_init();
-//CURL 					if (curl == NULL)
-//CURL 					{	iRetVal = 9;
-//CURL 						//sLogMsg.sprintf( "GenerateReport_CEC():  report generation error (curl_easy_init() failed):  %s", curl_easy_strerror(res) );
-//CURL 						sLogMsg.sprintf( "GenerateReport_CEC():  report generation error (curl_easy_init() failed)" );
-//CURL 					}
-//CURL 					else
-//CURL 					{
-//CURL 						curl_easy_setopt(curl, CURLOPT_URL, sURL );
-//CURL 
-//CURL //						curl_easy_setopt(curl, CURLOPT_CAPATH, CACertPath);	// SAC 5/21/13
-//CURL 						curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, true);
-//CURL 						curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2);
-//CURL 						curl_easy_setopt(curl, CURLOPT_CAINFO, sCACertPathFile);
-//CURL 
-//CURL 			// PROXY SETUP
-//CURL 						if (pszProxyAddress && strlen( pszProxyAddress ) > 0)
-//CURL 						{	curl_easy_setopt(curl, CURLOPT_PROXY, pszProxyAddress );
-//CURL 							curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1 );
-//CURL 							curl_easy_setopt(curl, CURLOPT_HEADER, 1 );
-//CURL 							if (pszProxyCredentials && strlen( pszProxyCredentials ) > 0)
-//CURL 								curl_easy_setopt(curl, CURLOPT_PROXYUSERPWD, pszProxyCredentials );
-//CURL 						}
-//CURL 
-//CURL 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postthis );
-//CURL 
-//CURL 						/* if we don't provide POSTFIELDSIZE, libcurl will strlen() by
-//CURL 							 itself */
-//CURL //						curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(postthis));
-//CURL 						curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, npost);
-//CURL 
-//CURL 						/* set up the response side 	*/
-//CURL 						curl_easy_setopt(curl, CURLOPT_URL, sURL );
-//CURL //						if (FullFlag>0) 
-//CURL //							curl_easy_setopt(curl, CURLOPT_URL, "https://cf6r.com/ReportingServiceTest/ReportingService.svc/BetaTestDoc/UserFull/PassFull/True");
-//CURL //						else
-//CURL //							curl_easy_setopt(curl, CURLOPT_URL, "https://cf6r.com/ReportingServiceTest/ReportingService.svc/BetaTestDoc/User/Pass/True");
-//CURL 						curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
-//CURL 						curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp_Out);
-//CURL 
-//CURL 						/* Perform the requests, res will get the return code */
-//CURL 						res = curl_easy_perform(curl);   // send request
-//CURL 						bFileWritten = true;
-//CURL 
-//CURL 					// SAC 8/22/13 - removed per e-mail from Robert Scott 8/20/13
-//CURL 					//	if (res == CURLE_OK)				/* Check for errors */
-//CURL 					//	{	res = curl_easy_perform(curl);   // retrieve result
-//CURL 					//		if (res != CURLE_OK)
-//CURL 					//		{	iRetVal = 11;
-//CURL 					//			sLogMsg.sprintf( "GenerateReport_CEC():  report generation error retrieving result (curl_easy_perform() failed):  %s", curl_easy_strerror(res) );
-//CURL 					//			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//CURL 					//		}
-//CURL 					//	}
-//CURL 					//	else
-//CURL 						if (res != CURLE_OK)				/* Check for errors */
-//CURL 						{	iRetVal = 10;
-//CURL 							sLogMsg.sprintf( "GenerateReport_CEC():  report generation error sending request (curl_easy_perform() failed):  %s", curl_easy_strerror(res) );
-//CURL 							//if (!bSilent)
-//CURL 							//	BEMMessageBox( sLogMsg );
-//CURL 							//if (bVerbose)
-//CURL 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//CURL 						//	fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-//CURL 						}
-//CURL 
-//CURL 						/* always cleanup */
-//CURL 						curl_easy_cleanup(curl);
-//CURL 
-//CURL 				//	// SAC 5/30/13 - flush and close file to ensure that it does not remain open (and inaccessible) to the calling application
-//CURL 				//		if (res == CURLE_OK && fp_Out)
-//CURL 				//		{	fflush( fp_Out );
-//CURL 				//			fclose( fp_Out );
-//CURL 				//		}
-//CURL 				// SAC 9/21/13 - moved down and execute so that anytime the file is opened it gets closed, not just when its population is successful
-//CURL 
-//CURL 					}
-//CURL 					}
-				}	// END of CURL Communication
-
-// ------------------------
-// --  Qt Communication  --
-// ------------------------
-				else
-				{			if (TRUE)	//bVerbose)
-								BEMPX_WriteLogFile( "    Communicating w/ report generator using Qt", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					iRetVal = GenerateReportViaQt( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
-																pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose );
-				}	// END of Qt Communication
-			}
-
-		// moved flush/close of output file down here and executed anytime the file exists, rather than only when CURL executed successfully - SAC 9/21/13
-			if (/*res == CURLE_OK &&*/ fp_Out)
-			{	fflush( fp_Out );
-				fclose( fp_Out );
-				fp_Out = NULL;
-			}
-
-		// CHECK FOR OUTPUT FILE NOT AN XML (if PDF requested)
-			if (iRetVal == 0 && bPDFOnly)
-			{
-				fp_Out = _fsopen( FileOutName, "rb", _SH_DENYNO /*_SH_DENYWR*/ );
-				if (fp_Out==NULL) 
-					iRetVal = 19;		//	19 : Error opening output file following report generation
-				else
-				{	nread = fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
-					if (nread < 20)
-						iRetVal = 20;		//	20 : Error reading data from output file following report generation
-					else
-					{	buff[20] = '\0';
-						QString sHdrText = buff;
-						sHdrText = sHdrText.toLower();
-						if (sHdrText.indexOf("xml") >= 0)
-							iRetVal = 21;		//	21 : PDF report contains XML data - likely error messages from web server
-					}
-					fclose( fp_Out );
-				}
-			}
-
-
-		// SAC 9/3/14 - if report generation was unsuccessful, then RENAME the resulting file 
-			if (bFileWritten && // bPDFOnly &&  - only for PDFs??
-					iRetVal > 0)
-			{	if (!FileWriteable( FileOutName ))
-				{	assert( FALSE );
-				}
-				else
-				{	QString sRenameTo = FileOutName;
-					sRenameTo += "-errant";
-					if (FileExists( sRenameTo ))
-					{	if (!FileWriteable( sRenameTo.toLocal8Bit().constData() ) || !DeleteFile( sRenameTo.toLocal8Bit().constData() ))
-						{	sLogMsg.sprintf( "    unable to replace errant report file with latest version:  %s", sRenameTo.toLocal8Bit().constData() );
-							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-							sRenameTo.clear();
-					}	}
-					if (!sRenameTo.isEmpty())
-					{	if (MoveFile( FileOutName, sRenameTo.toLocal8Bit().constData() ))
-							sLogMsg.sprintf( "    errant report file renamed to:  %s", sRenameTo.toLocal8Bit().constData() );
-						else
-							sLogMsg.sprintf( "    attempt to rename errant report file failed:  '%s' -->> '%s'", FileOutName, sRenameTo.toLocal8Bit().constData() );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}	}	}
-
-		}
-	//	catch(CException e) {
-	//		BEMMessageBox( "Unexpected error loading symbolic file list." );
-	//	}
-		catch( ... ) {
-			assert( FALSE );
-			BEMPX_WriteLogFile( "GenerateReport_CEC():  Unknown error generating compliance report.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			//	if (!bSilent)
-			//		BEMMessageBox( "Unknown error generating compliance report." );
-		}
-	}
-
-// wait for a response from the keyboard 
-//	printf("Look for the output file %s.\nPress any key to continue...", FileOutName);
-//	_getch();
-
-  return iRetVal;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 										const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, const char* pszPrivateKey, 
 										const char* pszProxyAddress, const char* pszProxyCredentials, 		// pass NULLs for no proxy 
@@ -1149,18 +604,16 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 										const char* pszCompRptID /*=NULL*/, const char* pszRptGenServer /*=NULL*/, const char* pszRptGenApp /*=NULL*/,
 										const char* pszRptGenService /*=NULL*/, const char* pszSecKeyRLName /*=NULL*/, const char* pszOutputPathFile /*=NULL*/,  // SAC 6/2/14  // SAC 10/9/14
 										const char* pszProxyType /*=NULL*/, const char* pszNetComLibrary /*=NULL*/, long iSecurityKeyIndex /*=0*/, 	// SAC 11/5/15   // SAC 1/10/17
-										bool bFinalPDFGeneration /*=true*/ )
+										bool bFinalPDFGeneration /*=true*/, bool bSchemaBasedRptGen /*=false*/ )		// SAC 11/20/18
 { 
-//	BEMMessageBox( "Generating compliance report..." );
-//	bVerbose = true;  
 				if (bVerbose)
 				{	QString sFuncArgMsg;
-					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s )",
+					sFuncArgMsg.sprintf( "GenerateReport_CEC( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s, '%s', '%s', '%s', '%s', '%s',\n                                           '%s', '%s', '%s', %s, %s )",
 							(pszXMLResultsPathFile ? pszXMLResultsPathFile : "(null)"), (pszCACertPath ? pszCACertPath : "(null)"), (pszReportName ? pszReportName : "(null)"), (pszAuthToken1 ? pszAuthToken1 : "(null)"), (pszAuthToken2 ? pszAuthToken2 : "(null)"),
 							(pszSignature ? pszSignature : "(null)"), (pszPublicKey ? "<PubKey>"/*pszPublicKey*/ : "(null)"), (pszPrivateKey ? "<PrvKey>"/*pszPrivateKey*/ : "(null)"), (pszProxyAddress ? pszProxyAddress : "(null)"), (pszProxyCredentials ? pszProxyCredentials : "(null)"),
 							(pszPDFOnlyBool ? pszPDFOnlyBool : "(null)"), (pszDebugBool ? pszDebugBool : "(null)"), (bVerbose ? "true" : "false"), (bSilent ? "true" : "false"), (bSendSignature ? "true" : "false"), (pszCompRptID ? pszCompRptID : "(null)"),
 							(pszRptGenServer ? pszRptGenServer : "(null)"), (pszRptGenApp ? pszRptGenApp : "(null)"), (pszRptGenService ? pszRptGenService : "(null)"), (pszSecKeyRLName ? pszSecKeyRLName : "(null)"),
-							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)"), (iSecurityKeyIndex==0 ? "0" : ">0") );
+							(pszOutputPathFile ? pszOutputPathFile : "(null)"), (pszProxyType ? pszProxyType : "(null)"), (pszNetComLibrary ? pszNetComLibrary : "(null)"), (iSecurityKeyIndex==0 ? "0" : ">0"), (bSchemaBasedRptGen ? "true" : "false") );
 					BEMPX_WriteLogFile( sFuncArgMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 				}
 	int iRetVal = 0;
@@ -1201,8 +654,8 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 
 	QString sXMLPathFile = pszXMLResultsPathFile;
 	sXMLPathFile.replace( "\\", "/" );
-	QString sCACertPathFile, sCACertPath = pszCACertPath;
-	sCACertPath.replace( "\\", "/" );
+//	QString sCACertPathFile, sCACertPath = pszCACertPath;
+//	sCACertPath.replace( "\\", "/" );
 
 //BEMMessageBox( QString( "Checking existence of results file: %1" ).arg( (sXMLPathFile.isEmpty() ? "(missing)" : sXMLPathFile) ) );
 
@@ -1512,8 +965,14 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 		// SAC 7/14/17 - new URL scheme for single-pass report gen
 		// SAC 8/24/17 - revised new scheme replacing bPDFRpt & bXMLRpt w/ an integer servings as bitwise flags for addiitonal reports
 				if (lRptIDNum >= 0)
+				{	if (bSchemaBasedRptGen)		// SAC 11/20/18 - report incompatibility of URL for CF1R XML schema-based report gen
+					{	sLogMsg.sprintf( "  ERROR: CF1R XML schema-based report gen URL incompatible with RptIDNum >= 0 reports, generating report '%s' %s %s", pszReportName, (bPDFRpt && bXMLRpt ? "pdf+xml" : (bPDFRpt ? "pdf" : "xml")), (sSignHex.length() > 5 ? "(signed)" : " ") );
+						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						sLogMsg.clear();
+					}
 					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%ld/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 							pszReportName, pszAuthToken1, pszAuthToken2, lRptIDNum, /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );
+				}
 				else
 					sURL.sprintf( "https://%s/%s/%s/%s/%s/%s/%s/%s/%s/%s", sRptGenServer.toLocal8Bit().constData(), sRptGenApp.toLocal8Bit().constData(), sRptGenService.toLocal8Bit().constData(), 
 							pszReportName, pszAuthToken1, pszAuthToken2, (bPDFRpt ? "true" : "false"), (bXMLRpt ? "true" : "false"), /*pszDebugBool,*/ sSignHex.toLocal8Bit().constData(), sRptPubHexKey.toLocal8Bit().constData() );

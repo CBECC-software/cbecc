@@ -103,6 +103,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CBECC-Res19", "CBECCUI\CBEC
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XSD2BEM", "XSD2BEM\XSD2BEM.vcxproj", "{614C37C6-2B91-49B3-8692-B8F5E4470301}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BEMMerge", "BEMMerge\BEMMerge.vcxproj", "{614C37C6-2B91-49B3-8692-B8F5E4470320}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1DD233D0-9840-4EDE-A53D-B87BD87E1D50} = {1DD233D0-9840-4EDE-A53D-B87BD87E1D50}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -197,6 +202,10 @@ Global
 		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Debug|Win32.Build.0 = Debug|Win32
 		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Release|Win32.ActiveCfg = Release|Win32
 		{614C37C6-2B91-49B3-8692-B8F5E4470301}.Release|Win32.Build.0 = Release|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470320}.Debug|Win32.ActiveCfg = Debug|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470320}.Debug|Win32.Build.0 = Debug|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470320}.Release|Win32.ActiveCfg = Release|Win32
+		{614C37C6-2B91-49B3-8692-B8F5E4470320}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

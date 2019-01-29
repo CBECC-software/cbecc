@@ -1111,7 +1111,24 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 						}
 						else
 						{	// this sDataPathItem could be ANY object type
-							iParseCompID = BEMP_GetDBComponentID( sDataPathItem );
+										// SAC 10/16/18 - revision to FIRST check for this being a property of Project BEFORE checking for Comp names (in case Proj:Property name is same as a Class name)
+										int iProjPropSqrBracketIdx = sDataPathItem.indexOf( '[' );
+										int iProjPropColonIdx      = sDataPathItem.indexOf( ':' );
+										QString sParamOnly;
+										if (iProjPropSqrBracketIdx > 0 && iProjPropColonIdx > 0)
+											sParamOnly = sDataPathItem.left( std::min( iProjPropSqrBracketIdx, iProjPropColonIdx ) );
+										else if (iProjPropSqrBracketIdx > 0)
+											sParamOnly = sDataPathItem.left( iProjPropSqrBracketIdx );
+										else if (iProjPropColonIdx > 0)
+											sParamOnly = sDataPathItem.left( iProjPropColonIdx );
+										else
+											sParamOnly = sDataPathItem;
+										long lProjPropTypeIdx = BEMP_GetPropertyTypeIndexByName( iLastParseCompID, sParamOnly );
+										if (lProjPropTypeIdx > 0)
+											iParseCompID = -1;
+										else
+											iParseCompID = BEMP_GetDBComponentID( sDataPathItem );
+						//	iParseCompID = BEMP_GetDBComponentID( sDataPathItem );
 							if (iParseCompID < 0)
 							{	// wasn't an object type, so check for it being an object referencing property of the last parsed object type
 								long lDBID = BEMPX_GetDatabaseID( sDataPathItem, iLastParseCompID );
@@ -3127,8 +3144,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 														}
 														else
 													   {	fScaleFactor = dData;
-															if (fScaleFactor <= 0 || fScaleFactor > 1)
-															{  sErrMsg = QString( "Invalid PolyLoop scaling factor (%1), argument #1" ).arg( QString::number( fScaleFactor ) );
+															if (fScaleFactor <= 0)  // SAC 10/26/18 - removed to allow scaling factors > 1: || fScaleFactor > 1)
+															{  sErrMsg = QString( "Invalid PolyLoop scaling factor (%1), argument #1 must be > 0" ).arg( QString::number( fScaleFactor ) );
 															   ExpSetErr( error, EXP_RuleProc, sErrMsg );
 													   		fScaleFactor = -1;
 															}
@@ -4345,20 +4362,28 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   {
                      if (op == BF_PostError)  // SAC 5/21/01
                      {
+               //         if (pssaErrorMsgs)
+               //            pssaErrorMsgs->push_back( sRetStr );
+               //         else
+               //            ExpSetErr( error, EXP_RuleProc, QString( "Error:  %1" ).arg( sRetStr ) /*"Unable to post Error message."*/ );  // SAC 2/26/05 - Post error msg itself, rather than msg indicating it could not be posted
+					// SAC 1/26/19 - replaced above w/ following to: incorporate 'Error..." into message -and- follow through w/ posting Warning via ExpSetErr() (to avoid errors in incompatible return values)
                         if (pssaErrorMsgs)
-                           pssaErrorMsgs->push_back( sRetStr );
-                        else
-                           ExpSetErr( error, EXP_RuleProc, QString( "Error:  %1" ).arg( sRetStr ) /*"Unable to post Error message."*/ );  // SAC 2/26/05 - Post error msg itself, rather than msg indicating it could not be posted
+                           pssaErrorMsgs->push_back( QString( "Error:  %1" ).arg( sRetStr ) );
+                        ExpSetErr( error, EXP_RuleProc, QString( "Error:  %1" ).arg( sRetStr ) /*"Unable to post Error message."*/ );  // SAC 2/26/05 - Post error msg itself, rather than msg indicating it could not be posted
 							// SAC 8/2/12 - logging message here to callback redundent, as it is passed back via callback in CRule:Eval()
 							//	if (ruleSet.m_pLogMsgCallbackFunc)
 							//		ruleSet.m_pLogMsgCallbackFunc( logMsgERROR, (const char*) sRetStr, NULL );
                      }
                      else if (op == BF_PostWarn)  // SAC 5/21/01
                      {
+               //         if (pssaWarningMsgs)
+               //            pssaWarningMsgs->push_back( sRetStr );
+               //         else
+               //            ExpSetErr( error, EXP_RuleWarn, QString( "Warning:  %1" ).arg( sRetStr ) /*"Unable to post Warning message."*/ );  // SAC 2/26/05 - Post warning msg itself, rather than msg indicating it could not be posted
+					// SAC 1/26/19 - replaced above w/ following to: incorporate 'Warning..." into message -and- follow through w/ posting Warning via ExpSetErr() (to avoid errors in incompatible return values)
                         if (pssaWarningMsgs)
-                           pssaWarningMsgs->push_back( sRetStr );
-                        else
-                           ExpSetErr( error, EXP_RuleWarn, QString( "Warning:  %1" ).arg( sRetStr ) /*"Unable to post Warning message."*/ );  // SAC 2/26/05 - Post warning msg itself, rather than msg indicating it could not be posted
+                           pssaWarningMsgs->push_back( QString( "Warning:  %1" ).arg( sRetStr ) );
+                        ExpSetErr( error, EXP_RuleWarn, QString( "Warning:  %1" ).arg( sRetStr ) /*"Unable to post Warning message."*/ );  // SAC 2/26/05 - Post warning msg itself, rather than msg indicating it could not be posted
 							// SAC 8/2/12 - logging message here to callback redundent, as it is passed back via callback in CRule:Eval()
 							//	if (ruleSet.m_pLogMsgCallbackFunc)
 							//		ruleSet.m_pLogMsgCallbackFunc( logMsgWARNING, (const char*) sRetStr, NULL );
@@ -11776,7 +11801,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
       long lDBID_DUT_DHWSysRef      = GetPropertyDBID_LogError( "DwellUnitType", "DHWSysRef",      iCID_DwellUnitType, iNumErrors, sTmp );		// BEMP_Obj,  5,  1,  0, "",   0,  1, "DHWSys",   8004, "DHW system that serves this equip zone type"    
       long lDBID_DUT_ServedByDHWSys = GetPropertyDBID_LogError( "DwellUnitType", "ServedByDHWSys", iCID_DwellUnitType, iNumErrors, sTmp );		// BEMP_Int,  1,  0,  0, "",   0,  0,             8004, "Boolean (0/1) whether or not this DUT is served by one or more valid DHWSys objects"    
 
-		long lType, lTotNumDHWHeaters;		double fFloorAreaServed;
+		long lType;		double fFloorAreaServed, fTotNumDHWHeaters;		// SAC 1/2/19 - switched TotNumDHWHeaters from long to double to accommodate fractional DHW heater multipliers (HPWHSIZE)
 		//long lTypeOK, lIsNew, lIsAltered, lIsExisting, lIsVerified;
 		QString sSysName;
 		BEMObject *pSysObj, *pDHWSysRptObj;
@@ -11836,7 +11861,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 																//	BEMPX_GetInteger( lDBID_DHWSys_IsAltered       , lIsAltered       , 0, -1, iDHWSysIdx ) && 
 																//	BEMPX_GetInteger( lDBID_DHWSys_IsExisting      , lIsExisting      , 0, -1, iDHWSysIdx ) && 
 																//	BEMPX_GetInteger( lDBID_DHWSys_IsVerified      , lIsVerified      , 0, -1, iDHWSysIdx ) && 
-																	BEMPX_GetInteger( lDBID_DHWSys_TotNumDHWHeaters, lTotNumDHWHeaters, 0, -1, iDHWSysIdx ) && lTotNumDHWHeaters > 0 &&
+																	BEMPX_GetFloat(   lDBID_DHWSys_TotNumDHWHeaters, fTotNumDHWHeaters, 0, -1, iDHWSysIdx ) && fTotNumDHWHeaters > 0 &&
 																	BEMPX_GetFloat(   lDBID_DHWSys_FloorAreaServed , fFloorAreaServed , 0, -1, iDHWSysIdx ) && fFloorAreaServed > 0.1 &&
 																	BEMPX_GetString(  lDBID_DHWSys_Name            , sSysName,   FALSE, 0, -1, iDHWSysIdx ) && !sSysName.isEmpty() &&
 																	TRUE  )
@@ -11895,16 +11920,16 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 
 		else
 		{	// SINGLE FAMILY
-			long lNumDwellingUnits, lNumDHWEquipUnits;
+			long lNumDwellingUnits;  double dNumDHWEquipUnits;		// SAC 1/3/19 - NumDHWEquipUnits long -> double as part of fractional dhw heater multiplier updates
 			if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NumDwellingUnits" ), lNumDwellingUnits, 1 ))
 				sErrMsg = QString( "CreateDHWRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:NumDwellingUnits" );
-			else if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NumDHWEquipUnits" ), lNumDHWEquipUnits, 0 ))
+			else if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:NumDHWEquipUnits" ), dNumDHWEquipUnits, 0 ))
 				sErrMsg = QString( "CreateDHWRptObjects Error:  unable to retrieve value for %1" ).arg( "Proj:NumDHWEquipUnits" );
 			else
-			{	if (lNumDwellingUnits > lNumDHWEquipUnits)
+			{	if (lNumDwellingUnits > dNumDHWEquipUnits)
 				{	assert( FALSE );		// 
 					if (pEval->bVerboseOutput)
-					{	QString sLocErrMsg = QString( "Warning: Unexpected condition found in CreateDHWRptObjects(): Proj:NumDwellingUnits (%1) > Proj:NumDHWEquipUnits (%2)" ).arg( QString::number( lNumDwellingUnits ), QString::number( lNumDHWEquipUnits ) );
+					{	QString sLocErrMsg = QString( "Warning: Unexpected condition found in CreateDHWRptObjects(): Proj:NumDwellingUnits (%1) > Proj:NumDHWEquipUnits (%2)" ).arg( QString::number( lNumDwellingUnits ), QString::number( dNumDHWEquipUnits ) );
 						BEMPX_WriteLogFile( sLocErrMsg );
 				}	}
 
@@ -11916,7 +11941,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 						//	BEMPX_GetInteger( lDBID_DHWSys_IsAltered       , lIsAltered       , 0, -1, iDHWSysIdx ) && 
 						//	BEMPX_GetInteger( lDBID_DHWSys_IsExisting      , lIsExisting      , 0, -1, iDHWSysIdx ) && 
 						//	BEMPX_GetInteger( lDBID_DHWSys_IsVerified      , lIsVerified      , 0, -1, iDHWSysIdx ) && 
-							BEMPX_GetInteger( lDBID_DHWSys_TotNumDHWHeaters, lTotNumDHWHeaters, 0, -1, iDHWSysIdx ) && lTotNumDHWHeaters > 0 &&
+							BEMPX_GetFloat(   lDBID_DHWSys_TotNumDHWHeaters, fTotNumDHWHeaters, 0, -1, iDHWSysIdx ) && fTotNumDHWHeaters > 0 &&
 							BEMPX_GetFloat(   lDBID_DHWSys_FloorAreaServed , fFloorAreaServed , 0, -1, iDHWSysIdx ) && fFloorAreaServed > 0.1 &&
 							BEMPX_GetString(  lDBID_DHWSys_Name            , sSysName,   FALSE, 0, -1, iDHWSysIdx ) && !sSysName.isEmpty() &&
 						//	(lIsNew > 0 || lIsAltered > 0 || (lIsExisting > 0 && lIsVerified > 0)) )

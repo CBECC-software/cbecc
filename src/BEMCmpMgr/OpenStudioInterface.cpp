@@ -1779,8 +1779,8 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			// data defining which files get copied where      - for iSimulationStorage =  1  2  3  4  5  6  7
 			FileCopyInfo fcInfo[] = {//{	"in.idf",         ".idf",            1, true,  { 1, 1, 1, 1, 1, 1, 1 } },	-- IDF file now written to std processing directory - just leave alone for now
 												{	"eplustbl.htm",   ".htm",            0, true,  { 0, 1, 1, 1, 1, 1, 1 } },
-												{	"eplusssz.csv",   " - ssz.csv",      0, true,  { 0, 0, 1, 1, 1, 1, 1 } },
-												{	"epluszsz.csv",   " - zsz.csv",      0, true,  { 0, 0, 1, 1, 1, 1, 1 } },
+												{	"eplusssz.csv",   " - ssz.csv",      0, false, { 0, 0, 1, 1, 1, 1, 1 } },	// SAC 1/24/19 - switched bReportFailure from true to false
+												{	"epluszsz.csv",   " - zsz.csv",      0, false, { 0, 0, 1, 1, 1, 1, 1 } },	// SAC 1/24/19 - switched bReportFailure from true to false
 												{	"eplusout.csv",   ".csv",            0, false, { 0, 0, 1, 1, 1, 1, 1 } },	// SAC 4/12/16 - for SimOutputVariablesToCSV - SAC 4/26/16 - toggled from T to F since they may not be present
 												{	"eplusout.eio",   ".eio",            0, true,  { 0, 0, 1, 1, 1, 1, 1 } },
 												{	"eplusout.err",   ".err",            0, true,  { 0, 0, 1, 1, 1, 1, 1 } },

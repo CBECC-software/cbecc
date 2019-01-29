@@ -284,7 +284,7 @@ bool BEMPROC_API __cdecl BEMPX_ReadProjectFile(  const char* fileName, int iFile
                                                           BEMComponentMap* pCompMap=NULL, BEMPropertyMap* pPropMap=NULL,
                                                           BOOL bSupressAllMessageBoxes=FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
                                                           int* piObjIdxSetFailures=NULL, QStringList* psaDataSetFailures=NULL,   // SAC 7/10/03 - added to facilitate more informative error reporting
-																			 BOOL bLogDurations=FALSE );  // SAC 10/24/13 - added duration logging
+																			 BOOL bLogDurations=FALSE, const char* pszClassPrefix=NULL );  // SAC 10/24/13 - added duration logging  // SAC 10/24/18 - added pszClassPrefix
 
 // SAC 1/15/03 - Added argument to re-enable output of Undefined data when writing non-user input mode files (for backward compatibility)
 // SAC 8/30/11 - added new argument to facilitate the writing of CSE input files directly from BEMProc databases
@@ -297,13 +297,15 @@ bool BEMPROC_API __cdecl BEMPX_ReadProjectFile(  const char* fileName, int iFile
 #define BEMPX_IsHPXML(   iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
 #define BEMPX_IsCF1RXML( iFileType )  (int)  (iFileType == BEMFT_CF1RXML)
 #define BEMPX_IsXML(     iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 ||  iFileType == BEMFT_CF1RXML || iFileType == BEMFT_XML)
+#define  BEMF_ClassIDMult  1000    // SAC 12/14/18
 bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInputMode*/, bool bUseLogFileName=false, bool bWriteAllProperties=false,
                                                           BOOL bSupressAllMessageBoxes=FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 																			 int iFileType = 0,    // SAC 8/30/11 - added iFileType argument
 																			 bool bAppend = false, const char* pszModelName = NULL, bool bWriteTerminator = true,	// SAC 2/19/13 - added 3 args
 																			 int iBEMProcIdx=-1, long lModDate=-1, bool bOnlyValidInputs=false,  // SAC 3/18/13  // SAC 6/26/13  // SAC 4/16/14
 																			 bool bAllowCreateDateReset=true,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
-																			 int iPropertyCommentOption=0 );			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+																			 int iPropertyCommentOption=0, 			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+																			 std::vector<long>* plaClsObjIndices=NULL );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
 
 BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1 );
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,

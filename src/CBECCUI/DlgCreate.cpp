@@ -50,23 +50,23 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 // misc. dialog and control dimensions & locations
-#define  CR8DLG_WD  525
+#define  CR8DLG_WD  660		// SAC 12/23/18 - increased 525->575 // SAC 1/5/19 - 575->600 // SAC 1/24/19 - 600->660
 #define  CR8DLG_HT  215		// SAC 12/9/14 - increased 210->215
 
-#define  CR8DLG_OPTN_L   255
-#define  CR8DLG_OPTN_R   500
+#define  CR8DLG_OPTN_L   390
+#define  CR8DLG_OPTN_R   635
 #define  CR8DLG_OPTN_T    15
 
-#define  CR8DLG_NAME_L   255
+#define  CR8DLG_NAME_L   390
 #define  CR8DLG_NAME_T    45
-#define  CR8DLG_NAME_R   500
+#define  CR8DLG_NAME_R   635
 //#define  CR8DLG_NAME_B    40
 
 #define  CR8DLG_NEXT_Y    75
 #define  CR8DLG_NEXT_DY   30
 
-#define  CR8DLG_COMBO_L  255
-#define  CR8DLG_COMBO_R  500
+#define  CR8DLG_COMBO_L  390
+#define  CR8DLG_COMBO_R  635
 
 // item/topic and ctrl IDs
 #define  IDD_CR8_DLG     1006

@@ -376,6 +376,8 @@ extern long int GetBlobSize( ParsedExpression* pExp );
 extern BOOL MakeBlob( ParsedExpression* pExp, void* blob, long size );
 
 extern void NodeToValue( ExpNode* node, double fVal );
+extern void NodeToString( ExpNode* node, char* str, int iStrLen );  /* SAC 12/10/18 */
+extern void OperatorToString( int oper, char* str, int iStrLen );  /* SAC 12/10/18 */
 
 extern BOOL ResetCurrentFunctionTracking();  /* SAC 2/14/14 - added to track function nesting */
 extern int eiParseCount_IfValidAnd;		/* SAC 1/30/15 - added to ensure all arguments evaluate via *Valid() functions */

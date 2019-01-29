@@ -177,7 +177,8 @@ public:
                  long lVersion = 0, int fileMode = BEMTextIO::load, bool bWriteAllProperties = FALSE,  // SAC 1/15/03
                  BOOL bSupressAllMessageBoxes = FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 					  int iFileType = 0, bool bOnlyValidInputs = false,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14 - added bOnlyValidInputs arg
-					  int iPropertyCommentOption = 0 );		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+					  int iPropertyCommentOption = 0, 		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+					  std::vector<long>* plaClsObjIndices = NULL );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
    ~CProjectFile();
 
 // SAC 4/27/03 - Modified function to return BOOL
@@ -264,6 +265,7 @@ public:
 	BEMObject* GetSpecificPropObject( int idx )		{	return ((idx >= 0 && idx < (int) m_povSpecificPropObjects.size()) ? m_povSpecificPropObjects[idx] : NULL);	}
 	BOOL SpecificPropertiesActive()						{	return m_bSpecificPropertiesActive;  }
 	BOOL WriteOnlySpecificProperties()					{	return m_bWriteOnlySpecificProps;  }
+	bool ObjectToBeWritten( int i1Class, int i0ObjIdx );		// SAC 12/16/18 - related to CSE HPWHSIZE feature
 
 private:
    BEMTextIO m_file;              // the file itself
@@ -300,7 +302,22 @@ private:
 	BOOL m_bWriteOnlySpecificProps;
 	int m_iPropertyCommentOption;		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 	int m_iChildIndent;					// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
+	std::vector<long>* m_plaClsObjIndices;		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
 };
+
+
+/////////////////////////////////////////////////////////////////////////////
+bool CProjectFile::ObjectToBeWritten( int i1Class, int i0ObjIdx )		// SAC 12/16/18 - related to CSE HPWHSIZE feature
+{	bool bRetVal = (m_plaClsObjIndices ? false : true);  // ptr NULL => ALL objects are to be written
+	if (!bRetVal)
+		for (int i=0; (!bRetVal && i < (int) m_plaClsObjIndices->size()); i++)
+		{	long lCls  = m_plaClsObjIndices->at(i) / BEMF_ClassIDMult;
+			long l1Obj = m_plaClsObjIndices->at(i) - (lCls * BEMF_ClassIDMult);
+			bRetVal = (lCls == i1Class &&
+						  (i0ObjIdx < 0 || l1Obj < 1 || l1Obj == (i0ObjIdx+1)));
+		}
+	return bRetVal;
+}
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -326,7 +343,8 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
                             long lVersion, int fileMode, bool bWriteAllProperties,
                             BOOL bSupressAllMessageBoxes /*=FALSE*/,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 									 int iFileType /*=0*/, bool bOnlyValidInputs /*=false*/,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14
-									 int iPropertyCommentOption /*=0*/ )		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+									 int iPropertyCommentOption /*=0*/, 		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+									 std::vector<long>* plaClsObjIndices /*=NULL*/ )		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
 {
    // set some member flags
    m_bIsUserInputMode = (iFileMode == BEMFM_INPUT)/*bIsInputMode*/;
@@ -350,6 +368,7 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
 	m_iPropertyCommentOption = iPropertyCommentOption;
 
 	m_iChildIndent = (m_iFileType == BEMFT_CSE ? 3 : 0);		// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
+	m_plaClsObjIndices = plaClsObjIndices;
 
    try
    {
@@ -2760,7 +2779,7 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
              // don't write class objects tagged as AutoCreate to INPUT file
            ( (!m_bIsUserInputMode) || (!pClass->getAutoCreate()) ) )
       {
-// SAC 4/16/14 - if storing input and m_bOnlyValidInputs = true, then check to confirm that there are valid input properties before writing file
+			// SAC 4/16/14 - if storing input and m_bOnlyValidInputs = true, then check to confirm that there are valid input properties before writing file
 			bool bWriteClass = (m_iFileMode == BEMFM_INPUT && m_bOnlyValidInputs) ? false : true;
 			if (!bWriteClass)
 			{	for (int iP1=0; (!bWriteClass && iP1 < eBEMProc.getClass(i1Class-1)->getNumProps()); iP1++)
@@ -2768,6 +2787,10 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 					if (iPropDataType < BEMD_NotInput)
 						bWriteClass = true;
 			}	}
+
+			// SAC 12/16/18 - enable CSE HPWHSIZE runs by filtering out classes not targeted for output via m_plaClsObjIndices
+			if (bWriteClass && m_plaClsObjIndices)
+				bWriteClass = ObjectToBeWritten( i1Class, -1 );
 
 			if (bWriteClass)
 			{
@@ -2777,10 +2800,11 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 				{	BEMObject* pObj = pClass->GetObject( BEMO_User, ib );
          	   if (pObj != NULL)
          	   {
+         	   	bool bOKToWriteObj = (m_plaClsObjIndices ? ObjectToBeWritten( i1Class, ib ) : true);		// SAC 12/16/18 - CSE HPWHSIZE runs
          	      // only write the component if it doesn't have a parent.
          	      // if it DOES have a parent, then it will be written automatically during the
          	      // course of its parent being written.
-         	      if (pObj->getParent() == NULL)
+         	      if (bOKToWriteObj && pObj->getParent() == NULL)
          	      {
          	         WriteComponent( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, 0 /*IndentSpcs*/ );
          	      }
@@ -3363,11 +3387,13 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
             BEMMessageBox( QString( "Error opening file: %1" ).arg( sThisLogFileName ), "", 2 /*warning*/ );
       }
       else
-      {
+      {	bool bReOpenAndLeaveOpen = false;	// SAC 11/16/18 - revision to retain same log file writing mode when doing SaveAs... (related to copying previous log file)
          // if psNewLogFileName specified, then we first copy contents
          // of old log file into this log file before proceeding
          if ( sPrevLogFileName.length() > 0 && !bBlankFile && bAllowCopyOfPreviousLog )
+         {	bReOpenAndLeaveOpen = (!ssOpenLogPathFile.isEmpty() && ssOpenLogPathFile.compare( sPrevLogFileName, Qt::CaseInsensitive ) == 0);		// SAC 11/16/18
             CopyOtherLogFile( *pLogFile, (const char*) sPrevLogFileName.toLocal8Bit().constData() );
+         }
 
 			if (ppCSVColumnLabels && strlen(output) > 1 && output[strlen(output)-1] == '\n')
 	         pLogFile->write( output );
@@ -3390,7 +3416,11 @@ bool BEMPX_WriteLogFile( const char* output, const char* psNewLogFileName, bool 
 				{	pLogFile->flush();
 					pLogFile->close();
 				}
-      }	}
+      	}
+
+      	if (bReOpenAndLeaveOpen)	// SAC 11/16/18
+				BEMPX_OpenLogFile( sThisLogFileName.toLocal8Bit().constData(), false /*bBlankFile*/ );
+      }
    }
 	return ok;
 }
@@ -3411,7 +3441,8 @@ static bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,
                          int* piObjIdxSetFailures /*=NULL*/, QStringList* psaDataSetFailures /*=NULL*/,   // SAC 7/10/03 - added to facilitate more informative error reporting
 								 BOOL bLogDurations /*=FALSE*/, BOOL bStoreData /*=TRUE*/,   // SAC 10/24/13 - added duration logging  // SAC 10/29/13 - added bStoreData
 								 int* piObjPropCounts /*=NULL*/, BEMStraightMap* pStraightMap,    // SAC 10/30/13 - added to facilitate bulk memory allocation of CBEMObject & CBEMProperty objects
-								 BEMComponentMap* pCompMap, BEMPropertyMap* pPropMap );			// SAC 5/7/14 - added BEMComponentMap & BEMPropertyMap pointers to handle more comprehensive backward compatibility
+								 BEMComponentMap* pCompMap, BEMPropertyMap* pPropMap, 			// SAC 5/7/14 - added BEMComponentMap & BEMPropertyMap pointers to handle more comprehensive backward compatibility
+								 const char* pszClassPrefix );		// SAC 10/24/18 - added pszClassPrefix
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -3449,7 +3480,7 @@ bool BEMPX_ReadProjectFile(  const char* fileName, int iFileMode /*bool bIsInput
                              BEMComponentMap* pCompMap /*=NULL*/, BEMPropertyMap* pPropMap /*=NULL*/,
                              BOOL bSupressAllMessageBoxes /*=FALSE*/,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
                              int* piObjIdxSetFailures /*=NULL*/, QStringList* psaDataSetFailures /*=NULL*/,   // SAC 7/10/03 - added to facilitate more informative error reporting
-										BOOL bLogDurations /*=FALSE*/ )  // SAC 10/24/13 - added duration logging
+										BOOL bLogDurations /*=FALSE*/, const char* pszClassPrefix /*=NULL*/ )  // SAC 10/24/13 - added duration logging
 {
    bool bRetVal = TRUE;
 	if (iBEMProcIdx < 0)  // SAC 3/13/13
@@ -3518,7 +3549,7 @@ bool BEMPX_ReadProjectFile(  const char* fileName, int iFileMode /*bool bIsInput
 		if (iFileMode == BEMFM_INPUT)
 	   {	if (ReadXMLFile( fileName, BEMFM_INPUT /*iFileMode*/, 0 /*lDBIDVersion*/, 0 /*iBEMProcIdx*/, ssRulesetFilename, TRUE /*bReturnRulesetFilename*/, 0 /*iMaxDBIDSetFailures*/,
 								NULL /*piDBIDSetFailures*/, FALSE /*bSupressAllMessageBoxes*/, NULL /*piObjIdxSetFailures*/, NULL /*psaDataSetFailures*/, FALSE /*bLogDurations*/,
-								TRUE /*bStoreData*/, NULL /*piObjPropCounts*/, NULL /*pStraightMap*/, NULL, NULL ) && !ssRulesetFilename.isEmpty())
+								TRUE /*bStoreData*/, NULL /*piObjPropCounts*/, NULL /*pStraightMap*/, NULL, NULL, NULL ) && !ssRulesetFilename.isEmpty())
 	         BEMPX_SetRulesetFilename( ssRulesetFilename.toLocal8Bit().constData() );
 		}
 
@@ -3527,7 +3558,7 @@ bool BEMPX_ReadProjectFile(  const char* fileName, int iFileMode /*bool bIsInput
 		int iaObjPropCounts[] = {0,0};
 	   ReadXMLFile( fileName, iFileMode, /*int iBEMProcIdx,*/ lDBIDVersion, iBEMProcIdx, sJunk, FALSE /*bReturnRulesetFilename*/,
 									iMaxDBIDSetFailures, piDBIDSetFailures, bSupressAllMessageBoxes, piObjIdxSetFailures, psaDataSetFailures,
-                           bLogDurations, FALSE /*bStoreData*/, iaObjPropCounts, pStraightMap, pCompMap, pPropMap );
+                           bLogDurations, FALSE /*bStoreData*/, iaObjPropCounts, pStraightMap, pCompMap, pPropMap, pszClassPrefix );
 	// perform BULK allocation of ALL BEMObject & BEMProperty objects
 		if (bLogDurations)
 		{  sMsg = QString( "      BEMPX_ReadProjectFile() - allocating %1 objects and %2 properties to import model into" ).arg( QString::number(iaObjPropCounts[0]), QString::number(iaObjPropCounts[1]) );
@@ -3536,7 +3567,7 @@ bool BEMPX_ReadProjectFile(  const char* fileName, int iFileMode /*bool bIsInput
 #endif
 	   bRetVal = ReadXMLFile( fileName, iFileMode, /*int iBEMProcIdx,*/ lDBIDVersion, iBEMProcIdx, sJunk, FALSE /*bReturnRulesetFilename*/,
 									iMaxDBIDSetFailures, piDBIDSetFailures, bSupressAllMessageBoxes, piObjIdxSetFailures, psaDataSetFailures,
-									bLogDurations, TRUE /*bStoreData*/, NULL, pStraightMap, pCompMap, pPropMap );
+									bLogDurations, TRUE /*bStoreData*/, NULL, pStraightMap, pCompMap, pPropMap, pszClassPrefix );
 	}
 	else
 	{
@@ -3613,7 +3644,7 @@ const char* BEMPX_GetRulesetFilenameFromProjectFile( const char* fileName )
 	{	ssRulesetFilename.clear();		// SAC 12/4/15 - blast previous ssRulesetFilename in order to ensure that the ruleset filename indeed IS read in (and not ignored)
 	   if (!ReadXMLFile( fileName, BEMFM_INPUT /*iFileMode*/, 0 /*lDBIDVersion*/, 0 /*iBEMProcIdx*/, ssRulesetFilename, TRUE /*bReturnRulesetFilename*/,
 								0 /*iMaxDBIDSetFailures*/, NULL /*piDBIDSetFailures*/, FALSE /*bSupressAllMessageBoxes*/,
-								NULL /*piObjIdxSetFailures*/, NULL /*psaDataSetFailures*/, FALSE /*bLogDurations*/, TRUE /*bStoreData*/, NULL /*piObjPropCounts*/, NULL, NULL, NULL ))
+								NULL /*piObjIdxSetFailures*/, NULL /*psaDataSetFailures*/, FALSE /*bLogDurations*/, TRUE /*bStoreData*/, NULL /*piObjPropCounts*/, NULL, NULL, NULL, NULL ))
 			ssRulesetFilename.clear();
 	}
 	else
@@ -3686,7 +3717,8 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 									bool bAppend /*=false*/, const char* pszModelName /*=NULL*/, bool bWriteTerminator /*=true*/, 		// SAC 2/19/13 - added trailing arguments to facilitate writing of multiple models into a single XML file
 									int iBEMProcIdx /*=-1*/, long lModDate /*=-1*/, bool bOnlyValidInputs /*=false*/,    // SAC 3/18/13  // SAC 6/26/13
 									bool bAllowCreateDateReset /*=true*/,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
-									int iPropertyCommentOption /*=0*/ )			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+									int iPropertyCommentOption /*=0*/, 			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
+									std::vector<long>* plaClsObjIndices /*=NULL*/ )		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
 {
 	bool bRetVal = true;
 
@@ -3760,7 +3792,8 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 	else
 	{
    	CProjectFile* file = new CProjectFile( sFileName.toLocal8Bit().constData(), iFileMode /*bIsInputMode*/, 0, 0, BEMTextIO::store, bWriteAllProperties,  // SAC 1/15/03
-   	                                       bSupressAllMessageBoxes, iFileType, bOnlyValidInputs, iPropertyCommentOption );  // SAC 4/27/03  // SAC 12/5/16
+   	                                       bSupressAllMessageBoxes, iFileType, bOnlyValidInputs, iPropertyCommentOption,   // SAC 4/27/03  // SAC 12/5/16
+															plaClsObjIndices );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
    	if ( file->IsOpen() )
    	   file->WriteProjectFile( iBEMProcIdx );
    	
@@ -4360,9 +4393,10 @@ void XMLPropertyNameReplacements( QString& sPropName )	// SAC 3/7/18
    return;
 }
 
-void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
+// retval:  >= 0 => # of properties SKIPPED due to name beginning "afterchildren_"
+int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
 									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/ )
-{
+{	int iNumAfterChildrenProps = 0;
 	QString sClassName = pObj->getClass()->getShortName();
 	if (BEMPX_IsHPXML( iFileType ))
 	{	assert( sClassName.left(3).compare("hpx") == 0 );
@@ -4426,8 +4460,12 @@ void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMo
       if ( pProp != NULL && IndexInArray( iAttribProps, iProp ) < 0 &&
       	  MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
       {
+			if (pProp->getType()->getShortName().indexOf("afterchildren_")==0 && !pObj->getClass()->getWriteAsSingleRecord())	// SAC 11/21/18 - code to postpone writing of 'afterchildren_*' properties until after children are written
+			{	iNumAfterChildrenProps++;
+	         iProp += (pProp->getType()->getNumValues()-1);
+	      }
          // if pProp IS NOT array, just write it out
-         if (pProp->getType()->getNumValues() == 1)
+         else if (pProp->getType()->getNumValues() == 1)
          {
             QString sData;
             PropertyToString_XML( pObj, pProp, sData, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
@@ -4462,6 +4500,51 @@ void WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMo
 	{	stream.writeEndElement();
 		stream.setAutoFormatting(true);
 	}
+	return iNumAfterChildrenProps;
+}
+
+void WritePropertiesAfterChildren_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMode /*bool bIsInputMode*/, int iFileType, bool bWriteAllProperties, bool bOnlyValidInputs, int iBEMProcIdx,
+									bool bWritePropertiesDefinedByRuleset, bool bUseReportPrecisionSettings /*=false*/ )	// SAC 11/21/18 - routine to write 'afterchildren_*' properties (after children are written)
+{
+   // Write Properties in the form: "   <PropType Name> = <Property Value>"
+   for (int iProp=0; iProp<pObj->getPropertiesSize(); iProp++)
+   {  BEMProperty* pProp = pObj->getProperty(iProp);
+      // if property valid and should be written (and wasn't already written above as an attribute of the object)
+      if ( pProp != NULL && pProp->getType()->getShortName().indexOf("afterchildren_")==0 &&
+      	  MustWriteProperty_XML( pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, bWritePropertiesDefinedByRuleset ) )
+      {
+         // if pProp IS NOT array, just write it out
+         if (pProp->getType()->getNumValues() == 1)
+         {
+            QString sData;
+            PropertyToString_XML( pObj, pProp, sData, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
+            if (sData.length() > 0 && (bWriteAllProperties || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
+            {	QString sPropName = pProp->getType()->getShortName();
+            	sPropName = sPropName.right( sPropName.length()-14 );  // SAC 11/21/18 - remove leading "afterchildren_"
+					//XMLPropertyNameReplacements( sPropName );
+			   	stream.writeTextElement( QString(sPropName), QString(sData) );
+            }
+   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
+ 		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
+					ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
+            else
+				{ //  assert( FALSE );
+				}
+         }
+         else  // pProp IS array
+         {		assert( false );  // if we get here we will need to trim property name written by the following routine to exclude leading "afterchildren_"
+               WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
+         }
+      }
+      else if (pProp == NULL)
+      {
+         assert( FALSE );
+      }
+      else  // must skip over entire property (which may have multiple elements)
+      {
+         iProp += (pProp->getType()->getNumValues()-1);
+      }
+   }
 }
 
 static inline int IndexOfIntInArray( int iVal, int iArraySize, int* piArray )
@@ -4476,7 +4559,7 @@ void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 									int iNumClassIDsToIgnore /*=0*/, int* piClassIDsToIgnore /*=NULL*/, bool bWritePropertiesDefinedByRuleset /*=true*/, bool bUseReportPrecisionSettings /*=false*/ )
 {
    // first write this component's properties
-   WriteProperties_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+   int iNumAfterChildrenProps = WriteProperties_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
 
    // then write each of this component's children (recursively)
    if (pObj->getChildCount() > 0)
@@ -4506,6 +4589,10 @@ void WriteComponent_XML(	QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
       	   }
       }	}
    }
+
+	if (iNumAfterChildrenProps > 0)  // SAC 1/24/12 - toggle back ON auto-formatting if the last component was written into a single record of the XML file
+		WritePropertiesAfterChildren_XML( stream, pObj, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, bOnlyValidInputs, iBEMProcIdx, bWritePropertiesDefinedByRuleset, bUseReportPrecisionSettings );
+
 	if (!pObj->getClass()->getWriteAsSingleRecord())  // SAC 1/24/12 - toggle back ON auto-formatting if the last component was written into a single record of the XML file
 		stream.writeEndElement();
 }
@@ -4975,11 +5062,114 @@ BEMObject* CreateCompMapObjects( BEMComponentMap* pCompMap, int iBEMMapGroupID, 
 }
 
 ////////////////////////////////////////////////////////////
+
+void PostAttributesToObject( BEMObject* pBEMObject, QXmlStreamAttributes* pAttribs, int iBEMProcIdx )
+{
+	if (pBEMObject && pAttribs)
+	{	int iError, iNumAttribs = pAttribs->size();
+		for (int iA=0; iA < iNumAttribs; iA++)
+		{	QString sAttribName = pAttribs->at(iA).name().toLocal8Bit().constData();
+			long lDBID = BEMPX_GetDatabaseID( sAttribName, pBEMObject->getClass()->get1BEMClassIdx() );
+			if (lDBID > BEM_COMP_MULT)
+			{	BEMPropertyType* pPropType = BEMPX_GetPropertyTypeFromDBID( lDBID, iError, iBEMProcIdx );
+        	   QString sChars = pAttribs->at(iA).value().toLocal8Bit().constData();
+				if (pPropType == NULL || sChars.isEmpty())
+				{	// ignore
+				}
+				else
+				{
+            	   BEM_PropertyStatus ePropStat = BEMS_UserDefined;
+            	   int iSet = 0;
+            	   int i0ArrIdx = 0;
+				// SAC 8/13/15 - added code to prevent setting of this property based on BEMDataType:m_iNotInputMode (and m_eCompDataType == BEMD_NotInput...)
+						QString sErrMsg2;
+						bool bNotInputError = false;
+
+				      	assert( pPropType->getNumPropTypeDetails() > i0ArrIdx );
+							BEMPropTypeDetails* pDT = pPropType->getPropTypeDetails( i0ArrIdx );			assert( pDT );
+							if (pDT && pDT->getCompDataType() == BEMD_NotInput && pDT->getNotInputMode() != DTNotInp_AllowUIReset)
+							{	ePropStat = BEMS_Undefined;
+								bNotInputError = (pDT->getNotInputMode() == DTNotInp_ErrorIfInput);
+			//					if (!pDT->getNotInputMsg().isEmpty())
+			//					{	QString sMsg, sMsgEnd;
+			//						if (i0ArrIdx > 0)
+			//							sMsgEnd = QString( "[%1]" ).arg( QString::number(i0ArrIdx+1) );
+			//						else
+			//							sMsgEnd = "";
+			//						if (bNotInputError)
+			//						{	sMsg = QString( "   Error:  %1  (%2 '%3' %4%5, line: %6)" ).arg( pDT->getNotInputMsg(), (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, pPropType->getShortName(), sMsgEnd, QString::number(stream.lineNumber()) );
+			//							sErrMsg2 = sMsg;
+			//						}
+			//						else
+			//							sMsg = QString( "   %1  (%2 '%3' %4%5)" ).arg( pDT->getNotInputMsg(), (pBEMClass ? pBEMClass->getShortName() : "<unknown type>"), sObjectName, pPropType->getShortName(), sMsgEnd );
+			//						BEMPX_WriteLogFile( sMsg, NULL, FALSE, FALSE /*m_bSupressAllMessageBoxes*/ );
+			//					}
+							}
+
+            	   // SAC 10/5/00 - Added code to intercept certain DBID that have been converted from BEMP_Int to BEMP_Sym
+            	   int iTempPropType = pPropType->getPropType();
+            	   QString sErrantData;  // SAC 7/10/03 - added to facilitate more informative error reporting
+            	   switch ( iTempPropType )
+            	   {  // read the data and post it to the database
+            	      case BEMP_Int : {  long lTemp = atol( sChars.toLocal8Bit().constData() );			// long lTemp = m_file.ReadLong();
+            	                        if (/*bPostData &&*/ ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
+            	                        {
+            	                           iSet = BEMPX_SetBEMData( lDBID, BEMP_Int, (void*) &lTemp,
+            	                                                 BEMO_User, -1 /*iObjIdx*/, ePropStat, BEMO_User /*eObjType*/, FALSE, iBEMProcIdx );
+            	                           if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
+            	                              sErrantData = sChars;		// sErrantData.Format( "%d", lTemp );
+            	                        }
+            	                        break;  }
+            	      case BEMP_Flt : {  double fTemp = atof( sChars.toLocal8Bit().constData() );       // float fTemp = m_file.ReadFloat();
+            	                        if (/*bPostData &&*/ ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
+            	                        {
+            	                           iSet = BEMPX_SetBEMData( lDBID, BEMP_Flt, (void*) &fTemp,
+            	                                                 BEMO_User, -1 /*iObjIdx*/, ePropStat, BEMO_User /*eObjType*/, FALSE, iBEMProcIdx );
+            	                           if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
+            	                              sErrantData = sChars;		// sErrantData.Format( "%g", fTemp );
+            	                        }
+            	                        break;  }
+            	      case BEMP_Sym :
+            	      case BEMP_Str : {  QString sTemp = sChars;		// QString sTemp = m_file.ReadString( TRUE );  // SAC 6/17/01 - added argument to ALLOW reading beyond carriage return
+				         						bool bNotSymOrNotNull = (iTempPropType != BEMP_Sym || sTemp.compare("(null)")!=0 ? true : false);	// SAC 4/7/16 - prevent storing enums = "(null)"
+            	                        if (/*bPostData &&*/ ePropStat != BEMS_Undefined && bNotSymOrNotNull)  // SAC 10/19/01 - added reference to bPostData
+            	                        {
+            	                           iSet = BEMPX_SetBEMData( lDBID, BEMP_QStr, (void*) &sTemp,  // BEMP_Str, (void*) sTemp.toLocal8Bit().constData(),
+            	                                                 BEMO_User, -1 /*iObjIdx*/, ePropStat, BEMO_User /*eObjType*/, FALSE, iBEMProcIdx );
+				                           	if (iSet < 0 && (!pPropType->getShortName().compare("Ruleset", Qt::CaseInsensitive) || !pPropType->getDescription().compare("Ruleset", Qt::CaseInsensitive)))
+            											iSet = 0;	// SAC 12/3/15 - ignore read errors where Ruleset not valid or not found (port fix from 11/22 made for *ibd files)
+            	                           if (iSet < 0)  // SAC 7/10/03 - added to facilitate more informative error reporting
+            	                              sErrantData = sTemp;
+            	                        }
+            	                        break;  }
+            	      case BEMP_Obj : {  QString sTemp = sChars;		// QString sTemp = m_file.ReadString( TRUE );
+            	                        // iError;
+            	                        if (/*bPostData &&*/ ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
+            	                        {
+            	                           BEMProperty* pProp = BEMPX_GetProperty( lDBID, iError, -1 /*iObjIdx*/, BEMO_User /*eObjType*/, iBEMProcIdx );
+            	                           if (pProp)
+            	                           {
+            	                              pProp->setDataStatus( ePropStat );
+            	                              pProp->setString( sTemp );
+            	                              pProp->setObj( NULL );
+            	                           }
+            	                        }
+            	                        break;  }
+            	      default : 
+            	         assert( FALSE );		// m_file.ThrowFormatException(); // should never happen
+            	         break;
+            	   }
+			}	}
+	}	}
+}
+
+////////////////////////////////////////////////////////////
 // WARNING:  THIS ROUTINE RECURSIVE, to allow for creation of children within...
 bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString sElemName, int iBEMClassIdx, bool bIsUserInputMode, int iBEMProcIdx,
 								QString& sErrMsg, BOOL bStoreData, int* piObjPropCounts /*=NULL*/, BEMStraightMap* pStraightMap, long lDBIDVersion, long& lFileVersion,    // SAC 10/30/13 - added to facilitate bulk memory allocation of BEMObject & BEMProperty objects
 								BEMComponentMap* pCompMap, BEMPropertyMap* pPropMap, QVector<int>* pivMapCompsCreated,		// SAC 5/7/14 - added BEMComponentMap & BEMPropertyMap ptrs
-								int& iDBIDSetFailureIdx, int iMaxDBIDSetFailures, int* piDBIDSetFailures, int* piObjIdxSetFailures, QStringList* psaDataSetFailures )   // SAC 6/28/16 - added to facilitate more informative error tracking
+								int& iDBIDSetFailureIdx, int iMaxDBIDSetFailures, int* piDBIDSetFailures, int* piObjIdxSetFailures, QStringList* psaDataSetFailures,    // SAC 6/28/16 - added to facilitate more informative error tracking
+								QXmlStreamAttributes* pAttribs, const char* pszClassPrefix )   // SAC 10/25/18 - added pAttribs to process component attributes (for non-SDDXML files)
 {	bool bRetVal = true;
 	int iInitialIndentLevel = siLastIndent;
 	int iLocalElementCount = 0;
@@ -5048,7 +5238,10 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																				if (lThisElemDBID > BEM_COMP_MULT)
 																					bPostDataForThisElement = TRUE;
 																				else
-																				{	int iNewClassID = BEMPX_GetDBComponentID( sElementName.toLocal8Bit().constData() );
+																				{
+																					if (pszClassPrefix && strlen( pszClassPrefix ) > 0)  // SAC 10/24/18
+																						sElementName.prepend( pszClassPrefix );
+																					int iNewClassID = BEMPX_GetDBComponentID( sElementName.toLocal8Bit().constData() );
 																					int iChildBEMMapGroupID = -1;		// SAC 5/7/14
 																					if (iNewClassID < 1)
 																						iChildBEMMapGroupID = FindOldCompMapGroupID( pCompMap, sElementName, lFileVersion, NULL );
@@ -5066,8 +5259,9 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																									pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
 																																					sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
 																								if (pBEMObject)
-																									bObjectCreated = TRUE;
-																							}
+																								{	bObjectCreated = TRUE;
+																									PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+																							}	}
 																							else
 																							{	//if (pBEMClass && piObjPropCounts)
 																								//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5081,12 +5275,17 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																						}
 																						if (bRetVal)
 																						{
+																							QXmlStreamAttributes childAttribs = stream.attributes();		// SAC 10/25/18 - enable capture of attributes for non-SDDXML (gbXML) files
+																							QXmlStreamAttributes* pChildAttribs = NULL;
+																							if (!bIsUserInputMode && childAttribs.size() > 0)
+																								pChildAttribs = &childAttribs;
 //#ifdef _DEBUG
 //			QString sDbg = QString("   reading %1 component - Line %2, column %3").arg(sElementName).arg(stream.lineNumber()).arg(stream.columnNumber());
 //		   BEMPX_WriteLogFile( sDbg );
 //#endif
 																							bRetVal = ReadXMLComponent( fileName, stream, sElementName, iNewClassID, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts, pStraightMap,
-																																	lDBIDVersion, lFileVersion, pCompMap, pPropMap, pivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
+																																	lDBIDVersion, lFileVersion, pCompMap, pPropMap, pivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, 
+																																	piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures, pChildAttribs, pszClassPrefix );
 																						}
 																					}
 																					else
@@ -5204,8 +5403,9 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																							pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
 																																			sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
 																						if (pBEMObject)
-																							bObjectCreated = TRUE;
-																					}
+																						{	bObjectCreated = TRUE;
+																							PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+																					}	}
 																					else
 																					{	//if (pBEMClass && piObjPropCounts)
 																						//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5253,8 +5453,9 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 																								pBEMObject = CreateCompMapObjects(	pCompMap, iBEMMapGroupID, iCMIdx, i1BEMMapGroupNewClasses, iBEMProcIdx,
 																																				sObjectName.toLocal8Bit().constData(), bIsUserInputMode, pivMapCompsCreated );
 																							if (pBEMObject)
-																								bObjectCreated = TRUE;
-																						}
+																							{	bObjectCreated = TRUE;
+																								PostAttributesToObject( pBEMObject, pAttribs, iBEMProcIdx );
+																						}	}
 																						else
 																						{	//if (pBEMClass && piObjPropCounts)
 																							//	VERIFY( pBEMClass->IncrementPropertyCounts( piObjPropCounts, iBEMProcIdx ) );  // SAC 10/30/13
@@ -5451,6 +5652,14 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 		//BEMMessageBox( (LPCSTR)sErr.toLocal8Bit().constData(), "BEMProc ReadXMLFile() Error", 3 /*error*/ );
 	}
 
+// debugging
+if (bRetVal)
+{	assert( pBEMObject );
+	QString sLogMsg = QString( "   done reading %1 '%2' on line %3, column %4" ).arg( pBEMObject->getClass()->getShortName(), pBEMObject->getName(),
+													QString::number(stream.lineNumber()), QString::number(stream.columnNumber()) );
+   BEMPX_WriteLogFile( sLogMsg );
+}
+
 	return bRetVal;
 }
 
@@ -5462,7 +5671,8 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
                   int* piObjIdxSetFailures /*=NULL*/, QStringList* psaDataSetFailures /*=NULL*/,   // SAC 7/10/03 - added to facilitate more informative error reporting
 						BOOL bLogDurations /*=FALSE*/, BOOL bStoreData /*=TRUE*/,   // SAC 10/24/13 - added duration logging  // SAC 10/29/13 - added bStoreData
 						int* piObjPropCounts /*=NULL*/, BEMStraightMap* pStraightMap,   // SAC 10/30/13 - added to facilitate bulk memory allocation of BEMObject & BEMProperty objects
-						BEMComponentMap* pCompMap, BEMPropertyMap* pPropMap )
+						BEMComponentMap* pCompMap, BEMPropertyMap* pPropMap, 
+						const char* pszClassPrefix )		// SAC 10/24/18 - added pszClassPrefix
 {	bool bRetVal = true;
 	ptime t1(microsec_clock::local_time());  // SAC 10/24/13
 	QString sFileName = fileName;
@@ -5504,7 +5714,8 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
 					case QXmlStreamReader::Invalid               : assert( FALSE );   break;  // see what conditions we end up here
 					case QXmlStreamReader::StartElement          : {	siXMLElementCount++;
 																						sElemName = stream.name().toLocal8Bit().constData();
-																						if (siXMLElementCount == 1 && sElemName.compare("SDDXML", Qt::CaseInsensitive) != 0)
+																						if (siXMLElementCount == 1 && iFileMode == BEMFM_INPUT &&   // SAC 10/24/18 - added iFileMode to enable gbXML & other file types
+																							 sElemName.compare("SDDXML", Qt::CaseInsensitive) != 0)
 																						{	// ERROR - not a SDDXML file (??)
 																							bRetVal = false;
 																							sErrMsg = QString( "ERROR:  File not SDDXML, first element '%1' (expected 'SDDXML' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), fileName );
@@ -5536,7 +5747,11 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
 																						else
 																						{	// in this loop we should ONLY encounter BEMBase components (not component properties)
 																							QXmlStreamAttributes attribs = stream.attributes();
-																							assert( attribs.size() == 0 );  // only element having attributes is 'RulesetFilename' processed (ignored) above
+																							if (pszClassPrefix && strlen( pszClassPrefix ) > 0)  // SAC 10/24/18
+																								sElemName.prepend( pszClassPrefix );
+																							else
+																							{	assert( attribs.size() == 0 );  // only element having attributes is 'RulesetFilename' processed (ignored) above (for SDDXML files)
+																							}
 																							int iBEMClassIdx = BEMPX_GetDBComponentID( sElemName.toLocal8Bit().constData() );
 																							int iBEMMapGroupID = -1;		// SAC 5/7/14
 																							if (iBEMClassIdx < 1)
@@ -5554,8 +5769,10 @@ bool ReadXMLFile( const char* fileName, int iFileMode, /*int iBEMProcIdx,*/ long
 //			QString sDbg = QString("   reading %1 component - Line %2, column %3").arg(sElemName).arg(stream.lineNumber()).arg(stream.columnNumber());
 //		   BEMPX_WriteLogFile( sDbg );
 //#endif
+																									QXmlStreamAttributes* pAttribs = (pszClassPrefix && strlen( pszClassPrefix ) > 0 && attribs.size() > 0) ? &attribs : NULL;   // SAC 10/25/18
 																									bRetVal = ReadXMLComponent( fileName, stream, sElemName, iBEMClassIdx, bIsUserInputMode, iBEMProcIdx, sErrMsg, bStoreData, piObjPropCounts,
-																																			pStraightMap, lDBIDVersion, lFileVersion, pCompMap, pPropMap, &ivMapCompsCreated, iDBIDSetFailureIdx, iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures );
+																																			pStraightMap, lDBIDVersion, lFileVersion, pCompMap, pPropMap, &ivMapCompsCreated, iDBIDSetFailureIdx,
+																																			iMaxDBIDSetFailures, piDBIDSetFailures, piObjIdxSetFailures, psaDataSetFailures, pAttribs, pszClassPrefix );
 																								}
 																							}
 																						}

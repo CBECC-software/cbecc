@@ -140,9 +140,13 @@ public:
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 						const char* pszRunAbbrev=NULL );
+	int SetupRun_Simple( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
+						const char* pszRunAbbrev=NULL, const char* pszExtraCSECmdLineArgs=NULL, const char* pszAppendToCSEFile=NULL );
 	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
 	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL, int iBEMProcIdx=-1 );
+	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
+									QString& sErrorMsg );	// SAC 12/13/18 (HPWHSIZE)
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	void SetNumRuns( int iNumRuns ) { m_iNumRuns = iNumRuns; }
 	int GetNumRuns() const { return m_iNumRuns; }

@@ -74,15 +74,18 @@
 #define  DMRuleReserved_Maximum			13
 #define  DMRuleReserved_EndRule			14
 #define  DMRuleReserved_EndRule2			15
-#define  DMRuleReserved_Default			16
-#define  DMRuleReserved_CheckCode		17
-#define  DMRuleReserved_CheckSim			18
-#define  DMRuleReserved_FileHashes		19		// SAC 9/14/13
-#define  DMRuleReserved_SecurityKeys	20		// SAC 9/14/13
-#define  DMRuleReserved_PrevNames		21		// SAC 8/6/15
-#define  DMRuleReserved_Report			22
-#define  DMRuleReserved_Resets			23		// SAC 11/2/16
-#define  DMRuleReserved_MAX_NUM			23
+#define  DMRuleReserved_PrevNames		16		// SAC 8/6/15
+#define  DMRuleReserved_Resets			17		// SAC 11/2/16
+#define  DMRuleReserved_Default			18		// --- all reserved words from this point to MAX_NUM assumed to be generic transforms (rulelists) ---
+#define  DMRuleReserved_PreAnalCheck	19		// SAC 1/25/19 (com tic #2924)
+#define  DMRuleReserved_CheckCode		20
+#define  DMRuleReserved_CheckSim			21
+#define  DMRuleReserved_FileHashes		22		// SAC 9/14/13
+#define  DMRuleReserved_SecurityKeys	23		// SAC 9/14/13
+//#define  DMRuleReserved_PrevNames		22		// SAC 8/6/15		// SAC 1/26/19 - moved up to avoid rl_PREVNAMES rulelist creation
+#define  DMRuleReserved_Report			24
+//#define  DMRuleReserved_Resets			24		// SAC 11/2/16		// SAC 1/26/19 - moved up to avoid rl_PREVNAMES rulelist creation
+#define  DMRuleReserved_MAX_NUM			24
 
 static bool SetAllDataForDMRuleReserved( int iDMRuleRsrvd )		// SAC 8/8/13 - added to enable variation in bSetAllData rulelist property for "reserved" lists
 {	return  ( (iDMRuleRsrvd == DMRuleReserved_Default) ? false : true );
@@ -104,14 +107,17 @@ const char* pszDMRuleReserved[] = {	"DATATYPE",
                                     "MAXIMUM", 
 												"ENDRULE",
 												"ENDRUL",
+												"PREVIOUSNAMES",
+												"RESETS",
 												"DEFAULT",
+												"PREANALYSISCHECK",
 												"CHECKCODE",
 												"CHECKSIM",
 												"FILEHASHES",
 												"SECURITYKEYS",
-												"PREVIOUSNAMES",
-												"REPORT",
-												"RESETS" };
+									//			"PREVIOUSNAMES",
+												"REPORT" };
+									//			"RESETS" };
 
 const char* pszDMRuleDataTypes[] = {	"String",
 													"Integer",
@@ -653,6 +659,15 @@ bool StringHadAlphaOrNumeric( QString& str )
 	return false;
 }
 
+static inline int IntegerInArray( std::vector<int>& iaVals, int& iVal )  // SAC 1/13/19 - copied from expRule.cpp
+{	int iSize = (int) iaVals.size();
+	for (int j=0; j<iSize; j++)
+	{	if (iaVals[j] == iVal)
+			return j;
+	}
+	return -1;
+}
+
 bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReservedStrs,
 										std::vector<RuleList*>& paTransformRulelists, QFile& errorFile,
 										int iRuleFileReadIteration, int i1RuleFileIdx /*=0*/ )
@@ -876,6 +891,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
             	
 							QStringList saTokensProcessed;
 							std::vector<int> iaTokenIndices;
+							std::vector<int> iaTransformRulesProcessed;  // SAC 1/13/19 - added secondary transform rulelist idx array to ensure no rule expression duplications
 							if (!bContinue)
 							{	// this is a generic, blank rule, so skip to end of the rule and search for subsequent rule
 								if (!token.left(6).compare("ENDRUL", Qt::CaseInsensitive))
@@ -912,7 +928,28 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 												errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );			assert( FALSE );
 												bContinue = FALSE;	// skip to end of rule
 												bRetVal = FALSE;
-										}	}
+											}
+											else
+											{	// SAC 1/13/19 - added logging of skipped tokens (for debugging purposes initially)
+#ifdef _DEBUG
+												QString sDbgIssue = QString( "      Duplicate token being skipped '%1' found on line: %2 of '%3'\n" ).arg( sThisToken, QString::number(iFileErrLine), file.FileName() );
+												errorFile.write( sDbgIssue.toLocal8Bit().constData(), sDbgIssue.length() );
+												sDbgIssue = "            tokens already processed:  ";
+												int iDbg;
+												for (iDbg=0; iDbg<(int)saTokensProcessed.size(); iDbg++)
+													sDbgIssue += QString( "%1 (%2)  /  " ).arg(saTokensProcessed[iDbg], QString::number(iaTokenIndices[iDbg]));
+												sDbgIssue += QString( "\n" );
+												errorFile.write( sDbgIssue.toLocal8Bit().constData(), sDbgIssue.length() );
+												if (iTokenID > DMRuleReserved_EndRule2)
+													sDbgIssue = QString( "            continue because iTokenID (%1) > DMRuleReserved_EndRule2 (%2)\n" ).arg( QString::number(iTokenID), QString::number(DMRuleReserved_EndRule2) );
+												else if (!bTokensSpecified)
+													sDbgIssue = "            continue because !bTokensSpecified\n";
+												else if (iLabelIndex > iaTokenIndices[iTokensProcessedIdx])
+													sDbgIssue = QString( "            continue because iLabelIndex (%1) > iaTokenIndices[iTokensProcessedIdx] (%2)\n" ).arg( QString::number(iLabelIndex), QString::number(iaTokenIndices[iTokensProcessedIdx]) );
+												errorFile.write( sDbgIssue.toLocal8Bit().constData(), sDbgIssue.length() );
+#endif
+											}
+										}
 										else
 										{	saTokensProcessed.push_back( sThisToken );
 											iaTokenIndices.push_back( iLabelIndex );
@@ -1244,25 +1281,60 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 																					int iNumTransforms = ruleSet.getNumTransformations();
 																					int iNumRulelists  = (int) paTransformRulelists.size();
 																					std::vector<int> iaTransRLIdx;
+																					std::vector<int> iaTransRLIdxSKIPPED;  // SAC 1/13/19
 																					if (iTransRLIdx >= 0 && iTransRLIdx < iNumRulelists)
-																						iaTransRLIdx.push_back( iTransRLIdx );
+																					{	if (IntegerInArray( iaTransformRulesProcessed, iTransRLIdx ) < 0)
+																						{	iaTransRLIdx.push_back( iTransRLIdx );
+																							iaTransformRulesProcessed.push_back( iTransRLIdx );
+																						}
+																						else
+																							iaTransRLIdxSKIPPED.push_back( iTransRLIdx );
+																					}
 																					else if (iTransRLIdx >= iNumRulelists)
 																					{	// should be a transform GROUP name
 																						for (iTr=0; iTr < iNumTransforms; iTr++)
 																						{	pTr = (RuleSetTransformation*) ruleSet.getTransformation( iTr );		assert( pTr );
 																							//if (pTr && !pTr->m_sGroupLongName.compare( token, Qt::CaseInsensitive ))
 																							if (pTr && pTr->LongGroupNameMatch( token ))		// SAC 8/20/15 - switched group names from single strings to arrays
-																								iaTransRLIdx.push_back( (iTr+(DMRuleReserved_MAX_NUM-DMRuleReserved_Default)+1) );
-																					}	}
+																							{	int iTR2Add = (iTr+(DMRuleReserved_MAX_NUM-DMRuleReserved_Default)+1);
+																								if (IntegerInArray( iaTransformRulesProcessed, iTR2Add ) < 0)
+																								{	iaTransRLIdx.push_back( iTR2Add );
+																									iaTransformRulesProcessed.push_back( iTR2Add );
+																								}
+																								else
+																									iaTransRLIdxSKIPPED.push_back( iTR2Add );
+																					}	}	}
                               	
 																					if (iaTransRLIdx.size() < 1)
-																					{	// INVALID iTokenID => no idea which TRANSFORM's rulelist to add this rule to
-																						assert( FALSE );
-																						//QString sErr;
-																						sErr = QString( "\n\tRule syntax error on/near '%1' line: %2\n" ).arg( token, QString::number(file.GetLineCount()) );
-																						errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
-																						bRetVal = FALSE;
-																					}
+																					{	if (iaTransRLIdxSKIPPED.size() > 0)
+																						{	// skipping this rule expression due to it having been processed already, which is probably OK
+// #ifdef _DEBUG   - report only when in debug mode once we are confident that this needn't cause errant return or be presented to user
+																							int iFileErrLine = file.GetLineCount();
+																							QString sDbgIssue = QString( "      Skipping inclusion of rule expression for '%1' found on line: %2 of '%3'\n" ).arg( token, QString::number(iFileErrLine), file.FileName() );
+																							errorFile.write( sDbgIssue.toLocal8Bit().constData(), sDbgIssue.length() );
+																							sDbgIssue = "            corresponding rulelist(s) already processed:  ";
+																							int iDbg;
+																							for (iDbg=0; iDbg<(int)iaTransRLIdxSKIPPED.size(); iDbg++)
+																							//{	RuleSetTransformation* pRptTr = (RuleSetTransformation*) ruleSet.getTransformation( iaTransRLIdxSKIPPED[iDbg] );		assert( pRptTr );  - not a TRANSFORM index - an index into the RuleLists
+																							{	RuleList* pRptRL = paTransformRulelists[ iaTransRLIdxSKIPPED[iDbg] ];		assert( pRptRL );
+																								if (pRptRL)
+																									sDbgIssue += QString( "%1 (%2)  /  " ).arg( pRptRL->getName(), QString::number( iaTransRLIdxSKIPPED[iDbg] ) );
+																								else
+																									sDbgIssue += QString( "(%1)  /  " ).arg( QString::number( iaTransRLIdxSKIPPED[iDbg] ) );
+																							}
+																							sDbgIssue += QString( "\n" );
+																							errorFile.write( sDbgIssue.toLocal8Bit().constData(), sDbgIssue.length() );
+// #endif
+																							token2 = file.ReadToNextToken( saReservedStrs );  // skip over this rule expression
+																						}
+																						else
+																						{	// INVALID iTokenID => no idea which TRANSFORM's rulelist to add this rule to
+																							assert( FALSE );
+																							//QString sErr;
+																							sErr = QString( "\n\tRule syntax error on/near '%1' line: %2\n" ).arg( token, QString::number(file.GetLineCount()) );
+																							errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+																							bRetVal = FALSE;
+																					}	}
 																					else
 																					{	int iRuleLineNum = file.GetLineCount();
 																						token2 = file.ReadToNextToken( saReservedStrs );

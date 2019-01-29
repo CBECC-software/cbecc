@@ -185,6 +185,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_CF1RXMLPropError		67		//  Error evaluating CF1RPRF01E Proposed model rules
 #define  BEMAnal_CECRes_CF1RXMLFinalError		68		//  Error evaluating CF1RPRF01E final/results rules
 #define  BEMAnal_CECRes_CF1RXMLCompIDError	69		//  Main CF1RPRF01E object type invalid
+#define  BEMAnal_CECRes_HPWHSizingError		70		//  Error in sizing HPWH system(s) using CSE
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report
@@ -203,14 +204,14 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 //																				const char* pszReportType, const char* pszCACertPath, bool bVerbose=false, bool bSilent=false );
 int  BEMCMPMGR_API __cdecl CMX_GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 																				const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
-																				const char* pszDebugBool, bool bVerbose=false, bool bSilent=false );
+																				const char* pszDebugBool, bool bVerbose=false, bool bSilent=false, bool bSchemaBasedRptGen=false );   // SAC 11/20/18
 int  BEMCMPMGR_API __cdecl CMX_GenerateReport_Proxy_CEC(	const char* pszXMLResultsPathFile, const char* pszCACertPath, const char* pszReportName,
 																						const char* pszAuthToken1, const char* pszAuthToken2, const char* pszSignature, const char* pszPublicKey, 
 																						const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy 
 																						const char* pszDebugBool, bool bVerbose=false, bool bSilent=false,
 																						const char* pszCompRptID=NULL, const char* pszRptGenServer=NULL, const char* pszRptGenApp=NULL,		// SAC 8/7/14 - added more args to facilitate URL path specification
 																						const char* pszRptGenService=NULL, const char* pszSecKeyRLName=NULL, const char* pszOutputPathFile=NULL,
-																						const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL );	// SAC 11/5/15
+																						const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL, bool bSchemaBasedRptGen=false );	  // SAC 11/5/15   // SAC 11/20/18
 
 int  BEMCMPMGR_API __cdecl CMX_CheckSiteAccess(	const char* pszSite, const char* pszCACertPath, const char* pszProxyAddress, const char* pszProxyCredentials,		// pass NULLs for no proxy  
 														char* pszErrorMsg=NULL, int iErrorMsgLen=0, bool bVerbose=false, const char* pszProxyType=NULL, const char* pszNetComLibrary=NULL );	// SAC 11/5/15
@@ -242,7 +243,7 @@ int  BEMCMPMGR_API __cdecl CMX_GetDataFloat(   double* pReturnFlt, const char* p
 							 											 const char* pszCompName=NULL, float fDefault=0 );
 
 bool BEMCMPMGR_API __cdecl CMX_SecureExecutable();
-long BEMCMPMGR_API __cdecl CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure=false );
+long BEMCMPMGR_API __cdecl CMX_EncodeBase64( const unsigned char *input, long length, char* output, long outLength, bool bSecure=false );
 int  BEMCMPMGR_API __cdecl CMX_DecodeBase64( char* outData, const char* inData, bool bSecure=false );
 int  BEMCMPMGR_API __cdecl CMX_Encrypt( unsigned char * data, int dataLen, unsigned char *encrypted );
 int  BEMCMPMGR_API __cdecl CMX_Decrypt( unsigned char * enc_data, int dataLen, unsigned char *decrypted );

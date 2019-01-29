@@ -291,9 +291,11 @@ BOOL CComplianceUIDoc::OnOpenDocument(LPCTSTR lpszPathName)
 bool IsXMLFileExt( CString sExt )	// SAC 10/29/15
 {	bool bRetVal = false;
 #ifdef UI_CANRES
-	bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".cibd16x") || !sExt.CompareNoCase(".xml"));
+	bRetVal = (!sExt.CompareNoCase(".cibdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .cibd##x
+				  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".cibd") && !sExt.Right(1).CompareNoCase("x")));
 #elif UI_CARES
-	bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".ribd16x") || !sExt.CompareNoCase(".xml"));
+	bRetVal = (!sExt.CompareNoCase(".ribdx") || !sExt.CompareNoCase(".xml") ||	// SAC 10/29/18 - revised to allow any code vintage: .ribd##x
+				  (sExt.GetLength()==8 && !sExt.Left(5).CompareNoCase(".ribd") && !sExt.Right(1).CompareNoCase("x")));
 #endif
 	bRetVal = (bRetVal || !sExt.CompareNoCase(".xml"));
 	return bRetVal;
@@ -489,7 +491,8 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 #ifdef UI_CARES
 	bDefaultRulesetIsCA = (bDefaultRulesetExists && sDfltRulesFNAllCaps.Find( "CA RES" ) == 0);
 #elif UI_CANRES
-	bDefaultRulesetIsCA = (bDefaultRulesetExists && sDfltRulesFNAllCaps.Find( "CEC" ) == 0 && sDfltRulesFNAllCaps.Find( "NONRES" ) > 0);
+	bDefaultRulesetIsCA = (bDefaultRulesetExists && ( (sDfltRulesFNAllCaps.Find( "CEC" ) == 0 && sDfltRulesFNAllCaps.Find( "NONRES" ) > 0) ||
+																	  (sDfltRulesFNAllCaps.Find( "T24N" ) >= 0) ));		// SAC 11/16/18 - added check for new default ruleset name (as of 2019)
 #endif
 	// note - no check to ensure that sDefaultRulesetFN is consistent w/ UI_PROGYEARxxxx
 

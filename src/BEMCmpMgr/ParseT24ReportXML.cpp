@@ -67,7 +67,7 @@
 //			BIO_flush(bio_out);
 //			BIO_free_all(b64);
 
-long CMX_EncodeBase64( const unsigned char *input, int length, char* output, int outLength, bool bSecure )
+long CMX_EncodeBase64( const unsigned char *input, long length, char* output, long outLength, bool bSecure )
 {
 //	char* inpCrypt = NULL;
 //	if (!bSecure)
@@ -124,6 +124,109 @@ long CMX_EncodeBase64( const unsigned char *input, int length, char* output, int
 
 	BIO_free_all(b64);
 //	free( inpCrypt );
+	return iRetVal;
+}
+
+#define ChunkSize 65536
+
+long EncodeBase64FromFile( const char* inFileName, QString& encStr )
+{	long iRetVal = 0;
+
+	QString sPathFile = inFileName;
+	sPathFile.replace( "\\", "/" );
+	FILE *fp_in = NULL;
+	char buff[ChunkSize];
+	char *postthis = NULL; // need to malloc (gasp!) to the filesize
+	long int FileInSize = 0;
+	long int nread = 0;
+	int i, npost = 0;	// index into postthis
+
+	if (sPathFile.isEmpty())
+	{	iRetVal = -1;			assert( FALSE );			//	-1 : inFileName not specified
+	}
+	else if (!FileExists( sPathFile ))
+	{	iRetVal = -2;			assert( FALSE );			//	-2 : inFileName not found
+	}
+	else
+	{
+		try
+		{
+			int ErrorCode = fopen_s( &fp_in, sPathFile.toLocal8Bit().constData(), "rb");		// switched open flag to 'binary' mode to fix file size issue (in text mode, file size can be bogus)
+			if (iRetVal == 0 && ErrorCode != 0)
+			{	iRetVal = -3;
+			}
+			else
+			{	ErrorCode = fseek(fp_in, 0L, SEEK_END);  // seek to the end for filesize info
+				if (ErrorCode <0)
+				{	iRetVal = -3;
+				}  // fseek error
+				FileInSize = ftell(fp_in);
+				fseek (fp_in,0L, SEEK_SET);	// go back to the beginning
+			}
+			if (iRetVal == 0)
+			{  postthis = (char *) malloc( (FileInSize)*sizeof(char) + 1 );
+				if (postthis == NULL)
+					iRetVal = -4;
+			}
+			if (iRetVal == 0)
+			{	//	Here is where you read in the file chunk by chunk - build up the postthis array
+				npost = 0;	// postthis index
+				nread=fread(buff, sizeof(char), ChunkSize, fp_in);
+				if (nread <=0)
+				{	iRetVal = -5;
+				//	fprintf(stderr,"Oops: input file read %d bytes\n", nread);
+				}
+				else
+				{	for (i=0;i<nread;i++)
+						postthis[i+npost] = buff[i];
+				}
+				npost += nread;	//; update index into postthis
+				// if we have more to read
+				while (iRetVal == 0 && npost < FileInSize) // we have more to read	
+				{	nread=fread(buff, sizeof(char), ChunkSize, fp_in);
+					if (nread <= 0)
+						iRetVal = -6;
+					else
+					{	for (i=0;i<nread;i++)
+						{	postthis[i+npost] = buff[i];
+						}
+					}
+					npost += nread;	// update index into postthis
+					postthis[npost]='\0';	// postthis needs to be NULL terminated
+				}	// end while npost < FileInSize
+			// Debug
+			//	printf_s("size of postthis: %d bytes\n", npost);
+			}
+			assert( fp_in || iRetVal < 0 );
+			if (fp_in)
+				fclose( fp_in );  // close in file (finished reading it)
+			fp_in = NULL;
+
+			if (iRetVal == 0)
+			{	long encSize = (long) (FileInSize*1.5);  // *1.1 too small...
+				char* encChars = (char*) malloc( (encSize)*sizeof(char) );
+				if (encChars==NULL)
+					iRetVal = -7;
+				else
+				{	long lEncBsRetVal = CMX_EncodeBase64( (const unsigned char*) postthis, FileInSize, encChars, encSize, false /*bSecure*/ );
+					if (lEncBsRetVal <= 0)
+						iRetVal = lEncBsRetVal - 10;
+					else
+						encStr = encChars;
+					free(encChars);
+				}
+			}
+			if (postthis)
+				free(postthis);
+		}
+	//	catch(CException e) {
+	//		BEMMessageBox( "Unexpected error loading symbolic file list." );
+	//	}
+		catch( ... )
+		{	assert( FALSE );
+			BEMPX_WriteLogFile( "EncodeBase64FromFile():  Unknown error encoding file.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+	}
 	return iRetVal;
 }
 
@@ -416,12 +519,14 @@ bool ParseTitle24ReportXML( const char* xmlFileName, const char* pdfFileName, co
 					case QXmlStreamReader::Invalid               : assert( FALSE );   break;  // see what conditions we end up here
 					case QXmlStreamReader::StartElement          : {	iXMLElementCount++;
 																						sElemName = stream.name().toLocal8Bit().constData();
-																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0)
+																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0 &&
+																															  sElemName.compare("ComplianceDocumentPackage", Qt::CaseInsensitive) != 0)  // SAC 11/21/18
 																						{	// ERROR - not a proper Title24 report XML file (??)
 																							bRetVal = false;
-																							sErrMsg = QString( "ERROR:  File not a Title24 analysis report, first element '%1' (expected 'Title24' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
+																							sErrMsg = QString( "ERROR:  File not a Title24 analysis report, first element '%1' (expected 'Title24' or 'ComplianceDocumentPackage' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
 																						}
-																						else if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0)
+																						else if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0 ||
+																									sElemName.compare("ComplianceDocumentPackage", Qt::CaseInsensitive) == 0)
 																						{	// do nothing here
 																						}
 																						else if (sElemName.compare(sRptElemName, Qt::CaseInsensitive) == 0)
@@ -578,12 +683,14 @@ int ExtractErrorsFromTitle24ReportXML( const char* xmlFileName, QString& sErrors
 					case QXmlStreamReader::Invalid               : assert( FALSE );   break;  // see what conditions we end up here
 					case QXmlStreamReader::StartElement          : {	iXMLElementCount++;
 																						sElemName = stream.name().toLocal8Bit().constData();
-																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0)
+																						if (iXMLElementCount == 1 && sElemName.compare("Title24", Qt::CaseInsensitive) != 0 &&
+																															  sElemName.compare("ComplianceDocumentPackage", Qt::CaseInsensitive) != 0)  // SAC 11/21/18
 																						{	// ERROR - not a proper Title24 report XML file (??)
 																							iRetVal = -3;
-																							sErrMsg = QString( "ERROR:  File not a Title24 analysis report, first element '%1' (expected 'Title24' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
+																							sErrMsg = QString( "ERROR:  File not a Title24 analysis report, first element '%1' (expected 'Title24' or 'ComplianceDocumentPackage' on line %2):  %3" ).arg( sElemName, QString::number(stream.lineNumber()), xmlFileName );
 																						}
-																						else if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0)
+																						else if (sElemName.compare("Title24", Qt::CaseInsensitive) == 0 ||
+																									sElemName.compare("ComplianceDocumentPackage", Qt::CaseInsensitive) == 0)
 																						{	// do nothing here
 																						}
 																						else if (sElemName.compare(sErrorsElemName, Qt::CaseInsensitive) == 0)

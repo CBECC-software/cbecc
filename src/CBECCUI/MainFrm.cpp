@@ -620,7 +620,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
       m_wndStatusBar.GetPaneInfo(1, id, style, width);
       m_wndStatusBar.SetPaneInfo(1, id, style, FontX(120));
       m_wndStatusBar.GetPaneInfo(2, id, style, width);
-      m_wndStatusBar.SetPaneInfo(2, id, style, FontX(190));
+      m_wndStatusBar.SetPaneInfo(2, id, style, FontX(230));		// widened ruleset field to allow for trailing '-VCHP' (or other custom IDs) 190->230 - SAC 1/25/19
    }
 
 	// TODO: Remove this if you don't want tool tips or a resizeable toolbar
@@ -1438,8 +1438,9 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 		}
 
 #ifdef UI_CARES
-      else if (wAction >= 171 && wAction <= 189)
+      else if (wAction >= 171 && wAction <= 194)
       {	int iDlgHt = 600, iDlgWd = 770;  // Present dialog to collect Multifamily Dwelling Unit data
+      	int iDlgClassID = eiBDBCID_Proj;
       	if (wAction == 187)	// SAC 1/15/15 - Present dialog to collect properties defaulted based on Proj:SimSpeedOption
       	{	iDlgHt = 400;
       		iDlgWd = 410;
@@ -1452,9 +1453,14 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
       	{	iDlgHt = 350;
       		iDlgWd = 700;
       	}
+      	else if (wAction <= 194)	// SAC 12/26/18 - Present dialog to review/edit DwellUnitType drain water heat recovery properties
+      	{	iDlgHt = 710;
+      		iDlgWd = 600;
+      		iDlgClassID = eiBDBCID_DwellUnitType;
+      	}
 			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_Proj, sDialogCaption );
-         CSACDlg dlgProj( pDlg, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+			GetDialogCaption( iDlgClassID, sDialogCaption );
+         CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
 									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
                            0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
@@ -1500,8 +1506,51 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgProj.DoModal();
 		}
+      else if (wAction == 3036)		// SAC 12/5/18 - screen to enter DHWSys Compact Distribution straight-line heater-fixture distances (tic #975)
+		{	int iDlgHt = 355, iDlgWd = 520;	// expanded Ht from 320 to 355 to allow for user specification of Compactness Factor
+			CString sDialogCaption;
+			GetDialogCaption( eiBDBCID_DHWSys, sDialogCaption );
+         CSACDlg dlgProj( pDlg, eiBDBCID_DHWSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+									ebIncludeLongCompParamStrInToolTip );
+         dlgProj.DoModal();
+		}
 
 #elif UI_CANRES
+      else if (wAction >= 190 && wAction <= 195)
+      {	int iDlgHt = 710, iDlgWd = 600;  // Present dialog to collect Spc ResSpcDHWFeatures data
+      	int iDlgClassID = eiBDBCID_ResSpcDHWFeatures;
+			int iResSpcDHWFtrsRef0Array = wAction - 190;
+			BEMObject* pRSDF = NULL;
+			if (BEMPX_GetObject( elDBID_Spc_ResSpcDHWFeaturesRef+iResSpcDHWFtrsRef0Array, pRSDF ) && pRSDF)
+			{	int iRSDFObjIdx = BEMPX_GetObjectIndex( pRSDF->getClass(), pRSDF );		ASSERT( iRSDFObjIdx >= 0 );
+				if (iRSDFObjIdx >= 0)
+				{	BEMPX_SetActiveObjectIndex( pRSDF->getClass()->get1BEMClassIdx(), iRSDFObjIdx );
+					CString sDialogCaption;
+					GetDialogCaption( iDlgClassID, sDialogCaption );
+		         CSACDlg dlgProj( pDlg, iDlgClassID, 0 /* lDBID_ScreenIdx */, 190 /* lDBID_ScreenID */, 0, 0, 0,
+            		               esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+											iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+                        		   0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+											0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+											0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+            		               FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+                  		         // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+                        		   FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+											ebIncludeLongCompParamStrInToolTip );
+      		   dlgProj.DoModal();
+			}	}
+			else
+			{	ASSERT( FALSE );
+			}
+		}
 	// SAC 5/29/14 - code to create & delete CartesianPt children of PolyLp objects
       else if (wAction >= 1001 && wAction <= 1300)
 		{	// DELETE CartesianPt child of current PolyLp object
@@ -2421,7 +2470,7 @@ void CMainFrame::OnFileSaveAs()
    }
    else
    {
-		BOOL bWriteUserModel = (BEMPX_GetActiveModel() == 0);		// SAC 3/24/13 - prevent storage of non-User model as normap project input file
+		BOOL bWriteUserModel = (BEMPX_GetActiveModel() == 0);		// SAC 3/24/13 - prevent storage of non-User model as normal project input file
 		if (!bWriteUserModel)
 		{	if (MessageBox( "The active building description is not the user input model, probably due to partial analysis being performed.\n\n"
 									"Press 'OK' to save (and switch to) the user input model, or 'Cancel' to abort the save action.", NULL, MB_OKCANCEL ) == IDOK)
@@ -2793,6 +2842,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 																{  "MaxNumErrorsReportedPerType" ,  "MaxNumErrorsReportedPerType" ,    5   },
 																{  "BypassInputChecks"           ,  "BypassInputChecks"           ,    0   },
 																{  "BypassUMLHChecks"            ,  "BypassUMLHChecks"            ,    0   },
+																{  "BypassPreAnalysisCheckRules" ,  "BypassPreAnalysisCheckRules" ,    0   },  // SAC 1/25/19 (com tic #2924)
 																{  "BypassCheckSimRules"         ,  "BypassCheckSimRules"         ,    0   },
 																{  "BypassCheckCodeRules"        ,  "BypassCheckCodeRules"        ,    0   },
 																{  "BypassValidFileChecks"       ,  "BypassValidFileChecks"       ,    0   },  // SAC 11/11/13
@@ -2856,6 +2906,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
          sOptionsCSVString +=         "PromptUserUMLHWarning,1,";
 	// new, valid, temporary (?) option:  WriteUMLHViolationsToFile - default to 1		// SAC 3/18/15
 
+      int iPreAnalysisCheckPromptOption = ReadProgInt( sOptsSec, "PreAnalysisCheckPromptOption", (bFromAltSection ? -999 : (bBatchMode ? 0 : 3)) /*default*/ );		// SAC 1/26/19 (com tic #2924)
+      if (iPreAnalysisCheckPromptOption >= 0)		// SAC 7/5/16 - pass regardless of value, since default varies by mode
+			{	sOptTemp.Format( "PreAnalysisCheckPromptOption,%d,", iPreAnalysisCheckPromptOption );
+				sOptionsCSVString += sOptTemp;
+			}
+
       int iCompReportWarningOption = ReadProgInt( sOptsSec, "CompReportWarningOption", (bFromAltSection ? -999 : (bBatchMode ? 0 : 5)) /*default*/ );
       if (iCompReportWarningOption >= 0)		// SAC 7/5/16 - pass regardless of value, since default varies by mode
 			{	sOptTemp.Format( "CompReportWarningOption,%d,", iCompReportWarningOption );
@@ -2910,6 +2966,20 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			BOOL bFullComplianceAnalysis = (lAnalysisType == 13);
 			if (!bFullComplianceAnalysis)		// default in ...Analysis...() routine switched to TRUE
 				sOptionsCSVString += "FullComplianceAnalysis,0,";
+		}
+
+		long lEnergyCodeYr;
+		if (!bBatchMode)
+			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );	// SAC 10/29/18
+		else
+		{	// add batch defaulting of lEnergyCodeYr based on EXE year - SAC 1/19/19
+			#ifdef UI_PROGYEAR2016
+			lEnergyCodeYr = 2016;
+			#elif  UI_PROGYEAR2019
+			lEnergyCodeYr = 2019;
+			#else
+			lEnergyCodeYr = 0;  // ???
+			#endif
 		}
 
 		int iVerbose = ReadProgInt( sOptsSec, "LogRuleEvaluation", 0 /*default*/ );
@@ -2983,9 +3053,15 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableCO2DesignRatings,%d,", iEnableCO2DesignRatings );
 			sOptionsCSVString += sOptTemp;
 		}
-      int iWriteCF1RXML = ReadProgInt( sOptsSec, "WriteCF1RXML", 0 /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML
+      int iWriteCF1RXML = ReadProgInt( sOptsSec, "WriteCF1RXML", (lEnergyCodeYr > 2018 ? 1 : 0) /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML   - SAC 10/29/18 - added default of 1 for 2019+
 		if (iWriteCF1RXML > 0)
 		{	sOptTemp.Format( "WriteCF1RXML,%d,", iWriteCF1RXML );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iRptGenViaAnalysisResultsXMLDefault = (lEnergyCodeYr < 2019 ? 1 : 0);		// SAC 11/20/18 - causes secondary report gen via Analysis Results XML (for 2019 & later(?) code vintages)
+      int iRptGenViaAnalysisResultsXML = ReadProgInt( sOptsSec, "RptGenViaAnalysisResultsXML", iRptGenViaAnalysisResultsXMLDefault );
+		if (iRptGenViaAnalysisResultsXML != iRptGenViaAnalysisResultsXMLDefault)
+		{	sOptTemp.Format( "RptGenViaAnalysisResultsXML,%d,", iRptGenViaAnalysisResultsXML );
 			sOptionsCSVString += sOptTemp;
 		}
       if (ReadProgInt( sOptsSec,   "BypassValidFileChecks",     0 /*default*/ ) > 0)		// SAC 5/3/14
@@ -3116,10 +3192,10 @@ static void InitBatchRunsFromINI()
 	long lAdditionalInputs = ReadProgInt( "options", "Batch_AdditionalInputs", 0 );
 	if (lAdditionalInputs > 0)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), BEMP_Int, (void*) &lAdditionalInputs );
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,  lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3157,10 +3233,10 @@ static void WriteBatchRunDataToINI()
 //	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
 //	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
 //	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,  iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3447,6 +3523,20 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 			VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString, true /*bBatchMode*/ ) );		// SAC 1/29/14
 
+		// SAC 1/17/19 - add certain other options used in Batch processing but not regular analysis
+			int iVerboseInputLogging = ReadProgInt( "options", "VerboseInputLogging", 0 );
+			if (iVerboseInputLogging > 0)
+			{	sTemp.Format( "VerboseInputLogging,%d,", iVerboseInputLogging );			sOptionsCSVString += sTemp;
+			}
+			int iCEDAUD = ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 1 );
+			if (iCEDAUD == 0)
+			{	sTemp.Format( "ClassifyEditableDefaultsAsUserData,%d,", iCEDAUD );		sOptionsCSVString += sTemp;
+			}
+			int iFSADP = ReadProgInt( "options", "FileSaveAllDefinedProperties", 1 );
+			if (iFSADP > 0)
+			{	sTemp.Format( "FileSaveAllDefinedProperties,%d,", iFSADP );					sOptionsCSVString += sTemp;
+			}
+
 			const char* pszAnalOpts = NULL;
 			if (!sOptionsCSVString.IsEmpty())
 				pszAnalOpts = (const char*) sOptionsCSVString;
@@ -3612,13 +3702,17 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 #ifdef UI_CARES
 static int siBatchDefsFileVer = 1;
 static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11,12\n";
-static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,,,,,Multiple,Front,Program,Processing\n";
+static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,,,,,,Multiple,Front,Program,Processing\n";
 static const char* pszBatchDefsColLabel3 = "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Output,Options\n";
+static const char* pszCZs[] = {  "CZ1  (Arcata)", "CZ2  (Santa Rosa)", "CZ3  (Oakland)", "CZ4  (San Jose)", "CZ5  (Santa Maria)", "CZ6  (Torrance)", "CZ7  (San Diego)", "CZ8  (Fullerton)",
+											"CZ9  (Burbank)", "CZ10  (Riverside)", "CZ11  (Red Bluff)", "CZ12  (Sacramento)", "CZ13  (Fresno)", "CZ14  (Palmdale)", "CZ15  (Palm Springs)", "CZ16  (Blue Canyon)" };
 #elif UI_CANRES
 static int siBatchDefsFileVer = 3;
 static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11\n";
 static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,Path to Copy,Path to Copy,,Override AutoSize Flag,,,Program,Processing\n";
 static const char* pszBatchDefsColLabel3 = "; Record,Project or File Name (full path or relative to \\Projects),Project or File Name,SDD XML files to,CSE files to,Run Title,p,bz,b,Output,Options\n";
+static const char* pszCZs[] = {  "ClimateZone1", "ClimateZone2", "ClimateZone3", "ClimateZone4", "ClimateZone5", "ClimateZone6", "ClimateZone7", "ClimateZone8",
+											"ClimateZone9", "ClimateZone10", "ClimateZone11", "ClimateZone12", "ClimateZone13", "ClimateZone14", "ClimateZone15", "ClimateZone16" };
 #endif
 
 BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatchLogPathFile, CString& sBatchResultsPathFile ) 	// SAC 11/10/17
@@ -3635,6 +3729,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 		else
 		{	BOOL bIsUIActive = (BEMPX_GetUIActiveFlag());		CString sFileMsg;		QString qsFileDescrip;
 			long lStoreProjToSepDir = BEMPX_GetInteger( elDBID_BatchRuns_StoreProjToSepDir, iSV, iErr );
+			long lRunsSpanClimates  = BEMPX_GetInteger( elDBID_BatchRuns_RunsSpanClimates , iSV, iErr );    // SAC 1/4/19 
 			QString qsOutputProjDir = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullOutputProjDir" ), iSV, iErr );
 			QString qsResultsCSVFN  = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:ResultsFileName"   ), iSV, iErr );
 			QString qsOutputLogFN   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:LogFileName"       ), iSV, iErr );
@@ -3644,6 +3739,14 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 			qsSDDXMLFilePath = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:SDDXMLFilePath"    ), iSV, iErr );
 			qsCSEFilePath    = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:CSEFilePath"       ), iSV, iErr );
 			qsAnalOptsINI    = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:AnalOptsINISection"), iSV, iErr );
+#endif
+
+#ifdef UI_CANRES
+			if (lRunsSpanClimates > 0)		// SAC 1/4/19
+			{	qsErrMsg = "Batch processing option 'RunsSpanClimates' not compatible with CBECC-Com.";		// batch definitions CSV format change required to enable this in CBECC-Com
+				BEMMessageBox( qsErrMsg, "Batch Processing", 3 /*error*/ );
+				return FALSE;
+			}
 #endif
 
 			CString sCompareApp;
@@ -3765,36 +3868,77 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 					{	qsFile = it.next();
 						qsOutDir.clear();
 						iRunNum++;
-						if (bOutDirSameAsIn)
-						{	str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
-							int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
-							if (iLastSlash > 0)
-								qsOutDir = qsFile.left( iLastSlash+1 );
-						}
-						else
-						{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
-							int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
-							if (iLastSlash > qsOutputProjDir.length())
-							{	QDir dir( qsOutDir.left( iLastSlash ) );
-								if (!dir.exists())
-									dir.mkpath(".");
-								if (!dir.exists() && qsErrMsg.isEmpty())
-									qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
-							}
-							str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
-																		 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
-							if (iLastSlash > 0)
-								qsOutDir = qsOutDir.left( iLastSlash+1 );
-						}
+
+						if (lRunsSpanClimates > 0)		// SAC 1/4/19
+						{	int iCZ=1;
+							for (; (qsErrMsg.isEmpty() && iCZ<=16); iCZ++)
+							{
+								int iLastSlashIn = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+								int iLastDotIn   = qsFile.lastIndexOf( "." );		ASSERT( iLastDotIn > (iLastSlashIn+1) );
+								QString qsRunTitle = qsFile.mid( iLastSlashIn+1, std::max( 1, (iLastDotIn-iLastSlashIn-1) ) );
+								QString qsFileExt  = qsFile.right( qsFile.length()-iLastDotIn ); // includes leading '.'
+								if (bOutDirSameAsIn)
+								{	str.Format( "1,\"%s\",\"%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsFile.left(iLastDotIn).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
+									if (iLastSlashIn > 0)
+										qsOutDir = qsFile.left( iLastSlashIn+1 );
+								}
+								else
+								{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+									int iLastSlashOut = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+									if (iLastSlashOut > qsOutputProjDir.length())
+									{	QDir dir( qsOutDir.left( iLastSlashOut ) );
+										if (!dir.exists())
+											dir.mkpath(".");
+										if (!dir.exists() && qsErrMsg.isEmpty())
+											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlashOut ) );
+									}
+									str.Format( "1,\"%s\",\"%s%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+													qsFile.mid( qsFullProjDir.length(), qsFile.length()-qsFullProjDir.length()-qsFileExt.length() ).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
+									if (iLastSlashOut > 0)
+										qsOutDir = qsOutDir.left( iLastSlashOut+1 );
+								}
 
 #ifdef UI_CARES
-						str2 = ",,,,,,,CumCSV,,\n";
+								str2.Format( "\"%s-CZ%.2i\",\"%s\",,,,,,CumCSV,,,\n", qsRunTitle.toLatin1().constData(), iCZ, pszCZs[iCZ-1] );
 #elif UI_CANRES
-						str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
-														qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );
+								str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+																qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );		ASSERT( FALSE );  // need to incorporate CZ detail
 #endif
-						str += str2;
-						defsFile.WriteString( str );
+								str += str2;
+								defsFile.WriteString( str );
+						}	}
+						else	// runs DON'T span all CZs 
+						{	if (bOutDirSameAsIn)
+							{	str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+								int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+								if (iLastSlash > 0)
+									qsOutDir = qsFile.left( iLastSlash+1 );
+							}
+							else
+							{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+								int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+								if (iLastSlash > qsOutputProjDir.length())
+								{	QDir dir( qsOutDir.left( iLastSlash ) );
+									if (!dir.exists())
+										dir.mkpath(".");
+									if (!dir.exists() && qsErrMsg.isEmpty())
+										qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
+								}
+								str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+																			 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+								if (iLastSlash > 0)
+									qsOutDir = qsOutDir.left( iLastSlash+1 );
+							}
+
+#ifdef UI_CARES
+							str2 = ",,,,,,,,,CumCSV,,\n";
+#elif UI_CANRES
+							str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+															qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );
+#endif
+							str += str2;
+							defsFile.WriteString( str );
+						}
 					}
 
 					defsFile.WriteString( "-1\n" );
@@ -5275,7 +5419,7 @@ static char BASED_CODE szPerfErr3[]   = "Save the building data by selecting Fil
 static char BASED_CODE szPerfWthr1[]  = "Weather File '";
 static char BASED_CODE szPerfWthr2[]  = "' Not Found.";
 
-#define  CSV_RESULTSLENGTH  3072
+#define  CSV_RESULTSLENGTH  3200
 static char pszCSVResultSummary[ CSV_RESULTSLENGTH ];
 
 afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
@@ -5293,7 +5437,7 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	BOOL bContinue = TRUE;
 
 #ifdef UI_CARES
-	long lEnergyCodeYearNum, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+	long lEnergyCodeYearNum=0, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
 //	long lRunScope=0, lIsAddAlone=0;
 //	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
 //	if (bContinue && BEMPX_GetUIActiveFlag() && 
@@ -5468,9 +5612,11 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				// SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9  - SAC 6/7/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13
 				// SAC 12/12/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
 				// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944,3776 & 2904 chars
-				CString sDfltResFN = (bHaveCDRs ? "AnalysisResults-v17cdr.csv" : "AnalysisResults-v17.csv");
+				// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF - rec lengths now 2024, 3870 & 3045 chars
+				// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
+				CString sDfltResFN = (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						17 /*iResFormatVer*/, sOriginalFileName );
+																						19 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
 					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3072];
@@ -5533,15 +5679,26 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				CString sPTDMsg, sBtnFile[3], sBtnLabel[3];
 				int iNumViewBtns=0;
 
-				CString sPDFRptFN = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
-				sPDFRptFN += " - AnalysisResults-BEES.pdf";
+			//	CString sDefaultResFNWord = "AnalysisResults";		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
+			//	if (lEnergyCodeYearNum >= 2019 && ReadProgInt( "options", "WriteCF1RXML", 1 /*default*/ ) > 0)
+			//		sDefaultResFNWord = "CF1RPRF01E";
+			// SAC 1/25/19 - mods to enable INI to determine which PDF report to prompt user for
+				CString sPDFRptFN, sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYearNum >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
+				sPDFRptFN.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord );
+				if (!FileExists( sPDFRptFN ))
+				{	// see if OTHER report is available, and if so, prompt user to view that one
+					CString sPDFRptFN2, sDefaultResFNWord2 = (sDefaultResFNWord.CompareNoCase("CF1RPRF01E") ? "CF1RPRF01E" : "AnalysisResults");
+					sPDFRptFN2.Format( "%s - %s-BEES.pdf", sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') ), sDefaultResFNWord2 );
+					if (FileExists( sPDFRptFN2 ))
+					{	sPDFRptFN = sPDFRptFN2;		sDefaultResFNWord = sDefaultResFNWord2;
+				}	}
 				if (!FileExists( sPDFRptFN ))
 				{	// report to log  that PDF was expected but not found...
 					sMsg.Format( "PDF compliance report not found:  %s", sPDFRptFN );
 					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
 				}
 				else
-				{	sPTDMsg = "PDF compliance report successfully generated during analysis.";
+				{	sPTDMsg.Format( "%s PDF compliance report successfully generated during analysis.", sDefaultResFNWord );
 					sBtnFile[iNumViewBtns] = sPDFRptFN;   sBtnLabel[iNumViewBtns++] = "Compliance Report";
 				}
 				if (!sCSERptPathFile.IsEmpty() && !sCSEErrPathFile.IsEmpty())
@@ -5920,6 +6077,9 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 			}
 			else if (BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent error messagebox when GUI deactivated
 				AfxMessageBox( "No analysis results available to display." );  // was: "Analysis succeeded but results retrieval error is preventing their display." );
+		}
+		else if (iSimResult == 71 && ReadProgInt( "options", "PreAnalysisCheckPromptOption", 3 /*default*/ ) >= 3)		// SAC 1/26/19 - (com tic #2924)
+		{	// do nothing here - analysis aborted due to pre-anal check errors and the user should have already been prompted w/ those errors...
 		}
 		else if (iSimResult != 66)		// SAC 7/6/16 - logic to prevent showing error dialog if return value => 66 : Analysis aborted - user chose to abort due to compliance reporting issue(s)
 	//	{	CString sAnalRetVal;		sAnalRetVal.Format( "CMX_PerformAnalysis_CECNonRes() returned %d  -  %s", iSimResult, (iSimResult < 1 ? "SUCCESS!" : "user aborted and/or errors occurred.") );
@@ -6463,18 +6623,33 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 //							toEncode, iEncrRet, strScrEncoded, iDecrRet, strScrDecoded );
 //	AfxMessageBox( sTestMsg );
 
-	CString sAppendForResults = " - AnalysisResults.xml";
+	CString sDefaultResFNWord = "AnalysisResults";		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
+#ifdef UI_CARES
+	long lEnergyCodeYr;
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+	if (lEnergyCodeYr >= 2019)
+		sDefaultResFNWord = "CF1RPRF01E";
+#elif UI_CANRES
+	// add code once schema-based reporting enabled in -Com
+#endif
+
+	CString sAppendForResults, sAppendForPDF, sAppendForXML;
+	sAppendForResults.Format( " - %s.xml", sDefaultResFNWord );
 #ifdef UI_CARES
 	ASSERT( iReportID == 0 );
 	CString sReportLabel  = "Compliance Report";
 	CString sRptDBIDName  = "Proj:CompReportPDF";
-	CString sAppendForPDF = " - AnalysisResults-BEES.pdf";
-	CString sAppendForXML = " - AnalysisResults-BEES.xml";  // SAC 11/29/16
+	sAppendForPDF.Format( " - %s-BEES.pdf", sDefaultResFNWord );
+	sAppendForXML.Format( " - %s-BEES.xml", sDefaultResFNWord );  // SAC 11/29/16
 #elif UI_CANRES
 	CString sReportLabel  = (iReportID == 3 ? "Standard Model Report"					: "Compliance Report" );
 	CString sRptDBIDName  = (iReportID == 3 ? "Proj:CompReportStd"						: "Proj:CompReportPDF" );
-	CString sAppendForPDF = (iReportID == 3 ? " - AnalysisResults-BEES-Std.pdf"	: " - AnalysisResults-BEES.pdf" );
-	CString sAppendForXML = (iReportID == 3 ? ""                               	: " - AnalysisResults-BEES.xml" );
+	if (iReportID == 3)
+		sAppendForPDF.Format( " - %s-BEES-Std.pdf", sDefaultResFNWord );
+	else
+	{	sAppendForPDF.Format( " - %s-BEES.pdf", sDefaultResFNWord );
+		sAppendForXML.Format( " - %s-BEES.xml", sDefaultResFNWord );
+	}
 #else
 	AfxMessageBox( "Report viewing only available in California Title-24 CBECC-* programs." );
 	return;
@@ -6690,12 +6865,27 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 		BOOL bIsUIActive = BEMPX_GetUIActiveFlag();		// was: (pApp ? pApp->IsUIActive() : TRUE);				// SAC 5/2/14 - toggle messagebox display OFF for batch processing
 		CString sErrMsg, sResXMLFileName;
 	   CDocument* pDoc = GetActiveDocument();
+
+		bool bSchemaBasedRptGen = false;		// SAC 11/21/18 - enable new CBECC-Res CF1R XML schema-based reporting
+		CString sDefaultResFNWord = "AnalysisResults";
+#ifdef UI_CARES
+		long lEnergyCodeYr;
+		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
+		if (lEnergyCodeYr >= 2019)
+		{	bSchemaBasedRptGen = true;
+			sDefaultResFNWord = "CF1RPRF01E";
+		}
+#elif UI_CANRES
+		// add code once schema-based reporting enabled in -Com
+#endif
+
 	   CString sProjFileName;
 	   if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
 	   {  sProjFileName = pDoc->GetPathName();
 			if (!sProjFileName.IsEmpty() && sProjFileName.ReverseFind('.') > 0)
-			{	sResXMLFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
-				sResXMLFileName += " - AnalysisResults.xml";
+			{	//sResXMLFileName = sProjFileName.Left( sProjFileName.ReverseFind('.') );
+				//sResXMLFileName += " - AnalysisResults.xml";
+				sResXMLFileName.Format( "%s - %s.xml", sProjFileName.Left( sProjFileName.ReverseFind('.') ), sDefaultResFNWord );
 			}
 			if (!FileExists( sResXMLFileName ))
 				sErrMsg.Format( "Analysis results file not found:  %s", sResXMLFileName );
@@ -6719,10 +6909,10 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenStdReport" ), sRptGenCompReport );
 			      			if (sRptGenCompReport.IsEmpty())
 			      				sErrMsg = "The ruleset selected for this project does not define a Standard Model report ID (Proj:RptGenStdReport) and therefore the report cannot be generated.";
-								sAppendToFN = " - AnalysisResults-BEES-Std.pdf";
+								sAppendToFN.Format( " - %s-BEES-Std.pdf", sResXMLFileName );
 								sRptType = "standard model";		sRptTypeLong = "Standard Model Report";
 								break;
-				default :	sAppendToFN = " - AnalysisResults-BEES.pdf";
+				default :	sAppendToFN.Format( " - %s-BEES.pdf", sResXMLFileName );
 								sRptType = "compliance";			sRptTypeLong = "Compliance Report";
 								break;
 			}
@@ -6803,16 +6993,24 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenUIVer"      ), sRptGenUIVer      );
 	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenCompRptID"  ), sRptGenCompRptID  );
 	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenServer"     ), sRptGenServer     );
-	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenApp"        ), sRptGenApp        );
-	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenService"    ), sRptGenService    );
 	      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:SecKeyRLName"     ), sSecKeyRLName     );
-						if (sRptGenCompReport.IsEmpty())
-		      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenCompReport" ), sRptGenCompReport );
+	      			if (bSchemaBasedRptGen)		// SAC 11/21/18
+	      			{	if (sRptGenCompReport.IsEmpty())
+			      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenSchemaRpt" ), sRptGenCompReport );
+		      			BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenSchemaApp" ), sRptGenApp        );
+		      			BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenSchemaSvc" ), sRptGenService    );
+	      			}
+	      			else
+	      			{	if (sRptGenCompReport.IsEmpty())
+			      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenCompReport" ), sRptGenCompReport );
+	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenApp"        ), sRptGenApp        );
+	      				BEMPX_SetDataString(    BEMPX_GetDatabaseID( "Proj:RptGenService"    ), sRptGenService    );
+	      			}
 
 						EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
 						iRptGenRetVal = CMX_GenerateReport_Proxy_CEC( sResXMLFileName /*sProjPath, sResFN*/, sCACertPath, sRptGenCompReport, sRptGenUIApp, sRptGenUIVer,
 																	"none" /*Signature*/, "none" /*PublicKey*/, pszProxyServerAddress, pszProxyServerCredentials, "true" /*sDebugRpt*/, bVerbose, false /*bSilent*/,
-																	sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService, sSecKeyRLName, sOutRptFN, pszProxyServerType, pszNetComLibrary );		// SAC 8/7/14 - added final arguments to fix -Res rpt gen issue #355		// SAC 11/5/15
+																	sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService, sSecKeyRLName, sOutRptFN, pszProxyServerType, pszNetComLibrary, bSchemaBasedRptGen );		// SAC 8/7/14 - added final arguments to fix -Res rpt gen issue #355		// SAC 11/5/15
 						EnableWindow( TRUE );
 					}
 
@@ -8952,6 +9150,7 @@ void CMainFrame::OnUpdateShowModelGrid(CCmdUI* pCmdUI)
 		pDoc = GetActiveDocument();
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) );
 #else
+	iEnableGridDflt;
    pCmdUI->Enable( FALSE );
 #endif
 }
@@ -8994,7 +9193,9 @@ void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid test
 //   }	//}
 #else
 	else
+	{	iEnableGridDflt;
 		AfxMessageBox( "Error Model Grid access restricted to CBECC-Com." );
+	}
 #endif
 }
 

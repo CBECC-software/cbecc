@@ -1890,13 +1890,35 @@ void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int&
 
 /////////////////////////////////////////////////////////////////////////////
 
+
+
+#ifdef CM_QTGUI
+#include <QtWidgets/QAbstractButton>
+#include <QtWidgets/QTextEdit>
+void showDetailsInQMessageBox(QMessageBox& messageBox, int iTextWd, int iTextHt)
+{
+   foreach (QAbstractButton *button, messageBox.buttons())
+   {
+      if (messageBox.buttonRole(button) == QMessageBox::ActionRole)
+      {
+         button->click();
+         break;
+      }
+   }
+   QList<QTextEdit*> textBoxes = messageBox.findChildren<QTextEdit*>();
+   if(textBoxes.size())
+      textBoxes[0]->setFixedSize(iTextWd, iTextHt);
+}
+#endif
+
+
 #define  Com_NumCSEMeters    3
 static const char* pszMeters[Com_NumCSEMeters+1]			= { "MtrElec",     "MtrNatGas",  "MtrOther",  NULL };
 static const char* pszMeters_ComMap[Com_NumCSEMeters+1]	= { "Electricity", "NaturalGas", "OtherFuel", NULL };		// SAC 5/31/16 - added to enable retrieval of CSE results to -Com analysis
 double         sdaMeterMults_ComMap[Com_NumCSEMeters+1]	= {    0.293,         0.01,         0.01,     0.0  };		// SAC 6/1/16 - added to convert units of CSE results to -Com analysis (1/3.412 for elec)  // SAC 6/29/16 - inc NG & Oth fuel mults by 10 fixing MBtu->therms
 
-static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook", "User1", "User2",*/ "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
-static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,  vNULL , v NULL ,*/ "Photovoltaics", "Battery", NULL }; 
+static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2",              /*"User2",*/ "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
+static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,*/ "Domestic Hot Water", /*  NULL ,*/ "Photovoltaics", "Battery", NULL }; 				// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
 
 static int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, long lDBID_ReportFileAppend, int iObjIdx, bool /*bProcessCurrentSelection*/,
 									QVector<QString>& saModelReportOptions, bool bVerbose, bool bSilent );
@@ -1974,11 +1996,12 @@ static QString sDbgFileName;
 //											63 : Error evaluating CSE_SimulationPrep rules
 //											64 : Unable to open/delete/write CSE include file
 //											65 : Error copying simulation weather file to processing directory
-//											66 : Analysis aborted - user chose to abort due to compliance reporting issue(s)
+//											66 : Analysis aborted - user chose to abort due to pre-analysis check warning(s) and/or compliance reporting issue(s)
 //											67 : Error evaluating ProposedModelPrep rules
 //											68 : One or more errors returned from Compliance Report Generator
 //											69 : Error evaluating rulelist that converts residential DHW systems to code baseline
 //											70 : Error evaluating 'GenerateZEROCodeReport' rulelist
+//											71 : Error(s) encountered performing pre-analysis check of input model
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2028,6 +2051,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int  iDontAbortOnErrorsThruStep	=	 GetCSVOptionValue( "DontAbortOnErrorsThruStep"  ,   0,  saCSVOptions ); 		// SAC 7/25/13 - added to ensure analysis pushed thru to a certain point regardless of errors encountered
 	bool bBypassInputChecks				=	(GetCSVOptionValue( "BypassInputChecks"          ,   0,  saCSVOptions ) > 0);
 	bool bBypassUMLHChecks				=	(GetCSVOptionValue( "BypassUMLHChecks"           ,   0,  saCSVOptions ) > 0);
+	bool bBypassPreAnalysisCheckRules=	(GetCSVOptionValue( "BypassPreAnalysisCheckRules",   0,  saCSVOptions ) > 0);  // SAC 1/25/19 - (tic #2924)
 	bool bBypassCheckSimRules			=	(GetCSVOptionValue( "BypassCheckSimRules"        ,   0,  saCSVOptions ) > 0);
 	bool bBypassCheckCodeRules			=	(GetCSVOptionValue( "BypassCheckCodeRules"       ,   0,  saCSVOptions ) > 0);
 	bool bBypassValidFileChecks		=	(GetCSVOptionValue( "BypassValidFileChecks"      ,   0,  saCSVOptions ) > 0);  // SAC 11/11/13
@@ -2056,6 +2080,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	                                    (GetCSVOptionValue( "LogCSESimulation"           ,   0,  saCSVOptions ) > 0);	// SAC 7/13/18
 	bool bPromptUserUMLHWarning		=  (GetCSVOptionValue( "PromptUserUMLHWarning"      ,   0,  saCSVOptions ) > 0);	// SAC 3/11/15
 	bool bPerformDupObjNameCheck		=  (GetCSVOptionValue( "PerformDupObjNameCheck"     ,   1,  saCSVOptions ) > 0);	// SAC 6/12/15
+	int  iPreAnalysisCheckPromptOption = GetCSVOptionValue( "PreAnalysisCheckPromptOption",  0,  saCSVOptions );		// SAC 1/26/19 - (tic #2924)
 	int  iCompReportWarningOption		=	 GetCSVOptionValue( "CompReportWarningOption"    ,   0,  saCSVOptions );		// SAC 7/5/16
 	bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
@@ -2825,7 +2850,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case 46 :   sFHPathFile = sCSEEXEPath + "cse19.exe";	             				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;	// SAC 5/24/16
 					case 47 :   sFHPathFile = sCSEEXEPath + "cse.exe";				       				bRequiredForCodeYear = (iDLLCodeYear <= 2016);		break;
 					case 48 :   sFHPathFile = sCSEEXEPath + "calc_bt_control.exe";      				bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
-					case 49 :   sFHPathFile = sCSEEXEPath + "DHWDUMF.txt";	           				break;
+					case 49 :   sFHPathFile = sCSEEXEPath + "DHWDU.txt";	           					break;
 					case 50 :	sFHPathFile = sCompMgrDLLPath + "OS_Wrap19.dll";                  bRequiredForCodeYear = (iDLLCodeYear == 2019);		break;
 					default :			assert( FALSE );                                      		break;
 				}
@@ -3308,151 +3333,264 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 		}
 
-	// SAC 7/5/16 - added code to check for any/all conditions where report generation will be prevented or not secure and prompt user of this condition before proceeding with analysis
-		if (iRetVal == 0 && iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML) && !sXMLResultsFileName.isEmpty())
+		BOOL bChkFailureDetailsWritten=FALSE;
+		if (!bAbort && !BEMPX_AbortRuleEvaluation() && iRetVal == 0)
 		{
-		#define  NumCantGenRpts  5
-			int iCantGenRptIdx[NumCantGenRpts];
-			bool bCantGenRpt[] = {	!FileExists( sXMLResultsFileName.toLocal8Bit().constData() ),
-											false,	// defined below - check for report gen website not accessible
-											false,	// defined below - check for report gen offline
-											!sIDFToSimulate.isEmpty(),
-											(pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3])  };
-			if (iEnableRptGenStatusChecks > 0)
-			{	//const char* pszProxyServerAddress     = (sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()    );
-				//const char* pszProxyServerCredentials = (sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData());
-				//const char* pszProxyServerType        = (sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()       );	// SAC 11/4/15
-				//const char* pszNetComLibrary          = (sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()         );	// SAC 11/5/15
-				int iRptGenAvail = CMX_CheckSiteAccess( "Proj:RptGenCheckURL", sCACertPath.toLocal8Bit().constData(),
-														(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
-														(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
-														NULL /*pszErrMsg*/, 0, bVerbose, 
-														(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
-														(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()) );
-				if (iRptGenAvail > -10)
-					// rpt gen NOT available
-					bCantGenRpt[ (iRptGenAvail < 0 ? 2 : 1) ] = true;
-				//	sLogMsg.sprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
-				//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
-			int iRF, iNumCantGenRptsTRUE = 0;
-			for (iRF=0; iRF < NumCantGenRpts; iRF++)
-			{	if (bCantGenRpt[iRF])
-					iCantGenRptIdx[iRF] = iNumCantGenRptsTRUE++;
-				else
-					iCantGenRptIdx[iRF] = -1;
-			}
+			int iNumCantGenRptsTRUE = 0;
+			QString qsPreAnalChkDlgBody, qsPreAnalChkDlgDetails;
+			int iNumPreAnalChkErrs=0, iNumPreAnalChkWarns=0;
+			QStringList saPreAnalChkWarningMsgs;
 
-			QString qsRptIssuesDlgBody, qsRptIssuesDlgDetails;
-			int iNumRptSecOffTRUE = 0;
-			if (iNumCantGenRptsTRUE > 0)
+// -----------------------------------------------------
+// NEW ERROR/WARNING CHECKING & REPORTING STUFF
+// -----------------------------------------------------
+			if (!bBypassPreAnalysisCheckRules)		// SAC 1/25/19 (tic #2924)
 			{
-				bComplianceReportPDF = bComplianceReportXML = bComplianceReportStd = false;
-				BEMPX_WriteLogFile( "   Skipping compliance report generation due to:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+   								if (bVerbose)
+										BEMPX_WriteLogFile( "  PerfAnal_NRes - Pre-Analysis Check of SDD model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+   	  		BOOL bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_PREANALYSISCHECK" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo, &saPreAnalChkWarningMsgs );
+				BEMPX_RefreshLogFile();
+
+				iNumPreAnalChkErrs = BEMPX_GetRulesetErrorCount() - iPrevRuleErrs;
+				iNumPreAnalChkWarns = saPreAnalChkWarningMsgs.size();
+				if ((iNumPreAnalChkErrs > 0 || iNumPreAnalChkWarns > 0) && iDontAbortOnErrorsThruStep < 1 &&
+					 iPreAnalysisCheckPromptOption == 1)	// iPreAnalysisCheckPromptOption = 1  =>  no user prompt / abort analysis if either pre-analysis errors OR warnings are detected
+				{
+//											71 : Error(s) encountered performing pre-analysis check of input model
+						iRetVal = (iRetVal > 0 ? iRetVal : 71);
+						bAbort = true;
+				}
+				else if (iNumPreAnalChkErrs > 0)
+				{															if (bStoreBEMDetails && !bChkFailureDetailsWritten)
+																			{	sDbgFileName = sProcessingPath + sModelFileOnly + QString(" - PreAnalChk.ibd-Detail");
+   																			BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+   																			bChkFailureDetailsWritten = TRUE;
+																			}
+					if (iDontAbortOnErrorsThruStep < 1)  // check flag to bypass errors
+					{
+//											71 : Error(s) encountered performing pre-analysis check of input model
+						iRetVal = (iRetVal > 0 ? iRetVal : 71);
+						bAbort = true;
+
+						if (iPreAnalysisCheckPromptOption >= 3)		// only prompt user of errors if iPreAnalysisCheckPromptOption >= 3
+						{	// populate message re: errors for user prompt
+							char pszRuleErr[1024];
+							int iErrCount = 0;
+							QString qsErrTmp;
+							for (int iErr=1; iErr<=iNumPreAnalChkErrs; iErr++)
+							{	if (BEMPX_GetRulesetErrorMessage( iPrevRuleErrs+iErr, pszRuleErr, 1024 ))
+								{	// filter out generic messages that indicate certain rulelists failing
+									if (	_strnicmp( pszRuleErr, "ERROR:  Error encountered evaluating rulelist 'ProposedModel", 60 ) == 0 )		// ProposedModelCodeCheck / SimulationCheck / CodeAdditions
+									{	// do not report these errors which are always accommpanied by error messages, even when in Verbose mode...
+									}
+									else if (bVerbose || _strnicmp( pszRuleErr, "ERROR:  Error encountered evaluating rule", 41 ) != 0)
+									{	iErrCount += 1;
+										//if (iErrCount <= iMaxErrCount)
+											if (iNumPreAnalChkErrs < 2)
+												qsErrTmp = QString( "\n%1" ).arg( pszRuleErr );
+											else
+												qsErrTmp = QString( "\n(%1)  %2" ).arg( QString::number(iErrCount), pszRuleErr );
+											if (!bVerbose)
+											{	// if verbose flag NOT set, then strip off details of rule where error occurred
+												int iRuleDetailIdx = qsErrTmp.indexOf( "evaluating rule: " );
+												if (iRuleDetailIdx > 0)
+													qsErrTmp = qsErrTmp.left( iRuleDetailIdx );
+											}
+											qsPreAnalChkDlgDetails += qsErrTmp;
+								}	}
+								else
+								{	assert( false );
+								}
+							}	assert( (iErrCount > 0 || qsPreAnalChkDlgDetails.isEmpty()) );
+							if (qsPreAnalChkDlgDetails.isEmpty())
+							{	// for some reason, no errors were retrieved above...
+								qsPreAnalChkDlgDetails = "Error(s) detected during pre-analysis model check. Refer to project log for details.";
+							}
+							else
+							{	iNumPreAnalChkErrs = iErrCount;
+								qsPreAnalChkDlgDetails = QString( "%1 error(s) detected by pre-analysis check:" ).arg( QString::number(iErrCount) ) + qsPreAnalChkDlgDetails;
+							}
+						}
+				}	}
+				iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+
+				if (iNumPreAnalChkWarns > 0)
+				{	// warnings reported during rl_PREANALYSISCHECK NOT echoed to project log, so we should do that before aborting or prompting user to continue
+					bool bPromptUserWarnings = (iPreAnalysisCheckPromptOption >= 2);
+					if (bPromptUserWarnings && iNumPreAnalChkErrs > 0)
+						qsPreAnalChkDlgDetails += "\n\n";
+
+					if (iNumPreAnalChkWarns < 2)
+					{	//BEMPX_WriteLogFile( QString("Warning:  %1").arg(saPreAnalChkWarningMsgs[0]), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						if (bPromptUserWarnings)
+							qsPreAnalChkDlgDetails += saPreAnalChkWarningMsgs[0];
+						//	qsPreAnalChkDlgDetails += QString( "Warning detected by pre-analysis check:" );
+					}
+					else
+					{	if (bPromptUserWarnings)
+							qsPreAnalChkDlgDetails += QString( "%1 warnings detected by pre-analysis check:" ).arg( QString::number(iNumPreAnalChkWarns) );
+						for (int iWM=1; iWM<=iNumPreAnalChkWarns; iWM++)
+						{	//BEMPX_WriteLogFile( QString("Warning:  %1").arg(saPreAnalChkWarningMsgs[iWM-1]), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							if (bPromptUserWarnings)
+								qsPreAnalChkDlgDetails += QString( "\n(%1)  %2" ).arg( QString::number(iWM), saPreAnalChkWarningMsgs[iWM-1] );
+					}	}
+				}
+			}	// end of code that performs Pre-Analysis Check rulelist eval
+
+			QString qsRptIssueDescrip, qsRptIssuePrompt, qsRptIssueListing;
+			int iNumRptSecOffTRUE = 0;
+			if (iCodeType == CT_T24N && (bComplianceReportPDF || bComplianceReportXML) && !sXMLResultsFileName.isEmpty())
+			{	// SAC 7/5/16 - added code to check for any/all conditions where report generation will be prevented or not secure and prompt user of this condition before proceeding with analysis
+			#define  NumCantGenRpts  5
+				int iCantGenRptIdx[NumCantGenRpts];
+				bool bCantGenRpt[] = {	!FileExists( sXMLResultsFileName.toLocal8Bit().constData() ),
+												false,	// defined below - check for report gen website not accessible
+												false,	// defined below - check for report gen offline
+												!sIDFToSimulate.isEmpty(),
+												(pbBypassOpenStudio[0] || pbBypassOpenStudio[1] || pbBypassOpenStudio[2] || pbBypassOpenStudio[3])  };
+				if (iEnableRptGenStatusChecks > 0)
+				{	int iRptGenAvail = CMX_CheckSiteAccess( "Proj:RptGenCheckURL", sCACertPath.toLocal8Bit().constData(),
+															(sProxyServerAddress.isEmpty()     ? NULL : (const char*) sProxyServerAddress.toLocal8Bit().constData()), 
+															(sProxyServerCredentials.isEmpty() ? NULL : (const char*) sProxyServerCredentials.toLocal8Bit().constData()), 
+															NULL /*pszErrMsg*/, 0, bVerbose, 
+															(sProxyServerType.isEmpty()        ? NULL : (const char*) sProxyServerType.toLocal8Bit().constData()), 
+															(sNetComLibrary.isEmpty()          ? NULL : (const char*) sNetComLibrary.toLocal8Bit().constData()) );
+					if (iRptGenAvail > -10)
+						// rpt gen NOT available
+						bCantGenRpt[ (iRptGenAvail < 0 ? 2 : 1) ] = true;
+					//	sLogMsg.sprintf( "Compliance report(s) called for but bypassed due to %s.", (iRptGenAvail<0 ? "report generation being offline" : "report generator website not accessible") );
+					//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				}
+				int iRF;
 				for (iRF=0; iRF < NumCantGenRpts; iRF++)
 				{	if (bCantGenRpt[iRF])
-					{	if (iNumCantGenRptsTRUE == 1)
-							qsRptIssuesDlgBody = "<a>Unable to generate compliance report due to ";
-						else if (iCantGenRptIdx[iRF] == 0)
-							qsRptIssuesDlgBody = "<a>Unable to generate compliance report due to:<br></a>";
-						switch (iRF)
-						{	case  0 :	sLogMsg.sprintf( "      XML results file not found:  %s", sXMLResultsFileName.toLocal8Bit().constData() );						break;
-							case  1 :	sLogMsg =       "      report generator website not accessible";											break;
-							case  2 :	sLogMsg =       "      report generator offline";																break;
-							case  3 :	sLogMsg =       "      IDF file specified in analysis options overriding compliance models";		break;
-							case  4 :	sLogMsg =       "      one or more OpenStudio/EnergyPlus simulations being bypassed";				break;
-							default :	sLogMsg.clear();		break;
-						}
-						if (!sLogMsg.isEmpty())
-						{	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-							sLogMsg = sLogMsg.trimmed();		// was: TrimLeft();
-							if (iNumCantGenRptsTRUE == 1)
-								qsRptIssuesDlgBody += QString( "%1.<br></a>" ).arg( sLogMsg );
-							else
-								qsRptIssuesDlgBody += QString( "<a>%1) %2<br><\a>" ).arg( QChar('a'+iCantGenRptIdx[iRF]), sLogMsg );
-				}	}	}
-				qsRptIssuesDlgBody += "<a><br>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
-			}
-			else if (bOrigSendRptSignature)
-			{
-				long lDisableMandUFacChecks;
-				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandUFacChecks", iCID_Proj ), lDisableMandUFacChecks ))		// SAC 2/7/17 - new cause for disabling report security
-					lDisableMandUFacChecks = 0;
-		#define  NumRptSecOff  15
-				int iRptSecOffIdx[NumRptSecOff];
-				bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
-												(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
-												(bBypassInputChecks),						// input checks having been bypassed";
-												(bBypassUMLHChecks),							// unmet load hour checks having been bypassed";
-												(bBypassCheckSimRules),						// simulation check rules having been bypassed";
-												(bBypassCheckCodeRules),					// energy code checking rules having been bypassed";
-												(plOverrideAutosize[0] != -1 || plOverrideAutosize[1] != -1 || plOverrideAutosize[2] != -1 || plOverrideAutosize[3] != -1),	// override of equipment auto-sizing in one or more simulations";
-												(lQuickAnalysis > 0),						// QuickAnalysis option being activated";
-												(bIgnoreFileReadErrors),					// file read errors having been ignored";
-												(bBypassValidFileChecks),					// file validity checks having been bypassed";
-												(!sDevOptsNotDefaultedAbbrev.isEmpty()),	// developer options being activated (as described in previous log message)";
-												(!sExcptDsgnModelFile.isEmpty()),			// user specification of alternative proposed simulation IDF file";
-												(!sCSEIncludeFileDBID.isEmpty()),			// user specification of CSE include file(s): %s", sCSEIncludeFileDBID );
-												(lNumSpaceWithDefaultedDwellingUnitArea > 0),  	// # dwelling unit areas have not been entered by the user
-												(lDisableMandUFacChecks > 0),  			// mandatory U-factor checks disabled by the user - SAC 2/7/17
-												(iNumFileOpenDefaultingRounds != 3)  };	// number of model defaulting rounds overridden by user - SAC 4/11/18 
-				for (iRF=0; iRF < NumRptSecOff; iRF++)
-				{	if (bRptSecOff[iRF])
-						iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
+						iCantGenRptIdx[iRF] = iNumCantGenRptsTRUE++;
 					else
-						iRptSecOffIdx[iRF] = -1;
+						iCantGenRptIdx[iRF] = -1;
 				}
 
-				if (iNumRptSecOffTRUE > 0)
+				if (iNumCantGenRptsTRUE > 0)
 				{
-					bSendRptSignature = false;
-					BEMPX_WriteLogFile( "   Compliance report will be watermarked (not valid compliance documentation) due to:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					for (iRF=0; iRF < NumRptSecOff; iRF++)
-					{	if (bRptSecOff[iRF])
-						{	if (iNumRptSecOffTRUE == 1)
-								qsRptIssuesDlgBody = "<a>Compliance report will be watermarked (cannot serve as compliance documentation) due to ";
-							else if (iRptSecOffIdx[iRF] == 0)
-								qsRptIssuesDlgBody = "<a>Compliance report will be watermarked (cannot serve as compliance documentation) due to:<br></a>";
+					bComplianceReportPDF = bComplianceReportXML = bComplianceReportStd = false;
+					BEMPX_WriteLogFile( "   Skipping compliance report generation due to:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					for (iRF=0; iRF < NumCantGenRpts; iRF++)
+					{	if (bCantGenRpt[iRF])
+						{	if (iNumCantGenRptsTRUE == 1)
+								qsRptIssueListing = "Unable to generate compliance report due to ";
+		//						qsRptIssueListing = "<a>Unable to generate compliance report due to ";
+							else if (iCantGenRptIdx[iRF] == 0)
+								qsRptIssueListing = "Unable to generate compliance report due to:";
+		//						qsRptIssueListing = "<a>Unable to generate compliance report due to:<br></a>";
 							switch (iRF)
-							{	case  0 :	sLogMsg.sprintf( "      %d file hash check(s) failed on executable and/or analysis support files (see log file for details)", iNumFileHashErrs );		break;
-								case  1 :	sLogMsg.sprintf( "      inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );		break;
-								case  2 :	sLogMsg =        "      input checks being bypassed";		break;
-								case  3 :	sLogMsg =        "      unmet load hour checks being bypassed";		break;
-								case  4 :	sLogMsg =        "      simulation check rules being bypassed";		break;
-								case  5 :	sLogMsg =        "      energy code checking rules being bypassed";		break;
-								case  6 :	sLogMsg =        "      the override of equipment auto-sizing in one or more simulations";		break;
-								case  7 :	sLogMsg =        "      the QuickAnalysis option being activated";		break;
-								case  8 :	sLogMsg =        "      file read errors being ignored";		break;
-								case  9 :	sLogMsg =        "      file validity (hash) checks being bypassed";		break;
-								case 10 :	sLogMsg.sprintf( "      developer options being activated: %s (see log file for details)", sDevOptsNotDefaultedAbbrev.toLocal8Bit().constData() );		break;
-//	QString sDevOptsNotDefaulted;
-//	QString saDevOptsObjProps[] = {	"Proj:DisableDayltgCtrls", "Proj:DefaultDayltgCtrls", "Proj:AutoHardSize", "Proj:AutoEffInput", " " };		// SAC 8/12/14 - updated w/ latest dayltg flags
-//	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
-								case 11 :	sLogMsg =        "      user specification of alternative proposed simulation IDF file";		break;
-								case 12 :	sLogMsg.sprintf( "      user specification of %s include file(s): %s", qsCSEName.toLocal8Bit().constData(), sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
-								case 13 :	sLogMsg.sprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
-						//		case 13 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
-//	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
-								case 14 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
-								case 15 :	sLogMsg.sprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
+							{	case  0 :	sLogMsg.sprintf( "      XML results file not found:  %s", sXMLResultsFileName.toLocal8Bit().constData() );						break;
+								case  1 :	sLogMsg =       "      report generator website not accessible";											break;
+								case  2 :	sLogMsg =       "      report generator offline";																break;
+								case  3 :	sLogMsg =       "      IDF file specified in analysis options overriding compliance models";		break;
+								case  4 :	sLogMsg =       "      one or more OpenStudio/EnergyPlus simulations being bypassed";				break;
 								default :	sLogMsg.clear();		break;
 							}
 							if (!sLogMsg.isEmpty())
-							{	if (iRF == 0)	// hash check failures already reported to log above
-									BEMPX_WriteLogFile( "      file hash check(s) failures listed above", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								else
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+							{	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								sLogMsg = sLogMsg.trimmed();		// was: TrimLeft();
-								if (iNumRptSecOffTRUE == 1)
-									qsRptIssuesDlgBody += QString( "%1.<br></a>" ).arg( sLogMsg );
+								if (iNumCantGenRptsTRUE == 1)
+									qsRptIssueListing += QString( "%1." ).arg( sLogMsg );
+		//							qsRptIssueListing += QString( "%1.<br></a>" ).arg( sLogMsg );
 								else
-									qsRptIssuesDlgBody += QString( "<a>%1) %2<br><\a>" ).arg( QString::number( iRptSecOffIdx[iRF]+1 ), sLogMsg );
+									qsRptIssueListing += QString( "\n(%1) %2" ).arg( QChar('a'+iCantGenRptIdx[iRF]), sLogMsg );
+		//							qsRptIssueListing += QString( "<a>%1) %2<br><\a>" ).arg( QChar('a'+iCantGenRptIdx[iRF]), sLogMsg );
 					}	}	}
+					qsRptIssuePrompt = "<a>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+					qsRptIssueDescrip = "ompliance report generation issue";
+				}
+				else if (bOrigSendRptSignature)
+				{
+					long lDisableMandUFacChecks;
+					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandUFacChecks", iCID_Proj ), lDisableMandUFacChecks ))		// SAC 2/7/17 - new cause for disabling report security
+						lDisableMandUFacChecks = 0;
+			#define  NumRptSecOff  16
+					int iRptSecOffIdx[NumRptSecOff];
+					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
+													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
+													(bBypassInputChecks),						// input checks having been bypassed";
+													(bBypassUMLHChecks),							// unmet load hour checks having been bypassed";
+													(bBypassPreAnalysisCheckRules),			// pre-analysis check rules having been bypassed";		// SAC 1/25/19 (tic #2924)
+													(bBypassCheckSimRules),						// simulation check rules having been bypassed";
+													(bBypassCheckCodeRules),					// energy code checking rules having been bypassed";
+													(plOverrideAutosize[0] != -1 || plOverrideAutosize[1] != -1 || plOverrideAutosize[2] != -1 || plOverrideAutosize[3] != -1),	// override of equipment auto-sizing in one or more simulations";
+													(lQuickAnalysis > 0),						// QuickAnalysis option being activated";
+													(bIgnoreFileReadErrors),					// file read errors having been ignored";
+													(bBypassValidFileChecks),					// file validity checks having been bypassed";
+													(!sDevOptsNotDefaultedAbbrev.isEmpty()),	// developer options being activated (as described in previous log message)";
+													(!sExcptDsgnModelFile.isEmpty()),			// user specification of alternative proposed simulation IDF file";
+													(!sCSEIncludeFileDBID.isEmpty()),			// user specification of CSE include file(s): %s", sCSEIncludeFileDBID );
+													(lNumSpaceWithDefaultedDwellingUnitArea > 0),  	// # dwelling unit areas have not been entered by the user
+													(lDisableMandUFacChecks > 0),  			// mandatory U-factor checks disabled by the user - SAC 2/7/17
+													(iNumFileOpenDefaultingRounds != 3)  };	// number of model defaulting rounds overridden by user - SAC 4/11/18 
+					for (iRF=0; iRF < NumRptSecOff; iRF++)
+					{	if (bRptSecOff[iRF])
+							iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
+						else
+							iRptSecOffIdx[iRF] = -1;
+					}
+
+					if (iNumRptSecOffTRUE > 0)
+					{
+						bSendRptSignature = false;
+						BEMPX_WriteLogFile( "   Compliance report will be watermarked (not valid compliance documentation) due to:", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						for (iRF=0; iRF < NumRptSecOff; iRF++)
+						{	if (bRptSecOff[iRF])
+							{	if (iNumRptSecOffTRUE == 1)
+									qsRptIssueListing = "Compliance report will be watermarked (cannot serve as compliance documentation) due to ";
+		//							qsRptIssueListing = "<a>Compliance report will be watermarked (cannot serve as compliance documentation) due to ";
+								else if (iRptSecOffIdx[iRF] == 0)
+									qsRptIssueListing = "Compliance report will be watermarked (cannot serve as compliance documentation) due to:";
+		//							qsRptIssueListing = "<a>Compliance report will be watermarked (cannot serve as compliance documentation) due to:<br></a>";
+								switch (iRF)
+								{	case  0 :	sLogMsg.sprintf( "      %d file hash check(s) failed on executable and/or analysis support files (see log file for details)", iNumFileHashErrs );		break;
+									case  1 :	sLogMsg.sprintf( "      inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );		break;
+									case  2 :	sLogMsg =        "      input checks being bypassed";		break;
+									case  3 :	sLogMsg =        "      unmet load hour checks being bypassed";		break;
+									case  4 :	sLogMsg =        "      pre-analysis check rules being bypassed";		break;		// SAC 1/25/19 (tic #2924)
+									case  5 :	sLogMsg =        "      simulation check rules being bypassed";		break;
+									case  6 :	sLogMsg =        "      energy code checking rules being bypassed";		break;
+									case  7 :	sLogMsg =        "      the override of equipment auto-sizing in one or more simulations";		break;
+									case  8 :	sLogMsg =        "      the QuickAnalysis option being activated";		break;
+									case  9 :	sLogMsg =        "      file read errors being ignored";		break;
+									case 10 :	sLogMsg =        "      file validity (hash) checks being bypassed";		break;
+									case 11 :	sLogMsg.sprintf( "      developer options being activated: %s (see log file for details)", sDevOptsNotDefaultedAbbrev.toLocal8Bit().constData() );		break;
+//	QString sDevOptsNotDefaulted;
+//	QString saDevOptsObjProps[] = {	"Proj:DisableDayltgCtrls", "Proj:DefaultDayltgCtrls", "Proj:AutoHardSize", "Proj:AutoEffInput", " " };		// SAC 8/12/14 - updated w/ latest dayltg flags
+//	double faDevOptsPropOKVals[] = {               0,                         0,                      0,                      0           };
+									case 12 :	sLogMsg =        "      user specification of alternative proposed simulation IDF file";		break;
+									case 13 :	sLogMsg.sprintf( "      user specification of %s include file(s): %s", qsCSEName.toLocal8Bit().constData(), sCSEIncludeFileDBID.toLocal8Bit().constData() );		break;
+									case 14 :	sLogMsg.sprintf( "      %d dwelling unit space(s) with defaulted information in the Dwelling Unit Data tab", lNumSpaceWithDefaultedDwellingUnitArea );		break;
+							//		case 14 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
+//	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
+									case 15 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
+									case 16 :	sLogMsg.sprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
+									default :	sLogMsg.clear();		break;
+								}
+								if (!sLogMsg.isEmpty())
+								{	if (iRF == 0)	// hash check failures already reported to log above
+										BEMPX_WriteLogFile( "      file hash check(s) failures listed above", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									else
+										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									sLogMsg = sLogMsg.trimmed();		// was: TrimLeft();
+									if (iNumRptSecOffTRUE == 1)
+										qsRptIssueListing += QString( "%1." ).arg( sLogMsg );
+		//								qsRptIssueListing += QString( "%1.<br></a>" ).arg( sLogMsg );
+									else
+										qsRptIssueListing += QString( "\n(%1) %2" ).arg( QString::number( iRptSecOffIdx[iRF]+1 ), sLogMsg );
+		//								qsRptIssueListing += QString( "<a>%1) %2<br><\a>" ).arg( QString::number( iRptSecOffIdx[iRF]+1 ), sLogMsg );
+						}	}	}
 // kludge to plug in user prompt from Larry
-					if (iNumRptSecOffTRUE == 1 && bRptSecOff[13] && sUIVersionString.indexOf( "CBECC-Com" ) >= 0)
-						qsRptIssuesDlgBody += "<a><br>Press Abort and enter design dwelling unit information to receive a compliant report.<br></a>";
-					else
-						qsRptIssuesDlgBody += "<a><br>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+						if (iNumRptSecOffTRUE == 1 && bRptSecOff[14] && sUIVersionString.indexOf( "CBECC-Com" ) >= 0)
+							qsRptIssuePrompt = "<a>Press Abort and enter design dwelling unit information to receive a compliant report.<br></a>";
+						else
+							qsRptIssuePrompt = "<a>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+						qsRptIssueDescrip = "ompliance report watermarking issue";
+					}
 				}
 			}
 
@@ -3463,123 +3601,206 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			//    3 - prompt user when report generation is not available / continue analysis without prompting user if report security is disabled
 			//    4 - abort analysis with no user prompt if report generation is not available / prompt user if report security is disabled
 			//    5 - (CBECC-Com live analysis default) prompt user if either report generation is not available or if report security is disabled
-			if (!qsRptIssuesDlgBody.isEmpty() && iCompReportWarningOption > 0)
+			// --------------------------------------------------------
+			// iPreAnalysisCheckPromptOption - Options include:
+			//    0 - (compliance engine & batch processing default) no user prompt / abort analysis if errors are detected, otherwise continue analysis (regardless of any warnings)
+			//    1 - no user prompt / abort analysis if either pre-analysis errors OR warnings are detected
+			//    2 - abort analysis with no user prompt if pre-analysis errors are detected / prompt user to continue or abort analysis if warnings are detected
+			//    3 - (CBECC-Com live analysis default) prompt user if any pre-analysis errors or warnings are detected (w/ option to continue or abort if warnings but no errors detected)
+			if ( (iNumPreAnalChkErrs  < 1 && !qsRptIssuePrompt.isEmpty() && (iCompReportWarningOption > 0 || iNumPreAnalChkErrs > 0)) ||
+				  (iNumPreAnalChkErrs  > 0 && iPreAnalysisCheckPromptOption >= 3) ||
+				  (iNumPreAnalChkWarns > 0 && iPreAnalysisCheckPromptOption >= 2) )
 			{	bool bRptIssueAbort = false;
-				if (iCompReportWarningOption == 4 && iNumCantGenRptsTRUE > 0)
+				bool bSomeRptIssueDescribed = (!qsRptIssueDescrip.isEmpty());
+				QString qsPreAnalChkDlgCaption;
+
+				// at this point we have errors & possible warnings echoed to qsPreAnalChkDlgDetails, qsPreAnalChkDlgBody is empty
+				//	and report issues are described in qsRptIssue*
+				if (iNumPreAnalChkErrs > 0)
+				{	// report ONLY the pre-analysis errors
+					qsPreAnalChkDlgBody = QString( "<a>Pre-analysis check detected %1 error(s) in user model. Details listed below.<br><br></a>" ).arg( QString::number(iNumPreAnalChkErrs) );
+					qsPreAnalChkDlgBody += QString( "<a>Press 'OK' to terminate analysis.<br></a>" ).arg( QString::number(iNumPreAnalChkErrs) );
+					qsPreAnalChkDlgCaption = "Pre-Analysis Check Error(s)";
+				}
+				else
+				{	if (!qsRptIssueListing.isEmpty())
+					{	// append reporting issue details following warnings
+						if (iNumPreAnalChkWarns > 0)
+							qsPreAnalChkDlgDetails += QString( "\n\n" );
+						qsPreAnalChkDlgDetails += qsRptIssueListing;
+					}
+
+					if (iNumPreAnalChkWarns < 1 && !qsRptIssueDescrip.isEmpty())
+					{	// base dialog body on reporting issues alone
+						qsPreAnalChkDlgBody = QString( "<a>C%1(s) were detected during a pre-analysis check - details listed below.<br><br></a>" ).arg( qsRptIssueDescrip );
+						if (iNumCantGenRptsTRUE < 1)  // old caption defaulting...
+							// security issue(s) only
+							qsPreAnalChkDlgCaption = "Compliance Report Watermark Issue(s)";
+						else if (iNumRptSecOffTRUE < 1)
+							// no reports only
+							qsPreAnalChkDlgCaption = "Compliance Report Generation Issue(s)";
+						else
+							// combination of report gen access & security issues
+							qsPreAnalChkDlgCaption = "Compliance Report Generation and Watermark Issues";
+					}
+					else if (qsRptIssueDescrip.isEmpty())
+					{	// base dialog body on check warnings alone
+						qsPreAnalChkDlgBody = QString( "<a>Issue(s) were detected during a pre-analysis check - details listed below.<br><br></a>" );
+						qsPreAnalChkDlgCaption = "Pre-Analysis Check Warning(s)";
+					}
+					else
+					{	// base dialog body on check warnings + reporting issues
+						qsPreAnalChkDlgBody = QString( "<a>A combination of pre-analysis check and c%1(s) were detected during a pre-analysis check - details listed below.<br><br></a>" ).arg( qsRptIssueDescrip );
+						qsPreAnalChkDlgCaption = "Pre-Analysis Check Warning and Reporting Issues";
+					}
+
+					if (!qsRptIssuePrompt.isEmpty())
+						qsPreAnalChkDlgBody += qsRptIssuePrompt;  // might be custom prompt related to ...design dwelling unit information...
+					else
+						qsPreAnalChkDlgBody += "<a>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+				}
+
+//						if (qsPreAnalChkDlgBody.isEmpty())
+//						{	// no reporting issues found, so just need to deal w/ 
+//
+//							{	qsPreAnalChkDlgBody = QString( "Pre-analysis check detected %1 error(s) in user model. Details listed below." ).arg( QString::number(iErrCount) );
+//
+//
+//						if (!qsPreAnalChkDlgBody.isEmpty() &&
+//							  ((iCompReportWarningOption == 3 && iNumCantGenRptsTRUE > 0) ||
+//								 iCompReportWarningOption > 3 ))
+//						{	qsPreAnalChkDlgDetails += QString( "\n\n" );
+//
+//
+//			QString qsRptIssuePrompt, qsRptIssueListing;
+//					qsRptIssuePrompt = "<a>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+//// kludge to plug in user prompt from Larry
+//						if (iNumRptSecOffTRUE == 1 && bRptSecOff[14] && sUIVersionString.indexOf( "CBECC-Com" ) >= 0)
+//							qsRptIssuePrompt += "<a>Press Abort and enter design dwelling unit information to receive a compliant report.<br></a>";
+//						else
+//							qsRptIssuePrompt += "<a>Press 'OK' to continue performing anaysis or 'Abort' to terminate analysis.<br></a>";
+//
+//					qsRptIssueDescrip = "ompliance report generation issue";
+//						qsRptIssueDescrip = "ompliance report watermarking issue";
+//
+//
+//				iNumPreAnalChkErrs = (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs);
+//				iNumPreAnalChkWarns = saPreAnalChkWarningMsgs.size();
+//							if (qsPreAnalChkDlgDetails.isEmpty())
+//							{	// for some reason, no errors were retrieved above...
+//								qsPreAnalChkDlgBody = "Error(s) detected during pre-analysis model check. Refer to project log for details.";
+//							}
+//							else
+//							{	qsPreAnalChkDlgBody = QString( "Pre-analysis check detected %1 error(s) in user model. Details listed below." ).arg( QString::number(iErrCount) );
+//								iNumPreAnalChkErrs = iErrCount;
+//								qsPreAnalChkDlgDetails = QString( "%1 error(s) detected by pre-analysis check:" ).arg( QString::number(iErrCount) ) + qsPreAnalChkDlgDetails;
+//							}
+
+	// ??? what if there is a CONFLICT between iCompReportWarningOption & iPreAnalysisCheckPromptOption ... ???
+				if (bSomeRptIssueDescribed && iCompReportWarningOption == 4 && iNumCantGenRptsTRUE > 0)
 					bRptIssueAbort = true;
-				else if (iCompReportWarningOption < 3)
+				else if (bSomeRptIssueDescribed && iCompReportWarningOption < 3)
 				{	if (iCompReportWarningOption == 2)
 						bRptIssueAbort = true;
 					else if (iCompReportWarningOption == 1 && iNumCantGenRptsTRUE > 0)
 						bRptIssueAbort = true;
 				}
-				else if ((iCompReportWarningOption == 3 && iNumCantGenRptsTRUE > 0) ||
-							 iCompReportWarningOption > 3 )
+				if ( (iNumPreAnalChkErrs  > 0 && iPreAnalysisCheckPromptOption >= 3) ||
+				     (iNumPreAnalChkWarns > 0 && iPreAnalysisCheckPromptOption >= 2) ||
+					  (!bRptIssueAbort && ((iCompReportWarningOption == 3 && iNumCantGenRptsTRUE > 0) ||
+												   iCompReportWarningOption > 3)) )
 				{	// prompt user
-
-//from Larry:
-//(1)    5 dwelling unit spaces are using defaulted information in the Dwelling Unit Data Tabs.  Press Abort and enter design dwelling unit information to receive a compliant report.
-
+					assert( !qsPreAnalChkDlgCaption.isEmpty() && !qsPreAnalChkDlgBody.isEmpty() );
+										//from Larry:
+										//(1)    5 dwelling unit spaces are using defaulted information in the Dwelling Unit Data Tabs.  Press Abort and enter design dwelling unit information to receive a compliant report.
 #ifdef CM_QTGUI
 					// display report issues dialog
-					QString qsRptIssuesDlgCaption;
-					if (iNumCantGenRptsTRUE < 1)
-					{	// security issue(s) only
-						qsRptIssuesDlgCaption = "Compliance Report Watermark Issue";
-						if (iNumRptSecOffTRUE > 1)
-							qsRptIssuesDlgCaption += "s";
-					}
-					else if (iNumRptSecOffTRUE < 1)
-					{	// no reports only
-						qsRptIssuesDlgCaption = "Compliance Report Generation Issue";
-						if (iNumCantGenRptsTRUE > 1)
-							qsRptIssuesDlgCaption += "s";
-					}
-					else
-						// combination of report gen access & security issues
-						qsRptIssuesDlgCaption = "Compliance Report Generation and Watermark Issues";
-
 					if (sq_app)
 						sq_app->beep();
 					QMessageBox msgBox;
-					msgBox.setWindowTitle( qsRptIssuesDlgCaption );
+					msgBox.setWindowTitle( qsPreAnalChkDlgCaption );
 					msgBox.setIcon( QMessageBox::Warning ); 
 					msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-					msgBox.setText( qsRptIssuesDlgBody );
-					msgBox.setDetailedText( qsRptIssuesDlgDetails );
+					msgBox.setText( qsPreAnalChkDlgBody );
+					msgBox.setDetailedText( qsPreAnalChkDlgDetails );
 					msgBox.setStandardButtons( QMessageBox::Ok );
-					msgBox.addButton( QMessageBox::Abort );
+					if (iNumPreAnalChkErrs < 1)
+						msgBox.addButton( QMessageBox::Abort );
 					msgBox.setDefaultButton( QMessageBox::Ok );
+					showDetailsInQMessageBox(msgBox, 770, 300);		// routine to OPEN Details (to start with) + resize text box (to larger size)
 					bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
 #endif
 				}
 
-				if (bRptIssueAbort)
-				{	sErrMsg = "Analysis aborting - user chose to terminate due to compliance report issue(s)";
-//											66 : Analysis aborted - user chose to abort due to compliance reporting issue(s)
+				if (bRptIssueAbort && iNumPreAnalChkErrs < 1)
+				{	sErrMsg = "Analysis aborting - user chose to terminate due to pre-analysis check warning(s) and/or compliance report issue(s)";
+//										66 : Analysis aborted - user chose to abort due to pre-analysis check warning(s) and/or compliance reporting issue(s)
 					ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 66 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
 				}
 			}
-		}
+		}	// end of outer check for analysis continuing that encapsulates all pre-analysis & report gen checks
 
 		if (!bAbort && !BEMPX_AbortRuleEvaluation() && bReDefaultModel)		// SAC 11/8/14
 			DefaultModel_CECNonRes( iPrevRuleErrs, sUIVersionString, iRetVal, bVerbose, pCompRuleDebugInfo, iDontAbortOnErrorsThruStep, iNumFileOpenDefaultingRounds );
 
-		if (bBypassInputChecks)
-			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing input (range and required input) checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		if (bBypassCheckSimRules)
-			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing simulation input checks (that are intended to ensure the building model is complete)", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		if (!bChkCode)
-			BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing energy code checks (due to research mode)", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-		else if (bBypassCheckCodeRules)
-		{	BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing energy code checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			bChkCode = FALSE;
-		}
+		if (!bAbort && !BEMPX_AbortRuleEvaluation() && iRetVal == 0)
+		{
+			if (bBypassInputChecks)
+				BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing input (range and required input) checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			if (bBypassCheckSimRules)
+				BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing simulation input checks (that are intended to ensure the building model is complete)", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			if (!bChkCode)
+				BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing energy code checks (due to research mode)", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			else if (bBypassCheckCodeRules)
+			{	BEMPX_WriteLogFile( "  PerfAnal_NRes - Bypassing energy code checks", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				bChkCode = FALSE;
+			}
 
-		iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
-		BOOL bRangeCheckOK, bChkEvalSuccessful, bChkFailureDetailsWritten=FALSE;
-      for (int iChk=(bBypassInputChecks ? 1 : 0); iChk < (bChkCode ? 3 : 2); iChk++)
-		{						if (bVerbose)
-									BEMPX_WriteLogFile( "  PerfAnal_NRes - Checking SDD model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			if (iChk==0)
-				bRangeCheckOK = BEMPX_PerformErrorCheck( bChkCode /*bRequireRequiredData=TRUE*/, FALSE /*bReportSimDefaultErrors=TRUE*/,
-																		FALSE /*bPerformReqdClassCheck=TRUE*/, FALSE /*bPostRangeWarnings=FALSE*/ );
-			else if (iChk==1 && !bBypassCheckSimRules )
-      		bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_CHECKSIM" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
-			else if (iChk==2 && !bBypassCheckCodeRules)
-      		bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_CHECKCODE", bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
-			BEMPX_RefreshLogFile();	// SAC 5/19/14
+			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+			BOOL bRangeCheckOK, bChkEvalSuccessful;
+	      for (int iChk=(bBypassInputChecks ? 1 : 0); iChk < (bChkCode ? 3 : 2); iChk++)
+			{						if (bVerbose)
+										BEMPX_WriteLogFile( "  PerfAnal_NRes - Checking SDD model", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				if (iChk==0)
+					bRangeCheckOK = BEMPX_PerformErrorCheck( bChkCode /*bRequireRequiredData=TRUE*/, FALSE /*bReportSimDefaultErrors=TRUE*/,
+																			FALSE /*bPerformReqdClassCheck=TRUE*/, FALSE /*bPostRangeWarnings=FALSE*/ );
+				else if (iChk==1 && !bBypassCheckSimRules )
+	      		bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_CHECKSIM" , bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
+				else if (iChk==2 && !bBypassCheckCodeRules)
+	      		bChkEvalSuccessful = CMX_EvaluateRuleset( "rl_CHECKCODE", bVerbose, FALSE /*bTagDataAsUserDefined*/, bVerbose, NULL, NULL, NULL, pCompRuleDebugInfo );
+				BEMPX_RefreshLogFile();	// SAC 5/19/14
 
-			if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
-			{															if (bStoreBEMDetails && !bChkFailureDetailsWritten)
-																		{	QString sChkErr = (iChk==0 ? " - RangeReqd" : (iChk==1 ? " - ChkSim" : " - ChkCode"));
-																			sDbgFileName = sProcessingPath + sModelFileOnly + sChkErr + QString(".ibd-Detail");
-   																		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
-   																		bChkFailureDetailsWritten = TRUE;
-																		}
-				if (iDontAbortOnErrorsThruStep < 1)  // check flag to bypass errors
-				{
+				if (BEMPX_GetRulesetErrorCount() > iPrevRuleErrs)
+				{															if (bStoreBEMDetails && !bChkFailureDetailsWritten)
+																			{	QString sChkErr = (iChk==0 ? " - RangeReqd" : (iChk==1 ? " - ChkSim" : " - ChkCode"));
+																				sDbgFileName = sProcessingPath + sModelFileOnly + sChkErr + QString(".ibd-Detail");
+	   																		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+	   																		bChkFailureDetailsWritten = TRUE;
+																			}
+					if (iDontAbortOnErrorsThruStep < 1)  // check flag to bypass errors
+					{
 //											11 : Error(s) encountered performing required data & numeric range checks
 //											12 : Error(s) encountered checking input model for simulation compatibility
 //											13 : Error(s) encountered checking input model for code requirements
-					iRetVal = (iRetVal > 0 ? iRetVal : 11+iChk);		// do abort (after ALL checks)
-					bAbort = true;
-			}	}
+						iRetVal = (iRetVal > 0 ? iRetVal : 11+iChk);		// do abort (after ALL checks)
+						bAbort = true;
+				}	}
 
-			iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
-		}
+				iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
+			}
 
-		// blast weather file hash property values - not helpful for them to remain in analysis inputs - SAC 9/3/13
-		if (bWthrHashesSet)
-		{	BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "WthrFileEPWHash", iCID_Proj ), iError );
-			BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "WthrFileDDYHash", iCID_Proj ), iError );
-		}
+			// blast weather file hash property values - not helpful for them to remain in analysis inputs - SAC 9/3/13
+			if (bWthrHashesSet)
+			{	BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "WthrFileEPWHash", iCID_Proj ), iError );
+				BEMPX_DefaultProperty( BEMPX_GetDatabaseID( "WthrFileDDYHash", iCID_Proj ), iError );
+			}
 
 					if (iAnalysisThruStep < 2)
 					{	bCompletedAnalysisSteps = TRUE;
 											sLogMsg.sprintf( "  PerfAnal_NRes - Completed analysis steps thru #%d", iAnalysisThruStep );
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
+		}
 	}
 
 		// BEFORE writing SDD XML file, evaluate rulelist that does certain OSM-prep, incl. creating & assigning ThrmlEngyStor:DischrgSchRef, ChrgSchRef & ChlrOnlySchRef based on ModeSchRef
@@ -3673,7 +3894,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 					//		AnalysisThruStep options:
 					//		     iRun
-					//		  1    0   - Analysis Initialization (DEFAULT/CHECKSIM/CHECKCODE rules)
+					//		  1    0   - Analysis Initialization (DEFAULT/PREANALYSISCHECK/CHECKSIM/CHECKCODE rules)
 					//		  2   0-1  - Evaluate SIZING_PROPOSED and SIZING_BASELINE rules
 					//		  3   0-1  - Generate SIZING_PROPOSED and SIZING_BASELINE OSM & IDF
 					//		  4   0-1  - Simulate SIZING_PROPOSED and SIZING_BASELINE models & retrieve results (possibly iterate for ruleset autosized models)
@@ -4361,7 +4582,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												}
 												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
 												{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
-													QString sDHWUseIncFile = "DHWDUMF.txt";
+													QString sDHWUseIncFile = "DHWDU.txt";	// SAC 1/24/19 - updated from DHWDUMF.txt to DHWDU.txt
 													QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
 													if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
 													{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
@@ -4395,7 +4616,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 															!pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] && !bBypassUMLHChecks && !bBypassCheckSimRules && 
 															plOverrideAutosize[0] == -1 && plOverrideAutosize[1] == -1 && plOverrideAutosize[2] == -1 && plOverrideAutosize[3] == -1 && !bBypassCheckCodeRules && 
 															lQuickAnalysis <= 0 && !bIgnoreFileReadErrors && !bBypassValidFileChecks && sDevOptsNotDefaulted.isEmpty() && sExcptDsgnModelFile.isEmpty() &&
-															lNumSpaceWithDefaultedDwellingUnitArea < 1)
+															lNumSpaceWithDefaultedDwellingUnitArea < 1 && !bBypassPreAnalysisCheckRules)
 													{	bAllowReportIncludeFile = false;
 														sCSEIncludeFileDBID.clear();
 																			sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
