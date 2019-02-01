@@ -6627,8 +6627,10 @@ void CMainFrame::ViewReport( int iReportID /*=0*/ )		// SAC 11/18/15
 #ifdef UI_CARES
 	long lEnergyCodeYr;
 	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
-	if (lEnergyCodeYr >= 2019)
-		sDefaultResFNWord = "CF1RPRF01E";
+	//if (lEnergyCodeYr >= 2019)
+	//	sDefaultResFNWord = "CF1RPRF01E";
+	// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
+		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
 #elif UI_CANRES
 	// add code once schema-based reporting enabled in -Com
 #endif
@@ -6871,10 +6873,14 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 #ifdef UI_CARES
 		long lEnergyCodeYr;
 		BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYr );
-		if (lEnergyCodeYr >= 2019)
-		{	bSchemaBasedRptGen = true;
-			sDefaultResFNWord = "CF1RPRF01E";
-		}
+	//	if (lEnergyCodeYr >= 2019)
+	//	{	bSchemaBasedRptGen = true;
+	//		sDefaultResFNWord = "CF1RPRF01E";
+	//	}
+	// SAC 1/31/19 - revised above code to be sensitive to Res INI option ComplianceReportPrompt
+		sDefaultResFNWord = ReadProgString( "options", "ComplianceReportPrompt", (lEnergyCodeYr >= 2019 ? "CF1RPRF01E" : "AnalysisResults") );
+		if (sDefaultResFNWord.Find("Analysis") != 0)
+			bSchemaBasedRptGen = true;
 #elif UI_CANRES
 		// add code once schema-based reporting enabled in -Com
 #endif
@@ -6909,13 +6915,15 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 			      			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:RptGenStdReport" ), sRptGenCompReport );
 			      			if (sRptGenCompReport.IsEmpty())
 			      				sErrMsg = "The ruleset selected for this project does not define a Standard Model report ID (Proj:RptGenStdReport) and therefore the report cannot be generated.";
-								sAppendToFN.Format( " - %s-BEES-Std.pdf", sResXMLFileName );
+								sAppendToFN.Format( " - %s-BEES-Std.pdf", sDefaultResFNWord );
 								sRptType = "standard model";		sRptTypeLong = "Standard Model Report";
 								break;
-				default :	sAppendToFN.Format( " - %s-BEES.pdf", sResXMLFileName );
+				default :	sAppendToFN.Format( " - %s-BEES.pdf", sDefaultResFNWord );
 								sRptType = "compliance";			sRptTypeLong = "Compliance Report";
 								break;
 			}
+//CString sDbg; sDbg.Format( "sProjFileName:  %s\nsAppendToFN:  %s", sProjFileName, sAppendToFN );
+//BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 			CString sMsg, sOutRptFN = (sProjFileName.ReverseFind('.') > 0 ? sProjFileName.Left( sProjFileName.ReverseFind('.') ) : sProjFileName);
 			sOutRptFN += sAppendToFN;
@@ -7010,7 +7018,7 @@ void CMainFrame::GenerateReport( int iReportID )		// SAC 10/8/14
 						EnableWindow( FALSE );		// SAC 11/12/15 - disable window/UI actions during processing
 						iRptGenRetVal = CMX_GenerateReport_Proxy_CEC( sResXMLFileName /*sProjPath, sResFN*/, sCACertPath, sRptGenCompReport, sRptGenUIApp, sRptGenUIVer,
 																	"none" /*Signature*/, "none" /*PublicKey*/, pszProxyServerAddress, pszProxyServerCredentials, "true" /*sDebugRpt*/, bVerbose, false /*bSilent*/,
-																	sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService, sSecKeyRLName, sOutRptFN, pszProxyServerType, pszNetComLibrary, bSchemaBasedRptGen );		// SAC 8/7/14 - added final arguments to fix -Res rpt gen issue #355		// SAC 11/5/15
+																	sRptGenCompRptID, sRptGenServer, sRptGenApp, sRptGenService, sSecKeyRLName, sOutRptFN, pszProxyServerType, pszNetComLibrary, bSchemaBasedRptGen);		// SAC 8/7/14 - added final arguments to fix -Res rpt gen issue #355		// SAC 11/5/15
 						EnableWindow( TRUE );
 					}
 

@@ -637,7 +637,8 @@ int CSERunMgr::SetupRun(
 
 int CSERunMgr::SetupRun_Simple(
 	int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,
-	const char* pszRunAbbrev /*=NULL*/, const char* pszExtraCSECmdLineArgs /*=NULL*/, const char* pszAppendToCSEFile /*=NULL*/ )
+	const char* pszRunAbbrev /*=NULL*/, const char* pszExtraCSECmdLineArgs /*=NULL*/,
+	const char* pszAppendToCSEFile /*=NULL*/, int iModelType /*=0*/ )
 {
 	int iRetVal = 0;
 	CSERun* pCSERun = new CSERun;
@@ -774,9 +775,10 @@ int CSERunMgr::SetupRun_Simple(
 				else if (FileExists( sOutFiles[i].toLocal8Bit().constData() ))
 					DeleteFile( sOutFiles[i].toLocal8Bit().constData() );
 			}
-		}
-		
-		QString sRptIncFile, sProcRptIncFile, sZoneIncFile, sProcZoneIncFile;		QVector<QString> saZoneIncFiles, saProcZoneIncFiles, saZoneNameIncFiles;
+	}	}
+
+	if (iRetVal == 0 && iModelType == 0 /*T24R*/)	
+	{	QString sRptIncFile, sProcRptIncFile, sZoneIncFile, sProcZoneIncFile;		QVector<QString> saZoneIncFiles, saProcZoneIncFiles, saZoneNameIncFiles;
 		if (iRetVal == 0)
 		{	// Write Report Include file statement
 			long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "Proj:ReportIncludeFile" );
@@ -904,9 +906,10 @@ int CSERunMgr::SetupRun_Simple(
 					iRetVal = BEMAnal_CECRes_CSEIncFileCopyError;
 				}
 			}
-		}
+	}	}
 
-		// SAC 3/18/17 - storage of TDV CSV file to be made available to the CSE input file
+	if (iRetVal == 0)	
+	{	// SAC 3/18/17 - storage of TDV CSV file to be made available to the CSE input file
 		pCSERun->SetTDVFName( "" );		// SAC 4/16/17
 
 		if (iRetVal == 0)
@@ -955,6 +958,12 @@ int CSERunMgr::SetupRun_Simple(
 		}
 		}	// end of excerpt from SetupRunFinish()
 	}
+
+	if (iRetVal != 0 && m_bVerbose)
+	{	sLogMsg = QString( "   CSERunMgr::SetupRun_Simple() error - returning %1" ).arg( QString::number(iRetVal) );
+		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	}	
+
 	return iRetVal;
 }		// CSERunMgr::SetupRun
 
@@ -979,9 +988,11 @@ vector< string> split_string( const string& line, const string delim)
 	return toks;
 }		// split_string
 //-----------------------------------------------------------------------------
+//  ModelType:		0  T24-Res
+//						1  T24-Com
 // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
 int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath,
-											std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol, bool bVerbose )
+											std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol, bool bVerbose, int iModelType )
 // returns 0 iff success
 //         1 fail (CSE error, ...)
 {
@@ -999,7 +1010,7 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 		QString sHPWHSizeCmdLineArg = QString( " -DHPWHSIZE=%1" ).arg( QString::number(daRunMults[iR], 'f', iMultDecPrec) );
 		QString sNum = QString::number(iR+1);
 		iCSESimRetVal = cseRunMgr.SetupRun_Simple( iR /*iRunIdx*/, CRM_User /*iRunType*/, sErrMsg, true /*bAllowReportIncludeFile*/,
-													"HPWHSz" /*pszRunAbbrev*/, sHPWHSizeCmdLineArg.toLocal8Bit().constData(), sNum.toLocal8Bit().constData() );
+													"HPWHSz" /*pszRunAbbrev*/, sHPWHSizeCmdLineArg.toLocal8Bit().constData(), sNum.toLocal8Bit().constData(), iModelType );
 			//BEMMessageBox( QString("hsz_Run1():  cseRunMgr.SetupRun_Simple() returned %1 (0=>OK) for file:  %2").arg(QString::number(iCSESimRetVal), hsz_sModelFileOnlyNoExt) );		// debugging
 	}
 
@@ -1011,6 +1022,7 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 	}
 
 	double dHrlyRes[3][8760], dAnnUse[3] = {0.0,0.0,0.0};
+	double dDbgRawRes[3] = {0.0,0.0,0.0};		// SAC 1/29/19
 	for (iR=0; (iCSESimRetVal == 0 && sErrMsg.isEmpty() && iR < iNumRuns); iR++)
 	{	const CSERun& cseRun = cseRunMgr.GetRun(iR/*iRunIdx*/);
 		const QString& sRunID = cseRun.GetRunID();
@@ -1051,12 +1063,18 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 				{	getline(is, line);
 					vector< string> toks = split_string(line, ",");
 					dHrlyRes[iR][i] = stod(toks[colTot]);
+					dDbgRawRes[iR] += dHrlyRes[iR][i];
 				}
 				fb.close();
 		}	}
 
 		if (iCSESimRetVal == 0)
-		{	// apply hourly TDV multipliers to DHW results (or simply sum hourlys into single use result)
+		{	if (iModelType == 1)		// convert kBtu CSE results into kWh, as those are the units the Com TDV table are in
+			{	for (int i=0;i<8760;i++)
+					dHrlyRes[iR][i] /= 3.412;
+			}
+
+			// apply hourly TDV multipliers to DHW results (or simply sum hourlys into single use result)
 			if (!sStdHPWHSzTDVTbl.isEmpty() && lStdHPWHSzTDVCol > 0)
 				dAnnUse[iR] = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[iR], sStdHPWHSzTDVTbl.toLocal8Bit().constData(),	lStdHPWHSzTDVCol, bVerbose );
 			else
@@ -1080,8 +1098,8 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 				sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3,  %4" ).arg(
 														QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), sErrMsg );
 			else
-				sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3 resulted in %4 kTDV" ).arg(
-														QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), QString::number(dAnnUse[iR], 'f', 0) );
+				sLogMsg = QString( "   HPWH Sizing system %1, run %2 using multiplier %3 resulted in %4 kTDV   (%5 kWh)" ).arg(
+														QString::number(iSysIdx), QString::number(iR+1), QString::number(daRunMults[iR], 'f', iMultDecPrec), QString::number(dAnnUse[iR], 'f', 0), QString::number(dDbgRawRes[iR]/3.412, 'f', 0) );
 			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 		}
 	}
@@ -1099,14 +1117,17 @@ int CSE_PerformHPWHSizing_3Run( QString sCSEexe, QString sCSEWthr, QString sMode
 	return ret;
 }	// CSE_PerformHPWHSizing_3Run
 //-----------------------------------------------------------------------------
-
+//  ModelType:		0  T24-Res
+//						1  T24-Com
 bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
-								QString& sErrorMsg )	// SAC 12/13/18 (HPWHSIZE)
+								QString& sErrorMsg, int iModelType )	// SAC 12/13/18 (HPWHSIZE)
 {
+	QString qsMainDWHSysClass = (iModelType == 1 ? "ResDHWSys" : "DHWSys");
 	std::vector<int> iaCSEDHWSystemsSizedIdx, iaDHWSystemsSizedIdx;
-	int iCID_DHWSys       = BEMPX_GetDBComponentID( "DHWSys" );
+	int iCID_DHWSys       = BEMPX_GetDBComponentID( qsMainDWHSysClass.toLocal8Bit().constData() );
 	int iCID_CSEDHWSys    = BEMPX_GetDBComponentID( "cseDHWSYS" );
 	int iCID_CSEDHWHeater = BEMPX_GetDBComponentID( "cseDHWHEATER" );
+	long lDBID_SzRunMults = BEMPX_GetDatabaseID( (iModelType == 1 ? "StdHPWHSizingRunMults[1]" : "StdHPWHSzRunMlts[1]"), iCID_DHWSys );
 	int iSV, iErr, iNumCSEDHWSystems = BEMPX_GetNumObjects( iCID_CSEDHWSys );
 	bool bFirstDHWSysBeingSized = true;
 	for (int iSIdx=0; (sErrorMsg.isEmpty() && iSIdx < iNumCSEDHWSystems); iSIdx++)
@@ -1115,7 +1136,7 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 		int iDHWSysObjIdx = (pSrcDHWSys && pSrcDHWSys->getClass()) ? BEMPX_GetObjectIndex( pSrcDHWSys->getClass(), pSrcDHWSys ) : -1;
 		long lHPWHSizingReqd=0;
 		if (pCentralSys == NULL && iDHWSysObjIdx >= 0 && 
-			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "DHWSys:HPWHSizingReqd" ), lHPWHSizingReqd, 0, -1, iDHWSysObjIdx ) && lHPWHSizingReqd > 0)
+			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "HPWHSizingReqd", iCID_DHWSys ), lHPWHSizingReqd, 0, -1, iDHWSysObjIdx ) && lHPWHSizingReqd > 0)
 		{	// process each system that isn't a slave and that has the flag set HPWHSizingReqd
 			iaCSEDHWSystemsSizedIdx.push_back( iSIdx );
 			iaDHWSystemsSizedIdx.push_back( iDHWSysObjIdx );
@@ -1311,7 +1332,7 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 					QString sModelFileOnlyNoExt = sSzCSEFileOnlyNoExt.left( sSzCSEFileOnlyNoExt.length()-1 );
 					QString sSzRun1CSEPathFile = QString( "%1%21.cse" ).arg( m_sProcessPath, sSzCSEFileOnlyNoExt );
 					for (int iM=0; iM < lStdHPWHSzNumRuns; iM++)
-					{	BEMPX_GetFloat( BEMPX_GetDatabaseID( "DHWSys:StdHPWHSzRunMlts[1]" )+iM, dRunMult, 0.0, -1, iDHWSysObjIdx );		assert( dRunMult > 0 );
+					{	BEMPX_GetFloat( lDBID_SzRunMults+iM, dRunMult, 0.0, -1, iDHWSysObjIdx );		assert( dRunMult > 0 );
 						if (dRunMult > 0)
 						{	daRunMults.push_back( dRunMult );
 							if (iM>0)
@@ -1340,7 +1361,7 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 					int iHPWHSzRetVal = -1;
 					if (sErrorMsg.isEmpty())
 					{	iHPWHSzRetVal = CSE_PerformHPWHSizing_3Run( m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sModelFileOnlyNoExt, m_sProcessPath,
-																					daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol, m_bVerbose );		// sErrorMsg   // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
+																					daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol, m_bVerbose, iModelType );		// sErrorMsg   // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
 					}
 					if (sErrorMsg.isEmpty() && iHPWHSzRetVal==0)
 					{	// evaluat RULES to calculate final heater multiplier based on sizing run results already posted to the cseDHWSYS
@@ -2205,6 +2226,32 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 
 		}	}
+
+
+
+// debugging
+//bool bVerboseInit = m_bVerbose;
+//m_bVerbose = true;
+				// SAC 1/29/19 - code to initiate HPWH Sizing run(s) when called for (based on Res)
+				long lCSE_HPWHSizingReqd=0, lHPWHSizInProc=0;
+				long lDBID_HPWHSizInProc = BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizInProc" );	// SAC 12/18/18
+				if (lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
+					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingReqd" ), lCSE_HPWHSizingReqd ) && lCSE_HPWHSizingReqd > 0)
+				{	// set flag indicating that we are performing HPWHSizing (otherwise we get stuck in an infinite loop during setup of CSE run initiated by T24Res_HPWHSizing()
+					lHPWHSizInProc = 1;
+					BEMPX_SetBEMData( lDBID_HPWHSizInProc, BEMP_Int, (void*) &lHPWHSizInProc );
+				// PERFORM HPWH Sizing
+					if (!T24Res_HPWHSizing( sProjFileAlone, sRunID, sErrorMsg, 1 /*iModelType*/ ))
+					{	iRetVal = 72;	// Error in sizing small central residential HPWH system(s) using CSE
+						if (!sErrorMsg.isEmpty())
+							BEMPX_WriteLogFile( sErrorMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+					}
+					// re-default (blast) flag indicating that we are performing HPWHSizing
+					BEMPX_DefaultProperty( lDBID_HPWHSizInProc, m_iError );
+				}
+// debugging
+//m_bVerbose = bVerboseInit;
+
 
 
 		QString sProjCSEFile;

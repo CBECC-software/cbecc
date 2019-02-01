@@ -2002,6 +2002,7 @@ static QString sDbgFileName;
 //											69 : Error evaluating rulelist that converts residential DHW systems to code baseline
 //											70 : Error evaluating 'GenerateZEROCodeReport' rulelist
 //											71 : Error(s) encountered performing pre-analysis check of input model
+//											72	: Error in sizing small central residential HPWH system(s) using CSE
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -4112,8 +4113,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									else
 									{
 		// debugging
-		sLogMsg.sprintf( "Evaluating ResDHWBaselineRulelist '%s' on model %d (iCurActiveBEMProcIdx %d).", sResDHWBaselineRulelistName.toLocal8Bit().constData(), BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
-		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		//sLogMsg.sprintf( "Evaluating ResDHWBaselineRulelist '%s' on model %d (iCurActiveBEMProcIdx %d).", sResDHWBaselineRulelistName.toLocal8Bit().constData(), BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
+		//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 										int iResDHWBaseRetVal = LocalEvaluateRuleset( sErrMsg, 69, sResDHWBaselineRulelistName.toLocal8Bit().constData(), bVerbose, pCompRuleDebugInfo );
 //											69 : Error evaluating rulelist that converts residential DHW systems to code baseline
 										if (iResDHWBaseRetVal != 0 || BEMPX_AbortRuleEvaluation())

@@ -1398,27 +1398,34 @@ void CTreeBDB::AddAssignedChildren( HTREEITEM hParent, int iParClass, int iParOb
 	laChildObjIDs.RemoveAll();
 }
 
-static BOOL sbAppendDBIDsLoaded = FALSE;
-//static long slaAppendDBID[ BEM_NUM_CLASSES ];
+//static BOOL sbAppendDBIDsLoaded = FALSE;
+static QString sqsAppendDBIDsRuleSetID;
+static QString sqsAppendDBIDsRuleSetVer;
 static CDWordArray sdwaAppendDBID;
 static void LoadAppendDBIDs()
 {
-   int i1Class = 1;
-   int iError;
-   BEMClass* pClass = BEMPX_GetClass( i1Class, iError );
-   sdwaAppendDBID.SetSize( BEMPX_GetNumClasses() );
-   while ((iError >= 0) && pClass)
-   {
-      CString sParam = ReadProgString( "AppendToTreeEntries", pClass->getShortName().toLatin1().constData(), "");
-      if (sParam.GetLength() != 0)
-         sdwaAppendDBID[ i1Class-1 ] = (DWORD) BEMPX_GetDatabaseID( sParam, i1Class );
-      else
-         sdwaAppendDBID[ i1Class-1 ] = 0;
-
-      pClass = BEMPX_GetClass( ++i1Class, iError );
-   }
-
-   sbAppendDBIDsLoaded = TRUE;
+	QString sLoadedRuleSetID, sLoadedRuleSetVer;
+	if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))	// SAC 1/31/19 - code to refresh the list of AppendDBIDs list when ruleset has changed
+	{	if (sqsAppendDBIDsRuleSetID.isEmpty() || sqsAppendDBIDsRuleSetVer.isEmpty() ||
+			 sqsAppendDBIDsRuleSetID.compare(  sLoadedRuleSetID  ) ||
+			 sqsAppendDBIDsRuleSetVer.compare( sLoadedRuleSetVer ))
+		{  int i1Class = 1;
+		   int iError;
+		   BEMClass* pClass = BEMPX_GetClass( i1Class, iError );
+		   sdwaAppendDBID.SetSize( BEMPX_GetNumClasses() );
+		   while ((iError >= 0) && pClass)
+		   {
+		      CString sParam = ReadProgString( "AppendToTreeEntries", pClass->getShortName().toLatin1().constData(), "");
+		      if (sParam.GetLength() != 0)
+		         sdwaAppendDBID[ i1Class-1 ] = (DWORD) BEMPX_GetDatabaseID( sParam, i1Class );
+		      else
+		         sdwaAppendDBID[ i1Class-1 ] = 0;
+		      pClass = BEMPX_GetClass( ++i1Class, iError );
+		   }
+			sqsAppendDBIDsRuleSetID  = sLoadedRuleSetID;
+			sqsAppendDBIDsRuleSetVer = sLoadedRuleSetVer;
+		   //sbAppendDBIDsLoaded = TRUE;
+	}	}
 }
 
 static void SetItemString( BEMObject* pObj, CString& sEntry )
@@ -1436,7 +1443,8 @@ static void SetItemString( BEMObject* pObj, CString& sEntry )
       {
          sEntry = pObj->getName().toLatin1().constData();
 
-         if (sbAppendDBIDsLoaded && sdwaAppendDBID[ pObj->getClass()->get1BEMClassIdx()-1 ] > 0)		// SAC 3/22/14 - make sure sdwaAppendDBID array is setup before referencing it
+         if (sdwaAppendDBID.GetSize() >= pObj->getClass()->get1BEMClassIdx() &&
+         	 sdwaAppendDBID[ pObj->getClass()->get1BEMClassIdx()-1 ] > 0)		// SAC 3/22/14 - make sure sdwaAppendDBID array is setup before referencing it // SAC 1/31/19
          {
             int iObjIdx = BEMPX_GetObjectIndex( pObj->getClass(), pObj );
             QString sTemp;
@@ -1735,8 +1743,8 @@ void CTreeBDB::PopulateBDBTree( int iTreeMode, int iBDBClassToHighlight, BOOL bO
       m_iTreeMode = iTreeMode;
 
 // SAC 2/28/14 - moved to here so that we can confirm that Proj object exists (an indication that RULE NEW vars are available for display)
-		if (!sbAppendDBIDsLoaded && eiBDBCID_Proj > 0 && BEMPX_GetNumObjects( eiBDBCID_Proj ) > 0)
-			LoadAppendDBIDs();
+		if (/*!sbAppendDBIDsLoaded &&*/ eiBDBCID_Proj > 0 && BEMPX_GetNumObjects( eiBDBCID_Proj ) > 0)
+			LoadAppendDBIDs();	// SAC 1/31/19 - revised to check for ruleset change before loading...
 
       ResetArrayData();
       if ( (DeleteAllBDBItems()) && (m_iTreeMode >= 0) && (m_iTreeMode < TM_NumModes) )
@@ -1899,7 +1907,8 @@ void CTreeBDB::CheckAndUpdateTree( long lDBIDModified )
          m_bTreeCurrent = FALSE;
       }
    }
-   else if ( iClass > 0 && iClass <= BEMPX_GetNumClasses() && sbAppendDBIDsLoaded &&	// SAC 3/22/14 - make sure sdwaAppendDBID array is setup before referencing it
+   else if ( iClass > 0 && iClass <= BEMPX_GetNumClasses() &&
+				 sdwaAppendDBID.GetSize() >= iClass &&	// SAC 3/22/14 - make sure sdwaAppendDBID array is setup before referencing it // SAC 1/31/19
              sdwaAppendDBID[ iClass-1 ] > 0 )  // update tree if user modified a value which gets appended to
       m_bTreeCurrent = FALSE;                  // its component's tree entry label
    else if ( lDBIDModified == elDBID_Proj_Ruleset )         // always update tree if ruleset changed
