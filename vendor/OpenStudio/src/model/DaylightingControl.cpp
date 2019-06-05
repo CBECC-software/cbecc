@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "DaylightingControl.hpp"
 #include "DaylightingControl_Impl.hpp"
@@ -62,8 +72,6 @@ namespace detail {
   const std::vector<std::string>& DaylightingControl_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -193,25 +201,29 @@ namespace detail {
     return getDouble(OS_Daylighting_ControlFields::MaximumAllowableDiscomfortGlareIndex,true);
   }
 
-  void DaylightingControl_Impl::setPositionXCoordinate(double positionXCoordinate) {
+  bool DaylightingControl_Impl::setPositionXCoordinate(double positionXCoordinate) {
     bool result = setDouble(OS_Daylighting_ControlFields::PositionXCoordinate, positionXCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
-  void DaylightingControl_Impl::setPositionYCoordinate(double positionYCoordinate) {
+  bool DaylightingControl_Impl::setPositionYCoordinate(double positionYCoordinate) {
     bool result = setDouble(OS_Daylighting_ControlFields::PositionYCoordinate, positionYCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
-  void DaylightingControl_Impl::setPositionZCoordinate(double positionZCoordinate) {
+  bool DaylightingControl_Impl::setPositionZCoordinate(double positionZCoordinate) {
     bool result = setDouble(OS_Daylighting_ControlFields::PositionZCoordinate, positionZCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
 
-  void DaylightingControl_Impl::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
+  bool DaylightingControl_Impl::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
     bool result = setDouble(OS_Daylighting_ControlFields::PsiRotationAroundXAxis, psiRotationAroundXAxis);
     OS_ASSERT(result);
+    return result;
   }
 
   void DaylightingControl_Impl::resetPsiRotationAroundXAxis() {
@@ -219,9 +231,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void DaylightingControl_Impl::setThetaRotationAroundYAxis(double thetaRotationAroundYAxis) {
+  bool DaylightingControl_Impl::setThetaRotationAroundYAxis(double thetaRotationAroundYAxis) {
     bool result = setDouble(OS_Daylighting_ControlFields::ThetaRotationAroundYAxis, thetaRotationAroundYAxis);
     OS_ASSERT(result);
+    return result;
   }
 
   void DaylightingControl_Impl::resetThetaRotationAroundYAxis() {
@@ -229,9 +242,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void DaylightingControl_Impl::setPhiRotationAroundZAxis(double phiRotationAroundZAxis) {
+  bool DaylightingControl_Impl::setPhiRotationAroundZAxis(double phiRotationAroundZAxis) {
     bool result = setDouble(OS_Daylighting_ControlFields::PhiRotationAroundZAxis, phiRotationAroundZAxis);
     OS_ASSERT(result);
+    return result;
   }
 
   void DaylightingControl_Impl::resetPhiRotationAroundZAxis() {
@@ -279,9 +293,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void DaylightingControl_Impl::setNumberofSteppedControlSteps(int numberofSteppedControlSteps) {
+  bool DaylightingControl_Impl::setNumberofSteppedControlSteps(int numberofSteppedControlSteps) {
     bool result = setInt(OS_Daylighting_ControlFields::NumberofSteppedControlSteps, numberofSteppedControlSteps);
     OS_ASSERT(result);
+    return result;
   }
 
   void DaylightingControl_Impl::resetNumberofSteppedControlSteps() {
@@ -355,7 +370,7 @@ namespace detail {
     return result;
   }
 
-  bool DaylightingControl_Impl::setTransformation(const openstudio::Transformation& transformation) 
+  bool DaylightingControl_Impl::setTransformation(const openstudio::Transformation& transformation)
   {
     Vector3d translation = transformation.translation();
     this->setPositionXCoordinate(translation.x());
@@ -366,8 +381,8 @@ namespace detail {
     setPsiRotationAroundXAxis(radToDeg(eulerAngles.psi()));
     setThetaRotationAroundYAxis(radToDeg(eulerAngles.theta()));
     setPhiRotationAroundZAxis(radToDeg(eulerAngles.phi()));
-    
-    return true;  
+
+    return true;
   }
 
   bool DaylightingControl_Impl::isPrimaryDaylightingControl() const
@@ -395,7 +410,7 @@ namespace detail {
         result = (this->handle() == control->handle());
       }
     }
-    return result;  
+    return result;
   }
 
   bool DaylightingControl_Impl::aimAt(const Point3d& target)
@@ -544,19 +559,19 @@ boost::optional<double> DaylightingControl::maximumAllowableDiscomfortGlareIndex
   return getImpl<detail::DaylightingControl_Impl>()->maximumAllowableDiscomfortGlareIndex();
 }
 
-void DaylightingControl::setPositionXCoordinate(double positionXCoordinate) {
-  getImpl<detail::DaylightingControl_Impl>()->setPositionXCoordinate(positionXCoordinate);
+bool DaylightingControl::setPositionXCoordinate(double positionXCoordinate) {
+  return getImpl<detail::DaylightingControl_Impl>()->setPositionXCoordinate(positionXCoordinate);
 }
 
-void DaylightingControl::setPositionYCoordinate(double positionYCoordinate) {
-  getImpl<detail::DaylightingControl_Impl>()->setPositionYCoordinate(positionYCoordinate);
+bool DaylightingControl::setPositionYCoordinate(double positionYCoordinate) {
+  return getImpl<detail::DaylightingControl_Impl>()->setPositionYCoordinate(positionYCoordinate);
 }
 
-void DaylightingControl::setPositionZCoordinate(double positionZCoordinate) {
-  getImpl<detail::DaylightingControl_Impl>()->setPositionZCoordinate(positionZCoordinate);
+bool DaylightingControl::setPositionZCoordinate(double positionZCoordinate) {
+  return getImpl<detail::DaylightingControl_Impl>()->setPositionZCoordinate(positionZCoordinate);
 }
 
-void DaylightingControl::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
+bool DaylightingControl::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
   return getImpl<detail::DaylightingControl_Impl>()->setPsiRotationAroundXAxis(psiRotationAroundXAxis);
 }
 
@@ -564,7 +579,7 @@ void DaylightingControl::resetPsiRotationAroundXAxis() {
   getImpl<detail::DaylightingControl_Impl>()->resetPsiRotationAroundXAxis();
 }
 
-void DaylightingControl::setThetaRotationAroundYAxis(double thetaRotationAroundYAxis) {
+bool DaylightingControl::setThetaRotationAroundYAxis(double thetaRotationAroundYAxis) {
   return getImpl<detail::DaylightingControl_Impl>()->setThetaRotationAroundYAxis(thetaRotationAroundYAxis);
 }
 
@@ -572,7 +587,7 @@ void DaylightingControl::resetThetaRotationAroundYAxis() {
   getImpl<detail::DaylightingControl_Impl>()->resetThetaRotationAroundYAxis();
 }
 
-void DaylightingControl::setPhiRotationAroundZAxis(double phiRotationAroundZAxis) {
+bool DaylightingControl::setPhiRotationAroundZAxis(double phiRotationAroundZAxis) {
   return getImpl<detail::DaylightingControl_Impl>()->setPhiRotationAroundZAxis(phiRotationAroundZAxis);
 }
 
@@ -612,8 +627,8 @@ void DaylightingControl::resetMinimumLightOutputFractionforContinuousDimmingCont
   getImpl<detail::DaylightingControl_Impl>()->resetMinimumLightOutputFractionforContinuousDimmingControl();
 }
 
-void DaylightingControl::setNumberofSteppedControlSteps(int numberofSteppedControlSteps) {
-  getImpl<detail::DaylightingControl_Impl>()->setNumberofSteppedControlSteps(numberofSteppedControlSteps);
+bool DaylightingControl::setNumberofSteppedControlSteps(int numberofSteppedControlSteps) {
+  return getImpl<detail::DaylightingControl_Impl>()->setNumberofSteppedControlSteps(numberofSteppedControlSteps);
 }
 
 void DaylightingControl::resetNumberofSteppedControlSteps() {
@@ -680,11 +695,10 @@ bool DaylightingControl::aimAt(const Point3d& target)
 
 /// @cond
 DaylightingControl::DaylightingControl(std::shared_ptr<detail::DaylightingControl_Impl> impl)
-  : SpaceItem(impl)
+  : SpaceItem(std::move(impl))
 {}
 /// @endcond
 
 
 } // model
 } // openstudio
-

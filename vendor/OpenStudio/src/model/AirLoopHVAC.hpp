@@ -1,27 +1,38 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_AIRLOOPHVAC_HPP
 #define MODEL_AIRLOOPHVAC_HPP
 
 #include "ModelAPI.hpp"
 #include "Loop.hpp"
+#include "../utilities/core/Deprecated.hpp"
 
 namespace openstudio {
 
@@ -41,6 +52,7 @@ class StraightComponent;
 class ThermalZone;
 class SizingSystem;
 class AvailabilityManager;
+
 
 /** AirLoopHVAC is an interface to the EnergyPlus IDD object named "AirLoopHVAC"
  *
@@ -82,7 +94,7 @@ class MODEL_API AirLoopHVAC : public Loop
 
   bool isDesignSupplyAirFlowRateAutosized() const;
 
-  void setDesignSupplyAirFlowRate(double designSupplyAirFlowRate);
+  bool setDesignSupplyAirFlowRate(double designSupplyAirFlowRate);
 
   bool setDesignSupplyAirFlowRate(const Quantity& designSupplyAirFlowRate);
 
@@ -120,21 +132,21 @@ class MODEL_API AirLoopHVAC : public Loop
    * is an outdoor air system within the air loop.  A freshly constructed
    * AirLoopHVAC object will not have an outdoor air system.
    */
-  boost::optional<Node> outdoorAirNode();
+  boost::optional<Node> outdoorAirNode() const;
 
   /** Returns the relief air node.  This is the outermost node from which
    * air is relieved from the air loop to the outdoor air.  This node only exists
    * if there is an outdoor air system within the air loop.  A freshly
    * constructed AirLoopHVAC object will not have an outdoor air system.
    */
-  boost::optional<Node> reliefAirNode();
+  boost::optional<Node> reliefAirNode() const;
 
   /** Returns the mixed air node.  This is the mixed air node of the outdoor
    * air mixer of the air loop.  This node only exists if there is an outdoor air
    * system within the air loop.  A freshly constructed AirLoopHVAC object
    * will not have an outdoor air system.
    */
-  boost::optional<Node> mixedAirNode();
+  boost::optional<Node> mixedAirNode() const;
 
   /** Returns the return air node.  This is the return air node of the outdoor
    * air mixer of the air loop.  This node only exists if there is an outdoor air
@@ -143,14 +155,14 @@ class MODEL_API AirLoopHVAC : public Loop
    * same as the supply inlet node, because there is often no hvac equipment
    * before the outdoor air mixer.
    */
-  boost::optional<Node> returnAirNode();
+  boost::optional<Node> returnAirNode() const;
 
   /** Returns true if the system is "dual duct"
     * ie. there is a supply splitter
     */
   bool isDualDuct() const;
 
-  /** Returns the supply side splitter.  
+  /** Returns the supply side splitter.
     * If the system is a dual duct then it will have a supply side splitter.
     */
   boost::optional<Splitter> supplySplitter() const;
@@ -158,7 +170,7 @@ class MODEL_API AirLoopHVAC : public Loop
   /** If this is a dual duct system, remove the supply side splitter.
     * If this is not a dual duct system, there is no supply side splitter and the method will return false.
     *
-    * The system will become a single duct. Dual duct terminals may remain on the demand side, and those must be 
+    * The system will become a single duct. Dual duct terminals may remain on the demand side, and those must be
     * resolved separately by removing the zones served by dual ducts or changing to single duct terminals.
     *
     * The components downstream of the splitter will also be removed.
@@ -168,11 +180,11 @@ class MODEL_API AirLoopHVAC : public Loop
   /** If this is a dual duct system, remove the supply side splitter.
     * If this is not a dual duct system, there is no supply side splitter and the method will return false.
     *
-    * The system will become a single duct. Dual duct terminals may remain on the demand side, and those must be 
+    * The system will become a single duct. Dual duct terminals may remain on the demand side, and those must be
     * resolved separately by removing the zones served by dual ducts or changing to single duct terminals.
     *
     * The dual duct branch containing hvacComponent will be removed.
-    * The remaining branch will be integrated into the loop. 
+    * The remaining branch will be integrated into the loop.
     * If hvacComponent is not found on either dual duct branch
     * the method will return false. This will be the case if hvacComponent is not found on the system's supplyComponents(),
     * or upstream of the splitter.
@@ -199,7 +211,7 @@ class MODEL_API AirLoopHVAC : public Loop
   std::vector<AirLoopHVACZoneSplitter> zoneSplitters() const;
 
   /** Returns the zone mixer, if it doesn't exist then it makes one. */
-  AirLoopHVACZoneMixer zoneMixer();
+  AirLoopHVACZoneMixer zoneMixer() const;
 
   /** Returns all of the components on the outdoor air system including the mixer itself.
    *  If type is given then the results will be limited to the given IddObjectType.
@@ -213,7 +225,7 @@ class MODEL_API AirLoopHVAC : public Loop
   boost::optional<AirLoopHVACOutdoorAirSystem> airLoopHVACOutdoorAirSystem() const;
 
   /** Returns the fan in the mixed air stream (after outdoor air system) of the air system.
-   *  If there is no outdoor air system or there are multiple fans in the mixed air stream, 
+   *  If there is no outdoor air system or there are multiple fans in the mixed air stream,
    *  then the fan closest to the supply outlet node will be returned.
    */
   boost::optional<HVACComponent> supplyFan() const;
@@ -241,6 +253,14 @@ class MODEL_API AirLoopHVAC : public Loop
   /** Overloaded version of addBranchForZone() **/
   bool addBranchForZone(ThermalZone & thermalZone, HVACComponent & airTerminal);
 
+  /** This method has the same function as addBranchForZone, except it will not
+   * disconnect any air loops that are already attached to the zone.
+   **/
+  bool multiAddBranchForZone(ThermalZone & thermalZone);
+
+  /** Overloaded version of addBranchForZone() **/
+  bool multiAddBranchForZone(ThermalZone & thermalZone, HVACComponent & airTerminal);
+
   /** Adds a new branch on the demand side of the air loop with the specified airTerminal.
    *  Returns true if the airTerminal was accepted, otherwise false.  The argument, hvacComponent,
    *  can be an air terminal, AirLoopHVACSupplyPlenum, or airLoopHVACReturnPlenum.
@@ -262,14 +282,14 @@ class MODEL_API AirLoopHVAC : public Loop
   Schedule availabilitySchedule() const;
 
   /** Set the availability schedule for when this system is allowed to run. **/
-  void setAvailabilitySchedule(Schedule & schedule);
+  bool setAvailabilitySchedule(Schedule & schedule);
 
   /** Configure the system to night cycle
     * This is a convenience for creating and attaching a new AvailabilityManagerNightCycle.
     * Valid options are StayOff, CycleOnAny, and CycleOnAnyZoneFansOnly **/
-  bool setNightCycleControlType(std::string controlType);
+  bool setNightCycleControlType(std::string const & controlType);
 
-  /** Returns a string indicating if the system is configured to night cycle 
+  /** Returns a string indicating if the system is configured to night cycle
     * If there is no AvailabilityManagerNightCycle this method will return StayOff **/
   std::string nightCycleControlType() const;
 
@@ -288,22 +308,88 @@ class MODEL_API AirLoopHVAC : public Loop
    *  flow rate through a return air bypass duct. **/
   // void resetReturnAirBypassFlowTemperatureSetpointSchedule();
 
-  /** AvailabilityManager is used to override the system availabilitySchedule() with one of OpenStudio's
-    * supported AvailabilityManager types.
-    * Unlike EnergyPlus which supports layering multiple availability managers on an AvailabilityManagerAssignmentList,
-    * OpenStudio allows only one AvailabilityManager at a time.
-    **/
-  boost::optional<AvailabilityManager> availabilityManager() const;
 
-  bool setAvailabilityManager(const AvailabilityManager& availabilityManager);
+  /*
+   * Return all AvailabilityManagers assigned to this list, in the priority order
+   *  AvailabilityManagers are used to override the system availabilitySchedule() with one of OpenStudio's
+   *  supported AvailabilityManager types.
+   */
+  std::vector<AvailabilityManager> availabilityManagers() const;
 
-  void resetAvailabilityManager();
+  /*
+   * Add a new AvailabilityManager at the end of the list (priority = last).
+   */
+  bool addAvailabilityManager(const AvailabilityManager & availabilityManager);
+
+  /*
+   * Add a new AvailabilityManager to the list which a given priority (1 to x).
+   * Internally calls addAvailabilityManager then setPriority, see remarks there
+   */
+  bool addAvailabilityManager(const AvailabilityManager & availabilityManager, unsigned priority);
+
+
+  /*
+   * Set all availabilityManagers using a list of AvailabilityManagers
+   */
+  bool setAvailabilityManagers(const std::vector<AvailabilityManager> & avms);
+
+   /*
+   * Removes all AvailabilityManagers assigned (TODO: should that affect the availabilitySchedule?)
+   */
+  void resetAvailabilityManagers();
+
+  /*
+   * Remove the given AvailabilityManager from this AvailabilityManagerAssignmentList
+   */
+  bool removeAvailabilityManager(const AvailabilityManager& avm);
+
+  /*
+   * Remove the availabilityManager at the given priority
+   * Returns false if the priority isn't between 1 and the number of AVMs
+   */
+  bool removeAvailabilityManager(unsigned priority);
+
+  /*
+   * You can shuffle the priority of a given AvailabilityManager after having added it
+   * If priority is below 1, it's reset to 1.
+   * If priority is greater than the number of availability managers, will reset to last
+   */
+  bool setAvailabilityManagerPriority(const AvailabilityManager & availabilityManager, unsigned priority);
+
+  /*
+   * Get the priority of the AvailabilityManager given as argument
+   */
+  unsigned availabilityManagerPriority(const AvailabilityManager & availabilityManager) const;
+
+
+  // TODO: DEPRECATED SECTION Remove in the future (deprecated around 2.3.0)
+  /*
+   * Returns the first availability Manager used
+   */
+  OS_DEPRECATED boost::optional<AvailabilityManager> availabilityManager() const;
+
+  /* Deprecated, kept for backward compatibility with existing scripts, will be removed in a future version
+   * Behavior is that it will remove all AVMs assigned to this loop, and replace it with the one passed as argument
+   */
+  OS_DEPRECATED bool setAvailabilityManager(const AvailabilityManager& availabilityManager);
+
+  /*
+   * Clears all AVMs (forwards to resetAvailabilabilityManagers
+   **/
+  OS_DEPRECATED void resetAvailabilityManager();
+  // END DEPRECATED
+
+
 
   std::vector<openstudio::IdfObject> remove() override;
 
   ModelObject clone(Model model) const override;
 
   static IddObjectType iddObjectType();
+
+  boost::optional<double> autosizedDesignSupplyAirFlowRate() const ;
+
+
 
  protected:
 

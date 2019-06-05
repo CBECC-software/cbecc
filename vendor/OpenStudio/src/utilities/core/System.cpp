@@ -1,38 +1,39 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
-
-
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "System.hpp"
 #include "Application.hpp"
 
-#include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 
-#include <boost/numeric/ublas/matrix.hpp> 
-#include <boost/numeric/ublas/matrix_sparse.hpp> 
-#include <boost/numeric/ublas/io.hpp> 
-#include <boost/numeric/ublas/matrix_proxy.hpp> 
-#include <boost/numeric/ublas/triangular.hpp> 
-#include <boost/numeric/ublas/lu.hpp> 
+#include <boost/numeric/ublas/lu.hpp>
 
-#include <cassert>
 
 namespace openstudio{
 
@@ -52,11 +53,11 @@ namespace openstudio{
     if (GetLastInputInfo(&lastInput)){
       // current system up time in MS, lastInput is referenced to this
       // maximum value is 49.7 days, how telling.....
-      DWORD tickCount = GetTickCount(); 
+      DWORD tickCount = GetTickCount();
 
       // idle milliseconds
-      unsigned idleMS = boost::lexical_cast<unsigned>(tickCount-lastInput.dwTime); 
-      
+      unsigned idleMS = boost::lexical_cast<unsigned>(tickCount-lastInput.dwTime);
+
       // use integer division like a pro
       result = Time(0,0,0,idleMS/1000);
     }
@@ -156,42 +157,42 @@ namespace openstudio{
 
   void System::testExceptions5()
   {
-    using namespace boost::numeric::ublas; 
-    using namespace std; 
+    using namespace boost::numeric::ublas;
+    using namespace std;
 
     struct BreakUBlas
     {
-      static bool invertMatrix(matrix<double>& orig, matrix<double>& inverted) { 
-        typedef permutation_matrix<std::size_t> pmatrix; 
-        matrix<double> A(orig); 
-        pmatrix pm(A.size1()); 
+      static bool invertMatrix(matrix<double>& orig, matrix<double>& inverted) {
+        typedef permutation_matrix<std::size_t> pmatrix;
+        matrix<double> A(orig);
+        pmatrix pm(A.size1());
 
-        // perform LU-factorization 
-        int res = lu_factorize(A,pm); 
-        if( res != 0 ) return false; 
+        // perform LU-factorization
+        int res = lu_factorize(A,pm);
+        if( res != 0 ) return false;
 
-        inverted.assign(identity_matrix<double>(A.size1())); 
-        lu_substitute(A, pm, inverted); 
-  
-        return true; 
-      }; 
+        inverted.assign(identity_matrix<double>(A.size1()));
+        lu_substitute(A, pm, inverted);
 
-      static void breakIt() { 
-        double data[6][6] = {{15, 29700, 472042, 7.8021e+06, 1.32426e+08, 2.29091e+09}, 
-          {29700,1.32426e+08,2.29091e+09,4.01989e+10,7.13142e+11,1.27611e+13}, 
-          {472042,2.29091e+09,4.01989e+10,7.13142e+11,1.27611e+13,2.29941e+14}, 
-          {7.8021e+06,4.01989e+10,7.13142e+11,1.27611e+13,2.29941e+14,4.16694e+15}, 
-          {1.32426e+08,7.13142e+11,1.27611e+13,2.29941e+14,4.16694e+15,7.58705e+16}, 
-          {2.29091e+09,1.27611e+13,2.29941e+14,4.16694e+15,7.58705e+16,1.38694e+18}}; 
+        return true;
+      };
+
+      static void breakIt() {
+        double data[6][6] = {{15, 29700, 472042, 7.8021e+06, 1.32426e+08, 2.29091e+09},
+          {29700,1.32426e+08,2.29091e+09,4.01989e+10,7.13142e+11,1.27611e+13},
+          {472042,2.29091e+09,4.01989e+10,7.13142e+11,1.27611e+13,2.29941e+14},
+          {7.8021e+06,4.01989e+10,7.13142e+11,1.27611e+13,2.29941e+14,4.16694e+15},
+          {1.32426e+08,7.13142e+11,1.27611e+13,2.29941e+14,4.16694e+15,7.58705e+16},
+          {2.29091e+09,1.27611e+13,2.29941e+14,4.16694e+15,7.58705e+16,1.38694e+18}};
 
         matrix<double> a(6, 6);
         for (unsigned i = 0; i < a.size1 (); ++i)
           for (unsigned j = 0; j < a.size2 (); ++j)
             a(i, j) = data[i][j];
 
-        matrix<double> b(a); 
-        invertMatrix(a, b); 
-      } 
+        matrix<double> b(a);
+        invertMatrix(a, b);
+      }
     };
 
     try {
@@ -226,7 +227,7 @@ namespace openstudio{
         MyException() : std::runtime_error("exception")
         {}
 
-        virtual ~MyException() throw() 
+        virtual ~MyException() throw()
         {}
     };
 
@@ -263,17 +264,17 @@ namespace openstudio{
         MyException() : std::runtime_error("exception")
         {}
 
-        virtual ~MyException() throw() 
+        virtual ~MyException() throw()
         {}
     };
 
     class MyException2 : public MyException
     {
       public:
-        MyException2() 
+        MyException2()
         {}
 
-        virtual ~MyException2() throw() 
+        virtual ~MyException2() throw()
         {}
     };
 

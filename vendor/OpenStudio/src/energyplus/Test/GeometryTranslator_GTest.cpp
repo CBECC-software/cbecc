@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "EnergyPlusFixture.hpp"
@@ -66,8 +76,10 @@ Workspace testWorkspace(const CoordinateSystem& system, const CoordinateSystem& 
     ,                        !- Name \n\
     1,                       !- Begin Month \n\
     1,                       !- Begin Day of Month \n\
+    ,                        !- Begin Year \n\
     1,                       !- End Month \n\
     1,                       !- End Day of Month \n\
+    ,                        !- End Year \n\
     Tuesday,                 !- Day of Week for Start Day \n\
     Yes,                     !- Use Weather File Holidays and Special Days \n\
     Yes,                     !- Use Weather File Daylight Saving Period \n\
@@ -131,26 +143,39 @@ Workspace testWorkspace(const CoordinateSystem& system, const CoordinateSystem& 
     10.0,0.0,1.;  !- X,Y,Z ==> Vertex 4 {m} \n\
     \n\
   Daylighting:Controls, \n\
+    Daylighting Controls,    !- Name \n\
     Zone,                    !- Zone Name \n\
-    2,                       !- Total Daylighting Reference Points \n\
-    0.0,                     !- X-Coordinate of First Reference Point {m} \n\
-    0.0,                     !- Y-Coordinate of First Reference Point {m} \n\
-    0.8,                     !- Z-Coordinate of First Reference Point {m} \n\
-    1.0,                     !- X-Coordinate of Second Reference Point {m} \n\
-    1.0,                     !- Y-Coordinate of Second Reference Point {m} \n\
-    0.8,                     !- Z-Coordinate of Second Reference Point {m} \n\
-    1.0,                     !- Fraction of Zone Controlled by First Reference Point \n\
-    0.0,                     !- Fraction of Zone Controlled by Second Reference Point \n\
-    550,                     !- Illuminance Setpoint at First Reference Point {lux} \n\
-    0,                       !- Illuminance Setpoint at Second Reference Point {lux} \n\
-    1,                       !- Lighting Control Type \n\
+    SplitFlux,               !- Daylighting Method \n\
+    ,                        !- Availability Schedule Name \n\
+    Continuous,              !- Lighting Control Type \n\
+    0.3,                     !- Minimum Input Power Fraction for Continuous or ContinuousOff Dimming Control \n\
+    0.2,                     !- Minimum Light Output Fraction for Continuous or ContinuousOff Dimming Control \n\
+    ,                        !- Number of Stepped Control Steps \n\
+    1.0,                     !- Probability Lighting will be Reset When Needed in Manual Stepped Control \n\
+    Daylighting RefPt1,      !- Glare Calculation Daylighting Reference Point Name \n\
     0.0,                     !- Glare Calculation Azimuth Angle of View Direction Clockwise from Zone y-Axis {deg} \n\
     20.0,                    !- Maximum Allowable Discomfort Glare Index \n\
-    0.3,                     !- Minimum Input Power Fraction for Continuous Dimming Control \n\
-    0.2,                     !- Minimum Light Output Fraction for Continuous Dimming Control \n\
-    0,                       !- Number of Stepped Control Steps \n\
-    1.0;                     !- Probability Lighting will be Reset When Needed in Manual Stepped Control \n\
+    ,                        !- DElight Gridding Resolution {m2} \n\
+    Daylighting RefPt1,      !- Daylighting Reference Point 1 Name \n\
+    1.0,                     !- Fraction of Zone Controlled by Reference Point 1 \n\
+    550,                     !- Illuminance Setpoint at Reference Point 1 {lux} \n\
+    Daylighting RefPt2,      !- Daylighting Reference Point 2 Name \n\
+    0.0,                     !- Fraction of Zone Controlled by Reference Point 2 \n\
+    0;                       !- Illuminance Setpoint at Reference Point 2 {lux} \n\
     \n\
+  Daylighting:ReferencePoint, \n\
+    Daylighting RefPt1,      !- Name \n\
+    Zone,                    !- Zone Name \n\
+    0.0,                     !- X-Coordinate of Reference Point {m} \n\
+    0.0,                     !- Y-Coordinate of Reference Point {m} \n\
+    0.8;                     !- Z-Coordinate of Reference Point {m} \n\
+    \n\
+  Daylighting:ReferencePoint, \n\
+    Daylighting RefPt2,      !- Name \n\
+    Zone,                    !- Zone Name \n\
+    1.0,                     !- X-Coordinate of Reference Point {m} \n\
+    1.0,                     !- Y-Coordinate of Reference Point {m} \n\
+    0.8;                     !- Z-Coordinate of Reference Point {m} \n\
   Output:IlluminanceMap, \n\
     Daylight Map,            !- Name \n\
     Zone,                    !- Zone Name \n\
@@ -193,7 +218,7 @@ TEST_F(EnergyPlusFixture,GeometryTranslator_RelativeTest)
     zone_rotation = Geom::Transformation::rotation([0,0,0], [0,0,1], -30.degrees)
     zone_translation = Geom::Transformation::translation([10.m,5.m,1.m])
     zone.transform! zone_translation*zone_rotation
-    
+
     face.vertices.each do |vertex|
       puts "#{vertex.position[0].to_m}, #{vertex.position[1].to_m}, #{vertex.position[2].to_m}"
     end
@@ -209,7 +234,7 @@ TEST_F(EnergyPlusFixture,GeometryTranslator_RelativeTest)
   // now create a model and check everthing is as expected
   ReverseTranslator reverseTranslator;
   Model model = reverseTranslator.translateWorkspace(workspace);
-  
+
   Building building = model.getUniqueModelObject<Building>();
   Transformation buildingTransformation = building.transformation();
 
@@ -307,7 +332,7 @@ TEST_F(EnergyPlusFixture,GeometryTranslator_AbsoluteTest)
   // now create a model and check everthing is as expected
   ReverseTranslator reverseTranslator;
   Model model = reverseTranslator.translateWorkspace(workspace);
-  
+
   Building building = model.getUniqueModelObject<Building>();
   Transformation buildingTransformation = building.transformation();
 
@@ -379,13 +404,13 @@ void compareSurfaces(const WorkspaceObject& refObject, const WorkspaceObject& te
     case IddObjectType::BuildingSurface_Detailed:
       ASSERT_TRUE(refObject.getTarget(BuildingSurface_DetailedFields::ZoneName));
       ASSERT_TRUE(testObject.getTarget(BuildingSurface_DetailedFields::ZoneName));
-      EXPECT_TRUE(refObject.getTarget(BuildingSurface_DetailedFields::ZoneName)->name().get() == 
+      EXPECT_TRUE(refObject.getTarget(BuildingSurface_DetailedFields::ZoneName)->name().get() ==
                   testObject.getTarget(BuildingSurface_DetailedFields::ZoneName)->name().get());
       break;
     case IddObjectType::FenestrationSurface_Detailed:
       ASSERT_TRUE(refObject.getTarget(FenestrationSurface_DetailedFields::BuildingSurfaceName));
       ASSERT_TRUE(testObject.getTarget(FenestrationSurface_DetailedFields::BuildingSurfaceName));
-      EXPECT_TRUE(refObject.getTarget(FenestrationSurface_DetailedFields::BuildingSurfaceName)->name().get() == 
+      EXPECT_TRUE(refObject.getTarget(FenestrationSurface_DetailedFields::BuildingSurfaceName)->name().get() ==
                   testObject.getTarget(FenestrationSurface_DetailedFields::BuildingSurfaceName)->name().get());
       break;
     case IddObjectType::Shading_Site_Detailed:
@@ -396,7 +421,7 @@ void compareSurfaces(const WorkspaceObject& refObject, const WorkspaceObject& te
       ASSERT_TRUE(refObject.getTarget(Shading_Zone_DetailedFields::BaseSurfaceName));
       ASSERT_TRUE(testObject.getTarget(Shading_Zone_DetailedFields::BaseSurfaceName));
       // might not be the same since we have to look for surface, would be good to fix eventually
-      //EXPECT_TRUE(refObject.getTarget(Shading_Zone_DetailedFields::BaseSurfaceName)->name().get() == 
+      //EXPECT_TRUE(refObject.getTarget(Shading_Zone_DetailedFields::BaseSurfaceName)->name().get() ==
       //  testObject.getTarget(Shading_Zone_DetailedFields::BaseSurfaceName)->name().get());
       break;
     default:
@@ -435,9 +460,9 @@ void compareSurfaces(const WorkspaceObject& refObject, const WorkspaceObject& te
   }
   EXPECT_TRUE(compare);
   if (!compare){
-    std::cout << "ref = " << refObject.iddObject().type().valueName() << ", " 
+    std::cout << "ref = " << refObject.iddObject().type().valueName() << ", "
               << refObject.name().get() << ", " << refVerts << std::endl;
-    std::cout << "test = " << testObject.iddObject().type().valueName() << ", " 
+    std::cout << "test = " << testObject.iddObject().type().valueName() << ", "
               << testObject.name().get() << ", " << testVerts <<  std::endl;
   }
 }
@@ -486,7 +511,7 @@ TEST_F(EnergyPlusFixture,GeometryTranslator_SimpleRelativeTest)
   EXPECT_TRUE(relWorkspace.getObjectsByType(IddObjectType::Shading_Fin).empty());
   EXPECT_TRUE(relWorkspace.getObjectsByType(IddObjectType::Shading_Fin_Projection).empty());
 
-  // types to check 
+  // types to check
   std::vector<unsigned> iddTypes;
   iddTypes.push_back(IddObjectType::BuildingSurface_Detailed);
   iddTypes.push_back(IddObjectType::FenestrationSurface_Detailed);
@@ -514,7 +539,7 @@ TEST_F(EnergyPlusFixture,GeometryTranslator_SimpleRelativeTest)
 TEST_F(EnergyPlusFixture,GeometryTranslator_VerticesForAzimuthTiltXYZLengthWidthOrHeight)
 {
   Point3dVector vertices;
- 
+
   // a dummy floor
   vertices = verticesForAzimuthTiltXYZLengthWidthOrHeight(0, 180, 73, 14, 0, 25, 20);
   ASSERT_EQ(static_cast<unsigned>(4), vertices.size());

@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "QuantityRegex.hpp"
 #include "../core/Logger.hpp"
@@ -24,13 +34,28 @@
 
 namespace openstudio {
 
+// JM@2017-12-14:
+// Note from Julien Marrec: I heavily commented this file in December 2017,
+// in the hope that it will make any debugging needed down the road a lot smoother
+// Beware that the "standard flavor" equivalents are valid at the time I am writing this
+// Especially for case where I put the "full" equivalent that adds the bit from another function returning a regex,
+// if the referenced function is changed, then it'll no longer be valid
+
 const boost::regex& regexFixedPrecisionValue() {
+  // Equivalent to "-?\d*\.?\d+" in standard flavor (PRCE, python or JS should work)
+  // (optional minus sign, then digits with potentially a decimal point)
+  // Matches stuff like "10" "1.012", "-.12"
   static boost::regex rgx("-?[[:digit:]]*\\.?[[:digit:]]+");
   return rgx;
 }
 
 const boost::regex& regexEmbeddedFixedPrecisionValue() {
   std::stringstream regexComposer;
+  // First bit is a non capturing group to ensure the regexFixedPrecisionValue will be found on the beginning of the string
+  // (or with anything but whitespace)
+  // Then regexFixedPrecisionValue matches a number (int or float), which is the only capturing group here
+  // Last bit checks it's the end of the string, or there's a space, a "." then end, a dot then space, a comma, a semi colon
+  // regexComposer in standard flavor is "(?:^| )(-?\d*\.?\d+)(?:$| |\.$|\. |,|;)"
   regexComposer << "(?:^| )(" << regexFixedPrecisionValue().str() << ")(?:$| |\\.$|\\. |,|;)";
   static boost::regex rgx(regexComposer.str());
   return rgx;
@@ -46,12 +71,16 @@ bool containsFixedPrecisionValue(const std::string& s) {
 
 
 const boost::regex& regexScientificNotationValue() {
+  // Equivalent to "-?\d*[.]?\d+[EDed][-\+]?\d+" in standard flavor
+  // will match: "-10.5e5", "10d+5", ".1E10"
+  // Will not match: 1e0.5 (will actually match 1e0 here...)
   static boost::regex rgx("-?[[:digit:]]*[.]?[[:digit:]]+[EDed][-\\+]?[[:digit:]]+");
   return rgx;
 }
 
 const boost::regex& regexEmbeddedScientificNotationValue() {
   std::stringstream regexComposer;
+  // Same idea as in regexEmbeddedFixedPrecisionValue
   regexComposer << "(?:^| )(" << regexScientificNotationValue().str() << ")(?:$| |\\.$|\\. |,|;)";
   static boost::regex rgx(regexComposer.str());
   return rgx;
@@ -67,21 +96,59 @@ bool containsScientificNotationValue(const std::string& s) {
 
 
 const boost::regex& regexBaseUnit() {
-  // ETH@20120320 It doesn't seem like the last [\\l\\u]{0,10} should be necessary, but now
+  // ETH@20120320 It doesn't seem like the last [\\l\\u]{0,10} should not be necessary, but now
   // is not a good time to try removing it.
   // ETH@20120320 Should also tighten up to require {} if > 1 character in denominator.
   // ETH@20120711 Trying to address both of the issues above.
+  /* JM@2017-12-14:
+   * \\l => [[:lower:]] => any lower case character <=> [a-z]
+   * \\u => [[:upper::]] => any upper case character <=> [A-Z]
+   * \\d => [[:digit:]] => any digit <=> [0-9]
+   * \\$ => litteral dollar sign?
+   *  Eg: [\\l\\u\\d\\$] <=> [a-zA-Z0-9\$] in a PRCE flavor
+   *
+   *
+   * (?:...) is a non-capturing group
+   * Let's decompose this regex:
+   * Optionally, the string can start with a '\', then
+   * First bit looks for [a-zA-Z\$], between 1 to 8 times
+   * Second bit (Optional non capturing groups), looks for either _[a-zA-Z0-9\$] or  _\{[a-zA-Z0-9\$]{1,10}\}
+   *    This means that "_2" will be match, "_{2}", "_{24}" but not "2", nor "_24".
+   *    It can NOT be present too
+   * Last bit looks for optional [a-zA-Z\$], between 0 and 2 times
+   *
+   * The entire regex can be tested in regular flavor using this:
+   *    "\\?[a-zA-Z\$]{1,8}(?:_(?:[a-zA-Z0-9\$]|\{[a-zA-Z0-9\$]{1,10}\}))?[a-zA-Z\$]{0,2}"
+   *
+   * Examples:
+   * Matches in full: "ft_{2}O", "ftH_2O", "ftH_{24}O" "ft", "lux"
+   * Matches only the "m" in the following: m^3, m^-{-1}
+   * Doesn't match: "98", "ftH_24O"
+   * (Warning: will match "ftH_2" and "O" in "ft_H24O" if global flag in search)
+   */
   static boost::regex rgx("\\\\?[\\l\\u\\$]{1,8}(?:_(?:[\\l\\u\\d\\$]|\\{[\\l\\u\\d\\$]{1,10}\\}))?[\\l\\u\\$]{0,2}");
   return rgx;
 }
 
 const boost::regex& regexExponent() {
-  static boost::regex rgx("-?[[:digit:]]+");
+  // This regex looks for "^" (litteral), optional "{", captures (optional "-"  \d+) and finally optional "}"
+  // The actual exponent is in the only capturing group, so match[1] is the exponent
+  // Standard flavor equivalent: "(?:\^\{?)(-?\d+)(?:\})?"
+  static boost::regex rgx("(?:\\^\\{?)(-?[[:digit:]]+)(?:\\})?");
+
   return rgx;
 }
 
 const boost::regex& regexAtomicUnit() {
   std::stringstream regexComposer;
+  // The portion written here (without regexBaseUnit) is equivalent to "(?:\^(?:\d+|\{-\d+\}))?"
+  // Meaning it will match (but not capture) stuff like "^3" or "^{-3}" but not "^{3}", and its optional
+  // so Overall the "m" is matched in "m", "m^3", "m^{-1}"
+  //
+  // Valid until anything above is changed: the full one is equivalent to
+  // "\\?[a-zA-Z\$]{1,8}(?:_(?:[a-zA-Z0-9\$]|\{[a-zA-Z0-9\$]{1,10}\}))?[a-zA-Z\$]{0,2}(?:\^(?:\d+|\{-\d+\}))?"
+  //
+  // Currently because the exponent portion here is optional, it'll match anything that matches regexBaseUnit,
   regexComposer << regexBaseUnit().str() << "(?:\\^(?:[[:digit:]]+|\\{-[[:digit:]]+\\}))?";
   static boost::regex rgx(regexComposer.str());
   return rgx;
@@ -89,6 +156,9 @@ const boost::regex& regexAtomicUnit() {
 
 const boost::regex& regexEmbeddedAtomicUnit() {
   std::stringstream regexComposer;
+  // First bit checks that it's the beggining of the string, or a space is before, or litteral "*", "/" or "("
+  // then regexAtomicUnit
+  // then ensures it's the end of the string, a space, or a litteral "*", "/" or ")"
   regexComposer << "(?:^| |\\*|/|\\()(" << regexAtomicUnit().str() << ")(?:$| |\\*|/|\\))";
   static boost::regex rgx(regexComposer.str());
   return rgx;
@@ -106,6 +176,7 @@ bool containsAtomicUnit(const std::string& s) {
 const boost::regex& regexCompoundUnit() {
   // ETH@20120320 Somehow a quantity (0.12 kg) is getting by this regex. Now is not a good
   // time to try to fix.
+  // JM@2017-12-14: Not fixing now, but this is because all of the groups are optional ("?"), except [a-zA-Z\$]{1,8} (from regexBaseUnit)
   std::stringstream regexComposer, tempComposer;
   // place atomicUnit*atomicUnit*... in tempComposer
   tempComposer << regexAtomicUnit().str() << "(?:\\*" << regexAtomicUnit().str() << ")*";
@@ -134,6 +205,7 @@ bool containsCompoundUnit(const std::string& s) {
 
 const boost::regex& regexScaledUnit() {
   std::stringstream regexComposer;
+  // "\\?[a-zA-Z\$]{1,5}" << regexCompoundUnit << "\)" in standard flavor
   regexComposer << "\\\\?[\\l\\u]{1,5}\\(" << regexCompoundUnit().str() << "\\)";
   static boost::regex rgx(regexComposer.str());
   return rgx;
@@ -154,7 +226,6 @@ bool containsScaledUnit(const std::string& s) {
   return boost::regex_search(s,regexEmbeddedScaledUnit());
 }
 
-
 const boost::regex& regexDirectScaledUnit() {
   std::stringstream regexComposer, tempComposer;
   // place atomicUnit*atomicUnit*... in tempComposer
@@ -168,14 +239,14 @@ const boost::regex& regexDirectScaledUnit() {
 const boost::regex& regexEmbeddedDirectScaledUnit() {
   std::stringstream regexComposer;
   regexComposer << "(?:(?:^| )(" << regexDirectScaledUnit().str() << ")(?:$| |\\.$|\\. |,|;)|"
-                       << "\\((" << regexDirectScaledUnit().str() << ")\\)|" 
+                       << "\\((" << regexDirectScaledUnit().str() << ")\\)|"
                        << "\\{(" << regexDirectScaledUnit().str() << ")\\}|"
                        << "\\[(" << regexDirectScaledUnit().str() << ")\\])";
   static boost::regex rgx(regexComposer.str());
   return rgx;
 }
 
-std::pair<std::string,std::pair<unsigned,std::string> > 
+std::pair<std::string,std::pair<unsigned,std::string> >
 decomposeDirectScaledUnit(const std::string& s) {
   if (!isDirectScaledUnit(s)) {
     LOG_FREE_AND_THROW("openstudio.QuantityRegex","Cannot decompose " << s
@@ -212,7 +283,7 @@ const boost::regex& regexUnit() {
 const boost::regex& regexEmbeddedUnit() {
   std::stringstream regexComposer;
   regexComposer << "(?:(?:^| )" << regexUnit().str() << "(?:$| |\\.$|\\. |,|;)|"
-                       << "\\(" << regexUnit().str() << "\\)|" 
+                       << "\\(" << regexUnit().str() << "\\)|"
                        << "\\{" << regexUnit().str() << "\\}|"
                        << "\\[" << regexUnit().str() << "\\])";
   static boost::regex rgx(regexComposer.str());
@@ -345,7 +416,6 @@ std::pair< std::vector<std::string>,std::vector<std::string> > decomposeCompound
   }
 
   return result;
-
 }
 
 std::pair<std::string,int> decomposeAtomicUnitString(const std::string& s) {
@@ -354,13 +424,18 @@ std::pair<std::string,int> decomposeAtomicUnitString(const std::string& s) {
     LOG_FREE_AND_THROW("openstudio.QuantityRegex","Cannot decompose " << s
       << " into a base unit and exponent because it is not an atomic unit.");
   }
+
   std::pair<std::string,int> result;
   boost::smatch match;
 
   boost::regex_search(s,match,regexBaseUnit());
+
+  // First is the baseUnit (match[0].first is the start of sequence that matched, match[0].second is the end of sequence)
   result.first = std::string(match[0].first,match[0].second);
+  // Match an exponent and put that in result.second
   if (boost::regex_search(s,match,regexExponent())) {
-    std::istringstream iss(std::string(match[0].first,match[0].second));
+    // We want the submatch (capturing group)
+    std::istringstream iss(match[1]);
     iss >> result.second;
   }
   else {

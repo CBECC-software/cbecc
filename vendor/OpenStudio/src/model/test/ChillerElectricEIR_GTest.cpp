@@ -1,23 +1,36 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
+
+#include "ModelFixture.hpp"
+
 #include "../PlantLoop.hpp"
 #include "../Model.hpp"
 #include "../ChillerElectricEIR.hpp"
@@ -32,13 +45,13 @@
 
 using namespace openstudio;
 
-TEST(ChillerElectricEIR,ChillerElectricEIR_ChillerElectricEIR)
+TEST_F(ModelFixture, ChillerElectricEIR_ChillerElectricEIR)
 {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_EXIT ( 
-  {  
-     model::Model m; 
+  ASSERT_EXIT (
+  {
+     model::Model m;
 
      model::CurveBiquadratic ccFofT(m);
      model::CurveBiquadratic eirToCorfOfT(m);
@@ -46,22 +59,22 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_ChillerElectricEIR)
 
      model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
-     exit(0); 
+     exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 }
 
 // Add to the end of an empty supply side and check that it is placed correctly.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode1)
+TEST_F(ModelFixture, ChillerElectricEIR_addToNode1)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Node supplyOutletNode = plantLoop.supplyOutletNode();
@@ -93,16 +106,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode1)
 }
 
 // Add to the front of an empty supply side and check that it is placed correctly.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode2)
+TEST_F(ModelFixture, ChillerElectricEIR_addToNode2)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Node supplyInletNode = plantLoop.supplyInletNode();
@@ -133,16 +146,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode2)
 }
 
 // Add to the middle of the existing branch.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode3)
+TEST_F(ModelFixture, ChillerElectricEIR_addToNode3)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Mixer supplyMixer = plantLoop.supplyMixer();
@@ -205,16 +218,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToNode3)
 }
 
 // Add to new branch
-TEST(ChillerElectricEIR,PlantLoop_addSupplyBranch)
+TEST_F(ModelFixture, ChillerElectricEIR_PlantLoop_addSupplyBranch)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   ASSERT_TRUE(plantLoop.addSupplyBranchForComponent(chiller));
@@ -253,16 +266,16 @@ TEST(ChillerElectricEIR,PlantLoop_addSupplyBranch)
 }
 
 // Add to the end of an empty demand side and check that it is placed correctly.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode1)
+TEST_F(ModelFixture, ChillerElectricEIR_addToDemandNode1)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Node demandOutletNode = plantLoop.demandOutletNode();
@@ -298,16 +311,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode1)
 }
 
 // Add to the front of an empty demand side and check that it is placed correctly.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode2)
+TEST_F(ModelFixture, ChillerElectricEIR_addToDemandNode2)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Node demandInletNode = plantLoop.demandInletNode();
@@ -342,16 +355,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode2)
 }
 
 // Add to the middle of the existing branch.
-TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode3)
+TEST_F(ModelFixture, ChillerElectricEIR_addToDemandNode3)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   model::Mixer demandMixer = plantLoop.demandMixer();
@@ -394,16 +407,16 @@ TEST(ChillerElectricEIR,ChillerElectricEIR_addToDemandNode3)
 }
 
 // Add to new demand branch
-TEST(ChillerElectricEIR,PlantLoop_addDemandBranch)
+TEST_F(ModelFixture, ChillerElectricEIR_PlantLoop_addDemandBranch)
 {
-  model::Model m; 
-  
-  model::PlantLoop plantLoop(m); 
-  
+  model::Model m;
+
+  model::PlantLoop plantLoop(m);
+
   model::CurveBiquadratic ccFofT(m);
   model::CurveBiquadratic eirToCorfOfT(m);
   model::CurveQuadratic eiToCorfOfPlr(m);
-  
+
   model::ChillerElectricEIR chiller(m,ccFofT,eirToCorfOfT,eiToCorfOfPlr);
 
   ASSERT_TRUE(plantLoop.addDemandBranchForComponent(chiller));
@@ -445,4 +458,60 @@ TEST(ChillerElectricEIR,PlantLoop_addDemandBranch)
   EXPECT_EQ(5u,plantLoop.demandComponents().size());
 }
 
+// Check condenser type setting/defaulting
+TEST_F(ModelFixture, ChillerElectricEIR_CondenserType)
+{
+  model::Model m;
 
+  model::PlantLoop pl1(m);
+  model::PlantLoop pl2(m);
+
+  model::ChillerElectricEIR ch(m);
+
+  // By default, AirCooled (from IDD)
+  EXPECT_EQ("AirCooled", ch.condenserType());
+
+  // Not connected to a secondary plantLoop
+  ASSERT_TRUE(ch.setCondenserType("EvaporativelyCooled"));
+  ASSERT_EQ("EvaporativelyCooled", ch.condenserType());
+
+  ASSERT_TRUE(ch.setCondenserType("AirCooled"));
+  ASSERT_EQ("AirCooled", ch.condenserType());
+
+  ASSERT_FALSE(ch.setCondenserType("WaterCooled"));
+
+  // Add to primary plant loop (on supply), behavior should be the same
+  ASSERT_TRUE(pl1.addSupplyBranchForComponent(ch));
+  // Should have stayed
+  ASSERT_EQ("AirCooled", ch.condenserType());
+  ASSERT_TRUE(ch.setCondenserType("EvaporativelyCooled"));
+  ASSERT_EQ("EvaporativelyCooled", ch.condenserType());
+
+  ASSERT_TRUE(ch.setCondenserType("AirCooled"));
+  ASSERT_EQ("AirCooled", ch.condenserType());
+
+  ASSERT_FALSE(ch.setCondenserType("WaterCooled"));
+
+
+  // Add to the Secondary plant loop (on demand), behavior should be reversed
+  ASSERT_TRUE(pl2.addDemandBranchForComponent(ch));
+  // Should have been automatically set to WaterCooled
+  ASSERT_EQ("WaterCooled", ch.condenserType());
+
+  ASSERT_FALSE(ch.setCondenserType("AirCooled"));
+  ASSERT_FALSE(ch.setCondenserType("EvaporativelyCooled"));
+
+  // Disconnect from the secondary plant Loop
+  ASSERT_TRUE(ch.removeFromSecondaryPlantLoop());
+  // Should have been automatically switched to AirCooled
+  ASSERT_EQ("AirCooled", ch.condenserType());
+
+  ASSERT_TRUE(ch.setCondenserType("EvaporativelyCooled"));
+  ASSERT_EQ("EvaporativelyCooled", ch.condenserType());
+
+  ASSERT_TRUE(ch.setCondenserType("AirCooled"));
+  ASSERT_EQ("AirCooled", ch.condenserType());
+
+  ASSERT_FALSE(ch.setCondenserType("WaterCooled"));
+
+}

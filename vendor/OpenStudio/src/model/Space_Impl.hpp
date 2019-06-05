@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_SPACE_IMPL_HPP
 #define MODEL_SPACE_IMPL_HPP
@@ -40,6 +50,7 @@ class DefaultScheduleType;
 class DefaultScheduleSet;
 class ThermalZone;
 class BuildingStory;
+class BuildingUnit;
 class ShadingSurfaceGroup;
 class InteriorPartitionSurfaceGroup;
 class PlanarSurface;
@@ -49,6 +60,7 @@ class People;
 class Lights;
 class Luminaire;
 class ElectricEquipment;
+class ElectricEquipmentITEAirCooled;
 class GasEquipment;
 class HotWaterEquipment;
 class SteamEquipment;
@@ -66,70 +78,7 @@ namespace detail {
 
   /** Space_Impl is a PlanarSurfaceGroup_Impl that is the implementation class for Space.*/
   class MODEL_API Space_Impl : public PlanarSurfaceGroup_Impl {
-    Q_OBJECT;
 
-    Q_PROPERTY(double directionofRelativeNorth READ directionofRelativeNorth WRITE setDirectionofRelativeNorth RESET resetDirectionofRelativeNorth);
-    Q_PROPERTY(openstudio::Quantity directionofRelativeNorth_SI READ directionofRelativeNorth_SI WRITE setDirectionofRelativeNorth RESET resetDirectionofRelativeNorth);
-    Q_PROPERTY(openstudio::Quantity directionofRelativeNorth_IP READ directionofRelativeNorth_IP WRITE setDirectionofRelativeNorth RESET resetDirectionofRelativeNorth);
-    Q_PROPERTY(bool isDirectionofRelativeNorthDefaulted READ isDirectionofRelativeNorthDefaulted);
-
-    Q_PROPERTY(double xOrigin READ xOrigin WRITE setXOrigin RESET resetXOrigin);
-    Q_PROPERTY(openstudio::Quantity xOrigin_SI READ xOrigin_SI WRITE setXOrigin RESET resetXOrigin);
-    Q_PROPERTY(openstudio::Quantity xOrigin_IP READ xOrigin_IP WRITE setXOrigin RESET resetXOrigin);
-    Q_PROPERTY(bool isXOriginDefaulted READ isXOriginDefaulted);
-
-    Q_PROPERTY(double yOrigin READ yOrigin WRITE setYOrigin RESET resetYOrigin);
-    Q_PROPERTY(openstudio::Quantity yOrigin_SI READ yOrigin_SI WRITE setYOrigin RESET resetYOrigin);
-    Q_PROPERTY(openstudio::Quantity yOrigin_IP READ yOrigin_IP WRITE setYOrigin RESET resetYOrigin);
-    Q_PROPERTY(bool isYOriginDefaulted READ isYOriginDefaulted);
-
-    Q_PROPERTY(double zOrigin READ zOrigin WRITE setZOrigin RESET resetZOrigin);
-    Q_PROPERTY(openstudio::Quantity zOrigin_SI READ xOrigin_SI WRITE setZOrigin RESET resetZOrigin);
-    Q_PROPERTY(openstudio::Quantity zOrigin_IP READ xOrigin_IP WRITE setZOrigin RESET resetZOrigin);
-    Q_PROPERTY(bool isZOriginDefaulted READ isZOriginDefaulted);
-
-    Q_PROPERTY(bool partofTotalFloorArea READ partofTotalFloorArea WRITE setPartofTotalFloorArea RESET resetPartofTotalFloorArea);
-    Q_PROPERTY(bool isPartofTotalFloorAreaDefaulted READ isPartofTotalFloorAreaDefaulted);
-
-    Q_PROPERTY(double floorArea READ floorArea);
-    Q_PROPERTY(double exteriorArea READ exteriorArea);
-    Q_PROPERTY(double exteriorWallArea READ exteriorWallArea);
-    Q_PROPERTY(double volume READ volume);
-    Q_PROPERTY(double numberOfPeople READ numberOfPeople WRITE setNumberOfPeople);
-    Q_PROPERTY(double peoplePerFloorArea READ peoplePerFloorArea WRITE setPeoplePerFloorArea);
-    Q_PROPERTY(double floorAreaPerPerson READ floorAreaPerPerson WRITE setFloorAreaPerPerson);
-    Q_PROPERTY(double lightingPower READ lightingPower WRITE setLightingPower);
-    Q_PROPERTY(double lightingPowerPerFloorArea READ lightingPowerPerFloorArea WRITE setLightingPowerPerFloorArea);
-    Q_PROPERTY(double lightingPowerPerPerson READ lightingPowerPerPerson WRITE setLightingPowerPerPerson);
-    Q_PROPERTY(double electricEquipmentPower READ electricEquipmentPower WRITE setElectricEquipmentPower);
-    Q_PROPERTY(double electricEquipmentPowerPerFloorArea READ electricEquipmentPowerPerFloorArea WRITE setElectricEquipmentPowerPerFloorArea);
-    Q_PROPERTY(double electricEquipmentPowerPerPerson READ electricEquipmentPowerPerPerson WRITE setElectricEquipmentPowerPerPerson);
-    Q_PROPERTY(double gasEquipmentPower READ gasEquipmentPower WRITE setGasEquipmentPower);
-    Q_PROPERTY(double gasEquipmentPowerPerFloorArea READ gasEquipmentPowerPerFloorArea WRITE setGasEquipmentPowerPerFloorArea);
-    Q_PROPERTY(double gasEquipmentPowerPerPerson READ gasEquipmentPowerPerPerson WRITE setGasEquipmentPowerPerPerson);
-
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> spaceType READ spaceTypeAsModelObject WRITE setSpaceTypeAsModelObject RESET resetSpaceType);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> defaultConstructionSet READ defaultConstructionSetAsModelObject WRITE setDefaultConstructionSetAsModelObject RESET resetDefaultConstructionSet);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> defaultScheduleSet READ defaultScheduleSetAsModelObject WRITE setDefaultScheduleSetAsModelObject RESET resetDefaultScheduleSet);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> thermalZone READ thermalZoneAsModelObject WRITE setThermalZoneAsModelObject);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> buildingStory READ buildingStoryAsModelObject WRITE setBuildingStoryAsModelObject);
-
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> shadingSurfaceGroups READ shadingSurfaceGroupsAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> interiorPartitionSurfaceGroups READ interiorPartitionSurfaceGroupsAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> surfaces READ surfacesAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> internalMass READ internalMassAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> people READ peopleAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> lights READ lightsAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> luminaires READ luminairesAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> electricEquipment READ electricEquipmentAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> gasEquipment READ gasEquipmentAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> hotWaterEquipment READ hotWaterEquipmentAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> steamEquipment READ steamEquipmentAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> otherEquipment READ otherEquipmentAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> daylightingControls READ daylightingControlsAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> illuminanceMaps READ illuminanceMapsAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> spaceInfiltrationDesignFlowRates READ spaceInfiltrationDesignFlowRatesAsModelObjects);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> spaceInfiltrationEffectiveLeakageAreas READ spaceInfiltrationEffectiveLeakageAreasAsModelObjects);
   public:
     /** @name Constructors and Destructors */
     //@{
@@ -197,23 +146,23 @@ namespace detail {
     /** @name Setters */
     //@{
 
-    virtual void setDirectionofRelativeNorth(double directionofRelativeNorth, bool driverMethod = true) override;
+    virtual bool setDirectionofRelativeNorth(double directionofRelativeNorth, bool driverMethod = true) override;
 
     virtual void resetDirectionofRelativeNorth() override;
 
-    virtual void setXOrigin(double xOrigin, bool driverMethod = true) override;
+    virtual bool setXOrigin(double xOrigin, bool driverMethod = true) override;
 
     virtual void resetXOrigin() override;
 
-    virtual void setYOrigin(double yOrigin, bool driverMethod = true) override;
+    virtual bool setYOrigin(double yOrigin, bool driverMethod = true) override;
 
     virtual void resetYOrigin() override;
 
-    virtual void setZOrigin(double zOrigin, bool driverMethod = true) override;
+    virtual bool setZOrigin(double zOrigin, bool driverMethod = true) override;
 
     virtual void resetZOrigin() override;
 
-    void setPartofTotalFloorArea(bool partofTotalFloorArea);
+    bool setPartofTotalFloorArea(bool partofTotalFloorArea);
 
     void resetPartofTotalFloorArea();
 
@@ -235,7 +184,7 @@ namespace detail {
     boost::optional<DefaultConstructionSet> defaultConstructionSet() const;
 
     /// Returns the default construction for this planar surface if available by searching (in order):
-    /// This space's default construction set, search distance = 1 
+    /// This space's default construction set, search distance = 1
     /// This space's space type's default construction set, search distance = 2
     /// This space's building story's default construction set, search distance = 3
     /// The building's default construction set, search distance = 4
@@ -284,6 +233,12 @@ namespace detail {
     // resets the building story
     void resetBuildingStory();
 
+    boost::optional<BuildingUnit> buildingUnit() const;
+
+    bool setBuildingUnit(const BuildingUnit& buildingUnit);
+
+    void resetBuildingUnit();
+
     /// Returns all \link ShadingSurfaceGroup ShadingSurfaceGroups \endlink in this space.
     std::vector<ShadingSurfaceGroup> shadingSurfaceGroups() const;
 
@@ -308,6 +263,9 @@ namespace detail {
     /// Returns all ElectricEquipment in this space.
     std::vector<ElectricEquipment> electricEquipment() const;
 
+    /// Returns all ElectricEquipmentITEAirCooled in this space.
+    std::vector<ElectricEquipmentITEAirCooled> electricEquipmentITEAirCooled() const;
+
     /// Returns all GasEquipment in this space.
     std::vector<GasEquipment> gasEquipment() const;
 
@@ -318,10 +276,10 @@ namespace detail {
     std::vector<SteamEquipment> steamEquipment() const;
 
     /// Returns all OtherEquipment in this space.
-    std::vector<OtherEquipment> otherEquipment() const;  
+    std::vector<OtherEquipment> otherEquipment() const;
 
     /// Returns all WaterUseEquipment in this space.
-    std::vector<WaterUseEquipment> waterUseEquipment() const; 
+    std::vector<WaterUseEquipment> waterUseEquipment() const;
 
     /// Returns all DaylightingControls in this space.
     std::vector<DaylightingControl> daylightingControls() const;
@@ -330,8 +288,8 @@ namespace detail {
     std::vector<IlluminanceMap> illuminanceMaps() const;
 
     /// Returns all GlareSensors in this space.
-    std::vector<GlareSensor> glareSensors() const;  
-    
+    std::vector<GlareSensor> glareSensors() const;
+
     /// Returns all SpaceInfiltrationDesignFlowRate objects in this space.
     std::vector<SpaceInfiltrationDesignFlowRate> spaceInfiltrationDesignFlowRates() const;
 
@@ -366,21 +324,21 @@ namespace detail {
 
     bool setNumberOfPeople(double numberOfPeople);
 
-    bool setNumberOfPeople(double numberOfPeople, 
+    bool setNumberOfPeople(double numberOfPeople,
                            const boost::optional<People>& templatePeople);
 
     double peoplePerFloorArea() const;
 
     bool setPeoplePerFloorArea(double peoplePerFloorArea);
 
-    bool setPeoplePerFloorArea(double peoplePerFloorArea, 
+    bool setPeoplePerFloorArea(double peoplePerFloorArea,
                                const boost::optional<People>& templatePeople);
 
     double floorAreaPerPerson() const;
 
     bool setFloorAreaPerPerson(double floorAreaPerPerson);
 
-    bool setFloorAreaPerPerson(double floorAreaPerPerson, 
+    bool setFloorAreaPerPerson(double floorAreaPerPerson,
                                const boost::optional<People>& templatePeople);
 
     double lightingPower() const;
@@ -393,14 +351,14 @@ namespace detail {
 
     bool setLightingPowerPerFloorArea(double lightingPowerPerFloorArea);
 
-    bool setLightingPowerPerFloorArea(double lightingPowerPerFloorArea, 
+    bool setLightingPowerPerFloorArea(double lightingPowerPerFloorArea,
                                       const boost::optional<Lights>& templateLights);
 
     double lightingPowerPerPerson() const;
 
     bool setLightingPowerPerPerson(double lightingPowerPerPerson);
 
-    bool setLightingPowerPerPerson(double lightingPowerPerPerson, 
+    bool setLightingPowerPerPerson(double lightingPowerPerPerson,
                                    const boost::optional<Lights>& templateLights);
 
     double electricEquipmentPower() const;
@@ -408,7 +366,7 @@ namespace detail {
     bool setElectricEquipmentPower(double electricEquipmentPower);
 
     bool setElectricEquipmentPower(
-        double electricEquipmentPower, 
+        double electricEquipmentPower,
         const boost::optional<ElectricEquipment>& templateElectricEquipment);
 
     double electricEquipmentPowerPerFloorArea() const;
@@ -416,7 +374,7 @@ namespace detail {
     bool setElectricEquipmentPowerPerFloorArea(double electricEquipmentPowerPerFloorArea);
 
     bool setElectricEquipmentPowerPerFloorArea(
-        double electricEquipmentPowerPerFloorArea, 
+        double electricEquipmentPowerPerFloorArea,
         const boost::optional<ElectricEquipment>& templateElectricEquipment);
 
     double electricEquipmentPowerPerPerson() const;
@@ -424,14 +382,18 @@ namespace detail {
     bool setElectricEquipmentPowerPerPerson(double electricEquipmentPowerPerPerson);
 
     bool setElectricEquipmentPowerPerPerson(
-        double electricEquipmentPowerPerPerson, 
+        double electricEquipmentPowerPerPerson,
         const boost::optional<ElectricEquipment>& templateElectricEquipment);
+
+    double electricEquipmentITEAirCooledPower() const;
+
+    double electricEquipmentITEAirCooledPowerPerFloorArea() const;
 
     double gasEquipmentPower() const;
 
     bool setGasEquipmentPower(double gasEquipmentPower);
 
-    bool setGasEquipmentPower(double gasEquipmentPower, 
+    bool setGasEquipmentPower(double gasEquipmentPower,
                               const boost::optional<GasEquipment>& templateGasEquipment);
 
     double gasEquipmentPowerPerFloorArea() const;
@@ -439,7 +401,7 @@ namespace detail {
     bool setGasEquipmentPowerPerFloorArea(double gasEquipmentPowerPerFloorArea);
 
     bool setGasEquipmentPowerPerFloorArea(
-        double gasEquipmentPowerPerFloorArea, 
+        double gasEquipmentPowerPerFloorArea,
         const boost::optional<GasEquipment>& templateGasEquipment);
 
     double gasEquipmentPowerPerPerson() const;
@@ -447,7 +409,7 @@ namespace detail {
     bool setGasEquipmentPowerPerPerson(double gasEquipmentPowerPerPerson);
 
     bool setGasEquipmentPowerPerPerson(
-        double gasEquipmentPowerPerPerson, 
+        double gasEquipmentPowerPerPerson,
         const boost::optional<GasEquipment>& templateGasEquipment);
 
     /** Returns the infiltration design flow rate (m^3/s) in the space. Ignores
@@ -527,7 +489,7 @@ namespace detail {
 
     openstudio::Quantity directionofRelativeNorth_SI() const;
     openstudio::Quantity directionofRelativeNorth_IP() const;
-    bool setDirectionofRelativeNorth(const Quantity& directionofRelativeNorth);   
+    bool setDirectionofRelativeNorth(const Quantity& directionofRelativeNorth);
 
     openstudio::Quantity xOrigin_SI() const;
     openstudio::Quantity xOrigin_IP() const;
@@ -554,6 +516,7 @@ namespace detail {
     std::vector<ModelObject> lightsAsModelObjects() const;
     std::vector<ModelObject> luminairesAsModelObjects() const;
     std::vector<ModelObject> electricEquipmentAsModelObjects() const;
+    std::vector<ModelObject> electricEquipmentITEAirCooledAsModelObjects() const;
     std::vector<ModelObject> gasEquipmentAsModelObjects() const;
     std::vector<ModelObject> hotWaterEquipmentAsModelObjects() const;
     std::vector<ModelObject> steamEquipmentAsModelObjects() const;
@@ -570,7 +533,7 @@ namespace detail {
     bool setThermalZoneAsModelObject(const boost::optional<ModelObject>& modelObject);
     bool setBuildingStoryAsModelObject(const boost::optional<ModelObject>& modelObject);
 
-    template <typename T, typename TDef> 
+    template <typename T, typename TDef>
     boost::optional<T> getMySpaceLoadInstance(const boost::optional<T>& templateSpaceLoadInstance);
 
     template <typename T>

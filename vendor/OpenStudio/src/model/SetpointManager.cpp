@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
- *  All rights reserved.
- *  
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *  
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *  
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "SetpointManager.hpp"
 #include "SetpointManager_Impl.hpp"
@@ -24,6 +34,9 @@
 #include "Node_Impl.hpp"
 #include "AirLoopHVAC.hpp"
 #include "PlantLoop.hpp"
+#include "Splitter.hpp"
+#include "Mixer.hpp"
+#include <algorithm>
 
 #include "../utilities/core/Assert.hpp"
 
@@ -46,7 +59,7 @@ namespace detail{
   }
 
   SetpointManager_Impl::SetpointManager_Impl(
-      const SetpointManager_Impl& other, 
+      const SetpointManager_Impl& other,
       Model_Impl* model,
       bool keepHandles)
     : HVACComponent_Impl(other,model,keepHandles)
@@ -63,8 +76,6 @@ namespace detail{
   const std::vector<std::string>& SetpointManager_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -82,6 +93,14 @@ namespace detail{
     return result;
   }
 
+
+  /** Returns false by default. This is a virtual method which will be overriden for specific SPMs to return true
+   * if they are allowed on a plantLoop
+   **/
+  bool SetpointManager_Impl::isAllowedOnPlantLoop() const {
+    return false;
+  }
+
   bool SetpointManager_Impl::addToNode(Node & node)
   {
     if( node.model() != this->model() )
@@ -89,6 +108,8 @@ namespace detail{
       return false;
     }
 
+    // Erase any existing setpoint manager that has the same control variable
+    // eg you can't have two temperature ones. But Humidity ones can be MaximumHumidityRatio or MinimumHumidityRatio so you can have a Min and Max
     std::vector<SetpointManager> _setpointManagers = node.setpointManagers();
     if( !_setpointManagers.empty() )
     {
@@ -105,15 +126,46 @@ namespace detail{
 
     if( OptionalAirLoopHVAC airLoop = node.airLoopHVAC() )
     {
+      // If this is one of the regular nodes of the supply path (eg not in the AirLoopHVACOASys)
       if( airLoop->supplyComponent(node.handle()) )
       {
         return this->setSetpointNode(node);
       }
-      if(OptionalAirLoopHVACOutdoorAirSystem oaSystem = airLoop->airLoopHVACOutdoorAirSystem())
-      {
+    }
+
+    if(OptionalAirLoopHVACOutdoorAirSystem oaSystem = node.airLoopHVACOutdoorAirSystem())
+    {
+      // We only accept it if it's neither the relief or the OA node (doesn't make sense to place one there)
+      if ( (node != oaSystem->outboardReliefNode()) && (node != oaSystem->outboardOANode()) ) {
         return this->setSetpointNode(node);
       }
     }
+
+    // If the specific SPM (derived class) is allowed on PlantLoop, then we allow it on the supply side,
+    // or the demand side EXCEPT on a demand branch
+    if ( boost::optional<PlantLoop> plant = node.plantLoop() ) {
+      if( this->isAllowedOnPlantLoop() ) {
+        // If it's the supply side
+        if( plant->supplyComponent(node.handle()) ) {
+          return this->setSetpointNode(node);
+        } else {
+          // On the demand side
+          Splitter splitter = plant->demandSplitter();
+          Mixer mixer = plant->demandMixer();
+          // We check that the node is NOT between the splitter and the mixer
+          auto branchcomps = plant->demandComponents(splitter, mixer);
+          if ( std::find(branchcomps.begin(), branchcomps.end(), node) == branchcomps.end() ) {
+            return this->setSetpointNode(node);
+          } else {
+            LOG(Info, this->briefDescription() << " cannot be added on a demand branch");
+
+          }
+        }
+      } else {
+        LOG(Info,"This SetpointManager cannot be connected to a PlantLoop, for " << this->briefDescription());
+      }
+    }
+
     return false;
   }
 
@@ -162,7 +214,7 @@ namespace detail{
   }
 
 } // detail
-  
+
 SetpointManager::SetpointManager(IddObjectType type, const Model& model)
   : HVACComponent(type, model)
 {
@@ -170,7 +222,7 @@ SetpointManager::SetpointManager(IddObjectType type, const Model& model)
 }
 
 SetpointManager::SetpointManager(std::shared_ptr<detail::SetpointManager_Impl> p)
-  : HVACComponent(p)
+  : HVACComponent(std::move(p))
 {
 }
 
@@ -188,6 +240,13 @@ bool SetpointManager::setControlVariable(const std::string & value)
 {
   return getImpl<detail::SetpointManager_Impl>()->setControlVariable(value);
 }
+
+bool SetpointManager::isAllowedOnPlantLoop() const
+{
+  return getImpl<detail::SetpointManager_Impl>()->isAllowedOnPlantLoop();
+}
+
+
 
 } // model
 } // openstudio

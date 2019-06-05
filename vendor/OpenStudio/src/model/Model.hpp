@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_MODEL_HPP
 #define MODEL_MODEL_HPP
@@ -24,6 +34,7 @@
 #include "ModelObject.hpp"
 
 #include "../utilities/idf/Workspace.hpp"
+#include "../utilities/filetypes/WorkflowJSON.hpp"
 #include "../utilities/core/Assert.hpp"
 
 #include <vector>
@@ -31,6 +42,10 @@
 namespace openstudio {
 
 class SqlFile;
+class Date;
+class MonthOfYear;
+class DayOfWeek;
+class NthDayOfWeekInMonth;
 
 namespace model {
 
@@ -42,7 +57,9 @@ class WeatherFile;
 class Component;
 class ComponentData;
 class Schedule;
+class Node;
 class SpaceType;
+class FoundationKivaSettings;
 
 namespace detail {
   class Model_Impl;
@@ -87,12 +104,19 @@ class MODEL_API Model : public openstudio::Workspace {
   /** @name Getters */
   //@{
 
+  /// Get the WorkflowJSON
+  WorkflowJSON workflowJSON() const;
+
   /** Returns the EnergyPlus output SqlFile if set. */
   boost::optional<SqlFile> sqlFile() const;
 
   /** Get the Building object if there is one, this implementation uses a cached reference to the Building
    *  object which can be significantly faster than calling getOptionalUniqueModelObject<Building>(). */
   boost::optional<Building> building() const;
+  
+  /** Get the FoundationKivaSettings object if there is one, this implementation uses a cached reference to the FoundationKivaSettings
+   *  object which can be significantly faster than calling getOptionalUniqueModelObject<FoundationKivaSettings>(). */
+  boost::optional<FoundationKivaSettings> foundationKivaSettings() const;  
 
   /** Get the LifeCycleCostParameters object if there is one, this implementation uses a cached reference to the LifeCycleCostParameters
    *  object which can be significantly faster than calling getOptionalUniqueModelObject<LifeCycleCostParameters>(). */
@@ -106,6 +130,25 @@ class MODEL_API Model : public openstudio::Workspace {
    *  object which can be significantly faster than calling getOptionalUniqueModelObject<YearDescription>(). */
   boost::optional<YearDescription> yearDescription() const;
 
+  /** Get or create the YearDescription object if there is one, then call method from YearDescription. */
+  // DLM: this is due to issues exporting the model::YearDescription object because of name conflict with utilities::YearDescription.
+  boost::optional<int> calendarYear() const;
+  std::string dayofWeekforStartDay() const;
+  bool isDayofWeekforStartDayDefaulted() const;
+  bool isLeapYear() const;
+  bool isIsLeapYearDefaulted() const;
+  bool setCalendarYear(int calendarYear);
+  void resetCalendarYear();
+  bool setDayofWeekforStartDay(std::string dayofWeekforStartDay);
+  void resetDayofWeekforStartDay();
+  bool setIsLeapYear(bool isLeapYear);
+  void resetIsLeapYear();
+  int assumedYear();
+  openstudio::Date makeDate(openstudio::MonthOfYear monthOfYear, unsigned dayOfMonth);
+  openstudio::Date makeDate(unsigned monthOfYear, unsigned dayOfMonth);
+  openstudio::Date makeDate(openstudio::NthDayOfWeekInMonth n, openstudio::DayOfWeek dayOfWeek, openstudio::MonthOfYear monthOfYear);
+  openstudio::Date makeDate(unsigned dayOfYear);
+
   /** Get the WeatherFile object if there is one, this implementation uses a cached reference to the WeatherFile
    *  object which can be significantly faster than calling getOptionalUniqueModelObject<WeatherFile>(). */
   boost::optional<WeatherFile> weatherFile() const;
@@ -114,21 +157,43 @@ class MODEL_API Model : public openstudio::Workspace {
    *  create a new schedule if necessary and add it to the model */
   Schedule alwaysOnDiscreteSchedule() const;
 
+  /** Get the always on schedule with discrete type limits name. */
+  std::string alwaysOnDiscreteScheduleName() const;
+
   /** Get an always off schedule with discrete type limits if there is one.
    *  create a new schedule if necessary and add it to the model */
   Schedule alwaysOffDiscreteSchedule() const;
+
+  /** Get the always off schedule with discrete type limits name. */
+  std::string alwaysOffDiscreteScheduleName() const;
 
   /** Get an always on schedule with continuous type limits if there is one.
   *  create a new schedule if necessary and add it to the model */
   Schedule alwaysOnContinuousSchedule() const;
 
+  /** Get the always on schedule with continuous type limits name.*/
+  std::string alwaysOnContinuousScheduleName() const;
+
+  /** Get a Node named 'Model Outdoor Air Node' (intended to be forward translated to an OutdoorAir:Node) and not connected to a PlantLoop or AirLoopHVAC.
+  *  create a new Node if necessary and add it to the model */
+  Node outdoorAirNode() const;
+
   /** Get the space type used for plenums if there is one.
    *  Create a new space type if necessary and add it to the model */
   SpaceType plenumSpaceType() const;
 
+  /** Get the space type name used for plenums. */
+  std::string plenumSpaceTypeName() const;
+
   //@}
   /** @name Setters */
   //@{
+
+  /**  Set the WorkflowJSON. */
+  bool setWorkflowJSON(const WorkflowJSON& workflowJSON);
+
+  /** Reset the WorkflowJSON. */
+  void resetWorkflowJSON();
 
   /** Sets the EnergyPlus output SqlFile.  SqlFile must correspond to EnergyPlus
    *  simulation of this Model. */
@@ -330,8 +395,11 @@ class MODEL_API Model : public openstudio::Workspace {
 
   //@}
 
-  /** Load Model from file. */
-  static boost::optional<Model> load(const path& p);
+  /** Load Model from file, attempts to load WorkflowJSON from standard path. */
+  static boost::optional<Model> load(const path& osmPath);
+
+  /** Load Model and WorkflowJSON from files, fails if either osm or workflowJSON cannot be loaded. */
+  static boost::optional<Model> load(const path& osmPath, const path& workflowJSONPath);
 
   /// Equality test, tests if this Model shares the same implementation object with other.
   bool operator==(const Model& other) const;
@@ -371,6 +439,28 @@ class MODEL_API Model : public openstudio::Workspace {
   /// @cond
   detail::Model_Impl* rawImpl() const;
   /// @endcond
+
+  /** For each object in the model with autosizable fields,
+   *  sets all autosizable fields to 'autosize'.
+   *  Fields that previously contained hard-sized
+   *  values will be overwritten by 'autosize.'
+   */
+  void autosize();
+
+  /** For each object in the model with autosizable fields,
+   *  retrieves the autosized values from the sizing run and then
+   *  sets these values in the object explicitly.
+   *  Requires a sql file with sizing run results from a
+   *  previous simulation.
+   *  For example, if a ChillerElectricEIR's Reference Capacity
+   *  was previously autosized to 120,000W by the sizing run,
+   *  this method would find the 120,000W in the sql file and then
+   *  set the Reference Capacity field to 120,000W explicitly.  Next
+   *  time a simulation is run, the chiller's capacity will be 120,000W,
+   *  it will not be autosized during the sizing run.
+   */
+  void applySizingValues();
+
  protected:
   /// @cond
   typedef detail::Model_Impl ImplType;

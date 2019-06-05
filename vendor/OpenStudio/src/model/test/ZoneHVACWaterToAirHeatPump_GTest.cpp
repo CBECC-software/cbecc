@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
@@ -59,8 +69,8 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_FanOnOff)
 {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_EXIT ( 
-  {  
+  ASSERT_EXIT (
+  {
     Model model;
     Schedule availabilitySched = model.alwaysOnDiscreteSchedule();
     CurveExponent fanPowerFtSpeedCurve(model);
@@ -89,7 +99,7 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_FanOnOff)
     CoilHeatingElectric supplementalHC(model,availabilitySched);
     ZoneHVACWaterToAirHeatPump testHP(model,availabilitySched,supplyFan,coilHeatingWaterToAirHP,coilCoolingWaterToAirHP,supplementalHC);
 
-    exit(0); 
+    exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 }
@@ -98,17 +108,20 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_FanConstantVolume)
 {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_DEATH (
+  ASSERT_EXIT (
   {
     Model model;
     Schedule availabilitySched = model.alwaysOnDiscreteSchedule();
-    FanConstantVolume supplyFan(model,availabilitySched);
+    //FanConstantVolume supplyFan(model,availabilitySched);
+    FanOnOff supplyFan(model,availabilitySched);
     CoilHeatingWaterToAirHeatPumpEquationFit coilHeatingWaterToAirHP(model);
     CoilCoolingWaterToAirHeatPumpEquationFit coilCoolingWaterToAirHP(model);
     CoilHeatingElectric supplementalHC(model,availabilitySched);
 
     ZoneHVACWaterToAirHeatPump testHP(model,availabilitySched,supplyFan,coilHeatingWaterToAirHP,coilCoolingWaterToAirHP,supplementalHC);
-  }, ".*" );
+    exit(0);
+  } ,
+    ::testing::ExitedWithCode(0), "" );
 }
 
 TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
@@ -134,7 +147,7 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
   fanEfficiencyFtSpeedCurve.setMaximumValueofx(1.5);
   fanEfficiencyFtSpeedCurve.setMinimumCurveOutput(0.3);
   fanEfficiencyFtSpeedCurve.setMaximumCurveOutput(1.0);
- 
+
   ScheduleConstant availabilitySched(model);
   availabilitySched.setValue(1.0);
   FanOnOff supplyFan(model,availabilitySched,fanPowerFtSpeedCurve,fanEfficiencyFtSpeedCurve);
@@ -240,35 +253,35 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
   EXPECT_TRUE(testHP.isOutdoorAirFlowRateWhenNoCoolingorHeatingisNeededAutosized());
 
 //test heat pump maximum cycling rate
-  EXPECT_TRUE(testHP.setMaximumCyclingRate(5.0)); 
+  EXPECT_TRUE(testHP.setMaximumCyclingRate(5.0));
   boost::optional<double> value7 = testHP.maximumCyclingRate();
   EXPECT_EQ(*value7,5.0);
   testHP.resetMaximumCyclingRate();
   EXPECT_TRUE(testHP.isMaximumCyclingRateDefaulted());
 
 //test heat pump time constant
-  EXPECT_TRUE(testHP.setHeatPumpTimeConstant(60)); 
+  EXPECT_TRUE(testHP.setHeatPumpTimeConstant(60));
   boost::optional<double> value8 = testHP.heatPumpTimeConstant();
   EXPECT_EQ(*value8,60);
   testHP.resetHeatPumpTimeConstant();
   EXPECT_TRUE(testHP.isHeatPumpTimeConstantDefaulted());
 
 //test heat pump fraction of On cycle power use
-  EXPECT_TRUE(testHP.setFractionofOnCyclePowerUse(0.02)); 
+  EXPECT_TRUE(testHP.setFractionofOnCyclePowerUse(0.02));
   boost::optional<double> value9 = testHP.fractionofOnCyclePowerUse();
   EXPECT_EQ(*value9,0.02);
   testHP.resetFractionofOnCyclePowerUse();
   EXPECT_TRUE(testHP.isFractionofOnCyclePowerUseDefaulted());
 
 //test heat pump fan delay time
-  EXPECT_TRUE(testHP.setHeatPumpFanDelayTime(60)); 
+  EXPECT_TRUE(testHP.setHeatPumpFanDelayTime(60));
   boost::optional<double> value10 = testHP.heatPumpFanDelayTime();
   EXPECT_EQ(*value10,60);
   testHP.resetHeatPumpFanDelayTime();
   EXPECT_TRUE(testHP.isHeatPumpFanDelayTimeDefaulted());
 
 //test heat pump maximum supply air temperature from supplemental heater
-  EXPECT_TRUE(testHP.setMaximumSupplyAirTemperaturefromSupplementalHeater(90)); 
+  EXPECT_TRUE(testHP.setMaximumSupplyAirTemperaturefromSupplementalHeater(90));
   boost::optional<double> value11 = testHP.maximumSupplyAirTemperaturefromSupplementalHeater();
   EXPECT_EQ(*value11,90);
   testHP.resetMaximumSupplyAirTemperaturefromSupplementalHeater();
@@ -276,7 +289,7 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
   EXPECT_TRUE(testHP.isMaximumSupplyAirTemperaturefromSupplementalHeaterAutosized());
 
 //test heat pump maximum outdoor air temperature for supplemental heater operation
-  EXPECT_TRUE(testHP.setMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation(21)); 
+  EXPECT_TRUE(testHP.setMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation(21));
   boost::optional<double> value12 = testHP.maximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation();
   EXPECT_EQ(*value12,21);
   testHP.resetMaximumOutdoorDryBulbTemperatureforSupplementalHeaterOperation();
@@ -287,7 +300,7 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
   EXPECT_EQ(0u,thermalZone.equipment().size());
 
   EXPECT_TRUE(testHP.addToThermalZone(thermalZone));
-  
+
   EXPECT_TRUE(testHP.inletNode());
   EXPECT_TRUE(testHP.outletNode());
 
@@ -297,4 +310,17 @@ TEST_F(ModelFixture, ZoneHVACWaterToAirHeatPump_SetGetFields) {
   EXPECT_TRUE(coolingCoil1.containingZoneHVACComponent());
   EXPECT_TRUE(heatingCoil1.containingZoneHVACComponent());
   EXPECT_TRUE(supplementalHC1.containingZoneHVACComponent());
+
+  //test fan placement
+  EXPECT_TRUE(testHP.setHeatPumpCoilWaterFlowMode("Constant"));
+  std::string str3 = testHP.heatPumpCoilWaterFlowMode();
+  EXPECT_EQ(str3, "Constant");
+  EXPECT_FALSE(testHP.isHeatPumpCoilWaterFlowModeDefaulted());
+
+  testHP.resetHeatPumpCoilWaterFlowMode();
+  EXPECT_TRUE(testHP.isHeatPumpCoilWaterFlowModeDefaulted());
+  str3 = testHP.heatPumpCoilWaterFlowMode();
+  EXPECT_EQ(str3,"Cycling");
+
+
 }

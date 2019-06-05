@@ -1,37 +1,42 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "SqlFile_Impl.hpp"
 #include "SqlFileTimeSeriesQuery.hpp"
 #include "OpenStudio.hxx"
 
-#include "../core/String.hpp"
 #include "../time/Calendar.hpp"
 #include "../filetypes/EpwFile.hpp"
 #include "../core/Containers.hpp"
-#include "../core/Optional.hpp"
-#include "../time/DateTime.hpp"
 #include "../core/Assert.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
+
 
 using boost::multi_index_container;
 using boost::multi_index::indexed_by;
@@ -53,8 +58,8 @@ namespace openstudio{
     SqlFile_Impl::SqlFile_Impl(const openstudio::path& path, const bool createIndexes)
       : m_path(path), m_connectionOpen(false), m_supportedVersion(false)
     {
-      if (boost::filesystem::exists(m_path)){
-        m_path = boost::filesystem::canonical(m_path);
+      if (openstudio::filesystem::exists(m_path)){
+        m_path = openstudio::filesystem::canonical(m_path);
       }
       reopen();
       if (createIndexes) this->createIndexes();
@@ -64,15 +69,15 @@ namespace openstudio{
         const openstudio::Calendar &t_calendar, const bool createIndexes)
       : m_path(t_path)
     {
-      if (boost::filesystem::exists(m_path)){
-        m_path = boost::filesystem::canonical(m_path);
+      if (openstudio::filesystem::exists(m_path)){
+        m_path = openstudio::filesystem::canonical(m_path);
       }
       m_sqliteFilename = toString(m_path.make_preferred().native());
       std::string fileName = m_sqliteFilename;
 
       bool initschema = false;
 
-      if (!boost::filesystem::exists(m_path))
+      if (!openstudio::filesystem::exists(m_path))
       {
         initschema = true;
       }
@@ -350,7 +355,7 @@ namespace openstudio{
           }
 
           stmt.bind(7, nextEnvironmentPeriodIndex);
-          
+
           stmt.execute();
 
           ++nextTimeIndex;
@@ -358,7 +363,7 @@ namespace openstudio{
 
         ++simulationDay;
       }
-        
+
     }
 
     void SqlFile_Impl::execAndThrowOnError(const std::string &t_stmt)
@@ -367,7 +372,7 @@ namespace openstudio{
       if (sqlite3_exec(m_db, t_stmt.c_str(), nullptr, nullptr, &err) != SQLITE_OK)
       {
         std::string errstr;
-       
+
         if (err)
         {
           errstr = err;
@@ -417,7 +422,7 @@ namespace openstudio{
         close();
         init();
       }catch(const std::exception&e){
-        LOG(Error, "Exception while opening database at '" << toString(m_path) 
+        LOG(Error, "Exception while opening database at '" << toString(m_path)
             << "': " << e.what());
         result = false;
       }
@@ -436,7 +441,7 @@ namespace openstudio{
         if (!isValidConnection()) {
           sqlite3_close(m_db);
           m_connectionOpen = false;
-          throw openstudio::Exception("ResultsViewer is not compatible with this file.");
+          throw openstudio::Exception("OpenStudio is not compatible with this file.");
         }
         // set a 1 second timeout
         code = sqlite3_busy_timeout(m_db, 1000);
@@ -534,7 +539,7 @@ namespace openstudio{
     }
 
 
-    void SqlFile_Impl::insertIlluminanceMap(const std::string &t_zoneName, const std::string &t_name, 
+    void SqlFile_Impl::insertIlluminanceMap(const std::string &t_zoneName, const std::string &t_name,
         const std::string &t_environmentName, const std::vector<DateTime> &t_times,
         const std::vector<double> &t_xs, const std::vector<double> &t_ys, double t_z, const std::vector<Matrix> &t_maps)
     {
@@ -631,7 +636,7 @@ namespace openstudio{
     }
 
 
-    void SqlFile_Impl::insertTimeSeriesData(const std::string &t_variableType, const std::string &t_indexGroup, 
+    void SqlFile_Impl::insertTimeSeriesData(const std::string &t_variableType, const std::string &t_indexGroup,
         const std::string &t_timestepType, const std::string &t_keyValue, const std::string &t_variableName,
         const openstudio::ReportingFrequency &t_reportingFrequency, const boost::optional<std::string> &t_scheduleName,
         const std::string &t_variableUnits, const openstudio::TimeSeries &t_timeSeries)
@@ -680,13 +685,13 @@ namespace openstudio{
         openstudio::DateTime dt = firstdate + openstudio::Time(days[i]);
         double value = values[i];
 
-        if (dt.time().seconds() == 59) 
+        if (dt.time().seconds() == 59)
         {
           // rounding error, let's help
           dt += openstudio::Time(0,0,0,1);
         }
 
-        if (dt.time().seconds() == 1) 
+        if (dt.time().seconds() == 1)
         {
           // rounding error, let's help
           dt -= openstudio::Time(0,0,0,1);
@@ -720,7 +725,7 @@ namespace openstudio{
       {
         sqlite3_stmt* sqlStmtPtr;
 
-        std::string stmt = 
+        std::string stmt =
           "select sum(VariableValue), VariableName, ReportingFrequency, VariableUnits "
           "from ReportMeterData, ReportMeterDataDictionary "
           "where (ReportMeterData.ReportMeterDataDictionaryIndex = ReportMeterDataDictionary.ReportMeterDataDictionaryIndex) "
@@ -814,8 +819,8 @@ namespace openstudio{
           {
             std::string queryEnvPeriod = boost::to_upper_copy(envPeriodsItr->second);
             m_dataDictionary.insert(DataDictionaryItem(dictionaryIndex,envPeriodsItr->first,name,keyValue,queryEnvPeriod,rf,units,table));
-            LOG(Trace,"Creating data dictionary item " << dictionaryIndex << ", " << (*envPeriodsItr).first 
-                << ", " << name << ", " << keyValue << ", " << queryEnvPeriod << ", " << rf << ", " 
+            LOG(Trace,"Creating data dictionary item " << dictionaryIndex << ", " << (*envPeriodsItr).first
+                << ", " << name << ", " << keyValue << ", " << queryEnvPeriod << ", " << rf << ", "
                 << units << ", " << table << ".");
           }
 
@@ -861,7 +866,7 @@ namespace openstudio{
         const openstudio::MonthOfYear &t_monthOfYear) const
     {
       const std::string reportname = "BUILDING ENERGY PERFORMANCE - " + boost::algorithm::to_upper_copy(t_fuelType.valueDescription());
-      const std::string columnname = boost::algorithm::to_upper_copy(t_categoryType.valueName()) + ":" + 
+      const std::string columnname = boost::algorithm::to_upper_copy(t_categoryType.valueName()) + ":" +
         boost::algorithm::to_upper_copy(t_fuelType.valueName());
       const std::string rowname = t_monthOfYear.valueDescription();
 
@@ -874,7 +879,7 @@ namespace openstudio{
 
       return execAndReturnFirstDouble(s);
     }
-    
+
     //TODO
     boost::optional<double> SqlFile_Impl::peakEnergyDemandByMonth(
         const openstudio::EndUseFuelType &t_fuelType,
@@ -882,8 +887,8 @@ namespace openstudio{
         const openstudio::MonthOfYear &t_monthOfYear) const
     {
       const std::string reportname = "BUILDING ENERGY PERFORMANCE - " + boost::algorithm::to_upper_copy(t_fuelType.valueDescription()) + " PEAK DEMAND";
-      const std::string columnname = boost::algorithm::to_upper_copy(t_categoryType.valueName()) + ":" + 
-        boost::algorithm::to_upper_copy(t_fuelType.valueName()) + 
+      const std::string columnname = boost::algorithm::to_upper_copy(t_categoryType.valueName()) + ":" +
+        boost::algorithm::to_upper_copy(t_fuelType.valueName()) +
         " {AT MAX/MIN}";
       const std::string rowname = t_monthOfYear.valueDescription();
 
@@ -1019,8 +1024,8 @@ namespace openstudio{
       else if (fuel == FuelType::Gas){
         return execAndReturnFirstDouble("SELECT Value from tabulardatawithstrings where (reportname = 'Economics Results Summary Report') and (ReportForString = 'Entire Facility') and (TableName = 'Annual Cost') and (ColumnName ='Gas') and (((RowName = 'Cost') and (Units = '~~$~~')) or (RowName = 'Cost (~~$~~)'))");
       }
-      else { 
-        // E+ lumps all other fuel types under "Other," so we are forced to use the meters table instead.  
+      else {
+        // E+ lumps all other fuel types under "Other," so we are forced to use the meters table instead.
         // This is fragile if there are custom submeters, but this is the only option
         std::string meterName;
 
@@ -1072,7 +1077,7 @@ namespace openstudio{
     {
       // Get the total building area
       boost::optional<double> totalBuildingArea = execAndReturnFirstDouble("SELECT Value from tabulardatawithstrings where (reportname = 'AnnualBuildingUtilityPerformanceSummary') and (ReportForString = 'Entire Facility') and (TableName = 'Building Area') and (ColumnName = 'Area') and (RowName = 'Total Building Area') and (Units = 'm2')");
-      
+
       // Get the annual energy cost
       boost::optional<double> annualEnergyCost = annualTotalCost(fuel);
 
@@ -1122,10 +1127,10 @@ namespace openstudio{
 
       if (totalCost) {
         return totalCost;
-      } 
-      
+      }
+
       return boost::none;
-      
+
     }
 
     std::vector<std::string> SqlFile_Impl::availableTimeSeries()
@@ -2023,9 +2028,9 @@ namespace openstudio{
             value = columnText(sqlite3_column_text(sqlStmtPtr, 0));
             valueVector->push_back(*value);
           }
-          else  // i didn't get a row.  something is wrong so set the exit condition. 
+          else  // i didn't get a row.  something is wrong so set the exit condition.
           {     // should never get here since i test for all documented return states above
-            code = SQLITE_DONE;  
+            code = SQLITE_DONE;
           }
 
         }// end loop
@@ -2350,7 +2355,7 @@ namespace openstudio{
       }catch(const std::exception&){
       }
 
-      if (m_db) 
+      if (m_db)
       {
         std::string energyPlusVersion = this->energyPlusVersion();
         VersionString version(energyPlusVersion);
@@ -2386,7 +2391,7 @@ namespace openstudio{
 
         long cumulativeSeconds = 0;
 
-        while (code == SQLITE_ROW) 
+        while (code == SQLITE_ROW)
         {
           double value = sqlite3_column_double(sqlStmtPtr, 0);
           stdValues.push_back(value);
@@ -2557,7 +2562,7 @@ namespace openstudio{
             }
           }
         }
-        
+
 
       } else if (!iEpRfNKv->timeSeries.values().empty()) {
         ts = iEpRfNKv->timeSeries;
@@ -2584,10 +2589,10 @@ namespace openstudio{
       SqlFileTimeSeriesQueryVector result, temp1, temp2;
 
       // no work needed
-      if (query.m_vetted) { 
+      if (query.m_vetted) {
         result.push_back(query);
-        return result; 
-      } 
+        return result;
+      }
 
       temp1 = expandEnvironment(query);
 
@@ -2737,7 +2742,7 @@ namespace openstudio{
               continue;
             }
             ++it;
-          }      
+          }
         }
       }
 
@@ -2807,7 +2812,7 @@ namespace openstudio{
         else {
           if (expanded.size() == 0) {
             LOG(Info,"Unable to return timeSeries based on query: " << std::endl << query
-                << ", because there are no matching timeSeries in SqlFile " << toString(path()) 
+                << ", because there are no matching timeSeries in SqlFile " << toString(path())
                 << ".");
           }
           else {
@@ -2820,7 +2825,7 @@ namespace openstudio{
       }
 
       OS_ASSERT(wquery.m_vetted);
-      OS_ASSERT(wquery.environment()); 
+      OS_ASSERT(wquery.environment());
       OS_ASSERT(!wquery.environment().get().type());
       OS_ASSERT(wquery.reportingFrequency());
       OS_ASSERT(wquery.timeSeries());
@@ -3459,9 +3464,9 @@ namespace openstudio{
       return illuminanceMap(*timeIndex);
     }
 
-    void SqlFile_Impl::illuminanceMap(const int& hourlyReportIndex, 
-                                      std::vector<double>& x, 
-                                      std::vector<double>& y, 
+    void SqlFile_Impl::illuminanceMap(const int& hourlyReportIndex,
+                                      std::vector<double>& x,
+                                      std::vector<double>& y,
                                       std::vector<double>& illuminance) const
     {
       double xVal(0.0), yVal(0.0), yValPrevious(0.0), illuminanceVal(0.0);
@@ -3605,18 +3610,18 @@ namespace openstudio{
       return index;
     }
 
-    void SqlFile_Impl::mf_makeConsistent(std::vector<SqlFileTimeSeriesQuery>& queries) 
+    void SqlFile_Impl::mf_makeConsistent(std::vector<SqlFileTimeSeriesQuery>& queries)
     {
       // make each query consistent, or delete it if there is no possibility of a matching TimeSeries
       // do not check name validity--only cross-validity
-      for (auto queryIt = queries.begin(); 
-          queryIt < queries.end(); ) 
+      for (auto queryIt = queries.begin();
+          queryIt < queries.end(); )
       {
         // environment
         OptionalString envName;
         if (queryIt->environment() && queryIt->environment()->name()) {
           envName = queryIt->environment()->name();
-        }     
+        }
 
         // reporting frequency
         OptionalReportingFrequency rf;
@@ -3666,7 +3671,7 @@ namespace openstudio{
           tsSet.insert(temp.begin(),temp.end());
         }
         if (tsName) {
-          if (tsSet.find(*tsName) == tsSet.end()) { 
+          if (tsSet.find(*tsName) == tsSet.end()) {
             queryIt = queries.erase(queryIt);
             continue;
           }
@@ -3718,15 +3723,15 @@ namespace openstudio{
                 for (const std::string& kv : keyValueNames) {
                   StringVector::const_iterator it = std::find_if(kvAvail.begin(),kvAvail.end(),
                       std::bind(istringEqual,kv,std::placeholders::_1));
-                  if (it != kvAvail.end()) { 
-                    keepers.insert(*it); 
+                  if (it != kvAvail.end()) {
+                    keepers.insert(*it);
                     if (keepers.size() == keyValueNames.size()) { break; }
                   }
                 }
                 if (keepers.size() == keyValueNames.size()) { break; }
               }
               if (keepers.size() == keyValueNames.size()) { break; }
-            }           
+            }
           }
           // set key values to keepers
           if (keepers.empty()) {

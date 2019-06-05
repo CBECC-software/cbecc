@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_AIRTERMINALSINGLEDUCTPARALLELPIUREHEAT_IMPL_HPP
 #define MODEL_AIRTERMINALSINGLEDUCTPARALLELPIUREHEAT_IMPL_HPP
@@ -32,24 +42,7 @@ namespace detail {
 
   /** AirTerminalSingleDuctParallelPIUReheat_Impl is a StraightComponent_Impl that is the implementation class for AirTerminalSingleDuctParallelPIUReheat.*/
   class MODEL_API AirTerminalSingleDuctParallelPIUReheat_Impl : public StraightComponent_Impl {
-    Q_OBJECT;
 
-    Q_PROPERTY(boost::optional<double> maximumPrimaryAirFlowRate READ maximumPrimaryAirFlowRate WRITE setMaximumPrimaryAirFlowRate);
-    Q_PROPERTY(bool isMaximumPrimaryAirFlowRateAutosized READ isMaximumPrimaryAirFlowRateAutosized);
-    Q_PROPERTY(boost::optional<double> maximumSecondaryAirFlowRate READ maximumSecondaryAirFlowRate WRITE setMaximumSecondaryAirFlowRate);
-    Q_PROPERTY(bool isMaximumSecondaryAirFlowRateAutosized READ isMaximumSecondaryAirFlowRateAutosized);
-    Q_PROPERTY(boost::optional<double> minimumPrimaryAirFlowFraction READ minimumPrimaryAirFlowFraction WRITE setMinimumPrimaryAirFlowFraction);
-    Q_PROPERTY(bool isMinimumPrimaryAirFlowFractionAutosized READ isMinimumPrimaryAirFlowFractionAutosized);
-    Q_PROPERTY(boost::optional<double> fanOnFlowFraction READ fanOnFlowFraction WRITE setFanOnFlowFraction);
-    Q_PROPERTY(bool isFanOnFlowFractionAutosized READ isFanOnFlowFractionAutosized);
-    Q_PROPERTY(boost::optional<double> maximumHotWaterorSteamFlowRate READ maximumHotWaterorSteamFlowRate WRITE setMaximumHotWaterorSteamFlowRate RESET resetMaximumHotWaterorSteamFlowRate);
-    Q_PROPERTY(bool isMaximumHotWaterorSteamFlowRateAutosized READ isMaximumHotWaterorSteamFlowRateAutosized);
-    Q_PROPERTY(double minimumHotWaterorSteamFlowRate READ minimumHotWaterorSteamFlowRate WRITE setMinimumHotWaterorSteamFlowRate RESET resetMinimumHotWaterorSteamFlowRate);
-    Q_PROPERTY(bool isMinimumHotWaterorSteamFlowRateDefaulted READ isMinimumHotWaterorSteamFlowRateDefaulted);
-    Q_PROPERTY(double convergenceTolerance READ convergenceTolerance WRITE setConvergenceTolerance RESET resetConvergenceTolerance);
-    Q_PROPERTY(bool isConvergenceToleranceDefaulted READ isConvergenceToleranceDefaulted);
-
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> availabilitySchedule READ availabilityScheduleAsModelObject WRITE setAvailabilityScheduleAsModelObject);
    public:
     /** @name Constructors and Destructors */
     //@{
@@ -82,9 +75,9 @@ namespace detail {
 
     virtual std::vector<ModelObject> children() const override;
 
-    virtual unsigned inletPort() override;
+    virtual unsigned inletPort() const override;
 
-    virtual unsigned outletPort() override;
+    virtual unsigned outletPort() const override;
 
     virtual bool addToNode(Node & node) override;
 
@@ -130,33 +123,51 @@ namespace detail {
 
     bool isConvergenceToleranceDefaulted() const;
 
+  boost::optional<double> autosizedMaximumPrimaryAirFlowRate() const ;
+
+  boost::optional<double> autosizedMaximumSecondaryAirFlowRate() const ;
+
+  boost::optional<double> autosizedMinimumPrimaryAirFlowFraction() const ;
+
+  boost::optional<double> autosizedFanOnFlowFraction() const ;
+
+  boost::optional<double> autosizedMaximumHotWaterorSteamFlowRate() const ;
+
+  virtual void autosize() override;
+
+  virtual void applySizingValues() override;
+
     //@}
     /** @name Setters */
     //@{
 
+
+    // TODO: @macumber all of these should have a return type of bool, and shouldn't accept boost::optional double (or at least be overloaded to accept a
+    // double too), see https://github.com/NREL/OpenStudio/issues/2620 and https://github.com/jmarrec/OpenStudio/commit/5d295638aea240becc14a45641ea72a413e1c360
+    // and https://github.com/NREL/OpenStudio/pull/2589
     bool setAvailabilitySchedule(Schedule& schedule);
 
-    void setMaximumPrimaryAirFlowRate(boost::optional<double> maximumPrimaryAirFlowRate);
+    bool setMaximumPrimaryAirFlowRate(boost::optional<double> maximumPrimaryAirFlowRate);
 
     void autosizeMaximumPrimaryAirFlowRate();
 
-    void setMaximumSecondaryAirFlowRate(boost::optional<double> maximumSecondaryAirFlowRate);
+    bool setMaximumSecondaryAirFlowRate(boost::optional<double> maximumSecondaryAirFlowRate);
 
     void autosizeMaximumSecondaryAirFlowRate();
 
-    void setMinimumPrimaryAirFlowFraction(boost::optional<double> minimumPrimaryAirFlowFraction);
+    bool setMinimumPrimaryAirFlowFraction(boost::optional<double> minimumPrimaryAirFlowFraction);
 
     void autosizeMinimumPrimaryAirFlowFraction();
 
-    void setFanOnFlowFraction(boost::optional<double> fanOnFlowFraction);
+    bool setFanOnFlowFraction(boost::optional<double> fanOnFlowFraction);
 
     void autosizeFanOnFlowFraction();
 
-    void setFan( HVACComponent & hvacComponent );
+    bool setFan( HVACComponent & hvacComponent );
 
-    void setReheatCoil( HVACComponent & hvacComponent );
+    bool setReheatCoil( HVACComponent & hvacComponent );
 
-    void setMaximumHotWaterorSteamFlowRate(boost::optional<double> maximumHotWaterorSteamFlowRate);
+    bool setMaximumHotWaterorSteamFlowRate(boost::optional<double> maximumHotWaterorSteamFlowRate);
 
     void resetMaximumHotWaterorSteamFlowRate();
 
@@ -174,7 +185,7 @@ namespace detail {
     // Use carefully.  Removing (or moving) plenum will leave model in invalid state
     bool setInducedAirPlenumZone(ThermalZone & thermalZone);
 
-    void setFanAvailabilitySchedule(Schedule & schedule);
+    bool setFanAvailabilitySchedule(Schedule & schedule);
 
     //@}
    protected:
@@ -197,4 +208,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_AIRTERMINALSINGLEDUCTPARALLELPIUREHEAT_IMPL_HPP
-

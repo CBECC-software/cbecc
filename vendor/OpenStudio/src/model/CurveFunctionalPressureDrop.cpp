@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CurveFunctionalPressureDrop.hpp"
 #include "CurveFunctionalPressureDrop_Impl.hpp"
@@ -56,9 +66,19 @@ namespace detail {
 
   const std::vector<std::string>& CurveFunctionalPressureDrop_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // Curve Input 1: MassFlow
+      "Performance Curve Input Variable 1 Value",
+
+      // Curve Input 2: Density
+      "Performance Curve Input Variable 2 Value",
+
+      // Curve Input 3: Velocity
+      "Performance Curve Input Variable 3 Value",
+
+      // Curve Output: the resultant value
+      "Performance Curve Output Value"
+    };
     return result;
   }
 
@@ -68,13 +88,13 @@ namespace detail {
 
   int CurveFunctionalPressureDrop_Impl::numVariables() const {
     LOG_AND_THROW("CurveFunctionalPressureDrop must be evaluated by EnergyPlus, in the context of "
-        << "plant pressure simulations. Therefore, numVariables and evaluate are not applicable " 
+        << "plant pressure simulations. Therefore, numVariables and evaluate are not applicable "
         << "for this curve type.");
   }
 
   double CurveFunctionalPressureDrop_Impl::evaluate(const std::vector<double>& x) const {
     LOG_AND_THROW("CurveFunctionalPressureDrop must be evaluated by EnergyPlus, in the context of "
-        << "plant pressure simulations. Therefore, numVariables and evaluate are not applicable " 
+        << "plant pressure simulations. Therefore, numVariables and evaluate are not applicable "
         << "for this curve type.");
   }
 
@@ -100,12 +120,13 @@ namespace detail {
     return getDouble(OS_Curve_Functional_PressureDropFields::FixedFrictionFactor,true);
   }
 
-  void CurveFunctionalPressureDrop_Impl::setDiameter(double diameter) {
+  bool CurveFunctionalPressureDrop_Impl::setDiameter(double diameter) {
     bool result = setDouble(OS_Curve_Functional_PressureDropFields::Diameter, diameter);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveFunctionalPressureDrop_Impl::setMinorLossCoefficient(boost::optional<double> minorLossCoefficient) {
+  bool CurveFunctionalPressureDrop_Impl::setMinorLossCoefficient(boost::optional<double> minorLossCoefficient) {
     bool result = false;
     if (minorLossCoefficient) {
       result = setDouble(OS_Curve_Functional_PressureDropFields::MinorLossCoefficient, minorLossCoefficient.get());
@@ -113,6 +134,7 @@ namespace detail {
       result = setString(OS_Curve_Functional_PressureDropFields::MinorLossCoefficient, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveFunctionalPressureDrop_Impl::resetMinorLossCoefficient() {
@@ -120,7 +142,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CurveFunctionalPressureDrop_Impl::setLength(boost::optional<double> length) {
+  bool CurveFunctionalPressureDrop_Impl::setLength(boost::optional<double> length) {
     bool result = false;
     if (length) {
       result = setDouble(OS_Curve_Functional_PressureDropFields::Length, length.get());
@@ -128,6 +150,7 @@ namespace detail {
       result = setString(OS_Curve_Functional_PressureDropFields::Length, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveFunctionalPressureDrop_Impl::resetLength() {
@@ -135,7 +158,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CurveFunctionalPressureDrop_Impl::setRoughness(boost::optional<double> roughness) {
+  bool CurveFunctionalPressureDrop_Impl::setRoughness(boost::optional<double> roughness) {
     bool result = false;
     if (roughness) {
       result = setDouble(OS_Curve_Functional_PressureDropFields::Roughness, roughness.get());
@@ -143,6 +166,7 @@ namespace detail {
       result = setString(OS_Curve_Functional_PressureDropFields::Roughness, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveFunctionalPressureDrop_Impl::resetRoughness() {
@@ -150,7 +174,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CurveFunctionalPressureDrop_Impl::setFixedFrictionFactor(boost::optional<double> fixedFrictionFactor) {
+  bool CurveFunctionalPressureDrop_Impl::setFixedFrictionFactor(boost::optional<double> fixedFrictionFactor) {
     bool result = false;
     if (fixedFrictionFactor) {
       result = setDouble(OS_Curve_Functional_PressureDropFields::FixedFrictionFactor, fixedFrictionFactor.get());
@@ -158,6 +182,7 @@ namespace detail {
       result = setString(OS_Curve_Functional_PressureDropFields::FixedFrictionFactor, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveFunctionalPressureDrop_Impl::resetFixedFrictionFactor() {
@@ -199,36 +224,36 @@ boost::optional<double> CurveFunctionalPressureDrop::fixedFrictionFactor() const
   return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->fixedFrictionFactor();
 }
 
-void CurveFunctionalPressureDrop::setDiameter(double diameter) {
-  getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setDiameter(diameter);
+bool CurveFunctionalPressureDrop::setDiameter(double diameter) {
+  return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setDiameter(diameter);
 }
 
-void CurveFunctionalPressureDrop::setMinorLossCoefficient(double minorLossCoefficient) {
-  getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setMinorLossCoefficient(minorLossCoefficient);
+bool CurveFunctionalPressureDrop::setMinorLossCoefficient(double minorLossCoefficient) {
+  return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setMinorLossCoefficient(minorLossCoefficient);
 }
 
 void CurveFunctionalPressureDrop::resetMinorLossCoefficient() {
   getImpl<detail::CurveFunctionalPressureDrop_Impl>()->resetMinorLossCoefficient();
 }
 
-void CurveFunctionalPressureDrop::setLength(double length) {
-  getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setLength(length);
+bool CurveFunctionalPressureDrop::setLength(double length) {
+  return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setLength(length);
 }
 
 void CurveFunctionalPressureDrop::resetLength() {
   getImpl<detail::CurveFunctionalPressureDrop_Impl>()->resetLength();
 }
 
-void CurveFunctionalPressureDrop::setRoughness(double roughness) {
-  getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setRoughness(roughness);
+bool CurveFunctionalPressureDrop::setRoughness(double roughness) {
+  return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setRoughness(roughness);
 }
 
 void CurveFunctionalPressureDrop::resetRoughness() {
   getImpl<detail::CurveFunctionalPressureDrop_Impl>()->resetRoughness();
 }
 
-void CurveFunctionalPressureDrop::setFixedFrictionFactor(double fixedFrictionFactor) {
-  getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setFixedFrictionFactor(fixedFrictionFactor);
+bool CurveFunctionalPressureDrop::setFixedFrictionFactor(double fixedFrictionFactor) {
+  return getImpl<detail::CurveFunctionalPressureDrop_Impl>()->setFixedFrictionFactor(fixedFrictionFactor);
 }
 
 void CurveFunctionalPressureDrop::resetFixedFrictionFactor() {
@@ -237,10 +262,9 @@ void CurveFunctionalPressureDrop::resetFixedFrictionFactor() {
 
 /// @cond
 CurveFunctionalPressureDrop::CurveFunctionalPressureDrop(std::shared_ptr<detail::CurveFunctionalPressureDrop_Impl> impl)
-  : Curve(impl)
+  : Curve(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

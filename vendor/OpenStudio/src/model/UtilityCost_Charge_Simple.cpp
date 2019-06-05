@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "UtilityCost_Charge_Simple.hpp"
 #include "UtilityCost_Charge_Simple_Impl.hpp"
@@ -57,9 +67,9 @@ OptionalString UtilityCost_Charge_Simple_Impl::tariffName() const
   return getString(OS_UtilityCost_Charge_SimpleFields::TariffName);
 }
 
-void UtilityCost_Charge_Simple_Impl::setTariffName(const std::string& str)
+bool UtilityCost_Charge_Simple_Impl::setTariffName(const std::string& str)
 {
-  setString(OS_UtilityCost_Charge_SimpleFields::TariffName,str);
+  return setString(OS_UtilityCost_Charge_SimpleFields::TariffName,str);;
 }
 
 OptionalString UtilityCost_Charge_Simple_Impl::sourceVariable() const
@@ -67,9 +77,9 @@ OptionalString UtilityCost_Charge_Simple_Impl::sourceVariable() const
   return getString(OS_UtilityCost_Charge_SimpleFields::SourceVariable);
 }
 
-void UtilityCost_Charge_Simple_Impl::setSourceVariable(const std::string& str)
+bool UtilityCost_Charge_Simple_Impl::setSourceVariable(const std::string& str)
 {
-  setString(OS_UtilityCost_Charge_SimpleFields::SourceVariable,str);
+  return setString(OS_UtilityCost_Charge_SimpleFields::SourceVariable,str);;
 }
 
 OptionalString UtilityCost_Charge_Simple_Impl::season() const
@@ -77,9 +87,9 @@ OptionalString UtilityCost_Charge_Simple_Impl::season() const
   return getString(OS_UtilityCost_Charge_SimpleFields::Season);
 }
 
-void UtilityCost_Charge_Simple_Impl::setSeason(const std::string& str)
+bool UtilityCost_Charge_Simple_Impl::setSeason(const std::string& str)
 {
-  setString(OS_UtilityCost_Charge_SimpleFields::Season,str);
+  return setString(OS_UtilityCost_Charge_SimpleFields::Season,str);;
 }
 
 OptionalString UtilityCost_Charge_Simple_Impl::categoryVariableName() const
@@ -87,9 +97,9 @@ OptionalString UtilityCost_Charge_Simple_Impl::categoryVariableName() const
   return getString(OS_UtilityCost_Charge_SimpleFields::CategoryVariableName);
 }
 
-void UtilityCost_Charge_Simple_Impl::setCategoryVariableName(const std::string& str)
+bool UtilityCost_Charge_Simple_Impl::setCategoryVariableName(const std::string& str)
 {
-  setString(OS_UtilityCost_Charge_SimpleFields::CategoryVariableName,str);
+  return setString(OS_UtilityCost_Charge_SimpleFields::CategoryVariableName,str);;
 }
 
 OptionalString UtilityCost_Charge_Simple_Impl::costPerUnitValueOrVariableName() const
@@ -97,9 +107,9 @@ OptionalString UtilityCost_Charge_Simple_Impl::costPerUnitValueOrVariableName() 
   return getString(OS_UtilityCost_Charge_SimpleFields::CostperUnitValueorVariableName);
 }
 
-void UtilityCost_Charge_Simple_Impl::setCostPerUnitValueOrVariableName(const std::string& str)
+bool UtilityCost_Charge_Simple_Impl::setCostPerUnitValueOrVariableName(const std::string& str)
 {
-  setString(OS_UtilityCost_Charge_SimpleFields::CostperUnitValueorVariableName,str);
+  return setString(OS_UtilityCost_Charge_SimpleFields::CostperUnitValueorVariableName,str);;
 }
 
 // return the parent object in the hierarchy
@@ -133,8 +143,6 @@ std::vector<IddObjectType> UtilityCost_Charge_Simple_Impl::allowableChildTypes()
 const std::vector<std::string>& UtilityCost_Charge_Simple_Impl::outputVariableNames() const
 {
   static std::vector<std::string> result;
-  if (result.empty()){
-  }
   return result;
 }
 
@@ -149,7 +157,7 @@ UtilityCost_Charge_Simple::UtilityCost_Charge_Simple(const Model& model)
 
 // constructor
 UtilityCost_Charge_Simple::UtilityCost_Charge_Simple(std::shared_ptr<detail::UtilityCost_Charge_Simple_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 
 OptionalString UtilityCost_Charge_Simple::tariffName() const
@@ -157,9 +165,9 @@ OptionalString UtilityCost_Charge_Simple::tariffName() const
   return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->tariffName();
 }
 
-void UtilityCost_Charge_Simple::setTariffName(const std::string& str)
+bool UtilityCost_Charge_Simple::setTariffName(const std::string& str)
 {
-  getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setTariffName(str);
+  return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setTariffName(str);
 }
 
 OptionalString UtilityCost_Charge_Simple::sourceVariable() const
@@ -167,9 +175,9 @@ OptionalString UtilityCost_Charge_Simple::sourceVariable() const
   return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->sourceVariable();
 }
 
-void UtilityCost_Charge_Simple::setSourceVariable(const std::string& str)
+bool UtilityCost_Charge_Simple::setSourceVariable(const std::string& str)
 {
-  getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setSourceVariable(str);
+  return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setSourceVariable(str);
 }
 
 OptionalString UtilityCost_Charge_Simple::season() const
@@ -177,9 +185,9 @@ OptionalString UtilityCost_Charge_Simple::season() const
   return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->season();
 }
 
-void UtilityCost_Charge_Simple::setSeason(const std::string& str)
+bool UtilityCost_Charge_Simple::setSeason(const std::string& str)
 {
-  getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setSeason(str);
+  return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setSeason(str);
 }
 
 OptionalString UtilityCost_Charge_Simple::categoryVariableName() const
@@ -187,9 +195,9 @@ OptionalString UtilityCost_Charge_Simple::categoryVariableName() const
   return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->categoryVariableName();
 }
 
-void UtilityCost_Charge_Simple::setCategoryVariableName(const std::string& str)
+bool UtilityCost_Charge_Simple::setCategoryVariableName(const std::string& str)
 {
-  getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setCategoryVariableName(str);
+  return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setCategoryVariableName(str);
 }
 
 OptionalString UtilityCost_Charge_Simple::costPerUnitValueOrVariableName() const
@@ -197,9 +205,9 @@ OptionalString UtilityCost_Charge_Simple::costPerUnitValueOrVariableName() const
   return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->costPerUnitValueOrVariableName();
 }
 
-void UtilityCost_Charge_Simple::setCostPerUnitValueOrVariableName(const std::string& str)
+bool UtilityCost_Charge_Simple::setCostPerUnitValueOrVariableName(const std::string& str)
 {
-  getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setCostPerUnitValueOrVariableName(str);
+  return getImpl<detail::UtilityCost_Charge_Simple_Impl>()->setCostPerUnitValueOrVariableName(str);
 }
 
 IddObjectType UtilityCost_Charge_Simple::iddObjectType()

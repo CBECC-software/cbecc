@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "AvailabilityManagerNightCycle.hpp"
 #include "AvailabilityManagerNightCycle_Impl.hpp"
@@ -25,6 +35,9 @@
 #include "ThermalZone_Impl.hpp"
 #include "ScheduleTypeLimits.hpp"
 #include "ScheduleTypeRegistry.hpp"
+#include "ModelObject.hpp"
+#include "ModelObjectList.hpp"
+#include "ModelObjectList_Impl.hpp"
 #include <utilities/idd/IddFactory.hxx>
 
 #include <utilities/idd/OS_AvailabilityManager_NightCycle_FieldEnums.hxx>
@@ -61,9 +74,9 @@ namespace detail {
 
   const std::vector<std::string>& AvailabilityManagerNightCycle_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Availability Manager Night Cycle Control Status"
+    };
     return result;
   }
 
@@ -121,10 +134,6 @@ namespace detail {
     return isEmpty(OS_AvailabilityManager_NightCycleFields::CyclingRunTime);
   }
 
-  boost::optional<ThermalZone> AvailabilityManagerNightCycle_Impl::controlThermalZone() const {
-    return getObject<ModelObject>().getModelObjectTarget<ThermalZone>(OS_AvailabilityManager_NightCycleFields::ControlThermalZone);
-  }
-
   bool AvailabilityManagerNightCycle_Impl::setControlType(std::string controlType) {
     bool result = setString(OS_AvailabilityManager_NightCycleFields::ControlType, controlType);
     return result;
@@ -135,9 +144,9 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void AvailabilityManagerNightCycle_Impl::setThermostatTolerance(double thermostatTolerance) {
+  bool AvailabilityManagerNightCycle_Impl::setThermostatTolerance(double thermostatTolerance) {
     bool result = setDouble(OS_AvailabilityManager_NightCycleFields::ThermostatTolerance, thermostatTolerance);
-    OS_ASSERT(result);
+    return result;
   }
 
   bool AvailabilityManagerNightCycle_Impl::setThermostatTolerance(const Quantity& thermostatTolerance) {
@@ -154,9 +163,9 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void AvailabilityManagerNightCycle_Impl::setCyclingRunTime(double cyclingRunTime) {
+  bool AvailabilityManagerNightCycle_Impl::setCyclingRunTime(double cyclingRunTime) {
     bool result = setDouble(OS_AvailabilityManager_NightCycleFields::CyclingRunTime, cyclingRunTime);
-    OS_ASSERT(result);
+    return result;
   }
 
   bool AvailabilityManagerNightCycle_Impl::setCyclingRunTime(const Quantity& cyclingRunTime) {
@@ -173,26 +182,39 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  bool AvailabilityManagerNightCycle_Impl::setControlThermalZone(const boost::optional<ThermalZone>& thermalZone) {
-    bool result(false);
-    if (thermalZone) {
-      result = setPointer(OS_AvailabilityManager_NightCycleFields::ControlThermalZone, thermalZone.get().handle());
-    }
-    else {
-      resetControlThermalZone();
-      result = true;
-    }
-    return result;
-  }
-
-  void AvailabilityManagerNightCycle_Impl::resetControlThermalZone() {
-    bool result = setString(OS_AvailabilityManager_NightCycleFields::ControlThermalZone, "");
-    OS_ASSERT(result);
-  }
-
   std::vector<std::string> AvailabilityManagerNightCycle_Impl::controlTypeValues() const {
     return AvailabilityManagerNightCycle::controlTypeValues();
   }
+
+
+  // Cycling Run Time Control Type
+  std::vector<std::string> AvailabilityManagerNightCycle_Impl::cyclingRunTimeControlTypeValues() const {
+    return AvailabilityManagerNightCycle::cyclingRunTimeControlTypeValues();
+  }
+
+  std::string AvailabilityManagerNightCycle_Impl::cyclingRunTimeControlType() const {
+    boost::optional<std::string> value = getString(OS_AvailabilityManager_NightCycleFields::CyclingRunTimeControlType, true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  bool AvailabilityManagerNightCycle_Impl::isCyclingRunTimeControlTypeDefaulted() const {
+    return isEmpty(OS_AvailabilityManager_NightCycleFields::CyclingRunTimeControlType);
+  }
+
+  bool AvailabilityManagerNightCycle_Impl::setCyclingRunTimeControlType(std::string cyclingRunTimeControlType) {
+    bool result = setString(OS_AvailabilityManager_NightCycleFields::CyclingRunTimeControlType, cyclingRunTimeControlType);
+    return result;
+
+  }
+
+  void AvailabilityManagerNightCycle_Impl::resetCyclingRunTimeControlType() {
+    bool result = setString(OS_AvailabilityManager_NightCycleFields::CyclingRunTimeControlType, "");
+    OS_ASSERT(result);
+
+  }
+
+
 
   openstudio::Quantity AvailabilityManagerNightCycle_Impl::thermostatTolerance_SI() const {
     return getThermostatTolerance(false);
@@ -210,31 +232,243 @@ namespace detail {
     return getCyclingRunTime(true);
   }
 
-  boost::optional<ModelObject> AvailabilityManagerNightCycle_Impl::controlThermalZoneAsModelObject() const {
-    OptionalModelObject result;
-    OptionalThermalZone intermediate = controlThermalZone();
-    if (intermediate) {
-      result = *intermediate;
+
+
+
+  // Control Zone
+  ModelObjectList AvailabilityManagerNightCycle_Impl::controlThermalZoneList() const {
+    boost::optional<ModelObjectList> mo_list = getObject<ModelObject>().getModelObjectTarget<ModelObjectList>(OS_AvailabilityManager_NightCycleFields::ControlZoneorZoneListName);
+    if (mo_list) {
+      return mo_list.get();
+    } else {
+      LOG_AND_THROW(briefDescription() << " does not have a controlThermalZoneList attached");
+    }
+  }
+  void AvailabilityManagerNightCycle_Impl::clearControlThermalZoneList() {
+    ModelObjectList mo_list = controlThermalZoneList();
+    for (const ModelObject& mo : mo_list.modelObjects()) {
+      mo_list.removeModelObject(mo);
+    }
+    // Assert size = 0?
+  }
+
+
+  std::vector<ThermalZone> AvailabilityManagerNightCycle_Impl::controlThermalZones() const {
+    ModelObjectList mo_list = controlThermalZoneList();
+    std::vector<ThermalZone> result;
+    for ( ModelObject mo : mo_list.modelObjects() ) {
+      boost::optional<ThermalZone> thermalZone = mo.optionalCast<ThermalZone>();
+      if (thermalZone) {
+        result.push_back(thermalZone.get());
+      } else {
+        LOG_AND_THROW(briefDescription() << " appears to have non ThermalZone objects in the controlThermalZones list");
+      }
     }
     return result;
   }
 
-  bool AvailabilityManagerNightCycle_Impl::setControlThermalZoneAsModelObject(const boost::optional<ModelObject>& modelObject) {
-    if (modelObject) {
-      OptionalThermalZone intermediate = modelObject->optionalCast<ThermalZone>();
-      if (intermediate) {
-        ThermalZone thermalZone(*intermediate);
-        return setControlThermalZone(thermalZone);
-      }
-      else {
-        return false;
+  bool AvailabilityManagerNightCycle_Impl::setControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+    // Clear it first
+    clearControlThermalZoneList();
+    bool result = false;
+
+    ModelObjectList mo_list = controlThermalZoneList();
+    for (ThermalZone thermalZone: thermalZones) {
+      result = mo_list.addModelObject(thermalZone);
+      if (!result) {
+        LOG_AND_THROW("Adding " << thermalZone.briefDescription() << " to ControlThermalZones failed for " << briefDescription());
       }
     }
-    else {
-      resetControlThermalZone();
-    }
-    return true;
+    return result;
   }
+
+  void AvailabilityManagerNightCycle_Impl::resetControlThermalZones() {
+    // Clear it
+    clearControlThermalZoneList();
+  }
+
+
+
+
+  // Cooling Control Zones
+  ModelObjectList AvailabilityManagerNightCycle_Impl::coolingControlThermalZoneList() const {
+    boost::optional<ModelObjectList> mo_list = getObject<ModelObject>().getModelObjectTarget<ModelObjectList>(OS_AvailabilityManager_NightCycleFields::CoolingControlZoneorZoneListName);
+    if (mo_list) {
+      return mo_list.get();
+    } else {
+      LOG_AND_THROW(briefDescription() << " does not have a coolingControlThermalZoneList attached");
+    }
+  }
+
+  void AvailabilityManagerNightCycle_Impl::clearCoolingControlThermalZoneList() {
+    ModelObjectList mo_list = coolingControlThermalZoneList();
+    for (const ModelObject& mo : mo_list.modelObjects()) {
+      mo_list.removeModelObject(mo);
+    }
+    // Assert size = 0?
+  }
+
+
+  std::vector<ThermalZone> AvailabilityManagerNightCycle_Impl::coolingControlThermalZones() const {
+    ModelObjectList mo_list = coolingControlThermalZoneList();
+    std::vector<ThermalZone> result;
+    for ( ModelObject mo : mo_list.modelObjects() ) {
+      boost::optional<ThermalZone> thermalZone = mo.optionalCast<ThermalZone>();
+      if (thermalZone) {
+        result.push_back(thermalZone.get());
+      } else {
+        LOG_AND_THROW(briefDescription() << " appears to have non ThermalZone objects in the coolingControlThermalZones list");
+      }
+    }
+    return result;
+  }
+
+  bool AvailabilityManagerNightCycle_Impl::setCoolingControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+    // Clear it first
+    clearCoolingControlThermalZoneList();
+    bool result = false;
+
+    ModelObjectList mo_list = coolingControlThermalZoneList();
+    for (ThermalZone thermalZone: thermalZones) {
+      result = mo_list.addModelObject(thermalZone);
+      if (!result) {
+        LOG_AND_THROW("Adding " << thermalZone.briefDescription() << " to CoolingControlThermalZones failed for " << briefDescription());
+      }
+    }
+    return result;
+  }
+
+  void AvailabilityManagerNightCycle_Impl::resetCoolingControlThermalZones() {
+    // Clear it
+    clearCoolingControlThermalZoneList();
+  }
+
+
+  // Heating Control Zones
+  ModelObjectList AvailabilityManagerNightCycle_Impl::heatingControlThermalZoneList() const {
+    boost::optional<ModelObjectList> mo_list = getObject<ModelObject>().getModelObjectTarget<ModelObjectList>(OS_AvailabilityManager_NightCycleFields::HeatingControlZoneorZoneListName);
+    if (mo_list) {
+      return mo_list.get();
+    } else {
+      LOG_AND_THROW(briefDescription() << " does not have a heatingControlThermalZoneList attached");
+    }
+  }
+
+  void AvailabilityManagerNightCycle_Impl::clearHeatingControlThermalZoneList() {
+    ModelObjectList mo_list = heatingControlThermalZoneList();
+    for (const ModelObject& mo : mo_list.modelObjects()) {
+      mo_list.removeModelObject(mo);
+    }
+    // Assert size = 0?
+  }
+
+
+  std::vector<ThermalZone> AvailabilityManagerNightCycle_Impl::heatingControlThermalZones() const {
+    ModelObjectList mo_list = heatingControlThermalZoneList();
+    std::vector<ThermalZone> result;
+    for ( ModelObject mo : mo_list.modelObjects() ) {
+      boost::optional<ThermalZone> thermalZone = mo.optionalCast<ThermalZone>();
+      if (thermalZone) {
+        result.push_back(thermalZone.get());
+      } else {
+        LOG_AND_THROW(briefDescription() << " appears to have non ThermalZone objects in the heatingControlThermalZones list");
+      }
+    }
+    return result;
+  }
+
+  bool AvailabilityManagerNightCycle_Impl::setHeatingControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+    // Clear it first
+    clearHeatingControlThermalZoneList();
+    bool result = false;
+
+    ModelObjectList mo_list = heatingControlThermalZoneList();
+    for (ThermalZone thermalZone: thermalZones) {
+      result = mo_list.addModelObject(thermalZone);
+      if (!result) {
+        LOG_AND_THROW("Adding " << thermalZone.briefDescription() << " to HeatingControlThermalZones failed for " << briefDescription());
+      }
+    }
+    return result;
+  }
+
+  void AvailabilityManagerNightCycle_Impl::resetHeatingControlThermalZones() {
+    // Clear it
+    clearHeatingControlThermalZoneList();
+  }
+
+
+
+  // Heating Zone Fans Only Zones
+
+  ModelObjectList AvailabilityManagerNightCycle_Impl::heatingZoneFansOnlyThermalZoneList() const {
+    boost::optional<ModelObjectList> mo_list = getObject<ModelObject>().getModelObjectTarget<ModelObjectList>(OS_AvailabilityManager_NightCycleFields::HeatingZoneFansOnlyZoneorZoneListName);
+    if (mo_list) {
+      return mo_list.get();
+    } else {
+      LOG_AND_THROW(briefDescription() << " does not have a heatingZoneFansOnlyThermalZoneList attached");
+    }
+  }
+
+  void AvailabilityManagerNightCycle_Impl::clearHeatingZoneFansOnlyThermalZoneList() {
+    ModelObjectList mo_list = heatingZoneFansOnlyThermalZoneList();
+    for (const ModelObject& mo : mo_list.modelObjects()) {
+      mo_list.removeModelObject(mo);
+    }
+    // Assert size = 0?
+  }
+
+
+  std::vector<ThermalZone> AvailabilityManagerNightCycle_Impl::heatingZoneFansOnlyThermalZones() const {
+    ModelObjectList mo_list = heatingZoneFansOnlyThermalZoneList();
+    std::vector<ThermalZone> result;
+    for ( ModelObject mo : mo_list.modelObjects() ) {
+      boost::optional<ThermalZone> thermalZone = mo.optionalCast<ThermalZone>();
+      if (thermalZone) {
+        result.push_back(thermalZone.get());
+      } else {
+        LOG_AND_THROW(briefDescription() << " appears to have non ThermalZone objects in the heatingZoneFansOnlyThermalZones list");
+      }
+    }
+    return result;
+  }
+
+  bool AvailabilityManagerNightCycle_Impl::setHeatingZoneFansOnlyThermalZones(const std::vector<ThermalZone>& thermalZones) {
+    // Clear it first
+    clearHeatingZoneFansOnlyThermalZoneList();
+    bool result = false;
+    ModelObjectList mo_list = heatingZoneFansOnlyThermalZoneList();
+    for (ThermalZone thermalZone: thermalZones) {
+      result = mo_list.addModelObject(thermalZone);
+      if (!result) {
+        LOG_AND_THROW("Adding " << thermalZone.briefDescription() << " to HeatingZoneFansOnlyThermalZones failed for " << briefDescription());
+      }
+    }
+    return result;
+  }
+
+  void AvailabilityManagerNightCycle_Impl::resetHeatingZoneFansOnlyThermalZones() {
+    // Clear it
+    clearHeatingZoneFansOnlyThermalZoneList();
+  }
+
+
+/*
+ *    bool setControlThermalZones(const std::vector<ThermalZone>& thermalZones);
+ *    void resetControlThermalZones();
+ *
+ *    std::vector<ThermalZone> coolingControlZones() const;
+ *    bool setCoolingControlZones(const std::vector<ThermalZone>& thermalZones);
+ *    void resetCoolingControlZones();
+ *
+ *    std::vector<ThermalZone> heatingControlZones() const;
+ *    bool setHeatingControlZones(const std::vector<ThermalZone>& thermalZones);
+ *    void resetHeatingControlZones();
+ *
+ *    std::vector<ThermalZone> heatingZoneFansOnlyZones() const;
+ *    bool setHeatingZoneFansOnlyZones(const std::vector<ThermalZone>& thermalZones);
+ *    void resetHeatingZoneFansOnlyZones();
+ */
 
 } // detail
 
@@ -244,6 +478,30 @@ AvailabilityManagerNightCycle::AvailabilityManagerNightCycle(const Model& model)
   OS_ASSERT(getImpl<detail::AvailabilityManagerNightCycle_Impl>());
   setThermostatTolerance(1.0);
   setCyclingRunTime(3600);
+
+  ModelObjectList controlThermalZoneList = ModelObjectList(model);
+  controlThermalZoneList.setName(this->name().get() + " Control Zone List");
+  bool ok = setPointer(OS_AvailabilityManager_NightCycleFields::ControlZoneorZoneListName, controlThermalZoneList.handle());
+  OS_ASSERT(ok);
+
+  // Cooling Control Zone List
+  ModelObjectList coolingControlThermalZoneList = ModelObjectList(model);
+  controlThermalZoneList.setName(this->name().get() + " Cooling Control Zone List");
+  ok = setPointer(OS_AvailabilityManager_NightCycleFields::CoolingControlZoneorZoneListName, coolingControlThermalZoneList.handle());
+  OS_ASSERT(ok);
+
+  // Cooling Control Zone List
+  ModelObjectList heatingControlThermalZoneList = ModelObjectList(model);
+  controlThermalZoneList.setName(this->name().get() + " Heating Control Zone List");
+  ok = setPointer(OS_AvailabilityManager_NightCycleFields::HeatingControlZoneorZoneListName, heatingControlThermalZoneList.handle());
+  OS_ASSERT(ok);
+
+
+  // Heating Zone Fans Only Zone List
+  ModelObjectList heatingZoneFansOnlyThermalZoneList = ModelObjectList(model);
+  controlThermalZoneList.setName(this->name().get() + " Heating Zone Fans Only Zone List");
+  ok = setPointer(OS_AvailabilityManager_NightCycleFields::HeatingZoneFansOnlyZoneorZoneListName, heatingZoneFansOnlyThermalZoneList.handle());
+  OS_ASSERT(ok);
 }
 
 IddObjectType AvailabilityManagerNightCycle::iddObjectType() {
@@ -287,10 +545,6 @@ bool AvailabilityManagerNightCycle::isCyclingRunTimeDefaulted() const {
   return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->isCyclingRunTimeDefaulted();
 }
 
-boost::optional<ThermalZone> AvailabilityManagerNightCycle::controlThermalZone() const {
-  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->controlThermalZone();
-}
-
 bool AvailabilityManagerNightCycle::setControlType(std::string controlType) {
   return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setControlType(controlType);
 }
@@ -299,8 +553,8 @@ void AvailabilityManagerNightCycle::resetControlType() {
   getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetControlType();
 }
 
-void AvailabilityManagerNightCycle::setThermostatTolerance(double thermostatTolerance) {
-  getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setThermostatTolerance(thermostatTolerance);
+bool AvailabilityManagerNightCycle::setThermostatTolerance(double thermostatTolerance) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setThermostatTolerance(thermostatTolerance);
 }
 
 bool AvailabilityManagerNightCycle::setThermostatTolerance(const Quantity& thermostatTolerance) {
@@ -311,8 +565,8 @@ void AvailabilityManagerNightCycle::resetThermostatTolerance() {
   getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetThermostatTolerance();
 }
 
-void AvailabilityManagerNightCycle::setCyclingRunTime(double cyclingRunTime) {
-  getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setCyclingRunTime(cyclingRunTime);
+bool AvailabilityManagerNightCycle::setCyclingRunTime(double cyclingRunTime) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setCyclingRunTime(cyclingRunTime);
 }
 
 bool AvailabilityManagerNightCycle::setCyclingRunTime(const Quantity& cyclingRunTime) {
@@ -323,20 +577,115 @@ void AvailabilityManagerNightCycle::resetCyclingRunTime() {
   getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetCyclingRunTime();
 }
 
+
+// Deprecated
+boost::optional<ThermalZone> AvailabilityManagerNightCycle::controlThermalZone() const {
+  LOG(Warn, "AvailabilityManagerNightCycle::controlThermalZone has been deprecated and will be removed in a future release, "
+            "please use AvailabilityManagerNightCycle::controlThermalZones instead");
+
+  boost::optional<ThermalZone> result;
+
+  std::vector<ThermalZone> zones = getImpl<detail::AvailabilityManagerNightCycle_Impl>()->controlThermalZones();
+  if (zones.size() > 1 ) {
+    LOG(Warn, "Multiple thermalZones are assigned, returning the first found");
+    result = zones[0];
+  } else if (zones.size() == 1) {
+    result = zones[0];
+  }
+
+  return result;
+}
+// Deprecated
 bool AvailabilityManagerNightCycle::setControlThermalZone(const ThermalZone& thermalZone) {
-  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setControlThermalZone(thermalZone);
+  LOG(Warn, "AvailabilityManagerNightCycle::setControlThermalZone has been deprecated and will be removed in a future release, "
+            "please use AvailabilityManagerNightCycle::setControlThermalZones instead");
+
+  std::vector<ThermalZone> thermalZones;
+  thermalZones.push_back(thermalZone);
+
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setControlThermalZones(thermalZones);
+}
+// Deprecated
+void AvailabilityManagerNightCycle::resetControlThermalZone() {
+  LOG(Warn, "AvailabilityManagerNightCycle::resetControlThermalZone has been deprecated and will be removed in a future release, "
+            "please use AvailabilityManagerNightCycle::resetControlThermalZones instead");
+  getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetControlThermalZones();
 }
 
-void AvailabilityManagerNightCycle::resetControlThermalZone() {
-  getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetControlThermalZone();
+std::vector<ThermalZone> AvailabilityManagerNightCycle::controlThermalZones() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->controlThermalZones();
 }
+bool AvailabilityManagerNightCycle::setControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setControlThermalZones(thermalZones);
+}
+void AvailabilityManagerNightCycle::resetControlThermalZones() {
+ getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetControlThermalZones();
+}
+
+
+std::vector<ThermalZone> AvailabilityManagerNightCycle::coolingControlThermalZones() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->coolingControlThermalZones();
+}
+bool AvailabilityManagerNightCycle::setCoolingControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setCoolingControlThermalZones(thermalZones);
+}
+void AvailabilityManagerNightCycle::resetCoolingControlThermalZones() {
+ getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetCoolingControlThermalZones();
+}
+
+
+std::vector<ThermalZone> AvailabilityManagerNightCycle::heatingControlThermalZones() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->heatingControlThermalZones();
+}
+bool AvailabilityManagerNightCycle::setHeatingControlThermalZones(const std::vector<ThermalZone>& thermalZones) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setHeatingControlThermalZones(thermalZones);
+}
+void AvailabilityManagerNightCycle::resetHeatingControlThermalZones() {
+ getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetHeatingControlThermalZones();
+}
+
+
+std::vector<ThermalZone> AvailabilityManagerNightCycle::heatingZoneFansOnlyThermalZones() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->heatingZoneFansOnlyThermalZones();
+}
+bool AvailabilityManagerNightCycle::setHeatingZoneFansOnlyThermalZones(const std::vector<ThermalZone>& thermalZones) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setHeatingZoneFansOnlyThermalZones(thermalZones);
+}
+void AvailabilityManagerNightCycle::resetHeatingZoneFansOnlyThermalZones() {
+ getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetHeatingZoneFansOnlyThermalZones();
+}
+
+
+
+// Cycling Run Time Control Type
+std::vector<std::string> AvailabilityManagerNightCycle::cyclingRunTimeControlTypeValues() {
+  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                        OS_AvailabilityManager_NightCycleFields::CyclingRunTimeControlType);
+}
+
+std::string AvailabilityManagerNightCycle::cyclingRunTimeControlType() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->cyclingRunTimeControlType();
+}
+
+bool AvailabilityManagerNightCycle::isCyclingRunTimeControlTypeDefaulted() const {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->isCyclingRunTimeControlTypeDefaulted();
+}
+
+bool AvailabilityManagerNightCycle::setCyclingRunTimeControlType(std::string cyclingRunTimeControlType) {
+  return getImpl<detail::AvailabilityManagerNightCycle_Impl>()->setCyclingRunTimeControlType(cyclingRunTimeControlType);
+}
+
+void AvailabilityManagerNightCycle::resetCyclingRunTimeControlType() {
+  getImpl<detail::AvailabilityManagerNightCycle_Impl>()->resetCyclingRunTimeControlType();
+}
+
+
 
 /// @cond
 AvailabilityManagerNightCycle::AvailabilityManagerNightCycle(std::shared_ptr<detail::AvailabilityManagerNightCycle_Impl> impl)
-  : AvailabilityManager(impl)
+  : AvailabilityManager(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

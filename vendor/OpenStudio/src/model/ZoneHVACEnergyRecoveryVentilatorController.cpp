@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ZoneHVACEnergyRecoveryVentilatorController.hpp"
 #include "ZoneHVACEnergyRecoveryVentilatorController_Impl.hpp"
@@ -62,8 +72,7 @@ namespace detail {
   const std::vector<std::string>& ZoneHVACEnergyRecoveryVentilatorController_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
+      // Not appropriate
     return result;
   }
 
@@ -146,7 +155,7 @@ namespace detail {
     return openstudio::istringEqual(value.get(), "Yes");
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setTemperatureHighLimit(boost::optional<double> temperatureHighLimit) {
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setTemperatureHighLimit(boost::optional<double> temperatureHighLimit) {
     bool result(false);
     if (temperatureHighLimit) {
       result = setDouble(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::TemperatureHighLimit, temperatureHighLimit.get());
@@ -156,6 +165,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void ZoneHVACEnergyRecoveryVentilatorController_Impl::resetTemperatureHighLimit() {
@@ -163,7 +173,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setTemperatureLowLimit(boost::optional<double> temperatureLowLimit) {
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setTemperatureLowLimit(boost::optional<double> temperatureLowLimit) {
     bool result(false);
     if (temperatureLowLimit) {
       result = setDouble(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::TemperatureLowLimit, temperatureLowLimit.get());
@@ -173,6 +183,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void ZoneHVACEnergyRecoveryVentilatorController_Impl::resetTemperatureLowLimit() {
@@ -180,7 +191,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setEnthalpyHighLimit(boost::optional<double> enthalpyHighLimit) {
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setEnthalpyHighLimit(boost::optional<double> enthalpyHighLimit) {
     bool result(false);
     if (enthalpyHighLimit) {
       result = setDouble(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::EnthalpyHighLimit, enthalpyHighLimit.get());
@@ -190,6 +201,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void ZoneHVACEnergyRecoveryVentilatorController_Impl::resetEnthalpyHighLimit() {
@@ -197,7 +209,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setDewpointTemperatureLimit(boost::optional<double> dewpointTemperatureLimit) {
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setDewpointTemperatureLimit(boost::optional<double> dewpointTemperatureLimit) {
     bool result(false);
     if (dewpointTemperatureLimit) {
       result = setDouble(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::DewpointTemperatureLimit, dewpointTemperatureLimit.get());
@@ -207,6 +219,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void ZoneHVACEnergyRecoveryVentilatorController_Impl::resetDewpointTemperatureLimit() {
@@ -254,8 +267,8 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setHighHumidityControlFlag(bool highHumidityControlFlag) {
-    setBooleanFieldValue(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::HighHumidityControlFlag, highHumidityControlFlag);
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setHighHumidityControlFlag(bool highHumidityControlFlag) {
+    return setBooleanFieldValue(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::HighHumidityControlFlag, highHumidityControlFlag);;
   }
 
   bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setHighHumidityOutdoorAirFlowRatio(double highHumidityOutdoorAirFlowRatio) {
@@ -263,8 +276,8 @@ namespace detail {
     return result;
   }
 
-  void ZoneHVACEnergyRecoveryVentilatorController_Impl::setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(bool controlHighIndoorHumidityBasedonOutdoorHumidityRatio) {
-    setBooleanFieldValue(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::ControlHighIndoorHumidityBasedonOutdoorHumidityRatio, controlHighIndoorHumidityBasedonOutdoorHumidityRatio);
+  bool ZoneHVACEnergyRecoveryVentilatorController_Impl::setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(bool controlHighIndoorHumidityBasedonOutdoorHumidityRatio) {
+    return setBooleanFieldValue(OS_ZoneHVAC_EnergyRecoveryVentilator_ControllerFields::ControlHighIndoorHumidityBasedonOutdoorHumidityRatio, controlHighIndoorHumidityBasedonOutdoorHumidityRatio);;
   }
 
 } // detail
@@ -343,32 +356,32 @@ bool ZoneHVACEnergyRecoveryVentilatorController::controlHighIndoorHumidityBasedo
   return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->controlHighIndoorHumidityBasedonOutdoorHumidityRatio();
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setTemperatureHighLimit(double temperatureHighLimit) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setTemperatureHighLimit(temperatureHighLimit);
+bool ZoneHVACEnergyRecoveryVentilatorController::setTemperatureHighLimit(double temperatureHighLimit) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setTemperatureHighLimit(temperatureHighLimit);
 }
 
 void ZoneHVACEnergyRecoveryVentilatorController::resetTemperatureHighLimit() {
   getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->resetTemperatureHighLimit();
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setTemperatureLowLimit(double temperatureLowLimit) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setTemperatureLowLimit(temperatureLowLimit);
+bool ZoneHVACEnergyRecoveryVentilatorController::setTemperatureLowLimit(double temperatureLowLimit) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setTemperatureLowLimit(temperatureLowLimit);
 }
 
 void ZoneHVACEnergyRecoveryVentilatorController::resetTemperatureLowLimit() {
   getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->resetTemperatureLowLimit();
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setEnthalpyHighLimit(double enthalpyHighLimit) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setEnthalpyHighLimit(enthalpyHighLimit);
+bool ZoneHVACEnergyRecoveryVentilatorController::setEnthalpyHighLimit(double enthalpyHighLimit) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setEnthalpyHighLimit(enthalpyHighLimit);
 }
 
 void ZoneHVACEnergyRecoveryVentilatorController::resetEnthalpyHighLimit() {
   getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->resetEnthalpyHighLimit();
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setDewpointTemperatureLimit(double dewpointTemperatureLimit) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setDewpointTemperatureLimit(dewpointTemperatureLimit);
+bool ZoneHVACEnergyRecoveryVentilatorController::setDewpointTemperatureLimit(double dewpointTemperatureLimit) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setDewpointTemperatureLimit(dewpointTemperatureLimit);
 }
 
 void ZoneHVACEnergyRecoveryVentilatorController::resetDewpointTemperatureLimit() {
@@ -399,24 +412,23 @@ void ZoneHVACEnergyRecoveryVentilatorController::resetTimeofDayEconomizerFlowCon
   getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->resetTimeofDayEconomizerFlowControlSchedule();
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setHighHumidityControlFlag(bool highHumidityControlFlag) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setHighHumidityControlFlag(highHumidityControlFlag);
+bool ZoneHVACEnergyRecoveryVentilatorController::setHighHumidityControlFlag(bool highHumidityControlFlag) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setHighHumidityControlFlag(highHumidityControlFlag);
 }
 
 bool ZoneHVACEnergyRecoveryVentilatorController::setHighHumidityOutdoorAirFlowRatio(double highHumidityOutdoorAirFlowRatio) {
   return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setHighHumidityOutdoorAirFlowRatio(highHumidityOutdoorAirFlowRatio);
 }
 
-void ZoneHVACEnergyRecoveryVentilatorController::setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(bool controlHighIndoorHumidityBasedonOutdoorHumidityRatio) {
-  getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(controlHighIndoorHumidityBasedonOutdoorHumidityRatio);
+bool ZoneHVACEnergyRecoveryVentilatorController::setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(bool controlHighIndoorHumidityBasedonOutdoorHumidityRatio) {
+  return getImpl<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl>()->setControlHighIndoorHumidityBasedonOutdoorHumidityRatio(controlHighIndoorHumidityBasedonOutdoorHumidityRatio);
 }
 
 /// @cond
 ZoneHVACEnergyRecoveryVentilatorController::ZoneHVACEnergyRecoveryVentilatorController(std::shared_ptr<detail::ZoneHVACEnergyRecoveryVentilatorController_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

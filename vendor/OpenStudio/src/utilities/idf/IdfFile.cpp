@@ -1,30 +1,37 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "IdfFile.hpp"
 #include <utilities/idf/IdfObject_Impl.hpp> // needed for serialization
 #include "IdfRegex.hpp"
 #include "ValidityReport.hpp"
 
-#include <utilities/idd/IddObject_Impl.hpp> // needed for serialization
-#include <utilities/idd/IddField_Impl.hpp> // needed for serialization
-#include <utilities/idd/IddFile_Impl.hpp> // needed for serialization
 #include "../idd/IddRegex.hpp"
 #include <utilities/idd/IddFactory.hxx>
 #include <utilities/idd/IddEnums.hxx>
@@ -33,31 +40,25 @@
 
 #include "../plot/ProgressBar.hpp"
 #include "../core/PathHelpers.hpp"
-#include "../core/String.hpp"
 #include "../core/Assert.hpp"
-#include "../core/Compare.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/regex.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+
+
 #include <boost/iostreams/filter/newline.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 
-#include <sstream>
 
 namespace openstudio {
 
 // CONSTRUCTORS
 
-IdfFile::IdfFile(IddFileType iddFileType) 
+IdfFile::IdfFile(IddFileType iddFileType)
   : m_iddFileAndFactoryWrapper(iddFileType)
 {
   addVersionObject();
 }
 
-IdfFile::IdfFile(const IddFile& iddFile) 
+IdfFile::IdfFile(const IddFile& iddFile)
   : m_iddFileAndFactoryWrapper(iddFile)
 {
   addVersionObject();
@@ -77,7 +78,7 @@ IddFile IdfFile::iddFile() const {
   return m_iddFileAndFactoryWrapper.iddFile();
 }
 
-IddFileType IdfFile::iddFileType() const { 
+IddFileType IdfFile::iddFileType() const {
   return m_iddFileAndFactoryWrapper.iddFileType();
 }
 
@@ -170,7 +171,7 @@ void IdfFile::addObject(const IdfObject& object) {
   }
   else if ((object.iddObject().type() == IddObjectType::Catchall) &&
            (object.numFields() > 0u) &&
-           (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName()))) 
+           (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName())))
   {
     m_versionObjectIndices.insert(m_objects.size() - 1);
   }
@@ -188,10 +189,10 @@ void IdfFile::insertObjectByIddObjectType(const IdfObject& object) {
     if (it == itEnd || object.iddObject().type() < it->iddObject().type()) {
       // insert object immediately before it
       it = m_objects.insert(it,object);
-      if (object.iddObject().isVersionObject() || 
+      if (object.iddObject().isVersionObject() ||
           ((object.iddObject().type() == IddObjectType::Catchall) &&
            (object.numFields() > 0u) &&
-           (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName())))) 
+           (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName()))))
       {
         unsigned index = unsigned(it - m_objects.begin());
         m_versionObjectIndices.insert(index);
@@ -207,10 +208,10 @@ bool IdfFile::removeObject(const IdfObject& object) {
     std::bind(handleEquals<IdfObject, Handle>, std::placeholders::_1, object.handle()));
   if (it != m_objects.end()) {
     unsigned index(it - m_objects.begin());
-    if (it->iddObject().isVersionObject() || 
+    if (it->iddObject().isVersionObject() ||
         ((object.iddObject().type() == IddObjectType::Catchall) &&
          (object.numFields() > 0u) &&
-         (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName())))) 
+         (boost::regex_match(object.getString(0).get(),iddRegex::versionObjectName()))))
     {
       m_versionObjectIndices.erase(index);
     }
@@ -279,8 +280,8 @@ ValidityReport IdfFile::validityReport(StrictnessLevel level) const {
     // object-level report
     ValidityReport objectReport = object.validityReport(level);
     OptionalDataError oError = objectReport.nextError();
-    while (oError) { 
-      report.insertError(*oError); 
+    while (oError) {
+      report.insertError(*oError);
       oError = objectReport.nextError();
     }
 
@@ -321,9 +322,9 @@ ValidityReport IdfFile::validityReport(StrictnessLevel level) const {
 
 // SERIALIZATON
 
-boost::optional<IdfFile> IdfFile::load(std::istream& is, 
-                                       const IddFileType& iddFileType, 
-                                       ProgressBar* progressBar) 
+boost::optional<IdfFile> IdfFile::load(std::istream& is,
+                                       const IddFileType& iddFileType,
+                                       ProgressBar* progressBar)
 {
   IdfFile result(iddFileType);
   // remove initial version object
@@ -338,9 +339,9 @@ boost::optional<IdfFile> IdfFile::load(std::istream& is,
   return boost::none;
 }
 
-OptionalIdfFile IdfFile::load(std::istream& is, 
-                              const IddFile& iddFile, 
-                              ProgressBar* progressBar) 
+OptionalIdfFile IdfFile::load(std::istream& is,
+                              const IddFile& iddFile,
+                              ProgressBar* progressBar)
 {
   IdfFile result(iddFile);
   // remove initial version object
@@ -360,21 +361,21 @@ OptionalIdfFile IdfFile::load(const path& p, ProgressBar* progressBar) {
   IddFileType iddType(IddFileType::EnergyPlus); // default
 
   // switch if file extension equal to modelFileExtension() or componentFileExtension()
-  std::string pext = toString(boost::filesystem::extension(p));
+  std::string pext = toString(openstudio::filesystem::extension(p));
   if (!pext.empty()) {
     // remove '.'
     pext = std::string(++pext.begin(),pext.end());
   }
-  if ((pext == modelFileExtension()) || (pext == componentFileExtension())) { 
-    iddType = IddFileType(IddFileType::OpenStudio); 
+  if ((pext == modelFileExtension()) || (pext == componentFileExtension())) {
+    iddType = IddFileType(IddFileType::OpenStudio);
   }
-  
+
   return load(p, iddType, progressBar);
 }
 
-OptionalIdfFile IdfFile::load(const path& p, 
-                              const IddFileType& iddFileType, 
-                              ProgressBar* progressBar) 
+OptionalIdfFile IdfFile::load(const path& p,
+                              const IddFileType& iddFileType,
+                              ProgressBar* progressBar)
 {
   // complete path
   path wp(p);
@@ -389,7 +390,7 @@ OptionalIdfFile IdfFile::load(const path& p,
   }
 
   // try to open file and parse
-  boost::filesystem::ifstream inFile(wp);
+  openstudio::filesystem::ifstream inFile(wp);
   if (inFile) {
     try {
       return load(inFile, iddFileType, progressBar);
@@ -405,7 +406,7 @@ OptionalIdfFile IdfFile::load(const path& p, const IddFile& iddFile, ProgressBar
   path wp = completePathToFile(p,path(),"idf",false);
 
   // try to open file and parse
-  boost::filesystem::ifstream inFile(wp);
+  openstudio::filesystem::ifstream inFile(wp);
   if (inFile) {
     try {
       return load(inFile, iddFile, progressBar);
@@ -435,12 +436,12 @@ boost::optional<VersionString> IdfFile::loadVersionOnly(std::istream& is) {
 boost::optional<VersionString> IdfFile::loadVersionOnly(const path& p) {
   boost::optional<VersionString> result;
   path wp = completePathToFile(p,path(),"idf",false);
-  boost::filesystem::ifstream inFile(wp);
+  openstudio::filesystem::ifstream inFile(wp);
   if (inFile) {
     try {
       return loadVersionOnly(inFile);
     }
-    catch (...) { 
+    catch (...) {
       return result;
     }
   }
@@ -465,8 +466,8 @@ bool IdfFile::save(const openstudio::path& p, bool overwrite) {
   bool enforceExtension = false;
   OptionalIddFileType iddType = m_iddFileAndFactoryWrapper.iddFileType();
   if (iddType) {
-    if (*iddType == IddFileType::EnergyPlus) { 
-      expectedExtension = "idf"; 
+    if (*iddType == IddFileType::EnergyPlus) {
+      expectedExtension = "idf";
       enforceExtension = true;
     }
     else if (*iddType == IddFileType::OpenStudio) {
@@ -476,12 +477,12 @@ bool IdfFile::save(const openstudio::path& p, bool overwrite) {
         // no need to enforce b/c already checked
       }
       else {
-        expectedExtension = modelFileExtension(); 
+        expectedExtension = modelFileExtension();
         enforceExtension = true;
       }
     }
   }
-  
+
   // set extension if appropriate
   path wp(p);
   if (enforceExtension) {
@@ -491,15 +492,15 @@ bool IdfFile::save(const openstudio::path& p, bool overwrite) {
   // do not overwrite if not allowed
   if (!overwrite) {
     path temp = completePathToFile(wp,path());
-    if (!temp.empty()) { 
-      LOG(Info,"Save method failed because instructed not to overwrite path '" 
+    if (!temp.empty()) {
+      LOG(Info,"Save method failed because instructed not to overwrite path '"
         << toString(wp) << "'.");
       return false;
     }
   }
 
   if (makeParentFolder(wp)) {
-    boost::filesystem::ofstream outFile(wp);
+    openstudio::filesystem::ofstream outFile(wp);
     if (outFile) {
       try {
         print(outFile);
@@ -553,10 +554,10 @@ bool IdfFile::m_load(std::istream& is, ProgressBar* progressBar, bool versionOnl
 
   // read the file line by line using regexes
   while(std::getline(filt, line)){
-    
+
     if (line == "\r")
     {
-      // This is not a real line at all, just the vestiges from the 
+      // This is not a real line at all, just the vestiges from the
       // previous windows formatted line being parsed on unix, skip it,
       // don't even count it
       continue;
@@ -597,7 +598,7 @@ bool IdfFile::m_load(std::istream& is, ProgressBar* progressBar, bool versionOnl
             commentOnlyObject = IdfObject::load(commentOnlyIddObject->name() + ";" + comment,
                                                 *commentOnlyIddObject);
             OS_ASSERT(commentOnlyObject);
-            
+
             // put it in the object list
             addObject(*commentOnlyObject);
           }
@@ -672,7 +673,7 @@ bool IdfFile::m_load(std::istream& is, ProgressBar* progressBar, bool versionOnl
       if (!versionOnly || isVersion) {
         OptionalIdfObject object = IdfObject::load(text,*iddObject);
         if (!object) {
-          LOG(Error,"Unable to construct IdfObject from text: " << std::endl << text 
+          LOG(Error,"Unable to construct IdfObject from text: " << std::endl << text
               << std::endl << "Throwing this object out and parsing the remainder of the file.");
           continue;
         }
@@ -696,7 +697,7 @@ IddFileAndFactoryWrapper IdfFile::iddFileAndFactoryWrapper() const {
 }
 
 void IdfFile::setIddFileAndFactoryWrapper(
-    const IddFileAndFactoryWrapper& iddFileAndFactoryWrapper) 
+    const IddFileAndFactoryWrapper& iddFileAndFactoryWrapper)
 {
   m_iddFileAndFactoryWrapper = iddFileAndFactoryWrapper;
 }

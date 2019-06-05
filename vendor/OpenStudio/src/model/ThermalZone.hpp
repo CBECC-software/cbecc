@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_THERMALZONE_HPP
 #define MODEL_THERMALZONE_HPP
@@ -41,6 +51,7 @@ class ZoneControlHumidistat;
 class SizingZone;
 class PortList;
 class ZoneMixing;
+class AirflowNetworkZone;
 
 namespace detail {
 
@@ -110,7 +121,7 @@ class MODEL_API ThermalZone : public HVACComponent {
   bool isFractionofZoneControlledbyPrimaryDaylightingControlDefaulted() const;
 
   double fractionofZoneControlledbySecondaryDaylightingControl() const;
-  
+
   Quantity getFractionofZoneControlledbySecondaryDaylightingControl(bool returnIP=false) const;
 
   bool isFractionofZoneControlledbySecondaryDaylightingControlDefaulted() const;
@@ -125,20 +136,20 @@ class MODEL_API ThermalZone : public HVACComponent {
 
   void resetMultiplier();
 
-  void setCeilingHeight(boost::optional<double> ceilingHeight);
-  
-  void setCeilingHeight(double ceilingHeight);
-  
+  bool setCeilingHeight(boost::optional<double> ceilingHeight);
+
+  bool setCeilingHeight(double ceilingHeight);
+
   bool setCeilingHeight(const Quantity& ceilingHeight);
 
   void resetCeilingHeight();
 
   void autocalculateCeilingHeight();
 
-  void setVolume(boost::optional<double> volume);
+  bool setVolume(boost::optional<double> volume);
 
-  void setVolume(double volume);
-  
+  bool setVolume(double volume);
+
   bool setVolume(const Quantity& volume);
 
   void resetVolume();
@@ -157,7 +168,7 @@ class MODEL_API ThermalZone : public HVACComponent {
 
   void resetZoneOutsideConvectionAlgorithm();
 
-  void setZoneConditioningEquipmentListName(std::string zoneConditioningEquipmentListName);
+  bool setZoneConditioningEquipmentListName(std::string zoneConditioningEquipmentListName);
 
   /** \deprecated */
   bool setThermostatSetpointDualSetpoint(const ThermostatSetpointDualSetpoint & thermostat);
@@ -178,13 +189,13 @@ class MODEL_API ThermalZone : public HVACComponent {
   void resetZoneControlContaminantController();
 
   bool setFractionofZoneControlledbyPrimaryDaylightingControl(double fractionofZoneControlledbyPrimaryDaylightingControl);
-  
+
   bool setFractionofZoneControlledbyPrimaryDaylightingControl(const Quantity& fractionofZoneControlledbyPrimaryDaylightingControl);
 
   void resetFractionofZoneControlledbyPrimaryDaylightingControl();
 
   bool setFractionofZoneControlledbySecondaryDaylightingControl(double fractionofZoneControlledbySecondaryDaylightingControl);
-  
+
   bool setFractionofZoneControlledbySecondaryDaylightingControl(const Quantity& fractionofZoneControlledbySecondaryDaylightingControl);
 
   void resetFractionofZoneControlledbySecondaryDaylightingControl();
@@ -195,13 +206,17 @@ class MODEL_API ThermalZone : public HVACComponent {
   /** @name Other */
   //@{
 
-  unsigned returnAirPort();
+  // As of OS Version 2.6.1 this method returns the first port on the returnPortList
+  // because multiple return air ports (and AirLoopHVAC instances) are allowed
+  unsigned returnAirPort() const;
 
-  unsigned zoneAirPort();
+  unsigned zoneAirPort() const;
 
-  OptionalModelObject returnAirModelObject();
+  OptionalModelObject returnAirModelObject() const;
 
-  Node zoneAirNode();
+  std::vector<ModelObject> returnAirModelObjects() const;
+
+  Node zoneAirNode() const;
 
   boost::optional<DaylightingControl> primaryDaylightingControl() const;
 
@@ -236,6 +251,8 @@ class MODEL_API ThermalZone : public HVACComponent {
 
   boost::optional<HVACComponent> airLoopHVACTerminal() const;
 
+  std::vector<HVACComponent> airLoopHVACTerminals() const;
+
   /// returns all spaces in this thermal zone
   std::vector<Space> spaces() const;
 
@@ -267,7 +284,7 @@ class MODEL_API ThermalZone : public HVACComponent {
 
   /** Returns the lighting power (W) in this thermal zone. Does not include space multiplier. Does include lighting multiplier. */
   double lightingPower() const;
-  
+
   /** Returns the lighting power density (W/m^2) of this thermal zone. Does not include space multiplier. Does include lighting multiplier. */
   double lightingPowerPerFloorArea() const;
 
@@ -318,13 +335,13 @@ class MODEL_API ThermalZone : public HVACComponent {
   /// Combines all spaces referencing this zone into a single space referencing this zone.
   /// If this zone has no spaces referencing it, then an uninitialized optional space is returned.
   /// If this zone has one space referencing it, then that space is returned.
-  /// If this zone is referenced by more than one space, then geometry from all spaces is added to a single zone.  
+  /// If this zone is referenced by more than one space, then geometry from all spaces is added to a single zone.
   /// The space origin is at the minimum x, y, z coordinate of all space origins, direction of relative north is preserved if same for all spaces.
-  /// If all spaces reference the same building story then that is preserved, otherwise it is cleared. 
-  /// If all spaces reference the same space type then that is preserved, otherwise space loads from the space type are applied to the new space directly. 
-  /// Direct child space loads are converted to absolute levels.  
-  /// Constructions and schedules are hard applied to all child surfaces and loads.  
-  /// Surfaces referencing other surfaces within the space are converted to interior partitions.  
+  /// If all spaces reference the same building story then that is preserved, otherwise it is cleared.
+  /// If all spaces reference the same space type then that is preserved, otherwise space loads from the space type are applied to the new space directly.
+  /// Direct child space loads are converted to absolute levels.
+  /// Constructions and schedules are hard applied to all child surfaces and loads.
+  /// Surfaces referencing other surfaces within the space are converted to interior partitions.
   boost::optional<Space> combineSpaces();
 
   /** Removes connections to all other HVACComponent objects */
@@ -343,45 +360,57 @@ class MODEL_API ThermalZone : public HVACComponent {
    *  If the ThermalZone is later added to a loop useIdealAirLoads
    *  will be reset to false.
    */
-  void setUseIdealAirLoads(bool useIdealAirLoads);
+  bool setUseIdealAirLoads(bool useIdealAirLoads);
 
   bool addToNode(Node & node);
+
+  /** This method is the same as addToNode, except
+   *  existing air loop connections will not be removed.
+   *  This is because EnergyPlus gained the ability to attach multiple air loops.
+   **/
+  bool multiAddToNode(Node & node);
+
+  PortList returnPortList() const;
 
   PortList inletPortList() const;
 
   PortList exhaustPortList() const;
 
-  /** Add new equipment setting the heating and cooling priorities 
+  /** Add new equipment setting the heating and cooling priorities
    *  to the next available priority level.
    *  Air terminals associated with AirLoopHVAC will be moved to first priority.
    *  This method is relatively dumb.  It will add any model object to the list
    *  even if it is not hvac equipment.  That might change in the future.
    */
-  void addEquipment(const ModelObject & equipment);
+  bool addEquipment(const ModelObject & equipment);
 
   /** Remove equipment from the EquipmentList.
-    * This will not remove the equipment from the model or 
+    * This will not remove the equipment from the model or
     * disconnect any node connections.  Use only if you know what you are doing.
     */
-  void removeEquipment(const ModelObject & equipment);
+  bool removeEquipment(const ModelObject & equipment);
+
+  std::string loadDistributionScheme() const;
+
+  bool setLoadDistributionScheme(std::string scheme);
 
   /** Set cooling priority of equipment.
-   *  Asserts when equipment is not in the ZoneHVACEquipmentList
+   *  Returns false when equipment is not in the ZoneHVACEquipmentList
    */
-  void setCoolingPriority(const ModelObject & equipment, unsigned priority);
+  bool setCoolingPriority(const ModelObject & equipment, unsigned priority);
 
   /** Set heating priority of equipment.
-   *  Asserts when equipment is not in the ZoneHVACEquipmentList
+   *  Returns false when equipment is not in the ZoneHVACEquipmentList
    */
-  void setHeatingPriority(const ModelObject & euqipment, unsigned priority);
+  bool setHeatingPriority(const ModelObject & equipment, unsigned priority);
 
   /** Return all equipment.  Order is determined by heating priority */
-  std::vector<ModelObject> equipmentInHeatingOrder();
+  std::vector<ModelObject> equipmentInHeatingOrder() const;
 
   /** Return all equipment.  Order is determined by cooling priority */
-  std::vector<ModelObject> equipmentInCoolingOrder();
+  std::vector<ModelObject> equipmentInCoolingOrder() const;
 
-  /** Return true if the ThermalZone is attached to 
+  /** Return true if the ThermalZone is attached to
   *   an AirLoopHVACSupplyPlenum or AirLoopHVACReturnPlenum
   */
   bool isPlenum() const;
@@ -406,9 +435,17 @@ class MODEL_API ThermalZone : public HVACComponent {
     */
   bool setSupplyPlenum(const ThermalZone & plenumZone, unsigned branchIndex);
 
-  /** Remove any supply plenum serving this zone
+  /** Remove any supply plenum serving this zone,
+   * associated with the AirLoopHVAC returned by
+   * ThermalZone::airLoopHVAC().
   */
   void removeSupplyPlenum();
+
+  /** Remove any supply plenum associated with
+   * the given AirLoopHVAC instance.
+   * This method is important when a zone is connected to multiple AirLoopHVAC instances.
+   */
+  void removeSupplyPlenum(const AirLoopHVAC & airloop);
 
   /** Overload of removeSupplyPlenum()
     * This variation can account for dual duct systems, branchIndex can be 0 or 1
@@ -417,6 +454,15 @@ class MODEL_API ThermalZone : public HVACComponent {
   */
   void removeSupplyPlenum(unsigned branchIndex);
 
+  /** Remove any supply plenum associated with
+   * the given AirLoopHVAC instance, and branchIndex in a dual duct system.
+   *  This method is important when a zone is connected to multiple AirLoopHVAC instances.
+    * This variation can account for dual duct systems, branchIndex can be 0 or 1
+    * indicating which branch of a dual duct system to attach to.
+    * branchIndex 0 corresponds to the branch of demandInletNode(0).
+   */
+  void removeSupplyPlenum(const AirLoopHVAC & airloop, unsigned branchIndex);
+
   /** Establish plenumZone as the return plenum for this ThermalZone.
   *   This ThermalZone must already be attached to AirLoopHVAC.
   *   The plenumZone must not be used as a plenum on another AirLoopHVAC structure.
@@ -424,9 +470,18 @@ class MODEL_API ThermalZone : public HVACComponent {
   */
   bool setReturnPlenum(const ThermalZone & plenumZone);
 
+  /** setReturnPlenum for the specified air loop.
+    * This method is used when there are multiple air loops attached to the zone
+    */
+  bool setReturnPlenum(const ThermalZone & plenumZone, AirLoopHVAC & airLoop);
+
   /** Remove any return plenum serving this zone
   */
   void removeReturnPlenum();
+
+  /** Remove any return plenum serving this zone
+  */
+  void removeReturnPlenum(AirLoopHVAC & airLoop);
 
   /** Returns all ZoneMixing objects associated with this zone, includes supply and exhaust mixing objects */
   std::vector<ZoneMixing> zoneMixing() const;
@@ -436,6 +491,14 @@ class MODEL_API ThermalZone : public HVACComponent {
 
   /** Returns all ZoneMixing objects which exhaust air from this zone */
   std::vector<ZoneMixing> exhaustZoneMixing() const;
+
+  /** Creates an AirflowNetworkZone object if an object is not already attached. */
+  AirflowNetworkZone getAirflowNetworkZone();
+
+  /** Returns the attached AirflowNetworkZone if there is one */
+  boost::optional<AirflowNetworkZone> airflowNetworkZone() const;
+
+  std::vector<AirLoopHVAC> airLoopHVACs() const;
 
   //@}
  protected:
@@ -464,4 +527,3 @@ typedef std::vector<ThermalZone> ThermalZoneVector;
 } // openstudio
 
 #endif // MODEL_THERMALZONE_HPP
-

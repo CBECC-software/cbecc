@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_TABLEMULTIVARIABLELOOKUP_IMPL_HPP
 #define MODEL_TABLEMULTIVARIABLELOOKUP_IMPL_HPP
@@ -26,6 +36,9 @@
 
 namespace openstudio {
 namespace model {
+
+// Foward declaration
+class TableMultiVariableLookupPoint;
 
 namespace detail {
 
@@ -137,7 +150,8 @@ namespace detail {
 
     int numberofIndependentVariables() const;
 
-    // TODO: Handle this object's extensible fields.
+    /** Print a fixed-width table of the points, precision is the number of decimals */
+    std::string printTable(unsigned int precision) const;
 
     //@}
     /** @name Setters */
@@ -159,7 +173,7 @@ namespace detail {
 
     void resetTableDataFormat();
 
-    void setExternalFileName(boost::optional<std::string> externalFileName);
+    bool setExternalFileName(boost::optional<std::string> externalFileName);
 
     void resetExternalFileName();
 
@@ -171,55 +185,55 @@ namespace detail {
 
     void resetX2SortOrder();
 
-    void setNormalizationReference(boost::optional<double> normalizationReference);
+    bool setNormalizationReference(boost::optional<double> normalizationReference);
 
     void resetNormalizationReference();
 
-    void setMinimumValueofX1(boost::optional<double> minimumValueofX1);
+    bool setMinimumValueofX1(boost::optional<double> minimumValueofX1);
 
     void resetMinimumValueofX1();
 
-    void setMaximumValueofX1(boost::optional<double> maximumValueofX1);
+    bool setMaximumValueofX1(boost::optional<double> maximumValueofX1);
 
     void resetMaximumValueofX1();
 
-    void setMinimumValueofX2(boost::optional<double> minimumValueofX2);
+    bool setMinimumValueofX2(boost::optional<double> minimumValueofX2);
 
     void resetMinimumValueofX2();
 
-    void setMaximumValueofX2(boost::optional<double> maximumValueofX2);
+    bool setMaximumValueofX2(boost::optional<double> maximumValueofX2);
 
     void resetMaximumValueofX2();
 
-    void setMinimumValueofX3(boost::optional<double> minimumValueofX3);
+    bool setMinimumValueofX3(boost::optional<double> minimumValueofX3);
 
     void resetMinimumValueofX3();
 
-    void setMaximumValueofX3(boost::optional<double> maximumValueofX3);
+    bool setMaximumValueofX3(boost::optional<double> maximumValueofX3);
 
     void resetMaximumValueofX3();
 
-    void setMinimumValueofX4(boost::optional<double> minimumValueofX4);
+    bool setMinimumValueofX4(boost::optional<double> minimumValueofX4);
 
     void resetMinimumValueofX4();
 
-    void setMaximumValueofX4(boost::optional<double> maximumValueofX4);
+    bool setMaximumValueofX4(boost::optional<double> maximumValueofX4);
 
     void resetMaximumValueofX4();
 
-    void setMinimumValueofX5(boost::optional<double> minimumValueofX5);
+    bool setMinimumValueofX5(boost::optional<double> minimumValueofX5);
 
     void resetMinimumValueofX5();
 
-    void setMaximumValueofX5(boost::optional<double> maximumValueofX5);
+    bool setMaximumValueofX5(boost::optional<double> maximumValueofX5);
 
     void resetMaximumValueofX5();
 
-    void setMinimumTableOutput(boost::optional<double> minimumTableOutput);
+    bool setMinimumTableOutput(boost::optional<double> minimumTableOutput);
 
     void resetMinimumTableOutput();
 
-    void setMaximumTableOutput(boost::optional<double> maximumTableOutput);
+    bool setMaximumTableOutput(boost::optional<double> maximumTableOutput);
 
     void resetMaximumTableOutput();
 
@@ -269,19 +283,21 @@ namespace detail {
 
     double evaluate(const std::vector<double>& x) const override;
 
+    // Primary way to add a point
+    bool addPoint(const TableMultiVariableLookupPoint& point);
+
+    // Convenience functions
     bool addPoint(const std::vector<double> & xValues, double yValue);
-
     bool addPoint(double x1, double yValue);
-
     bool addPoint(double x1, double x2, double yValue);
-
     bool addPoint(double x1, double x2, double x3, double yValue);
-
     bool addPoint(double x1, double x2, double x3, double x4, double yValue);
-
     bool addPoint(double x1, double x2, double x3, double x4, double x5, double yValue);
 
-    std::vector<std::pair<std::vector<double>,double> > points() const;
+    // Directly set the points from a vector, will delete any existing points
+    bool setPoints(const std::vector<TableMultiVariableLookupPoint>& points);
+
+    std::vector<TableMultiVariableLookupPoint> points() const;
 
     static bool xValuesEqual(const std::vector<double> & a, const std::vector<double> & b);
 
@@ -297,4 +313,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_TABLEMULTIVARIABLELOOKUP_IMPL_HPP
-

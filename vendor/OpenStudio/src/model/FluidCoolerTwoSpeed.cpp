@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "FluidCoolerTwoSpeed.hpp"
 #include "FluidCoolerTwoSpeed_Impl.hpp"
@@ -59,9 +69,14 @@ namespace detail {
 
   const std::vector<std::string>& FluidCoolerTwoSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Cooling Tower Fan Electric Power",
+      "Cooling Tower Fan Electric Energy",
+      "Cooling Tower Heat Transfer Rate",
+      "Cooling Tower Inlet Temperature",
+      "Cooling Tower Outlet Temperature",
+      "Cooling Tower Mass Flow Rate"
+    };
     return result;
   }
 
@@ -69,12 +84,12 @@ namespace detail {
     return FluidCoolerTwoSpeed::iddObjectType();
   }
 
-  unsigned FluidCoolerTwoSpeed_Impl::inletPort()
+  unsigned FluidCoolerTwoSpeed_Impl::inletPort() const
   {
     return  OS_FluidCooler_TwoSpeedFields::WaterInletNode;
   }
 
-  unsigned FluidCoolerTwoSpeed_Impl::outletPort()
+  unsigned FluidCoolerTwoSpeed_Impl::outletPort() const
   {
     return  OS_FluidCooler_TwoSpeedFields::WaterOutletNode;
   }
@@ -272,9 +287,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FluidCoolerTwoSpeed_Impl::setLowFanSpeedUFactorTimesAreaSizingFactor(double lowFanSpeedUFactorTimesAreaSizingFactor) {
+  bool FluidCoolerTwoSpeed_Impl::setLowFanSpeedUFactorTimesAreaSizingFactor(double lowFanSpeedUFactorTimesAreaSizingFactor) {
     bool result = setDouble(OS_FluidCooler_TwoSpeedFields::LowFanSpeedUFactorTimesAreaSizingFactor, lowFanSpeedUFactorTimesAreaSizingFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FluidCoolerTwoSpeed_Impl::setHighSpeedNominalCapacity(double highSpeedNominalCapacity) {
@@ -295,9 +311,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FluidCoolerTwoSpeed_Impl::setLowSpeedNominalCapacitySizingFactor(double lowSpeedNominalCapacitySizingFactor) {
+  bool FluidCoolerTwoSpeed_Impl::setLowSpeedNominalCapacitySizingFactor(double lowSpeedNominalCapacitySizingFactor) {
     bool result = setDouble(OS_FluidCooler_TwoSpeedFields::LowSpeedNominalCapacitySizingFactor, lowSpeedNominalCapacitySizingFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FluidCoolerTwoSpeed_Impl::setDesignEnteringWaterTemperature(double designEnteringWaterTemperature) {
@@ -367,9 +384,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FluidCoolerTwoSpeed_Impl::setLowFanSpeedAirFlowRateSizingFactor(double lowFanSpeedAirFlowRateSizingFactor) {
+  bool FluidCoolerTwoSpeed_Impl::setLowFanSpeedAirFlowRateSizingFactor(double lowFanSpeedAirFlowRateSizingFactor) {
     bool result = setDouble(OS_FluidCooler_TwoSpeedFields::LowFanSpeedAirFlowRateSizingFactor, lowFanSpeedAirFlowRateSizingFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FluidCoolerTwoSpeed_Impl::setLowFanSpeedFanPower(boost::optional<double> lowFanSpeedFanPower) {
@@ -385,9 +403,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FluidCoolerTwoSpeed_Impl::setLowFanSpeedFanPowerSizingFactor(double lowFanSpeedFanPowerSizingFactor) {
+  bool FluidCoolerTwoSpeed_Impl::setLowFanSpeedFanPowerSizingFactor(double lowFanSpeedFanPowerSizingFactor) {
     bool result = setDouble(OS_FluidCooler_TwoSpeedFields::LowFanSpeedFanPowerSizingFactor, lowFanSpeedFanPowerSizingFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FluidCoolerTwoSpeed_Impl::setOutdoorAirInletNode(const boost::optional<Node>& node) {
@@ -416,6 +435,93 @@ namespace detail {
     }
 
     return false;
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedHighFanSpeedUfactorTimesAreaValue() const {
+    return getAutosizedValue("Fluid cooler UA value at high fan speed based on nominal capacity input", "W/K");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedLowFanSpeedUfactorTimesAreaValue() const {
+    return getAutosizedValue("U-factor Times Area Value at Low Fan Speed", "W/C");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedLowSpeedNominalCapacity() const {
+    return getAutosizedValue("Low Fan Speed Nominal Capacity", "W");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedDesignWaterFlowRate() const {
+    return getAutosizedValue("Design Water Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedHighFanSpeedAirFlowRate() const {
+    return getAutosizedValue("Air Flow Rate at High Fan Speed", "m3/s");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedHighFanSpeedFanPower() const {
+    return getAutosizedValue("Fan Power at High Fan Speed", "W");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedLowFanSpeedAirFlowRate() const {
+    return getAutosizedValue("Air Flow Rate at Low Fan Speed", "m3/s");
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed_Impl::autosizedLowFanSpeedFanPower() const {
+    return getAutosizedValue("Fan Power at Low Fan Speed", "W");
+  }
+
+  void FluidCoolerTwoSpeed_Impl::autosize() {
+    autosizeHighFanSpeedUfactorTimesAreaValue();
+    autosizeLowFanSpeedUfactorTimesAreaValue();
+    autosizeLowSpeedNominalCapacity();
+    autosizeDesignWaterFlowRate();
+    autosizeHighFanSpeedAirFlowRate();
+    autosizeHighFanSpeedFanPower();
+    autosizeLowFanSpeedAirFlowRate();
+    autosizeLowFanSpeedFanPower();
+  }
+
+  void FluidCoolerTwoSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedHighFanSpeedUfactorTimesAreaValue();
+    if (val) {
+      setHighFanSpeedUfactorTimesAreaValue(val.get());
+    }
+
+    val = autosizedLowFanSpeedUfactorTimesAreaValue();
+    if (val) {
+      setLowFanSpeedUfactorTimesAreaValue(val.get());
+    }
+
+    val = autosizedLowSpeedNominalCapacity();
+    if (val) {
+      setLowSpeedNominalCapacity(val.get());
+    }
+
+    val = autosizedDesignWaterFlowRate();
+    if (val) {
+      setDesignWaterFlowRate(val.get());
+    }
+
+    val = autosizedHighFanSpeedAirFlowRate();
+    if (val) {
+      setHighFanSpeedAirFlowRate(val.get());
+    }
+
+    val = autosizedHighFanSpeedFanPower();
+    if (val) {
+      setHighFanSpeedFanPower(val.get());
+    }
+
+    val = autosizedLowFanSpeedAirFlowRate();
+    if (val) {
+      setLowFanSpeedAirFlowRate(val.get());
+    }
+
+    val = autosizedLowFanSpeedFanPower();
+    if (val) {
+      setLowFanSpeedFanPower(val.get());
+    }
+
   }
 
 } // detail
@@ -577,8 +683,8 @@ void FluidCoolerTwoSpeed::autosizeLowFanSpeedUfactorTimesAreaValue() {
   getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizeLowFanSpeedUfactorTimesAreaValue();
 }
 
-void FluidCoolerTwoSpeed::setLowFanSpeedUFactorTimesAreaSizingFactor(double lowFanSpeedUFactorTimesAreaSizingFactor) {
-  getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedUFactorTimesAreaSizingFactor(lowFanSpeedUFactorTimesAreaSizingFactor);
+bool FluidCoolerTwoSpeed::setLowFanSpeedUFactorTimesAreaSizingFactor(double lowFanSpeedUFactorTimesAreaSizingFactor) {
+  return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedUFactorTimesAreaSizingFactor(lowFanSpeedUFactorTimesAreaSizingFactor);
 }
 
 bool FluidCoolerTwoSpeed::setHighSpeedNominalCapacity(double highSpeedNominalCapacity) {
@@ -593,8 +699,8 @@ void FluidCoolerTwoSpeed::autosizeLowSpeedNominalCapacity() {
   getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizeLowSpeedNominalCapacity();
 }
 
-void FluidCoolerTwoSpeed::setLowSpeedNominalCapacitySizingFactor(double lowSpeedNominalCapacitySizingFactor) {
-  getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowSpeedNominalCapacitySizingFactor(lowSpeedNominalCapacitySizingFactor);
+bool FluidCoolerTwoSpeed::setLowSpeedNominalCapacitySizingFactor(double lowSpeedNominalCapacitySizingFactor) {
+  return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowSpeedNominalCapacitySizingFactor(lowSpeedNominalCapacitySizingFactor);
 }
 
 bool FluidCoolerTwoSpeed::setDesignEnteringWaterTemperature(double designEnteringWaterTemperature) {
@@ -641,8 +747,8 @@ void FluidCoolerTwoSpeed::autosizeLowFanSpeedAirFlowRate() {
   getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizeLowFanSpeedAirFlowRate();
 }
 
-void FluidCoolerTwoSpeed::setLowFanSpeedAirFlowRateSizingFactor(double lowFanSpeedAirFlowRateSizingFactor) {
-  getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedAirFlowRateSizingFactor(lowFanSpeedAirFlowRateSizingFactor);
+bool FluidCoolerTwoSpeed::setLowFanSpeedAirFlowRateSizingFactor(double lowFanSpeedAirFlowRateSizingFactor) {
+  return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedAirFlowRateSizingFactor(lowFanSpeedAirFlowRateSizingFactor);
 }
 
 bool FluidCoolerTwoSpeed::setLowFanSpeedFanPower(double lowFanSpeedFanPower) {
@@ -653,8 +759,8 @@ void FluidCoolerTwoSpeed::autosizeLowFanSpeedFanPower() {
   getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizeLowFanSpeedFanPower();
 }
 
-void FluidCoolerTwoSpeed::setLowFanSpeedFanPowerSizingFactor(double lowFanSpeedFanPowerSizingFactor) {
-  getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedFanPowerSizingFactor(lowFanSpeedFanPowerSizingFactor);
+bool FluidCoolerTwoSpeed::setLowFanSpeedFanPowerSizingFactor(double lowFanSpeedFanPowerSizingFactor) {
+  return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->setLowFanSpeedFanPowerSizingFactor(lowFanSpeedFanPowerSizingFactor);
 }
 
 bool FluidCoolerTwoSpeed::setOutdoorAirInletNode(const Node& node) {
@@ -667,10 +773,41 @@ void FluidCoolerTwoSpeed::resetOutdoorAirInletNode() {
 
 /// @cond
 FluidCoolerTwoSpeed::FluidCoolerTwoSpeed(std::shared_ptr<detail::FluidCoolerTwoSpeed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedHighFanSpeedUfactorTimesAreaValue() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedHighFanSpeedUfactorTimesAreaValue();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedLowFanSpeedUfactorTimesAreaValue() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedLowFanSpeedUfactorTimesAreaValue();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedLowSpeedNominalCapacity() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedLowSpeedNominalCapacity();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedDesignWaterFlowRate() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedDesignWaterFlowRate();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedHighFanSpeedAirFlowRate() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedHighFanSpeedAirFlowRate();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedHighFanSpeedFanPower() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedHighFanSpeedFanPower();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedLowFanSpeedAirFlowRate() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedLowFanSpeedAirFlowRate();
+  }
+
+  boost::optional<double> FluidCoolerTwoSpeed::autosizedLowFanSpeedFanPower() const {
+    return getImpl<detail::FluidCoolerTwoSpeed_Impl>()->autosizedLowFanSpeedFanPower();
+  }
+
 } // model
 } // openstudio
-

@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "IddObject.hpp"
 #include "IddObject_Impl.hpp"
@@ -29,10 +39,8 @@
 
 #include "../core/Assert.hpp"
 
-#include <boost/filesystem/fstream.hpp>
+
 #include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
-#include <boost/algorithm/string.hpp>
 
 using std::string;
 using std::vector;
@@ -49,8 +57,8 @@ namespace detail {
   // CONSTRUCTORS
 
   /// default constructor for serialization
-  IddObject_Impl::IddObject_Impl() : 
-    m_name("Catchall"), 
+  IddObject_Impl::IddObject_Impl() :
+    m_name("Catchall"),
     m_type(IddObjectType::Catchall)
   {
     m_properties.extensible = true;
@@ -107,7 +115,7 @@ namespace detail {
     if (index < m_fields.size()){
       field = m_fields[index];
     }else if (m_extensibleFields.size() > 0){
-      // if not subtract out fields size and mod by number of extensible fields 
+      // if not subtract out fields size and mod by number of extensible fields
       index = index - m_fields.size();
       index = index % m_extensibleFields.size();
       field = m_extensibleFields[index];
@@ -118,7 +126,7 @@ namespace detail {
 
   boost::optional<IddField> IddObject_Impl::getField(const std::string& fieldName) const {
     OptionalIddField result;
-  
+
     // look in fields
     for (const IddField& field : m_fields){
       if (boost::iequals(field.name(), fieldName)){
@@ -209,7 +217,7 @@ namespace detail {
       ++index;
     }
 
-    // do not pre-create extensible groups, so user can directly call 
+    // do not pre-create extensible groups, so user can directly call
     // .pushExtensibleGroup, without preceding it with a .clearExtensibleGroups.
     if (result > n) {
       result = n;
@@ -226,7 +234,7 @@ namespace detail {
 
   bool IddObject_Impl::isNonextensibleField(unsigned index) const {
     if (index < m_fields.size()) { return true; }
-    return false; 
+    return false;
   }
 
   bool IddObject_Impl::isExtensibleField(unsigned index) const {
@@ -273,7 +281,7 @@ namespace detail {
 
   ExtensibleIndex IddObject_Impl::extensibleIndex(unsigned index) const {
     if (!isExtensibleField(index)) {
-      LOG_AND_THROW("Field " << index << " is not an extensible field in IddObject " 
+      LOG_AND_THROW("Field " << index << " is not an extensible field in IddObject "
                     << name() << ".");
     }
     ExtensibleIndex result(0,0);
@@ -287,8 +295,8 @@ namespace detail {
       LOG_AND_THROW("IddObject " << name() << " does not have extensible fields.");
     }
     if (extensibleIndex.field >= m_properties.numExtensible) {
-      LOG_AND_THROW("IddObject " << name() << " only has " << m_properties.numExtensible 
-                    << " fields in its extensible group. Therefore, a ExtensibleIndex.field of " 
+      LOG_AND_THROW("IddObject " << name() << " only has " << m_properties.numExtensible
+                    << " fields in its extensible group. Therefore, a ExtensibleIndex.field of "
                     << extensibleIndex.field << " is invalid.");
     }
     return m_fields.size() + extensibleIndex.group*m_properties.numExtensible + extensibleIndex.field;
@@ -335,7 +343,7 @@ namespace detail {
   }
 
   UnsignedVector IddObject_Impl::objectListFields() const {
-  
+
     UnsignedVector result;
 
     for (unsigned index = 0; index < m_fields.size(); ++index) {
@@ -398,10 +406,10 @@ namespace detail {
 
   // SERIALIZATION
 
-  std::shared_ptr<IddObject_Impl> IddObject_Impl::load(const std::string& name, 
+  std::shared_ptr<IddObject_Impl> IddObject_Impl::load(const std::string& name,
                                                          const std::string& group,
-                                                         const std::string& text, 
-                                                         IddObjectType type) 
+                                                         const std::string& text,
+                                                         IddObjectType type)
   {
     std::shared_ptr<IddObject_Impl> result;
     result = std::shared_ptr<IddObject_Impl>(new IddObject_Impl(name,group,type));
@@ -422,7 +430,7 @@ namespace detail {
       os << m_name << ";" << std::endl;
       m_properties.print(os);
       os << std::endl;
-  
+
     }
     else {
 
@@ -520,7 +528,7 @@ namespace detail {
     // remove all the extensible fields from the field list
     m_fields.resize(extensibleBegin-m_fields.begin());
 
-    // regexs that match extensible fields 
+    // regexs that match extensible fields
     boost::regex find("\\s?[0-9]+");
     string replace("");
 
@@ -528,12 +536,12 @@ namespace detail {
     // e.g. "Vertex 1 X-coordinate" -> "Vertex X-coordinate"
     for (IddField& extensibleField : m_extensibleFields){
       std::string extensibleFieldName = extensibleField.name();
-      extensibleFieldName = regex_replace(extensibleFieldName, find, replace); 
+      extensibleFieldName = regex_replace(extensibleFieldName, find, replace);
       trim(extensibleFieldName);
       extensibleField.setName(extensibleFieldName);
     }
 
-    // figure out numExtensibleGroupsRequired 
+    // figure out numExtensibleGroupsRequired
     if (m_properties.minFields > 0){
       unsigned minFields = m_properties.minFields;
       if (minFields > m_fields.size()) {
@@ -569,7 +577,7 @@ namespace detail {
     }
     if ( !( (boost::regex_match(propertiesText, commentRegex::whitespaceOnlyBlock())) ||
             (boost::regex_match(propertiesText, iddRegex::commentOnlyLine())) ) ){
-      LOG_AND_THROW("Could not process properties text '" << propertiesText << "' in object '" 
+      LOG_AND_THROW("Could not process properties text '" << propertiesText << "' in object '"
                     << m_name << "'");
     }
   }
@@ -579,7 +587,7 @@ namespace detail {
     smatch matches;
     if (boost::regex_search(text, matches, iddRegex::memoProperty())){
       string memo(matches[1].first, matches[1].second); trim(memo);
-      if (m_properties.memo.empty()) { m_properties.memo = memo; } 
+      if (m_properties.memo.empty()) { m_properties.memo = memo; }
       else { m_properties.memo += "\n" + memo; }
 
     }else if (boost::regex_match(text, iddRegex::uniqueProperty())){
@@ -655,7 +663,7 @@ namespace detail {
     }
 
     if (!copyText.empty()){
-      LOG_AND_THROW("Could not process remaining field text '" << copyText << "' in object '" 
+      LOG_AND_THROW("Could not process remaining field text '" << copyText << "' in object '"
                     << m_name << "'");
     }
 
@@ -753,7 +761,7 @@ boost::optional<unsigned> IddObject::nameFieldIndex() const {
   return m_impl->nameFieldIndex();
 }
 
-bool IddObject::isRequiredField(unsigned index) const { 
+bool IddObject::isRequiredField(unsigned index) const {
   return m_impl->isRequiredField(index);
 }
 

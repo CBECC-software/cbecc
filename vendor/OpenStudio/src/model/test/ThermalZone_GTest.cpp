@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
@@ -23,7 +33,7 @@
 
 #include "../AirLoopHVAC.hpp"
 #include "../AirLoopHVACZoneSplitter.hpp"
-#include "../AirTerminalSingleDuctUncontrolled.hpp"
+#include "../AirTerminalSingleDuctConstantVolumeNoReheat.hpp"
 #include "../CoilCoolingDXSingleSpeed.hpp"
 #include "../CoilHeatingWater.hpp"
 #include "../CurveBiquadratic.hpp"
@@ -90,7 +100,7 @@ TEST_F(ModelFixture, ThermalZone_Spaces)
   EXPECT_EQ(thermalZone.handle(), space1.thermalZone()->handle());
   EXPECT_FALSE(space2.thermalZone());
   EXPECT_EQ(1u, thermalZone.spaces().size());
-  
+
   ASSERT_TRUE(space1.thermalZone());
   EXPECT_EQ(thermalZone.handle(), space1.thermalZone()->handle());
   EXPECT_TRUE(space2.setThermalZone(thermalZone));
@@ -117,9 +127,21 @@ TEST_F(ModelFixture,ThermalZone_Remove)
   ASSERT_EQ(1u,thermalZones.size());
   EXPECT_EQ(zone1.handle(), thermalZones[0].handle());
 
+  auto mo = zone1.returnAirModelObject();
+  EXPECT_TRUE(mo);
+
+  AirLoopHVAC airLoopHVAC2(model);
+  airLoopHVAC2.multiAddBranchForZone(zone1);
+
+  auto mos = zone1.returnAirModelObjects();
+  EXPECT_EQ(2u, mos.size());
+
   ASSERT_NO_THROW(zone1.remove());
 
   modelObjects = airLoopHVAC.demandComponents();
+  EXPECT_EQ(5u,modelObjects.size());
+
+  modelObjects = airLoopHVAC2.demandComponents();
   EXPECT_EQ(5u,modelObjects.size());
 }
 
@@ -130,7 +152,7 @@ TEST_F(ModelFixture,ThermalZone_AddToNode_SPM)
   ThermalZone thermalZone(m);
   ThermalZone thermalZone2(m);
   ScheduleCompact s(m);
-  AirTerminalSingleDuctUncontrolled singleDuctTerminal(m,s);
+  AirTerminalSingleDuctConstantVolumeNoReheat singleDuctTerminal(m,s);
   SetpointManagerSingleZoneReheat spm(m);
 
   Node outletNode = airLoopHVAC.supplyOutletNode();
@@ -213,12 +235,38 @@ TEST_F(ModelFixture,ThermalZone_FractionofZoneControlledbySecondaryDaylightingCo
   EXPECT_EQ(units.standardString(),q.units().standardString());
 }
 
+/* Tests that you cannot set Fractions that sum to greater than 1 */
+TEST_F(ModelFixture,ThermalZone_FractionofZoneControlledbyDaylightingControl_PriSecLimits) {
+  Model m;
+  ThermalZone z(m);
+
+  // As Fraction
+  ASSERT_TRUE(z.setFractionofZoneControlledbyPrimaryDaylightingControl(0.5));
+  ASSERT_TRUE(z.setFractionofZoneControlledbySecondaryDaylightingControl(0.5));
+  ASSERT_FALSE(z.setFractionofZoneControlledbySecondaryDaylightingControl(0.75));
+  ASSERT_FALSE(z.setFractionofZoneControlledbyPrimaryDaylightingControl(0.75));
+
+  // As Quantity
+  Unit units = z.getFractionofZoneControlledbySecondaryDaylightingControl(true).units(); // Get IP units.
+  double value(0.5);
+  double value2(0.7);
+  Quantity testQ(value, units);
+  Quantity testQ2(value2, units);
+
+  ASSERT_TRUE(z.setFractionofZoneControlledbyPrimaryDaylightingControl(testQ));
+  ASSERT_TRUE(z.setFractionofZoneControlledbySecondaryDaylightingControl(testQ));
+  ASSERT_FALSE(z.setFractionofZoneControlledbyPrimaryDaylightingControl(testQ2));
+  ASSERT_FALSE(z.setFractionofZoneControlledbySecondaryDaylightingControl(testQ2));
+
+}
+
+
 TEST_F(ModelFixture, CombinedInfiltration) {
   Model model;
   ThermalZone thermalZone(model);
 
   // 100 m^2
-  std::vector<Point3d> points; 
+  std::vector<Point3d> points;
   points.push_back(Point3d(0, 10, 0));
   points.push_back(Point3d(10, 10, 0));
   points.push_back(Point3d(10, 0, 0));
@@ -263,13 +311,13 @@ TEST_F(ModelFixture, CombinedInfiltration) {
 TEST_F(ModelFixture,ThermalZone_ThermalZone) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_EXIT ( 
-  {  
+  ASSERT_EXIT (
+  {
     Model model;
 
     ThermalZone thermalZone(model);
 
-    exit(0); 
+    exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 }
@@ -282,7 +330,7 @@ TEST_F(ModelFixture,ThermalZone_equipment) {
   AirLoopHVAC airLoopHVAC(model);
 
   ScheduleCompact scheduleCompact(model);
-  AirTerminalSingleDuctUncontrolled singleDuctTerminal(model,scheduleCompact);
+  AirTerminalSingleDuctConstantVolumeNoReheat singleDuctTerminal(model,scheduleCompact);
 
   airLoopHVAC.addBranchForZone(thermalZone,singleDuctTerminal);
 
@@ -347,7 +395,7 @@ TEST_F(ModelFixture,ThermalZone_equipment) {
 
 
   ZoneHVACPackagedTerminalAirConditioner ptac( model,
-                                               scheduleCompact, 
+                                               scheduleCompact,
                                                fan,
                                                heatingCoil,
                                                coolingCoil );
@@ -355,6 +403,20 @@ TEST_F(ModelFixture,ThermalZone_equipment) {
   EXPECT_TRUE(ptac.addToThermalZone(thermalZone));
 
   EXPECT_EQ(2u,thermalZone.equipment().size());
+}
+
+TEST_F(ModelFixture,ThermalZone_LoadDistributionScheme) {
+  Model model;
+
+  ThermalZone thermalZone(model);
+
+  EXPECT_EQ("SequentialLoad",thermalZone.loadDistributionScheme());
+
+  thermalZone.setLoadDistributionScheme("UniformLoad");
+  EXPECT_EQ("UniformLoad",thermalZone.loadDistributionScheme());
+
+  thermalZone.setLoadDistributionScheme("InvalidChoice");
+  EXPECT_EQ("UniformLoad",thermalZone.loadDistributionScheme());
 }
 
 TEST_F(ModelFixture,ThermalZone_Cost) {
@@ -526,16 +588,16 @@ TEST_F(ModelFixture, ThermalZone_Clone)
 {
   Model m;
   ThermalZone thermalZone(m);
-  
+
   auto zoneAirNode = thermalZone.zoneAirNode();
-  
+
   ZoneControlHumidistat humidistat(m);
   thermalZone.setZoneControlHumidistat(humidistat);
   ScheduleRuleset humidSchedule(m);
   humidistat.setHumidifyingRelativeHumiditySetpointSchedule(humidSchedule);
   ScheduleRuleset dehumidSchedule(m);
   humidistat.setDehumidifyingRelativeHumiditySetpointSchedule(dehumidSchedule);
-  
+
   ThermostatSetpointDualSetpoint thermostat(m);
   thermalZone.setThermostat(thermostat);
   ScheduleRuleset coolingSchedule(m);
@@ -661,7 +723,7 @@ TEST_F(ModelFixture, ThermalZone_Thermostat)
   {
     Model m;
     ThermalZone zone(m);
-    ThermostatSetpointDualSetpoint thermostat(m); 
+    ThermostatSetpointDualSetpoint thermostat(m);
     zone.setThermostat(thermostat);
     auto zone2 = zone.clone().cast<model::ThermalZone>();
 
@@ -710,7 +772,7 @@ TEST_F(ModelFixture, ThermalZone_ZoneControlContaminantController)
   {
     Model m;
     ThermalZone zone(m);
-    ZoneControlContaminantController controller(m); 
+    ZoneControlContaminantController controller(m);
     zone.setZoneControlContaminantController(controller);
     auto zone2 = zone.clone().cast<model::ThermalZone>();
 
@@ -759,7 +821,7 @@ TEST_F(ModelFixture, ThermalZone_ZoneControlHumidistat)
   {
     Model m;
     ThermalZone zone(m);
-    ZoneControlHumidistat controller(m); 
+    ZoneControlHumidistat controller(m);
     zone.setZoneControlHumidistat(controller);
     auto zone2 = zone.clone().cast<model::ThermalZone>();
 

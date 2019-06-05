@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilCoolingDXVariableSpeed.hpp"
 #include "CoilCoolingDXVariableSpeed_Impl.hpp"
@@ -29,6 +39,8 @@
 // #include "WaterStorageTank_Impl.hpp"
 #include "ModelObjectList.hpp"
 #include "ModelObjectList_Impl.hpp"
+#include "AirLoopHVACOutdoorAirSystem.hpp"
+#include "AirLoopHVACOutdoorAirSystem_Impl.hpp"
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir.hpp"
@@ -84,9 +96,38 @@ namespace detail {
 
   const std::vector<std::string>& CoilCoolingDXVariableSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Cooling Coil Electric Power",
+      "Cooling Coil Total Cooling Rate",
+      "Cooling Coil Sensible Cooling Rate",
+      "Cooling Coil Source Side Heat Transfer Rate",
+      "Cooling Coil Part Load Ratio",
+      "Cooling Coil Runtime Fraction",
+      "Cooling Coil Air Mass Flow Rate",
+      "Cooling Coil Air Inlet Temperature",
+      "Cooling Coil Air Inlet Humidity Ratio",
+      "Cooling Coil Air Outlet Temperature",
+      "Cooling Coil Air Outlet Humidity Ratio",
+      "Cooling Coil Upper Speed Level",
+      "Cooling Coil Neighboring Speed Levels Ratio",
+      "VSAirtoAirHP Recoverable Waste Heat",
+      "Cooling Coil Electric Energy",
+      "Cooling Coil Total Cooling Energy",
+      "Cooling Coil Sensible Cooling Energy",
+      "Cooling Coil Latent Cooling Energy",
+      "Cooling Coil Source Side Heat Transfer Energy",
+      "Cooling Coil Crankcase Heater Electric Power",
+      "Cooling Coil Crankcase Heater Electric Energy",
+      "Cooling Coil Condensate Volume Flow Rate",
+      "Cooling Coil Condensate Volume",
+      "Cooling Coil Condenser Inlet Temperature",
+      "Cooling Coil Evaporative Condenser Water Volume",
+      "Cooling Coil Evaporative Condenser Mains Water Volume",
+      "Cooling Coil Evaporative Condenser Pump Electric Power",
+      "Cooling Coil Evaporative Condenser Pump Electric Energy",
+      "Cooling Coil Basin Heater Electric Power",
+      "Cooling Coil Basin Heater Electric Energy"
+    };
     return result;
   }
 
@@ -106,11 +147,11 @@ namespace detail {
     return result;
   }
 
-  unsigned CoilCoolingDXVariableSpeed_Impl::inletPort() {
+  unsigned CoilCoolingDXVariableSpeed_Impl::inletPort() const {
     return OS_Coil_Cooling_DX_VariableSpeedFields::IndoorAirInletNodeName;
   }
 
-  unsigned CoilCoolingDXVariableSpeed_Impl::outletPort() {
+  unsigned CoilCoolingDXVariableSpeed_Impl::outletPort() const {
     return OS_Coil_Cooling_DX_VariableSpeedFields::IndoorAirOutletNodeName;
   }
 
@@ -225,17 +266,19 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_Coil_Cooling_DX_VariableSpeedFields::BasinHeaterOperatingScheduleName);
   }
 
-  void CoilCoolingDXVariableSpeed_Impl::setNominalSpeedLevel(int nominalSpeedLevel) {
+  bool CoilCoolingDXVariableSpeed_Impl::setNominalSpeedLevel(int nominalSpeedLevel) {
     bool result = setInt(OS_Coil_Cooling_DX_VariableSpeedFields::NominalSpeedLevel, nominalSpeedLevel);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CoilCoolingDXVariableSpeed_Impl::setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(boost::optional<double> grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel) {
+  bool CoilCoolingDXVariableSpeed_Impl::setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(boost::optional<double> grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel) {
     bool result(false);
     if (grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel) {
       result = setDouble(OS_Coil_Cooling_DX_VariableSpeedFields::GrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel, grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel.get());
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CoilCoolingDXVariableSpeed_Impl::autosizeGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel() {
@@ -243,12 +286,13 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CoilCoolingDXVariableSpeed_Impl::setRatedAirFlowRateAtSelectedNominalSpeedLevel(boost::optional<double> ratedAirFlowRateAtSelectedNominalSpeedLevel) {
+  bool CoilCoolingDXVariableSpeed_Impl::setRatedAirFlowRateAtSelectedNominalSpeedLevel(boost::optional<double> ratedAirFlowRateAtSelectedNominalSpeedLevel) {
     bool result(false);
     if (ratedAirFlowRateAtSelectedNominalSpeedLevel) {
       result = setDouble(OS_Coil_Cooling_DX_VariableSpeedFields::RatedAirFlowRateAtSelectedNominalSpeedLevel, ratedAirFlowRateAtSelectedNominalSpeedLevel.get());
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CoilCoolingDXVariableSpeed_Impl::autosizeRatedAirFlowRateAtSelectedNominalSpeedLevel() {
@@ -404,11 +448,12 @@ namespace detail {
   }
 
   bool CoilCoolingDXVariableSpeed_Impl::addSpeed( const CoilCoolingDXVariableSpeedSpeedData & speed) {
+    bool result = false;
     auto modelObjectList = speedDataList();
     if( modelObjectList ) {
-      modelObjectList->addModelObject(speed);
+      result = modelObjectList->addModelObject(speed);
     }
-    return false;
+    return result;
   }
 
   void CoilCoolingDXVariableSpeed_Impl::removeSpeed( const CoilCoolingDXVariableSpeedSpeedData & speed) {
@@ -517,6 +562,10 @@ namespace detail {
       }
     }
 
+    if ( auto oa = node.airLoopHVACOutdoorAirSystem() ) {
+      return StraightComponent_Impl::addToNode( node );
+    }
+
     return false;
   }
 
@@ -546,6 +595,43 @@ namespace detail {
     }
 
     return result;
+  }
+
+  boost::optional<double> CoilCoolingDXVariableSpeed_Impl::autosizedGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel() const {
+    return getAutosizedValue("Design Size Rated Total Cooling Capacity", "W");
+  }
+
+  boost::optional<double> CoilCoolingDXVariableSpeed_Impl::autosizedRatedAirFlowRateAtSelectedNominalSpeedLevel() const {
+    return getAutosizedValue("Design Size Rated Air Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> CoilCoolingDXVariableSpeed_Impl::autosizedEvaporativeCondenserPumpRatedPowerConsumption() const {
+    return getAutosizedValue("Design Size Evaporative Condenser Pump Rated Power Consumption", "W");
+  }
+
+  void CoilCoolingDXVariableSpeed_Impl::autosize() {
+    autosizeGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel();
+    autosizeRatedAirFlowRateAtSelectedNominalSpeedLevel();
+    autosizeEvaporativeCondenserPumpRatedPowerConsumption();
+  }
+
+  void CoilCoolingDXVariableSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel();
+    if (val) {
+      setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(val.get());
+    }
+
+    val = autosizedRatedAirFlowRateAtSelectedNominalSpeedLevel();
+    if (val) {
+      setRatedAirFlowRateAtSelectedNominalSpeedLevel(val.get());
+    }
+
+    val = autosizedEvaporativeCondenserPumpRatedPowerConsumption();
+    if (val) {
+      setEvaporativeCondenserPumpRatedPowerConsumption(val.get());
+    }
+
   }
 
 } // detail
@@ -722,20 +808,20 @@ boost::optional<Schedule> CoilCoolingDXVariableSpeed::basinHeaterOperatingSchedu
   return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->basinHeaterOperatingSchedule();
 }
 
-void CoilCoolingDXVariableSpeed::setNominalSpeedLevel(int nominalSpeedLevel) {
-  getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setNominalSpeedLevel(nominalSpeedLevel);
+bool CoilCoolingDXVariableSpeed::setNominalSpeedLevel(int nominalSpeedLevel) {
+  return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setNominalSpeedLevel(nominalSpeedLevel);
 }
 
-void CoilCoolingDXVariableSpeed::setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(double grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel) {
-  getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel);
+bool CoilCoolingDXVariableSpeed::setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(double grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel) {
+  return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel(grossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel);
 }
 
 void CoilCoolingDXVariableSpeed::autosizeGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel() {
   getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->autosizeGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel();
 }
 
-void CoilCoolingDXVariableSpeed::setRatedAirFlowRateAtSelectedNominalSpeedLevel(double ratedAirFlowRateAtSelectedNominalSpeedLevel) {
-  getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setRatedAirFlowRateAtSelectedNominalSpeedLevel(ratedAirFlowRateAtSelectedNominalSpeedLevel);
+bool CoilCoolingDXVariableSpeed::setRatedAirFlowRateAtSelectedNominalSpeedLevel(double ratedAirFlowRateAtSelectedNominalSpeedLevel) {
+  return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->setRatedAirFlowRateAtSelectedNominalSpeedLevel(ratedAirFlowRateAtSelectedNominalSpeedLevel);
 }
 
 void CoilCoolingDXVariableSpeed::autosizeRatedAirFlowRateAtSelectedNominalSpeedLevel() {
@@ -832,10 +918,21 @@ void CoilCoolingDXVariableSpeed::removeAllSpeeds() {
 
 /// @cond
 CoilCoolingDXVariableSpeed::CoilCoolingDXVariableSpeed(std::shared_ptr<detail::CoilCoolingDXVariableSpeed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> CoilCoolingDXVariableSpeed::autosizedGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel() const {
+    return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->autosizedGrossRatedTotalCoolingCapacityAtSelectedNominalSpeedLevel();
+  }
+
+  boost::optional<double> CoilCoolingDXVariableSpeed::autosizedRatedAirFlowRateAtSelectedNominalSpeedLevel() const {
+    return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->autosizedRatedAirFlowRateAtSelectedNominalSpeedLevel();
+  }
+
+  boost::optional<double> CoilCoolingDXVariableSpeed::autosizedEvaporativeCondenserPumpRatedPowerConsumption() const {
+    return getImpl<detail::CoilCoolingDXVariableSpeed_Impl>()->autosizedEvaporativeCondenserPumpRatedPowerConsumption();
+  }
+
 } // model
 } // openstudio
-

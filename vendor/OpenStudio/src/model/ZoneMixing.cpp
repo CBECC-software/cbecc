@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ZoneMixing.hpp"
 #include "ZoneMixing_Impl.hpp"
@@ -64,24 +74,23 @@ namespace detail {
 
   const std::vector<std::string>& ZoneMixing_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-      result.push_back("Zone Mixing Volume");
-      result.push_back("Zone Mixing Current Density Air Volume Flow Rate");
-      result.push_back("Zone Mixing Standard Density Air Volume Flow Rate");
-      result.push_back("Zone Mixing Mass");
-      result.push_back("Zone Mixing Mass Flow Rate");
-      result.push_back("Zone Mixing Sensible Heat Loss Energy");
-      result.push_back("Zone Mixing Sensible Heat Gain Energy");
-      result.push_back("Zone Mixing Latent Heat Loss Energy");
-      result.push_back("Zone Mixing Latent Heat Gain Energy");
-      result.push_back("Zone Mixing Total Heat Loss Energy");
-      result.push_back("Zone Mixing Total Heat Gain Energy");
+    static std::vector<std::string> result{
+      "Zone Mixing Volume",
+      "Zone Mixing Current Density Air Volume Flow Rate",
+      "Zone Mixing Standard Density Air Volume Flow Rate",
+      "Zone Mixing Mass",
+      "Zone Mixing Mass Flow Rate",
+      "Zone Mixing Sensible Heat Loss Energy",
+      "Zone Mixing Sensible Heat Gain Energy",
+      "Zone Mixing Latent Heat Loss Energy",
+      "Zone Mixing Latent Heat Gain Energy",
+      "Zone Mixing Total Heat Loss Energy",
+      "Zone Mixing Total Heat Gain Energy"
       // DLM: these are not working yet
       // https://github.com/NREL/EnergyPlus/issues/5042
-      //result.push_back("Zone Mixing Receiving Air Mass Flow Rate");
-      //result.push_back("Zone Mixing Source Air Mass Flow Rate");
-    }
+      //"Zone Mixing Receiving Air Mass Flow Rate",
+      //"Zone Mixing Source Air Mass Flow Rate",
+    };
     return result;
   }
 
@@ -286,7 +295,7 @@ namespace detail {
 
   bool ZoneMixing_Impl::setSourceZone(const ThermalZone& zone) {
     bool result(false);
-    
+
     // source zone cannot be the same as this zone
     if (zone.handle() != this->zone().handle()){
       result = setPointer(OS_ZoneMixingFields::SourceZoneName, zone.handle());
@@ -299,10 +308,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ZoneMixing_Impl::setDeltaTemperature(double deltaTemperature) {
+  bool ZoneMixing_Impl::setDeltaTemperature(double deltaTemperature) {
     bool result = setDouble(OS_ZoneMixingFields::DeltaTemperature, deltaTemperature);
     OS_ASSERT(result);
     resetDeltaTemperatureSchedule();
+    return result;
   }
 
   void ZoneMixing_Impl::resetDeltaTemperature() {
@@ -404,6 +414,15 @@ namespace detail {
     OS_ASSERT(result);
   }
 
+  std::vector<EMSActuatorNames> ZoneMixing_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"ZoneMixing", "Air Exchange Flow Rate"}};
+    return actuators;
+  }
+
+  std::vector<std::string> ZoneMixing_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types;
+    return types;
+  }
 } // detail
 
 ZoneMixing::ZoneMixing(const ThermalZone& zone)
@@ -517,8 +536,8 @@ void ZoneMixing::resetSourceZone() {
   getImpl<detail::ZoneMixing_Impl>()->resetSourceZone();
 }
 
-void ZoneMixing::setDeltaTemperature(double deltaTemperature) {
-  getImpl<detail::ZoneMixing_Impl>()->setDeltaTemperature(deltaTemperature);
+bool ZoneMixing::setDeltaTemperature(double deltaTemperature) {
+  return getImpl<detail::ZoneMixing_Impl>()->setDeltaTemperature(deltaTemperature);
 }
 
 void ZoneMixing::resetDeltaTemperature() {
@@ -583,7 +602,7 @@ void ZoneMixing::resetMaximumOutdoorTemperatureSchedule() {
 
 /// @cond
 ZoneMixing::ZoneMixing(std::shared_ptr<detail::ZoneMixing_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 

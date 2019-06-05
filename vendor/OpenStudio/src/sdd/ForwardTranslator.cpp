@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ForwardTranslator.hpp"
 
@@ -83,7 +93,7 @@
 #include "../model/LifeCycleCostParameters.hpp"
 #include "../model/LightingDesignDay.hpp"
 #include "../model/LightingSimulationControl.hpp"
-#include "../model/Meter.hpp"
+#include "../model/OutputMeter.hpp"
 #include "../model/ModelObjectList.hpp"
 #include "../model/OutputControlReportingTolerances.hpp"
 #include "../model/OutputVariable.hpp"
@@ -123,6 +133,9 @@
 #include "../model/ShadowCalculation.hpp"
 #include "../model/SiteGroundReflectance.hpp"
 #include "../model/SiteGroundTemperatureBuildingSurface.hpp"
+#include "../model/SiteGroundTemperatureDeep.hpp"
+#include "../model/SiteGroundTemperatureFCfactorMethod.hpp"
+#include "../model/SiteGroundTemperatureShallow.hpp"
 #include "../model/SiteWaterMainsTemperature.hpp"
 #include "../model/SizingParameters.hpp"
 #include "../model/SkyTemperature.hpp"
@@ -140,8 +153,8 @@
 
 #include "../utilities/plot/ProgressBar.hpp"
 #include "../utilities/core/Assert.hpp"
+#include "../utilities/core/FilesystemHelpers.hpp"
 
-#include <QFile>
 #include <QDomDocument>
 #include <QDomElement>
 #include <QThread>
@@ -194,11 +207,9 @@ namespace sdd {
       create_directory(path.parent_path());
     }
 
-    QFile file(toQString(path));
-    if (file.open(QFile::WriteOnly)){
-      QTextStream textStream(&file);
-      textStream.setCodec("UTF-8");
-      textStream << doc->toString(2);
+    openstudio::filesystem::ofstream file(path, std::ios_base::binary);
+    if (file.is_open()){
+      openstudio::filesystem::write(file, doc->toString(2));
       file.close();
       return true;
     }
@@ -320,7 +331,7 @@ namespace sdd {
     //<RunPeriodEndDay>0</RunPeriodEndDay>
     //<RunPeriodYear>0</RunPeriodYear>
 
-    // do materials before constructions 
+    // do materials before constructions
     std::vector<model::Material> materials = model.getModelObjects<model::Material>();
     std::sort(materials.begin(), materials.end(), WorkspaceObjectNameLess());
 
@@ -342,7 +353,7 @@ namespace sdd {
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
     }
-  
+
     // do constructions before geometry
 
     std::vector<model::ConstructionBase> constructions = model.getModelObjects<model::ConstructionBase>();
@@ -387,7 +398,7 @@ namespace sdd {
       if (constructionElement){
         projectElement.appendChild(*constructionElement);
       }
-            
+
       if (m_progressBar){
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
@@ -403,7 +414,7 @@ namespace sdd {
       if (constructionElement){
         projectElement.appendChild(*constructionElement);
       }
-            
+
       if (m_progressBar){
         m_progressBar->setValue(m_progressBar->value() + 1);
       }
@@ -432,7 +443,7 @@ namespace sdd {
     if (m_progressBar){
       m_progressBar->setWindowTitle(toString("Translating Site Shading"));
       m_progressBar->setMinimum(0);
-      m_progressBar->setMaximum((int)shadingSurfaceGroups.size()); 
+      m_progressBar->setMaximum((int)shadingSurfaceGroups.size());
       m_progressBar->setValue(0);
     }
 
@@ -507,10 +518,10 @@ namespace sdd {
     m_ignoreTypes.push_back(model::LifeCycleCostParameters::iddObjectType());
     m_ignoreTypes.push_back(model::LightingDesignDay::iddObjectType());
     m_ignoreTypes.push_back(model::LightingSimulationControl::iddObjectType());
-    m_ignoreTypes.push_back(model::Meter::iddObjectType());
     m_ignoreTypes.push_back(model::ModelObjectList::iddObjectType());
     m_ignoreTypes.push_back(model::Node::iddObjectType());
     m_ignoreTypes.push_back(model::OutputControlReportingTolerances::iddObjectType());
+    m_ignoreTypes.push_back(model::OutputMeter::iddObjectType());
     m_ignoreTypes.push_back(model::OutputVariable::iddObjectType());
     m_ignoreTypes.push_back(model::OutsideSurfaceConvectionAlgorithm::iddObjectType());
     m_ignoreTypes.push_back(model::PortList::iddObjectType());
@@ -573,7 +584,7 @@ namespace sdd {
           // If mo is not in the m_ignoreObjects list
           if(std::find(m_ignoreObjects.begin(),m_ignoreObjects.end(),mo.handle()) == m_ignoreObjects.end()) {
             LOG(Error,mo.briefDescription() << " was not translated.");
-          } 
+          }
         }
       }
     }

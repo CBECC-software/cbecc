@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "SimulationControl.hpp"
 #include "SimulationControl_Impl.hpp"
@@ -166,8 +176,6 @@ namespace detail{
   const std::vector<std::string>& SimulationControl_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -289,7 +297,7 @@ namespace detail{
     return isEmpty(OS_SimulationControlFields::MinimumNumberofWarmupDays);
   }
 
-  void SimulationControl_Impl::setDoZoneSizingCalculation(bool doZoneSizingCalculation) {
+  bool SimulationControl_Impl::setDoZoneSizingCalculation(bool doZoneSizingCalculation) {
     bool result = false;
     if (doZoneSizingCalculation) {
       result = setString(OS_SimulationControlFields::DoZoneSizingCalculation, "Yes");
@@ -297,6 +305,7 @@ namespace detail{
       result = setString(OS_SimulationControlFields::DoZoneSizingCalculation, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void SimulationControl_Impl::resetDoZoneSizingCalculation() {
@@ -304,7 +313,7 @@ namespace detail{
     OS_ASSERT(result);
   }
 
-  void SimulationControl_Impl::setDoSystemSizingCalculation(bool doSystemSizingCalculation) {
+  bool SimulationControl_Impl::setDoSystemSizingCalculation(bool doSystemSizingCalculation) {
     bool result = false;
     if (doSystemSizingCalculation) {
       result = setString(OS_SimulationControlFields::DoSystemSizingCalculation, "Yes");
@@ -312,6 +321,7 @@ namespace detail{
       result = setString(OS_SimulationControlFields::DoSystemSizingCalculation, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void SimulationControl_Impl::resetDoSystemSizingCalculation() {
@@ -319,7 +329,7 @@ namespace detail{
     OS_ASSERT(result);
   }
 
-  void SimulationControl_Impl::setDoPlantSizingCalculation(bool doPlantSizingCalculation) {
+  bool SimulationControl_Impl::setDoPlantSizingCalculation(bool doPlantSizingCalculation) {
     bool result = false;
     if (doPlantSizingCalculation) {
       result = setString(OS_SimulationControlFields::DoPlantSizingCalculation, "Yes");
@@ -327,6 +337,7 @@ namespace detail{
       result = setString(OS_SimulationControlFields::DoPlantSizingCalculation, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void SimulationControl_Impl::resetDoPlantSizingCalculation() {
@@ -334,7 +345,7 @@ namespace detail{
     OS_ASSERT(result);
   }
 
-  void SimulationControl_Impl::setRunSimulationforSizingPeriods(bool runSimulationforSizingPeriods) {
+  bool SimulationControl_Impl::setRunSimulationforSizingPeriods(bool runSimulationforSizingPeriods) {
     bool result = false;
     if (runSimulationforSizingPeriods) {
       result = setString(OS_SimulationControlFields::RunSimulationforSizingPeriods, "Yes");
@@ -342,6 +353,7 @@ namespace detail{
       result = setString(OS_SimulationControlFields::RunSimulationforSizingPeriods, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void SimulationControl_Impl::resetRunSimulationforSizingPeriods() {
@@ -349,7 +361,7 @@ namespace detail{
     OS_ASSERT(result);
   }
 
-  void SimulationControl_Impl::setRunSimulationforWeatherFileRunPeriods(bool runSimulationforWeatherFileRunPeriods) {
+  bool SimulationControl_Impl::setRunSimulationforWeatherFileRunPeriods(bool runSimulationforWeatherFileRunPeriods) {
     bool result = false;
     if (runSimulationforWeatherFileRunPeriods) {
       result = setString(OS_SimulationControlFields::RunSimulationforWeatherFileRunPeriods, "Yes");
@@ -357,6 +369,7 @@ namespace detail{
       result = setString(OS_SimulationControlFields::RunSimulationforWeatherFileRunPeriods, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void SimulationControl_Impl::resetRunSimulationforWeatherFileRunPeriods() {
@@ -611,7 +624,7 @@ SimulationControl::SimulationControl( const Model& model ):
 }
 
 SimulationControl::SimulationControl(std::shared_ptr<detail::SimulationControl_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 
 IddObjectType SimulationControl::iddObjectType() {
@@ -711,40 +724,65 @@ bool SimulationControl::isMinimumNumberofWarmupDaysDefaulted() const {
   return getImpl<detail::SimulationControl_Impl>()->isMinimumNumberofWarmupDaysDefaulted();
 }
 
-void SimulationControl::setDoZoneSizingCalculation(bool doZoneSizingCalculation) {
-  getImpl<detail::SimulationControl_Impl>()->setDoZoneSizingCalculation(doZoneSizingCalculation);
+bool SimulationControl::setDoZoneSizingCalculation(bool doZoneSizingCalculation) {
+  return getImpl<detail::SimulationControl_Impl>()->setDoZoneSizingCalculation(doZoneSizingCalculation);
+}
+
+void SimulationControl::setDoZoneSizingCalculationNoFail(bool doZoneSizingCalculation) {
+  bool result = getImpl<detail::SimulationControl_Impl>()->setDoZoneSizingCalculation(doZoneSizingCalculation);
+  OS_ASSERT(result);
 }
 
 void SimulationControl::resetDoZoneSizingCalculation() {
   getImpl<detail::SimulationControl_Impl>()->resetDoZoneSizingCalculation();
 }
 
-void SimulationControl::setDoSystemSizingCalculation(bool doSystemSizingCalculation) {
-  getImpl<detail::SimulationControl_Impl>()->setDoSystemSizingCalculation(doSystemSizingCalculation);
+bool SimulationControl::setDoSystemSizingCalculation(bool doSystemSizingCalculation) {
+  return getImpl<detail::SimulationControl_Impl>()->setDoSystemSizingCalculation(doSystemSizingCalculation);
+}
+
+void SimulationControl::setDoSystemSizingCalculationNoFail(bool doSystemSizingCalculation) {
+  bool result = getImpl<detail::SimulationControl_Impl>()->setDoSystemSizingCalculation(doSystemSizingCalculation);
+  OS_ASSERT(result);
 }
 
 void SimulationControl::resetDoSystemSizingCalculation() {
   getImpl<detail::SimulationControl_Impl>()->resetDoSystemSizingCalculation();
 }
 
-void SimulationControl::setDoPlantSizingCalculation(bool doPlantSizingCalculation) {
-  getImpl<detail::SimulationControl_Impl>()->setDoPlantSizingCalculation(doPlantSizingCalculation);
+bool SimulationControl::setDoPlantSizingCalculation(bool doPlantSizingCalculation) {
+  return getImpl<detail::SimulationControl_Impl>()->setDoPlantSizingCalculation(doPlantSizingCalculation);
+}
+
+void SimulationControl::setDoPlantSizingCalculationNoFail(bool doPlantSizingCalculation) {
+  bool result = getImpl<detail::SimulationControl_Impl>()->setDoPlantSizingCalculation(doPlantSizingCalculation);
+  OS_ASSERT(result);
 }
 
 void SimulationControl::resetDoPlantSizingCalculation() {
   getImpl<detail::SimulationControl_Impl>()->resetDoPlantSizingCalculation();
 }
 
-void SimulationControl::setRunSimulationforSizingPeriods(bool runSimulationforSizingPeriods) {
-  getImpl<detail::SimulationControl_Impl>()->setRunSimulationforSizingPeriods(runSimulationforSizingPeriods);
+bool SimulationControl::setRunSimulationforSizingPeriods(bool runSimulationforSizingPeriods) {
+  return getImpl<detail::SimulationControl_Impl>()->setRunSimulationforSizingPeriods(runSimulationforSizingPeriods);
+}
+
+void SimulationControl::setRunSimulationforSizingPeriodsNoFail(bool runSimulationforSizingPeriods) {
+  bool result = getImpl<detail::SimulationControl_Impl>()->setRunSimulationforSizingPeriods(runSimulationforSizingPeriods);
+  OS_ASSERT(result);
 }
 
 void SimulationControl::resetRunSimulationforSizingPeriods() {
   getImpl<detail::SimulationControl_Impl>()->resetRunSimulationforSizingPeriods();
 }
 
-void SimulationControl::setRunSimulationforWeatherFileRunPeriods(bool runSimulationforWeatherFileRunPeriods) {
-  getImpl<detail::SimulationControl_Impl>()->setRunSimulationforWeatherFileRunPeriods(runSimulationforWeatherFileRunPeriods);
+bool SimulationControl::setRunSimulationforWeatherFileRunPeriods(bool runSimulationforWeatherFileRunPeriods) {
+  return getImpl<detail::SimulationControl_Impl>()->setRunSimulationforWeatherFileRunPeriods(runSimulationforWeatherFileRunPeriods);
+}
+
+void SimulationControl::setRunSimulationforWeatherFileRunPeriodsNoFail(bool runSimulationforWeatherFileRunPeriods) {
+  bool result = getImpl<detail::SimulationControl_Impl>()->setRunSimulationforWeatherFileRunPeriods(runSimulationforWeatherFileRunPeriods);
+  OS_ASSERT(result);
 }
 
 void SimulationControl::resetRunSimulationforWeatherFileRunPeriods() {
@@ -822,7 +860,7 @@ std::vector<RunPeriod> SimulationControl::runPeriods() const {
 boost::optional<ShadowCalculation> SimulationControl::shadowCalculation() const {
   return getImpl<detail::SimulationControl_Impl>()->shadowCalculation();
 }
-  
+
 boost::optional<SizingParameters> SimulationControl::sizingParameters() const {
   return getImpl<detail::SimulationControl_Impl>()->sizingParameters();
 }

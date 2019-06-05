@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ChillerAbsorptionIndirect.hpp"
 #include "ChillerAbsorptionIndirect_Impl.hpp"
@@ -61,9 +71,45 @@ namespace detail {
 
   const std::vector<std::string>& ChillerAbsorptionIndirect_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    // static until ModelObject return type is changed for outputvariableNames
+    static std::vector<std::string> result{
+
+    // Common variables
+    "Chiller Electric Power",
+    "Chiller Electric Energy",
+    "Chiller Evaporator Cooling Rate",
+    "Chiller Evaporator Cooling Energy",
+    "Chiller Evaporator Inlet Temperature",
+    "Chiller Evaporator Outlet Temperature",
+    "Chiller Evaporator Mass Flow Rate",
+    "Chiller Condenser Heat Transfer Rate",
+    "Chiller Condenser Heat Transfer Energy",
+    "Chiller Condenser Inlet Temperature",
+    "Chiller Condenser Outlet Temperature",
+    "Chiller Condenser Mass Flow Rate",
+    "Chiller COP",
+    "Chiller Part-Load Ratio",
+    "Chiller Cycling Ratio",
+
+    // TODO: add proper tests once the ModelObject return type is changed.
+    // Generator = Hot Water
+    //if (this->generatorHeatSourceType() == "HotWater")
+    //{
+      "Chiller Source Hot Water Rate",
+      "Chiller Source Hot Water Energy",
+      "Chiller Hot Water Mass Flow Rate",
+    //}
+    //
+    // Generator = Steam
+    // generatorHeatSourceType == 'Steam'
+    //if (this->generatorHeatSourceType() == "Steam")
+    //{
+      "Chiller Source Steam Rate",
+      "Chiller Source Steam Energy",
+      "Chiller Steam Mass Flow Rate",
+      "Chiller Steam Heat Loss Rate"
+
+  };
     return result;
   }
 
@@ -305,19 +351,22 @@ namespace detail {
     return result;
   }
 
-  void ChillerAbsorptionIndirect_Impl::setDesignCondenserInletTemperature(double designCondenserInletTemperature) {
+  bool ChillerAbsorptionIndirect_Impl::setDesignCondenserInletTemperature(double designCondenserInletTemperature) {
     bool result = setDouble(OS_Chiller_Absorption_IndirectFields::DesignCondenserInletTemperature, designCondenserInletTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ChillerAbsorptionIndirect_Impl::setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit) {
+  bool ChillerAbsorptionIndirect_Impl::setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit) {
     bool result = setDouble(OS_Chiller_Absorption_IndirectFields::CondenserInletTemperatureLowerLimit, condenserInletTemperatureLowerLimit);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ChillerAbsorptionIndirect_Impl::setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit) {
+  bool ChillerAbsorptionIndirect_Impl::setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit) {
     bool result = setDouble(OS_Chiller_Absorption_IndirectFields::ChilledWaterOutletTemperatureLowerLimit, chilledWaterOutletTemperatureLowerLimit);
     OS_ASSERT(result);
+    return result;
   }
 
   bool ChillerAbsorptionIndirect_Impl::setDesignChilledWaterFlowRate(boost::optional<double> designChilledWaterFlowRate) {
@@ -391,12 +440,13 @@ namespace detail {
     return result;
   }
 
-  void ChillerAbsorptionIndirect_Impl::setDesignGeneratorFluidFlowRate(boost::optional<double> designGeneratorFluidFlowRate) {
+  bool ChillerAbsorptionIndirect_Impl::setDesignGeneratorFluidFlowRate(boost::optional<double> designGeneratorFluidFlowRate) {
     bool result(false);
     if (designGeneratorFluidFlowRate) {
       result = setDouble(OS_Chiller_Absorption_IndirectFields::DesignGeneratorFluidFlowRate, designGeneratorFluidFlowRate.get());
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void ChillerAbsorptionIndirect_Impl::autosizeDesignGeneratorFluidFlowRate() {
@@ -404,9 +454,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ChillerAbsorptionIndirect_Impl::setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet) {
+  bool ChillerAbsorptionIndirect_Impl::setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet) {
     bool result = setDouble(OS_Chiller_Absorption_IndirectFields::TemperatureLowerLimitGeneratorInlet, temperatureLowerLimitGeneratorInlet);
     OS_ASSERT(result);
+    return result;
   }
 
   bool ChillerAbsorptionIndirect_Impl::setDegreeofSubcoolinginSteamGenerator(double degreeofSubcoolinginSteamGenerator) {
@@ -452,19 +503,19 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<Curve>(OS_Chiller_Absorption_IndirectFields::GeneratorHeatInputCorrectionFunctionofChilledWaterTemperatureCurve);
   }
 
-  unsigned ChillerAbsorptionIndirect_Impl::supplyInletPort() {
+  unsigned ChillerAbsorptionIndirect_Impl::supplyInletPort() const {
     return OS_Chiller_Absorption_IndirectFields::ChilledWaterInletNodeName;
   }
 
-  unsigned ChillerAbsorptionIndirect_Impl::supplyOutletPort() {
+  unsigned ChillerAbsorptionIndirect_Impl::supplyOutletPort() const {
     return OS_Chiller_Absorption_IndirectFields::ChilledWaterOutletNodeName;
   }
 
-  unsigned ChillerAbsorptionIndirect_Impl::demandInletPort() {
+  unsigned ChillerAbsorptionIndirect_Impl::demandInletPort() const {
     return OS_Chiller_Absorption_IndirectFields::CondenserInletNodeName;
   }
 
-  unsigned ChillerAbsorptionIndirect_Impl::demandOutletPort() {
+  unsigned ChillerAbsorptionIndirect_Impl::demandOutletPort() const {
     return OS_Chiller_Absorption_IndirectFields::CondenserOutletNodeName;
   }
 
@@ -496,6 +547,63 @@ namespace detail {
 
   unsigned ChillerAbsorptionIndirect_Impl::tertiaryOutletPort() const {
     return OS_Chiller_Absorption_IndirectFields::GeneratorOutletNode;
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect_Impl::autosizedNominalCapacity() const {
+    return getAutosizedValue("Design Size Nominal Capacity", "W");
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect_Impl::autosizedNominalPumpingPower() const {
+    return getAutosizedValue("Design Size Nominal Pumping Power", "W");
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect_Impl::autosizedDesignChilledWaterFlowRate() const {
+    return getAutosizedValue("Design Size Design Chilled Water Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect_Impl::autosizedDesignCondenserWaterFlowRate() const {
+    return getAutosizedValue("Design Size Design Condenser Water Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect_Impl::autosizedDesignGeneratorFluidFlowRate() const {
+    return getAutosizedValue("Design Size Design Generator Fluid Flow Rate", "m3/s");
+  }
+
+  void ChillerAbsorptionIndirect_Impl::autosize() {
+    autosizeNominalCapacity();
+    autosizeNominalPumpingPower();
+    autosizeDesignChilledWaterFlowRate();
+    autosizeDesignCondenserWaterFlowRate();
+    autosizeDesignGeneratorFluidFlowRate();
+  }
+
+  void ChillerAbsorptionIndirect_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedNominalCapacity();
+    if (val) {
+      setNominalCapacity(val.get());
+    }
+
+    val = autosizedNominalPumpingPower();
+    if (val) {
+      setNominalPumpingPower(val.get());
+    }
+
+    val = autosizedDesignChilledWaterFlowRate();
+    if (val) {
+      setDesignChilledWaterFlowRate(val.get());
+    }
+
+    val = autosizedDesignCondenserWaterFlowRate();
+    if (val) {
+      setDesignCondenserWaterFlowRate(val.get());
+    }
+
+    val = autosizedDesignGeneratorFluidFlowRate();
+    if (val) {
+      setDesignGeneratorFluidFlowRate(val.get());
+    }
+
   }
 
 } // detail
@@ -758,16 +866,16 @@ bool ChillerAbsorptionIndirect::setOptimumPartLoadRatio(double optimumPartLoadRa
   return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setOptimumPartLoadRatio(optimumPartLoadRatio);
 }
 
-void ChillerAbsorptionIndirect::setDesignCondenserInletTemperature(double designCondenserInletTemperature) {
-  getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setDesignCondenserInletTemperature(designCondenserInletTemperature);
+bool ChillerAbsorptionIndirect::setDesignCondenserInletTemperature(double designCondenserInletTemperature) {
+  return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setDesignCondenserInletTemperature(designCondenserInletTemperature);
 }
 
-void ChillerAbsorptionIndirect::setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit) {
-  getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setCondenserInletTemperatureLowerLimit(condenserInletTemperatureLowerLimit);
+bool ChillerAbsorptionIndirect::setCondenserInletTemperatureLowerLimit(double condenserInletTemperatureLowerLimit) {
+  return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setCondenserInletTemperatureLowerLimit(condenserInletTemperatureLowerLimit);
 }
 
-void ChillerAbsorptionIndirect::setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit) {
-  getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setChilledWaterOutletTemperatureLowerLimit(chilledWaterOutletTemperatureLowerLimit);
+bool ChillerAbsorptionIndirect::setChilledWaterOutletTemperatureLowerLimit(double chilledWaterOutletTemperatureLowerLimit) {
+  return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setChilledWaterOutletTemperatureLowerLimit(chilledWaterOutletTemperatureLowerLimit);
 }
 
 bool ChillerAbsorptionIndirect::setDesignChilledWaterFlowRate(double designChilledWaterFlowRate) {
@@ -822,16 +930,16 @@ bool ChillerAbsorptionIndirect::setGeneratorHeatSourceType(std::string generator
   return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setGeneratorHeatSourceType(generatorHeatSourceType);
 }
 
-void ChillerAbsorptionIndirect::setDesignGeneratorFluidFlowRate(double designGeneratorFluidFlowRate) {
-  getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setDesignGeneratorFluidFlowRate(designGeneratorFluidFlowRate);
+bool ChillerAbsorptionIndirect::setDesignGeneratorFluidFlowRate(double designGeneratorFluidFlowRate) {
+  return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setDesignGeneratorFluidFlowRate(designGeneratorFluidFlowRate);
 }
 
 void ChillerAbsorptionIndirect::autosizeDesignGeneratorFluidFlowRate() {
   getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizeDesignGeneratorFluidFlowRate();
 }
 
-void ChillerAbsorptionIndirect::setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet) {
-  getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setTemperatureLowerLimitGeneratorInlet(temperatureLowerLimitGeneratorInlet);
+bool ChillerAbsorptionIndirect::setTemperatureLowerLimitGeneratorInlet(double temperatureLowerLimitGeneratorInlet) {
+  return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->setTemperatureLowerLimitGeneratorInlet(temperatureLowerLimitGeneratorInlet);
 }
 
 bool ChillerAbsorptionIndirect::setDegreeofSubcoolinginSteamGenerator(double degreeofSubcoolinginSteamGenerator) {
@@ -848,10 +956,29 @@ bool ChillerAbsorptionIndirect::setSizingFactor(double sizingFactor) {
 
 /// @cond
 ChillerAbsorptionIndirect::ChillerAbsorptionIndirect(std::shared_ptr<detail::ChillerAbsorptionIndirect_Impl> impl)
-  : WaterToWaterComponent(impl)
+  : WaterToWaterComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> ChillerAbsorptionIndirect::autosizedNominalCapacity() const {
+    return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizedNominalCapacity();
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect::autosizedNominalPumpingPower() const {
+    return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizedNominalPumpingPower();
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect::autosizedDesignChilledWaterFlowRate() const {
+    return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizedDesignChilledWaterFlowRate();
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect::autosizedDesignCondenserWaterFlowRate() const {
+    return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizedDesignCondenserWaterFlowRate();
+  }
+
+  boost::optional<double> ChillerAbsorptionIndirect::autosizedDesignGeneratorFluidFlowRate() const {
+    return getImpl<detail::ChillerAbsorptionIndirect_Impl>()->autosizedDesignGeneratorFluidFlowRate();
+  }
+
 } // model
 } // openstudio
-

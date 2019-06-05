@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
@@ -44,9 +54,10 @@ TEST_F(ModelFixture, SpaceType_InternalGainAttributes_PeoplePerFloorArea) {
   Model model;
   SpaceType spaceType(model);
 
-  OptionalAttribute peoplePerFloorArea = spaceType.getAttribute("peoplePerFloorArea");
-  ASSERT_TRUE(peoplePerFloorArea);
-  EXPECT_TRUE(peoplePerFloorArea->valueType() == AttributeValueType::Double);
+  // Removed due to removal of attributes
+  // OptionalAttribute peoplePerFloorArea = spaceType.getAttribute("peoplePerFloorArea");
+  // ASSERT_TRUE(peoplePerFloorArea);
+  // EXPECT_TRUE(peoplePerFloorArea->valueType() == AttributeValueType::Double);
 
   PeopleDefinition defPerArea(model);
   People instPerArea(defPerArea);
@@ -128,23 +139,72 @@ TEST_F(ModelFixture, SpaceType_StandardsTypes) {
   Model model;
   SpaceType spaceType(model);
 
+  // There are three dependent levels:
+  // 1: Template: eg 90.1-2010, 90.1-2013
+  // 2: Building Type: eg SecondarySchool, FullServiceRestaurant
+  // 3: Space Type: eg Auditorium, Kitchen
+  EXPECT_FALSE(spaceType.standardsTemplate());
+  std::vector<std::string> suggestedStandardsTemplates = spaceType.suggestedStandardsTemplates();
+  unsigned numTemplates = suggestedStandardsTemplates.size();
+  // This level should be populated always
+  EXPECT_GT(numTemplates, 0u);
+
+  // Until a Template is chosen, there shouldn't be any suggested Building Types (unless we have entered a value ourselves)
   EXPECT_FALSE(spaceType.standardsBuildingType());
   std::vector<std::string> suggestedStandardsBuildingTypes = spaceType.suggestedStandardsBuildingTypes();
   unsigned numBuildingTypes = suggestedStandardsBuildingTypes.size();
-  ASSERT_GT(numBuildingTypes, 0u);
+  EXPECT_EQ(numBuildingTypes, 0u);
+
+
+  // Until a Building Type has been chosen, there should be no proposed Space Types aside from Attic and Plenum (always present)
   EXPECT_FALSE(spaceType.standardsSpaceType());
   std::vector<std::string> suggestedStandardsSpaceTypes = spaceType.suggestedStandardsSpaceTypes();
-  ASSERT_EQ(2u, suggestedStandardsSpaceTypes.size());
+  EXPECT_EQ(2u, suggestedStandardsSpaceTypes.size());
   EXPECT_EQ("Attic", suggestedStandardsSpaceTypes[0]);
   EXPECT_EQ("Plenum", suggestedStandardsSpaceTypes[1]);
 
-  std::vector<std::string>::const_iterator it = std::find(suggestedStandardsBuildingTypes.begin(), suggestedStandardsBuildingTypes.end(), "SecondarySchool");
-  EXPECT_NE(suggestedStandardsBuildingTypes.end(), it);
+
+  // Verify that '90.1.2013' exists in the list of all possible templates (from JSON)
+  std::vector<std::string>::const_iterator it = std::find(suggestedStandardsTemplates.begin(),
+                                                          suggestedStandardsTemplates.end(),
+                                                          "90.1-2013");
+  EXPECT_NE(suggestedStandardsTemplates.end(), it);
+
+  // Pick a Template in the list of existing
+  EXPECT_TRUE(spaceType.setStandardsTemplate("90.1-2013"));
+  // We didn't add any new Template, so should be still the same number
+  EXPECT_EQ(numTemplates, spaceType.suggestedStandardsTemplates().size());
+  // Add a Template in the list of existing
+  EXPECT_TRUE(spaceType.setStandardsTemplate("A user-defined template"));
+  // We added a new Template, so should be + 1
+  EXPECT_EQ(numTemplates + 1, spaceType.suggestedStandardsTemplates().size());
+  // Reset to a standard template
+  EXPECT_TRUE(spaceType.setStandardsTemplate("90.1-2013"));
+  // We didn't add any new Template, so should be still the same number
+  EXPECT_EQ(numTemplates, spaceType.suggestedStandardsTemplates().size());
+
+  // standardsBuildingType should still be empty
+  EXPECT_FALSE(spaceType.standardsBuildingType());
+  // But now we should have suggestions for the building types based on the template
+  suggestedStandardsBuildingTypes = spaceType.suggestedStandardsBuildingTypes();
+  numBuildingTypes = suggestedStandardsBuildingTypes.size();
+  EXPECT_GT(numBuildingTypes, 0u);
+  EXPECT_FALSE(spaceType.standardsSpaceType());
+  // We still didn't pick a building type, so we expect until attic and plenum
+  suggestedStandardsSpaceTypes = spaceType.suggestedStandardsSpaceTypes();
+  EXPECT_EQ(2u, suggestedStandardsSpaceTypes.size());
+  EXPECT_EQ("Attic", suggestedStandardsSpaceTypes[0]);
+  EXPECT_EQ("Plenum", suggestedStandardsSpaceTypes[1]);
+
+  // Verify that 'SecondarySchool' exists in the list of all possible building types (from JSON)
+  std::vector<std::string>::const_iterator it2 = std::find(suggestedStandardsBuildingTypes.begin(), suggestedStandardsBuildingTypes.end(), "SecondarySchool");
+  EXPECT_NE(suggestedStandardsBuildingTypes.end(), it2);
 
   EXPECT_TRUE(spaceType.setStandardsBuildingType("SecondarySchool"));
   ASSERT_TRUE(spaceType.standardsBuildingType());
   EXPECT_EQ("SecondarySchool", spaceType.standardsBuildingType().get());
-  ASSERT_EQ(numBuildingTypes, spaceType.suggestedStandardsBuildingTypes().size());
+  // We didn't add any new building type, so should be still the same number
+  EXPECT_EQ(numBuildingTypes, spaceType.suggestedStandardsBuildingTypes().size());
   EXPECT_EQ("SecondarySchool", spaceType.suggestedStandardsBuildingTypes()[0]);
   EXPECT_FALSE(spaceType.standardsSpaceType());
 
@@ -155,12 +215,13 @@ TEST_F(ModelFixture, SpaceType_StandardsTypes) {
   EXPECT_TRUE(spaceType.setStandardsSpaceType(secondarySchoolStandardsSpaceTypes[0]));
   ASSERT_TRUE(spaceType.standardsSpaceType());
   EXPECT_EQ(secondarySchoolStandardsSpaceTypes[0], spaceType.standardsSpaceType().get());
-  ASSERT_EQ(numSpaceTypes, spaceType.suggestedStandardsSpaceTypes().size());
+  EXPECT_EQ(numSpaceTypes, spaceType.suggestedStandardsSpaceTypes().size());
 
   EXPECT_TRUE(spaceType.setStandardsSpaceType("Anything Goes"));
   ASSERT_TRUE(spaceType.standardsSpaceType());
   EXPECT_EQ("Anything Goes", spaceType.standardsSpaceType().get());
-  ASSERT_EQ(numSpaceTypes + 1, spaceType.suggestedStandardsSpaceTypes().size());
+  // This time it's a new entry (doesn't exist in JSON), so should be +1
+  EXPECT_EQ(numSpaceTypes + 1, spaceType.suggestedStandardsSpaceTypes().size());
   EXPECT_EQ("Anything Goes", spaceType.suggestedStandardsSpaceTypes()[0]);
 
   EXPECT_TRUE(spaceType.setStandardsSpaceType(""));
@@ -170,7 +231,7 @@ TEST_F(ModelFixture, SpaceType_StandardsTypes) {
   EXPECT_TRUE(spaceType.setStandardsBuildingType("Outpatient"));
   ASSERT_TRUE(spaceType.standardsBuildingType());
   EXPECT_EQ("Outpatient", spaceType.standardsBuildingType().get());
-  ASSERT_EQ(numBuildingTypes, spaceType.suggestedStandardsBuildingTypes().size());
+  EXPECT_EQ(numBuildingTypes, spaceType.suggestedStandardsBuildingTypes().size());
   EXPECT_EQ("Outpatient", spaceType.suggestedStandardsBuildingTypes()[0]);
   EXPECT_FALSE(spaceType.standardsSpaceType());
   EXPECT_FALSE(spaceType.suggestedStandardsSpaceTypes().empty());
@@ -192,18 +253,18 @@ TEST_F(ModelFixture, SpaceType_StandardsTypes) {
   EXPECT_TRUE(spaceType.setStandardsBuildingType("Anything Goes"));
   ASSERT_TRUE(spaceType.standardsBuildingType());
   EXPECT_EQ("Anything Goes", spaceType.standardsBuildingType().get());
-  ASSERT_EQ(numBuildingTypes + 1, spaceType.suggestedStandardsBuildingTypes().size());
+  EXPECT_EQ(numBuildingTypes + 1, spaceType.suggestedStandardsBuildingTypes().size());
   EXPECT_EQ("Anything Goes", spaceType.suggestedStandardsBuildingTypes()[0]);
   EXPECT_FALSE(spaceType.standardsSpaceType());
   suggestedStandardsSpaceTypes = spaceType.suggestedStandardsSpaceTypes();
-  ASSERT_EQ(2u, suggestedStandardsSpaceTypes.size());
+  EXPECT_EQ(2u, suggestedStandardsSpaceTypes.size());
   EXPECT_EQ("Attic", suggestedStandardsSpaceTypes[0]);
   EXPECT_EQ("Plenum", suggestedStandardsSpaceTypes[1]);
-} 
+}
 
 TEST_F(ModelFixture, SpaceType_Clone) {
   Model library;
-  Model model;  
+  Model model;
 
   SpaceType librarySpaceType(library);
 
@@ -251,4 +312,47 @@ TEST_F(ModelFixture, SpaceType_Clone) {
   EXPECT_EQ(1u,model.getModelObjects<ScheduleRuleset>().size());
 }
 
+TEST_F(ModelFixture, SpaceType_Name_Clone) {
+  Model m;
+
+  SpaceType st1(m);
+  EXPECT_TRUE(st1.setName("My Space Type"));
+
+  SpaceType st2 = st1.clone(m).cast<SpaceType>();
+  EXPECT_NE(st1.handle(), st2.handle());
+  EXPECT_NE(st1.nameString(), st2.nameString());
+
+  Model m2;
+  SpaceType st3 = st1.clone(m2).cast<SpaceType>();
+  EXPECT_NE(st1.handle(), st3.handle());
+  EXPECT_EQ(st1.nameString(), st3.nameString());
+}
+
+/* If the space type is the unique Plenum Space type, it should Log and Error and return itself */
+TEST_F(ModelFixture, SpaceType_Clone_Plenum) {
+
+  Model m;
+
+  SpaceType m1_st = m.plenumSpaceType();
+
+  // Does clone
+  SpaceType m1_stClone = m1_st.clone(m).cast<SpaceType>();
+  ASSERT_NE(m1_st.handle(), m1_stClone.handle());
+  ASSERT_NE(m1_st.nameString(), m1_stClone.nameString()) << m;
+
+  // Try in another model with no plenum space type, the clone should become the new plenum space type
+  Model m2;
+  SpaceType m2_stClone = m1_st.clone(m2).cast<SpaceType>();
+  ASSERT_NE(m1_st.handle(), m2_stClone.handle());
+  ASSERT_EQ(m1_st.nameString(), m2_stClone.nameString());
+  ASSERT_EQ(m2.plenumSpaceType().handle(), m2_stClone.handle());
+
+  // Try in another model with a plenum space type, the clone should not become the new plenum space type
+  Model m3;
+  m3.plenumSpaceType();
+  SpaceType m3_stClone = m1_st.clone(m3).cast<SpaceType>();
+  ASSERT_NE(m1_st.handle(), m3_stClone.handle());
+  ASSERT_NE(m1_st.nameString(), m3_stClone.nameString());
+  ASSERT_NE(m3.plenumSpaceType().handle(), m3_stClone.handle());
+}
 

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_BUILDING_HPP
 #define MODEL_BUILDING_HPP
@@ -31,7 +41,7 @@ class Transformation;
 namespace model {
 
 class Facility;
-class Meter;
+class OutputMeter;
 class ShadingSurfaceGroup;
 class Surface;
 class Space;
@@ -49,10 +59,10 @@ namespace detail {
 /** Building derives from ParentObject and is an interface to the OpenStudio IDD object named "Building".
  *
  *  Building is a unique object which parents all \link Space Spaces\endlink in the model.  Conceptually,
- *  the Building object represents the envelope shell and everything inside (lighting, equipment, etc).  
+ *  the Building object represents the envelope shell and everything inside (lighting, equipment, etc).
  *  The Building is a child of the Facility object which includes the Building as well as exterior equipment,
  *  parking lot lighting, water systems for grounds, etc.
- *   
+ *
  */
 class MODEL_API Building : public ParentObject {
  public:
@@ -81,13 +91,28 @@ class MODEL_API Building : public ParentObject {
 
   boost::optional<double> nominalFloortoCeilingHeight() const;
 
+  /// Returns the standards Template. This is a freeform field used to identify the energy standard template for standards.
+  /// Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.
+  /// More information can be found at https://github.com/NREL/openstudio-standards.
+  boost::optional<std::string> standardsTemplate() const;
+
+  /**
+   * Returns a list of suggestions from the openstudio-standards JSON data.
+   * If standardsTemplate is not empty, and not already present in the suggestions,
+   * it is added to the list of suggestion
+   */
+  std::vector<std::string> suggestedStandardsTemplates() const;
+
   /// Returns the standards building type. This is a freeform field used to identify the building type for standards.
   /// Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.
   /// More information can be found at https://github.com/NREL/openstudio-standards.
   boost::optional<std::string> standardsBuildingType() const;
 
-  /// If standardsBuildingType is empty, returns a list of suggestions.  If standardsBuildingType is not empty,
-  /// returns standardsBuildingType.
+  /**
+   * Returns a list of suggestions from the openstudio-standards JSON data.
+   * If standardsBuildingType is not empty, and not already present in the suggestions,
+   * it is added to the list of suggestion
+   */
   std::vector<std::string> suggestedStandardsBuildingTypes() const;
 
   bool relocatable() const;
@@ -97,7 +122,7 @@ class MODEL_API Building : public ParentObject {
   /** @name Setters */
   //@{
 
-  void setNorthAxis(double northAxis);
+  bool setNorthAxis(double northAxis);
   void resetNorthAxis();
 
   bool setNominalFloortoFloorHeight(double nominalFloortoFloorHeight);
@@ -113,7 +138,13 @@ class MODEL_API Building : public ParentObject {
   void resetStandardsNumberOfLivingUnits();
 
   bool setNominalFloortoCeilingHeight(double nominalFloortoCeilingHeight);
-  void resetNominalFloortoCeilingHeight(); 
+  void resetNominalFloortoCeilingHeight();
+
+  /// Sets the standards Template. This is a freeform field used to identify the energy standard template for standards.
+  /// Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.
+  /// More information can be found at https://github.com/NREL/openstudio-standards.
+  bool setStandardsTemplate(const std::string& standardsTemplate);
+  void resetStandardsTemplate();
 
   /// Sets the standards building type. This is a freeform field used to identify the building type for standards.
   /// Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.
@@ -121,7 +152,8 @@ class MODEL_API Building : public ParentObject {
   bool setStandardsBuildingType(const std::string& standardsBuildingType);
   void resetStandardsBuildingType();
 
-  void setRelocatable(bool isRelocatable);
+  bool setRelocatable(bool isRelocatable);
+  void setRelocatableNoFail(bool isRelocatable);
   void resetRelocatable();
 
 
@@ -156,8 +188,8 @@ class MODEL_API Building : public ParentObject {
   /// Resets the default schedule set for this space.
   void resetDefaultScheduleSet();
 
-  /// Returns all Meter objects at the Building level. 
-  std::vector<Meter> meters() const;
+  /// Returns all OutputMeter objects at the Building level.
+  std::vector<OutputMeter> meters() const;
 
   /// Returns the parent Facility object if it exists.
   boost::optional<Facility> facility() const;
@@ -181,7 +213,7 @@ class MODEL_API Building : public ParentObject {
 
   // ETH@20140115 - Should take a bool as to whether to include spaces marked as
   // "not in floor area".
-  /// Returns the total floor area in square meters.  
+  /// Returns the total floor area in square meters.
   /// Includes only spaces marked as included in floor area.
   /// Includes space multipliers in calculation.
   /// Attribute name: floorArea
@@ -223,7 +255,7 @@ class MODEL_API Building : public ParentObject {
 
   /** Returns the lighting power (W) in this building. */
   double lightingPower() const;
-  
+
   /** Returns the lighting power density (W/m^2) of this building. */
   double lightingPowerPerFloorArea() const;
 
@@ -304,4 +336,3 @@ typedef std::vector<Building> BuildingVector;
 } // openstudio
 
 #endif // MODEL_BUILDING_HPP
-

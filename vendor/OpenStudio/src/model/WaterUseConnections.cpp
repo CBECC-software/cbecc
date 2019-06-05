@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Model.hpp"
 #include "WaterUseConnections.hpp"
@@ -68,9 +78,29 @@ namespace detail {
 
   const std::vector<std::string>& WaterUseConnections_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Water Use Connections Hot Water Mass Flow Rate",
+      "Water Use Connections Cold Water Mass Flow Rate",
+      "Water Use Connections Total Mass Flow Rate",
+      "Water Use Connections Drain Water Mass Flow Rate",
+      "Water Use Connections Heat Recovery Mass Flow Rate",
+      "Water Use Connections Hot Water Volume Flow Rate",
+      "Water Use Connections Cold Water Volume Flow Rate",
+      "Water Use Connections Total Volume Flow Rate",
+      "Water Use Connections Hot Water Volume",
+      "Water Use Connections Cold Water Volume",
+      "Water Use Connections Total Volume",
+      "Water Use Connections Hot Water Temperature",
+      "Water Use Connections Cold Water Temperature",
+      "Water Use Connections Drain Water Temperature",
+      "Water Use Connections Return Water Temperature",
+      "Water Use Connections Waste Water Temperature",
+      "Water Use Connections Heat Recovery Water Temperature",
+      "Water Use Connections Heat Recovery Effectiveness",
+      "Water Use Connections Heat Recovery Rate",
+      "Water Use Connections Heat Recovery Energy",
+      "Water Use Connections Plant Hot Water Energy"
+    };
     return result;
   }
 
@@ -178,12 +208,12 @@ namespace detail {
     return true;
   }
 
-  unsigned WaterUseConnections_Impl::inletPort()
+  unsigned WaterUseConnections_Impl::inletPort() const
   {
     return OS_WaterUse_ConnectionsFields::InletNodeName;
   }
-  
-  unsigned WaterUseConnections_Impl::outletPort()
+
+  unsigned WaterUseConnections_Impl::outletPort() const
   {
     return OS_WaterUse_ConnectionsFields::OutletNodeName;
   }
@@ -199,7 +229,7 @@ namespace detail {
       WorkspaceExtensibleGroup group = elem.cast<WorkspaceExtensibleGroup>();
 
       boost::optional<WorkspaceObject> wo = group.getTarget(OS_WaterUse_ConnectionsExtensibleFields::WaterUseEquipmentName);
-       
+
       if( wo )
       {
         WaterUseEquipment equipment = wo->cast<WaterUseEquipment>();
@@ -210,11 +240,11 @@ namespace detail {
 
     return result;
   }
-  
+
   bool WaterUseConnections_Impl::addWaterUseEquipment(const WaterUseEquipment & waterUseEquipment)
   {
     bool result = false;
-  
+
     if( waterUseEquipment.model() == model() )
     {
       WorkspaceExtensibleGroup group = getObject<WaterUseConnections>().pushExtensibleGroup().cast<WorkspaceExtensibleGroup>();
@@ -226,7 +256,7 @@ namespace detail {
 
     return result;
   }
-  
+
   bool WaterUseConnections_Impl::removeWaterUseEquipment(WaterUseEquipment & _waterUseEquipment)
   {
     std::vector<WaterUseEquipment> equipment = waterUseEquipment();
@@ -298,12 +328,12 @@ void WaterUseConnections::resetColdWaterSupplyTemperatureSchedule() {
   getImpl<detail::WaterUseConnections_Impl>()->resetColdWaterSupplyTemperatureSchedule();
 }
 
-unsigned WaterUseConnections::inletPort()
+unsigned WaterUseConnections::inletPort() const
 {
   return getImpl<detail::WaterUseConnections_Impl>()->inletPort();
 }
 
-unsigned WaterUseConnections::outletPort()
+unsigned WaterUseConnections::outletPort() const
 {
   return getImpl<detail::WaterUseConnections_Impl>()->outletPort();
 }
@@ -325,7 +355,7 @@ bool WaterUseConnections::removeWaterUseEquipment(WaterUseEquipment & waterUseEq
 
 /// @cond
 WaterUseConnections::WaterUseConnections(std::shared_ptr<detail::WaterUseConnections_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 

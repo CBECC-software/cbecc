@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_COOLINGTOWERPERFORMANCECOOLTOOLS_IMPL_HPP
 #define MODEL_COOLINGTOWERPERFORMANCECOOLTOOLS_IMPL_HPP
@@ -151,91 +161,91 @@ namespace detail {
     /** @name Setters */
     //@{
 
-    void setMinimumInletAirWetBulbTemperature(double minimumInletAirWetBulbTemperature);
+    bool setMinimumInletAirWetBulbTemperature(double minimumInletAirWetBulbTemperature);
 
-    void setMaximumInletAirWetBulbTemperature(double maximumInletAirWetBulbTemperature);
+    bool setMaximumInletAirWetBulbTemperature(double maximumInletAirWetBulbTemperature);
 
-    void setMinimumRangeTemperature(double minimumRangeTemperature);
+    bool setMinimumRangeTemperature(double minimumRangeTemperature);
 
-    void setMaximumRangeTemperature(double maximumRangeTemperature);
+    bool setMaximumRangeTemperature(double maximumRangeTemperature);
 
-    void setMinimumApproachTemperature(double minimumApproachTemperature);
+    bool setMinimumApproachTemperature(double minimumApproachTemperature);
 
-    void setMaximumApproachTemperature(double maximumApproachTemperature);
+    bool setMaximumApproachTemperature(double maximumApproachTemperature);
 
-    void setMinimumWaterFlowRateRatio(double minimumWaterFlowRateRatio);
+    bool setMinimumWaterFlowRateRatio(double minimumWaterFlowRateRatio);
 
-    void setMaximumWaterFlowRateRatio(double maximumWaterFlowRateRatio);
+    bool setMaximumWaterFlowRateRatio(double maximumWaterFlowRateRatio);
 
-    void setCoefficient1(double coefficient1);
+    bool setCoefficient1(double coefficient1);
 
-    void setCoefficient2(double coefficient2);
+    bool setCoefficient2(double coefficient2);
 
-    void setCoefficient3(double coefficient3);
+    bool setCoefficient3(double coefficient3);
 
-    void setCoefficient4(double coefficient4);
+    bool setCoefficient4(double coefficient4);
 
-    void setCoefficient5(double coefficient5);
+    bool setCoefficient5(double coefficient5);
 
-    void setCoefficient6(double coefficient6);
+    bool setCoefficient6(double coefficient6);
 
-    void setCoefficient7(double coefficient7);
+    bool setCoefficient7(double coefficient7);
 
-    void setCoefficient8(double coefficient8);
+    bool setCoefficient8(double coefficient8);
 
-    void setCoefficient9(double coefficient9);
+    bool setCoefficient9(double coefficient9);
 
-    void setCoefficient10(double coefficient10);
+    bool setCoefficient10(double coefficient10);
 
-    void setCoefficient11(double coefficient11);
+    bool setCoefficient11(double coefficient11);
 
-    void setCoefficient12(double coefficient12);
+    bool setCoefficient12(double coefficient12);
 
-    void setCoefficient13(double coefficient13);
+    bool setCoefficient13(double coefficient13);
 
-    void setCoefficient14(double coefficient14);
+    bool setCoefficient14(double coefficient14);
 
-    void setCoefficient15(double coefficient15);
+    bool setCoefficient15(double coefficient15);
 
-    void setCoefficient16(double coefficient16);
+    bool setCoefficient16(double coefficient16);
 
-    void setCoefficient17(double coefficient17);
+    bool setCoefficient17(double coefficient17);
 
-    void setCoefficient18(double coefficient18);
+    bool setCoefficient18(double coefficient18);
 
-    void setCoefficient19(double coefficient19);
+    bool setCoefficient19(double coefficient19);
 
-    void setCoefficient20(double coefficient20);
+    bool setCoefficient20(double coefficient20);
 
-    void setCoefficient21(double coefficient21);
+    bool setCoefficient21(double coefficient21);
 
-    void setCoefficient22(double coefficient22);
+    bool setCoefficient22(double coefficient22);
 
-    void setCoefficient23(double coefficient23);
+    bool setCoefficient23(double coefficient23);
 
-    void setCoefficient24(double coefficient24);
+    bool setCoefficient24(double coefficient24);
 
-    void setCoefficient25(double coefficient25);
+    bool setCoefficient25(double coefficient25);
 
-    void setCoefficient26(double coefficient26);
+    bool setCoefficient26(double coefficient26);
 
-    void setCoefficient27(double coefficient27);
+    bool setCoefficient27(double coefficient27);
 
-    void setCoefficient28(double coefficient28);
+    bool setCoefficient28(double coefficient28);
 
-    void setCoefficient29(double coefficient29);
+    bool setCoefficient29(double coefficient29);
 
-    void setCoefficient30(double coefficient30);
+    bool setCoefficient30(double coefficient30);
 
-    void setCoefficient31(double coefficient31);
+    bool setCoefficient31(double coefficient31);
 
-    void setCoefficient32(double coefficient32);
+    bool setCoefficient32(double coefficient32);
 
-    void setCoefficient33(double coefficient33);
+    bool setCoefficient33(double coefficient33);
 
-    void setCoefficient34(double coefficient34);
+    bool setCoefficient34(double coefficient34);
 
-    void setCoefficient35(double coefficient35);
+    bool setCoefficient35(double coefficient35);
 
     //@}
     /** @name Other */
@@ -253,4 +263,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_COOLINGTOWERPERFORMANCECOOLTOOLS_IMPL_HPP
-

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationCase.hpp"
 #include "RefrigerationCase_Impl.hpp"
@@ -72,9 +82,43 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationCase_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Refrigeration Case Evaporator Total Cooling Rate",
+      "Refrigeration Case Evaporator Total Cooling Energy",
+      "Refrigeration Case Evaporator Sensible Cooling Rate",
+      "Refrigeration Case Evaporator Sensible Cooling Energy",
+      "Refrigeration Case Evaporator Latent Cooling Rate",
+      "Refrigeration Case Evaporator Latent Cooling Energy",
+      "Refrigeration Case Zone Sensible Cooling Rate",
+      "Refrigeration Case Zone Sensible Cooling Energy",
+      "Refrigeration Case Zone Sensible Heating Rate",
+      "Refrigeration Case Zone Sensible Heating Energy",
+      "Refrigeration Case Zone Latent Rate",
+      "Refrigeration Case Zone Latent Energy",
+      "Refrigeration Case Return Air Sensible Cooling Rate",
+      "Refrigeration Case Return Air Sensible Cooling Energy",
+      "Refrigeration Case Return Air Sensible Heating Rate",
+      "Refrigeration Case Return Air Sensible Heating Energy",
+      "Refrigeration Case Return Air Latent Rate",
+      "Refrigeration Case Return Air Latent Energy",
+      "Refrigeration Case Evaporator Fan Electric Power",
+      "Refrigeration Case Evaporator Fan Electric Energy",
+      "Refrigeration Case Lighting Electric Power",
+      "Refrigeration Case Lighting Electric Energy",
+      "Refrigeration Case Latent Credit Curve Value",
+
+      // TODO: implement tests
+
+      // If case defrost type is Electric, Hot-Gas, or Hot-Brine with Temperature Termination
+      "Refrigeration Case Defrost Energy Correction Curve Value",
+      // If anti-sweat heater control type is not equal to None:
+      "Refrigeration Case Anti Sweat Electric Power",
+      "Refrigeration Case Anti Sweat Electric Energy",
+      // If case defrost type is Electric or Electric with Temperature Termination:
+      "Refrigeration Case Defrost Electric Power",
+      "Refrigeration Case Defrost Electric Energy"
+
+    };
     return result;
   }
 
@@ -741,9 +785,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCase_Impl::setStandardCaseLightingPowerperUnitLength(double standardCaseLightingPowerperUnitLength) {
+  bool RefrigerationCase_Impl::setStandardCaseLightingPowerperUnitLength(double standardCaseLightingPowerperUnitLength) {
     bool result = setDouble(OS_Refrigeration_CaseFields::StandardCaseLightingPowerperUnitLength, standardCaseLightingPowerperUnitLength);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCase_Impl::resetStandardCaseLightingPowerperUnitLength() {
@@ -751,7 +796,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCase_Impl::setInstalledCaseLightingPowerperUnitLength(boost::optional<double> installedCaseLightingPowerperUnitLength) {
+  bool RefrigerationCase_Impl::setInstalledCaseLightingPowerperUnitLength(boost::optional<double> installedCaseLightingPowerperUnitLength) {
     bool result(false);
     if (installedCaseLightingPowerperUnitLength) {
       result = setDouble(OS_Refrigeration_CaseFields::InstalledCaseLightingPowerperUnitLength, installedCaseLightingPowerperUnitLength.get());
@@ -761,6 +806,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCase_Impl::resetInstalledCaseLightingPowerperUnitLength() {
@@ -821,9 +867,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCase_Impl::setHumidityatZeroAntiSweatHeaterEnergy(double humidityatZeroAntiSweatHeaterEnergy) {
+  bool RefrigerationCase_Impl::setHumidityatZeroAntiSweatHeaterEnergy(double humidityatZeroAntiSweatHeaterEnergy) {
     bool result = setDouble(OS_Refrigeration_CaseFields::HumidityatZeroAntiSweatHeaterEnergy, humidityatZeroAntiSweatHeaterEnergy);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCase_Impl::resetHumidityatZeroAntiSweatHeaterEnergy() {
@@ -977,9 +1024,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCase_Impl::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
+  bool RefrigerationCase_Impl::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
     bool result = setDouble(OS_Refrigeration_CaseFields::AverageRefrigerantChargeInventory, averageRefrigerantChargeInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCase_Impl::resetAverageRefrigerantChargeInventory() {
@@ -1759,16 +1807,16 @@ void RefrigerationCase::resetOperatingCaseFanPowerperUnitLength() {
   getImpl<detail::RefrigerationCase_Impl>()->resetOperatingCaseFanPowerperUnitLength();
 }
 
-void RefrigerationCase::setStandardCaseLightingPowerperUnitLength(double standardCaseLightingPowerperUnitLength) {
-  getImpl<detail::RefrigerationCase_Impl>()->setStandardCaseLightingPowerperUnitLength(standardCaseLightingPowerperUnitLength);
+bool RefrigerationCase::setStandardCaseLightingPowerperUnitLength(double standardCaseLightingPowerperUnitLength) {
+  return getImpl<detail::RefrigerationCase_Impl>()->setStandardCaseLightingPowerperUnitLength(standardCaseLightingPowerperUnitLength);
 }
 
 void RefrigerationCase::resetStandardCaseLightingPowerperUnitLength() {
   getImpl<detail::RefrigerationCase_Impl>()->resetStandardCaseLightingPowerperUnitLength();
 }
 
-void RefrigerationCase::setInstalledCaseLightingPowerperUnitLength(double installedCaseLightingPowerperUnitLength) {
-  getImpl<detail::RefrigerationCase_Impl>()->setInstalledCaseLightingPowerperUnitLength(installedCaseLightingPowerperUnitLength);
+bool RefrigerationCase::setInstalledCaseLightingPowerperUnitLength(double installedCaseLightingPowerperUnitLength) {
+  return getImpl<detail::RefrigerationCase_Impl>()->setInstalledCaseLightingPowerperUnitLength(installedCaseLightingPowerperUnitLength);
 }
 
 void RefrigerationCase::resetInstalledCaseLightingPowerperUnitLength() {
@@ -1815,8 +1863,8 @@ void RefrigerationCase::resetAntiSweatHeaterControlType() {
   getImpl<detail::RefrigerationCase_Impl>()->resetAntiSweatHeaterControlType();
 }
 
-void RefrigerationCase::setHumidityatZeroAntiSweatHeaterEnergy(double humidityatZeroAntiSweatHeaterEnergy) {
-  getImpl<detail::RefrigerationCase_Impl>()->setHumidityatZeroAntiSweatHeaterEnergy(humidityatZeroAntiSweatHeaterEnergy);
+bool RefrigerationCase::setHumidityatZeroAntiSweatHeaterEnergy(double humidityatZeroAntiSweatHeaterEnergy) {
+  return getImpl<detail::RefrigerationCase_Impl>()->setHumidityatZeroAntiSweatHeaterEnergy(humidityatZeroAntiSweatHeaterEnergy);
 }
 
 void RefrigerationCase::resetHumidityatZeroAntiSweatHeaterEnergy() {
@@ -1919,8 +1967,8 @@ void RefrigerationCase::resetDesignEvaporatorTemperatureorBrineInletTemperature(
   getImpl<detail::RefrigerationCase_Impl>()->resetDesignEvaporatorTemperatureorBrineInletTemperature();
 }
 
-void RefrigerationCase::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
-  getImpl<detail::RefrigerationCase_Impl>()->setAverageRefrigerantChargeInventory(averageRefrigerantChargeInventory);
+bool RefrigerationCase::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
+  return getImpl<detail::RefrigerationCase_Impl>()->setAverageRefrigerantChargeInventory(averageRefrigerantChargeInventory);
 }
 
 void RefrigerationCase::resetAverageRefrigerantChargeInventory() {
@@ -2097,10 +2145,9 @@ void RefrigerationCase::removeFromSystem() {
 
 /// @cond
 RefrigerationCase::RefrigerationCase(std::shared_ptr<detail::RefrigerationCase_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

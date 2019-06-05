@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_PUMPVARIABLESPEED_HPP
 #define MODEL_PUMPVARIABLESPEED_HPP
@@ -28,6 +38,7 @@ namespace model {
 
 class Schedule;
 class Curve;
+class ThermalZone;
 
 namespace detail {
 
@@ -37,7 +48,7 @@ namespace detail {
 
 /** PumpVariableSpeed is a StraightComponent that wraps the OpenStudio IDD object
  *  'OS:Pump:VariableSpeed'. */
-class MODEL_API PumpVariableSpeed : public StraightComponent 
+class MODEL_API PumpVariableSpeed : public StraightComponent
 {
   public:
 
@@ -53,6 +64,8 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
   static IddObjectType iddObjectType();
 
   static std::vector<std::string> pumpControlTypeValues();
+
+  static std::vector<std::string> designPowerSizingMethodValues();
 
   /** \deprecated */
   static std::vector<std::string> validPumpControlTypeValues();
@@ -158,7 +171,7 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
   /** @name Setters */
   //@{
 
-  void setRatedFlowRate(double ratedFlowRate);
+  bool setRatedFlowRate(double ratedFlowRate);
 
   bool setRatedFlowRate(const Quantity& ratedFlowRate);
 
@@ -166,13 +179,13 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
 
   void autosizeRatedFlowRate();
 
-  void setRatedPumpHead(double ratedPumpHead);
+  bool setRatedPumpHead(double ratedPumpHead);
 
   bool setRatedPumpHead(const Quantity& ratedPumpHead);
 
   void resetRatedPumpHead();
 
-  void setRatedPowerConsumption(double ratedPowerConsumption);
+  bool setRatedPowerConsumption(double ratedPowerConsumption);
 
   bool setRatedPowerConsumption(const Quantity& ratedPowerConsumption);
 
@@ -192,31 +205,31 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
 
   void resetFractionofMotorInefficienciestoFluidStream();
 
-  void setCoefficient1ofthePartLoadPerformanceCurve(double coefficient1ofthePartLoadPerformanceCurve);
+  bool setCoefficient1ofthePartLoadPerformanceCurve(double coefficient1ofthePartLoadPerformanceCurve);
 
   bool setCoefficient1ofthePartLoadPerformanceCurve(const Quantity& coefficient1ofthePartLoadPerformanceCurve);
 
   void resetCoefficient1ofthePartLoadPerformanceCurve();
 
-  void setCoefficient2ofthePartLoadPerformanceCurve(double coefficient2ofthePartLoadPerformanceCurve);
+  bool setCoefficient2ofthePartLoadPerformanceCurve(double coefficient2ofthePartLoadPerformanceCurve);
 
   bool setCoefficient2ofthePartLoadPerformanceCurve(const Quantity& coefficient2ofthePartLoadPerformanceCurve);
 
   void resetCoefficient2ofthePartLoadPerformanceCurve();
 
-  void setCoefficient3ofthePartLoadPerformanceCurve(double coefficient3ofthePartLoadPerformanceCurve);
+  bool setCoefficient3ofthePartLoadPerformanceCurve(double coefficient3ofthePartLoadPerformanceCurve);
 
   bool setCoefficient3ofthePartLoadPerformanceCurve(const Quantity& coefficient3ofthePartLoadPerformanceCurve);
 
   void resetCoefficient3ofthePartLoadPerformanceCurve();
 
-  void setCoefficient4ofthePartLoadPerformanceCurve(double coefficient4ofthePartLoadPerformanceCurve);
+  bool setCoefficient4ofthePartLoadPerformanceCurve(double coefficient4ofthePartLoadPerformanceCurve);
 
   bool setCoefficient4ofthePartLoadPerformanceCurve(const Quantity& coefficient4ofthePartLoadPerformanceCurve);
 
   void resetCoefficient4ofthePartLoadPerformanceCurve();
 
-  void setMinimumFlowRate(double minimumFlowRate);
+  bool setMinimumFlowRate(double minimumFlowRate);
 
   bool setMinimumFlowRate(const Quantity& minimumFlowRate);
 
@@ -235,7 +248,7 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
 
   void resetPumpCurve();
 
-  void setImpellerDiameter(double impellerDiameter);
+  bool setImpellerDiameter(double impellerDiameter);
 
   bool setImpellerDiameter(const Quantity& impellerDiameter);
 
@@ -265,6 +278,36 @@ class MODEL_API PumpVariableSpeed : public StraightComponent
 
   void resetMaximumRPMSchedule();
 
+  boost::optional<double> autosizedRatedFlowRate() const ;
+
+  boost::optional<double> autosizedRatedPowerConsumption() const ;
+
+  std::string designPowerSizingMethod() const;
+
+  bool setDesignPowerSizingMethod(const std::string & designPowerSizingMethod);
+
+  double designElectricPowerPerUnitFlowRate() const;
+
+  bool setDesignElectricPowerPerUnitFlowRate(double designElectricPowerPerUnitFlowRate);
+
+  double designShaftPowerPerUnitFlowRatePerUnitHead() const;
+
+  bool setDesignShaftPowerPerUnitFlowRatePerUnitHead(double designShaftPowerPerUnitFlowRatePerUnitHead);
+
+  boost::optional<ThermalZone> zone() const;
+
+  bool setZone(const ThermalZone& thermalZone);
+
+  void resetZone();
+
+  double skinLossRadiativeFraction() const;
+
+  bool setSkinLossRadiativeFraction(double skinLossRadiativeFraction);
+
+  double designMinimumFlowRateFraction() const;
+
+  bool setDesignMinimumFlowRateFraction(double designMinimumFlowRateFraction);
+
   //@}
  protected:
   /// @cond
@@ -293,4 +336,3 @@ typedef std::vector<PumpVariableSpeed> PumpVariableSpeedVector;
 } // openstudio
 
 #endif // MODEL_PUMPVARIABLESPEED_HPP
-

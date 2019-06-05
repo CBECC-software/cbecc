@@ -1,0 +1,21 @@
+Steps performed to compile for Win64 via VC12 (Visual Studio 2013)
+
+Read through Install.W64 - the following is an excerpt --
+
+(1) Downloaded & installed ActiveState Perl from:
+		http://www.activestate.com/ActivePerl  (ver 5.26.3, build 2603)
+		added perl path to PATH env (C:\Perl64\bin) (via Perl installer)
+
+(2) from a std command prompt, run (from C:\dev\CBECC-dev\vendor\openssl-1.0.2q):
+   > perl Configure VC-WIN64A
+   > ms\do_ms
+
+(3) from the Visual Studio 2013 Command Prompt (and from C:\WSF\devLibs\CompMgr\src\OpenSSL\openssl-1.0.1j):
+	> nmake -f ms\ntdll.mak
+			- nmake failed - but include directory setup fine
+
+Steps NOT performed:
+ 	> cd out32dll
+ 	> ..\ms\test
+
+

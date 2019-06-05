@@ -1,23 +1,34 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Geometry.hpp"
+#include "Vector3d.hpp"
 #include "Intersection.hpp"
 #include "../data/Matrix.hpp"
 #include "../core/Assert.hpp"
@@ -30,9 +41,10 @@
 #include <boost/geometry/geometries/ring.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/geometries/adapted/boost_tuple.hpp>
-#include <boost/geometry/strategies/cartesian/point_in_poly_franklin.hpp> 
-#include <boost/geometry/strategies/cartesian/point_in_poly_crossings_multiply.hpp> 
-#include <boost/geometry/algorithms/within.hpp> 
+#include <boost/geometry/strategies/cartesian/point_in_poly_franklin.hpp>
+#include <boost/geometry/strategies/cartesian/point_in_poly_crossings_multiply.hpp>
+#include <boost/geometry/algorithms/within.hpp>
+#include <boost/geometry/algorithms/simplify.hpp>
 
 typedef boost::geometry::model::d2::point_xy<double> BoostPoint;
 typedef boost::geometry::model::polygon<BoostPoint> BoostPolygon;
@@ -41,9 +53,8 @@ typedef boost::geometry::model::multi_polygon<BoostPolygon> BoostMultiPolygon;
 
 #include <polypartition/polypartition.h>
 
-#include <list>
 
-// remove_spikes 
+// remove_spikes
 // adapted from https://github.com/boostorg/geometry/commits/develop/include/boost/geometry/algorithms/remove_spikes.hpp eb3260708eb241d8da337f4be73b41d69d33cd09
 
 /*
@@ -73,10 +84,10 @@ namespace openstudio {
 
     double normTol = 0.001; // 1 mm
     double tol = 0.001; // relative to 1
-      
+
     double diff1_x = last_point.x()-segment_b.x();
     double diff1_y = last_point.y()-segment_b.y();
-    double norm1 = sqrt(pow(diff1_x, 2) + pow(diff1_y, 2)); 
+    double norm1 = sqrt(pow(diff1_x, 2) + pow(diff1_y, 2));
     if (norm1 > normTol){
       diff1_x = diff1_x/norm1;
       diff1_y = diff1_y/norm1;
@@ -303,7 +314,7 @@ inline void remove_spikes(Geometry& geometry)
 
 
 }} // namespace boost::geometry
-// remove_spikes 
+// remove_spikes
 
 
 namespace openstudio{
@@ -338,7 +349,7 @@ namespace openstudio{
     outerPoly.Init(outer.size() - 1);
     outerPoly.SetHole(false);
     //std::cout << "outer :";
-    for(unsigned i = 0; i < outer.size() - 1; ++i){
+    for(size_t i = 0; i < outer.size() - 1; ++i){
       outerPoly[i].x = outer[i].x();
       outerPoly[i].y = outer[i].y();
       //std::cout << "(" << outer[i].x() << ", " << outer[i].y() << ") ";
@@ -402,7 +413,7 @@ namespace openstudio{
         // DLM: might also want to partition if this polygon is self intersecting?
         result.push_back(polygon);
       }else{
-        std::vector<BoostPolygon> temp = removeHoles(polygon); 
+        std::vector<BoostPolygon> temp = removeHoles(polygon);
         result.insert(result.end(), temp.begin(), temp.end());
       }
     }
@@ -534,11 +545,11 @@ namespace openstudio{
     if (outer.empty()){
       return result;
     }
-    
+
     // add point for each vertex except final vertex
     for(unsigned i = 0; i < outer.size() - 1; ++i){
       Point3d point3d(outer[i].x(), outer[i].y(), 0.0);
-      
+
       // try to combine points within tolerance
       Point3d resultPoint = getCombinedPoint(point3d, allPoints, tol);
 
@@ -549,9 +560,11 @@ namespace openstudio{
       result.push_back(resultPoint);
     }
 
-    OS_ASSERT(polygon.inners().empty());
+    if (!polygon.inners().empty()) {
+      LOG_FREE(Warn, "utilities.geometry.verticesFromBoostPolygon", "Converting polygon with " << polygon.inners().size() << " inner loops to OpenStudio vertices, inner loops ignored");
+    }
 
-    result = removeCollinear(result);
+    result = removeCollinearLegacy(result);
 
     // don't keep repeated vertices
     if (result.front() == result.back()){
@@ -584,7 +597,7 @@ namespace openstudio{
       result.push_back(resultPoint);
     }
 
-    result = removeCollinear(result);
+    result = removeCollinearLegacy(result);
 
     // don't keep repeated vertices
     if (result.front() == result.back()){
@@ -614,10 +627,10 @@ namespace openstudio{
   };
 
   // Public functions
-  
-  IntersectionResult::IntersectionResult(const std::vector<Point3d>& polygon1, 
-                                         const std::vector<Point3d>& polygon2, 
-                                         const std::vector< std::vector<Point3d> >& newPolygons1, 
+
+  IntersectionResult::IntersectionResult(const std::vector<Point3d>& polygon1,
+                                         const std::vector<Point3d>& polygon2,
+                                         const std::vector< std::vector<Point3d> >& newPolygons1,
                                          const std::vector< std::vector<Point3d> >& newPolygons2)
     : m_polygon1(polygon1), m_polygon2(polygon2), m_newPolygons1(newPolygons1), m_newPolygons2(newPolygons2)
   {
@@ -642,12 +655,12 @@ namespace openstudio{
   {
     return m_newPolygons2;
   }
-  
+
   std::vector<Point3d> removeSpikes(const std::vector<Point3d>& polygon, double tol)
   {
     // convert vertices to boost rings
     std::vector<Point3d> allPoints;
-    
+
     boost::optional<BoostPolygon> boostPolygon = boostPolygonFromVertices(polygon, allPoints, tol);
     if (!boostPolygon){
       return std::vector<Point3d>();
@@ -659,12 +672,12 @@ namespace openstudio{
 
     return result;
   }
-  
+
   bool pointInPolygon(const Point3d& point, const std::vector<Point3d>& polygon, double tol)
   {
     // convert vertices to boost rings
     std::vector<Point3d> allPoints;
-    
+
     boost::optional<BoostRing> boostPolygon = nonIntersectingBoostRingFromVertices(polygon, allPoints, tol);
     if (!boostPolygon){
       return false;
@@ -689,15 +702,15 @@ namespace openstudio{
     double distance = boost::geometry::distance(boostPoint, *boostPolygon);
     bool result = (distance <= 0.0001);
 
-    return result; 
-      
+    return result;
+
   }
 
   boost::optional<std::vector<Point3d> > join(const std::vector<Point3d>& polygon1, const std::vector<Point3d>& polygon2, double tol)
   {
     // convert vertices to boost rings
     std::vector<Point3d> allPoints;
-    
+
     boost::optional<BoostRing> boostPolygon1 = nonIntersectingBoostRingFromVertices(polygon1, allPoints, tol);
     if (!boostPolygon1){
       return boost::none;
@@ -708,7 +721,7 @@ namespace openstudio{
       return boost::none;
     }
 
-    // union the points in face coordinates, 
+    // union the points in face coordinates,
     std::vector<BoostPolygon> unionResult;
     try{
       boost::geometry::union_(*boostPolygon1, *boostPolygon2, unionResult);
@@ -726,7 +739,11 @@ namespace openstudio{
       return boost::none;
     }else if (unionResult.size() > 1){
       return boost::none;
-    }
+    }else if (!unionResult[0].inners().empty()) {
+      // check for holes
+      LOG_FREE(Error, "utilities.geometry.join", "Union has inner loops");
+      return boost::none;
+    };
 
     std::vector<Point3d> unionVertices = verticesFromBoostPolygon(unionResult[0], allPoints, tol);
     boost::optional<double> testArea = boost::geometry::area(unionResult[0]);
@@ -737,6 +754,7 @@ namespace openstudio{
       LOG_FREE(Info, "utilities.geometry.join", "Union has very small area of " << *testArea << " m^2");
       return boost::none;
     }
+
     try{
       boost::geometry::detail::overlay::has_self_intersections(unionResult[0]);
     }catch(const boost::geometry::overlay_invalid_input_exception&){
@@ -744,14 +762,8 @@ namespace openstudio{
       return boost::none;
     }
 
-    // check for holes
-    if (!unionResult[0].inners().empty()){
-      LOG_FREE(Error, "utilities.geometry.join", "Union has inner loops");
-      return boost::none;
-    };
-
     unionVertices = reorderULC(unionVertices);
-    unionVertices = removeCollinear(unionVertices);
+    unionVertices = removeCollinearLegacy(unionVertices);
 
     return unionVertices;
   }
@@ -760,7 +772,7 @@ namespace openstudio{
   {
     std::vector<std::vector<Point3d> > result;
 
-    unsigned N = polygons.size();
+    size_t N = polygons.size();
     if (N <= 1){
       return polygons;
     }
@@ -776,8 +788,6 @@ namespace openstudio{
         }
       }
     }
-
-    
 
     std::vector<std::vector<unsigned> > connectedComponents = findConnectedComponents(A);
     for (const std::vector<unsigned>& component : connectedComponents){
@@ -809,7 +819,7 @@ namespace openstudio{
 
     // convert vertices to boost rings
     std::vector<Point3d> allPoints;
-    
+
     boost::optional<BoostRing> boostPolygon1 = nonIntersectingBoostRingFromVertices(polygon1, allPoints, tol);
     if (!boostPolygon1){
       return boost::none;
@@ -820,7 +830,7 @@ namespace openstudio{
       return boost::none;
     }
 
-    // intersect the points in face coordinates, 
+    // intersect the points in face coordinates,
     std::vector<BoostPolygon> intersectionResult;
     try{
       boost::geometry::intersection(*boostPolygon1, *boostPolygon2, intersectionResult);
@@ -843,7 +853,7 @@ namespace openstudio{
       LOG_FREE(Info, "utilities.geometry.intersect", "Intersection has " << intersectionResult.size() << " elements");
       std::sort(intersectionResult.begin(), intersectionResult.end(), BoostPolygonAreaGreater());
     }
-    
+
     // check that largest intersection is ok
     std::vector<Point3d> intersectionVertices = verticesFromBoostPolygon(intersectionResult[0], allPoints, tol);
     boost::optional<double> testArea = boost::geometry::area(intersectionResult[0]);
@@ -902,7 +912,7 @@ namespace openstudio{
     boost::geometry::difference(*boostPolygon1, *boostPolygon2, differenceResult1);
     differenceResult1 = removeSpikes(differenceResult1);
     differenceResult1 = removeHoles(differenceResult1);
-    
+
     // create new polygon for each difference
     for (unsigned i = 0; i < differenceResult1.size(); ++i){
 
@@ -979,7 +989,7 @@ namespace openstudio{
       if (!boostHole){
         return result;
       }
-      
+
       for (const BoostPolygon& boostPolygon : boostPolygons){
         std::vector<BoostPolygon> diffResult;
         boost::geometry::difference(boostPolygon, *boostHole, diffResult);
@@ -1003,7 +1013,8 @@ namespace openstudio{
     std::vector<Point3d> allPoints;
 
     boost::optional<BoostPolygon> bp = nonIntersectingBoostPolygonFromVertices(polygon, allPoints, tol);
-    if (!bp){
+    if (bp){
+      // able to get a non intersecting polygon, so does not self intersect
       return false;
     }
     return true;
@@ -1082,6 +1093,151 @@ namespace openstudio{
     }
 
     return true;
+  }
+
+  boost::optional<double> getLinearAlpha(const Point3d& point0, const Point3d& point1, const Point3d& test){
+    // test = point0 + a*(point1 - point0)
+    Vector3d diff1 = point1 - point0;
+    Vector3d diffTest = test - point0;
+
+    double length = diff1.length();
+    if (length < 0.001){
+      return boost::none;
+    }
+
+    double a;
+    if (std::abs(diff1.x()) > std::abs(diff1.y())){
+      if (std::abs(diff1.x()) > std::abs(diff1.z())){
+        a = diffTest.x() / diff1.x();
+      } else{
+        a = diffTest.z() / diff1.z();
+      }
+    } else{
+      if (std::abs(diff1.y()) > std::abs(diff1.z())){
+        a = diffTest.y() / diff1.y();
+      } else{
+        a = diffTest.z() / diff1.z();
+      }
+    }
+
+    diff1.setLength(a*length);
+    Point3d test2 = point0 + diff1;
+    double d = getDistance(test, test2);
+    if (d < 0.001){
+      if (a > 0 && a < 1){
+        return a;
+      }
+    }
+
+    return boost::none;
+  }
+
+  std::vector<Point3d> simplify(const std::vector<Point3d>& vertices, bool removeCollinear, double tol)
+  {
+    std::vector<Point3d> allPoints;
+
+    bool reversed = false;
+    boost::optional<Vector3d> outwardNormal = getOutwardNormal(vertices);
+    if (!outwardNormal){
+      return std::vector<Point3d>();
+    } else if (outwardNormal->z() > 0){
+      reversed = true;
+    }
+
+    boost::optional<BoostPolygon> bp;
+    if (reversed){
+      bp = boostPolygonFromVertices(reorderULC(reverse(vertices)), allPoints, tol);
+    } else {
+      bp = boostPolygonFromVertices(reorderULC(vertices), allPoints, tol);
+    }
+
+    if (!bp){
+      return std::vector<Point3d>();
+    }
+
+    boost::geometry::remove_spikes(*bp);
+
+    BoostPolygon out;
+
+    // this uses the Douglas-Peucker algorithm with a max difference of 0 so no non-collinear points will be removed
+    // if we want to allow this algorithm to be called with a non-zero value I suggest naming it "approximate" or something
+    //boost::geometry::simplify(*bp, out, 0.0);
+    boost::geometry::simplify(*bp, out, tol); // points within tol would already be merged
+
+    std::vector<Point3d> tmp = verticesFromBoostPolygon(out, allPoints, tol);
+
+    if (reversed){
+      tmp = reorderULC(reverse(tmp));
+    }
+
+    if (removeCollinear){
+      // collinear points already removed
+      return tmp;
+    }
+
+    if (tmp.empty()){
+      return tmp;
+    }
+
+    // we want to add back in all the unique points, have to put them in the right place
+    std::set<size_t> pointsToAdd;
+    for (size_t i = 0; i < allPoints.size(); ++i){
+      bool found = false;
+      for (const auto& tmpPoint : tmp){
+        if (getDistance(tmpPoint, allPoints[i]) < tol){
+          found = true;
+        }
+      }
+      if (!found){
+        pointsToAdd.insert(i);
+      }
+    }
+
+    std::vector<Point3d> result;
+    result.push_back(tmp[0]);
+    for (size_t i = 1; i < tmp.size(); ++i){
+      // see which remaining points fit in this segment, double is index in allPoints, alpha along line
+      std::vector<std::pair<size_t, double> > pointsInSegment;
+      for (size_t j : pointsToAdd){
+        boost::optional<double> alpha = getLinearAlpha(tmp[i - 1], tmp[i], allPoints[j]);
+        if (alpha){
+          pointsInSegment.push_back(std::make_pair(j, *alpha));
+        }
+      }
+
+      std::sort(pointsInSegment.begin(), pointsInSegment.end(), [](std::pair<size_t, double> a, std::pair<size_t, double> b) {return a.second < b.second; });
+
+      for (const auto& pointInSegment : pointsInSegment){
+        result.push_back(allPoints[pointInSegment.first]);
+        pointsToAdd.erase(pointInSegment.first);
+      }
+
+      // push the next point in simplified polygon
+      result.push_back(tmp[i]);
+    }
+
+    // now check between last point and first point
+    std::vector<std::pair<size_t, double> > pointsInSegment;
+    for (size_t j : pointsToAdd){
+      boost::optional<double> alpha = getLinearAlpha(tmp[tmp.size() - 1], tmp[0], allPoints[j]);
+      if (alpha){
+        pointsInSegment.push_back(std::make_pair(j, *alpha));
+      }
+    }
+
+    std::sort(pointsInSegment.begin(), pointsInSegment.end(), [](std::pair<size_t, double> a, std::pair<size_t, double> b) {return a.second < b.second; });
+
+    for (const auto& pointInSegment : pointsInSegment){
+      result.push_back(allPoints[pointInSegment.first]);
+      pointsToAdd.erase(pointInSegment.first);
+    }
+
+    if (!pointsToAdd.empty()){
+      LOG_FREE(Warn, "utilities.geometry.simplify", pointsToAdd.size() << " unique vertices were not added back to the polygon");
+    }
+
+    return result;
+
   }
 
 } // openstudio

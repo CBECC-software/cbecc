@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Building.hpp"
 #include "Building_Impl.hpp"
@@ -40,8 +50,8 @@
 #include "ShadingSurface_Impl.hpp"
 #include "ShadingSurfaceGroup.hpp"
 #include "ShadingSurfaceGroup_Impl.hpp"
-#include "Meter.hpp"
-#include "Meter_Impl.hpp"
+#include "OutputMeter.hpp"
+#include "OutputMeter_Impl.hpp"
 #include "Surface.hpp"
 #include "Surface_Impl.hpp"
 
@@ -97,7 +107,7 @@ namespace detail {
     std::vector<ModelObject> result;
 
     // meters
-    MeterVector meters = this->meters();
+    OutputMeterVector meters = this->meters();
     result.insert(result.end(),meters.begin(),meters.end());
 
     // building stories
@@ -144,7 +154,7 @@ namespace detail {
       // This call clones only the building and it's resources
       result = ModelObject_Impl::clone(t_model).cast<Building>();
 
-      // DLM: why did the ParentObject::clone not work?  
+      // DLM: why did the ParentObject::clone not work?
       // DLM: ParentObject::clone only preserves links between child and parent objects, it does not preserve links between levels of the hierarchy
       // we could potentially add ThermalZone as a resource of Space (or vice versa or both) but I am not sure what the implications of that are
 
@@ -198,7 +208,7 @@ namespace detail {
           clone.setBuildingStory(storyClone);
         }
       }
-      
+
     }
 
     OS_ASSERT(result);
@@ -225,8 +235,6 @@ namespace detail {
   const std::vector<std::string>& Building_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -273,6 +281,67 @@ namespace detail {
     return value;
   }
 
+
+  boost::optional<std::string> Building_Impl::standardsTemplate() const
+  {
+    return getString(OS_BuildingFields::StandardsTemplate, false, true);
+  }
+
+  std::vector<std::string> Building_Impl::suggestedStandardsTemplates() const
+  {
+
+    boost::optional<std::string> standardsTemplate = this->standardsTemplate();
+
+    // Make a dummy model and a dummy space Type,
+    // and call suggestedStandardsTemplates from it, so we don't have to repeat code here
+    Model tempModel;
+    SpaceType tempSpaceType(tempModel);
+    std::vector<std::string> result = tempSpaceType.suggestedStandardsTemplates();
+
+    // include values from model
+    for( const SpaceType& other : this->model().getConcreteModelObjects<SpaceType>() ){
+      if( boost::optional<std::string> otherTemplate = other.standardsTemplate() ) {
+        result.push_back(*otherTemplate);
+      }
+    }
+
+    // remove standardsTemplate
+    IstringFind finder;
+    if( standardsTemplate ){
+      finder.addTarget(*standardsTemplate);
+    }
+    auto it = std::remove_if(result.begin(), result.end(), finder);
+    result.resize( std::distance(result.begin(),it) );
+
+    // sort
+    std::sort(result.begin(), result.end(), IstringCompare());
+
+    // make unique
+    // DLM: have to sort before calling unique, unique only works on consecutive elements
+    it = std::unique(result.begin(), result.end(), IstringEqual());
+    result.resize( std::distance(result.begin(),it) );
+
+    // add current to front
+    if( standardsTemplate ){
+      result.insert(result.begin(), *standardsTemplate);
+    }
+
+    return result;
+  }
+
+  bool Building_Impl::setStandardsTemplate(const std::string& standardsTemplate)
+  {
+    bool result = setString(OS_BuildingFields::StandardsTemplate, standardsTemplate);
+    OS_ASSERT(result);
+    return result;
+  }
+
+  void Building_Impl::resetStandardsTemplate()
+  {
+    bool test = setString(OS_BuildingFields::StandardsTemplate, "");
+    OS_ASSERT(test);
+  }
+
   boost::optional<std::string> Building_Impl::standardsBuildingType() const
   {
     return getString(OS_BuildingFields::StandardsBuildingType, false, true);
@@ -280,48 +349,62 @@ namespace detail {
 
   std::vector<std::string> Building_Impl::suggestedStandardsBuildingTypes() const
   {
-    std::vector<std::string> result;
+    // If standardsTemplate isn't set, return empty
+    boost::optional<std::string> standardsTemplate = this->standardsTemplate();
+    if( !standardsTemplate ) {
+      return std::vector<std::string>();
+    } else {
 
-    boost::optional<std::string> standardsBuildingType = this->standardsBuildingType();
+      boost::optional<std::string> standardsBuildingType = this->standardsBuildingType();
 
-    // DLM: temp code, eventually get from StandardsLibrary
-    Model tempModel;
-    SpaceType tempSpaceType(tempModel);
-    std::vector<std::string> tempSuggestions = tempSpaceType.suggestedStandardsBuildingTypes();
-    for (const std::string& suggestion : tempSuggestions){
-      result.push_back(suggestion);
-    }
+      // Make a dummy Model and a dummy space Type,
+      // and call suggestedStandardsTemplates from it, so we don't have to repeat code here
+      Model tempModel;
+      SpaceType tempSpaceType(tempModel);
+      // We set the standards template to the value
+      tempSpaceType.setStandardsTemplate( standardsTemplate.get() );
+      std::vector<std::string> result = tempSpaceType.suggestedStandardsBuildingTypes();
 
-    // include values from model
-    for (const SpaceType& other : this->model().getConcreteModelObjects<SpaceType>()){
-      boost::optional<std::string> otherBuildingType = other.standardsBuildingType();
-      if (otherBuildingType){
-        result.push_back(*otherBuildingType);
+      // include values from model
+      for( const SpaceType& other : this->model().getConcreteModelObjects<SpaceType>() ){
+        if( boost::optional<std::string> otherBuildingType = other.standardsBuildingType() ){
+          result.push_back(*otherBuildingType);
+        }
       }
+
+      // remove standardsBuildingType
+      IstringFind finder;
+      if( standardsBuildingType ){
+        finder.addTarget(*standardsBuildingType);
+      }
+      auto it = std::remove_if(result.begin(), result.end(), finder);
+      result.resize( std::distance(result.begin(),it) );
+
+      // sort, unique only works on consecutive elements
+      std::sort(result.begin(), result.end(), IstringCompare());
+      // make unique
+      it = std::unique(result.begin(), result.end(), IstringEqual());
+      result.resize( std::distance(result.begin(),it) );
+
+      // add current to front
+      if( standardsBuildingType ){
+        result.insert(result.begin(), *standardsBuildingType);
+      }
+      return result;
     }
+  }
 
-    // remove standardsBuildingType
-    IstringFind finder;
-    if (standardsBuildingType){
-      finder.addTarget(*standardsBuildingType);
-    }
-    auto it = std::remove_if(result.begin(), result.end(), finder); 
-    result.resize( std::distance(result.begin(),it) ); 
-
-    // sort
-    std::sort(result.begin(), result.end(), IstringCompare());
-
-    // make unique
-    // DLM: have to sort before calling unique, unique only works on consecutive elements
-    it = std::unique(result.begin(), result.end(), IstringEqual()); 
-    result.resize( std::distance(result.begin(),it) ); 
-
-    // add current to front
-    if (standardsBuildingType){
-      result.insert(result.begin(), *standardsBuildingType);
-    }
-
+  bool Building_Impl::setStandardsBuildingType(const std::string& standardsBuildingType)
+  {
+    bool result = setString(OS_BuildingFields::StandardsBuildingType, standardsBuildingType);
+    OS_ASSERT(result);
     return result;
+  }
+
+  void Building_Impl::resetStandardsBuildingType()
+  {
+    bool test = setString(OS_BuildingFields::StandardsBuildingType, "");
+    OS_ASSERT(test);
   }
 
   bool Building_Impl::relocatable() const
@@ -330,14 +413,15 @@ namespace detail {
     OS_ASSERT(value);
     return openstudio::istringEqual(value.get(), "True");
   }
-  
+
   bool Building_Impl::isRelocatableDefaulted() const {
     return isEmpty(OS_BuildingFields::Relocatable);
   }
 
-  void Building_Impl::setNorthAxis(double northAxis) {
+  bool Building_Impl::setNorthAxis(double northAxis) {
     bool result = setDouble(OS_BuildingFields::NorthAxis, northAxis);
     OS_ASSERT(result);
+    return result;
   }
 
   void Building_Impl::resetNorthAxis() {
@@ -390,7 +474,7 @@ namespace detail {
     bool test = setString(OS_BuildingFields::StandardsNumberofLivingUnits, "");
     OS_ASSERT(test);
   }
-  
+
   bool Building_Impl::setNominalFloortoCeilingHeight(double nominalFloortoCeilingHeight) {
     bool result = setDouble(OS_BuildingFields::NominalFloortoCeilingHeight, nominalFloortoCeilingHeight);
     return result;
@@ -399,19 +483,6 @@ namespace detail {
   void Building_Impl::resetNominalFloortoCeilingHeight() {
     bool result = setString(OS_BuildingFields::NominalFloortoCeilingHeight, "");
     OS_ASSERT(result);
-  }
-
-  bool Building_Impl::setStandardsBuildingType(const std::string& standardsBuildingType)
-  {
-    bool result = setString(OS_BuildingFields::StandardsBuildingType, standardsBuildingType);
-    OS_ASSERT(result);
-    return result;
-  }
-
-  void Building_Impl::resetStandardsBuildingType()
-  {
-    bool test = setString(OS_BuildingFields::StandardsBuildingType, "");
-    OS_ASSERT(test);
   }
 
   bool Building_Impl::setRelocatable(bool relocatable)
@@ -479,11 +550,11 @@ namespace detail {
     setString(OS_BuildingFields::DefaultScheduleSetName, "");
   }
 
-  MeterVector Building_Impl::meters() const
+  OutputMeterVector Building_Impl::meters() const
   {
-    MeterVector result;
-    MeterVector meters = this->model().getConcreteModelObjects<Meter>();
-    for (const Meter& meter : meters){
+    OutputMeterVector result;
+    OutputMeterVector meters = this->model().getConcreteModelObjects<OutputMeter>();
+    for (const OutputMeter& meter : meters){
       if (meter.installLocationType() && (InstallLocationType::Building == meter.installLocationType().get().value())){
         result.push_back(meter);
       }
@@ -586,7 +657,7 @@ namespace detail {
 
   double Building_Impl::exteriorSurfaceArea() const {
     double result(0.0);
-    for (const Surface& surface : model().getModelObjects<Surface>()) {
+    for (const Surface& surface : model().getConcreteModelObjects<Surface>()) {
       OptionalSpace space = surface.space();
       std::string outsideBoundaryCondition = surface.outsideBoundaryCondition();
       if (space && openstudio::istringEqual(outsideBoundaryCondition, "Outdoors")) {
@@ -645,7 +716,7 @@ namespace detail {
     }
     return area / np;
   }
-  
+
   double Building_Impl::lightingPower() const {
     double result(0.0);
     for (const Space& space : spaces()){
@@ -1028,12 +1099,36 @@ boost::optional<double> Building::nominalFloortoCeilingHeight() const {
   return getImpl<detail::Building_Impl>()->nominalFloortoCeilingHeight();
 }
 
+boost::optional<std::string> Building::standardsTemplate() const{
+  return getImpl<detail::Building_Impl>()->standardsTemplate();
+}
+
+std::vector<std::string> Building::suggestedStandardsTemplates() const{
+  return getImpl<detail::Building_Impl>()->suggestedStandardsTemplates();
+}
+
+bool Building::setStandardsTemplate(const std::string& standardsTemplate){
+  return getImpl<detail::Building_Impl>()->setStandardsTemplate(standardsTemplate);
+}
+
+void Building::resetStandardsTemplate(){
+  getImpl<detail::Building_Impl>()->resetStandardsTemplate();
+}
+
 boost::optional<std::string> Building::standardsBuildingType() const{
   return getImpl<detail::Building_Impl>()->standardsBuildingType();
 }
 
 std::vector<std::string> Building::suggestedStandardsBuildingTypes() const{
   return getImpl<detail::Building_Impl>()->suggestedStandardsBuildingTypes();
+}
+
+bool Building::setStandardsBuildingType(const std::string& standardsBuildingType){
+  return getImpl<detail::Building_Impl>()->setStandardsBuildingType(standardsBuildingType);
+}
+
+void Building::resetStandardsBuildingType(){
+  getImpl<detail::Building_Impl>()->resetStandardsBuildingType();
 }
 
 bool Building::relocatable() const{
@@ -1044,8 +1139,8 @@ bool Building::isRelocatableDefaulted() const {
   return getImpl<detail::Building_Impl>()->isRelocatableDefaulted();
 }
 
-void Building::setNorthAxis(double northAxis) {
-  getImpl<detail::Building_Impl>()->setNorthAxis(northAxis);
+bool Building::setNorthAxis(double northAxis) {
+  return getImpl<detail::Building_Impl>()->setNorthAxis(northAxis);
 }
 
 void Building::resetNorthAxis() {
@@ -1092,16 +1187,13 @@ void Building::resetNominalFloortoCeilingHeight() {
   getImpl<detail::Building_Impl>()->resetNominalFloortoCeilingHeight();
 }
 
-bool Building::setStandardsBuildingType(const std::string& standardsBuildingType){
-  return getImpl<detail::Building_Impl>()->setStandardsBuildingType(standardsBuildingType);
+bool Building::setRelocatable(bool isRelocatable){
+  return getImpl<detail::Building_Impl>()->setRelocatable(isRelocatable);
 }
 
-void Building::resetStandardsBuildingType(){
-  getImpl<detail::Building_Impl>()->resetStandardsBuildingType();
-}
-
-void Building::setRelocatable(bool isRelocatable){
-  getImpl<detail::Building_Impl>()->setRelocatable(isRelocatable); 
+void Building::setRelocatableNoFail(bool isRelocatable){
+  bool result = getImpl<detail::Building_Impl>()->setRelocatable(isRelocatable);
+  OS_ASSERT(result);
 }
 
 void Building::resetRelocatable(){
@@ -1153,7 +1245,7 @@ void Building::resetDefaultScheduleSet()
   getImpl<detail::Building_Impl>()->resetDefaultScheduleSet();
 }
 
-MeterVector Building::meters() const
+OutputMeterVector Building::meters() const
 {
   return getImpl<detail::Building_Impl>()->meters();
 }
@@ -1288,7 +1380,7 @@ std::vector<std::vector<Point3d> > Building::generateSkylightPattern(double skyl
 
 /// @cond
 Building::Building(std::shared_ptr<detail::Building_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 
 Building::Building(Model& model)
@@ -1299,4 +1391,3 @@ Building::Building(Model& model)
 
 } // model
 } // openstudio
-

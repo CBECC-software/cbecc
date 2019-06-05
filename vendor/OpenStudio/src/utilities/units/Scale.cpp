@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Scale.hpp"
 
@@ -67,21 +77,21 @@ namespace openstudio{
   }
 
   /** Static constant defining SI prefix for 10^24. */
-  const Scale& yotta() 
+  const Scale& yotta()
   {
     static Scale Y = {"Y", "yotta",24,1.0E24};
     return Y;
   }
 
   /** Static constant defining SI prefix for 10^21. */
-  const Scale& zetta() 
+  const Scale& zetta()
   {
     static Scale Z = {"Z", "zetta",21,1.0E21};
     return Z;
   }
 
   /** Static constant defining SI prefix for 10^18. */
-  const Scale& exa() 
+  const Scale& exa()
   {
     static Scale E = {"E", "exa",18,1.0E18};
     return E;
@@ -115,6 +125,20 @@ namespace openstudio{
     return M;
   }
 
+  /** Static constant defining SI prefix for 10^5. */
+  UTILITIES_API const Scale& hectokilo()
+  {
+    static Scale hk = {"_hk", "hectokilo",5,1.0E5};
+    return hk;
+  }
+
+  /** Static constant defining SI prefix for 10^4. */
+  const Scale& myria()
+  {
+    static Scale k = {"_ma", "myria",4,1.0E4};
+    return k;
+  }
+
   /** Static constant defining SI prefix for 10^3. */
   const Scale& kilo()
   {
@@ -122,11 +146,32 @@ namespace openstudio{
     return k;
   }
 
+  /** Static constant defining SI prefix for 10^2. */
+  UTILITIES_API const Scale& hecto()
+  {
+    static Scale h = {"_h", "hecto",2,1.0E2};
+    return h;
+  }
+
+  /** Static constant defining SI prefix for 10^1. */
+  UTILITIES_API const Scale& deka()
+  {
+    static Scale da = {"_da", "deka",1,1.0E1};
+    return da;
+  }
+
   /** Static constant defining no scale (1.0). */
   const Scale& one()
   {
     static Scale o = {"","",0,1.0};
     return o;
+  }
+
+  /** Static constant defining SI prefix for 10^{-1} */
+  const Scale& deci()
+  {
+    static Scale d = {"_d", "deci",-1,1.0E-1};
+    return d;
   }
 
   /** Static constant defining SI prefix for 10^{-2} */
@@ -141,6 +186,20 @@ namespace openstudio{
   {
     static Scale m = {"m", "milli",-3,1.0E-3};
     return m;
+  }
+
+  /** Static constant defining SI prefix for 10^{-4} */
+  const Scale& decimilli()
+  {
+    static Scale dm = {"_dm", "decimilli",-4,1.0E-4};
+    return dm;
+  }
+
+  /** Static constant defining SI prefix for 10^{-5} */
+  const Scale& centimilli()
+  {
+    static Scale cm = {"_cm", "centimilli",-5,1.0E-5};
+    return cm;
   }
 
   /** Static constant defining SI prefix for 10^{-6} */
@@ -158,7 +217,7 @@ namespace openstudio{
   }
 
   /** Static constant defining SI prefix for 10^{-12} */
-  const Scale& pico() 
+  const Scale& pico()
   {
     static Scale p = {"p", "pico",-12,1.0E-12};
     return p;
@@ -179,14 +238,14 @@ namespace openstudio{
   }
 
   /** Static constant defining SI prefix for 10^{-21} */
-  const Scale& zepto() 
+  const Scale& zepto()
   {
     static Scale z = {"z", "zepto",-21,1.0E-21};
     return z;
   }
 
   /** Static constant defining SI prefix for 10^{-24} */
-  const Scale& yocto() 
+  const Scale& yocto()
   {
     static Scale y = {"y", "yocto",-24,1.0E-24};
     return y;

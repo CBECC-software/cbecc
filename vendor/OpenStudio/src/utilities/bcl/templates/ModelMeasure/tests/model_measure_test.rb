@@ -1,11 +1,12 @@
+# insert your copyright here
+
 require 'openstudio'
-require 'openstudio/ruleset/ShowRunnerOutput'
+require 'openstudio/measure/ShowRunnerOutput'
 require 'minitest/autorun'
 require_relative '../measure.rb'
 require 'fileutils'
 
-class ModelMeasureTest < MiniTest::Unit::TestCase
-
+class ModelMeasureNameTest < Minitest::Test
   # def setup
   # end
 
@@ -14,7 +15,7 @@ class ModelMeasureTest < MiniTest::Unit::TestCase
 
   def test_number_of_arguments_and_argument_names
     # create an instance of the measure
-    measure = ModelMeasure.new
+    measure = ModelMeasureName.new
 
     # make an empty model
     model = OpenStudio::Model::Model.new
@@ -22,31 +23,32 @@ class ModelMeasureTest < MiniTest::Unit::TestCase
     # get arguments and test that they are what we are expecting
     arguments = measure.arguments(model)
     assert_equal(1, arguments.size)
-    assert_equal("space_name", arguments[0].name)
+    assert_equal('space_name', arguments[0].name)
   end
 
   def test_bad_argument_values
     # create an instance of the measure
-    measure = ModelMeasure.new
+    measure = ModelMeasureName.new
 
-    # create an instance of a runner
-    runner = OpenStudio::Ruleset::OSRunner.new
+    # create runner with empty OSW
+    osw = OpenStudio::WorkflowJSON.new
+    runner = OpenStudio::Measure::OSRunner.new(osw)
 
     # make an empty model
     model = OpenStudio::Model::Model.new
 
     # get arguments
     arguments = measure.arguments(model)
-    argument_map = OpenStudio::Ruleset.convertOSArgumentVectorToMap(arguments)
+    argument_map = OpenStudio::Measure.convertOSArgumentVectorToMap(arguments)
 
     # create hash of argument values
     args_hash = {}
-    args_hash["space_name"] = ""
+    args_hash['space_name'] = ''
 
     # populate argument with specified hash value if specified
     arguments.each do |arg|
       temp_arg_var = arg.clone
-      if args_hash[arg.name]
+      if args_hash.key?(arg.name)
         assert(temp_arg_var.setValue(args_hash[arg.name]))
       end
       argument_map[arg.name] = temp_arg_var
@@ -60,21 +62,22 @@ class ModelMeasureTest < MiniTest::Unit::TestCase
     show_output(result)
 
     # assert that it ran correctly
-    assert_equal("Fail", result.value.valueName)
+    assert_equal('Fail', result.value.valueName)
   end
 
   def test_good_argument_values
     # create an instance of the measure
-    measure = ModelMeasure.new
+    measure = ModelMeasureName.new
 
-    # create an instance of a runner
-    runner = OpenStudio::Ruleset::OSRunner.new
+    # create runner with empty OSW
+    osw = OpenStudio::WorkflowJSON.new
+    runner = OpenStudio::Measure::OSRunner.new(osw)
 
     # load the test model
     translator = OpenStudio::OSVersion::VersionTranslator.new
-    path = OpenStudio::Path.new(File.dirname(__FILE__) + "/example_model.osm")
+    path = "#{File.dirname(__FILE__)}/example_model.osm"
     model = translator.loadModel(path)
-    assert((not model.empty?))
+    assert(!model.empty?)
     model = model.get
 
     # store the number of spaces in the seed model
@@ -82,18 +85,18 @@ class ModelMeasureTest < MiniTest::Unit::TestCase
 
     # get arguments
     arguments = measure.arguments(model)
-    argument_map = OpenStudio::Ruleset.convertOSArgumentVectorToMap(arguments)
+    argument_map = OpenStudio::Measure.convertOSArgumentVectorToMap(arguments)
 
     # create hash of argument values.
     # If the argument has a default that you want to use, you don't need it in the hash
     args_hash = {}
-    args_hash["space_name"] = "New Space"
+    args_hash['space_name'] = 'New Space'
     # using defaults values from measure.rb for other arguments
 
     # populate argument with specified hash value if specified
     arguments.each do |arg|
       temp_arg_var = arg.clone
-      if args_hash[arg.name]
+      if args_hash.key?(arg.name)
         assert(temp_arg_var.setValue(args_hash[arg.name]))
       end
       argument_map[arg.name] = temp_arg_var
@@ -107,16 +110,15 @@ class ModelMeasureTest < MiniTest::Unit::TestCase
     show_output(result)
 
     # assert that it ran correctly
-    assert_equal("Success", result.value.valueName)
+    assert_equal('Success', result.value.valueName)
     assert(result.info.size == 1)
-    assert(result.warnings.size == 0)
+    assert(result.warnings.empty?)
 
     # check that there is now 1 space
     assert_equal(1, model.getSpaces.size - num_spaces_seed)
 
     # save the model to test output directory
-    output_file_path = OpenStudio::Path.new(File.dirname(__FILE__) + "/output/test_output.osm")
-    model.save(output_file_path,true)
+    output_file_path = "#{File.dirname(__FILE__)}//output/test_output.osm"
+    model.save(output_file_path, true)
   end
-
 end

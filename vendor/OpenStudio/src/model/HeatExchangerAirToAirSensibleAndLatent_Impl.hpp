@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_HEATEXCHANGERAIRTOAIRSENSIBLEANDLATENT_IMPL_HPP
 #define MODEL_HEATEXCHANGERAIRTOAIRSENSIBLEANDLATENT_IMPL_HPP
@@ -29,84 +39,13 @@
 namespace openstudio {
 namespace model {
 
-// TODO: Check the following class names against object getters and setters.
 class Schedule;
-class Connection;
-class Connection;
-class Connection;
 class Connection;
 
 namespace detail {
 
   /** HeatExchangerAirToAirSensibleAndLatent_Impl is a AirToAirComponent_Impl that is the implementation class for HeatExchangerAirToAirSensibleAndLatent.*/
   class MODEL_API HeatExchangerAirToAirSensibleAndLatent_Impl : public AirToAirComponent_Impl {
-    Q_OBJECT;
-
-    Q_PROPERTY(boost::optional<double> nominalSupplyAirFlowRate READ nominalSupplyAirFlowRate WRITE setNominalSupplyAirFlowRate);
-    Q_PROPERTY(openstudio::OSOptionalQuantity nominalSupplyAirFlowRate_SI READ nominalSupplyAirFlowRate_SI WRITE setNominalSupplyAirFlowRate);
-    Q_PROPERTY(openstudio::OSOptionalQuantity nominalSupplyAirFlowRate_IP READ nominalSupplyAirFlowRate_IP WRITE setNominalSupplyAirFlowRate);
-    Q_PROPERTY(bool isNominalSupplyAirFlowRateAutosized READ isNominalSupplyAirFlowRateAutosized);
-
-    Q_PROPERTY(double sensibleEffectivenessat100HeatingAirFlow READ sensibleEffectivenessat100HeatingAirFlow WRITE setSensibleEffectivenessat100HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat100HeatingAirFlow_SI READ sensibleEffectivenessat100HeatingAirFlow_SI WRITE setSensibleEffectivenessat100HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat100HeatingAirFlow_IP READ sensibleEffectivenessat100HeatingAirFlow_IP WRITE setSensibleEffectivenessat100HeatingAirFlow);
-
-    Q_PROPERTY(double latentEffectivenessat100HeatingAirFlow READ latentEffectivenessat100HeatingAirFlow WRITE setLatentEffectivenessat100HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat100HeatingAirFlow_SI READ latentEffectivenessat100HeatingAirFlow_SI WRITE setLatentEffectivenessat100HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat100HeatingAirFlow_IP READ latentEffectivenessat100HeatingAirFlow_IP WRITE setLatentEffectivenessat100HeatingAirFlow);
-
-    Q_PROPERTY(double sensibleEffectivenessat75HeatingAirFlow READ sensibleEffectivenessat75HeatingAirFlow WRITE setSensibleEffectivenessat75HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat75HeatingAirFlow_SI READ sensibleEffectivenessat75HeatingAirFlow_SI WRITE setSensibleEffectivenessat75HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat75HeatingAirFlow_IP READ sensibleEffectivenessat75HeatingAirFlow_IP WRITE setSensibleEffectivenessat75HeatingAirFlow);
-
-    Q_PROPERTY(double latentEffectivenessat75HeatingAirFlow READ latentEffectivenessat75HeatingAirFlow WRITE setLatentEffectivenessat75HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat75HeatingAirFlow_SI READ latentEffectivenessat75HeatingAirFlow_SI WRITE setLatentEffectivenessat75HeatingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat75HeatingAirFlow_IP READ latentEffectivenessat75HeatingAirFlow_IP WRITE setLatentEffectivenessat75HeatingAirFlow);
-
-    Q_PROPERTY(double sensibleEffectivenessat100CoolingAirFlow READ sensibleEffectivenessat100CoolingAirFlow WRITE setSensibleEffectivenessat100CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat100CoolingAirFlow_SI READ sensibleEffectivenessat100CoolingAirFlow_SI WRITE setSensibleEffectivenessat100CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat100CoolingAirFlow_IP READ sensibleEffectivenessat100CoolingAirFlow_IP WRITE setSensibleEffectivenessat100CoolingAirFlow);
-
-    Q_PROPERTY(double latentEffectivenessat100CoolingAirFlow READ latentEffectivenessat100CoolingAirFlow WRITE setLatentEffectivenessat100CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat100CoolingAirFlow_SI READ latentEffectivenessat100CoolingAirFlow_SI WRITE setLatentEffectivenessat100CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat100CoolingAirFlow_IP READ latentEffectivenessat100CoolingAirFlow_IP WRITE setLatentEffectivenessat100CoolingAirFlow);
-
-    Q_PROPERTY(double sensibleEffectivenessat75CoolingAirFlow READ sensibleEffectivenessat75CoolingAirFlow WRITE setSensibleEffectivenessat75CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat75CoolingAirFlow_SI READ sensibleEffectivenessat75CoolingAirFlow_SI WRITE setSensibleEffectivenessat75CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity sensibleEffectivenessat75CoolingAirFlow_IP READ sensibleEffectivenessat75CoolingAirFlow_IP WRITE setSensibleEffectivenessat75CoolingAirFlow);
-
-    Q_PROPERTY(double latentEffectivenessat75CoolingAirFlow READ latentEffectivenessat75CoolingAirFlow WRITE setLatentEffectivenessat75CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat75CoolingAirFlow_SI READ latentEffectivenessat75CoolingAirFlow_SI WRITE setLatentEffectivenessat75CoolingAirFlow);
-    Q_PROPERTY(openstudio::Quantity latentEffectivenessat75CoolingAirFlow_IP READ latentEffectivenessat75CoolingAirFlow_IP WRITE setLatentEffectivenessat75CoolingAirFlow);
-
-    Q_PROPERTY(double nominalElectricPower READ nominalElectricPower WRITE setNominalElectricPower);
-    Q_PROPERTY(openstudio::Quantity nominalElectricPower_SI READ nominalElectricPower_SI WRITE setNominalElectricPower);
-    Q_PROPERTY(openstudio::Quantity nominalElectricPower_IP READ nominalElectricPower_IP WRITE setNominalElectricPower);
-
-    Q_PROPERTY(bool supplyAirOutletTemperatureControl READ supplyAirOutletTemperatureControl WRITE setSupplyAirOutletTemperatureControl);
-
-    Q_PROPERTY(std::string heatExchangerType READ heatExchangerType WRITE setHeatExchangerType);
-    Q_PROPERTY(std::vector<std::string> heatExchangerTypeValues READ heatExchangerTypeValues);
-
-    Q_PROPERTY(std::string frostControlType READ frostControlType WRITE setFrostControlType);
-    Q_PROPERTY(std::vector<std::string> frostControlTypeValues READ frostControlTypeValues);
-
-    Q_PROPERTY(double thresholdTemperature READ thresholdTemperature WRITE setThresholdTemperature RESET resetThresholdTemperature);
-    Q_PROPERTY(openstudio::Quantity thresholdTemperature_SI READ thresholdTemperature_SI WRITE setThresholdTemperature RESET resetThresholdTemperature);
-    Q_PROPERTY(openstudio::Quantity thresholdTemperature_IP READ thresholdTemperature_IP WRITE setThresholdTemperature RESET resetThresholdTemperature);
-    Q_PROPERTY(bool isThresholdTemperatureDefaulted READ isThresholdTemperatureDefaulted);
-
-    Q_PROPERTY(boost::optional<double> initialDefrostTimeFraction READ initialDefrostTimeFraction WRITE setInitialDefrostTimeFraction RESET resetInitialDefrostTimeFraction);
-    Q_PROPERTY(openstudio::OSOptionalQuantity initialDefrostTimeFraction_SI READ initialDefrostTimeFraction_SI WRITE setInitialDefrostTimeFraction RESET resetInitialDefrostTimeFraction);
-    Q_PROPERTY(openstudio::OSOptionalQuantity initialDefrostTimeFraction_IP READ initialDefrostTimeFraction_IP WRITE setInitialDefrostTimeFraction RESET resetInitialDefrostTimeFraction);
-
-    Q_PROPERTY(boost::optional<double> rateofDefrostTimeFractionIncrease READ rateofDefrostTimeFractionIncrease WRITE setRateofDefrostTimeFractionIncrease RESET resetRateofDefrostTimeFractionIncrease);
-    Q_PROPERTY(openstudio::OSOptionalQuantity rateofDefrostTimeFractionIncrease_SI READ rateofDefrostTimeFractionIncrease_SI WRITE setRateofDefrostTimeFractionIncrease RESET resetRateofDefrostTimeFractionIncrease);
-    Q_PROPERTY(openstudio::OSOptionalQuantity rateofDefrostTimeFractionIncrease_IP READ rateofDefrostTimeFractionIncrease_IP WRITE setRateofDefrostTimeFractionIncrease RESET resetRateofDefrostTimeFractionIncrease);
-
-    Q_PROPERTY(bool economizerLockout READ economizerLockout WRITE setEconomizerLockout);
-
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> availabilitySchedule READ availabilityScheduleAsModelObject WRITE setAvailabilityScheduleAsModelObject);
 
    public:
 
@@ -131,17 +70,31 @@ namespace detail {
     /** @name Virtual Methods */
     //@{
 
+    virtual std::vector<ModelObject> children() const override;
+
     virtual const std::vector<std::string>& outputVariableNames() const override;
 
     virtual IddObjectType iddObjectType() const override;
 
     virtual std::vector<ScheduleTypeKey> getScheduleTypeKeys(const Schedule& schedule) const override;
 
+    virtual void autosize() override;
+
+    virtual void applySizingValues() override;
+
+    virtual unsigned primaryAirInletPort() const override;
+
+    virtual unsigned primaryAirOutletPort() const override;
+
+    virtual unsigned secondaryAirInletPort() const override;
+
+    virtual unsigned secondaryAirOutletPort() const override;
+
+
     //@}
     /** @name Getters */
     //@{
 
-    // TODO: Check return type. From object lists, some candidates are: Schedule.
     Schedule availabilitySchedule() const;
 
     boost::optional<double> nominalSupplyAirFlowRate() const;
@@ -208,11 +161,13 @@ namespace detail {
 
     bool economizerLockout() const;
 
+    boost::optional<double> autosizedNominalSupplyAirFlowRate() const ;
+
+
     //@}
     /** @name Setters */
     //@{
 
-    // TODO: Check argument type. From object lists, some candidates are: Schedule.
     bool setAvailabilitySchedule(Schedule& schedule);
 
     bool setNominalSupplyAirFlowRate(boost::optional<double> nominalSupplyAirFlowRate);
@@ -257,13 +212,13 @@ namespace detail {
 
     bool setNominalElectricPower(const Quantity& nominalElectricPower);
 
-    void setSupplyAirOutletTemperatureControl(bool supplyAirOutletTemperatureControl);
+    bool setSupplyAirOutletTemperatureControl(bool supplyAirOutletTemperatureControl);
 
     bool setHeatExchangerType(std::string heatExchangerType);
 
     bool setFrostControlType(std::string frostControlType);
 
-    void setThresholdTemperature(double thresholdTemperature);
+    bool setThresholdTemperature(double thresholdTemperature);
 
     bool setThresholdTemperature(const Quantity& thresholdTemperature);
 
@@ -281,19 +236,14 @@ namespace detail {
 
     void resetRateofDefrostTimeFractionIncrease();
 
-    void setEconomizerLockout(bool economizerLockout);
+    bool setEconomizerLockout(bool economizerLockout);
 
     //@}
     /** @name Other */
     //@{
 
-    unsigned primaryAirInletPort() override;
-
-    unsigned primaryAirOutletPort() override;
-
-    unsigned secondaryAirInletPort() override;
-
-    unsigned secondaryAirOutletPort() override;
+    AirflowNetworkEquivalentDuct getAirflowNetworkEquivalentDuct(double length, double diameter);
+    boost::optional<AirflowNetworkEquivalentDuct> airflowNetworkEquivalentDuct() const;
 
     //@}
 
@@ -347,4 +297,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_HEATEXCHANGERAIRTOAIRSENSIBLEANDLATENT_IMPL_HPP
-

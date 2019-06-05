@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationAirChiller.hpp"
 #include "RefrigerationAirChiller_Impl.hpp"
@@ -68,9 +78,47 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationAirChiller_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Refrigeration Zone Air Chiller Total Cooling Rate",
+      "Refrigeration Zone Air Chiller Total Cooling Energy",
+      "Refrigeration Zone Air Chiller Sensible Cooling Rate",
+      "Refrigeration Zone Air Chiller Sensible Cooling Energy",
+      "Refrigeration Zone Air Chiller Latent Cooling Rate",
+      "Refrigeration Zone Air Chiller Latent Cooling Energy",
+      "Refrigeration Zone Air Chiller Water Removed Mass Flow Rate",
+      "Refrigeration Zone Air Chiller Total Electric Power",
+      "Refrigeration Zone Air Chiller Total Electric Energy",
+      "Refrigeration Zone Air Chiller Fan Electric Power",
+      "Refrigeration Zone Air Chiller Fan Electric Energy",
+      "Refrigeration Zone Air Chiller Heater Electric Power",
+      "Refrigeration Zone Air Chiller Heater Electric Energy",
+      "Refrigeration Zone Air Chiller Sensible Heat Ratio",
+      "Refrigeration Zone Air Chiller Frost Accumulation Mass",
+      "Refrigeration Zone Air Chiller Zone Total Cooling Rate",
+      "Refrigeration Zone Air Chiller Zone Total Cooling Energy",
+      "Refrigeration Zone Air Chiller Zone Sensible Cooling Rate",
+      "Refrigeration Zone Air Chiller Zone Sensible Cooling Energy",
+      "Refrigeration Zone Air Chiller Zone Heating Rate",
+      "Refrigeration Zone Air Chiller Zone Heating Energy",
+
+      // TODO: implement test
+      // Report only for Air Chillers using electric defrost
+      "Refrigeration Zone Air Chiller Defrost Electric Power",
+      "Refrigeration Zone Air Chiller Defrost Electric Energy"
+
+      // Reported in ThermalZone
+      // Report for each Zone exchanging energy with the Air Chiller
+      //"Refrigeration Zone Air Chiller Sensible Cooling Rate",
+      //"Refrigeration Zone Air Chiller Sensible Cooling Energy",
+      //"Refrigeration Zone Air Chiller Heating Rate",
+      //"Refrigeration Zone Air Chiller Heating Energy",
+      //"Refrigeration Zone Air Chiller Latent Cooling Rate",
+      //"Refrigeration Zone Air Chiller Latent Cooling Energy",
+      //"Refrigeration Zone Air Chiller Total Cooling Rate",
+      //"Refrigeration Zone Air Chiller Total Cooling Energy",
+      //"Refrigeration Zone Air Chiller Water Removed Mass Flow Rate"
+
+    };
     return result;
   }
 
@@ -132,11 +180,11 @@ namespace detail {
     return 0; // this object has no inlet or outlet node
   }
 
-  boost::optional<ThermalZone> RefrigerationAirChiller_Impl::thermalZone()
+  boost::optional<ThermalZone> RefrigerationAirChiller_Impl::thermalZone() const
   {
     Model m = this->model();
     ModelObject thisObject = this->getObject<ModelObject>();
-    std::vector<ThermalZone> thermalZones = m.getModelObjects<ThermalZone>();
+    std::vector<ThermalZone> thermalZones = m.getConcreteModelObjects<ThermalZone>();
     for( const auto & thermalZone : thermalZones )
     {
       std::vector<ModelObject> equipment = thermalZone.equipment();
@@ -384,7 +432,7 @@ namespace detail {
     return result;
   }
 
-  void RefrigerationAirChiller_Impl::setRatedUnitLoadFactor(boost::optional<double> ratedUnitLoadFactor) {
+  bool RefrigerationAirChiller_Impl::setRatedUnitLoadFactor(boost::optional<double> ratedUnitLoadFactor) {
     bool result(false);
     if (ratedUnitLoadFactor) {
       result = setDouble(OS_Refrigeration_AirChillerFields::RatedUnitLoadFactor, ratedUnitLoadFactor.get());
@@ -394,6 +442,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationAirChiller_Impl::resetRatedUnitLoadFactor() {
@@ -401,7 +450,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setRatedCapacity(boost::optional<double> ratedCapacity) {
+  bool RefrigerationAirChiller_Impl::setRatedCapacity(boost::optional<double> ratedCapacity) {
     bool result(false);
     if (ratedCapacity) {
       result = setDouble(OS_Refrigeration_AirChillerFields::RatedCapacity, ratedCapacity.get());
@@ -411,6 +460,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationAirChiller_Impl::resetRatedCapacity() {
@@ -455,9 +505,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor) {
+  bool RefrigerationAirChiller_Impl::setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor) {
     bool result = setDouble(OS_Refrigeration_AirChillerFields::CoilMaterialCorrectionFactor, coilMaterialCorrectionFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationAirChiller_Impl::resetCoilMaterialCorrectionFactor() {
@@ -465,9 +516,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor) {
+  bool RefrigerationAirChiller_Impl::setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor) {
     bool result = setDouble(OS_Refrigeration_AirChillerFields::RefrigerantCorrectionFactor, refrigerantCorrectionFactor);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationAirChiller_Impl::resetRefrigerantCorrectionFactor() {
@@ -512,9 +564,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setRatedTotalHeatingPower(double ratedTotalHeatingPower) {
+  bool RefrigerationAirChiller_Impl::setRatedTotalHeatingPower(double ratedTotalHeatingPower) {
     bool result = setDouble(OS_Refrigeration_AirChillerFields::RatedTotalHeatingPower, ratedTotalHeatingPower);
     OS_ASSERT(result);
+    return result;
   }
 
   bool RefrigerationAirChiller_Impl::setHeatingPowerSchedule(Schedule& schedule) {
@@ -550,9 +603,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setRatedAirFlow(double ratedAirFlow) {
+  bool RefrigerationAirChiller_Impl::setRatedAirFlow(double ratedAirFlow) {
     bool result = setDouble(OS_Refrigeration_AirChillerFields::RatedAirFlow, ratedAirFlow);
     OS_ASSERT(result);
+    return result;
   }
 
   bool RefrigerationAirChiller_Impl::setMinimumFanAirFlowRatio(double minimumFanAirFlowRatio) {
@@ -650,9 +704,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationAirChiller_Impl::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
+  bool RefrigerationAirChiller_Impl::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
     bool result = setDouble(OS_Refrigeration_AirChillerFields::AverageRefrigerantChargeInventory, averageRefrigerantChargeInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationAirChiller_Impl::resetAverageRefrigerantChargeInventory() {
@@ -908,16 +963,16 @@ bool RefrigerationAirChiller::setCapacityRatingType(std::string capacityRatingTy
   return getImpl<detail::RefrigerationAirChiller_Impl>()->setCapacityRatingType(capacityRatingType);
 }
 
-void RefrigerationAirChiller::setRatedUnitLoadFactor(double ratedUnitLoadFactor) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedUnitLoadFactor(ratedUnitLoadFactor);
+bool RefrigerationAirChiller::setRatedUnitLoadFactor(double ratedUnitLoadFactor) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedUnitLoadFactor(ratedUnitLoadFactor);
 }
 
 void RefrigerationAirChiller::resetRatedUnitLoadFactor() {
   getImpl<detail::RefrigerationAirChiller_Impl>()->resetRatedUnitLoadFactor();
 }
 
-void RefrigerationAirChiller::setRatedCapacity(double ratedCapacity) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedCapacity(ratedCapacity);
+bool RefrigerationAirChiller::setRatedCapacity(double ratedCapacity) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedCapacity(ratedCapacity);
 }
 
 void RefrigerationAirChiller::resetRatedCapacity() {
@@ -948,16 +1003,16 @@ void RefrigerationAirChiller::resetMaximumTemperatureDifferenceBetweenInletAiran
   getImpl<detail::RefrigerationAirChiller_Impl>()->resetMaximumTemperatureDifferenceBetweenInletAirandEvaporatingTemperature();
 }
 
-void RefrigerationAirChiller::setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setCoilMaterialCorrectionFactor(coilMaterialCorrectionFactor);
+bool RefrigerationAirChiller::setCoilMaterialCorrectionFactor(double coilMaterialCorrectionFactor) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setCoilMaterialCorrectionFactor(coilMaterialCorrectionFactor);
 }
 
 void RefrigerationAirChiller::resetCoilMaterialCorrectionFactor() {
   getImpl<detail::RefrigerationAirChiller_Impl>()->resetCoilMaterialCorrectionFactor();
 }
 
-void RefrigerationAirChiller::setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setRefrigerantCorrectionFactor(refrigerantCorrectionFactor);
+bool RefrigerationAirChiller::setRefrigerantCorrectionFactor(double refrigerantCorrectionFactor) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setRefrigerantCorrectionFactor(refrigerantCorrectionFactor);
 }
 
 void RefrigerationAirChiller::resetRefrigerantCorrectionFactor() {
@@ -988,8 +1043,8 @@ void RefrigerationAirChiller::resetSHR60CorrectionFactor() {
   getImpl<detail::RefrigerationAirChiller_Impl>()->resetSHR60CorrectionFactor();
 }
 
-void RefrigerationAirChiller::setRatedTotalHeatingPower(double ratedTotalHeatingPower) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedTotalHeatingPower(ratedTotalHeatingPower);
+bool RefrigerationAirChiller::setRatedTotalHeatingPower(double ratedTotalHeatingPower) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedTotalHeatingPower(ratedTotalHeatingPower);
 }
 
 bool RefrigerationAirChiller::setHeatingPowerSchedule(Schedule& schedule) {
@@ -1016,8 +1071,8 @@ void RefrigerationAirChiller::resetRatedFanPower() {
   getImpl<detail::RefrigerationAirChiller_Impl>()->resetRatedFanPower();
 }
 
-void RefrigerationAirChiller::setRatedAirFlow(double ratedAirFlow) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedAirFlow(ratedAirFlow);
+bool RefrigerationAirChiller::setRatedAirFlow(double ratedAirFlow) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setRatedAirFlow(ratedAirFlow);
 }
 
 bool RefrigerationAirChiller::setMinimumFanAirFlowRatio(double minimumFanAirFlowRatio) {
@@ -1080,8 +1135,8 @@ void RefrigerationAirChiller::resetTemperatureTerminationDefrostFractiontoIce() 
 //   getImpl<detail::RefrigerationAirChiller_Impl>()->resetVerticalLocation();
 // }
 
-void RefrigerationAirChiller::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
-  getImpl<detail::RefrigerationAirChiller_Impl>()->setAverageRefrigerantChargeInventory(averageRefrigerantChargeInventory);
+bool RefrigerationAirChiller::setAverageRefrigerantChargeInventory(double averageRefrigerantChargeInventory) {
+  return getImpl<detail::RefrigerationAirChiller_Impl>()->setAverageRefrigerantChargeInventory(averageRefrigerantChargeInventory);
 }
 
 void RefrigerationAirChiller::resetAverageRefrigerantChargeInventory() {
@@ -1090,10 +1145,9 @@ void RefrigerationAirChiller::resetAverageRefrigerantChargeInventory() {
 
 /// @cond
 RefrigerationAirChiller::RefrigerationAirChiller(std::shared_ptr<detail::RefrigerationAirChiller_Impl> impl)
-  : ZoneHVACComponent(impl)
+  : ZoneHVACComponent(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

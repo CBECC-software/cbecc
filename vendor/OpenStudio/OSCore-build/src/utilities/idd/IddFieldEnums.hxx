@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_IDD_IDDFIELDENUMS_HXX
 #define UTILITIES_IDD_IDDFIELDENUMS_HXX
@@ -42,14 +52,14 @@
 #include <utilities/idd/ZoneCapacitanceMultiplier_ResearchSpecial_FieldEnums.hxx>
 #include <utilities/idd/Timestep_FieldEnums.hxx>
 #include <utilities/idd/ConvergenceLimits_FieldEnums.hxx>
-#include <utilities/idd/ProgramControl_FieldEnums.hxx>
+#include <utilities/idd/HVACSystemRootFindingAlgorithm_FieldEnums.hxx>
 #include <utilities/idd/Compliance_Building_FieldEnums.hxx>
 #include <utilities/idd/Site_Location_FieldEnums.hxx>
+#include <utilities/idd/Site_VariableLocation_FieldEnums.hxx>
 #include <utilities/idd/SizingPeriod_DesignDay_FieldEnums.hxx>
 #include <utilities/idd/SizingPeriod_WeatherFileDays_FieldEnums.hxx>
 #include <utilities/idd/SizingPeriod_WeatherFileConditionType_FieldEnums.hxx>
 #include <utilities/idd/RunPeriod_FieldEnums.hxx>
-#include <utilities/idd/RunPeriod_CustomRange_FieldEnums.hxx>
 #include <utilities/idd/RunPeriodControl_SpecialDays_FieldEnums.hxx>
 #include <utilities/idd/RunPeriodControl_DaylightSavingTime_FieldEnums.hxx>
 #include <utilities/idd/WeatherProperty_SkyTemperature_FieldEnums.hxx>
@@ -80,6 +90,7 @@
 #include <utilities/idd/Schedule_Year_FieldEnums.hxx>
 #include <utilities/idd/Schedule_Compact_FieldEnums.hxx>
 #include <utilities/idd/Schedule_Constant_FieldEnums.hxx>
+#include <utilities/idd/Schedule_File_Shading_FieldEnums.hxx>
 #include <utilities/idd/Schedule_File_FieldEnums.hxx>
 #include <utilities/idd/Material_FieldEnums.hxx>
 #include <utilities/idd/Material_NoMass_FieldEnums.hxx>
@@ -107,6 +118,7 @@
 #include <utilities/idd/WindowMaterial_Gap_EquivalentLayer_FieldEnums.hxx>
 #include <utilities/idd/MaterialProperty_MoisturePenetrationDepth_Settings_FieldEnums.hxx>
 #include <utilities/idd/MaterialProperty_PhaseChange_FieldEnums.hxx>
+#include <utilities/idd/MaterialProperty_PhaseChangeHysteresis_FieldEnums.hxx>
 #include <utilities/idd/MaterialProperty_VariableThermalConductivity_FieldEnums.hxx>
 #include <utilities/idd/MaterialProperty_HeatAndMoistureTransfer_Settings_FieldEnums.hxx>
 #include <utilities/idd/MaterialProperty_HeatAndMoistureTransfer_SorptionIsotherm_FieldEnums.hxx>
@@ -120,6 +132,7 @@
 #include <utilities/idd/Construction_FfactorGroundFloor_FieldEnums.hxx>
 #include <utilities/idd/Construction_InternalSource_FieldEnums.hxx>
 #include <utilities/idd/WindowThermalModel_Params_FieldEnums.hxx>
+#include <utilities/idd/WindowsCalculationEngine_FieldEnums.hxx>
 #include <utilities/idd/Construction_ComplexFenestrationState_FieldEnums.hxx>
 #include <utilities/idd/Construction_WindowEquivalentLayer_FieldEnums.hxx>
 #include <utilities/idd/Construction_WindowDataFile_FieldEnums.hxx>
@@ -149,7 +162,7 @@
 #include <utilities/idd/Window_Interzone_FieldEnums.hxx>
 #include <utilities/idd/Door_Interzone_FieldEnums.hxx>
 #include <utilities/idd/GlazedDoor_Interzone_FieldEnums.hxx>
-#include <utilities/idd/WindowProperty_ShadingControl_FieldEnums.hxx>
+#include <utilities/idd/WindowShadingControl_FieldEnums.hxx>
 #include <utilities/idd/WindowProperty_FrameAndDivider_FieldEnums.hxx>
 #include <utilities/idd/WindowProperty_AirflowControl_FieldEnums.hxx>
 #include <utilities/idd/WindowProperty_StormWindow_FieldEnums.hxx>
@@ -168,9 +181,14 @@
 #include <utilities/idd/SurfaceProperty_HeatTransferAlgorithm_MultipleSurface_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_HeatTransferAlgorithm_SurfaceList_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_HeatTransferAlgorithm_Construction_FieldEnums.hxx>
+#include <utilities/idd/SurfaceProperty_HeatBalanceSourceTerm_FieldEnums.hxx>
 #include <utilities/idd/SurfaceControl_MovableInsulation_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_OtherSideCoefficients_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_OtherSideConditionsModel_FieldEnums.hxx>
+#include <utilities/idd/SurfaceProperty_Underwater_FieldEnums.hxx>
+#include <utilities/idd/Foundation_Kiva_FieldEnums.hxx>
+#include <utilities/idd/Foundation_Kiva_Settings_FieldEnums.hxx>
+#include <utilities/idd/SurfaceProperty_ExposedFoundationPerimeter_FieldEnums.hxx>
 #include <utilities/idd/SurfaceConvectionAlgorithm_Inside_AdaptiveModelSelections_FieldEnums.hxx>
 #include <utilities/idd/SurfaceConvectionAlgorithm_Outside_AdaptiveModelSelections_FieldEnums.hxx>
 #include <utilities/idd/SurfaceConvectionAlgorithm_Inside_UserCurve_FieldEnums.hxx>
@@ -180,6 +198,9 @@
 #include <utilities/idd/SurfaceProperties_VaporCoefficients_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_ExteriorNaturalVentedCavity_FieldEnums.hxx>
 #include <utilities/idd/SurfaceProperty_SolarIncidentInside_FieldEnums.hxx>
+#include <utilities/idd/SurfaceProperty_LocalEnvironment_FieldEnums.hxx>
+#include <utilities/idd/ZoneProperty_LocalEnvironment_FieldEnums.hxx>
+#include <utilities/idd/SurfaceProperty_SurroundingSurfaces_FieldEnums.hxx>
 #include <utilities/idd/ComplexFenestrationProperty_SolarAbsorbedLayers_FieldEnums.hxx>
 #include <utilities/idd/ZoneProperty_UserViewFactors_bySurfaceName_FieldEnums.hxx>
 #include <utilities/idd/GroundHeatTransfer_Control_FieldEnums.hxx>
@@ -239,8 +260,7 @@
 #include <utilities/idd/SurfaceContaminantSourceAndSink_Generic_DepositionVelocitySink_FieldEnums.hxx>
 #include <utilities/idd/ZoneContaminantSourceAndSink_Generic_DepositionRateSink_FieldEnums.hxx>
 #include <utilities/idd/Daylighting_Controls_FieldEnums.hxx>
-#include <utilities/idd/Daylighting_DELight_Controls_FieldEnums.hxx>
-#include <utilities/idd/Daylighting_DELight_ReferencePoint_FieldEnums.hxx>
+#include <utilities/idd/Daylighting_ReferencePoint_FieldEnums.hxx>
 #include <utilities/idd/Daylighting_DELight_ComplexFenestration_FieldEnums.hxx>
 #include <utilities/idd/DaylightingDevice_Tubular_FieldEnums.hxx>
 #include <utilities/idd/DaylightingDevice_Shelf_FieldEnums.hxx>
@@ -273,6 +293,7 @@
 #include <utilities/idd/AirflowNetwork_MultiZone_ExternalNode_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_MultiZone_WindPressureCoefficientArray_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_MultiZone_WindPressureCoefficientValues_FieldEnums.hxx>
+#include <utilities/idd/AirflowNetwork_ZoneControl_PressureController_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Node_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Component_Leak_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Component_LeakageRatio_FieldEnums.hxx>
@@ -282,8 +303,12 @@
 #include <utilities/idd/AirflowNetwork_Distribution_Component_HeatExchanger_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Component_TerminalUnit_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Component_ConstantPressureDrop_FieldEnums.hxx>
+#include <utilities/idd/AirflowNetwork_Distribution_Component_OutdoorAirFlow_FieldEnums.hxx>
+#include <utilities/idd/AirflowNetwork_Distribution_Component_ReliefAirFlow_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_Distribution_Linkage_FieldEnums.hxx>
+#include <utilities/idd/AirflowNetwork_Distribution_DuctViewFactors_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_OccupantVentilationControl_FieldEnums.hxx>
+#include <utilities/idd/AirflowNetwork_IntraZone_Node_FieldEnums.hxx>
 #include <utilities/idd/AirflowNetwork_IntraZone_Linkage_FieldEnums.hxx>
 #include <utilities/idd/Exterior_Lights_FieldEnums.hxx>
 #include <utilities/idd/Exterior_FuelEquipment_FieldEnums.hxx>
@@ -325,6 +350,7 @@
 #include <utilities/idd/Sizing_Parameters_FieldEnums.hxx>
 #include <utilities/idd/Sizing_Zone_FieldEnums.hxx>
 #include <utilities/idd/DesignSpecification_ZoneHVAC_Sizing_FieldEnums.hxx>
+#include <utilities/idd/DesignSpecification_AirTerminal_Sizing_FieldEnums.hxx>
 #include <utilities/idd/Sizing_System_FieldEnums.hxx>
 #include <utilities/idd/Sizing_Plant_FieldEnums.hxx>
 #include <utilities/idd/OutputControl_Sizing_Style_FieldEnums.hxx>
@@ -355,12 +381,14 @@
 #include <utilities/idd/ZoneHVAC_UnitVentilator_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_UnitHeater_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_EvaporativeCoolerUnit_FieldEnums.hxx>
+#include <utilities/idd/ZoneHVAC_HybridUnitaryHVAC_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_OutdoorAirUnit_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_OutdoorAirUnit_EquipmentList_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_TerminalUnit_VariableRefrigerantFlow_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_Baseboard_RadiantConvective_Water_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_Baseboard_RadiantConvective_Steam_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_Baseboard_RadiantConvective_Electric_FieldEnums.hxx>
+#include <utilities/idd/ZoneHVAC_CoolingPanel_RadiantConvective_Water_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_Baseboard_Convective_Water_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_Baseboard_Convective_Electric_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_LowTemperatureRadiant_VariableFlow_FieldEnums.hxx>
@@ -372,23 +400,25 @@
 #include <utilities/idd/ZoneHVAC_VentilatedSlab_SlabGroup_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_Uncontrolled_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_ConstantVolume_Reheat_FieldEnums.hxx>
+#include <utilities/idd/AirTerminal_SingleDuct_ConstantVolume_NoReheat_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_VAV_NoReheat_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_VAV_Reheat_FieldEnums.hxx>
-#include <utilities/idd/AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat_FieldEnums.hxx>
+#include <utilities/idd/AirTerminal_SingleDuct_VAV_Reheat_VariableSpeedFan_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat_FieldEnums.hxx>
+#include <utilities/idd/AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_SeriesPIU_Reheat_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_ParallelPIU_Reheat_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_SingleDuct_ConstantVolume_CooledBeam_FieldEnums.hxx>
-#include <utilities/idd/AirTerminal_SingleDuct_InletSideMixer_FieldEnums.hxx>
-#include <utilities/idd/AirTerminal_SingleDuct_SupplySideMixer_FieldEnums.hxx>
+#include <utilities/idd/AirTerminal_SingleDuct_Mixer_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_DualDuct_ConstantVolume_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_DualDuct_VAV_FieldEnums.hxx>
 #include <utilities/idd/AirTerminal_DualDuct_VAV_OutdoorAir_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_AirDistributionUnit_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_EquipmentList_FieldEnums.hxx>
 #include <utilities/idd/ZoneHVAC_EquipmentConnections_FieldEnums.hxx>
+#include <utilities/idd/Fan_SystemModel_FieldEnums.hxx>
 #include <utilities/idd/Fan_ConstantVolume_FieldEnums.hxx>
 #include <utilities/idd/Fan_VariableVolume_FieldEnums.hxx>
 #include <utilities/idd/Fan_OnOff_FieldEnums.hxx>
@@ -411,7 +441,7 @@
 #include <utilities/idd/Coil_Heating_Steam_FieldEnums.hxx>
 #include <utilities/idd/Coil_Heating_Electric_FieldEnums.hxx>
 #include <utilities/idd/Coil_Heating_Electric_MultiStage_FieldEnums.hxx>
-#include <utilities/idd/Coil_Heating_Gas_FieldEnums.hxx>
+#include <utilities/idd/Coil_Heating_Fuel_FieldEnums.hxx>
 #include <utilities/idd/Coil_Heating_Gas_MultiStage_FieldEnums.hxx>
 #include <utilities/idd/Coil_Heating_Desuperheater_FieldEnums.hxx>
 #include <utilities/idd/Coil_Heating_DX_SingleSpeed_FieldEnums.hxx>
@@ -431,6 +461,7 @@
 #include <utilities/idd/CoilSystem_Heating_DX_FieldEnums.hxx>
 #include <utilities/idd/CoilSystem_Cooling_Water_HeatExchangerAssisted_FieldEnums.hxx>
 #include <utilities/idd/CoilSystem_Cooling_DX_HeatExchangerAssisted_FieldEnums.hxx>
+#include <utilities/idd/CoilSystem_IntegratedHeatPump_AirSource_FieldEnums.hxx>
 #include <utilities/idd/Coil_Cooling_DX_SingleSpeed_ThermalStorage_FieldEnums.hxx>
 #include <utilities/idd/EvaporativeCooler_Direct_CelDekPad_FieldEnums.hxx>
 #include <utilities/idd/EvaporativeCooler_Indirect_CelDekPad_FieldEnums.hxx>
@@ -457,6 +488,7 @@
 #include <utilities/idd/AirLoopHVAC_UnitaryHeatPump_AirToAir_MultiSpeed_FieldEnums.hxx>
 #include <utilities/idd/AirConditioner_VariableRefrigerantFlow_FieldEnums.hxx>
 #include <utilities/idd/AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl_FieldEnums.hxx>
+#include <utilities/idd/AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl_HR_FieldEnums.hxx>
 #include <utilities/idd/ZoneTerminalUnitList_FieldEnums.hxx>
 #include <utilities/idd/Controller_WaterCoil_FieldEnums.hxx>
 #include <utilities/idd/Controller_OutdoorAir_FieldEnums.hxx>
@@ -499,10 +531,10 @@
 #include <utilities/idd/SolarCollectorPerformance_FlatPlate_FieldEnums.hxx>
 #include <utilities/idd/SolarCollector_FlatPlate_Water_FieldEnums.hxx>
 #include <utilities/idd/SolarCollector_FlatPlate_PhotovoltaicThermal_FieldEnums.hxx>
+#include <utilities/idd/SolarCollectorPerformance_PhotovoltaicThermal_Simple_FieldEnums.hxx>
 #include <utilities/idd/SolarCollector_IntegralCollectorStorage_FieldEnums.hxx>
 #include <utilities/idd/SolarCollectorPerformance_IntegralCollectorStorage_FieldEnums.hxx>
 #include <utilities/idd/SolarCollector_UnglazedTranspired_FieldEnums.hxx>
-#include <utilities/idd/SolarCollectorPerformance_PhotovoltaicThermal_Simple_FieldEnums.hxx>
 #include <utilities/idd/SolarCollector_UnglazedTranspired_Multisystem_FieldEnums.hxx>
 #include <utilities/idd/Boiler_HotWater_FieldEnums.hxx>
 #include <utilities/idd/Boiler_Steam_FieldEnums.hxx>
@@ -535,7 +567,11 @@
 #include <utilities/idd/EvaporativeFluidCooler_TwoSpeed_FieldEnums.hxx>
 #include <utilities/idd/FluidCooler_SingleSpeed_FieldEnums.hxx>
 #include <utilities/idd/FluidCooler_TwoSpeed_FieldEnums.hxx>
-#include <utilities/idd/GroundHeatExchanger_Vertical_FieldEnums.hxx>
+#include <utilities/idd/GroundHeatExchanger_System_FieldEnums.hxx>
+#include <utilities/idd/GroundHeatExchanger_Vertical_Properties_FieldEnums.hxx>
+#include <utilities/idd/GroundHeatExchanger_Vertical_Array_FieldEnums.hxx>
+#include <utilities/idd/GroundHeatExchanger_Vertical_Single_FieldEnums.hxx>
+#include <utilities/idd/GroundHeatExchanger_ResponseFactors_FieldEnums.hxx>
 #include <utilities/idd/GroundHeatExchanger_Pond_FieldEnums.hxx>
 #include <utilities/idd/GroundHeatExchanger_Surface_FieldEnums.hxx>
 #include <utilities/idd/GroundHeatExchanger_HorizontalTrench_FieldEnums.hxx>
@@ -671,6 +707,8 @@
 #include <utilities/idd/PhotovoltaicPerformance_Simple_FieldEnums.hxx>
 #include <utilities/idd/PhotovoltaicPerformance_EquivalentOneDiode_FieldEnums.hxx>
 #include <utilities/idd/PhotovoltaicPerformance_Sandia_FieldEnums.hxx>
+#include <utilities/idd/Generator_PVWatts_FieldEnums.hxx>
+#include <utilities/idd/ElectricLoadCenter_Inverter_PVWatts_FieldEnums.hxx>
 #include <utilities/idd/Generator_FuelCell_FieldEnums.hxx>
 #include <utilities/idd/Generator_FuelCell_PowerModule_FieldEnums.hxx>
 #include <utilities/idd/Generator_FuelCell_AirSupply_FieldEnums.hxx>
@@ -704,11 +742,19 @@
 #include <utilities/idd/FaultModel_PressureSensorOffset_OutdoorAir_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_TemperatureSensorOffset_ReturnAir_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_EnthalpySensorOffset_ReturnAir_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_TemperatureSensorOffset_ChillerSupplyWater_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_TemperatureSensorOffset_CoilSupplyAir_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_TemperatureSensorOffset_CondenserSupplyWater_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_ThermostatOffset_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_HumidistatOffset_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_Fouling_AirFilter_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_Fouling_Boiler_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_Fouling_EvaporativeCooler_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_Fouling_Chiller_FieldEnums.hxx>
+#include <utilities/idd/FaultModel_Fouling_CoolingTower_FieldEnums.hxx>
 #include <utilities/idd/FaultModel_Fouling_Coil_FieldEnums.hxx>
 #include <utilities/idd/Matrix_TwoDimension_FieldEnums.hxx>
+#include <utilities/idd/HybridModel_Zone_FieldEnums.hxx>
 #include <utilities/idd/Curve_Linear_FieldEnums.hxx>
 #include <utilities/idd/Curve_QuadLinear_FieldEnums.hxx>
 #include <utilities/idd/Curve_Quadratic_FieldEnums.hxx>
@@ -825,7 +871,9 @@
 #include <utilities/idd/OS_UtilityCost_Variable_FieldEnums.hxx>
 #include <utilities/idd/OS_WeatherFile_FieldEnums.hxx>
 #include <utilities/idd/OS_WeatherProperty_SkyTemperature_FieldEnums.hxx>
+#include <utilities/idd/OS_AdditionalProperties_FieldEnums.hxx>
 #include <utilities/idd/OS_BuildingStory_FieldEnums.hxx>
+#include <utilities/idd/OS_BuildingUnit_FieldEnums.hxx>
 #include <utilities/idd/OS_DefaultConstructionSet_FieldEnums.hxx>
 #include <utilities/idd/OS_DefaultScheduleSet_FieldEnums.hxx>
 #include <utilities/idd/OS_DefaultSubSurfaceConstructions_FieldEnums.hxx>
@@ -850,6 +898,8 @@
 #include <utilities/idd/OS_WindowMaterial_Shade_FieldEnums.hxx>
 #include <utilities/idd/OS_WindowMaterial_SimpleGlazingSystem_FieldEnums.hxx>
 #include <utilities/idd/OS_StandardsInformation_Material_FieldEnums.hxx>
+#include <utilities/idd/OS_MaterialProperty_GlazingSpectralData_FieldEnums.hxx>
+#include <utilities/idd/OS_MaterialProperty_MoisturePenetrationDepth_Settings_FieldEnums.hxx>
 #include <utilities/idd/OS_Construction_FieldEnums.hxx>
 #include <utilities/idd/OS_Construction_CfactorUndergroundWall_FieldEnums.hxx>
 #include <utilities/idd/OS_Construction_FfactorGroundFloor_FieldEnums.hxx>
@@ -861,11 +911,14 @@
 #include <utilities/idd/OS_Lights_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_Luminaire_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_ElectricEquipment_Definition_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricEquipment_ITE_AirCooled_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_GasEquipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_HotWaterEquipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_SteamEquipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_OtherEquipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_Exterior_Lights_Definition_FieldEnums.hxx>
+#include <utilities/idd/OS_Exterior_FuelEquipment_Definition_FieldEnums.hxx>
+#include <utilities/idd/OS_Exterior_WaterEquipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_Schedule_Compact_FieldEnums.hxx>
 #include <utilities/idd/OS_Schedule_Day_FieldEnums.hxx>
 #include <utilities/idd/OS_Schedule_Week_FieldEnums.hxx>
@@ -876,6 +929,8 @@
 #include <utilities/idd/OS_Schedule_FixedInterval_FieldEnums.hxx>
 #include <utilities/idd/OS_Schedule_VariableInterval_FieldEnums.hxx>
 #include <utilities/idd/OS_ScheduleTypeLimits_FieldEnums.hxx>
+#include <utilities/idd/OS_External_File_FieldEnums.hxx>
+#include <utilities/idd/OS_Schedule_File_FieldEnums.hxx>
 #include <utilities/idd/OS_Building_FieldEnums.hxx>
 #include <utilities/idd/OS_DaylightingDevice_Shelf_FieldEnums.hxx>
 #include <utilities/idd/OS_Facility_FieldEnums.hxx>
@@ -890,13 +945,17 @@
 #include <utilities/idd/OS_WindowProperty_FrameAndDivider_FieldEnums.hxx>
 #include <utilities/idd/OS_SurfaceProperty_ConvectionCoefficients_FieldEnums.hxx>
 #include <utilities/idd/OS_SurfaceProperty_ConvectionCoefficients_MultipleSurface_FieldEnums.hxx>
+#include <utilities/idd/OS_SurfaceProperty_ExposedFoundationPerimeter_FieldEnums.hxx>
 #include <utilities/idd/OS_SurfaceProperty_OtherSideCoefficients_FieldEnums.hxx>
 #include <utilities/idd/OS_SurfaceProperty_OtherSideConditionsModel_FieldEnums.hxx>
+#include <utilities/idd/OS_Foundation_Kiva_FieldEnums.hxx>
+#include <utilities/idd/OS_Foundation_Kiva_Settings_FieldEnums.hxx>
 #include <utilities/idd/OS_InternalMass_FieldEnums.hxx>
 #include <utilities/idd/OS_People_FieldEnums.hxx>
 #include <utilities/idd/OS_Lights_FieldEnums.hxx>
 #include <utilities/idd/OS_Luminaire_FieldEnums.hxx>
 #include <utilities/idd/OS_ElectricEquipment_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricEquipment_ITE_AirCooled_FieldEnums.hxx>
 #include <utilities/idd/OS_GasEquipment_FieldEnums.hxx>
 #include <utilities/idd/OS_HotWaterEquipment_FieldEnums.hxx>
 #include <utilities/idd/OS_SteamEquipment_FieldEnums.hxx>
@@ -904,6 +963,8 @@
 #include <utilities/idd/OS_SpaceInfiltration_DesignFlowRate_FieldEnums.hxx>
 #include <utilities/idd/OS_SpaceInfiltration_EffectiveLeakageArea_FieldEnums.hxx>
 #include <utilities/idd/OS_Exterior_Lights_FieldEnums.hxx>
+#include <utilities/idd/OS_Exterior_FuelEquipment_FieldEnums.hxx>
+#include <utilities/idd/OS_Exterior_WaterEquipment_FieldEnums.hxx>
 #include <utilities/idd/OS_Daylighting_Control_FieldEnums.hxx>
 #include <utilities/idd/OS_Glare_Sensor_FieldEnums.hxx>
 #include <utilities/idd/OS_IlluminanceMap_FieldEnums.hxx>
@@ -937,6 +998,7 @@
 #include <utilities/idd/OS_AirLoopHVAC_UnitaryHeatPump_AirToAir_FieldEnums.hxx>
 #include <utilities/idd/OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass_FieldEnums.hxx>
 #include <utilities/idd/OS_AirLoopHVAC_UnitarySystem_FieldEnums.hxx>
+#include <utilities/idd/OS_UnitarySystemPerformance_Multispeed_FieldEnums.hxx>
 #include <utilities/idd/OS_AirLoopHVAC_ZoneMixer_FieldEnums.hxx>
 #include <utilities/idd/OS_AirLoopHVAC_ZoneSplitter_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat_FieldEnums.hxx>
@@ -946,8 +1008,10 @@
 #include <utilities/idd/OS_AirTerminal_SingleDuct_SeriesPIU_Reheat_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_ParallelPIU_Reheat_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction_FieldEnums.hxx>
+#include <utilities/idd/OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_Uncontrolled_FieldEnums.hxx>
+#include <utilities/idd/OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_VAV_NoReheat_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_SingleDuct_VAV_Reheat_FieldEnums.hxx>
 #include <utilities/idd/OS_AirTerminal_DualDuct_VAV_OutdoorAir_FieldEnums.hxx>
@@ -955,9 +1019,15 @@
 #include <utilities/idd/OS_AirTerminal_DualDuct_VAV_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManagerAssignmentList_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_Scheduled_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_ScheduledOn_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_ScheduledOff_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_NightCycle_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_OptimumStart_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_DifferentialThermostat_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_HighTemperatureTurnOff_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_HighTemperatureTurnOn_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_LowTemperatureTurnOff_FieldEnums.hxx>
+#include <utilities/idd/OS_AvailabilityManager_LowTemperatureTurnOn_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_NightVentilation_FieldEnums.hxx>
 #include <utilities/idd/OS_AvailabilityManager_HybridVentilation_FieldEnums.hxx>
 #include <utilities/idd/OS_Boiler_HotWater_FieldEnums.hxx>
@@ -980,6 +1050,8 @@
 #include <utilities/idd/OS_GroundHeatExchanger_Vertical_FieldEnums.hxx>
 #include <utilities/idd/OS_GroundHeatExchanger_HorizontalTrench_FieldEnums.hxx>
 #include <utilities/idd/OS_Coil_Cooling_CooledBeam_FieldEnums.hxx>
+#include <utilities/idd/OS_Coil_Cooling_FourPipeBeam_FieldEnums.hxx>
+#include <utilities/idd/OS_Coil_Heating_FourPipeBeam_FieldEnums.hxx>
 #include <utilities/idd/OS_Coil_Cooling_DX_SingleSpeed_FieldEnums.hxx>
 #include <utilities/idd/OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode_FieldEnums.hxx>
 #include <utilities/idd/OS_CoilPerformance_DX_Cooling_FieldEnums.hxx>
@@ -1098,6 +1170,8 @@
 #include <utilities/idd/OS_SetpointManager_SingleZone_OneStageCooling_FieldEnums.hxx>
 #include <utilities/idd/OS_SetpointManager_SingleZone_OneStageHeating_FieldEnums.hxx>
 #include <utilities/idd/OS_SetpointManager_SingleZone_Humidity_Maximum_FieldEnums.hxx>
+#include <utilities/idd/OS_SetpointManager_SingleZone_Cooling_FieldEnums.hxx>
+#include <utilities/idd/OS_SetpointManager_SingleZone_Heating_FieldEnums.hxx>
 #include <utilities/idd/OS_Sizing_Plant_FieldEnums.hxx>
 #include <utilities/idd/OS_Sizing_System_FieldEnums.hxx>
 #include <utilities/idd/OS_Sizing_Zone_FieldEnums.hxx>
@@ -1131,7 +1205,10 @@
 #include <utilities/idd/OS_WaterHeater_Mixed_FieldEnums.hxx>
 #include <utilities/idd/OS_WaterHeater_HeatPump_FieldEnums.hxx>
 #include <utilities/idd/OS_Coil_WaterHeating_AirToWaterHeatPump_FieldEnums.hxx>
+#include <utilities/idd/OS_WaterHeater_HeatPump_WrappedCondenser_FieldEnums.hxx>
+#include <utilities/idd/OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped_FieldEnums.hxx>
 #include <utilities/idd/OS_WaterHeater_Stratified_FieldEnums.hxx>
+#include <utilities/idd/OS_WaterHeater_Sizing_FieldEnums.hxx>
 #include <utilities/idd/OS_WaterUse_Equipment_FieldEnums.hxx>
 #include <utilities/idd/OS_WaterUse_Equipment_Definition_FieldEnums.hxx>
 #include <utilities/idd/OS_WaterUse_Connections_FieldEnums.hxx>
@@ -1148,12 +1225,29 @@
 #include <utilities/idd/OS_SolarCollector_IntegralCollectorStorage_FieldEnums.hxx>
 #include <utilities/idd/OS_SolarCollectorPerformance_PhotovoltaicThermal_Simple_FieldEnums.hxx>
 #include <utilities/idd/OS_SolarCollector_FlatPlate_PhotovoltaicThermal_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_MicroTurbine_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_MicroTurbine_HeatRecovery_FieldEnums.hxx>
 #include <utilities/idd/OS_Generator_Photovoltaic_FieldEnums.hxx>
 #include <utilities/idd/OS_PhotovoltaicPerformance_Simple_FieldEnums.hxx>
 #include <utilities/idd/OS_PhotovoltaicPerformance_EquivalentOneDiode_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_PowerModule_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_AirSupply_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_WaterSupply_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_AuxiliaryHeater_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_ElectricalStorage_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_Inverter_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelCell_StackCooler_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_FuelSupply_FieldEnums.hxx>
+#include <utilities/idd/OS_Generator_PVWatts_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricLoadCenter_Inverter_PVWatts_FieldEnums.hxx>
 #include <utilities/idd/OS_ElectricLoadCenter_Inverter_Simple_FieldEnums.hxx>
 #include <utilities/idd/OS_ElectricLoadCenter_Inverter_LookUpTable_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricLoadCenter_Storage_Simple_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricLoadCenter_Transformer_FieldEnums.hxx>
 #include <utilities/idd/OS_ElectricLoadCenter_Distribution_FieldEnums.hxx>
+#include <utilities/idd/OS_ElectricLoadCenter_Storage_Converter_FieldEnums.hxx>
 #include <utilities/idd/OS_ComponentCost_Adjustments_FieldEnums.hxx>
 #include <utilities/idd/OS_LifeCycleCost_FieldEnums.hxx>
 #include <utilities/idd/OS_CurrencyType_FieldEnums.hxx>
@@ -1161,7 +1255,60 @@
 #include <utilities/idd/OS_LifeCycleCost_UsePriceEscalation_FieldEnums.hxx>
 #include <utilities/idd/OS_UtilityBill_FieldEnums.hxx>
 #include <utilities/idd/OS_OutputControl_ReportingTolerances_FieldEnums.hxx>
-#include <utilities/idd/OS_Meter_FieldEnums.hxx>
+#include <utilities/idd/OS_Output_Meter_FieldEnums.hxx>
 #include <utilities/idd/OS_Output_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_Meter_Custom_FieldEnums.hxx>
+#include <utilities/idd/OS_Meter_CustomDecrement_FieldEnums.hxx>
+#include <utilities/idd/OS_Output_EnergyManagementSystem_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_Sensor_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_Actuator_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_ProgramCallingManager_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_Program_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_Subroutine_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_GlobalVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_OutputVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_MeteredOutputVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_TrendVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_InternalVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_CurveOrTableIndexVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_EnergyManagementSystem_ConstructionIndexVariable_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkSimulationControl_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkZone_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkSurface_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkReferenceCrackConditions_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkCrack_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkEffectiveLeakageArea_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkDetailedOpening_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkSimpleOpening_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkHorizontalOpening_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkOutdoorAirflow_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkZoneExhaustFan_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkExternalNode_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkPressureController_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkDistributionNode_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkLeak_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkLeakageRatio_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkDuct_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkFan_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkEquivalentDuct_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkConstantPressureDrop_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkReliefAirFlow_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkDistributionLinkage_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkDuctViewFactors_FieldEnums.hxx>
+#include <utilities/idd/OS_AirflowNetworkOccupantVentilationControl_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_Schedule_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_Actuator_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitImport_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator_FieldEnums.hxx>
+#include <utilities/idd/OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable_FieldEnums.hxx>
+#include <utilities/idd/OS_PlantComponent_UserDefined_FieldEnums.hxx>
 
 #endif // UTILITIES_IDD_IDDFIELDENUMS_HXX

@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_CORE_PATHHELPERS_HPP
 #define UTILITIES_CORE_PATHHELPERS_HPP
@@ -26,15 +36,15 @@
 
 namespace openstudio {
 
-/** Single location for storing the default extension for Model serialization files. (That is, 
- *  the file extension to be used for Idf files following the IddFileType::OpenStudio Idd, or a 
+/** Single location for storing the default extension for Model serialization files. (That is,
+ *  the file extension to be used for Idf files following the IddFileType::OpenStudio Idd, or a
  *  subset thereof.) */
-UTILITIES_API std::string modelFileExtension(); 
+UTILITIES_API std::string modelFileExtension();
 
-/** Single location for storing the default extension for Component serialization files. (That is, 
- *  the file extension to be used for Idf files following the IddFileType::OpenStudio Idd, and 
+/** Single location for storing the default extension for Component serialization files. (That is,
+ *  the file extension to be used for Idf files following the IddFileType::OpenStudio Idd, and
  *  containing a single Component.) */
-UTILITIES_API std::string componentFileExtension(); 
+UTILITIES_API std::string componentFileExtension();
 
 UTILITIES_API std::string tableFileExtension();
 
@@ -44,8 +54,8 @@ UTILITIES_API std::string documentFileExtension();
 UTILITIES_API std::string rulesetFileExtension();
 
 /** Returns completed path if p is a path to a file on this system. Otherwise, returns an empty
- *  path. If base is not empty, completion is done relative to base. If ext is not empty, and p 
- *  has no extension, then p's extension is set to ext. If ext is not empty and p has an 
+ *  path. If base is not empty, completion is done relative to base. If ext is not empty, and p
+ *  has no extension, then p's extension is set to ext. If ext is not empty and p has an
  *  extension, then a warning may be logged if they do not match. */
 UTILITIES_API path completePathToFile(const path& p,
                                       const path& base=path(),
@@ -55,16 +65,16 @@ UTILITIES_API path completePathToFile(const path& p,
 /** Get p's extension as a string with the dot removed. */
 UTILITIES_API std::string getFileExtension(const path& p);
 
-/** Set p's extension to ext. If p has an extension not equal to ext, p's extension can be 
- *  replaced and/or a warning can be issued. Returns an empty path if there is a mismatch and 
+/** Set p's extension to ext. If p has an extension not equal to ext, p's extension can be
+ *  replaced and/or a warning can be issued. Returns an empty path if there is a mismatch and
  *  replaceOnMismatch == false. */
 UTILITIES_API path setFileExtension(const path& p,
                                     const std::string& ext,
                                     bool replaceOnMismatch=false,
                                     bool warnOnMismatch=true);
 
-/** As necessary, makes the parent folder for path p. If recursive == false, only one folder may 
- *  be constructed. If recursive == true, any number of folders may be constructed. Returns false 
+/** As necessary, makes the parent folder for path p. If recursive == false, only one folder may
+ *  be constructed. If recursive == true, any number of folders may be constructed. Returns false
  *  if parent folder does not exist after calling this function. */
 UTILITIES_API bool makeParentFolder(const path& p,const path& base=path(),bool recursive=false);
 
@@ -77,7 +87,15 @@ UTILITIES_API path relocatePath(const path& originalPath,
                                 const path& originalBase,
                                 const path& newBase);
 
-/** Print information about path p available through boost::filesystem. */
+/* Given the path to an OSM file, get the companion folder in which files, measures, etc, are stored
+ * eg if /path/to/model.osm, returns the folder /path/to/model/ */
+UTILITIES_API path getCompanionFolder(const path& osmPath);
+
+/* Given the path to a **directory**, return the name of the last level directory
+ * eg if /path/to/folder, returns 'folder' */
+UTILITIES_API path getLastLevelDirectoryName(const path& directory);
+
+/** Print information about path p available through openstudio::filesystem. */
 UTILITIES_API std::ostream& printPathInformation(std::ostream& os,const path& p);
 
 /** Recursively remove a directory, not subject to MAX_PATH */
@@ -93,12 +111,12 @@ UTILITIES_API bool isEmptyDirectory(const path& dirName);
 /** Returns the drive letter, e.g. if path is "C:\temp" returns "C".*/
 UTILITIES_API boost::optional<std::string> windowsDriveLetter(const path& p);
 
-/** Determines if a path is on a network drive.  
+/** Determines if a path is on a network drive.
   * Returns false if path is not absolute.
   * Currently only implemented for Windows, returns false on other platforms. */
 UTILITIES_API bool isNetworkPath(const path& p);
 
-/** Determines if a path is on a network drive and if that network resources is available.  
+/** Determines if a path is on a network drive and if that network resources is available.
   * Returns false if path is not absolute or if path is not a network path.
   * Currently only implemented for Windows, returns false on other platforms. */
 UTILITIES_API bool isNetworkPathAvailable(const path& p);

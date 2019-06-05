@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "EnergyPlusFixture.hpp"
@@ -31,6 +41,12 @@
 #include "../../model/SiteGroundReflectance_Impl.hpp"
 #include "../../model/SiteGroundTemperatureBuildingSurface.hpp"
 #include "../../model/SiteGroundTemperatureBuildingSurface_Impl.hpp"
+#include "../../model/SiteGroundTemperatureDeep.hpp"
+#include "../../model/SiteGroundTemperatureDeep_Impl.hpp"
+#include "../../model/SiteGroundTemperatureFCfactorMethod.hpp"
+#include "../../model/SiteGroundTemperatureFCfactorMethod_Impl.hpp"
+#include "../../model/SiteGroundTemperatureShallow.hpp"
+#include "../../model/SiteGroundTemperatureShallow_Impl.hpp"
 #include "../../model/SiteWaterMainsTemperature.hpp"
 #include "../../model/SiteWaterMainsTemperature_Impl.hpp"
 #include "../../model/Building.hpp"
@@ -48,8 +64,12 @@
 #include "../../model/CoilCoolingDXSingleSpeed_Impl.hpp"
 #include "../../model/StandardOpaqueMaterial.hpp"
 #include "../../model/Construction.hpp"
+#include "../../model/OutputVariable.hpp"
+#include "../../model/OutputVariable_Impl.hpp"
 #include "../../model/Version.hpp"
 #include "../../model/Version_Impl.hpp"
+#include "../../model/ZoneCapacitanceMultiplierResearchSpecial.hpp"
+#include "../../model/ZoneCapacitanceMultiplierResearchSpecial_Impl.hpp"
 
 #include "../../utilities/core/Optional.hpp"
 #include "../../utilities/core/Checksum.hpp"
@@ -61,6 +81,8 @@
 #include <utilities/idd/Lights_FieldEnums.hxx>
 #include <utilities/idd/OS_Schedule_Compact_FieldEnums.hxx>
 #include <utilities/idd/Schedule_Compact_FieldEnums.hxx>
+#include <utilities/idd/ZoneCapacitanceMultiplier_ResearchSpecial_FieldEnums.hxx>
+#include <utilities/idd/Output_Variable_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
 #include <utilities/idd/IddFactory.hxx>
 
@@ -71,6 +93,8 @@
 #include <resources.hxx>
 
 #include <sstream>
+
+#include <vector>
 
 using namespace openstudio::energyplus;
 using namespace openstudio::model;
@@ -144,7 +168,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateAirLoopHVAC) {
   ASSERT_NE(unsigned(0),workspace.objects().size());
 
   openstudio::path outDir = resourcesPath() / openstudio::toPath("airLoopHVAC.idf");
-  boost::filesystem::ofstream ofs(outDir);
+  openstudio::filesystem::ofstream ofs(outDir);
   workspace.toIdfFile().print(ofs);
   ofs.close();
 }
@@ -225,7 +249,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateCoolingCoil)
   EXPECT_EQ(3u,workspace.getObjectsByType(IddObjectType::Curve_Quadratic).size());
 
   path outDir = resourcesPath() / openstudio::toPath("CoolingCoilDXSingleSpeed.idf");
-  boost::filesystem::ofstream ofs(outDir);
+  openstudio::filesystem::ofstream ofs(outDir);
   workspace.toIdfFile().print(ofs);
   ofs.close();
 
@@ -309,7 +333,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateStandardOpaqueMaterial) 
   mat.setSolarAbsorptance(0.7);
   mat.setVisibleAbsorptance(0.7);
 
-  
+
   ForwardTranslator trans;
   Workspace workspace = trans.translateModelObject(mat);
 
@@ -379,7 +403,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSite) {
   ForwardTranslator trans;
   Workspace workspace = trans.translateModelObject(site);
   ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_Location));
-    
+
   IdfObject siteIdf = workspace.getObjectsByType(IddObjectType::Site_Location)[0];
   EXPECT_EQ(unsigned(5), siteIdf.numFields());
 
@@ -410,7 +434,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteGroundReflectance) {
   ForwardTranslator trans;
   Workspace workspace = trans.translateModelObject(groundreflect);
   ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_GroundReflectance));
-    
+
   IdfObject groundreflectIdf = workspace.getObjectsByType(IddObjectType::Site_GroundReflectance)[0];
   EXPECT_EQ(unsigned(12), groundreflectIdf.numFields());
 
@@ -448,7 +472,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteGroundTemperatureBui
   ForwardTranslator trans;
   Workspace workspace = trans.translateModelObject(groundtemp);
   ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_GroundTemperature_BuildingSurface));
-    
+
   IdfObject groundtempIdf = workspace.getObjectsByType(IddObjectType::Site_GroundTemperature_BuildingSurface)[0];
   EXPECT_EQ(unsigned(12), groundtempIdf.numFields());
 
@@ -466,6 +490,64 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteGroundTemperatureBui
   EXPECT_EQ( 19.633, *(groundtempIdf.getDouble(11)) );
 }
 
+TEST_F(EnergyPlusFixture, ForwardTranslatorTest_TranslateSiteGroundTemperatureDeep) {
+  openstudio::model::Model model;
+  openstudio::model::SiteGroundTemperatureDeep groundtemp = model.getUniqueModelObject<openstudio::model::SiteGroundTemperatureDeep>();
+
+  std::vector<double> monthly_temps = {19.527, 19.502, 19.536, 19.598, 20.002, 21.64, 22.225, 22.375, 21.449, 20.121, 19.802, 19.633};
+  groundtemp.setAllMonthlyTemperatures(monthly_temps);
+
+  ForwardTranslator trans;
+  Workspace workspace = trans.translateModelObject(groundtemp);
+  ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_GroundTemperature_Deep));
+
+  IdfObject groundtempIdf = workspace.getObjectsByType(IddObjectType::Site_GroundTemperature_Deep)[0];
+  EXPECT_EQ(unsigned(12), groundtempIdf.numFields());
+
+  for (int i=0; i < 12; ++i) {
+    ASSERT_NEAR(monthly_temps[i], *groundtempIdf.getDouble(i), 0.001);
+  }
+}
+
+TEST_F(EnergyPlusFixture, ForwardTranslatorTest_TranslateSiteGroundTemperatureFCfactorMethod) {
+  openstudio::model::Model model;
+  openstudio::model::SiteGroundTemperatureFCfactorMethod groundtemp = model.getUniqueModelObject<openstudio::model::SiteGroundTemperatureFCfactorMethod>();
+
+  std::vector<double> monthly_temps = {19.527, 19.502, 19.536, 19.598, 20.002, 21.64, 22.225, 22.375, 21.449, 20.121, 19.802, 19.633};
+  groundtemp.setAllMonthlyTemperatures(monthly_temps);
+
+  ForwardTranslator trans;
+  Workspace workspace = trans.translateModelObject(groundtemp);
+  ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_GroundTemperature_FCfactorMethod));
+
+  IdfObject groundtempIdf = workspace.getObjectsByType(IddObjectType::Site_GroundTemperature_FCfactorMethod)[0];
+  EXPECT_EQ(unsigned(12), groundtempIdf.numFields());
+
+  for (int i=0; i < 12; ++i) {
+    ASSERT_NEAR(monthly_temps[i], *groundtempIdf.getDouble(i), 0.001);
+  }
+}
+
+TEST_F(EnergyPlusFixture, ForwardTranslatorTest_TranslateSiteGroundTemperatureShallow) {
+  openstudio::model::Model model;
+  openstudio::model::SiteGroundTemperatureShallow groundtemp = model.getUniqueModelObject<openstudio::model::SiteGroundTemperatureShallow>();
+
+  std::vector<double> monthly_temps = {19.527, 19.502, 19.536, 19.598, 20.002, 21.64, 22.225, 22.375, 21.449, 20.121, 19.802, 19.633};
+  groundtemp.setAllMonthlyTemperatures(monthly_temps);
+
+  ForwardTranslator trans;
+  Workspace workspace = trans.translateModelObject(groundtemp);
+  ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_GroundTemperature_Shallow));
+
+  IdfObject groundtempIdf = workspace.getObjectsByType(IddObjectType::Site_GroundTemperature_Shallow)[0];
+  EXPECT_EQ(unsigned(12), groundtempIdf.numFields());
+
+  for (int i=0; i < 12; ++i) {
+    ASSERT_NEAR(monthly_temps[i], *groundtempIdf.getDouble(i), 0.001);
+  }
+}
+
+
 TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteWaterMainsTemperature) {
   openstudio::model::Model model;
   openstudio::model::SiteWaterMainsTemperature watertemp = model.getUniqueModelObject<openstudio::model::SiteWaterMainsTemperature>();
@@ -476,7 +558,7 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteWaterMainsTemperatur
   ForwardTranslator trans;
   Workspace workspace = trans.translateModelObject(watertemp);
   ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::Site_WaterMainsTemperature));
-    
+
   IdfObject watertempIdf = workspace.getObjectsByType(IddObjectType::Site_WaterMainsTemperature)[0];
   EXPECT_EQ(unsigned(4), watertempIdf.numFields());
 
@@ -488,16 +570,16 @@ TEST_F(EnergyPlusFixture,ForwardTranslatorTest_TranslateSiteWaterMainsTemperatur
 
 /*
 TEST_F(EnergyPlusFixture,ForwardTranslatorTest_AllObjects) {
-  // ETH@20130319 - Would like to have a test like this so we can inspect common errors and warnings 
-  // (and eliminate false positives). However, right now translateModel throws (and throws and throws), 
+  // ETH@20130319 - Would like to have a test like this so we can inspect common errors and warnings
+  // (and eliminate false positives). However, right now translateModel throws (and throws and throws),
   // because AirLoopHVAC assumes that so many things are hooked up properly and now is not the time to
-  // wrap lots of different pieces of code in try-catches. 
+  // wrap lots of different pieces of code in try-catches.
   //
-  // Perhaps we can make a model and add a template HVAC, screen out object types already there, and 
+  // Perhaps we can make a model and add a template HVAC, screen out object types already there, and
   // then try to add default objects for the rest ... Or maybe this test should be able to run as-is?
-  // In other words, should ForwardTranslator be robust to missing related objects even if the App 
+  // In other words, should ForwardTranslator be robust to missing related objects even if the App
   // and the API try their darndest to keep that from happening? (Wherever related objects are assumed
-  // to exist (airLoopHVAC.sizingSystem() is the first one), we could wrap them in try-catch blocks and 
+  // to exist (airLoopHVAC.sizingSystem() is the first one), we could wrap them in try-catch blocks and
   // log translator errors rather than having the exceptions propagate out of ForwardTranslator.)
   Workspace ws;
   IddObjectVector iddObjects = IddFactory::instance().getObjects(IddFileType(IddFileType::OpenStudio));
@@ -516,7 +598,7 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorTest_MultiThreadedLogMessages) {
   // This thread calls forward translator, this is not a good example of threading
   // just used for testing
   class ForwardTranslatorThread : public QThread {
-  public: 
+  public:
 
     ForwardTranslator translator;
     Model model;
@@ -531,8 +613,8 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorTest_MultiThreadedLogMessages) {
       workspace = translator.translateModel(model);
     }
   };
-    
-  Logger::instance().standardOutLogger().enable();
+
+  // Logger::instance().standardOutLogger().enable();
 
   Model model;
   Space space(model); // not in thermal zone will generate a warning
@@ -584,5 +666,87 @@ TEST_F(EnergyPlusFixture, ForwardTranslatorTest_MultiThreadedLogMessages) {
     EXPECT_EQ(numWarnings, thread2.translator.warnings().size());
     EXPECT_EQ(numWarnings, thread3.translator.warnings().size());
     EXPECT_EQ(numWarnings, thread4.translator.warnings().size());
+  }
+}
+
+TEST_F(EnergyPlusFixture, ForwardTranslatorTest_TranslateZoneCapacitanceMultiplierResearchSpecial) {
+  openstudio::model::Model model;
+  openstudio::model::ZoneCapacitanceMultiplierResearchSpecial zcm = model.getUniqueModelObject<openstudio::model::ZoneCapacitanceMultiplierResearchSpecial>();
+
+  zcm.setTemperatureCapacityMultiplier(2.0);
+  zcm.setHumidityCapacityMultiplier(3.0);
+  zcm.setCarbonDioxideCapacityMultiplier(4.0);
+
+  ForwardTranslator trans;
+  Workspace workspace = trans.translateModelObject(zcm);
+  ASSERT_EQ(1u, workspace.numObjectsOfType(IddObjectType::ZoneCapacitanceMultiplier_ResearchSpecial));
+
+  IdfObject zcmidf = workspace.getObjectsByType(IddObjectType::ZoneCapacitanceMultiplier_ResearchSpecial)[0];
+  EXPECT_FLOAT_EQ(zcmidf.getDouble(ZoneCapacitanceMultiplier_ResearchSpecialFields::TemperatureCapacityMultiplier).get(), 2.0);
+  EXPECT_FLOAT_EQ(zcmidf.getDouble(ZoneCapacitanceMultiplier_ResearchSpecialFields::HumidityCapacityMultiplier).get(), 3.0);
+  EXPECT_FLOAT_EQ(zcmidf.getDouble(ZoneCapacitanceMultiplier_ResearchSpecialFields::CarbonDioxideCapacityMultiplier).get(), 4.0);
+}
+
+
+TEST_F(EnergyPlusFixture, BadVariableName)
+{
+  // this test checks that string values are properly escaped through translation
+
+  Model model;
+
+  OutputVariable goodVar("Good Name", model);
+  EXPECT_EQ("Good Name", goodVar.variableName());
+
+  OutputVariable badVar("Bad, !Name", model);
+  EXPECT_EQ("Bad, !Name", badVar.variableName());
+
+  {
+    std::stringstream ss;
+    ss << model;
+
+    boost::optional<IdfFile> idf = IdfFile::load(ss, IddFileType::OpenStudio);
+    ASSERT_TRUE(idf);
+
+    Model model2;
+    model2.addObjects(idf->objects());
+
+    ASSERT_EQ(2u, model2.getConcreteModelObjects<OutputVariable>().size());
+    for (auto outputVariable : model2.getConcreteModelObjects<OutputVariable>()){
+      std::string s = outputVariable.variableName();
+      EXPECT_TRUE(s == "Good Name" || s == "Bad, !Name") << s;
+    }
+  }
+
+  ForwardTranslator trans;
+  Workspace workspace = trans.translateModel(model);
+
+  ASSERT_EQ(2u, workspace.getObjectsByType(IddObjectType::Output_Variable).size());
+  for (auto object : workspace.getObjectsByType(IddObjectType::Output_Variable)){
+    ASSERT_TRUE(object.getString(Output_VariableFields::VariableName)) << object;
+    std::string s = object.getString(Output_VariableFields::VariableName).get();
+    EXPECT_TRUE(s == "Good Name" || s == "Bad, !Name") << s;
+  }
+
+  std::stringstream ss;
+  ss << workspace;
+
+  boost::optional<IdfFile> idf2 = IdfFile::load(ss, IddFileType::EnergyPlus);
+  ASSERT_TRUE(idf2);
+
+  Workspace workspace2(idf2.get());
+  ASSERT_EQ(2u, workspace2.getObjectsByType(IddObjectType::Output_Variable).size());
+  for (auto object : workspace2.getObjectsByType(IddObjectType::Output_Variable)){
+    ASSERT_TRUE(object.getString(Output_VariableFields::VariableName)) << object;
+    std::string s = object.getString(Output_VariableFields::VariableName).get();
+    EXPECT_TRUE(s == "Good Name" || s == "Bad, !Name") << s;
+  }
+
+  ReverseTranslator rt;
+  boost::optional<Model> model2 = rt.translateWorkspace(workspace2);
+  ASSERT_TRUE(model2);
+  ASSERT_EQ(2u, model2->getConcreteModelObjects<OutputVariable>().size());
+  for (auto outputVariable : model2->getConcreteModelObjects<OutputVariable>()){
+    std::string s = outputVariable.variableName();
+    EXPECT_TRUE(s == "Good Name" || s == "Bad, !Name") << s;
   }
 }

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationGasCoolerAirCooled.hpp"
 #include "RefrigerationGasCoolerAirCooled_Impl.hpp"
@@ -65,9 +75,16 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationGasCoolerAirCooled_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Refrigeration Transcritical System Gas Cooler Heat Transfer Rate",
+      "Refrigeration Transcritical System Gas Cooler Heat Transfer Energy",
+      "Refrigeration Transcritical System Gas Cooler Fan Electric Power",
+      "Refrigeration Transcritical System Gas Cooler Fan Electric Energy",
+      "Refrigeration Transcritical System Gas Cooler Outlet Temperature",
+      "Refrigeration Transcritical System Gas Cooler Outlet Pressure",
+      "Refrigeration Transcritical System Gas Cooler Defrost Recovered Heat Transfer Rate",
+      "Refrigeration Transcritical System Gas Cooler Defrost Recovered Heat Transfer Energy"
+    };
     return result;
   }
 
@@ -265,9 +282,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setTransitionTemperature(double transitionTemperature) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setTransitionTemperature(double transitionTemperature) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::TransitionTemperature, transitionTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetTransitionTemperature() {
@@ -275,9 +293,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setTranscriticalApproachTemperature(double transcriticalApproachTemperature) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setTranscriticalApproachTemperature(double transcriticalApproachTemperature) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::TranscriticalApproachTemperature, transcriticalApproachTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetTranscriticalApproachTemperature() {
@@ -285,9 +304,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setSubcriticalTemperatureDifference(double subcriticalTemperatureDifference) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setSubcriticalTemperatureDifference(double subcriticalTemperatureDifference) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::SubcriticalTemperatureDifference, subcriticalTemperatureDifference);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetSubcriticalTemperatureDifference() {
@@ -295,9 +315,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setMinimumCondensingTemperature(double minimumCondensingTemperature) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setMinimumCondensingTemperature(double minimumCondensingTemperature) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::MinimumCondensingTemperature, minimumCondensingTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetMinimumCondensingTemperature() {
@@ -322,9 +343,10 @@ namespace detail {
   //   OS_ASSERT(result);
   // }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Refrigeration_GasCooler_AirCooledFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetEndUseSubcategory() {
@@ -332,9 +354,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setGasCoolerRefrigerantOperatingChargeInventory(double gasCoolerRefrigerantOperatingChargeInventory) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setGasCoolerRefrigerantOperatingChargeInventory(double gasCoolerRefrigerantOperatingChargeInventory) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::GasCoolerRefrigerantOperatingChargeInventory, gasCoolerRefrigerantOperatingChargeInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetGasCoolerRefrigerantOperatingChargeInventory() {
@@ -342,9 +365,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setGasCoolerReceiverRefrigerantInventory(double gasCoolerReceiverRefrigerantInventory) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setGasCoolerReceiverRefrigerantInventory(double gasCoolerReceiverRefrigerantInventory) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::GasCoolerReceiverRefrigerantInventory, gasCoolerReceiverRefrigerantInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetGasCoolerReceiverRefrigerantInventory() {
@@ -352,9 +376,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationGasCoolerAirCooled_Impl::setGasCoolerOutletPipingRefrigerantInventory(double gasCoolerOutletPipingRefrigerantInventory) {
+  bool RefrigerationGasCoolerAirCooled_Impl::setGasCoolerOutletPipingRefrigerantInventory(double gasCoolerOutletPipingRefrigerantInventory) {
     bool result = setDouble(OS_Refrigeration_GasCooler_AirCooledFields::GasCoolerOutletPipingRefrigerantInventory, gasCoolerOutletPipingRefrigerantInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationGasCoolerAirCooled_Impl::resetGasCoolerOutletPipingRefrigerantInventory() {
@@ -521,32 +546,32 @@ void RefrigerationGasCoolerAirCooled::resetMinimumFanAirFlowRatio() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetMinimumFanAirFlowRatio();
 }
 
-void RefrigerationGasCoolerAirCooled::setTransitionTemperature(double transitionTemperature) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setTransitionTemperature(transitionTemperature);
+bool RefrigerationGasCoolerAirCooled::setTransitionTemperature(double transitionTemperature) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setTransitionTemperature(transitionTemperature);
 }
 
 void RefrigerationGasCoolerAirCooled::resetTransitionTemperature() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetTransitionTemperature();
 }
 
-void RefrigerationGasCoolerAirCooled::setTranscriticalApproachTemperature(double transcriticalApproachTemperature) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setTranscriticalApproachTemperature(transcriticalApproachTemperature);
+bool RefrigerationGasCoolerAirCooled::setTranscriticalApproachTemperature(double transcriticalApproachTemperature) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setTranscriticalApproachTemperature(transcriticalApproachTemperature);
 }
 
 void RefrigerationGasCoolerAirCooled::resetTranscriticalApproachTemperature() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetTranscriticalApproachTemperature();
 }
 
-void RefrigerationGasCoolerAirCooled::setSubcriticalTemperatureDifference(double subcriticalTemperatureDifference) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setSubcriticalTemperatureDifference(subcriticalTemperatureDifference);
+bool RefrigerationGasCoolerAirCooled::setSubcriticalTemperatureDifference(double subcriticalTemperatureDifference) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setSubcriticalTemperatureDifference(subcriticalTemperatureDifference);
 }
 
 void RefrigerationGasCoolerAirCooled::resetSubcriticalTemperatureDifference() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetSubcriticalTemperatureDifference();
 }
 
-void RefrigerationGasCoolerAirCooled::setMinimumCondensingTemperature(double minimumCondensingTemperature) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setMinimumCondensingTemperature(minimumCondensingTemperature);
+bool RefrigerationGasCoolerAirCooled::setMinimumCondensingTemperature(double minimumCondensingTemperature) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setMinimumCondensingTemperature(minimumCondensingTemperature);
 }
 
 void RefrigerationGasCoolerAirCooled::resetMinimumCondensingTemperature() {
@@ -561,32 +586,32 @@ void RefrigerationGasCoolerAirCooled::resetMinimumCondensingTemperature() {
 //   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetAirInletNode();
 // }
 
-void RefrigerationGasCoolerAirCooled::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool RefrigerationGasCoolerAirCooled::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void RefrigerationGasCoolerAirCooled::resetEndUseSubcategory() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetEndUseSubcategory();
 }
 
-void RefrigerationGasCoolerAirCooled::setGasCoolerRefrigerantOperatingChargeInventory(double gasCoolerRefrigerantOperatingChargeInventory) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerRefrigerantOperatingChargeInventory(gasCoolerRefrigerantOperatingChargeInventory);
+bool RefrigerationGasCoolerAirCooled::setGasCoolerRefrigerantOperatingChargeInventory(double gasCoolerRefrigerantOperatingChargeInventory) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerRefrigerantOperatingChargeInventory(gasCoolerRefrigerantOperatingChargeInventory);
 }
 
 void RefrigerationGasCoolerAirCooled::resetGasCoolerRefrigerantOperatingChargeInventory() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetGasCoolerRefrigerantOperatingChargeInventory();
 }
 
-void RefrigerationGasCoolerAirCooled::setGasCoolerReceiverRefrigerantInventory(double gasCoolerReceiverRefrigerantInventory) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerReceiverRefrigerantInventory(gasCoolerReceiverRefrigerantInventory);
+bool RefrigerationGasCoolerAirCooled::setGasCoolerReceiverRefrigerantInventory(double gasCoolerReceiverRefrigerantInventory) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerReceiverRefrigerantInventory(gasCoolerReceiverRefrigerantInventory);
 }
 
 void RefrigerationGasCoolerAirCooled::resetGasCoolerReceiverRefrigerantInventory() {
   getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->resetGasCoolerReceiverRefrigerantInventory();
 }
 
-void RefrigerationGasCoolerAirCooled::setGasCoolerOutletPipingRefrigerantInventory(double gasCoolerOutletPipingRefrigerantInventory) {
-  getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerOutletPipingRefrigerantInventory(gasCoolerOutletPipingRefrigerantInventory);
+bool RefrigerationGasCoolerAirCooled::setGasCoolerOutletPipingRefrigerantInventory(double gasCoolerOutletPipingRefrigerantInventory) {
+  return getImpl<detail::RefrigerationGasCoolerAirCooled_Impl>()->setGasCoolerOutletPipingRefrigerantInventory(gasCoolerOutletPipingRefrigerantInventory);
 }
 
 void RefrigerationGasCoolerAirCooled::resetGasCoolerOutletPipingRefrigerantInventory() {
@@ -595,10 +620,9 @@ void RefrigerationGasCoolerAirCooled::resetGasCoolerOutletPipingRefrigerantInven
 
 /// @cond
 RefrigerationGasCoolerAirCooled::RefrigerationGasCoolerAirCooled(std::shared_ptr<detail::RefrigerationGasCoolerAirCooled_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

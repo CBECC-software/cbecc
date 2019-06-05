@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_IDD_AIRCONDITIONER_VARIABLEREFRIGERANTFLOW_FLUIDTEMPERATURECONTROL_FIELDENUMS_HXX
 #define UTILITIES_IDD_AIRCONDITIONER_VARIABLEREFRIGERANTFLOW_FLUIDTEMPERATURECONTROL_FIELDENUMS_HXX
@@ -41,7 +51,7 @@ class AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields: publ
  public: 
   enum domain 
   {
-HeatPumpName, AvailabilityScheduleName, ZoneTerminalUnitListName, RefrigerantType, RatedEvaporativeCapacity, RatedCompressorPowerPerUnitofRatedEvaporativeCapacity, MinimumOutdoorAirTemperatureinCoolingMode, MaximumOutdoorAirTemperatureinCoolingMode, MinimumOutdoorAirTemperatureinHeatingMode, MaximumOutdoorAirTemperatureinHeatingMode, ReferenceOutdoorUnitSuperheating, ReferenceOutdoorUnitSubcooling, RefrigerantTemperatureControlAlgorithmforIndoorUnit, ReferenceEvaporatingTemperatureforIndoorUnit, ReferenceCondensingTemperatureforIndoorUnit, VariableEvaporatingTemperatureMinimumforIndoorUnit, VariableEvaporatingTemperatureMaximumforIndoorUnit, VariableCondensingTemperatureMinimumforIndoorUnit, VariableCondensingTemperatureMaximumforIndoorUnit, OutdoorUnitFanPowerPerUnitofRatedEvaporativeCapacity, OutdoorUnitFanFlowRatePerUnitofRatedEvaporativeCapacity, OutdoorUnitEvaporatingTemperatureFunctionofSuperheatingCurveName, OutdoorUnitCondensingTemperatureFunctionofSubcoolingCurveName, DiameterofMainPipeConnectingOutdoorUnittoIndoorUnits, LengthofMainPipeConnectingOutdoorUnittoIndoorUnits, EquivalentLengthofMainPipeConnectingOutdoorUnittoIndoorUnits, HeightDifferenceBetweenOutdoorUnitandIndoorUnits, MainPipeInsulationThickness, MainPipeInsulationThermalConductivity, CrankcaseHeaterPowerperCompressor, NumberofCompressors, RatioofCompressorSizetoTotalCompressorCapacity, MaximumOutdoorDryBulbTemperatureforCrankcaseHeater, DefrostStrategy, DefrostControl, DefrostEnergyInputRatioModifierFunctionofTemperatureCurveName, DefrostTimePeriodFraction, ResistiveDefrostHeaterCapacity, MaximumOutdoorDrybulbTemperatureforDefrostOperation, CompressormaximumdeltaPressure, NumberofCompressorLoadingIndexEntries, CompressorSpeedatLoadingIndex1, LoadingIndex1EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex1CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex2, LoadingIndex2EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex2CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex3, LoadingIndex3EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex3CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex4, LoadingIndex4EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex4CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex5, LoadingIndex5EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex5CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex6, LoadingIndex6EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex6CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex7, LoadingIndex7EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex7list, CompressorSpeedatLoadingIndex8, LoadingIndex8EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex8CompressorPowerMultiplierFunctionofTemperatureCurveName, CompressorSpeedatLoadingIndex9, LoadingIndex9EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndex9CompressorPowerMultiplierFunctionofTemperatureCurveName,   };
+HeatPumpName, AvailabilityScheduleName, ZoneTerminalUnitListName, RefrigerantType, RatedEvaporativeCapacity, RatedCompressorPowerPerUnitofRatedEvaporativeCapacity, MinimumOutdoorAirTemperatureinCoolingMode, MaximumOutdoorAirTemperatureinCoolingMode, MinimumOutdoorAirTemperatureinHeatingMode, MaximumOutdoorAirTemperatureinHeatingMode, ReferenceOutdoorUnitSuperheating, ReferenceOutdoorUnitSubcooling, RefrigerantTemperatureControlAlgorithmforIndoorUnit, ReferenceEvaporatingTemperatureforIndoorUnit, ReferenceCondensingTemperatureforIndoorUnit, VariableEvaporatingTemperatureMinimumforIndoorUnit, VariableEvaporatingTemperatureMaximumforIndoorUnit, VariableCondensingTemperatureMinimumforIndoorUnit, VariableCondensingTemperatureMaximumforIndoorUnit, OutdoorUnitFanPowerPerUnitofRatedEvaporativeCapacity, OutdoorUnitFanFlowRatePerUnitofRatedEvaporativeCapacity, OutdoorUnitEvaporatingTemperatureFunctionofSuperheatingCurveName, OutdoorUnitCondensingTemperatureFunctionofSubcoolingCurveName, DiameterofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, LengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, EquivalentLengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, HeightDifferenceBetweenOutdoorUnitandIndoorUnits, MainPipeInsulationThickness, MainPipeInsulationThermalConductivity, CrankcaseHeaterPowerperCompressor, NumberofCompressors, RatioofCompressorSizetoTotalCompressorCapacity, MaximumOutdoorDryBulbTemperatureforCrankcaseHeater, DefrostStrategy, DefrostControl, DefrostEnergyInputRatioModifierFunctionofTemperatureCurveName, DefrostTimePeriodFraction, ResistiveDefrostHeaterCapacity, MaximumOutdoorDrybulbTemperatureforDefrostOperation, CompressormaximumdeltaPressure, NumberofCompressorLoadingIndexEntries,   };
   AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields()
    : EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields>(HeatPumpName) {} 
   AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields(const std::string &t_name) 
@@ -86,9 +96,9 @@ HeatPumpName, AvailabilityScheduleName, ZoneTerminalUnitListName, RefrigerantTyp
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::OutdoorUnitFanFlowRatePerUnitofRatedEvaporativeCapacity, "OutdoorUnitFanFlowRatePerUnitofRatedEvaporativeCapacity", "Outdoor Unit Fan Flow Rate Per Unit of Rated Evaporative Capacity"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::OutdoorUnitEvaporatingTemperatureFunctionofSuperheatingCurveName, "OutdoorUnitEvaporatingTemperatureFunctionofSuperheatingCurveName", "Outdoor Unit Evaporating Temperature Function of Superheating Curve Name"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::OutdoorUnitCondensingTemperatureFunctionofSubcoolingCurveName, "OutdoorUnitCondensingTemperatureFunctionofSubcoolingCurveName", "Outdoor Unit Condensing Temperature Function of Subcooling Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::DiameterofMainPipeConnectingOutdoorUnittoIndoorUnits, "DiameterofMainPipeConnectingOutdoorUnittoIndoorUnits", "Diameter of Main Pipe Connecting Outdoor Unit to Indoor Units"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LengthofMainPipeConnectingOutdoorUnittoIndoorUnits, "LengthofMainPipeConnectingOutdoorUnittoIndoorUnits", "Length of Main Pipe Connecting Outdoor Unit to Indoor Units"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::EquivalentLengthofMainPipeConnectingOutdoorUnittoIndoorUnits, "EquivalentLengthofMainPipeConnectingOutdoorUnittoIndoorUnits", "Equivalent Length of Main Pipe Connecting Outdoor Unit to Indoor Units"},
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::DiameterofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, "DiameterofMainPipeConnectingOutdoorUnittotheFirstBranchJoint", "Diameter of Main Pipe Connecting Outdoor Unit to the First Branch Joint"},
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, "LengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint", "Length of Main Pipe Connecting Outdoor Unit to the First Branch Joint"},
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::EquivalentLengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint, "EquivalentLengthofMainPipeConnectingOutdoorUnittotheFirstBranchJoint", "Equivalent Length of Main Pipe Connecting Outdoor Unit to the First Branch Joint"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::HeightDifferenceBetweenOutdoorUnitandIndoorUnits, "HeightDifferenceBetweenOutdoorUnitandIndoorUnits", "Height Difference Between Outdoor Unit and Indoor Units"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::MainPipeInsulationThickness, "MainPipeInsulationThickness", "Main Pipe Insulation Thickness"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::MainPipeInsulationThermalConductivity, "MainPipeInsulationThermalConductivity", "Main Pipe Insulation Thermal Conductivity"},
@@ -104,33 +114,6 @@ HeatPumpName, AvailabilityScheduleName, ZoneTerminalUnitListName, RefrigerantTyp
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::MaximumOutdoorDrybulbTemperatureforDefrostOperation, "MaximumOutdoorDrybulbTemperatureforDefrostOperation", "Maximum Outdoor Dry-bulb Temperature for Defrost Operation"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressormaximumdeltaPressure, "CompressormaximumdeltaPressure", "Compressor maximum delta Pressure"},
 { AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::NumberofCompressorLoadingIndexEntries, "NumberofCompressorLoadingIndexEntries", "Number of Compressor Loading Index Entries"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex1, "CompressorSpeedatLoadingIndex1", "Compressor Speed at Loading Index 1"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex1EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex1EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 1 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex1CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex1CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 1 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex2, "CompressorSpeedatLoadingIndex2", "Compressor Speed at Loading Index 2"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex2EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex2EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 2 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex2CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex2CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 2 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex3, "CompressorSpeedatLoadingIndex3", "Compressor Speed at Loading Index 3"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex3EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex3EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 3 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex3CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex3CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 3 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex4, "CompressorSpeedatLoadingIndex4", "Compressor Speed at Loading Index 4"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex4EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex4EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 4 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex4CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex4CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 4 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex5, "CompressorSpeedatLoadingIndex5", "Compressor Speed at Loading Index 5"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex5EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex5EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 5 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex5CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex5CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 5 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex6, "CompressorSpeedatLoadingIndex6", "Compressor Speed at Loading Index 6"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex6EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex6EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 6 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex6CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex6CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 6 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex7, "CompressorSpeedatLoadingIndex7", "Compressor Speed at Loading Index 7"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex7EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex7EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 7 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex7list, "LoadingIndex7list", "Loading Index 7 list"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex8, "CompressorSpeedatLoadingIndex8", "Compressor Speed at Loading Index 8"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex8EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex8EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 8 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex8CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex8CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 8 Compressor Power Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::CompressorSpeedatLoadingIndex9, "CompressorSpeedatLoadingIndex9", "Compressor Speed at Loading Index 9"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex9EvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndex9EvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index 9 Evaporative Capacity Multiplier Function of Temperature Curve Name"},
-{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields::LoadingIndex9CompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndex9CompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index 9 Compressor Power Multiplier Function of Temperature Curve Name"},
         { 0,0,0 }
       };
       VecType v;
@@ -158,6 +141,78 @@ HeatPumpName, AvailabilityScheduleName, ZoneTerminalUnitListName, RefrigerantTyp
     return os << e.valueName() << "(" << e.value() << ")";
   }
   typedef boost::optional<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields> OptionalAirConditioner_VariableRefrigerantFlow_FluidTemperatureControlFields ;
+#endif
+
+/** \class AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields
+ *  \brief Enumeration of AirConditioner:VariableRefrigerantFlow:FluidTemperatureControl's Idd and Idf extensible fields
+ *  to be used in conjunction with ExtensibleIndex and ExtensibleGroup.
+ *  \details This enumeration provides readable, and semi-robust tags to use instead
+ *  of bare unsigned integer ExtensibleIndex.field indices. (The enumeration value names
+ *  are more likely to be valid across EnergyPlus and OpenStudio releases, and will break
+ *  if they become invalid.)See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro
+ *  call is:
+ *
+ *  \code
+ *  \endcode */
+#ifdef SWIG 
+  OPENSTUDIO_ENUM(AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields, )
+#else
+class AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields: public ::EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields> {
+ public: 
+  enum domain 
+  {
+CompressorSpeedatLoadingIndex, LoadingIndexEvaporativeCapacityMultiplierFunctionofTemperatureCurveName, LoadingIndexCompressorPowerMultiplierFunctionofTemperatureCurveName,   };
+  AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields()
+   : EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields>(CompressorSpeedatLoadingIndex) {} 
+  AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields(const std::string &t_name) 
+   : EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields>(t_name) {} 
+  AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields(int t_value) 
+   : EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields>(t_value) {} 
+  static std::string enumName() 
+  { return "AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields"; }
+  domain value() const { return static_cast<domain>(EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields>::value()); }
+   private:
+    friend class EnumBase<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields>;
+    typedef std::pair<std::string, int> PT;
+    typedef std::vector<PT> VecType;
+    static VecType buildStringVec(bool isd)
+    {
+      struct evalue
+      {
+        int value; const char *name; const char *description;
+      };
+      const evalue a[] =
+      {
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields::CompressorSpeedatLoadingIndex, "CompressorSpeedatLoadingIndex", "Compressor Speed at Loading Index"},
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields::LoadingIndexEvaporativeCapacityMultiplierFunctionofTemperatureCurveName, "LoadingIndexEvaporativeCapacityMultiplierFunctionofTemperatureCurveName", "Loading Index Evaporative Capacity Multiplier Function of Temperature Curve Name"},
+{ AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields::LoadingIndexCompressorPowerMultiplierFunctionofTemperatureCurveName, "LoadingIndexCompressorPowerMultiplierFunctionofTemperatureCurveName", "Loading Index Compressor Power Multiplier Function of Temperature Curve Name"},
+        { 0,0,0 }
+      };
+      VecType v;
+      int i = 0;
+      while (!(a[i].value == 0 && a[i].name == 0 && a[i].description == 0))
+      {
+        if (isd)
+        {
+          std::string description = a[i].description; 
+          if (!description.empty())
+          {
+            v.push_back(PT(description, a[i].value));
+          }
+        } else {
+          v.push_back(PT(a[i].name, a[i].value));
+        }
+        ++i;
+      }
+      return v;
+    }
+  
+  };
+  inline std::ostream &operator<<(std::ostream &os, const AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields &e)
+  {
+    return os << e.valueName() << "(" << e.value() << ")";
+  }
+  typedef boost::optional<AirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields> OptionalAirConditioner_VariableRefrigerantFlow_FluidTemperatureControlExtensibleFields ;
 #endif
 
 } // openstudio

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilCoolingDXTwoStageWithHumidityControlMode.hpp"
 #include "CoilCoolingDXTwoStageWithHumidityControlMode_Impl.hpp"
@@ -39,6 +49,8 @@
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl.hpp"
 #include "ScheduleTypeLimits.hpp"
 #include "ScheduleTypeRegistry.hpp"
+#include "AirflowNetworkEquivalentDuct.hpp"
+#include "AirflowNetworkEquivalentDuct_Impl.hpp"
 #include <utilities/idd/OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode_FieldEnums.hxx>
 #include "../utilities/units/Unit.hpp"
 #include "../utilities/core/Assert.hpp"
@@ -73,10 +85,49 @@ namespace detail {
 
   const std::vector<std::string>& CoilCoolingDXTwoStageWithHumidityControlMode_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    // TODO: static for now
+    static std::vector<std::string> result{
+      "Cooling Coil Total Cooling Rate",
+      "Cooling Coil Total Cooling Energy",
+      "Cooling Coil Sensible Cooling Rate",
+      "Cooling Coil Sensible Cooling Energy",
+      "Cooling Coil Latent Cooling Rate",
+      "Cooling Coil Latent Cooling Energy",
+      "Cooling Coil Electric Power",
+      "Cooling Coil Electric Energy",
+      "Cooling Coil Runtime Fraction",
+
+      // condenserType = [AirCooled, EvaporativelyCooled]
+      // if (this->condenserType() == "EvaporativelyCooled") {
+        "Cooling Coil Condenser Inlet Temperature",
+        "Cooling Coil Evaporative Condenser Water Volume",
+        "Cooling Coil Evaporative Condenser Pump Electric Power",
+        "Cooling Coil Evaporative Condenser Pump Electric Energy",
+        "Cooling Coil Basin Heater Electric Power",
+        "Cooling Coil Basin Heater Electric Energy",
+        "Cooling Coil Evaporative Condenser Mains Supply Water Volume",
+      // }
+
+      // Storage tank isn't implemented
+      // if has storage tank:
+      // "Cooling Coil Condensate Volume Flow Rate",
+      // "Cooling Coil Condensate Volume",
+      //
+
+      // Additional variables for Coil:Cooling:DX:TwoStageWithHumidityControlMode only:
+      "Cooling Coil Stage 2 Runtime Fraction",
+      "Cooling Coil Dehumidification Mode"
+
+      // If not part of AirLoopHVAC:UnitaryHeatPump:AirToAir
+      // (if part of a heat pump, crankcase heater is reported only for the heating coil):
+      // if ( !this->containingHVACComponent().empty() ) {
+      // "Cooling Coil Crankcase Heater Electric Power",
+      // "Cooling Coil Crankcase Heater Electric Energy"
+      // }
+
+    };
     return result;
+
   }
 
   IddObjectType CoilCoolingDXTwoStageWithHumidityControlMode_Impl::iddObjectType() const {
@@ -85,7 +136,6 @@ namespace detail {
 
   std::vector<ScheduleTypeKey> CoilCoolingDXTwoStageWithHumidityControlMode_Impl::getScheduleTypeKeys(const Schedule& schedule) const
   {
-    // TODO: Check schedule display names.
     std::vector<ScheduleTypeKey> result;
     UnsignedVector fieldIndices = getSourceIndices(schedule.handle());
     UnsignedVector::const_iterator b(fieldIndices.begin()), e(fieldIndices.end());
@@ -284,11 +334,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  unsigned CoilCoolingDXTwoStageWithHumidityControlMode_Impl::inletPort() {
+  unsigned CoilCoolingDXTwoStageWithHumidityControlMode_Impl::inletPort() const {
     return OS_Coil_Cooling_DX_TwoStageWithHumidityControlModeFields::AirInletNodeName;
   }
 
-  unsigned CoilCoolingDXTwoStageWithHumidityControlMode_Impl::outletPort() {
+  unsigned CoilCoolingDXTwoStageWithHumidityControlMode_Impl::outletPort() const {
     return OS_Coil_Cooling_DX_TwoStageWithHumidityControlModeFields::AirOutletNodeName;
   }
 
@@ -346,8 +396,43 @@ namespace detail {
   {
     auto newCoil = StraightComponent_Impl::clone(model).cast<CoilCoolingDXTwoStageWithHumidityControlMode>();
 
+    if (model != this->model()) {
+      // If there are CoilPerformanceDXCooling objects, clone them as well
+      if (boost::optional<CoilPerformanceDXCooling> coilPerf1 = normalModeStage1CoilPerformance())
+      {
+        CoilPerformanceDXCooling coilPerf1Clone = coilPerf1->clone(model).cast<CoilPerformanceDXCooling>();
+        newCoil.setNormalModeStage1CoilPerformance(coilPerf1Clone);
+      }
+
+      if (boost::optional<CoilPerformanceDXCooling> coilPerf2 = normalModeStage1Plus2CoilPerformance())
+      {
+        CoilPerformanceDXCooling coilPerf2Clone = coilPerf2->clone(model).cast<CoilPerformanceDXCooling>();
+        newCoil.setNormalModeStage1Plus2CoilPerformance(coilPerf2Clone);
+      }
+
+      if (boost::optional<CoilPerformanceDXCooling> coilPerf3 = dehumidificationMode1Stage1CoilPerformance())
+      {
+        CoilPerformanceDXCooling coilPerf3Clone = coilPerf3->clone(model).cast<CoilPerformanceDXCooling>();
+        newCoil.setDehumidificationMode1Stage1CoilPerformance(coilPerf3Clone);
+      }
+
+      if (boost::optional<CoilPerformanceDXCooling> coilPerf4 = dehumidificationMode1Stage1Plus2CoilPerformance())
+      {
+        CoilPerformanceDXCooling coilPerf4Clone = coilPerf4->clone(model).cast<CoilPerformanceDXCooling>();
+        newCoil.setDehumidificationMode1Stage1Plus2CoilPerformance(coilPerf4Clone);
+      }
+    }
+
     return newCoil;
   }
+
+  std::vector<IddObjectType> CoilCoolingDXTwoStageWithHumidityControlMode_Impl::allowableChildTypes() const
+  {
+    std::vector<IddObjectType> result;
+    result.push_back(IddObjectType::OS_CoilPerformance_DX_Cooling);
+    return result;
+  }
+
 
   std::vector<ModelObject> CoilCoolingDXTwoStageWithHumidityControlMode_Impl::children() const
   {
@@ -367,8 +452,38 @@ namespace detail {
     if( auto mo = dehumidificationMode1Stage1Plus2CoilPerformance() ) {
       result.push_back(mo.get());
     }
+    std::vector<AirflowNetworkEquivalentDuct> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    result.insert(result.end(), myAFNItems.begin(), myAFNItems.end());
 
     return result;
+  }
+
+  AirflowNetworkEquivalentDuct CoilCoolingDXTwoStageWithHumidityControlMode_Impl::getAirflowNetworkEquivalentDuct(double length, double diameter)
+  {
+    boost::optional<AirflowNetworkEquivalentDuct> opt = airflowNetworkEquivalentDuct();
+    if (opt) {
+      if (opt->airPathLength() != length){
+        opt->setAirPathLength(length);
+      }
+      if (opt->airPathHydraulicDiameter() != diameter){
+        opt->setAirPathHydraulicDiameter(diameter);
+      }
+    }
+    return AirflowNetworkEquivalentDuct(model(), length, diameter, handle());
+  }
+
+  boost::optional<AirflowNetworkEquivalentDuct> CoilCoolingDXTwoStageWithHumidityControlMode_Impl::airflowNetworkEquivalentDuct() const
+  {
+    std::vector<AirflowNetworkEquivalentDuct> myAFN = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>
+      (AirflowNetworkEquivalentDuct::iddObjectType());
+    auto count = myAFN.size();
+    if (count == 1) {
+      return myAFN[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFN[0];
+    }
+    return boost::none;
   }
 
   bool CoilCoolingDXTwoStageWithHumidityControlMode_Impl::addToNode(Node & node)
@@ -569,7 +684,7 @@ CoilCoolingDXTwoStageWithHumidityControlMode::CoilCoolingDXTwoStageWithHumidityC
       partLoadFractionCorrelationCurve);
 
     coilPerformanceDXCooling.setGrossRatedCoolingCOP(2.7);
-    coilPerformanceDXCooling.setFractionofAirFlowBypassedAroundCoil(0.5); 
+    coilPerformanceDXCooling.setFractionofAirFlowBypassedAroundCoil(0.5);
 
     setDehumidificationMode1Stage1CoilPerformance(coilPerformanceDXCooling);
   }
@@ -629,7 +744,7 @@ CoilCoolingDXTwoStageWithHumidityControlMode::CoilCoolingDXTwoStageWithHumidityC
       partLoadFractionCorrelationCurve);
 
     coilPerformanceDXCooling.setGrossRatedCoolingCOP(2.7);
-    coilPerformanceDXCooling.setFractionofAirFlowBypassedAroundCoil(0.0); 
+    coilPerformanceDXCooling.setFractionofAirFlowBypassedAroundCoil(0.0);
 
     setDehumidificationMode1Stage1Plus2CoilPerformance(coilPerformanceDXCooling);
   }
@@ -759,9 +874,19 @@ void CoilCoolingDXTwoStageWithHumidityControlMode::resetBasinHeaterOperatingSche
   getImpl<detail::CoilCoolingDXTwoStageWithHumidityControlMode_Impl>()->resetBasinHeaterOperatingSchedule();
 }
 
+AirflowNetworkEquivalentDuct CoilCoolingDXTwoStageWithHumidityControlMode::getAirflowNetworkEquivalentDuct(double length, double diameter)
+{
+  return getImpl<detail::CoilCoolingDXTwoStageWithHumidityControlMode_Impl>()->getAirflowNetworkEquivalentDuct(length, diameter);
+}
+
+boost::optional<AirflowNetworkEquivalentDuct> CoilCoolingDXTwoStageWithHumidityControlMode::airflowNetworkEquivalentDuct() const
+{
+  return getImpl<detail::CoilCoolingDXTwoStageWithHumidityControlMode_Impl>()->airflowNetworkEquivalentDuct();
+}
+
 /// @cond
 CoilCoolingDXTwoStageWithHumidityControlMode::CoilCoolingDXTwoStageWithHumidityControlMode(std::shared_ptr<detail::CoilCoolingDXTwoStageWithHumidityControlMode_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 

@@ -1,33 +1,55 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilHeatingGas.hpp"
 #include "CoilHeatingGas_Impl.hpp"
 #include "Model.hpp"
+#include "AirTerminalSingleDuctConstantVolumeReheat.hpp"
+#include "AirTerminalSingleDuctConstantVolumeReheat_Impl.hpp"
 #include "AirTerminalSingleDuctParallelPIUReheat.hpp"
 #include "AirTerminalSingleDuctParallelPIUReheat_Impl.hpp"
 #include "AirTerminalSingleDuctVAVReheat.hpp"
 #include "AirTerminalSingleDuctVAVReheat_Impl.hpp"
+#include "AirTerminalSingleDuctVAVHeatAndCoolReheat.hpp"
+#include "AirTerminalSingleDuctVAVHeatAndCoolReheat_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir_Impl.hpp"
 #include "ZoneHVACWaterToAirHeatPump.hpp"
 #include "ZoneHVACWaterToAirHeatPump_Impl.hpp"
+#include "ZoneHVACPackagedTerminalAirConditioner.hpp"
+#include "ZoneHVACPackagedTerminalAirConditioner_Impl.hpp"
+#include "ZoneHVACUnitHeater.hpp"
+#include "ZoneHVACUnitHeater_Impl.hpp"
+#include "ZoneHVACUnitVentilator.hpp"
+#include "ZoneHVACUnitVentilator_Impl.hpp"
+#include "AirLoopHVACOutdoorAirSystem.hpp"
+#include "AirLoopHVACOutdoorAirSystem_Impl.hpp"
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass.hpp"
@@ -44,8 +66,11 @@
 #include "Node_Impl.hpp"
 #include "AirLoopHVAC.hpp"
 #include "AirLoopHVAC_Impl.hpp"
+#include "AirflowNetworkEquivalentDuct.hpp"
+#include "AirflowNetworkEquivalentDuct_Impl.hpp"
 #include <utilities/idd/OS_Coil_Heating_Gas_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
+#include <utilities/idd/IddFactory.hxx>
 #include "../utilities/core/Compare.hpp"
 #include "../utilities/core/Assert.hpp"
 #include "../utilities/units/Quantity.hpp"
@@ -83,9 +108,67 @@ namespace detail{
   // Get all output variable names that could be associated with this object.
   const std::vector<std::string>& CoilHeatingGas_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    // TODO: static until return of ModelObject is changed
+    static std::vector<std::string> result{
+      // Common variables
+      "Heating Coil Air Heating Energy",
+      "Heating Coil Air Heating Rate",
+
+      // This is the parasitic electric load associated with the coil operation, such as an inducer fan
+      "Heating Coil Electric Energy",
+      "Heating Coil Electric Power",
+
+      "Heating Coil Runtime Fraction",
+
+      // As of E+ 8;6, this maps to Coil:Heating:Fuel
+      // Fuel type specific
+      // TODO: DLM: the return type of this method needs to change to std::vector<std::string> in ModelObject
+      // until then, make this include all possible outputVariableNames for class regardless of fuelType
+      // std::string fuelType = this->fuelType();
+      // => ["NaturalGas", "Propane", "PropaneGas", "Diesel", "Gasoline", "FuelOil#1", "FuelOil#2", "OtherFuel1", "OtherFuel2"]
+      //         "Heating Coil <Fuel Type> Energy",
+      // if (fuelType == "NaturalGas") {
+        "Heating Coil Gas Energy",
+        "Heating Coil Gas Rate",
+        "Heating Coil Ancillary Gas Energy",
+        "Heating Coil Ancillary Gas Rate",
+      // } else if ( (fuelType == "PropaneGas") || (fuelType == "Propane") ) {
+        "Heating Coil Propane Energy",
+        "Heating Coil Propane Rate",
+        "Heating Coil Ancillary Propane Energy",
+        "Heating Coil Ancillary Propane Rate",
+      // } else if (fuelType == "FuelOil#1") {
+        "Heating Coil FuelOil#1 Energy",
+        "Heating Coil FuelOil#1 Rate",
+        "Heating Coil Ancillary FuelOil#1 Energy",
+        "Heating Coil Ancillary FuelOil#1 Rate",
+      // } else if (fuelType == "FuelOil#2") {
+        "Heating Coil FuelOil#2 Energy",
+        "Heating Coil FuelOil#2 Rate",
+        "Heating Coil Ancillary FuelOil#2 Energy",
+        "Heating Coil Ancillary FuelOil#2 Rate",
+      // } else if (fuelType == "Diesel") {
+        "Heating Coil Diesel Energy",
+        "Heating Coil Diesel Rate",
+        "Heating Coil Ancillary Diesel Energy",
+        "Heating Coil Ancillary Diesel Rate",
+      // } else if (fuelType == "Gasoline") {
+        "Heating Coil Gasoline Energy",
+        "Heating Coil Gasoline Rate",
+        "Heating Coil Ancillary Gasoline Energy",
+        "Heating Coil Ancillary Gasoline Rate",
+      // } else if (fuelType == "OtherFuel1") {
+        "Heating Coil OtherFuel1 Energy",
+        "Heating Coil OtherFuel1 Rate",
+        "Heating Coil Ancillary OtherFuel1 Energy",
+        "Heating Coil Ancillary OtherFuel1 Rate",
+      // } else if (fuelType == "OtherFuel2") {
+        "Heating Coil OtherFuel2 Energy",
+        "Heating Coil OtherFuel2 Rate",
+        "Heating Coil Ancillary OtherFuel2 Energy",
+        "Heating Coil Ancillary OtherFuel2 Rate"
+      // }
+    };
     return result;
   }
 
@@ -101,12 +184,12 @@ namespace detail{
     return result;
   }
 
-  unsigned CoilHeatingGas_Impl::inletPort()
+  unsigned CoilHeatingGas_Impl::inletPort() const
   {
     return OS_Coil_Heating_GasFields::AirInletNodeName;
   }
 
-  unsigned CoilHeatingGas_Impl::outletPort()
+  unsigned CoilHeatingGas_Impl::outletPort() const
   {
     return OS_Coil_Heating_GasFields::AirOutletNodeName;
   }
@@ -133,14 +216,32 @@ namespace detail{
     return result;
   }
 
+  std::string CoilHeatingGas_Impl::fuelType() const
+  {
+    return this->getString(OS_Coil_Heating_GasFields::FuelType, true).get();
+  }
+
+  bool CoilHeatingGas_Impl::setFuelType(const std::string &fuelType)
+  {
+    if (fuelType == "PropaneGas") {
+        LOG(Warn, "'PropaneGas' is deprecated for Coil_Heating_GasFields:FuelType, use 'Propane' instead");
+    }
+    return this->setString(OS_Coil_Heating_GasFields::FuelType, fuelType);
+  }
+
+  void CoilHeatingGas_Impl::resetFuelType()
+  {
+    this->setString(OS_Coil_Heating_GasFields::FuelType, "");
+  }
+
   double CoilHeatingGas_Impl::gasBurnerEfficiency() const
   {
     return this->getDouble(OS_Coil_Heating_GasFields::GasBurnerEfficiency).get();
   }
 
-  void CoilHeatingGas_Impl::setGasBurnerEfficiency(double val)
+  bool CoilHeatingGas_Impl::setGasBurnerEfficiency(double val)
   {
-    this->setDouble(OS_Coil_Heating_GasFields::GasBurnerEfficiency,val);
+    return this->setDouble(OS_Coil_Heating_GasFields::GasBurnerEfficiency,val);
   }
 
   double CoilHeatingGas_Impl::parasiticElectricLoad() const
@@ -148,9 +249,9 @@ namespace detail{
     return this->getDouble(OS_Coil_Heating_GasFields::ParasiticElectricLoad).get();
   }
 
-  void CoilHeatingGas_Impl::setParasiticElectricLoad(double val)
+  bool CoilHeatingGas_Impl::setParasiticElectricLoad(double val)
   {
-    this->setDouble(OS_Coil_Heating_GasFields::ParasiticElectricLoad,val);
+    return this->setDouble(OS_Coil_Heating_GasFields::ParasiticElectricLoad,val);
   }
 
   double CoilHeatingGas_Impl::parasiticGasLoad() const
@@ -158,9 +259,9 @@ namespace detail{
     return this->getDouble(OS_Coil_Heating_GasFields::ParasiticGasLoad).get();
   }
 
-  void CoilHeatingGas_Impl::setParasiticGasLoad(double val)
+  bool CoilHeatingGas_Impl::setParasiticGasLoad(double val)
   {
-    this->setDouble(OS_Coil_Heating_GasFields::ParasiticGasLoad,val);
+    return this->setDouble(OS_Coil_Heating_GasFields::ParasiticGasLoad,val);
   }
 
   boost::optional<HVACComponent> CoilHeatingGas_Impl::containingHVACComponent() const
@@ -215,6 +316,41 @@ namespace detail{
         if( coil->handle() == this->handle() )
         {
           return airTerminalSingleDuctVAVReheatObject;
+        }
+      }
+    }
+
+
+    // AirTerminalSingleDuctVAVHeatAndCoolReheat
+
+    std::vector<AirTerminalSingleDuctVAVHeatAndCoolReheat> airTerminalSingleDuctVAVHeatAndCoolReheatObjects;
+
+    airTerminalSingleDuctVAVHeatAndCoolReheatObjects = this->model().getConcreteModelObjects<AirTerminalSingleDuctVAVHeatAndCoolReheat>();
+
+    for( const auto & airTerminalSingleDuctVAVHeatAndCoolReheatObject : airTerminalSingleDuctVAVHeatAndCoolReheatObjects )
+    {
+      if( boost::optional<HVACComponent> coil = airTerminalSingleDuctVAVHeatAndCoolReheatObject.reheatCoil() )
+      {
+        if( coil->handle() == this->handle() )
+        {
+          return airTerminalSingleDuctVAVHeatAndCoolReheatObject;
+        }
+      }
+    }
+
+    // AirTerminalSingleDuctConstantVolumeReheat
+
+    std::vector<AirTerminalSingleDuctConstantVolumeReheat> airTerminalSingleDuctConstantVolumeReheatObjects;
+
+    airTerminalSingleDuctConstantVolumeReheatObjects = this->model().getConcreteModelObjects<AirTerminalSingleDuctConstantVolumeReheat>();
+
+    for( const auto & airTerminalSingleDuctConstantVolumeReheatObject : airTerminalSingleDuctConstantVolumeReheatObjects )
+    {
+      if( boost::optional<HVACComponent> coil = airTerminalSingleDuctConstantVolumeReheatObject.reheatCoil() )
+      {
+        if( coil->handle() == this->handle() )
+        {
+          return airTerminalSingleDuctConstantVolumeReheatObject;
         }
       }
     }
@@ -292,6 +428,58 @@ namespace detail{
       }
     }
 
+    // ZoneHVACPackagedTerminalAirConditioner
+
+    std::vector<ZoneHVACPackagedTerminalAirConditioner> zoneHVACPackagedTerminalAirConditioners;
+
+    zoneHVACPackagedTerminalAirConditioners = this->model().getConcreteModelObjects<ZoneHVACPackagedTerminalAirConditioner>();
+
+    for( const auto & zoneHVACPackagedTerminalAirConditioner : zoneHVACPackagedTerminalAirConditioners )
+    {
+      if( boost::optional<HVACComponent> coil = zoneHVACPackagedTerminalAirConditioner.heatingCoil() )
+      {
+        if( coil->handle() == this->handle() )
+        {
+          return zoneHVACPackagedTerminalAirConditioner;
+        }
+      }
+    }
+
+    // ZoneHVACUnitHeater
+
+    std::vector<ZoneHVACUnitHeater> zoneHVACUnitHeaters;
+
+    zoneHVACUnitHeaters = this->model().getConcreteModelObjects<ZoneHVACUnitHeater>();
+
+    for( const auto & zoneHVACUnitHeater : zoneHVACUnitHeaters )
+    {
+      if( boost::optional<HVACComponent> coil = zoneHVACUnitHeater.heatingCoil() )
+      {
+        if( coil->handle() == this->handle() )
+        {
+          return zoneHVACUnitHeater;
+        }
+      }
+    }
+
+    // ZoneHVACUnitHeater
+
+    std::vector<ZoneHVACUnitVentilator> zoneHVACUnitVentilators;
+
+    zoneHVACUnitVentilators = this->model().getConcreteModelObjects<ZoneHVACUnitVentilator>();
+
+    for( const auto & zoneHVACUnitVentilator : zoneHVACUnitVentilators )
+    {
+      if( boost::optional<HVACComponent> coil = zoneHVACUnitVentilator.heatingCoil() )
+      {
+        if( coil->handle() == this->handle() )
+        {
+          return zoneHVACUnitVentilator;
+        }
+      }
+    }
+
+
     return boost::none;
   }
 
@@ -333,7 +521,7 @@ namespace detail{
     return result;
   }
 
-  void CoilHeatingGas_Impl::setNominalCapacity(boost::optional<double> nominalCapacity) {
+  bool CoilHeatingGas_Impl::setNominalCapacity(boost::optional<double> nominalCapacity) {
     bool result(false);
     if (nominalCapacity) {
       result = setDouble(OS_Coil_Heating_GasFields::NominalCapacity, nominalCapacity.get());
@@ -343,6 +531,7 @@ namespace detail{
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool CoilHeatingGas_Impl::setNominalCapacity(const OSOptionalQuantity& nominalCapacity) {
@@ -408,6 +597,9 @@ namespace detail{
       result.push_back(curve.get());
     }
 
+    std::vector<AirflowNetworkEquivalentDuct> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    result.insert(result.end(), myAFNItems.begin(), myAFNItems.end());
+
     return result;
   }
 
@@ -428,7 +620,55 @@ namespace detail{
       }
     }
 
+    if ( auto oa = node.airLoopHVACOutdoorAirSystem() ) {
+      return StraightComponent_Impl::addToNode( node );
+    }
+
     return false;
+  }
+
+  AirflowNetworkEquivalentDuct CoilHeatingGas_Impl::getAirflowNetworkEquivalentDuct(double length, double diameter)
+  {
+    boost::optional<AirflowNetworkEquivalentDuct> opt = airflowNetworkEquivalentDuct();
+    if (opt) {
+      if (opt->airPathLength() != length){
+        opt->setAirPathLength(length);
+      }
+      if (opt->airPathHydraulicDiameter() != diameter){
+        opt->setAirPathHydraulicDiameter(diameter);
+      }
+    }
+    return AirflowNetworkEquivalentDuct(model(), length, diameter, handle());
+  }
+
+  boost::optional<AirflowNetworkEquivalentDuct> CoilHeatingGas_Impl::airflowNetworkEquivalentDuct() const
+  {
+    std::vector<AirflowNetworkEquivalentDuct> myAFN = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    auto count = myAFN.size();
+    if (count == 1) {
+      return myAFN[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFN[0];
+    }
+    return boost::none;
+  }
+
+  boost::optional<double> CoilHeatingGas_Impl::autosizedNominalCapacity() const {
+    return getAutosizedValue("Design Size Nominal Capacity", "W");
+  }
+
+  void CoilHeatingGas_Impl::autosize() {
+    autosizeNominalCapacity();
+  }
+
+  void CoilHeatingGas_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedNominalCapacity();
+    if (val) {
+      setNominalCapacity(val.get());
+    }
+
   }
 
 }// detail
@@ -466,7 +706,7 @@ CoilHeatingGas::CoilHeatingGas(const Model& model)
 }
 
 CoilHeatingGas::CoilHeatingGas(std::shared_ptr<detail::CoilHeatingGas_Impl> p)
-  : StraightComponent(p)
+  : StraightComponent(std::move(p))
 {}
 
 Schedule CoilHeatingGas::availabilitySchedule() const
@@ -486,14 +726,34 @@ bool CoilHeatingGas::setAvailableSchedule(Schedule & schedule )
   return getImpl<detail::CoilHeatingGas_Impl>()->setAvailabilitySchedule( schedule );
 }
 
+std::vector<std::string> CoilHeatingGas::validFuelTypeValues()
+{
+  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(), OS_Coil_Heating_GasFields::FuelType);
+}
+
+std::string CoilHeatingGas::fuelType() const
+{
+  return getImpl<detail::CoilHeatingGas_Impl>()->fuelType();
+}
+
+bool CoilHeatingGas::setFuelType(const std::string& fuelType)
+{
+  return getImpl<detail::CoilHeatingGas_Impl>()->setFuelType(fuelType);
+}
+
+void CoilHeatingGas::resetFuelType()
+{
+  getImpl<detail::CoilHeatingGas_Impl>()->resetFuelType();
+}
+
 double CoilHeatingGas::gasBurnerEfficiency() const
 {
   return getImpl<detail::CoilHeatingGas_Impl>()->gasBurnerEfficiency();
 }
 
-void CoilHeatingGas::setGasBurnerEfficiency(double val)
+bool CoilHeatingGas::setGasBurnerEfficiency(double val)
 {
-  getImpl<detail::CoilHeatingGas_Impl>()->setGasBurnerEfficiency(val);
+  return getImpl<detail::CoilHeatingGas_Impl>()->setGasBurnerEfficiency(val);
 }
 
 double CoilHeatingGas::parasiticElectricLoad() const
@@ -501,9 +761,9 @@ double CoilHeatingGas::parasiticElectricLoad() const
   return getImpl<detail::CoilHeatingGas_Impl>()->parasiticElectricLoad();
 }
 
-void CoilHeatingGas::setParasiticElectricLoad(double val)
+bool CoilHeatingGas::setParasiticElectricLoad(double val)
 {
-  getImpl<detail::CoilHeatingGas_Impl>()->setParasiticElectricLoad(val);
+  return getImpl<detail::CoilHeatingGas_Impl>()->setParasiticElectricLoad(val);
 }
 
 double CoilHeatingGas::parasiticGasLoad() const
@@ -511,9 +771,9 @@ double CoilHeatingGas::parasiticGasLoad() const
   return getImpl<detail::CoilHeatingGas_Impl>()->parasiticGasLoad();
 }
 
-void CoilHeatingGas::setParasiticGasLoad(double val)
+bool CoilHeatingGas::setParasiticGasLoad(double val)
 {
-  getImpl<detail::CoilHeatingGas_Impl>()->setParasiticGasLoad(val);
+  return getImpl<detail::CoilHeatingGas_Impl>()->setParasiticGasLoad(val);
 }
 
 boost::optional<double> CoilHeatingGas::nominalCapacity() const {
@@ -528,8 +788,8 @@ bool CoilHeatingGas::isNominalCapacityAutosized() const {
   return getImpl<detail::CoilHeatingGas_Impl>()->isNominalCapacityAutosized();
 }
 
-void CoilHeatingGas::setNominalCapacity(double nominalCapacity) {
-  getImpl<detail::CoilHeatingGas_Impl>()->setNominalCapacity(nominalCapacity);
+bool CoilHeatingGas::setNominalCapacity(double nominalCapacity) {
+  return getImpl<detail::CoilHeatingGas_Impl>()->setNominalCapacity(nominalCapacity);
 }
 
 bool CoilHeatingGas::setNominalCapacity(const Quantity& nominalCapacity) {
@@ -563,6 +823,20 @@ IddObjectType CoilHeatingGas::iddObjectType() {
   IddObjectType result(IddObjectType::OS_Coil_Heating_Gas);
   return result;
 }
+
+AirflowNetworkEquivalentDuct CoilHeatingGas::getAirflowNetworkEquivalentDuct(double length, double diameter)
+{
+  return getImpl<detail::CoilHeatingGas_Impl>()->getAirflowNetworkEquivalentDuct(length, diameter);
+}
+
+boost::optional<AirflowNetworkEquivalentDuct> CoilHeatingGas::airflowNetworkEquivalentDuct() const
+{
+  return getImpl<detail::CoilHeatingGas_Impl>()->airflowNetworkEquivalentDuct();
+}
+
+  boost::optional<double> CoilHeatingGas::autosizedNominalCapacity() const {
+    return getImpl<detail::CoilHeatingGas_Impl>()->autosizedNominalCapacity();
+  }
 
 } // model
 } // openstudio

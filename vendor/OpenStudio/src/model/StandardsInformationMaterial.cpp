@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "StandardsInformationMaterial.hpp"
 #include "StandardsInformationMaterial_Impl.hpp"
@@ -33,13 +43,16 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QString>
 
 namespace openstudio {
 namespace model {
 
 namespace detail {
 
-  QMap<QString, QVariant> StandardsInformationMaterial_Impl::m_standardsMap;
+  QJsonArray StandardsInformationMaterial_Impl::m_standardsArr;
 
   StandardsInformationMaterial_Impl::StandardsInformationMaterial_Impl(const IdfObject& idfObject,
     Model_Impl* model,
@@ -63,17 +76,26 @@ namespace detail {
     : ModelObject_Impl(other, model, keepHandle)
   {}
 
-  void StandardsInformationMaterial_Impl::parseStandardsMap() const
+  void StandardsInformationMaterial_Impl::parseStandardsJSON() const
   {
-    if (m_standardsMap.empty()){
-      QFile file(":/resources/standards/OpenStudio_Standards.json");
+    if (m_standardsArr.empty()){
+      QFile file(":/resources/standards/OpenStudio_Standards_materials_merged.json");
       if (file.open(QFile::ReadOnly)) {
         QJsonParseError parseError;
         QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll(), &parseError);
         file.close();
-        if (QJsonParseError::NoError == parseError.error) {
-          m_standardsMap = jsonDoc.object().toVariantMap();
+        if( QJsonParseError::NoError == parseError.error) {
+          QJsonObject jsonObj = jsonDoc.object();
+          if( (jsonObj.size() == 1) && jsonObj.contains("materials") && jsonObj["materials"].isArray()) {
+            m_standardsArr = jsonObj["materials"].toArray();
+          } else {
+            LOG_AND_THROW("Wrong format encountered in JSON file at 'resources/standards/OpenStudio_Standards_materials.json'");
+          }
+        } else {
+          LOG_AND_THROW("Problem occured in parsing JSON file at 'resources/standards/OpenStudio_Standards_materials.json'");
         }
+      } else {
+        LOG_AND_THROW("Cannot open file at 'resources/standards/OpenStudio_Standards_materials.json' for parsing");
       }
     }
   }
@@ -91,8 +113,6 @@ namespace detail {
   const std::vector<std::string>& StandardsInformationMaterial_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -117,16 +137,16 @@ namespace detail {
     boost::optional<std::string> materialStandard = this->materialStandard();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       QString tmp = material["material_standard"].toString();
       if (!tmp.isEmpty()){
         result.push_back(toString(tmp));
       }
     }
+
 
     // include values from model
     for (const StandardsInformationMaterial& other : this->model().getConcreteModelObjects<StandardsInformationMaterial>()){
@@ -183,22 +203,23 @@ namespace detail {
     }
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
-      QString tmp = material["material_standard"].toString();
-      if (toString(tmp) != *materialStandard){
-        continue;
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
+      if (materialStandard){
+        QString tmp = material["material_standard"].toString();
+        if (toString(tmp) != *materialStandard){
+          continue;
+        }
       }
 
-      tmp = material["material_standard_source"].toString();
+      QString tmp = material["material_standard_source"].toString();
       if (!tmp.isEmpty()){
         result.push_back(toString(tmp));
       }
     }
+
 
     // include values from model
     for (const StandardsInformationMaterial& other : this->model().getConcreteModelObjects<StandardsInformationMaterial>()){
@@ -257,12 +278,10 @@ namespace detail {
     boost::optional<std::string> standardsCategory = this->standardsCategory();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -275,6 +294,7 @@ namespace detail {
         result.push_back(toString(tmp));
       }
     }
+
 
     // include values from model
     for (const StandardsInformationMaterial& other : this->model().getConcreteModelObjects<StandardsInformationMaterial>()){
@@ -297,7 +317,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (standardsCategory){
       finder.addTarget(*standardsCategory);
@@ -321,7 +341,7 @@ namespace detail {
 
     return result;
   }
-  
+
   bool StandardsInformationMaterial_Impl::isCompositeMaterial() const
   {
     boost::optional<std::string> standardsCategory = this->standardsCategory();
@@ -360,12 +380,11 @@ namespace detail {
     }
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
 
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -373,12 +392,14 @@ namespace detail {
         }
       }
 
-      QString tmp = material["code_category"].toString();
-      if (toString(tmp) != *standardsCategory){
-        continue;
+      if (standardsCategory){
+        QString tmp = material["code_category"].toString();
+        if (toString(tmp) != *standardsCategory){
+          continue;
+        }
       }
 
-      tmp = material["code_identifier"].toString();
+      QString tmp = material["code_identifier"].toString();
       if (!tmp.isEmpty()){
         result.push_back(toString(tmp));
       }
@@ -453,12 +474,10 @@ namespace detail {
     boost::optional<std::string> compositeFramingMaterial = this->compositeFramingMaterial();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -509,7 +528,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (compositeFramingMaterial){
       finder.addTarget(*compositeFramingMaterial);
@@ -550,12 +569,11 @@ namespace detail {
     boost::optional<std::string> compositeFramingConfiguration = this->compositeFramingConfiguration();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
 
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -606,7 +624,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (compositeFramingConfiguration){
       finder.addTarget(*compositeFramingConfiguration);
@@ -647,12 +665,10 @@ namespace detail {
     boost::optional<std::string> compositeFramingDepth = this->compositeFramingDepth();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -703,7 +719,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (compositeFramingDepth){
       finder.addTarget(*compositeFramingDepth);
@@ -744,12 +760,10 @@ namespace detail {
     boost::optional<std::string> compositeFramingSize = this->compositeFramingSize();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -769,6 +783,7 @@ namespace detail {
         result.push_back(toString(tmp));
       }
     }
+
 
     // include values from model
     for (const StandardsInformationMaterial& other : this->model().getConcreteModelObjects<StandardsInformationMaterial>()){
@@ -800,7 +815,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (compositeFramingSize){
       finder.addTarget(*compositeFramingSize);
@@ -841,12 +856,10 @@ namespace detail {
     boost::optional<std::string> compositeCavityInsulation = this->compositeCavityInsulation();
 
     // include values from json
-    parseStandardsMap();
+    parseStandardsJSON();
 
-    QMap<QString, QVariant> materials = m_standardsMap["materials"].toMap();
-    for (QString material_name : materials.uniqueKeys()) {
-      QMap<QString, QVariant> material = materials[material_name].toMap();
-
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject material = v.toObject();
       if (materialStandard){
         QString tmp = material["material_standard"].toString();
         if (toString(tmp) != *materialStandard){
@@ -861,9 +874,14 @@ namespace detail {
         }
       }
 
-      QString tmp = material["cavity_insulation"].toString();
-      if (!tmp.isEmpty()){
+      // JM 2018-08-22: material["cavity_insulation"].toVariant().toString() would work too, but I'd rather be explicit
+      // cavity_insulation is stored in the JSON as a number (a double), and not a string
+      if( material["cavity_insulation"].isDouble() ) {
+        QString tmp = QString::number(material["cavity_insulation"].toDouble());
+        // No need to check if empty here
+        // if (!tmp.isEmpty()){
         result.push_back(toString(tmp));
+        //}
       }
     }
 
@@ -897,7 +915,7 @@ namespace detail {
       }
     }
 
-    // remove current 
+    // remove current
     IstringFind finder;
     if (compositeCavityInsulation){
       finder.addTarget(*compositeCavityInsulation);
@@ -922,9 +940,10 @@ namespace detail {
     return result;
   }
 
-  void StandardsInformationMaterial_Impl::setMaterialStandard(const std::string& materialStandard) {
+  bool StandardsInformationMaterial_Impl::setMaterialStandard(const std::string& materialStandard) {
     bool result = setString(OS_StandardsInformation_MaterialFields::MaterialStandard, materialStandard);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetMaterialStandard() {
@@ -932,9 +951,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setMaterialStandardSource(const std::string& materialStandardSource) {
+  bool StandardsInformationMaterial_Impl::setMaterialStandardSource(const std::string& materialStandardSource) {
     bool result = setString(OS_StandardsInformation_MaterialFields::MaterialStandardSource, materialStandardSource);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetMaterialStandardSource() {
@@ -942,7 +962,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setStandardsCategory(const std::string& standardsCategory) {
+  bool StandardsInformationMaterial_Impl::setStandardsCategory(const std::string& standardsCategory) {
     bool result = setString(OS_StandardsInformation_MaterialFields::StandardsCategory, standardsCategory);
     OS_ASSERT(result);
 
@@ -953,6 +973,7 @@ namespace detail {
       resetCompositeFramingSize();
       resetCompositeCavityInsulation();
     }
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetStandardsCategory() {
@@ -960,9 +981,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setStandardsIdentifier(const std::string& standardsIdentifier) {
+  bool StandardsInformationMaterial_Impl::setStandardsIdentifier(const std::string& standardsIdentifier) {
     bool result = setString(OS_StandardsInformation_MaterialFields::StandardsIdentifier, standardsIdentifier);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetStandardsIdentifier() {
@@ -970,10 +992,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setCompositeFramingMaterial(const std::string& compositeFramingMaterial)
+  bool StandardsInformationMaterial_Impl::setCompositeFramingMaterial(const std::string& compositeFramingMaterial)
   {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeFramingMaterial, compositeFramingMaterial);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetCompositeFramingMaterial()
@@ -982,22 +1005,24 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setCompositeFramingConfiguration(const std::string& compositeFramingConfiguration)
+  bool StandardsInformationMaterial_Impl::setCompositeFramingConfiguration(const std::string& compositeFramingConfiguration)
   {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeFramingConfiguration, compositeFramingConfiguration);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetCompositeFramingConfiguration()
-  {    
+  {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeFramingConfiguration, "");
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setCompositeFramingDepth(const std::string& compositeFramingDepth)
+  bool StandardsInformationMaterial_Impl::setCompositeFramingDepth(const std::string& compositeFramingDepth)
   {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeFramingDepth, compositeFramingDepth);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetCompositeFramingDepth()
@@ -1006,10 +1031,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setCompositeFramingSize(const std::string& compositeFramingSize)
+  bool StandardsInformationMaterial_Impl::setCompositeFramingSize(const std::string& compositeFramingSize)
   {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeFramingSize, compositeFramingSize);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetCompositeFramingSize()
@@ -1018,10 +1044,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationMaterial_Impl::setCompositeCavityInsulation(const std::string& compositeFramingInsulation)
+  bool StandardsInformationMaterial_Impl::setCompositeCavityInsulation(const std::string& compositeFramingInsulation)
   {
     bool result = setString(OS_StandardsInformation_MaterialFields::CompositeCavityInsulation, compositeFramingInsulation);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationMaterial_Impl::resetCompositeCavityInsulation()
@@ -1134,41 +1161,41 @@ std::vector<std::string> StandardsInformationMaterial::suggestedCompositeCavityI
   return getImpl<detail::StandardsInformationMaterial_Impl>()->suggestedCompositeCavityInsulations();
 }
 
-void StandardsInformationMaterial::setMaterialStandard(const std::string& materialStandard) {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setMaterialStandard(materialStandard);
+bool StandardsInformationMaterial::setMaterialStandard(const std::string& materialStandard) {
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setMaterialStandard(materialStandard);
 }
 
 void StandardsInformationMaterial::resetMaterialStandard() {
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetMaterialStandard();
 }
 
-void StandardsInformationMaterial::setMaterialStandardSource(const std::string& materialStandardSource) {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setMaterialStandardSource(materialStandardSource);
+bool StandardsInformationMaterial::setMaterialStandardSource(const std::string& materialStandardSource) {
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setMaterialStandardSource(materialStandardSource);
 }
 
 void StandardsInformationMaterial::resetMaterialStandardSource() {
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetMaterialStandardSource();
 }
 
-void StandardsInformationMaterial::setStandardsCategory(const std::string& standardsCategory) {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setStandardsCategory(standardsCategory);
+bool StandardsInformationMaterial::setStandardsCategory(const std::string& standardsCategory) {
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setStandardsCategory(standardsCategory);
 }
 
 void StandardsInformationMaterial::resetStandardsCategory() {
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetStandardsCategory();
 }
 
-void StandardsInformationMaterial::setStandardsIdentifier(const std::string& standardsIdentifier) {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setStandardsIdentifier(standardsIdentifier);
+bool StandardsInformationMaterial::setStandardsIdentifier(const std::string& standardsIdentifier) {
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setStandardsIdentifier(standardsIdentifier);
 }
 
 void StandardsInformationMaterial::resetStandardsIdentifier() {
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetStandardsIdentifier();
 }
 
-void StandardsInformationMaterial::setCompositeFramingMaterial(const std::string& compositeFramingMaterial)
+bool StandardsInformationMaterial::setCompositeFramingMaterial(const std::string& compositeFramingMaterial)
 {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingMaterial(compositeFramingMaterial);
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingMaterial(compositeFramingMaterial);
 }
 
 void StandardsInformationMaterial::resetCompositeFramingMaterial()
@@ -1176,9 +1203,9 @@ void StandardsInformationMaterial::resetCompositeFramingMaterial()
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetCompositeFramingMaterial();
 }
 
-void StandardsInformationMaterial::setCompositeFramingConfiguration(const std::string& compositeFramingConfiguration)
+bool StandardsInformationMaterial::setCompositeFramingConfiguration(const std::string& compositeFramingConfiguration)
 {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingConfiguration(compositeFramingConfiguration);
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingConfiguration(compositeFramingConfiguration);
 }
 
 void StandardsInformationMaterial::resetCompositeFramingConfiguration()
@@ -1186,9 +1213,9 @@ void StandardsInformationMaterial::resetCompositeFramingConfiguration()
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetCompositeFramingConfiguration();
 }
 
-void StandardsInformationMaterial::setCompositeFramingDepth(const std::string& compositeFramingDepth)
+bool StandardsInformationMaterial::setCompositeFramingDepth(const std::string& compositeFramingDepth)
 {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingDepth(compositeFramingDepth);
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingDepth(compositeFramingDepth);
 }
 
 void StandardsInformationMaterial::resetCompositeFramingDepth()
@@ -1196,9 +1223,9 @@ void StandardsInformationMaterial::resetCompositeFramingDepth()
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetCompositeFramingDepth();
 }
 
-void StandardsInformationMaterial::setCompositeFramingSize(const std::string& compositeFramingSize)
+bool StandardsInformationMaterial::setCompositeFramingSize(const std::string& compositeFramingSize)
 {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingSize(compositeFramingSize);
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeFramingSize(compositeFramingSize);
 }
 
 void StandardsInformationMaterial::resetCompositeFramingSize()
@@ -1206,9 +1233,9 @@ void StandardsInformationMaterial::resetCompositeFramingSize()
   getImpl<detail::StandardsInformationMaterial_Impl>()->resetCompositeFramingSize();
 }
 
-void StandardsInformationMaterial::setCompositeCavityInsulation(const std::string& compositeCavityInsulation)
+bool StandardsInformationMaterial::setCompositeCavityInsulation(const std::string& compositeCavityInsulation)
 {
-  getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeCavityInsulation(compositeCavityInsulation);
+  return getImpl<detail::StandardsInformationMaterial_Impl>()->setCompositeCavityInsulation(compositeCavityInsulation);
 }
 
 void StandardsInformationMaterial::resetCompositeCavityInsulation()
@@ -1218,10 +1245,9 @@ void StandardsInformationMaterial::resetCompositeCavityInsulation()
 
 /// @cond
 StandardsInformationMaterial::StandardsInformationMaterial(std::shared_ptr<detail::StandardsInformationMaterial_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

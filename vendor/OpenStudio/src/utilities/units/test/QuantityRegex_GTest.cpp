@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "UnitsFixture.hpp"
@@ -50,7 +60,7 @@ using openstudio::decomposeAtomicUnitString;
 TEST_F(UnitsFixture,QuantityRegex_Values) {
 
   // strings that should be FixedPrecisionValues
-  std::string fixedValue("0.321"); 
+  std::string fixedValue("0.321");
   EXPECT_TRUE(isFixedPrecisionValue(fixedValue));
   fixedValue = "20"; EXPECT_TRUE(isFixedPrecisionValue(fixedValue));
   fixedValue = ".3120"; EXPECT_TRUE(isFixedPrecisionValue(fixedValue));
@@ -82,7 +92,7 @@ TEST_F(UnitsFixture,QuantityRegex_Values) {
   containsFixedValue = "The number of elements is 532."; EXPECT_TRUE(containsFixedPrecisionValue(containsFixedValue));
   containsFixedValue = "321.225;-32.2896"; EXPECT_TRUE(containsFixedPrecisionValue(containsFixedValue));
   containsFixedValue = "Some text 321.25."; EXPECT_TRUE(containsFixedPrecisionValue(containsFixedValue));
- 
+
   // strings that should not contain FixedPrecisionValues
   std::string doesNotContainFixedValue("5.0E32");
   EXPECT_FALSE(containsFixedPrecisionValue(doesNotContainFixedValue));
@@ -124,7 +134,7 @@ TEST_F(UnitsFixture,QuantityRegex_Values) {
   containsSciValue = " 12657.0E+0001 kBtu/ft^2"; EXPECT_TRUE(containsScientificNotationValue(containsSciValue));
   containsSciValue = ".1E-2 text"; EXPECT_TRUE(containsScientificNotationValue(containsSciValue));
   containsSciValue = "1.0E-3; 2.1D+001"; EXPECT_TRUE(containsScientificNotationValue(containsSciValue));
- 
+
   // should not contain ScientificNotationValues
   std::string doesNotContainSciValue("some text");
   EXPECT_FALSE(containsScientificNotationValue(doesNotContainSciValue));
@@ -264,7 +274,7 @@ TEST_F(UnitsFixture,QuantityRegex_Units) {
   notAUnit = "cm^-2"; EXPECT_FALSE(isUnit(notAUnit));
   notAUnit = "2 m/s"; EXPECT_FALSE(isUnit(notAUnit));
   notAUnit = "kg*2"; EXPECT_FALSE(isUnit(notAUnit));
-  
+
   // contains a unit
   std::string includesAUnit("2 m");
   EXPECT_TRUE(containsUnit(includesAUnit));
@@ -329,7 +339,7 @@ TEST_F(UnitsFixture,QuantityRegex_Quantities) {
 TEST_F(UnitsFixture,QuantityRegex_DecomposeQuantities) {
   std::string qStr("3 m");
   std::pair<std::string,std::string> result;
-  
+
   result = decomposeQuantityString(qStr);
   EXPECT_EQ("3",result.first); EXPECT_EQ("m",result.second);
 
@@ -364,7 +374,7 @@ TEST_F(UnitsFixture,QuantityRegex_DecomposeQuantities) {
 TEST_F(UnitsFixture,QuantityRegex_DecomposeScaledUnits) {
   std::string uStr("k(m/s)");
   std::pair<std::string,std::string> result;
-  
+
   result = decomposeScaledUnitString(uStr);
   EXPECT_EQ("k",result.first); EXPECT_EQ("m/s",result.second);
 
@@ -390,29 +400,29 @@ TEST_F(UnitsFixture,QuantityRegex_DecomposeCompoundUnits) {
   std::string uStr("1/s");
   std::pair< std::vector<std::string>,std::vector<std::string> > result;
   result = decomposeCompoundUnitString(uStr);
-  ASSERT_EQ(static_cast<size_t>(0),result.first.size()); 
+  ASSERT_EQ(static_cast<size_t>(0),result.first.size());
   ASSERT_EQ(static_cast<size_t>(1),result.second.size());
   EXPECT_EQ("s",result.second[0]);
 
   uStr = "kg*m/s^2"; result = decomposeCompoundUnitString(uStr);
-  ASSERT_EQ(static_cast<size_t>(2),result.first.size()); 
+  ASSERT_EQ(static_cast<size_t>(2),result.first.size());
   ASSERT_EQ(static_cast<size_t>(1),result.second.size());
   EXPECT_EQ("kg",result.first[0]); EXPECT_EQ("m",result.first[1]);
   EXPECT_EQ("s^2",result.second[0]);
 
   uStr = "s^{-1}/ft^{-1}"; result = decomposeCompoundUnitString(uStr);
-  ASSERT_EQ(static_cast<size_t>(1),result.first.size()); 
+  ASSERT_EQ(static_cast<size_t>(1),result.first.size());
   ASSERT_EQ(static_cast<size_t>(1),result.second.size());
   EXPECT_EQ("s^{-1}",result.first[0]);
   EXPECT_EQ("ft^{-1}",result.second[0]);
 
   uStr = "kg"; result = decomposeCompoundUnitString(uStr);
-  ASSERT_EQ(static_cast<size_t>(1),result.first.size()); 
+  ASSERT_EQ(static_cast<size_t>(1),result.first.size());
   ASSERT_EQ(static_cast<size_t>(0),result.second.size());
   EXPECT_EQ("kg",result.first[0]);
 
   uStr = "1/s^2*K"; result = decomposeCompoundUnitString(uStr);
-  ASSERT_EQ(static_cast<size_t>(0),result.first.size()); 
+  ASSERT_EQ(static_cast<size_t>(0),result.first.size());
   ASSERT_EQ(static_cast<size_t>(2),result.second.size());
   EXPECT_EQ("s^2",result.second[0]); EXPECT_EQ("K",result.second[1]);
 
@@ -461,7 +471,7 @@ TEST_F(UnitsFixture,QuantityRegex_DirectScaledUnit) {
   EXPECT_EQ("people/",result.first);
   EXPECT_EQ(static_cast<unsigned>(2),result.second.first);
   EXPECT_EQ("m^2",result.second.second);
-  
+
   includesMatch = "Occupancy (people/1000*ft^2)";
   EXPECT_TRUE(containsDirectScaledUnit(includesMatch));
   boost::regex_search(includesMatch,m,regexEmbeddedDirectScaledUnit());
@@ -483,3 +493,115 @@ TEST_F(UnitsFixture,QuantityRegex_DirectScaledUnit) {
   EXPECT_EQ("kg",result.second.second);
 
 }
+
+
+TEST_F(UnitsFixture,QuantityRegex_PumpFields) {
+
+  std::string aUnit;
+  // Design Shaft Power per Unit Flow Rate per Unit Head is posing problems
+  // After trial and error, I can format the IDD so it works: No parenthesis, one divisor
+  // Currently this is the only one that passes
+  aUnit = "W*s/m^3*Pa"; EXPECT_TRUE(isUnit(aUnit));
+  aUnit = "W*min/gal*ftH_{2}O"; EXPECT_TRUE(isUnit(aUnit));
+
+
+  std::pair<std::string,int> atomicDecomp;
+
+  aUnit = "ftH_{2}O";
+  // this shouldn't be an atomic unit!
+  // EXPECT_FALSE(isAtomicUnit(aUnit));
+
+  // But we can at least make sure that the decomposition at least returns the right exponent (1...)
+  atomicDecomp = decomposeAtomicUnitString(aUnit);
+  EXPECT_EQ("ftH_{2}O", atomicDecomp.first);
+  EXPECT_EQ(1, atomicDecomp.second);
+
+  aUnit = "1/ftH_{2}O";
+  EXPECT_FALSE(containsScientificNotationValue(aUnit));
+  // There is no multiplier (km, ms, etc)
+  // This returns TRUE, like above... but we'll make sure it ends up fine...
+  // EXPECT_FALSE(containsAtomicUnit(aUnit));
+
+  // 1 over something is a Compound Unit)
+  EXPECT_TRUE(containsCompoundUnit(aUnit));
+
+  EXPECT_FALSE(containsScaledUnit(aUnit));
+  EXPECT_FALSE(containsDirectScaledUnit(aUnit));
+  EXPECT_TRUE(isUnit(aUnit));
+
+  ASSERT_TRUE(isCompoundUnit(aUnit));
+
+  std::pair< std::vector<std::string>,std::vector<std::string> > result;
+
+  result = decomposeCompoundUnitString(aUnit);
+  // Nothing on numerator
+  ASSERT_EQ(static_cast<size_t>(0),result.first.size());
+  // Should have one unit on the denominator
+  ASSERT_EQ(static_cast<size_t>(1),result.second.size());
+  EXPECT_EQ("ftH_{2}O",result.second[0]);
+
+
+  // All of these variations do fail
+/*
+ *  aUnit = "(W*s)/(m^3*Pa)"; EXPECT_TRUE(isUnit(aUnit));
+ *  aUnit = "(W*s)/(m^3*Pa)"; EXPECT_TRUE(isUnit(aUnit));
+ *
+ *  aUnit = "(W*min)/(gal*ftH_{2}O)"; EXPECT_TRUE(isUnit(aUnit));
+ *  aUnit = "W*min/(gal*ftH_{2}O)"; EXPECT_TRUE(isUnit(aUnit));
+ *
+ *  aUnit = "W/((m^3/s)*Pa)"; EXPECT_TRUE(isUnit(aUnit));
+ *  aUnit = "W/((gal/min)*ftH_{2}O)"; EXPECT_TRUE(isUnit(aUnit));
+ */
+
+}
+
+/* DEBUG AREA
+TEST_F(UnitsFixture, QuantityRegex_TESTBED) {
+
+  // target create Products/openstudio_utilities_test
+  // br set --file /home/julien/Software/Others/OpenStudio/openstudiocore/src/utilities/units/test/QuantityRegex_GTest.cpp --line 570
+  // process launch -- --gtest_filter=*QuantityRegex_TESTBED*
+  boost::regex rgx("(?:\\^\\{?)(-?[[:digit:]]+)(?:\\})?");
+  boost::smatch match;
+
+  int exponent;
+
+  std::string s = "short^{-3192}";
+
+  std::cout << "Expression:  \"" << rgx << "\"\n";
+  std::cout << "Text:        \"" << s << "\"\n";
+
+  if (boost::regex_search(s,match,rgx)) { // add a 4th argument boost::match_extra if you want to use captures
+
+    unsigned i; // add j for boost::match_extra
+    std::cout << "** Match found **\n   Sub-Expressions:\n";
+    for(i = 0; i < match.size(); ++i) {
+      std::cout << "      $" << i << " = \"" << match[i] << "\"\n";
+    }
+    // for use with 'boost::match_extra'
+     //std::cout << "   Captures:\n";
+     //for(i = 0; i < match.size(); ++i)
+     //{
+     //  std::cout << "      $" << i << " = {";
+     //  for(j = 0; j < match.captures(i).size(); ++j)
+     //  {
+     //    if(j)
+     //      std::cout << ", ";
+     //    else
+     //      std::cout << " ";
+     //    std::cout << "\"" << match.captures(i)[j] << "\"";
+     //  }
+     // std::cout << " }\n";
+     // }
+
+
+    std::istringstream iss(match[1]);
+    iss >> exponent;
+  } else {
+    exponent = 1;
+  }
+
+  EXPECT_EQ(-3192, exponent);
+
+
+} */

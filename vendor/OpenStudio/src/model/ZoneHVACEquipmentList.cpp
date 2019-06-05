@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ZoneHVACEquipmentList.hpp"
 #include "ZoneHVACEquipmentList_Impl.hpp"
@@ -59,8 +69,6 @@ ZoneHVACEquipmentList_Impl::ZoneHVACEquipmentList_Impl(const ZoneHVACEquipmentLi
 const std::vector<std::string>& ZoneHVACEquipmentList_Impl::outputVariableNames() const
 {
   static std::vector<std::string> result;
-  if (result.empty()){
-  }
   return result;
 }
 
@@ -68,7 +76,24 @@ IddObjectType ZoneHVACEquipmentList_Impl::iddObjectType() const {
   return ZoneHVACEquipmentList::iddObjectType();
 }
 
-void ZoneHVACEquipmentList_Impl::addEquipment(const ModelObject & equipment)
+std::string ZoneHVACEquipmentList_Impl::loadDistributionScheme() const
+{
+  auto value = getString(OS_ZoneHVAC_EquipmentListFields::LoadDistributionScheme,true);
+  OS_ASSERT(value);
+  return value.get();
+}
+
+bool ZoneHVACEquipmentList_Impl::setLoadDistributionScheme(std::string scheme)
+{
+  if( istringEqual(scheme,"Sequential") ) {
+    scheme = "SequentialLoad";
+  } else if( istringEqual(scheme,"Uniform") ) {
+    scheme = "UniformLoad";
+  }
+  return setString(OS_ZoneHVAC_EquipmentListFields::LoadDistributionScheme,scheme);
+}
+
+bool ZoneHVACEquipmentList_Impl::addEquipment(const ModelObject & equipment)
 {
   unsigned count = this->equipment().size();
 
@@ -85,13 +110,17 @@ void ZoneHVACEquipmentList_Impl::addEquipment(const ModelObject & equipment)
   {
     getObject<ModelObject>().eraseExtensibleGroup(eg.groupIndex());
   }
+  return ok;
 }
 
-void ZoneHVACEquipmentList_Impl::setCoolingPriority(const ModelObject & equipment, unsigned priority)
+bool ZoneHVACEquipmentList_Impl::setCoolingPriority(const ModelObject & equipment, unsigned priority)
 {
   std::vector<ModelObject> equipmentVector = equipmentInCoolingOrder();
 
-  OS_ASSERT( std::find(equipmentVector.begin(),equipmentVector.end(),equipment) != equipmentVector.end() );
+  if ( std::find(equipmentVector.begin(),equipmentVector.end(),equipment) == equipmentVector.end() ) {
+    LOG(Warn, "Cannot set cooling priority of an equipment that isn't in the ZoneHVACEquipmentList for " << briefDescription());
+    return false;
+  }
 
   if( priority > equipmentVector.size() ) priority = equipmentVector.size();
   if( priority < 1 ) priority = 1;
@@ -110,13 +139,17 @@ void ZoneHVACEquipmentList_Impl::setCoolingPriority(const ModelObject & equipmen
 
     newPriority++;
   }
+  return true;
 }
 
-void ZoneHVACEquipmentList_Impl::setHeatingPriority(const ModelObject & equipment, unsigned priority)
+bool ZoneHVACEquipmentList_Impl::setHeatingPriority(const ModelObject & equipment, unsigned priority)
 {
   std::vector<ModelObject> equipmentVector = equipmentInHeatingOrder();
 
-  OS_ASSERT( std::find(equipmentVector.begin(),equipmentVector.end(),equipment) != equipmentVector.end() );
+  if ( std::find(equipmentVector.begin(),equipmentVector.end(),equipment) == equipmentVector.end() ) {
+    LOG(Warn, "Cannot set Heating priority of an equipment that isn't in the ZoneHVACEquipmentList for " << briefDescription());
+    return false;
+  }
 
   if( priority > equipmentVector.size() ) priority = equipmentVector.size();
   if( priority < 1 ) priority = 1;
@@ -135,6 +168,7 @@ void ZoneHVACEquipmentList_Impl::setHeatingPriority(const ModelObject & equipmen
 
     newPriority++;
   }
+  return true;
 }
 
 WorkspaceExtensibleGroup ZoneHVACEquipmentList_Impl::getGroupForModelObject(const ModelObject & modelObject)
@@ -181,7 +215,7 @@ std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipment() const
   return result;
 }
 
-std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipmentInHeatingOrder()
+std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipmentInHeatingOrder() const
 {
   std::map<unsigned,ModelObject> equipmentMap;
 
@@ -212,7 +246,7 @@ std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipmentInHeatingOrder()
   return equipmentVector;
 }
 
-std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipmentInCoolingOrder()
+std::vector<ModelObject> ZoneHVACEquipmentList_Impl::equipmentInCoolingOrder() const
 {
   std::map<unsigned,ModelObject> equipmentMap;
 
@@ -252,8 +286,10 @@ ThermalZone ZoneHVACEquipmentList_Impl::thermalZone() const
   return wo->cast<ThermalZone>();
 }
 
-void ZoneHVACEquipmentList_Impl::removeEquipment(const ModelObject & equipment)
+bool ZoneHVACEquipmentList_Impl::removeEquipment(const ModelObject & equipment)
 {
+  bool result = false;
+
   std::vector<ModelObject> coolingVector = equipmentInCoolingOrder();
   std::vector<ModelObject> heatingVector = equipmentInHeatingOrder();
 
@@ -268,7 +304,8 @@ void ZoneHVACEquipmentList_Impl::removeEquipment(const ModelObject & equipment)
     if( wo->handle() == equipment.handle() )
     {
       getObject<ModelObject>().eraseExtensibleGroup(group.groupIndex());
-
+      // Found it
+      result = true;
       break;
     }
   }
@@ -298,9 +335,11 @@ void ZoneHVACEquipmentList_Impl::removeEquipment(const ModelObject & equipment)
     priority++;
   }
 
+  return result;
+
 }
 
-unsigned ZoneHVACEquipmentList_Impl::heatingPriority(const ModelObject & equipment)
+unsigned ZoneHVACEquipmentList_Impl::heatingPriority(const ModelObject & equipment) const
 {
   boost::optional<unsigned> result;
 
@@ -325,7 +364,7 @@ unsigned ZoneHVACEquipmentList_Impl::heatingPriority(const ModelObject & equipme
   return result.get();
 }
 
-unsigned ZoneHVACEquipmentList_Impl::coolingPriority(const ModelObject & equipment)
+unsigned ZoneHVACEquipmentList_Impl::coolingPriority(const ModelObject & equipment) const
 {
   boost::optional<unsigned> result;
 
@@ -364,19 +403,29 @@ IddObjectType ZoneHVACEquipmentList::iddObjectType() {
   return IddObjectType(IddObjectType::OS_ZoneHVAC_EquipmentList);
 }
 
-void ZoneHVACEquipmentList::addEquipment(const ModelObject & equipment)
+std::string ZoneHVACEquipmentList::loadDistributionScheme() const
 {
-  getImpl<detail::ZoneHVACEquipmentList_Impl>()->addEquipment(equipment);
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->loadDistributionScheme();
 }
 
-void ZoneHVACEquipmentList::setCoolingPriority(const ModelObject & equipment, unsigned priority)
+bool ZoneHVACEquipmentList::setLoadDistributionScheme(std::string scheme)
 {
-  getImpl<detail::ZoneHVACEquipmentList_Impl>()->setCoolingPriority(equipment,priority);
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->setLoadDistributionScheme(scheme);
 }
 
-void ZoneHVACEquipmentList::setHeatingPriority(const ModelObject & equipment, unsigned priority)
+bool ZoneHVACEquipmentList::addEquipment(const ModelObject & equipment)
 {
-  getImpl<detail::ZoneHVACEquipmentList_Impl>()->setHeatingPriority(equipment,priority);
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->addEquipment(equipment);
+}
+
+bool ZoneHVACEquipmentList::setCoolingPriority(const ModelObject & equipment, unsigned priority)
+{
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->setCoolingPriority(equipment,priority);
+}
+
+bool ZoneHVACEquipmentList::setHeatingPriority(const ModelObject & equipment, unsigned priority)
+{
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->setHeatingPriority(equipment,priority);
 }
 
 std::vector<ModelObject> ZoneHVACEquipmentList::equipment() const
@@ -384,12 +433,12 @@ std::vector<ModelObject> ZoneHVACEquipmentList::equipment() const
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->equipment();
 }
 
-std::vector<ModelObject> ZoneHVACEquipmentList::equipmentInHeatingOrder()
+std::vector<ModelObject> ZoneHVACEquipmentList::equipmentInHeatingOrder() const
 {
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->equipmentInHeatingOrder();
 }
 
-std::vector<ModelObject> ZoneHVACEquipmentList::equipmentInCoolingOrder()
+std::vector<ModelObject> ZoneHVACEquipmentList::equipmentInCoolingOrder() const
 {
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->equipmentInCoolingOrder();
 }
@@ -399,24 +448,24 @@ ThermalZone ZoneHVACEquipmentList::thermalZone() const
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->thermalZone();
 }
 
-void ZoneHVACEquipmentList::removeEquipment(const ModelObject & equipment)
+bool ZoneHVACEquipmentList::removeEquipment(const ModelObject & equipment)
 {
-  getImpl<detail::ZoneHVACEquipmentList_Impl>()->removeEquipment(equipment);
+  return getImpl<detail::ZoneHVACEquipmentList_Impl>()->removeEquipment(equipment);
 }
 
-unsigned ZoneHVACEquipmentList::heatingPriority(const ModelObject & equipment)
+unsigned ZoneHVACEquipmentList::heatingPriority(const ModelObject & equipment) const
 {
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->heatingPriority(equipment);
 }
 
-unsigned ZoneHVACEquipmentList::coolingPriority(const ModelObject & equipment)
+unsigned ZoneHVACEquipmentList::coolingPriority(const ModelObject & equipment) const
 {
   return getImpl<detail::ZoneHVACEquipmentList_Impl>()->coolingPriority(equipment);
 }
 
 /// @cond
 ZoneHVACEquipmentList::ZoneHVACEquipmentList(std::shared_ptr<detail::ZoneHVACEquipmentList_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 

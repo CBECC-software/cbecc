@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <utilities/idd/IddFactory.hxx>
 #include <utilities/idd/IddEnums.hxx>
@@ -2700,6 +2710,50 @@ IddObject createOS_WeatherProperty_SkyTemperatureIddObject() {
   return object;
 }
 
+IddObject createOS_AdditionalPropertiesIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AdditionalProperties,\n";
+    ss << "\\min-fields 2\n";
+    ss << "\\extensible:3\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Object Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list AllObjects\n";
+    ss << "A3,  \\field Feature Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\required-field\n";
+    ss << "A4,  \\field Feature Data Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key String\n";
+    ss << "\\key Double\n";
+    ss << "\\key Boolean\n";
+    ss << "\\key Integer\n";
+    ss << "\\required-field\n";
+    ss << "A5;  \\field Feature Value\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+
+    IddObjectType objType(IddObjectType::OS_AdditionalProperties);
+    OptionalIddObject oObj = IddObject::load("OS:AdditionalProperties",
+                                             "OpenStudio Resources",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AdditionalProperties);
+  return object;
+}
+
 IddObject createOS_BuildingStoryIddObject() {
 
   static IddObject object;
@@ -2747,6 +2801,43 @@ IddObject createOS_BuildingStoryIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_BuildingStory);
+  return object;
+}
+
+IddObject createOS_BuildingUnitIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:BuildingUnit,\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference BuildingUnitNames\n";
+    ss << "\\required-field\n";
+    ss << "A3,  \\field Rendering Color\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list GroupRenderingNames\n";
+    ss << "A4;  \\field Building Unit Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Residential\n";
+    ss << "\\key NonResidential\n";
+    ss << "\\default Residential\n";
+
+    IddObjectType objType(IddObjectType::OS_BuildingUnit);
+    OptionalIddObject oObj = IddObject::load("OS:BuildingUnit",
+                                             "OpenStudio Resources",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_BuildingUnit);
   return object;
 }
 
@@ -3035,12 +3126,17 @@ IddObject createOS_SpaceTypeIddObject() {
     ss << "A6, \\field Design Specification Outdoor Air Object Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list DesignSpecificationOutdoorAirNames\n";
-    ss << "A7, \\field Standards Building Type\n";
+    ss << "A7, \\field Standards Template\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This is a freeform field used to identify the energy standard template for standards.\n";
+    ss << "\\note Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.\n";
+    ss << "\\note More information can be found at https://github.com/NREL/openstudio-standards.\n";
+    ss << "A8, \\field Standards Building Type\n";
     ss << "\\type alpha\n";
     ss << "\\note This is a freeform field used to identify the building type for standards.\n";
     ss << "\\note Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.\n";
     ss << "\\note More information can be found at https://github.com/NREL/openstudio-standards.\n";
-    ss << "A8; \\field Standards Space Type\n";
+    ss << "A9; \\field Standards Space Type\n";
     ss << "\\type alpha\n";
     ss << "\\note This is a freeform field used to identify the space type for standards.\n";
     ss << "\\note Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.\n";
@@ -3940,7 +4036,8 @@ IddObject createOS_WindowMaterial_GlazingIddObject() {
     ss << "\\key Spectral\n";
     ss << "A4, \\field Window Glass Spectral Data Set Name\n";
     ss << "\\note Used only when Optical Data Type = Spectral\n";
-    ss << "\\type alpha\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list SpectralDataSets\n";
     ss << "N1, \\field Thickness\n";
     ss << "\\type real\n";
     ss << "\\required-field\n";
@@ -4521,6 +4618,133 @@ IddObject createOS_StandardsInformation_MaterialIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_StandardsInformation_Material);
+  return object;
+}
+
+IddObject createOS_MaterialProperty_GlazingSpectralDataIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:MaterialProperty:GlazingSpectralData,\n";
+    ss << "\\memo Name is followed by up to 800 sets of normal-incidence measured values of\n";
+    ss << "\\memo [wavelength, transmittance, front reflectance, back reflectance] for wavelengths\n";
+    ss << "\\memo covering the solar spectrum (from about 0.25 to 2.5 microns)\n";
+    ss << "\\format Spectral\n";
+    ss << "\\extensible:4\n";
+    ss << "\\min-fields 1\n";
+    ss << "\\max-fields 3201\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference SpectralDataSets\n";
+    ss << "N1,  \\field Wavelength\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type real\n";
+    ss << "\\units micron\n";
+    ss << "N2,  \\field Transmittance\n";
+    ss << "N3,  \\field Front Reflectance\n";
+    ss << "N4;  \\field Back Reflectance\n";
+
+    IddObjectType objType(IddObjectType::OS_MaterialProperty_GlazingSpectralData);
+    OptionalIddObject oObj = IddObject::load("OS:MaterialProperty:GlazingSpectralData",
+                                             "OpenStudio Materials",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_MaterialProperty_GlazingSpectralData);
+  return object;
+}
+
+IddObject createOS_MaterialProperty_MoisturePenetrationDepth_SettingsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:MaterialProperty:MoisturePenetrationDepth:Settings,\n";
+    ss << "\\memo Additional properties for moisture using EMPD procedure\n";
+    ss << "\\memo HeatBalanceAlgorithm choice=MoisturePenetrationDepthConductionTransferFunction only\n";
+    ss << "\\memo Has no effect with other HeatBalanceAlgorithm solution algorithms\n";
+    ss << "\\min-fields 11\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Material Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "\\note Material Name that the moisture properties will be added to.\n";
+    ss << "\\note Additional material properties required to perform the EMPD model.\n";
+    ss << "\\note Effective Mean Penetration Depth (EMPD)\n";
+    ss << "N1,  \\field Water Vapor Diffusion Resistance Factor\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\type real\n";
+    ss << "\\note Ratio of water vapor permeability of stagnant air to water vapor\n";
+    ss << "\\note permeability of material\n";
+    ss << "N2,  \\field Moisture Equation Coefficient a\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "N3,  \\field Moisture Equation Coefficient b\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "N4,  \\field Moisture Equation Coefficient c\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "N5,  \\field Moisture Equation Coefficient d\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "N6,  \\field Surface Layer Penetration Depth\n";
+    ss << "\\units m\n";
+    ss << "\\ip-units in\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\autocalculatable\n";
+    ss << "\\default autocalculate\n";
+    ss << "N7,  \\field Deep Layer Penetration Depth\n";
+    ss << "\\units m\n";
+    ss << "\\ip-units in\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\autocalculatable\n";
+    ss << "\\default autocalculate\n";
+    ss << "N8,  \\field Coating Layer Thickness\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\ip-units in\n";
+    ss << "\\minimum 0\n";
+    ss << "N9;  \\field Coating Layer Water Vapor Diffusion Resistance Factor\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0\n";
+    ss << "\\note The coating's resistance to water vapor diffusion relative to the\n";
+    ss << "\\note resistance to water vapor diffusion in stagnant air\n";
+    ss << "\\note (see Water Vapor Diffusion Resistance Factor above).\n";
+
+    IddObjectType objType(IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings);
+    OptionalIddObject oObj = IddObject::load("OS:MaterialProperty:MoisturePenetrationDepth:Settings",
+                                             "OpenStudio Materials",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings);
   return object;
 }
 
@@ -5299,6 +5523,211 @@ IddObject createOS_ElectricEquipment_DefinitionIddObject() {
   return object;
 }
 
+IddObject createOS_ElectricEquipment_ITE_AirCooled_DefinitionIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricEquipment:ITE:AirCooled:Definition,\n";
+    ss << "\\memo This object describes air-cooled electric information technology equipment (ITE) which has\n";
+    ss << "\\memo variable power consumption as a function of loading and temperature.\n";
+    ss << "\\min-fields 1\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ElectricEquipmentITEAirCooledDefinitionNames\n";
+    ss << "\\reference SpaceComponentDefinitionNames\n";
+    ss << "A3 , \\field Air Flow Calculation Method\n";
+    ss << "\\note The specified method is used to calculate the IT inlet temperature and zone return\n";
+    ss << "\\note air temperature. If FlowFromSystem is chosen, the zone is assumed to be well-mixed.\n";
+    ss << "\\note If FlowControlWithApproachTemperatures is chosen, Supply and Return approach temperature\n";
+    ss << "\\note should be defined to indicate the temperature difference due to the air distribution. When\n";
+    ss << "\\note FlowControlWithApproachTemperatures is chosen, the inputs of Air Inlet Connection Type, Design Recirculation Fraction\n";
+    ss << "\\note and Recirculation Function of Loading and Supply Temperature Curve Name are ignored. For multiple\n";
+    ss << "\\note ITE objects defined for one zone, the same calculation method should apply.\n";
+    ss << "\\note The FlowControlWithApproachTemperatures only applies to ITE zones with single duct VAV terminal unit.\n";
+    ss << "\\note Other return air heat gains from window or lights are not allowed when FlowControlWithApproachTemperatures is chosen.\n";
+    ss << "\\type choice\n";
+    ss << "\\key FlowFromSystem\n";
+    ss << "\\key FlowControlWithApproachTemperatures\n";
+    ss << "\\default FlowFromSystem\n";
+    ss << "A4 , \\field Design Power Input Calculation Method\n";
+    ss << "\\note The entered calculation method is used to specify the design power input\n";
+    ss << "\\note Watts/Unit => Watts per Unit -- Design Power = Watts per Unit * Number of Units\n";
+    ss << "\\note Watts/Area => Watts per Zone Floor Area -- Design Power = Watts per Zone Floor Area * Floor Area\n";
+    ss << "\\type choice\n";
+    ss << "\\key Watts/Unit\n";
+    ss << "\\key Watts/Area\n";
+    ss << "\\default Watts/Unit\n";
+    ss << "N1 , \\field Watts per Unit\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\ip-units W\n";
+    ss << "\\minimum 0\n";
+    ss << "N2 , \\field Watts per Zone Floor Area\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2\n";
+    ss << "\\ip-units W/ft2\n";
+    ss << "\\minimum 0\n";
+    ss << "A5 , \\field CPU Power Input Function of Loading and Air Temperature Curve Name\n";
+    ss << "\\note The name of a two-variable curve or table lookup object which modifies the CPU power\n";
+    ss << "\\note input as a function of CPU loading (x) and air inlet node temperature (y).\n";
+    ss << "\\note This curve (table) should equal 1.0 at design conditions (CPU loading = 1.0 and\n";
+    ss << "\\note Design Entering Air Temperature).\n";
+    ss << "\\note A default curve named “Data Center Servers Power fLoadTemp” is assigned.\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list BicubicBiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "N3 , \\field Design Fan Power Input Fraction\n";
+    ss << "\\note The fraction of the total power input at design conditions which is for the cooling fan(s)\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N4,  \\field Design Fan Air Flow Rate per Power Input\n";
+    ss << "\\note The cooling fan air flow rate per total electric power input at design conditions\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units m3/s-W\n";
+    ss << "\\ip-units (ft3/min)/(Btu/h)\n";
+    ss << "\\minimum 0.0\n";
+    ss << "A6 , \\field Air Flow Function of Loading and Air Temperature Curve Name\n";
+    ss << "\\note The name of a two-variable curve or table lookup object which modifies the cooling\n";
+    ss << "\\note air flow rate as a function of CPU loading (x) and air inlet node temperature (y).\n";
+    ss << "\\note This curve (table) should equal 1.0 at design conditions (CPU loading = 1.0 and\n";
+    ss << "\\note Design Entering Air Temperature).\n";
+    ss << "\\note A default curve named “Data Center Servers Power fLoadTemp” is assigned.\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list BicubicBiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "A7 , \\field Fan Power Input Function of Flow Curve Name\n";
+    ss << "\\note The name of a single-variable curve or table lookup object which modifies the cooling\n";
+    ss << "\\note fan power as a function of flow fraction (x).\n";
+    ss << "\\note This curve (table) should equal 1.0 at a flow fraction of 1.0.\n";
+    ss << "\\note A default curve named “ECM FanPower fFlow” is assigned.\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N5,  \\field Design Entering Air Temperature\n";
+    ss << "\\note The entering air temperature at design conditions.\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\ip-units F\n";
+    ss << "\\default 15.0\n";
+    ss << "A8, \\field Environmental Class\n";
+    ss << "\\note Specifies the allowable operating conditions for the air inlet conditions.\n";
+    ss << "\\note Used for reporting time outside allowable conditions.\n";
+    ss << "\\type choice\n";
+    ss << "\\key None\n";
+    ss << "\\key A1\n";
+    ss << "\\key A2\n";
+    ss << "\\key A3\n";
+    ss << "\\key A4\n";
+    ss << "\\key B\n";
+    ss << "\\key C\n";
+    ss << "\\default None\n";
+    ss << "A9, \\field Air Inlet Connection Type\n";
+    ss << "\\note Specifies the type of connection between the zone and the ITE air inlet node.\n";
+    ss << "\\note AdjustedSupply = ITE inlet temperature will be the current Supply Air Node temperature\n";
+    ss << "\\note adjusted by the current recirculation fraction.\n";
+    ss << "\\note All heat output is added to the zone air heat balance as a convective gain.\n";
+    ss << "\\note ZoneAirNode = ITE air inlet condition is  the average zone condition.\n";
+    ss << "\\note All heat output is added to the zone air heat balance as a convective gain.\n";
+    ss << "\\note RoomAirModel = ITE air inlet and outlet are connected to room air model nodes.\n";
+    ss << "\\note This field is only used when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type choice\n";
+    ss << "\\key AdjustedSupply\n";
+    ss << "\\key ZoneAirNode\n";
+    ss << "\\default AdjustedSupply\n";
+    ss << "N6,  \\field Design Recirculation Fraction\n";
+    ss << "\\note The recirculation fraction for this equipment at design conditions. This field is used only\n";
+    ss << "\\note if the Air Node Connection Type = AdjustedSupply. The default is 0.0 (no recirculation).\n";
+    ss << "\\note This field is only used when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 0.5\n";
+    ss << "\\default 0.0\n";
+    ss << "A10, \\field Recirculation Function of Loading and Supply Temperature Curve Name\n";
+    ss << "\\note The name of a two-variable curve or table lookup object which modifies the recirculation\n";
+    ss << "\\note fractionas a function of CPU loading (x) and supply air node temperature (y).\n";
+    ss << "\\note This curve (table) should equal 1.0 at design conditions (CPU loading = 1.0 and\n";
+    ss << "\\note Design Entering Air Temperature).This field is used only if the\n";
+    ss << "\\note Air Node Connection Type = AdjustedSupply. If this curve is left blank, then the curve\n";
+    ss << "\\note is assumed to always equal 1.0.\n";
+    ss << "\\note This field is only used when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BicubicBiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "N7 , \\field Design Electric Power Supply Efficiency\n";
+    ss << "\\note The efficiency of the power supply system serving this ITE\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A11, \\field Electric Power Supply Efficiency Function of Part Load Ratio Curve Name\n";
+    ss << "\\note The name of a single-variable curve or table lookup object which modifies the electric\n";
+    ss << "\\note power supply efficiency as a function of part-load ratio (x).\n";
+    ss << "\\note This curve (table) should equal 1.0 at full load (PLR = 1.0).\n";
+    ss << "\\note If this curve is left blank, then the curve is assumed to always equal 1.0.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N8 , \\field Fraction of Electric Power Supply Losses to Zone\n";
+    ss << "\\note Fraction of the electric power supply losses which are a heat gain to the zone\n";
+    ss << "\\note If this field is <1.0, the remainder of the losses are assumed to be lost to the outdoors.\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 1.0\n";
+    ss << "N9, \\field Supply Temperature Difference\n";
+    ss << "\\note The difference of the IT inlet temperature from the AHU supply air temperature.\n";
+    ss << "\\note Either Supply Temperature Difference or Supply Temperature Difference Schedule is required if Air Flow Calculation Method is set to FlowControlWithApproachTemperatures.\n";
+    ss << "\\note This field is ignored when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\ip-units F\n";
+    ss << "\\default 5.0\n";
+    ss << "A12, \\field Supply Temperature Difference Schedule\n";
+    ss << "\\note The difference schedule of the IT inlet temperature from the AHU supply air temperature.\n";
+    ss << "\\note Either Supply Temperature Difference or Supply Temperature Difference Schedule is required if Air Flow Calculation Method is set to FlowControlWithApproachTemperatures.\n";
+    ss << "\\note This field is ignored when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N10, \\field Return Temperature Difference\n";
+    ss << "\\note The difference of the AHU return air temperature from  IT outlet temperature.\n";
+    ss << "\\note Either Return Temperature Difference or Return Temperature Difference Schedule is required if Air Flow Calculation Method is set to FlowControlWithApproachTemperatures.\n";
+    ss << "\\note This field is ignored when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\ip-units F\n";
+    ss << "\\default 2.0\n";
+    ss << "A13; \\field Return Temperature Difference Schedule\n";
+    ss << "\\note The difference schedule of the AHU return air temperature from IT outlet temperature.\n";
+    ss << "\\note Either Return Temperature Difference or Return Temperature Difference Schedule is required if Air Flow Calculation Method is set to FlowControlWithApproachTemperatures.\n";
+    ss << "\\note This field is ignored when Air Flow Calculation Method is FlowFromSystem.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricEquipment:ITE:AirCooled:Definition",
+                                             "OpenStudio Space Load Definitions",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition);
+  return object;
+}
+
 IddObject createOS_GasEquipment_DefinitionIddObject() {
 
   static IddObject object;
@@ -5597,15 +6026,15 @@ IddObject createOS_Exterior_Lights_DefinitionIddObject() {
     ss << "OS:Exterior:Lights:Definition,\n";
     ss << "\\memo only used for Meter type reporting, does not affect building loads\n";
     ss << "\\min-fields 1\n";
-    ss << "A1, \\field Handle\n";
+    ss << "A1,  \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
-    ss << "A2, \\field Name\n";
+    ss << "A2,  \\field Name\n";
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference ExteriorLightsDefinitionNames\n";
     ss << "\\reference ExteriorEquipmentDefinitionNames\n";
-    ss << "N1; \\field Design Level\n";
+    ss << "N1;  \\field Design Level\n";
     ss << "\\type real\n";
     ss << "\\required-field\n";
     ss << "\\units W\n";
@@ -5622,6 +6051,78 @@ IddObject createOS_Exterior_Lights_DefinitionIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_Exterior_Lights_Definition);
+  return object;
+}
+
+IddObject createOS_Exterior_FuelEquipment_DefinitionIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Exterior:FuelEquipment:Definition,\n";
+    ss << "\\memo only used for Meter type reporting, does not affect building loads\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExteriorFuelEquipmentDefinitionNames\n";
+    ss << "\\reference ExteriorEquipmentDefinitionNames\n";
+    ss << "N1;  \\field Design Level\n";
+    ss << "\\required-field\n";
+    ss << "\\units W\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\ip-units W\n";
+
+    IddObjectType objType(IddObjectType::OS_Exterior_FuelEquipment_Definition);
+    OptionalIddObject oObj = IddObject::load("OS:Exterior:FuelEquipment:Definition",
+                                             "OpenStudio Exterior Equipment Definitions",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Exterior_FuelEquipment_Definition);
+  return object;
+}
+
+IddObject createOS_Exterior_WaterEquipment_DefinitionIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Exterior:WaterEquipment:Definition,\n";
+    ss << "\\memo only used for Meter type reporting, does not affect building loads\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExteriorWaterEquipmentDefinitionNames\n";
+    ss << "\\reference ExteriorEquipmentDefinitionNames\n";
+    ss << "N1;  \\field Design Level\n";
+    ss << "\\required-field\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+
+    IddObjectType objType(IddObjectType::OS_Exterior_WaterEquipment_Definition);
+    OptionalIddObject oObj = IddObject::load("OS:Exterior:WaterEquipment:Definition",
+                                             "OpenStudio Exterior Equipment Definitions",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Exterior_WaterEquipment_Definition);
   return object;
 }
 
@@ -6251,6 +6752,8 @@ IddObject createOS_ScheduleTypeLimitsIddObject() {
     ss << "\\key SolarEnergy\n";
     ss << "\\key Availability\n";
     ss << "\\key Percent\n";
+    ss << "\\key Control\n";
+    ss << "\\key Mode\n";
     ss << "\\key ControlMode\n";
     ss << "\\key LinearPowerDensity\n";
 
@@ -6264,6 +6767,128 @@ IddObject createOS_ScheduleTypeLimitsIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_ScheduleTypeLimits);
+  return object;
+}
+
+IddObject createOS_External_FileIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:External:File,\n";
+    ss << "\\url-object\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo An External:File points to a text computer file for use in Schedule:File objects.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExternalFileNames\n";
+    ss << "A3,  \\field File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\retaincase\n";
+    ss << "\\type url\n";
+    ss << "A4;  \\field Column Separator\n";
+    ss << "\\note Currently unused\n";
+    ss << "\\type choice\n";
+    ss << "\\key Comma\n";
+    ss << "\\key Tab\n";
+    ss << "\\key Space\n";
+    ss << "\\key Semicolon\n";
+    ss << "\\default Comma\n";
+
+    IddObjectType objType(IddObjectType::OS_External_File);
+    OptionalIddObject oObj = IddObject::load("OS:External:File",
+                                             "OpenStudio Schedules",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_External_File);
+  return object;
+}
+
+IddObject createOS_Schedule_FileIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Schedule:File,\n";
+    ss << "\\min-fields 6\n";
+    ss << "\\memo A Schedule:File points to a text computer file that has 8760-8784 hours of data.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ScheduleNames\n";
+    ss << "A3,  \\field Schedule Type Limits Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleTypeLimitsNames\n";
+    ss << "A4,  \\field External File Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ExternalFileNames\n";
+    ss << "N1,  \\field Column Number\n";
+    ss << "\\required-field\n";
+    ss << "\\type integer\n";
+    ss << "\\minimum 1\n";
+    ss << "N2,  \\field Rows to Skip at Top\n";
+    ss << "\\required-field\n";
+    ss << "\\type integer\n";
+    ss << "\\minimum 0\n";
+    ss << "N3,  \\field Number of Hours of Data\n";
+    ss << "\\note 8760 hours does not account for leap years, 8784 does.\n";
+    ss << "\\note should be either 8760 or 8784\n";
+    ss << "\\default 8760\n";
+    ss << "\\minimum 8760\n";
+    ss << "\\maximum 8784\n";
+    ss << "A5,  \\field Column Separator\n";
+    ss << "\\type choice\n";
+    ss << "\\key Comma\n";
+    ss << "\\key Tab\n";
+    ss << "\\key Fixed\n";
+    ss << "\\key Semicolon\n";
+    ss << "\\default Comma\n";
+    ss << "A6,  \\field Interpolate to Timestep\n";
+    ss << "\\note when the interval does not match the user specified timestep a \"Yes\" choice will average between the intervals request (to\n";
+    ss << "\\note timestep resolution.  a \"No\" choice will use the interval value at the simulation timestep without regard to if it matches\n";
+    ss << "\\note the boundary or not.\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default No\n";
+    ss << "N4;  \\field Minutes per Item\n";
+    ss << "\\type choice\n";
+    ss << "\\key 1\n";
+    ss << "\\key 2\n";
+    ss << "\\key 3\n";
+    ss << "\\key 4\n";
+    ss << "\\key 5\n";
+    ss << "\\key 6\n";
+    ss << "\\key 10\n";
+    ss << "\\key 12\n";
+    ss << "\\key 15\n";
+    ss << "\\key 20\n";
+    ss << "\\key 30\n";
+    ss << "\\key 60\n";
+
+    IddObjectType objType(IddObjectType::OS_Schedule_File);
+    OptionalIddObject oObj = IddObject::load("OS:Schedule:File",
+                                             "OpenStudio Schedules",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Schedule_File);
   return object;
 }
 
@@ -6317,7 +6942,12 @@ IddObject createOS_BuildingIddObject() {
     ss << "N4, \\field Standards Number of Above Ground Stories\n";
     ss << "\\type integer\n";
     ss << "\\minimum 0\n";
-    ss << "A7, \\field Standards Building Type\n";
+    ss << "A7, \\field Standards Template\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This is a freeform field used to identify the energy standard template for standards.\n";
+    ss << "\\note Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.\n";
+    ss << "\\note More information can be found at https://github.com/NREL/openstudio-standards.\n";
+    ss << "A8, \\field Standards Building Type\n";
     ss << "\\type alpha\n";
     ss << "\\note This is a freeform field used to identify the building type for standards.\n";
     ss << "\\note Standards applied to this model will use this field to determine correct levels for lighting, occupancy, etc.\n";
@@ -6325,7 +6955,7 @@ IddObject createOS_BuildingIddObject() {
     ss << "N5, \\field Standards Number of Living Units\n";
     ss << "\\type integer\n";
     ss << "\\minimum 0\n";
-    ss << "A8, \\field Relocatable\n";
+    ss << "A9, \\field Relocatable\n";
     ss << "\\type choice\n";
     ss << "\\default False\n";
     ss << "\\key True\n";
@@ -6717,9 +7347,12 @@ IddObject createOS_SpaceIddObject() {
     ss << "\\default Yes\n";
     ss << "\\key Yes\n";
     ss << "\\key No\n";
-    ss << "A9; \\field Design Specification Outdoor Air Object Name\n";
+    ss << "A9, \\field Design Specification Outdoor Air Object Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list DesignSpecificationOutdoorAirNames\n";
+    ss << "A10; \\field Building Unit Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BuildingUnitNames\n";
 
     IddObjectType objType(IddObjectType::OS_Space);
     OptionalIddObject oObj = IddObject::load("OS:Space",
@@ -6758,6 +7391,7 @@ IddObject createOS_SurfaceIddObject() {
     ss << "\\reference AllHeatTranAngFacNames\n";
     ss << "\\reference SurfGroupAndHTSurfNames\n";
     ss << "\\reference AllShadingAndHTSurfNames\n";
+    ss << "\\reference FloorSurfaceNames\n";
     ss << "A3, \\field Surface Type\n";
     ss << "\\type choice\n";
     ss << "\\required-field\n";
@@ -6779,6 +7413,7 @@ IddObject createOS_SurfaceIddObject() {
     ss << "\\key Adiabatic\n";
     ss << "\\key Surface\n";
     ss << "\\key Outdoors\n";
+    ss << "\\key Foundation\n";
     ss << "\\key Ground\n";
     ss << "\\key GroundFCfactorMethod\n";
     ss << "\\key OtherSideCoefficients\n";
@@ -6794,6 +7429,8 @@ IddObject createOS_SurfaceIddObject() {
     ss << "\\note Non-blank only if the field Outside Boundary Condition is Surface,\n";
     ss << "\\note OtherSideCoefficients or OtherSideConditionsModel\n";
     ss << "\\note If Surface, specify name of corresponding surface in adjacent space\n";
+    ss << "\\note If Foundation, specify the name of the corresponding Foundation object and\n";
+    ss << "\\note the program will calculate the heat transfer appropriately\n";
     ss << "\\note If OtherSideCoefficients, specify name of SurfaceProperty:OtherSideCoefficients\n";
     ss << "\\note If OtherSideConditionsModel, specify name of SurfaceProperty:OtherSideConditionsModel\n";
     ss << "\\type object-list\n";
@@ -6876,6 +7513,7 @@ IddObject createOS_SubSurfaceIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference SubSurfNames\n";
+    ss << "\\reference GlazedExtSubSurfNames\n";
     ss << "\\reference SurfAndSubSurfNames\n";
     ss << "\\reference AllHeatTranSurfNames\n";
     ss << "\\reference OutFaceEnvNames\n";
@@ -7306,13 +7944,16 @@ IddObject createOS_SurfaceProperty_ConvectionCoefficientsIddObject() {
     ss << "\\type handle\n";
     ss << "\\required-field\n";
     ss << "A2, \\field Surface Name\n";
+    ss << "\\required-field\n";
     ss << "\\type object-list\n";
     ss << "\\object-list AllHeatTranSurfNames\n";
     ss << "A3, \\field Convection Coefficient 1 Location\n";
+    ss << "\\required-field\n";
     ss << "\\type choice\n";
     ss << "\\key Outside\n";
     ss << "\\key Inside\n";
     ss << "A4, \\field Convection Coefficient 1 Type\n";
+    ss << "\\required-field\n";
     ss << "\\type choice\n";
     ss << "\\key Value\n";
     ss << "\\key Schedule\n";
@@ -7615,6 +8256,71 @@ IddObject createOS_SurfaceProperty_ConvectionCoefficients_MultipleSurfaceIddObje
   return object;
 }
 
+IddObject createOS_SurfaceProperty_ExposedFoundationPerimeterIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:SurfaceProperty:ExposedFoundationPerimeter,\n";
+    ss << "\\memo Defines the perimeter of a foundation floor that is exposed to the\n";
+    ss << "\\memo exterior environment through the floor. User may either define the\n";
+    ss << "\\memo total exposed perimeter, fraction of perimeter exposed or\n";
+    ss << "\\memo individually define which segments of the floor surface perimeter\n";
+    ss << "\\memo are exposed.\n";
+    ss << "\\extensible:1\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Surface Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FloorSurfaceNames\n";
+    ss << "A3, \\field Exposed Perimeter Calculation Method\n";
+    ss << "\\note Choices: TotalExposedPerimeter => total exposed perimeter in meters\n";
+    ss << "\\note ExposedPerimeterFraction => fraction of total perimeter that is\n";
+    ss << "\\note exposed. Value * Fraction = Total exposed perimeter\n";
+    ss << "\\note BySegment => define whether the segment between each set of\n";
+    ss << "\\note consecutive vertices of the floor surface is exposed.\n";
+    ss << "\\note SUM(exposed segement lengths) = Total exposed perimeter\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key TotalExposedPerimeter\n";
+    ss << "\\key ExposedPerimeterFraction\n";
+    ss << "\\key BySegment\n";
+    ss << "N1, \\field Total Exposed Perimeter\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N2, \\field Exposed Perimeter Fraction\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A4; \\field Surface Segment Exposed 1\n";
+    ss << "\\note Surface Segment N is the perimeter between the Nth and (N+1)th\n";
+    ss << "\\note vertices\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type choice\n";
+    ss << "\\default Yes\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+
+    IddObjectType objType(IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter);
+    OptionalIddObject oObj = IddObject::load("OS:SurfaceProperty:ExposedFoundationPerimeter",
+                                             "OpenStudio Advanced Construction, Surface, Zone Concepts",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter);
+  return object;
+}
+
 IddObject createOS_SurfaceProperty_OtherSideCoefficientsIddObject() {
 
   static IddObject object;
@@ -7746,6 +8452,225 @@ IddObject createOS_SurfaceProperty_OtherSideConditionsModelIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_SurfaceProperty_OtherSideConditionsModel);
+  return object;
+}
+
+IddObject createOS_Foundation_KivaIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Foundation:Kiva,\n";
+    ss << "\\memo Refined definition of the foundation surface construction used to\n";
+    ss << "\\memo inform two-dimensional heat transfer calculated using the Kiva\n";
+    ss << "\\memo ground heat transfer methodology.\n";
+    ss << "\\extensible:4\n";
+    ss << "\\min-fields 17\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference OutFaceEnvNames\n";
+    ss << "A3,  \\field Interior Horizontal Insulation Material Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N1,  \\field Interior Horizontal Insulation Depth\n";
+    ss << "\\note Distance from the slab bottom to the top of interior horizontal\n";
+    ss << "\\note insulation\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N2,  \\field Interior Horizontal Insulation Width\n";
+    ss << "\\note Extent of insulation as measured from the wall interior\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "A4,  \\field Interior Vertical Insulation Material Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N3,  \\field Interior Vertical Insulation Depth\n";
+    ss << "\\note Extent of insulation as measured from the wall top to the bottom\n";
+    ss << "\\note edge of the interior vertical insulation\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "A5,  \\field Exterior Horizontal Insulation Material Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N4,  \\field Exterior Horizontal Insulation Depth\n";
+    ss << "\\note Distance from the exterior grade to the top of exterior horizontal\n";
+    ss << "\\note insulation\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N5,  \\field Exterior Horizontal Insulation Width\n";
+    ss << "\\note Extent of insulation as measured from the wall exterior\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "A6,  \\field Exterior Vertical Insulation Material Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N6,  \\field Exterior Vertical Insulation Depth\n";
+    ss << "\\note Extent of insulation as measured from the wall top to the bottom\n";
+    ss << "\\note edge of the exterior vertical insulation\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N7,  \\field Wall Height Above Grade\n";
+    ss << "\\note Distance from the exterior grade to the wall top\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.2\n";
+    ss << "N8,  \\field Wall Depth Below Slab\n";
+    ss << "\\note Distance from the slab bottom to the bottom of the foundation wall\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "A7,  \\field Footing Wall Construction Name\n";
+    ss << "\\note Defines the below-grade surface construction for slabs. Required\n";
+    ss << "\\note if foundation wall is not exposed to the zone.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConstructionNames\n";
+    ss << "A8,  \\field Footing Material Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N9,  \\field Footing Depth\n";
+    ss << "\\note Top-to-bottom dimension of the footing (not to be confused with its\n";
+    ss << "\\note depth in the ground). The width of the footing is defined by the\n";
+    ss << "\\note material's thickness.\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.3\n";
+    ss << "A9,  \\field Custom Block Material Name 1\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MaterialNames\n";
+    ss << "N10, \\field Custom Block Depth 1\n";
+    ss << "\\note Top-to-bottom dimension of the block downward.\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N11, \\field Custom Block X Position 1\n";
+    ss << "\\note Position outward (+) or inward (-) relative to the foundation wall\n";
+    ss << "\\note interior\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "N12; \\field Custom Block Z Position 1\n";
+    ss << "\\note Position downward (+) relative to the foundation wall top\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+
+    IddObjectType objType(IddObjectType::OS_Foundation_Kiva);
+    OptionalIddObject oObj = IddObject::load("OS:Foundation:Kiva",
+                                             "OpenStudio Advanced Construction, Surface, Zone Concepts",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Foundation_Kiva);
+  return object;
+}
+
+IddObject createOS_Foundation_Kiva_SettingsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Foundation:Kiva:Settings,\n";
+    ss << "\\memo Settings applied across all Kiva foundation calculations.\n";
+    ss << "\\memo Object is not required. If not defined, defaults will be applied.\n";
+    ss << "\\min-fields 13\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "N1,  \\field Soil Conductivity\n";
+    ss << "\\type real\n";
+    ss << "\\default 1.73\n";
+    ss << "\\units W/m-K\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N2,  \\field Soil Density\n";
+    ss << "\\type real\n";
+    ss << "\\default 1842\n";
+    ss << "\\units kg/m3\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N3,  \\field Soil Specific Heat\n";
+    ss << "\\type real\n";
+    ss << "\\default 419\n";
+    ss << "\\units J/kg-K\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N4,  \\field Ground Solar Absorptivity\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.9\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "N5,  \\field Ground Thermal Absorptivity\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.9\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "N6,  \\field Ground Surface Roughness\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.03\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N7,  \\field Far-Field Width\n";
+    ss << "\\type real\n";
+    ss << "\\default 40\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "A2,  \\field Deep-Ground Boundary Condition\n";
+    ss << "\\type choice\n";
+    ss << "\\key ZeroFlux\n";
+    ss << "\\key GroundWater\n";
+    ss << "\\key Autoselect\n";
+    ss << "\\default Autoselect\n";
+    ss << "N8,  \\field Deep-Ground Depth\n";
+    ss << "\\type real\n";
+    ss << "\\default 40\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\autocalculatable\n";
+    ss << "\\default autocalculate\n";
+    ss << "N9,  \\field Minimum Cell Dimension\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.02\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N10, \\field Maximum Cell Growth Coefficient\n";
+    ss << "\\type real\n";
+    ss << "\\default 1.5\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 1.0\n";
+    ss << "A3;  \\field Simulation Timestep\n";
+    ss << "\\type choice\n";
+    ss << "\\key Hourly\n";
+    ss << "\\key Timestep\n";
+    ss << "\\default Hourly\n";
+
+    IddObjectType objType(IddObjectType::OS_Foundation_Kiva_Settings);
+    OptionalIddObject oObj = IddObject::load("OS:Foundation:Kiva:Settings",
+                                             "OpenStudio Advanced Construction, Surface, Zone Concepts",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Foundation_Kiva_Settings);
   return object;
 }
 
@@ -8062,6 +8987,71 @@ IddObject createOS_ElectricEquipmentIddObject() {
   return object;
 }
 
+IddObject createOS_ElectricEquipment_ITE_AirCooledIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricEquipment:ITE:AirCooled,\n";
+    ss << "\\min-fields 1\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+    ss << "\\reference ElectricEquipmentITEAirCooledNames\n";
+    ss << "\\reference SpaceItemNames\n";
+    ss << "\\reference SpaceLoadNames\n";
+    ss << "\\reference SpaceComponentInstanceNames\n";
+    ss << "A3, \\field Electric Equipment ITE AirCooled Definition Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ElectricEquipmentITEAirCooledDefinitionNames\n";
+    ss << "A4, \\field Space or SpaceType Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list SpaceAndSpaceTypeNames\n";
+    ss << "A5, \\field Design Power Input Schedule Name\n";
+    ss << "\\note units in schedule should be fraction applied to design level of electric equipment, generally (0.0 - 1.0)\n";
+    ss << "\\note If left blank, the schedule is assumed to always be 1.0\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A6, \\field CPU Loading Schedule Name\n";
+    ss << "\\note units in schedule should be fraction applied to design level of electric equipment, generally (0.0 - 1.0)\n";
+    ss << "\\note If left blank, the schedule is assumed to always be 1.0\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N1, \\field Multiplier\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A7, \\field CPU End-Use Subcategory\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default ITE-CPU\n";
+    ss << "A8, \\field Fan End-Use Subcategory\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default ITE-Fans\n";
+    ss << "A9; \\field Electric Power Supply End-Use Subcategory\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default ITE-UPS\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricEquipment_ITE_AirCooled);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricEquipment:ITE:AirCooled",
+                                             "OpenStudio Space Loads",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricEquipment_ITE_AirCooled);
+  return object;
+}
+
 IddObject createOS_GasEquipmentIddObject() {
 
   static IddObject object;
@@ -8238,7 +9228,7 @@ IddObject createOS_OtherEquipmentIddObject() {
     ss << "\\reference SpaceItemNames\n";
     ss << "\\reference SpaceLoadNames\n";
     ss << "\\reference SpaceComponentInstanceNames\n";
-    ss << "A3, \\field Other Equipment Definition Name\n";
+    ss << "A3,  \\field Other Equipment Definition Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list OtherEquipmentDefinitionNames\n";
@@ -8250,10 +9240,35 @@ IddObject createOS_OtherEquipmentIddObject() {
     ss << "\\note units in Schedule should be fraction applied to design level of other equipment, generally (0.0 - 1.0)\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "N1; \\field Multiplier\n";
+    ss << "N1, \\field Multiplier\n";
     ss << "\\type real\n";
     ss << "\\minimum 0.0\n";
     ss << "\\default 1.0\n";
+    ss << "A6,  \\field Fuel Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key None\n";
+    ss << "\\key Electricity\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key Coal\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "\\key Steam\n";
+    ss << "\\key DistrictHeating\n";
+    ss << "\\key DistrictCooling\n";
+    ss << "\\default None\n";
+    ss << "A7;  \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\note The following special tags will also place the end-use in specific rows in the LEED Summary table\n";
+    ss << "\\note EAp2-4/5. Performance Rating Method Compliance:\n";
+    ss << "\\note Fans-Parking Garage, Interior Lighting-Process, Cooking, Industrial Process, Elevators and Escalators.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
 
     IddObjectType objType(IddObjectType::OS_OtherEquipment);
     OptionalIddObject oObj = IddObject::load("OS:OtherEquipment",
@@ -8467,6 +9482,118 @@ IddObject createOS_Exterior_LightsIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_Exterior_Lights);
+  return object;
+}
+
+IddObject createOS_Exterior_FuelEquipmentIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Exterior:FuelEquipment,\n";
+    ss << "\\memo only used for Meter type reporting, does not affect building loads\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExteriorFuelEquipmentNames\n";
+    ss << "\\reference ExteriorEquipmentNames\n";
+    ss << "A3,  \\field Exterior Fuel Equipment Definition Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ExteriorFuelEquipmentDefinitionNames\n";
+    ss << "A4,  \\field Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note units in schedule should be fraction applied to capacity of the exterior fuel equipment, generally (0.0 - 1.0)\n";
+    ss << "A5,  \\field Fuel Use Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key Electricity\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key Coal\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "\\key Steam\n";
+    ss << "\\key DistrictHeating\n";
+    ss << "\\key DistrictCooling\n";
+    ss << "N1,  \\field Multiplier\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A6;  \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
+
+    IddObjectType objType(IddObjectType::OS_Exterior_FuelEquipment);
+    OptionalIddObject oObj = IddObject::load("OS:Exterior:FuelEquipment",
+                                             "OpenStudio Exterior Equipment",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Exterior_FuelEquipment);
+  return object;
+}
+
+IddObject createOS_Exterior_WaterEquipmentIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Exterior:WaterEquipment,\n";
+    ss << "\\memo only used for Meter type reporting, does not affect building loads\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExteriorWaterEquipmentNames\n";
+    ss << "\\reference ExteriorEquipmentNames\n";
+    ss << "A3,  \\field Exterior Water Equipment Definition Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ExteriorWaterEquipmentDefinitionNames\n";
+    ss << "A4,  \\field Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note units in Schedule should be fraction applied to capacity of the exterior water equipment, generally (0.0 - 1.0)\n";
+    ss << "N1,  \\field Multiplier\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A5;  \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
+
+    IddObjectType objType(IddObjectType::OS_Exterior_WaterEquipment);
+    OptionalIddObject oObj = IddObject::load("OS:Exterior:WaterEquipment",
+                                             "OpenStudio Exterior Equipment",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Exterior_WaterEquipment);
   return object;
 }
 
@@ -10271,6 +11398,7 @@ IddObject createOS_Refrigeration_SecondarySystemIddObject() {
     ss << "\\type real\n";
     ss << "\\minimum 0.0\n";
     ss << "\\units Pa\n";
+    ss << "\\ip-units ftH2O\n";
     ss << "\\note Either the Total Pump Power or the Total Pump Head is required.\n";
     ss << "N11,  \\field PhaseChange Circulating Rate\n";
     ss << "\\type real\n";
@@ -11218,9 +12346,10 @@ IddObject createOS_AirLoopHVACIddObject() {
     ss << "A4, \\field Availability Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "A5, \\field Availability Manager\n";
+    ss << "A5, \\field Availability Manager List Name\n";
+    ss << "\\note Enter the name of an AvailabilityManagerAssignmentList object.\n";
     ss << "\\type object-list\n";
-    ss << "\\object-list SystemAvailabilityManagers\n";
+    ss << "\\object-list SystemAvailabilityManagerLists\n";
     ss << "N1, \\field Design Supply Air Flow Rate\n";
     ss << "\\type real\n";
     ss << "\\autosizable\n";
@@ -11259,9 +12388,25 @@ IddObject createOS_AirLoopHVACIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A14; \\field Return Air Bypass Flow Temperature Setpoint Schedule Name\n";
+    ss << "A14, \\field Return Air Bypass Flow Temperature Setpoint Schedule Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
+    ss << "A15, \\field Demand Mixer Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A16, \\field Demand Splitter A Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A17, \\field Demand Splitter B Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A18; \\field Supply Splitter Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
 
     IddObjectType objType(IddObjectType::OS_AirLoopHVAC);
     OptionalIddObject oObj = IddObject::load("OS:AirLoopHVAC",
@@ -12376,7 +13521,7 @@ IddObject createOS_AirLoopHVAC_UnitarySystemIddObject() {
     ss << "\\type object-list\n";
     ss << "\\object-list ConnectionNames\n";
     ss << "\\note Enter the name of the heat recovery water outlet node if plant water loop connections are present.\n";
-    ss << "A23; \\field Design Specification Multispeed Heat Pump Object Name\n";
+    ss << "A23; \\field Design Specification Multispeed Object Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list UnitarySystemPerformaceNames\n";
     ss << "\\note Enter the name of the performance specification object used to describe the multispeed coil.\n";
@@ -12391,6 +13536,65 @@ IddObject createOS_AirLoopHVAC_UnitarySystemIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_AirLoopHVAC_UnitarySystem);
+  return object;
+}
+
+IddObject createOS_UnitarySystemPerformance_MultispeedIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:UnitarySystemPerformance:Multispeed,\n";
+    ss << "\\memo The UnitarySystemPerformance object is used to specify the air flow ratio at each\n";
+    ss << "\\memo operating speed. This object is primarily used for multispeed DX and water coils to allow\n";
+    ss << "\\memo operation at alternate flow rates different from those specified in the coil object.\n";
+    ss << "\\extensible:2 - repeat last two fields, remembering to remove ; from \"inner\" fields.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference UnitarySystemPerformaceNames\n";
+    ss << "A3 , \\field Single Mode Operation\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default No\n";
+    ss << "\\note Controls coil operation during each HVAC timestep.\n";
+    ss << "\\note This choice does not apply to speed 1 operation.\n";
+    ss << "\\note Yes = operate at the highest speed possible without exceeding the current load.\n";
+    ss << "\\note No = allow operation at the average of two adjacent speeds to match the current load.\n";
+    ss << "N1 , \\field Heating Speed 1 Supply Air Flow Ratio\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\note Used only for Multi speed coils\n";
+    ss << "\\note Enter the lowest operating supply air flow ratio during heating\n";
+    ss << "\\note operation or specify autosize. This value is the ratio of air flow\n";
+    ss << "\\note at this speed to the maximum air flow rate.\n";
+    ss << "N2 ; \\field Cooling Speed 1 Supply Air Flow Ratio\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Used only for Multi speed coils\n";
+    ss << "\\note Enter the lowest operating supply air flow ratio during cooling\n";
+    ss << "\\note operation or specify autosize. This value is the ratio of air flow\n";
+    ss << "\\note at this speed to the maximum air flow rate.\n";
+
+    IddObjectType objType(IddObjectType::OS_UnitarySystemPerformance_Multispeed);
+    OptionalIddObject oObj = IddObject::load("OS:UnitarySystemPerformance:Multispeed",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_UnitarySystemPerformance_Multispeed);
   return object;
 }
 
@@ -12414,6 +13618,7 @@ IddObject createOS_AirLoopHVAC_ZoneMixerIddObject() {
     ss << "\\reference ZoneMixers\n";
     ss << "\\reference ReturnPathComponentNames\n";
     ss << "\\reference ConnectionObject\n";
+    ss << "\\reference AirflowNetworkNodeComponentNames\n";
     ss << "A3, \\field Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
@@ -12457,6 +13662,7 @@ IddObject createOS_AirLoopHVAC_ZoneSplitterIddObject() {
     ss << "\\reference ZoneSplitters\n";
     ss << "\\reference SupplyPathComponentNames\n";
     ss << "\\reference ConnectionObject\n";
+    ss << "\\reference AirflowNetworkNodeComponentNames\n";
     ss << "A3, \\field Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
@@ -12998,6 +14204,111 @@ IddObject createOS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInductionIddObj
   return object;
 }
 
+IddObject createOS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeamIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirTerminal:SingleDuct:ConstantVolume:FourPipeBeam,\n";
+    ss << "\\memo Central air system terminal unit, single duct, constant volume,\n";
+    ss << "\\memo with heating and/or cooling.\n";
+    ss << "\\memo Operates as two-pipe unit if heating or cooling water is omitted.\n";
+    ss << "\\memo Heating and/or cooling can be scheduled off for dedicated ventilation.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3 , \\field Primary Air Availability Schedule Name\n";
+    ss << "\\note Primary air is supplied by central air handling unit and must be on for heating or cooling.\n";
+    ss << "\\note Schedule value > 0 means the primary air supply is available.\n";
+    ss << "\\note If this field is blank, the primary air supply is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A4 , \\field Cooling Availability Schedule Name\n";
+    ss << "\\note Cooling operation can be controlled separately using this availability schedule.\n";
+    ss << "\\note Schedule value > 0 means beam cooling is available.\n";
+    ss << "\\note If this field is blank, the beam cooling is always available (as long as primary air is also available).\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A5 , \\field Heating Availability Schedule Name\n";
+    ss << "\\note Heating operation can be controlled separately using this availability schedule.\n";
+    ss << "\\note Schedule value > 0 means beam heating is available.\n";
+    ss << "\\note If this field is blank, the beam heating is always available (as long as primary air is also available).\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A6 , \\field Primary Air Inlet Node Name\n";
+    ss << "\\note Name of the air system node for primary supply air entering the air distribution unit.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\required-field\n";
+    ss << "A7 , \\field Primary Air Outlet Node Name\n";
+    ss << "\\note Name of the air system node for primary supply air leaving the air distribution unit and entering the zone.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\required-field\n";
+    ss << "A8 , \\field Cooling Coil Name\n";
+    ss << "\\note  Needs to match the four pipe beam cooling coil object CoolingCoilFourPipeBeam\n";
+    ss << "\\note This can (only) be omitted to model a two-pipe heating only beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list CoolingCoilFourPipeBeam\n";
+    ss << "A9 , \\field Heating Coil Name\n";
+    ss << "\\note  Needs to match the cooled beam cooling coil object HeatingCoilFourPipeBeam\n";
+    ss << "\\note This can (only) be omitted to model a two-pipe cooling only beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list HeatingCoilFourPipeBeam\n";
+    ss << "N1 , \\field Design Primary Air Volume Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
+    ss << "N2 , \\field Design Chilled Water Volume Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
+    ss << "N3 , \\field Design Hot Water Volume Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
+    ss << "N4 , \\field Zone Total Beam Length\n";
+    ss << "\\note Sum of the length of all the beam units in the zone represented by this terminal unit.\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
+    ss << "N5 ; \\field Rated Primary Air Flow Rate per Beam Length\n";
+    ss << "\\note Primary air supply flow rate normalized by beam length.\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s-m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.035\n";
+
+    IddObjectType objType(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam);
+    OptionalIddObject oObj = IddObject::load("OS:AirTerminal:SingleDuct:ConstantVolume:FourPipeBeam",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam);
+  return object;
+}
+
 IddObject createOS_AirTerminal_SingleDuct_ConstantVolume_CooledBeamIddObject() {
 
   static IddObject object;
@@ -13097,6 +14408,9 @@ IddObject createOS_AirTerminal_SingleDuct_UncontrolledIddObject() {
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
     ss << "OS:AirTerminal:SingleDuct:Uncontrolled,\n";
+    ss << "\\memo Central air system terminal unit, single duct, constant volume, no controls other than\n";
+    ss << "\\memo on/off schedule.\n";
+    ss << "\\obsolete New=>OS:AirTerminal:SingleDuct:ConstantVolume:NoReheat\n";
     ss << "\\min-fields 6\n";
     ss << "A1, \\field Handle\n";
     ss << "\\type handle\n";
@@ -13132,6 +14446,59 @@ IddObject createOS_AirTerminal_SingleDuct_UncontrolledIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled);
+  return object;
+}
+
+IddObject createOS_AirTerminal_SingleDuct_ConstantVolume_NoReheatIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirTerminal:SingleDuct:ConstantVolume:NoReheat,\n";
+    ss << "\\memo Central air system terminal unit, single duct, constant volume, without reheat coil\n";
+    ss << "\\min-fields 6\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3,  \\field Availability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A4,  \\field Air Inlet Node Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note The air-inlet node name that connects the air splitter to the individual zone air distribution\n";
+    ss << "\\note unit. This node should also be one of the outlet air node of an AirLoopHVAC:ZoneSplitter or\n";
+    ss << "\\note AirLoopHVAC:SupplyPlenum component.\n";
+    ss << "A5,  \\field Air Outlet Node Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note This is an air outlet node from the air distribution unit. This node name should be one of the\n";
+    ss << "\\note supply air inlet node names of a zone served by this component.\n";
+    ss << "N1; \\field Maximum Air Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\autosizable\n";
+    ss << "\\units m3/s\n";
+    ss << "\\minimum 0\n";
+
+    IddObjectType objType(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat);
+    OptionalIddObject oObj = IddObject::load("OS:AirTerminal:SingleDuct:ConstantVolume:NoReheat",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat);
   return object;
 }
 
@@ -13181,7 +14548,8 @@ IddObject createOS_AirTerminal_SingleDuct_VAV_NoReheatIddObject() {
     ss << "\\note is optional; if a value is entered, then it is used for sizing normal-action reheat coils.\n";
     ss << "\\note If both this field and the following field are entered, the larger result is used.\n";
     ss << "\\type real\n";
-    ss << "\\default 0.3\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
     ss << "N3 , \\field Fixed Minimum Air Flow Rate\n";
     ss << "\\note This field is used if the field Zone Minimum Air Flow Input Method is FixedFlowRate.\n";
     ss << "\\note If the field Zone Minimum Air Flow Input Method is Scheduled, then this field\n";
@@ -13189,7 +14557,8 @@ IddObject createOS_AirTerminal_SingleDuct_VAV_NoReheatIddObject() {
     ss << "\\note If both this field and the previous field are entered, the larger result is used.\n";
     ss << "\\type real\n";
     ss << "\\units m3/s\n";
-    ss << "\\default 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
     ss << "A7 , \\field Minimum Air Flow Fraction Schedule Name\n";
     ss << "\\note This field is used if the field Zone Minimum Air Flow Input Method is Scheduled\n";
     ss << "\\note Schedule values are fractions, 0.0 to 1.0.\n";
@@ -13260,7 +14629,8 @@ IddObject createOS_AirTerminal_SingleDuct_VAV_ReheatIddObject() {
     ss << "\\note is optional; if a value is entered, then it is used for sizing normal-action reheat coils.\n";
     ss << "\\note If both this field and the following field are entered, the larger result is used.\n";
     ss << "\\type real\n";
-    ss << "\\default 0.3\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
     ss << "N3, \\field Fixed Minimum Air Flow Rate\n";
     ss << "\\note This field is used if the field Zone Minimum Air Flow Input Method is FixedFlowRate.\n";
     ss << "\\note If the field Zone Minimum Air Flow Input Method is Scheduled, then this field\n";
@@ -13268,7 +14638,8 @@ IddObject createOS_AirTerminal_SingleDuct_VAV_ReheatIddObject() {
     ss << "\\note If both this field and the previous field are entered, the larger result is used.\n";
     ss << "\\type real\n";
     ss << "\\units m3/s\n";
-    ss << "\\default 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
     ss << "A7, \\field Minimum Air Flow Fraction Schedule Name\n";
     ss << "\\note This field is used if the field Zone Minimum Air Flow Input Method is Scheduled\n";
     ss << "\\note Schedule values are fractions, 0.0 to 1.0.\n";
@@ -13307,6 +14678,7 @@ IddObject createOS_AirTerminal_SingleDuct_VAV_ReheatIddObject() {
     ss << "\\default Normal\n";
     ss << "\\key Normal\n";
     ss << "\\key Reverse\n";
+    ss << "\\key ReverseWithLimits\n";
     ss << "N7, \\field Maximum Flow per Zone Floor Area During Reheat\n";
     ss << "\\note Used only when Reheat Coil Object Type = Coil:Heating:Water and Damper Heating Action = Reverse\n";
     ss << "\\note When autocalculating, the maximum flow per zone is set to 0.002032 m3/s-m2 (0.4 cfm/sqft)\n";
@@ -13396,14 +14768,13 @@ IddObject createOS_AirTerminal_DualDuct_VAV_OutdoorAirIddObject() {
     ss << "\\autosizable\n";
     ss << "\\required-field\n";
     ss << "\\note If autosized this is the sum of flow needed for cooling and maximum required outdoor air\n";
-    ss << "A7 , \\field Design Specification Outdoor Air Object\n";
+    ss << "A7 , \\field Control For Outdoor Air\n";
+    ss << "\\note This field replaces the E+ field Design Specification Outdoor Air Object Name\n";
+    ss << "\\note Refer to OpenStudio API for details\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
     ss << "\\required-field\n";
-    ss << "\\type object-list\n";
-    ss << "\\object-list DesignSpecificationOutdoorAirNames\n";
-    ss << "\\note When the name of a DesignSpecification:OutdoorAir object is entered, the terminal\n";
-    ss << "\\note unit will increase flow as needed to meet this outdoor air requirement.\n";
-    ss << "\\note If Outdoor Air Flow per Person is non-zero, then the outdoor air requirement will\n";
-    ss << "\\note be computed based mode selected in the next field.\n";
     ss << "\\note At no time will the supply air flow rate exceed the value for Maximum Air Flow Rate.\n";
     ss << "A8 ; \\field Per Person Ventilation Rate Mode\n";
     ss << "\\type choice\n";
@@ -13584,14 +14955,14 @@ IddObject createOS_AvailabilityManager_ScheduledIddObject() {
     ss << "\\memo Determines the availability of a loop or system: whether it is on or off.\n";
     ss << "\\memo Schedule overrides fan/pump schedule.\n";
     ss << "\\min-fields 3\n";
-    ss << "A1, \\field Handle\n";
+    ss << "A1,  \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
-    ss << "A2, \\field Name\n";
+    ss << "A2,  \\field Name\n";
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference SystemAvailabilityManagers\n";
-    ss << "A3; \\field Schedule Name\n";
+    ss << "A3;  \\field Schedule Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ScheduleNames\n";
@@ -13606,6 +14977,76 @@ IddObject createOS_AvailabilityManager_ScheduledIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_Scheduled);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_ScheduledOnIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:ScheduledOn,\n";
+    ss << "\\memo Determines the availability of a loop or system: only controls the turn on action.\n";
+    ss << "\\memo Schedule overrides fan/pump schedule.\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3;  \\field Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_ScheduledOn);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:ScheduledOn",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_ScheduledOn);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_ScheduledOffIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:ScheduledOff,\n";
+    ss << "\\memo Determines the availability of a loop or system: only controls the turn off action.\n";
+    ss << "\\memo Schedule overrides fan/pump schedule.\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3;  \\field Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_ScheduledOff);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:ScheduledOff",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_ScheduledOff);
   return object;
 }
 
@@ -13640,6 +15081,10 @@ IddObject createOS_AvailabilityManager_NightCycleIddObject() {
     ss << "\\key CycleOnAny\n";
     ss << "\\key CycleOnControlZone\n";
     ss << "\\key CycleOnAnyZoneFansOnly\n";
+    ss << "\\key CycleOnAnyCoolingOrHeatingZone\n";
+    ss << "\\key CycleOnAnyCoolingZone\n";
+    ss << "\\key CycleOnAnyHeatingZone\n";
+    ss << "\\key CycleOnAnyHeatingZoneFansOnly\n";
     ss << "\\default StayOff\n";
     ss << "\\note When AvailabilityManager:NightCycle is used in the zone component availability\n";
     ss << "\\note manager assignment list, the key choices for Control Type would only be\n";
@@ -13647,15 +15092,30 @@ IddObject createOS_AvailabilityManager_NightCycleIddObject() {
     ss << "N1 , \\field Thermostat Tolerance\n";
     ss << "\\default 1.0\n";
     ss << "\\units deltaC\n";
+    ss << "A5 , \\field Cycling Run Time Control Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key FixedRunTime\n";
+    ss << "\\key Thermostat\n";
+    ss << "\\key ThermostatWithMinimumRunTime\n";
+    ss << "\\default FixedRunTime\n";
     ss << "N2 , \\field Cycling Run Time\n";
     ss << "\\default 3600.\n";
     ss << "\\units s\n";
-    ss << "A6 ; \\field Control Thermal Zone\n";
+    ss << "A7 , \\field Control Zone or Zone List Name\n";
     ss << "\\type object-list\n";
-    ss << "\\object-list ThermalZoneNames\n";
+    ss << "\\object-list ModelObjectLists\n";
     ss << "\\note When AvailabilityManager:NightCycle is used in the zone component availability\n";
     ss << "\\note manager assignment list, the Control Zone Name should be the name of the zone in which the\n";
     ss << "\\note zone component is.\n";
+    ss << "A8 , \\field Cooling Control Zone or Zone List Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ModelObjectLists\n";
+    ss << "A9 , \\field Heating Control Zone or Zone List Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ModelObjectLists\n";
+    ss << "A10 ; \\field Heating Zone Fans Only Zone or Zone List Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ModelObjectLists\n";
 
     IddObjectType objType(IddObjectType::OS_AvailabilityManager_NightCycle);
     OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:NightCycle",
@@ -13702,7 +15162,7 @@ IddObject createOS_AvailabilityManager_OptimumStartIddObject() {
     ss << "\\object-list ThermalZoneNames\n";
     ss << "A7 , \\field Zone List\n";
     ss << "\\type object-list\n";
-    ss << "\\object-list ZoneListNames\n";
+    ss << "\\object-list ThermalZoneListNames\n";
     ss << "N1 , \\field Maximum Value for Optimum Start Time\n";
     ss << "\\required-field\n";
     ss << "\\units hr\n";
@@ -13765,7 +15225,7 @@ IddObject createOS_AvailabilityManager_DifferentialThermostatIddObject() {
     std::stringstream ss;
     ss << "OS:AvailabilityManager:DifferentialThermostat,\n";
     ss << "\\memo Overrides fan/pump schedules depending on temperature difference between two nodes.\n";
-    ss << "A1, \\field Handle\n";
+    ss << "A1,  \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
     ss << "A2 , \\field Name\n";
@@ -13797,6 +15257,154 @@ IddObject createOS_AvailabilityManager_DifferentialThermostatIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_DifferentialThermostat);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_HighTemperatureTurnOffIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:HighTemperatureTurnOff,\n";
+    ss << "\\memo Overrides fan/pump schedules depending on temperature at sensor node.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3 , \\field Sensor Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "N1 ; \\field Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:HighTemperatureTurnOff",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_HighTemperatureTurnOnIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:HighTemperatureTurnOn,\n";
+    ss << "\\memo Overrides fan/pump schedules depending on temperature at sensor node.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3 , \\field Sensor Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "N1 ; \\field Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:HighTemperatureTurnOn",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_LowTemperatureTurnOffIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:LowTemperatureTurnOff,\n";
+    ss << "\\memo Overrides fan/pump schedules depending on temperature at sensor node.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3 , \\field Sensor Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "N1 , \\field Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "A4 ; \\field Applicability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note If blank, defaults to always active\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:LowTemperatureTurnOff",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff);
+  return object;
+}
+
+IddObject createOS_AvailabilityManager_LowTemperatureTurnOnIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AvailabilityManager:LowTemperatureTurnOn,\n";
+    ss << "\\memo Overrides fan/pump schedules depending on temperature at sensor node.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SystemAvailabilityManagers\n";
+    ss << "A3 , \\field Sensor Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "N1 ; \\field Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+
+    IddObjectType objType(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn);
+    OptionalIddObject oObj = IddObject::load("OS:AvailabilityManager:LowTemperatureTurnOn",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn);
   return object;
 }
 
@@ -14120,11 +15728,16 @@ IddObject createOS_Boiler_HotWaterIddObject() {
     ss << "\\units W\n";
     ss << "\\minimum 0\n";
     ss << "\\default 0.0\n";
-    ss << "N10; \\field Sizing Factor\n";
+    ss << "N10, \\field Sizing Factor\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0\n";
     ss << "\\default 1.0\n";
+    ss << "A9 ; \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
 
     IddObjectType objType(IddObjectType::OS_Boiler_HotWater);
     OptionalIddObject oObj = IddObject::load("OS:Boiler:HotWater",
@@ -14197,11 +15810,16 @@ IddObject createOS_Boiler_SteamIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "N11; \\field Sizing Factor\n";
+    ss << "N11, \\field Sizing Factor\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\default 1.0\n";
+    ss << "A6 ; \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
 
     IddObjectType objType(IddObjectType::OS_Boiler_Steam);
     OptionalIddObject oObj = IddObject::load("OS:Boiler:Steam",
@@ -14228,6 +15846,7 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_HeatingIddObject() {
     ss << "\\required-field\n";
     ss << "A2,  \\field Name\n";
     ss << "\\type alpha\n";
+    ss << "\\reference WWHPHeatingNames\n";
     ss << "\\required-field\n";
     ss << "\\reference ConnectionObject\n";
     ss << "A3,  \\field Source Side Inlet Node Name\n";
@@ -14246,26 +15865,32 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_HeatingIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "N1,  \\field Rated Load Side Flow Rate\n";
+    ss << "N1,  \\field Reference Load Side Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units m3/s\n";
-    ss << "N2,  \\field Rated Source Side Flow Rate\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\autosizable\n";
+    ss << "N2,  \\field Reference Source Side Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units m3/s\n";
-    ss << "N3,  \\field Rated Heating Capacity\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\autosizable\n";
+    ss << "N3,  \\field Reference Heating Capacity\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units W\n";
-    ss << "N4,  \\field Rated Heating Power Consumption\n";
+    ss << "\\autosizable\n";
+    ss << "N4,  \\field Reference Heating Power Consumption\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units W\n";
+    ss << "\\autosizable\n";
     ss << "N5,  \\field Heating Capacity Coefficient 1\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
@@ -14293,9 +15918,23 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_HeatingIddObject() {
     ss << "N13, \\field Heating Compressor Power Coefficient 4\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
-    ss << "N14; \\field Heating Compressor Power Coefficient 5\n";
+    ss << "N14, \\field Heating Compressor Power Coefficient 5\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
+    ss << "N15, \\field Reference Coefficient of Performance\n";
+    ss << "\\note This optional field is used to autosize Reference Heating Power Consumption\n";
+    ss << "\\note COP = Reference Heating Capacity / Reference Heating Power Consumption\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\required-field\n";
+    ss << "N16, \\field Sizing Factor\n";
+    ss << "\\note Multiplies the autosized capacity and flow rates\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\required-field\n";
+    ss << "A7 ; \\field Companion Cooling Heat Pump Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list WWHPCoolingNames\n";
 
     IddObjectType objType(IddObjectType::OS_HeatPump_WaterToWater_EquationFit_Heating);
     OptionalIddObject oObj = IddObject::load("OS:HeatPump:WaterToWater:EquationFit:Heating",
@@ -14322,6 +15961,7 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_CoolingIddObject() {
     ss << "\\required-field\n";
     ss << "A2,  \\field Name\n";
     ss << "\\type alpha\n";
+    ss << "\\reference WWHPCoolingNames\n";
     ss << "\\required-field\n";
     ss << "\\reference ConnectionObject\n";
     ss << "A3,  \\field Source Side Inlet Node Name\n";
@@ -14340,26 +15980,32 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_CoolingIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "N1,  \\field Rated Load Side Flow Rate\n";
+    ss << "N1,  \\field Reference Load Side Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units m3/s\n";
-    ss << "N2,  \\field Rated Source Side Flow Rate\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\autosizable\n";
+    ss << "N2,  \\field Reference Source Side Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units m3/s\n";
-    ss << "N3,  \\field Rated Cooling Capacity\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\autosizable\n";
+    ss << "N3,  \\field Reference Cooling Capacity\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units W\n";
-    ss << "N4,  \\field Rated Cooling Power Consumption\n";
+    ss << "\\autosizable\n";
+    ss << "N4,  \\field Reference Cooling Power Consumption\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\units W\n";
+    ss << "\\autosizable\n";
     ss << "N5,  \\field Cooling Capacity Coefficient 1\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
@@ -14387,9 +16033,24 @@ IddObject createOS_HeatPump_WaterToWater_EquationFit_CoolingIddObject() {
     ss << "N13, \\field Cooling Compressor Power Coefficient 4\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
-    ss << "N14; \\field Cooling Compressor Power Coefficient 5\n";
+    ss << "N14, \\field Cooling Compressor Power Coefficient 5\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
+    ss << "N15, \\field Reference Coefficient of Performance\n";
+    ss << "\\note This optional field is used to autosize Reference Cooling Power Consumption\n";
+    ss << "\\note COP = Rated Cooling Capacity / Rated Cooling Power Consumption\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 8.0\n";
+    ss << "N16, \\field Sizing Factor\n";
+    ss << "\\note Multiplies the autosized capacity and flow rates\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "A7 ; \\field Companion Heating Heat Pump Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list WWHPHeatingNames\n";
+    ss << "\\note This optional field is used to coordinate sizing calculations between heating and cooling modes.\n";
 
     IddObjectType objType(IddObjectType::OS_HeatPump_WaterToWater_EquationFit_Cooling);
     OptionalIddObject oObj = IddObject::load("OS:HeatPump:WaterToWater:EquationFit:Cooling",
@@ -14564,9 +16225,11 @@ IddObject createOS_Chiller_Electric_EIRIddObject() {
     ss << "\\minimum 0\n";
     ss << "\\default 0.0\n";
     ss << "A12, \\field Heat Recovery Inlet Node Name\n";
-    ss << "\\type alpha\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
     ss << "A13, \\field Heat Recovery Outlet Node Name\n";
-    ss << "\\type alpha\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
     ss << "N15, \\field Sizing Factor\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
@@ -14589,7 +16252,7 @@ IddObject createOS_Chiller_Electric_EIRIddObject() {
     ss << "\\units C\n";
     ss << "\\minimum 2\n";
     ss << "\\default 2.0\n";
-    ss << "A14; \\field Basin Heater Operating Schedule Name\n";
+    ss << "A14, \\field Basin Heater Operating Schedule Name\n";
     ss << "\\note This field is only used for Condenser Type = EvaporativelyCooled.\n";
     ss << "\\note Schedule values greater than 0 allow the basin heater to operate whenever the outdoor\n";
     ss << "\\note air dry-bulb temperature is below the basin heater setpoint temperature.\n";
@@ -14597,6 +16260,26 @@ IddObject createOS_Chiller_Electric_EIRIddObject() {
     ss << "\\note throughout the entire simulation.\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
+    ss << "N18, \\field Condenser Heat Recovery Relative Capacity Fraction\n";
+    ss << "\\note This optional field is the fraction of total rejected heat that can be recovered at full load\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "A15, \\field Heat Recovery Inlet High Temperature Limit Schedule Name\n";
+    ss << "\\note This optional schedule of temperatures will turn off heat recovery if inlet exceeds the value\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A16, \\field Heat Recovery Leaving Temperature Setpoint Node Name\n";
+    ss << "\\note This optional field provides control over the heat recovery\n";
+    ss << "\\note Using this triggers a model more suited to series bundle and chillers with higher temperature heat recovery\n";
+    ss << "\\note If this field is not used, the bundles are modeled as being in parallel\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A17; \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
 
     IddObjectType objType(IddObjectType::OS_Chiller_Electric_EIR);
     OptionalIddObject oObj = IddObject::load("OS:Chiller:Electric:EIR",
@@ -14623,33 +16306,33 @@ IddObject createOS_CentralHeatPumpSystemIddObject() {
     ss << "\\required-field\n";
     ss << "A2,  \\field Name\n";
     ss << "\\type alpha\n";
-    ss << "\\reference ConnectionObjecta\n";
+    ss << "\\reference ConnectionObject\n";
     ss << "\\required-field\n";
     ss << "A3,  \\field Control Method\n";
     ss << "\\required-field\n";
     ss << "\\type choice\n";
     ss << "\\key SmartMixing\n";
-    ss << "A3,  \\field Cooling Loop Inlet Node Name\n";
+    ss << "A4,  \\field Cooling Loop Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A4,  \\field Cooling Loop Outlet Node Name\n";
+    ss << "A5,  \\field Cooling Loop Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A5,  \\field Source Loop Inlet Node Name\n";
+    ss << "A6,  \\field Source Loop Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A6,  \\field Source Loop Outlet Node Name\n";
+    ss << "A7,  \\field Source Loop Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A7,  \\field Heating Loop Inlet Node Name\n";
+    ss << "A8,  \\field Heating Loop Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A8,  \\field Heating Loop Outlet Node Name\n";
+    ss << "A9,  \\field Heating Loop Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
@@ -14658,11 +16341,11 @@ IddObject createOS_CentralHeatPumpSystemIddObject() {
     ss << "\\type real\n";
     ss << "\\units W\n";
     ss << "\\minimum 0.0\n";
-    ss << "A9,  \\field Ancillary Operation Schedule Name\n";
+    ss << "A10, \\field Ancillary Operation Schedule Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
     ss << "\\note This value from this schedule is multiplied times the Ancillary Power\n";
-    ss << "A10; \\field Chiller Heater Module List Name\n";
+    ss << "A11; \\field Chiller Heater Module List Name\n";
     ss << "\\required-field\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ModelObjectLists\n";
@@ -14836,6 +16519,8 @@ IddObject createOS_ChillerHeaterPerformance_Electric_EIRIddObject() {
     ss << "\\object-list QuadraticCurves\n";
     ss << "\\object-list UniVariateTables\n";
     ss << "\\object-list BiVariateTables\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "! TODO: temp per https://github.com/NREL/EnergyPlus/issues/6224\n";
     ss << "N16, \\field Cooling Mode Cooling Capacity Optimum Part Load Ratio\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
@@ -14862,6 +16547,8 @@ IddObject createOS_ChillerHeaterPerformance_Electric_EIRIddObject() {
     ss << "\\object-list QuadraticCurves\n";
     ss << "\\object-list UniVariateTables\n";
     ss << "\\object-list BiVariateTables\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "! TODO: temp per https://github.com/NREL/EnergyPlus/issues/6224\n";
     ss << "N17, \\field Heating Mode Cooling Capacity Optimum Part Load Ratio\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
@@ -15252,7 +16939,7 @@ IddObject createOS_CoolingTower_SingleSpeedIddObject() {
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
     ss << "OS:CoolingTower:SingleSpeed,\n";
-    ss << "\\min-fields 10\n";
+    ss << "\\min-fields 45\n";
     ss << "A1 , \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
@@ -15423,11 +17110,55 @@ IddObject createOS_CoolingTower_SingleSpeedIddObject() {
     ss << "\\minimum 1\n";
     ss << "\\default 2.5\n";
     ss << "\\note The allowable maximal fraction of the nominal flow rate per cell\n";
-    ss << "N17; \\field Sizing Factor\n";
+    ss << "N17, \\field Sizing Factor\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
-    ss << "\\minimum> 0.0\n";
     ss << "\\default 1.0\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N18 , \\field Free Convection Air Flow Rate Sizing Factor\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum< 1.0\n";
+    ss << "N19 , \\field Free Convection U-Factor Times Area Value Sizing Factor\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum< 1.0\n";
+    ss << "N20 , \\field Heat Rejection Capacity and Nominal Capacity Sizing Ratio\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "N21, \\field Free Convection Nominal Capacity Sizing Factor\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum< 1.0\n";
+    ss << "N22, \\field Design Inlet Air Dry-Bulb Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 20.0\n";
+    ss << "N23, \\field Design Inlet Air Wet-Bulb Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 20.0\n";
+    ss << "N24, \\field Design Approach Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "N25, \\field Design Range Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "A13; \\field End-Use Subcategory\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
 
     IddObjectType objType(IddObjectType::OS_CoolingTower_SingleSpeed);
     OptionalIddObject oObj = IddObject::load("OS:CoolingTower:SingleSpeed",
@@ -15449,7 +17180,7 @@ IddObject createOS_CoolingTower_TwoSpeedIddObject() {
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
     ss << "OS:CoolingTower:TwoSpeed,\n";
-    ss << "\\min-fields 25\n";
+    ss << "\\min-fields 57\n";
     ss << "\\memo This tower model is based on Merkel's theory, which is also the basis\n";
     ss << "\\memo for the tower model in ASHRAE's HVAC1 Toolkit. The closed-circuit cooling tower\n";
     ss << "\\memo is modeled as a counter flow heat exchanger with a two-speed fan drawing air\n";
@@ -15711,11 +17442,37 @@ IddObject createOS_CoolingTower_TwoSpeedIddObject() {
     ss << "\\minimum 1\n";
     ss << "\\default 2.5\n";
     ss << "\\note The allowable maximal fraction of the nominal flow rate per cell\n";
-    ss << "N29; \\field Sizing Factor\n";
+    ss << "N29, \\field Sizing Factor\n";
+    ss << "\\required-field\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
-    ss << "\\default 1.0\n";
+    ss << "N30, \\field Design Inlet Air Dry-Bulb Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 20.0\n";
+    ss << "N31, \\field Design Inlet Air Wet-Bulb Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 20.0\n";
+    ss << "N32, \\field Design Approach Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "N33, \\field Design Range Temperature\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\autosizable\n";
+    ss << "\\minimum> 0\n";
+    ss << "A13; \\field End-Use Subcategory\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
 
     IddObjectType objType(IddObjectType::OS_CoolingTower_TwoSpeed);
     OptionalIddObject oObj = IddObject::load("OS:CoolingTower:TwoSpeed",
@@ -15737,7 +17494,7 @@ IddObject createOS_CoolingTower_VariableSpeedIddObject() {
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
     ss << "OS:CoolingTower:VariableSpeed,\n";
-    ss << "\\min-fields 16\n";
+    ss << "\\min-fields 35\n";
     ss << "A1 , \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
@@ -15911,10 +17668,14 @@ IddObject createOS_CoolingTower_VariableSpeedIddObject() {
     ss << "\\type real\n";
     ss << "\\minimum 1\n";
     ss << "\\note The allowable maximal fraction of the nominal flow rate per cell\n";
-    ss << "N17; \\field Sizing Factor\n";
+    ss << "N17, \\field Sizing Factor\n";
     ss << "\\note Multiplies the autosized capacity and flow rates\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
+    ss << "A14; \\field End-Use Subcategory\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
 
     IddObjectType objType(IddObjectType::OS_CoolingTower_VariableSpeed);
     OptionalIddObject oObj = IddObject::load("OS:CoolingTower:VariableSpeed",
@@ -16710,6 +18471,170 @@ IddObject createOS_Coil_Cooling_CooledBeamIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_Coil_Cooling_CooledBeam);
+  return object;
+}
+
+IddObject createOS_Coil_Cooling_FourPipeBeamIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Coil:Cooling:FourPipeBeam,\n";
+    ss << "\\min-fields 10\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+    ss << "\\reference CoolingCoilFourPipeBeam\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3 , \\field Chilled Water Inlet Node Name\n";
+    ss << "\\note Name of the plant system node for chilled water entering the beam.\n";
+    ss << "\\note The two chilled water nodes can (only) be omitted to model a two-pipe heating only beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A4 , \\field Chilled Water Outlet Node Name\n";
+    ss << "\\note Name of the plant system node for chilled water leaving the beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N1 , \\field Beam Rated Cooling Capacity per Beam Length\n";
+    ss << "\\note Sensible cooling capacity per meter of beam length at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 600.0\n";
+    ss << "N2 , \\field Beam Rated Cooling Room Air Chilled Water Temperature Difference\n";
+    ss << "\\note Difference in temperature between the zone air and the entering chilled water at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 10.0\n";
+    ss << "N3 , \\field Beam Rated Chilled Water Volume Flow Rate per Beam Length\n";
+    ss << "\\note The volume flow rate of chilled water per meter of beam length at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s-m\n";
+    ss << "\\ip-units gal/min-ft\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.00005\n";
+    ss << "A5 , \\field Beam Cooling Capacity Temperature Difference Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam cooling capacity when the temperature difference between entering water and zone air\n";
+    ss << "\\note is different than at the rating point.  Single independent variable is the ratio of the current\n";
+    ss << "\\note temperature difference divided by the rating point temperature difference.\n";
+    ss << "\\note This field is required when beam is connected to a chilled water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "A6 , \\field Beam Cooling Capacity Air Flow Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam cooling capacity when the primary air supply flow rate is different\n";
+    ss << "\\note than at the rating point. The single independent variable is the current normalized\n";
+    ss << "\\note air flow rate divided by the normalized air flow rate at the rating point.\n";
+    ss << "\\note This field is required when beam is connected to a chilled water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "A7 ; \\field Beam Cooling Capacity Chilled Water Flow Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam cooling capacity when the normalized chilled water flow rate is different\n";
+    ss << "\\note than at the rating point. The single independent variable is the current normalized\n";
+    ss << "\\note chilled water flow rate divided by the normalized chilled water flow rate at the rating point.\n";
+    ss << "\\note This field is required when beam is connected to a chilled water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+
+    IddObjectType objType(IddObjectType::OS_Coil_Cooling_FourPipeBeam);
+    OptionalIddObject oObj = IddObject::load("OS:Coil:Cooling:FourPipeBeam",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Coil_Cooling_FourPipeBeam);
+  return object;
+}
+
+IddObject createOS_Coil_Heating_FourPipeBeamIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Coil:Heating:FourPipeBeam,\n";
+    ss << "\\min-fields 10\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+    ss << "\\reference HeatingCoilFourPipeBeam\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3 , \\field Hot Water Inlet Node Name\n";
+    ss << "\\note Name of the plant system node for hot water entering the beam.\n";
+    ss << "\\note The two hot water nodes can (only) be omitted to model a two-pipe cooling-only beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A4, \\field Hot Water Outlet Node Name\n";
+    ss << "\\note Name of the plant system node for hot water leaving the beam.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N1 , \\field Beam Rated Heating Capacity per Beam Length\n";
+    ss << "\\note Sensible heating capacity per meter of beam length at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 1500.0\n";
+    ss << "N2 , \\field Beam Rated Heating Room Air Hot Water Temperature Difference\n";
+    ss << "\\note Difference in temperature between the zone air and the entering hot water at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 27.8\n";
+    ss << "N3 , \\field Beam Rated Hot Water Volume Flow Rate per Beam Length\n";
+    ss << "\\note The volume flow rate of hoy water per meter of beam length at the rating point.\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s-m\n";
+    ss << "\\ip-units gal/min-ft\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.00005\n";
+    ss << "A5 , \\field Beam Heating Capacity Temperature Difference Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam heating capacity when the temperature difference between entering water and zone air\n";
+    ss << "\\note is different than at the rating point.  Single independent variable is the ratio of the current\n";
+    ss << "\\note temperature difference divided by the rating point temperature difference.\n";
+    ss << "\\note This field is required when beam is connected to a hot water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "A6 , \\field Beam Heating Capacity Air Flow Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam heating capacity when the primary air supply flow rate is different\n";
+    ss << "\\note than at the rating point. The single independent variable is the current normalized\n";
+    ss << "\\note air flow rate divided by the normalized air flow rate at the rating point.\n";
+    ss << "\\note This field is required when beam is connected to a hot water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "A7 ; \\field Beam Heating Capacity Hot Water Flow Modification Factor Curve Name\n";
+    ss << "\\note Adjusts beam heating capacity when the normalized hot water flow rate is different\n";
+    ss << "\\note than at the rating point. The single independent variable is the current normalized\n";
+    ss << "\\note hot water flow rate divided by the normalized hot water flow rate at the rating point.\n";
+    ss << "\\note This field is required when beam is connected to a hot water plant.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+
+    IddObjectType objType(IddObjectType::OS_Coil_Heating_FourPipeBeam);
+    OptionalIddObject oObj = IddObject::load("OS:Coil:Heating:FourPipeBeam",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Coil_Heating_FourPipeBeam);
   return object;
 }
 
@@ -18311,6 +20236,16 @@ IddObject createOS_Coil_Heating_DX_SingleSpeedIddObject() {
     ss << "\\autosizable\n";
     ss << "\\units m3/s\n";
     ss << "\\minimum> 0\n";
+    ss << "N4 , \\field Rated Supply Fan Power Per Volume Flow Rate\n";
+    ss << "\\note Enter the supply fan power per air volume flow rate at the rated test conditions.\n";
+    ss << "\\note The test conditions vary external static pressure based on heating capacity.\n";
+    ss << "\\note This value is only used to calculate Heating Seasonal Performance Factor(HSPF). This value is not\n";
+    ss << "\\note used for modeling the supply (condenser) fan during simulations.\n";
+    ss << "\\type real\n";
+    ss << "\\units W/(m3/s)\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1250.0\n";
+    ss << "\\required-field\n";
     ss << "A4, \\field Air Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ConnectionNames\n";
@@ -18367,24 +20302,24 @@ IddObject createOS_Coil_Heating_DX_SingleSpeedIddObject() {
     ss << "\\note only required if ReverseCycle defrost strategy is specified\n";
     ss << "\\type object-list\n";
     ss << "\\object-list BiquadraticCurves\n";
-    ss << "N4, \\field Minimum Outdoor Dry-Bulb Temperature for Compressor Operation\n";
+    ss << "N5, \\field Minimum Outdoor Dry-Bulb Temperature for Compressor Operation\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\minimum -20\n";
     ss << "\\default -8.0\n";
-    ss << "N5, \\field Maximum Outdoor Dry-Bulb Temperature for Defrost Operation\n";
+    ss << "N6, \\field Maximum Outdoor Dry-Bulb Temperature for Defrost Operation\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\minimum 0\n";
     ss << "\\maximum 7.22\n";
     ss << "\\default 5.0\n";
-    ss << "N6, \\field Crankcase Heater Capacity\n";
+    ss << "N7, \\field Crankcase Heater Capacity\n";
     ss << "\\type real\n";
     ss << "\\units W\n";
     ss << "\\ip-units Btu/h\n";
     ss << "\\minimum 0\n";
     ss << "\\default 0.0\n";
-    ss << "N7, \\field Maximum Outdoor Dry-Bulb Temperature for Crankcase Heater Operation\n";
+    ss << "N8, \\field Maximum Outdoor Dry-Bulb Temperature for Crankcase Heater Operation\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\minimum 0\n";
@@ -18399,13 +20334,13 @@ IddObject createOS_Coil_Heating_DX_SingleSpeedIddObject() {
     ss << "\\default Timed\n";
     ss << "\\key Timed\n";
     ss << "\\key OnDemand\n";
-    ss << "N8, \\field Defrost Time Period Fraction\n";
+    ss << "N9, \\field Defrost Time Period Fraction\n";
     ss << "\\note Fraction of time in defrost mode\n";
     ss << "\\note only applicable if timed defrost control is specified\n";
     ss << "\\type real\n";
     ss << "\\minimum 0\n";
     ss << "\\default 0.058333\n";
-    ss << "N9; \\field Resistive Defrost Heater Capacity\n";
+    ss << "N10; \\field Resistive Defrost Heater Capacity\n";
     ss << "\\note only applicable if resistive defrost strategy is specified\n";
     ss << "\\type real\n";
     ss << "\\autosizable\n";
@@ -18507,6 +20442,7 @@ IddObject createOS_Coil_Heating_ElectricIddObject() {
     ss << "A2, \\field Name\n";
     ss << "\\type alpha\n";
     ss << "\\reference HeatingCoilName\n";
+    ss << "\\reference HeatingCoilsElectric\n";
     ss << "\\reference HeatingCoilsGasElec\n";
     ss << "\\reference HeatingCoilsGasElecDXSS\n";
     ss << "\\reference HeatingCoilsGasElecDesup\n";
@@ -18614,10 +20550,23 @@ IddObject createOS_Coil_Heating_GasIddObject() {
     ss << "\\note increase the gas consumption of the coil due to transient coil operation.\n";
     ss << "\\type object-list\n";
     ss << "\\object-list QuadraticCubicCurves\n";
-    ss << "N4; \\field Parasitic Gas Load\n";
+    ss << "N4, \\field Parasitic Gas Load\n";
     ss << "\\note parasitic gas load associated with the gas coil operation (i.e., standing pilot)\n";
     ss << "\\type real\n";
     ss << "\\units W\n";
+    ss << "A8;  \\field Fuel Type\n";
+    ss << "\\note PropaneGas is deprecated in favor of Propane\n";
+    ss << "\\type choice\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key Propane\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "\\default NaturalGas\n";
 
     IddObjectType objType(IddObjectType::OS_Coil_Heating_Gas);
     OptionalIddObject oObj = IddObject::load("OS:Coil:Heating:Gas",
@@ -19150,26 +21099,60 @@ IddObject createOS_Coil_Heating_Water_BaseboardIddObject() {
     ss << "\\required-field\n";
     ss << "\\reference BaseboardHeatingCoil\n";
     ss << "\\reference ConnectionObject\n";
-    ss << "N1, \\field U-Factor Times Area Value\n";
+    ss << "A3 , \\field Heating Design Capacity Method\n";
+    ss << "\\type choice\n";
+    ss << "\\key HeatingDesignCapacity\n";
+    ss << "\\key CapacityPerFloorArea\n";
+    ss << "\\key FractionOfAutosizedHeatingCapacity\n";
+    ss << "\\required-field\n";
+    ss << "\\note Enter the method used to determine the heating design capacity.\n";
+    ss << "\\note HeatingDesignCapacity = > selected when the design heating capacity value or autosize\n";
+    ss << "\\note is specified. CapacityPerFloorArea = > selected when the design heating capacity is\n";
+    ss << "\\note determine from user specified heating capacity per floor area and zone floor area.\n";
+    ss << "\\note FractionOfAutosizedHeatingCapacity = > is selected when the design heating capacity is\n";
+    ss << "\\note determined from a user specified fraction and the auto-sized design heating capacity.\n";
+    ss << "N1 , \\field Heating Design Capacity\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\required-field\n";
+    ss << "\\ip-units W\n";
+    ss << "\\note Enter the design heating capacity.Required field when the heating design capacity method\n";
+    ss << "\\note HeatingDesignCapacity.\n";
+    ss << "N2 , \\field Heating Design Capacity Per Floor Area\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Enter the heating design capacity per zone floor area.Required field when the heating design\n";
+    ss << "\\note capacity method field is CapacityPerFloorArea.\n";
+    ss << "N3 , \\field Fraction of Autosized Heating Design Capacity\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Enter the fraction of auto - sized heating design capacity.Required field when capacity the\n";
+    ss << "\\note heating design capacity method field is FractionOfAutosizedHeatingCapacity.\n";
+    ss << "N4, \\field U-Factor Times Area Value\n";
     ss << "\\type real\n";
     ss << "\\autosizable\n";
     ss << "\\units W/K\n";
     ss << "\\default autosize\n";
-    ss << "N2, \\field Maximum Water Flow Rate\n";
+    ss << "N5, \\field Maximum Water Flow Rate\n";
     ss << "\\type real\n";
     ss << "\\autosizable\n";
     ss << "\\units m3/s\n";
     ss << "\\ip-units gal/min\n";
     ss << "\\default Autosize\n";
-    ss << "N3, \\field Convergence Tolerance\n";
+    ss << "N6, \\field Convergence Tolerance\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\default 0.001\n";
-    ss << "A3, \\field Water Inlet Node Name\n";
+    ss << "A4, \\field Water Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A4; \\field Water Outlet Node Name\n";
+    ss << "A5; \\field Water Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
@@ -20768,10 +22751,12 @@ IddObject createOS_Controller_WaterCoilIddObject() {
     ss << "\\type real\n";
     ss << "\\autosizable\n";
     ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
     ss << "\\default Autosize\n";
     ss << "N3; \\field Minimum Actuated Flow\n";
     ss << "\\type real\n";
     ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
     ss << "\\default 0.0000001\n";
 
     IddObjectType objType(IddObjectType::OS_Controller_WaterCoil);
@@ -20804,6 +22789,7 @@ IddObject createOS_Curve_LinearIddObject() {
     ss << "\\required-field\n";
     ss << "\\reference LinearCurves\n";
     ss << "\\reference LinearOrQuadraticCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 Constant\n";
     ss << "\\type real\n";
@@ -20871,6 +22857,7 @@ IddObject createOS_Curve_QuadraticIddObject() {
     ss << "\\required-field\n";
     ss << "\\reference QuadraticCurves\n";
     ss << "\\reference LinearOrQuadraticCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "\\reference QuadraticCubicCurves\n";
     ss << "\\reference BiquadraticQuadraticCubicCurves\n";
@@ -20942,6 +22929,7 @@ IddObject createOS_Curve_CubicIddObject() {
     ss << "\\required-field\n";
     ss << "\\reference CubicCurves\n";
     ss << "\\reference AllCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference QuadraticCubicCurves\n";
     ss << "\\reference BiquadraticCubicCurves\n";
     ss << "\\reference BiquadraticQuadraticCubicCurves\n";
@@ -21015,6 +23003,7 @@ IddObject createOS_Curve_QuarticIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference QuarticCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 Constant\n";
     ss << "\\type real\n";
@@ -21090,6 +23079,7 @@ IddObject createOS_Curve_ExponentIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference ExponentCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 Constant\n";
     ss << "\\type real\n";
@@ -21599,6 +23589,7 @@ IddObject createOS_Curve_Functional_PressureDropIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference AllCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference PressureDropCurves\n";
     ss << "N1, \\field Diameter\n";
     ss << "\\note \"D\" in above expression, used to also calculate local velocity\n";
@@ -21729,6 +23720,7 @@ IddObject createOS_Curve_ExponentialSkewNormalIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference ExponentialSkewNormalCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
@@ -21792,6 +23784,7 @@ IddObject createOS_Curve_SigmoidIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference SigmoidCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
@@ -21858,6 +23851,7 @@ IddObject createOS_Curve_RectangularHyperbola1IddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference RectangularHyperbola1Curves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
@@ -21918,6 +23912,7 @@ IddObject createOS_Curve_RectangularHyperbola2IddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference RectangularHyperbola2Curves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
@@ -21978,6 +23973,7 @@ IddObject createOS_Curve_ExponentialDecayIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference ExponentialDecayCurves\n";
+    ss << "\\reference UniVariateCurves\n";
     ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
@@ -22037,6 +24033,8 @@ IddObject createOS_Curve_DoubleExponentialDecayIddObject() {
     ss << "\\type alpha\n";
     ss << "\\required-field\n";
     ss << "\\reference DoubleExponentialDecayCurves\n";
+    ss << "\\reference UniVariateCurves\n";
+    ss << "\\reference AllCurves\n";
     ss << "N1, \\field Coefficient1 C1\n";
     ss << "\\type real\n";
     ss << "\\required-field\n";
@@ -22699,7 +24697,7 @@ IddObject createOS_EvaporativeCooler_Direct_ResearchSpecialIddObject() {
     ss << "\\required-field\n";
     ss << "\\units W/(m3/s)\n";
     ss << "\\note this field is used when the previous field is set to autosize. The pump power is scaled with Primary Air Design Air Flow Rate\n";
-    ss << "A8;  \\field Water Pump Power Modifier Curve Name\n";
+    ss << "A8,  \\field Water Pump Power Modifier Curve Name\n";
     ss << "\\note this curve modifies the pump power in the previous field by multiplying the design power by the result of this curve.\n";
     ss << "\\note x = ff = flow fraction on the primary air.  The flow fraction is the secondary air flow rate during current operation divided\n";
     ss << "\\note by Primary Air Design Flow Rate\n";
@@ -22710,6 +24708,29 @@ IddObject createOS_EvaporativeCooler_Direct_ResearchSpecialIddObject() {
     ss << "\\note Curve:ExponentialSkewNormal, Curve:Sigmoid, Curve:RectuangularHyperbola1,\n";
     ss << "\\note Curve:RectangularHyperbola2, Curve:ExponentialDecay, Curve:DoubleExponentialDecay,\n";
     ss << "\\note Table:OneIndependentVariable\n";
+    ss << "N7,  \\field Evaporative Operation Minimum Drybulb Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\minimum -99.0\n";
+    ss << "\\note This numeric field defines the evaporative cooler air inlet node drybulb temperature minimum\n";
+    ss << "\\note limit in degrees Celsius. The evaporative cooler will be turned off when the evaporator cooler\n";
+    ss << "\\note air inlet node dry-bulb temperature falls below this limit. The typical minimum value is 16degC. Users\n";
+    ss << "\\note are allowed to specify their own limits. If this field is left blank, then there is no drybulb lower\n";
+    ss << "\\note temperature limit for evaporative cooler operation.\n";
+    ss << "N8,  \\field Evaporative Operation Maximum Limit Wetbulb Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\note when outdoor wetbulb temperature rises above this limit the cooler shuts down.\n";
+    ss << "\\note This numeric field defines the evaporative cooler air inlet node wet-bulb temperature maximum\n";
+    ss << "\\note limit in degrees Celsius. The evaporative cooler will be turned off when the evaporative cooler\n";
+    ss << "\\note air inlet node wet-bulb temperature exceeds this limit. The typical maximum value is 24degC. Users\n";
+    ss << "\\note are allowed to specify their own limits. If this field is left blank, then there is no upper\n";
+    ss << "\\note wetbulb temperature limit for evaporative cooler operation.\n";
+    ss << "N9;  \\field Evaporative Operation Maximum Limit Drybulb Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\note This numeric field defines the evaporative cooler air inlet node dry-bulb temperature maximum\n";
+    ss << "\\note limit in degrees Celsius. The evaporative cooler will be turned off when its air inlet node\n";
+    ss << "\\note drybulb temperature exceeds this limit. The typical maximum value is 26degC. Users\n";
+    ss << "\\note are allowed to specify their own limits. If this field is left blank, then there is no upper\n";
+    ss << "\\note temperature limit for evaporative cooler operation.\n";
 
     IddObjectType objType(IddObjectType::OS_EvaporativeCooler_Direct_ResearchSpecial);
     OptionalIddObject oObj = IddObject::load("OS:EvaporativeCooler:Direct:ResearchSpecial",
@@ -23140,7 +25161,7 @@ IddObject createOS_Fan_ConstantVolumeIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "N1, \\field Fan Efficiency\n";
+    ss << "N1, \\field Fan Total Efficiency\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0\n";
     ss << "\\maximum 1\n";
@@ -23216,7 +25237,7 @@ IddObject createOS_Fan_VariableVolumeIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "N1, \\field Fan Efficiency\n";
+    ss << "N1, \\field Fan Total Efficiency\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0\n";
     ss << "\\maximum 1\n";
@@ -23320,7 +25341,7 @@ IddObject createOS_Fan_OnOffIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "N1, \\field Fan Efficiency\n";
+    ss << "N1, \\field Fan Total Efficiency\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0\n";
     ss << "\\maximum 1\n";
@@ -23401,7 +25422,7 @@ IddObject createOS_Fan_ZoneExhaustIddObject() {
     ss << "\\note If this field is blank, the system is always available.\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "N1, \\field Fan Efficiency\n";
+    ss << "N1, \\field Fan Total Efficiency\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\maximum 1.0\n";
@@ -23792,6 +25813,7 @@ IddObject createOS_NodeIddObject() {
     ss << "\\required-field\n";
     ss << "\\reference ConnectionObject\n";
     ss << "\\reference Node\n";
+    ss << "\\reference AirflowNetworkNodeComponentNames\n";
     ss << "N1, \\field Inlet Port\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
@@ -23909,11 +25931,16 @@ IddObject createOS_PlantLoopIddObject() {
     ss << "\\default Water\n";
     ss << "\\key Water\n";
     ss << "\\key Steam\n";
-    ss << "\\key UserDefinedFluidType\n";
+    ss << "\\key PropyleneGlycol\n";
+    ss << "\\key EthyleneGlycol\n";
+    ss << "N1,  \\field Glycol Concentration\n";
+    ss << "\\type integer\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 100\n";
+    ss << "\\note Only used with either \"PropyleneGlycol\" or \"EthyleneGlycol\"\n";
     ss << "A4, \\field User Defined Fluid Type\n";
-    ss << "\\note This field is only required when Fluid Type is UserDefinedFluidType\n";
-    ss << "\\type object-list\n";
-    ss << "\\object-list FluidAndGlycolNames\n";
+    ss << "\\note This field is not used.\n";
+    ss << "\\type alpha\n";
     ss << "A5, \\field Plant Equipment Operation Heating Load\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ControlSchemeList\n";
@@ -23927,61 +25954,61 @@ IddObject createOS_PlantLoopIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list Node\n";
-    ss << "N1, \\field Maximum Loop Temperature\n";
+    ss << "N2, \\field Maximum Loop Temperature\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\default 100.0\n";
-    ss << "N2, \\field Minimum Loop Temperature\n";
+    ss << "N3, \\field Minimum Loop Temperature\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\default 0.0\n";
-    ss << "N3, \\field Maximum Loop Flow Rate\n";
+    ss << "N4, \\field Maximum Loop Flow Rate\n";
     ss << "\\type real\n";
     ss << "\\autosizable\n";
     ss << "\\units m3/s\n";
     ss << "\\ip-units gal/min\n";
     ss << "\\minimum 0\n";
     ss << "\\default autosize\n";
-    ss << "N4, \\field Minimum Loop Flow Rate\n";
+    ss << "N5, \\field Minimum Loop Flow Rate\n";
     ss << "\\type real\n";
     ss << "\\units m3/s\n";
     ss << "\\ip-units gal/min\n";
     ss << "\\default 0.0\n";
-    ss << "N5, \\field Plant Loop Volume\n";
+    ss << "N6, \\field Plant Loop Volume\n";
     ss << "\\type real\n";
     ss << "\\autocalculatable\n";
     ss << "\\units m3\n";
     ss << "\\ip-units gal\n";
     ss << "\\minimum 0\n";
     ss << "\\default autocalculate\n";
-    ss << "A8, \\field Plant Side Inlet Node Name\n";
+    ss << "A9, \\field Plant Side Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A9, \\field Plant Side Outlet Node Name\n";
+    ss << "A10, \\field Plant Side Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A10, \\field Plant Side Branch List Name\n";
+    ss << "A11, \\field Plant Side Branch List Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list BranchLists\n";
-    ss << "A11, \\field Demand Side Inlet Node Name\n";
+    ss << "A12, \\field Demand Side Inlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A12, \\field Demand Side Outlet Node Name\n";
+    ss << "A13, \\field Demand Side Outlet Node Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A13, \\field Demand Side Branch List Name\n";
+    ss << "A14, \\field Demand Side Branch List Name\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list BranchLists\n";
-    ss << "A14, \\field Demand Side Connector List Name\n";
+    ss << "A15, \\field Demand Side Connector List Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ConnectorLists\n";
-    ss << "A15, \\field Load Distribution Scheme\n";
+    ss << "A16, \\field Load Distribution Scheme\n";
     ss << "\\type choice\n";
     ss << "\\required-field\n";
     ss << "\\key Optimal\n";
@@ -23989,15 +26016,16 @@ IddObject createOS_PlantLoopIddObject() {
     ss << "\\key UniformLoad\n";
     ss << "\\key UniformPLR\n";
     ss << "\\key SequentialUniformPLR\n";
-    ss << "A16, \\field Availability Manager List Name\n";
+    ss << "A17, \\field Availability Manager List Name\n";
+    ss << "\\note Enter the name of an AvailabilityManagerAssignmentList object.\n";
     ss << "\\type object-list\n";
     ss << "\\object-list SystemAvailabilityManagerLists\n";
-    ss << "A17, \\field Plant Loop Demand Calculation Scheme\n";
+    ss << "A18, \\field Plant Loop Demand Calculation Scheme\n";
     ss << "\\type choice\n";
     ss << "\\default SingleSetpoint\n";
     ss << "\\key SingleSetpoint\n";
     ss << "\\key DualSetpointDeadband\n";
-    ss << "A18, \\field Common Pipe Simulation\n";
+    ss << "A19, \\field Common Pipe Simulation\n";
     ss << "\\note Specifies a primary-secondary loop configuration. The plant side is the\n";
     ss << "\\note primary loop, and the demand side is the secondary loop.\n";
     ss << "\\note A secondary supply pump is required on the demand side.\n";
@@ -24011,24 +26039,40 @@ IddObject createOS_PlantLoopIddObject() {
     ss << "\\key CommonPipe\n";
     ss << "\\key TwoWayCommonPipe\n";
     ss << "\\key None\n";
-    ss << "A19, \\field Pressure Simulation Type\n";
+    ss << "A20, \\field Pressure Simulation Type\n";
     ss << "\\type choice\n";
     ss << "\\default None\n";
     ss << "\\key PumpPowerCorrection\n";
     ss << "\\key LoopFlowCorrection\n";
     ss << "\\key None\n";
-    ss << "A20, \\field Plant Equipment Operation Heating Load Schedule\n";
+    ss << "A21, \\field Plant Equipment Operation Heating Load Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "A21, \\field Plant Equipment Operation Cooling Load Schedule\n";
+    ss << "A22, \\field Plant Equipment Operation Cooling Load Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "A22, \\field Primary Plant Equipment Operation Scheme Schedule\n";
+    ss << "A23, \\field Primary Plant Equipment Operation Scheme Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "A23; \\field Component Setpoint Operation Scheme Schedule\n";
+    ss << "A24, \\field Component Setpoint Operation Scheme Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
+    ss << "A25, \\field Demand Mixer Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A26, \\field Demand Splitter Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A27, \\field Supply Mixer Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
+    ss << "A28; \\field Supply Splitter Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionObject\n";
 
     IddObjectType objType(IddObjectType::OS_PlantLoop);
     OptionalIddObject oObj = IddObject::load("OS:PlantLoop",
@@ -24188,14 +26232,14 @@ IddObject createOS_PlantEquipmentOperation_OutdoorWetBulbIddObject() {
     ss << "A2 ,\\field Name\n";
     ss << "\\required-field\n";
     ss << "\\reference ControlSchemeList\n";
-    ss << "N1 ,\\field Dry-Bulb Temperature Range 1 Lower Limit\n";
+    ss << "N1 ,\\field Wet-Bulb Temperature Range 1 Lower Limit\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
     ss << "\\minimum -70\n";
     ss << "\\maximum 70\n";
     ss << "\\begin-extensible\n";
-    ss << "N2 ,\\field Dry-Bulb Temperature Range 1 Upper Limit\n";
+    ss << "N2 ,\\field Wet-Bulb Temperature Range 1 Upper Limit\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\units C\n";
@@ -24569,7 +26613,6 @@ IddObject createOS_Pump_ConstantSpeedIddObject() {
     std::stringstream ss;
     ss << "OS:Pump:ConstantSpeed,\n";
     ss << "\\memo This pump model is described in the ASHRAE secondary HVAC toolkit.\n";
-    ss << "\\min-fields 10\n";
     ss << "A1, \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
@@ -24642,12 +26685,29 @@ IddObject createOS_Pump_ConstantSpeedIddObject() {
     ss << "\\note optional, if used pump losses transfered to zone as internal gains\n";
     ss << "\\type Object-list\n";
     ss << "\\object-list ThermalZoneNames\n";
-    ss << "N8;   \\field Skin Loss Radiative Fraction\n";
-    ss << "\\note optional. If zone identified in previous field then this determines\n";
-    ss << "\\note the split between convection and radiation for the skin losses\n";
+    ss << "N8,   \\field Skin Loss Radiative Fraction\n";
+    ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\minimum 0.0\n";
     ss << "\\maximum 1.0\n";
+    ss << "A9,  \\field Design Power Sizing Method\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key PowerPerFlow\n";
+    ss << "\\key PowerPerFlowPerPressure\n";
+    ss << "N9,  \\field Design Electric Power per Unit Flow Rate\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W/(m3/s)\n";
+    ss << "\\ip-units W/(gal/min)\n";
+    ss << "\\minimum> 0\n";
+    ss << "N10; \\field Design Shaft Power per Unit Flow Rate per Unit Head\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\note Used to size Design Power Consumption from design flow rate for head and motor efficiency\n";
+    ss << "\\units W-s/m3-Pa\n";
+    ss << "\\ip-units W-min/gal-ftH2O\n";
+    ss << "\\minimum> 0\n";
 
     IddObjectType objType(IddObjectType::OS_Pump_ConstantSpeed);
     OptionalIddObject oObj = IddObject::load("OS:Pump:ConstantSpeed",
@@ -24670,7 +26730,6 @@ IddObject createOS_Pump_VariableSpeedIddObject() {
     std::stringstream ss;
     ss << "OS:Pump:VariableSpeed,\n";
     ss << "\\memo This pump model is described in the ASHRAE secondary HVAC toolkit.\n";
-    ss << "\\min-fields 15\n";
     ss << "A1, \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
@@ -24781,10 +26840,44 @@ IddObject createOS_Pump_VariableSpeedIddObject() {
     ss << "\\type object-list\n";
     ss << "\\units Rotations Per Minute\n";
     ss << "\\object-list ScheduleNames\n";
-    ss << "A13; \\field Maximum RPM Schedule\n";
+    ss << "A13, \\field Maximum RPM Schedule\n";
     ss << "\\type object-list\n";
     ss << "\\units Rotations Per Minute\n";
     ss << "\\object-list ScheduleNames\n";
+    ss << "A14,  \\field Zone Name\n";
+    ss << "\\note optional, if used pump losses transfered to zone as internal gains\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "N12,  \\field Skin Loss Radiative Fraction\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "A15,  \\field Design Power Sizing Method\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key PowerPerFlow\n";
+    ss << "\\key PowerPerFlowPerPressure\n";
+    ss << "N13,  \\field Design Electric Power per Unit Flow Rate\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\note Used to size Design Power Consumption from design flow rate\n";
+    ss << "\\units W/(m3/s)\n";
+    ss << "\\ip-units W/(gal/min)\n";
+    ss << "\\minimum> 0\n";
+    ss << "N14,  \\field Design Shaft Power per Unit Flow Rate per Unit Head\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\note Used to size Design Power Consumption from design flow rate for head and motor efficiency\n";
+    ss << "\\units W-s/m3-Pa\n";
+    ss << "\\ip-units W-min/gal-ftH2O\n";
+    ss << "\\minimum> 0\n";
+    ss << "N15;  \\field Design Minimum Flow Rate Fraction\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\note Used to size Design Minimum Flow Rate\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1.0\n";
 
     IddObjectType objType(IddObjectType::OS_Pump_VariableSpeed);
     OptionalIddObject oObj = IddObject::load("OS:Pump:VariableSpeed",
@@ -24875,13 +26968,30 @@ IddObject createOS_HeaderedPumps_ConstantSpeedIddObject() {
     ss << "\\note optional, if used pump losses transfered to zone as internal gains\n";
     ss << "\\type Object-list\n";
     ss << "\\object-list ThermalZoneNames\n";
-    ss << "N7 ;  \\field Skin Loss Radiative Fraction\n";
+    ss << "N7 ,  \\field Skin Loss Radiative Fraction\n";
     ss << "\\note optional. If zone identified in previous field then this determines\n";
     ss << "\\note the split between convection and radiation for the skin losses\n";
     ss << "\\type real\n";
     ss << "\\minimum 0.0\n";
     ss << "\\maximum 1.0\n";
     ss << "\\required-field\n";
+    ss << "A9,  \\field Design Power Sizing Method\n";
+    ss << "\\type choice\n";
+    ss << "\\required-field\n";
+    ss << "\\key PowerPerFlow\n";
+    ss << "\\key PowerPerFlowPerPressure\n";
+    ss << "N8,  \\field Design Electric Power per Unit Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units W/(m3/s)\n";
+    ss << "\\ip-units W/(gal/min)\n";
+    ss << "\\minimum> 0\n";
+    ss << "N9; \\field Design Shaft Power per Unit Flow Rate per Unit Head\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units W-s/m3-Pa\n";
+    ss << "\\ip-units W-min/gal-ftH2O\n";
+    ss << "\\minimum> 0\n";
 
     IddObjectType objType(IddObjectType::OS_HeaderedPumps_ConstantSpeed);
     OptionalIddObject oObj = IddObject::load("OS:HeaderedPumps:ConstantSpeed",
@@ -24986,13 +27096,28 @@ IddObject createOS_HeaderedPumps_VariableSpeedIddObject() {
     ss << "\\note optional, if used pump losses transfered to zone as internal gains\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ThermalZoneNames\n";
-    ss << "N12;  \\field Skin Loss Radiative Fraction\n";
-    ss << "\\note optional. If zone identified in previous field then this determines\n";
-    ss << "\\note the split between convection and radiation for the skin losses\n";
+    ss << "N12,  \\field Skin Loss Radiative Fraction\n";
     ss << "\\type real\n";
     ss << "\\minimum 0.0\n";
     ss << "\\maximum 1.0\n";
     ss << "\\required-field\n";
+    ss << "A9,  \\field Design Power Sizing Method\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key PowerPerFlow\n";
+    ss << "\\key PowerPerFlowPerPressure\n";
+    ss << "N13, \\field Design Electric Power per Unit Flow Rate\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W/(m3/s)\n";
+    ss << "\\ip-units W/(gal/min)\n";
+    ss << "\\minimum> 0\n";
+    ss << "N14; \\field Design Shaft Power per Unit Flow Rate per Unit Head\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W-s/m3-Pa\n";
+    ss << "\\ip-units W-min/gal-ftH2O\n";
+    ss << "\\minimum> 0\n";
 
     IddObjectType objType(IddObjectType::OS_HeaderedPumps_VariableSpeed);
     OptionalIddObject oObj = IddObject::load("OS:HeaderedPumps:VariableSpeed",
@@ -25793,9 +27918,16 @@ IddObject createOS_SetpointManager_FollowGroundTemperatureIddObject() {
     ss << "\\required-field\n";
     ss << "\\units C\n";
     ss << "\\type real\n";
-    ss << "A4 ; \\field Setpoint Node or NodeList Name\n";
+    ss << "A4 , \\field Setpoint Node or NodeList Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list Node\n";
+    ss << "A5 ; \\field Reference Ground Temperature Object Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Site:GroundTemperature:BuildingSurface\n";
+    ss << "\\key Site:GroundTemperature:Shallow\n";
+    ss << "\\key Site:GroundTemperature:Deep\n";
+    ss << "\\key Site:GroundTemperature:FCfactorMethod\n";
+    ss << "\\default Site:GroundTemperature:BuildingSurface\n";
 
     IddObjectType objType(IddObjectType::OS_SetpointManager_FollowGroundTemperature);
     OptionalIddObject oObj = IddObject::load("OS:SetpointManager:FollowGroundTemperature",
@@ -26204,6 +28336,100 @@ IddObject createOS_SetpointManager_SingleZone_Humidity_MaximumIddObject() {
   return object;
 }
 
+IddObject createOS_SetpointManager_SingleZone_CoolingIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:SetpointManager:SingleZone:Cooling,\n";
+    ss << "\\memo This setpoint manager detects the control zone load to meet the current cooling\n";
+    ss << "\\memo setpoint, zone inlet node flow rate, and zone node temperature, and calculates a\n";
+    ss << "\\memo setpoint temperature for the supply air that will satisfy the zone cooling load for\n";
+    ss << "\\memo the control zone.\n";
+    ss << "\\min-fields 7\n";
+    ss << "A1 , \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "A3 , \\field Control Variable\n";
+    ss << "\\type choice\n";
+    ss << "\\required-field\n";
+    ss << "\\key Temperature\n";
+    ss << "N1 , \\field Minimum Supply Air Temperature\n";
+    ss << "\\units C\n";
+    ss << "\\required-field\n";
+    ss << "N2 , \\field Maximum Supply Air Temperature\n";
+    ss << "\\units C\n";
+    ss << "\\required-field\n";
+    ss << "A4 , \\field Control Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "A5 ; \\field Setpoint Node or NodeList Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+
+    IddObjectType objType(IddObjectType::OS_SetpointManager_SingleZone_Cooling);
+    OptionalIddObject oObj = IddObject::load("OS:SetpointManager:SingleZone:Cooling",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_SetpointManager_SingleZone_Cooling);
+  return object;
+}
+
+IddObject createOS_SetpointManager_SingleZone_HeatingIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:SetpointManager:SingleZone:Heating,\n";
+    ss << "\\memo This setpoint manager detects the control zone load to meet the current heating\n";
+    ss << "\\memo setpoint, zone inlet node flow rate, and zone node temperature, and calculates a\n";
+    ss << "\\memo setpoint temperature for the supply air that will satisfy the zone heating load for\n";
+    ss << "\\memo the control zone.\n";
+    ss << "\\min-fields 7\n";
+    ss << "A1 , \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "A3 , \\field Control Variable\n";
+    ss << "\\type choice\n";
+    ss << "\\required-field\n";
+    ss << "\\key Temperature\n";
+    ss << "N1 , \\field Minimum Supply Air Temperature\n";
+    ss << "\\units C\n";
+    ss << "\\required-field\n";
+    ss << "N2 , \\field Maximum Supply Air Temperature\n";
+    ss << "\\units C\n";
+    ss << "\\required-field\n";
+    ss << "A4 , \\field Control Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "A5 ; \\field Setpoint Node or NodeList Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+
+    IddObjectType objType(IddObjectType::OS_SetpointManager_SingleZone_Heating);
+    OptionalIddObject oObj = IddObject::load("OS:SetpointManager:SingleZone:Heating",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_SetpointManager_SingleZone_Heating);
+  return object;
+}
+
 IddObject createOS_Sizing_PlantIddObject() {
 
   static IddObject object;
@@ -26286,14 +28512,14 @@ IddObject createOS_Sizing_SystemIddObject() {
     ss << "\\object-list AirPrimaryLoops\n";
     ss << "A3, \\field Type of Load to Size On\n";
     ss << "\\note Specifies the basis for sizing the system supply air flow rate\n";
-    ss << "\\note Sensible and VentilationRequirement are the only available options\n";
-    ss << "\\note Sensible uses the zone design air flow rates\n";
+    ss << "\\note Sensible and Total use the zone design air flow rates to size the system supply air flow rate\n";
+    ss << "\\note The cooling coil will then be sized at either the peak Sensible or Total flow rate and conditions\n";
+    ss << "\\note The heating coil is always sized at the peak sensible heating load.\n";
     ss << "\\note VentilationRequirement uses the system ventilation requirement\n";
     ss << "\\type choice\n";
     ss << "\\default Sensible\n";
     ss << "\\key Sensible\n";
     ss << "\\key VentilationRequirement\n";
-    ss << "\\key Latent\n";
     ss << "\\key Total\n";
     ss << "N1, \\field Design Outdoor Air Flow Rate\n";
     ss << "\\type real\n";
@@ -26301,11 +28527,12 @@ IddObject createOS_Sizing_SystemIddObject() {
     ss << "\\units m3/s\n";
     ss << "\\minimum 0\n";
     ss << "\\default autosize\n";
-    ss << "N2, \\field Minimum System Air Flow Ratio\n";
+    ss << "N2, \\field Central Heating Maximum System Air Flow Ratio\n";
     ss << "\\type real\n";
-    ss << "\\required-field\n";
     ss << "\\minimum 0\n";
     ss << "\\maximum 1\n";
+    ss << "\\autosizable\n";
+    ss << "\\default autosize\n";
     ss << "N3, \\field Preheat Design Temperature\n";
     ss << "\\type real\n";
     ss << "\\required-field\n";
@@ -26842,10 +29069,10 @@ IddObject createOS_ThermalZoneIddObject() {
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
     ss << "\\object-list ConnectionNames\n";
-    ss << "A9, \\field Zone Return Air Node Name\n";
+    ss << "A9, \\field Zone Return Air Port List\n";
     ss << "\\type object-list\n";
     ss << "\\required-field\n";
-    ss << "\\object-list ConnectionNames\n";
+    ss << "\\object-list PortLists\n";
     ss << "A10, \\field Primary Daylighting Control Name\n";
     ss << "\\note For export to EnergyPlus\n";
     ss << "\\type object-list\n";
@@ -27093,7 +29320,14 @@ IddObject createOS_ZoneHVAC_EquipmentListIddObject() {
     ss << "A3 , \\field Thermal Zone\n";
     ss << "\\type object-list\n";
     ss << "\\object-list AllObjects\n";
-    ss << "A4 , \\field Zone Equipment 1\n";
+    ss << "A4, \\field Load Distribution Scheme\n";
+    ss << "\\type choice\n";
+    ss << "\\key SequentialLoad\n";
+    ss << "\\key UniformLoad\n";
+    ss << "\\key UniformPLR\n";
+    ss << "\\key SequentialUniformPLR\n";
+    ss << "\\default SequentialLoad\n";
+    ss << "A5 , \\field Zone Equipment 1\n";
     ss << "\\required-field\n";
     ss << "\\type object-list\n";
     ss << "\\object-list AllObjects\n";
@@ -27187,6 +29421,7 @@ IddObject createOS_ZoneVentilation_DesignFlowRateIddObject() {
     ss << "\\note pressure rise across the fan\n";
     ss << "\\type real\n";
     ss << "\\units Pa\n";
+    ss << "\\ip-units inH2O\n";
     ss << "\\minimum 0\n";
     ss << "\\required-field\n";
     ss << "N6 , \\field Fan Total Efficiency\n";
@@ -27717,7 +29952,7 @@ IddObject createOS_ZoneHVAC_FourPipeFanCoilIddObject() {
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
     ss << "OS:ZoneHVAC:FourPipeFanCoil,\n";
-    ss << "\\min-fields 24\n";
+    ss << "\\min-fields 25\n";
     ss << "A1 , \\field Handle\n";
     ss << "\\type handle\n";
     ss << "\\required-field\n";
@@ -27736,6 +29971,8 @@ IddObject createOS_ZoneHVAC_FourPipeFanCoilIddObject() {
     ss << "\\key CyclingFan\n";
     ss << "\\key VariableFanVariableFlow\n";
     ss << "\\key VariableFanConstantFlow\n";
+    ss << "\\key MultiSpeedFan\n";
+    ss << "\\key ASHRAE90VariableFan\n";
     ss << "N1 , \\field Maximum Supply Air Flow Rate\n";
     ss << "\\required-field\n";
     ss << "\\autosizable\n";
@@ -27810,10 +30047,29 @@ IddObject createOS_ZoneHVAC_FourPipeFanCoilIddObject() {
     ss << "\\default 0.0\n";
     ss << "\\units m3/s\n";
     ss << "\\ip-units gal/min\n";
-    ss << "N10; \\field Heating Convergence Tolerance\n";
+    ss << "N10, \\field Heating Convergence Tolerance\n";
     ss << "\\type real\n";
     ss << "\\minimum> 0.0\n";
     ss << "\\default 0.001\n";
+    ss << "A13, \\field Supply Air Fan Operating Mode Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N11, \\field Minimum Supply Air Temperature in Cooling Mode\n";
+    ss << "\\note For Capacity Control Method = ASHRAE90VariableFan, enter the minimum air temperature in cooling mode.\n";
+    ss << "\\note Leave this field blank or enter 0 to control to the zone load per ASHRAE 90.1. In this case, a zone sizing simulation is required.\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\required-field\n";
+    ss << "N12; \\field Maximum Supply Air Temperature in Heating Mode\n";
+    ss << "\\note For Capacity Control Method = ASHRAE90VariableFan, enter the maximum air temperature in heating mode.\n";
+    ss << "\\note Leave this field blank or enter 0 to control to the zone load per ASHRAE 90.1. In this case, a zone sizing simulation is required.\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\autosizable\n";
+    ss << "\\required-field\n";
 
     IddObjectType objType(IddObjectType::OS_ZoneHVAC_FourPipeFanCoil);
     OptionalIddObject oObj = IddObject::load("OS:ZoneHVAC:FourPipeFanCoil",
@@ -27891,6 +30147,7 @@ IddObject createOS_ZoneHVAC_LowTemperatureRadiant_ConstantFlowIddObject() {
     ss << "\\object-list ScheduleNames\n";
     ss << "N4 , \\field Rated Pump Head\n";
     ss << "\\units Pa\n";
+    ss << "\\ip-units ftH2O\n";
     ss << "\\default 179352\n";
     ss << "\\note default head is 60 feet\n";
     ss << "N5 , \\field Rated Power Consumption\n";
@@ -28573,10 +30830,24 @@ IddObject createOS_ZoneHVAC_WaterToAirHeatPumpIddObject() {
     ss << "\\note cycling fan operation (fan cycles with cooling or heating coil). Schedule values greater\n";
     ss << "\\note than 0 denote constant fan operation (fan runs continually regardless of coil operation).\n";
     ss << "\\note The fan operating mode defaults to cycling fan operation if this field is left blank.\n";
-    ss << "A14; \\field Availability Manager List Name\n";
+    ss << "A14, \\field Availability Manager List Name\n";
     ss << "\\note Enter the name of an AvailabilityManagerAssignmentList object.\n";
     ss << "\\type object-list\n";
     ss << "\\object-list SystemAvailabilityManagerLists\n";
+    ss << "A15, \\field Heat Pump Coil Water Flow Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key Constant\n";
+    ss << "\\key Cycling\n";
+    ss << "\\key ConstantOnDemand\n";
+    ss << "\\default Cycling\n";
+    ss << "\\note used only when the heat pump coils are of the type WaterToAirHeatPump:EquationFit\n";
+    ss << "\\note Constant results in 100% water flow regardless of compressor PLR\n";
+    ss << "\\note Cycling results in water flow that matches compressor PLR\n";
+    ss << "\\note ConstantOnDemand results in 100% water flow whenever the coil is on, but is 0% whenever the coil has no load\n";
+    ss << "A26; \\field Design Specification ZoneHVAC Sizing Object Name\n";
+    ss << "\\note Enter the name of a DesignSpecificationZoneHVACSizing object.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list DesignSpecificationZoneHVACSizingName\n";
 
     IddObjectType objType(IddObjectType::OS_ZoneHVAC_WaterToAirHeatPump);
     OptionalIddObject oObj = IddObject::load("OS:ZoneHVAC:WaterToAirHeatPump",
@@ -29497,13 +31768,31 @@ IddObject createOS_WaterHeater_MixedIddObject() {
     ss << "\\units m3/s\n";
     ss << "\\ip-units gal/min\n";
     ss << "\\minimum 0.0\n";
-    ss << "N22; \\field Indirect Water Heating Recovery Time\n";
+    ss << "N22, \\field Indirect Water Heating Recovery Time\n";
     ss << "\\type real\n";
     ss << "\\default 1.5\n";
     ss << "\\note Parameter for autosizing design flow rates for indirectly heated water tanks\n";
     ss << "\\note Time required to raise temperature of entire tank from 14.4C to 57.2C\n";
     ss << "\\units hr\n";
     ss << "\\minimum> 0.0\n";
+    ss << "A19, \\field Source Side Flow Control Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key StorageTank\n";
+    ss << "\\key IndirectHeatPrimarySetpoint\n";
+    ss << "\\key IndirectHeatAlternateSetpoint\n";
+    ss << "\\default IndirectHeatPrimarySetpoint\n";
+    ss << "\\note StorageTank mode always requests flow unless tank is at its Maximum Temperature Limit\n";
+    ss << "\\note IndirectHeatPrimarySetpoint mode requests flow whenever primary setpoint calls for heat\n";
+    ss << "\\note IndirectHeatAlternateSetpoint mode requests flow whenever alternate indirect setpoint calls for heat\n";
+    ss << "A20, \\field Indirect Alternate Setpoint Temperature Schedule Name\n";
+    ss << "\\note This field is only used if the previous is set to IndirectHeatAlternateSetpoint\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A21; \\field End-Use Subcategory\n";
+    ss << "\\note Any text may be used here to categorize the end-uses in the ABUPS End Uses by Subcategory table.\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\default General\n";
 
     IddObjectType objType(IddObjectType::OS_WaterHeater_Mixed);
     OptionalIddObject oObj = IddObject::load("OS:WaterHeater:Mixed",
@@ -29976,6 +32265,422 @@ IddObject createOS_Coil_WaterHeating_AirToWaterHeatPumpIddObject() {
   return object;
 }
 
+IddObject createOS_WaterHeater_HeatPump_WrappedCondenserIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:WaterHeater:HeatPump:WrappedCondenser,\n";
+    ss << "\\min-fields 30\n";
+    ss << "\\memo This object models an air-source heat pump for water heating where the heating coil is wrapped around\n";
+    ss << "\\memo the tank, which is typical of residential HPWHs.\n";
+    ss << "\\memo For pumped condenser HPWHs, see WaterHeater:HeatPump:PumpedCondenser.\n";
+    ss << "\\memo WaterHeater:HeatPump:WrappedCondenser is a compound object that references other component objects -\n";
+    ss << "\\memo Coil:WaterHeating:AirToWaterHeatPump:Pumped, Fan:OnOff, WaterHeater:Mixed\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note Unique name for this instance of a heat pump water heater.\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3 , \\field Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for this system. Schedule value > 0 means the system is available.\n";
+    ss << "\\note If this field is blank, the system is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Schedule values of 0 denote the heat pump compressor is off and the parasitic electric\n";
+    ss << "\\note energy is also off.\n";
+    ss << "A4,  \\field Compressor Setpoint Temperature Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Defines the cut-out temperature where the heat pump compressor turns off.\n";
+    ss << "\\note The heat pump compressor setpoint temperature should always be greater\n";
+    ss << "\\note than the water tank's heater (element or burner) setpoint temperature.\n";
+    ss << "N1 , \\field Dead Band Temperature Difference\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 20\n";
+    ss << "\\required-field\n";
+    ss << "\\note Setpoint temperature minus the dead band temperature difference defines\n";
+    ss << "\\note the cut-in temperature where the heat pump compressor turns on.\n";
+    ss << "\\note The water tank's heater (element or burner) setpoint temperature\n";
+    ss << "\\note should always be less than the heat pump compressor cut-in temperature.\n";
+    ss << "N2,  \\field Condenser Bottom Location\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Distance from the bottom of the tank to the bottom of the wrapped condenser.\n";
+    ss << "N3,  \\field Condenser Top Location\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0\n";
+    ss << "\\note Distance from the bottom of the tank to the top of the wrapped condenser.\n";
+    ss << "N4 , \\field Evaporator Air Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\autocalculatable\n";
+    ss << "\\required-field\n";
+    ss << "\\note Actual air flow rate across the heat pump's air coil (evaporator).\n";
+    ss << "\\note If autocalculated, the air flow rate is set equal to 5.035E-5 m3/s/W times\n";
+    ss << "\\note the rated heating capacity of the heat pump's DX coil.\n";
+    ss << "A5 , \\field Inlet Air Configuration\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key Schedule\n";
+    ss << "\\key ZoneAirOnly\n";
+    ss << "\\key OutdoorAirOnly\n";
+    ss << "\\key ZoneAndOutdoorAir\n";
+    ss << "\\note Defines the configuration of the airflow path through the air coil and fan section.\n";
+    ss << "A6 , \\field Air Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note Zone air exhaust node name if Inlet Air Configuration is ZoneAirOnly or\n";
+    ss << "\\note ZoneAndOutdoorAir.\n";
+    ss << "\\note Simply a unique Node Name if Inlet Air Configuration is Schedule.\n";
+    ss << "\\note Otherwise, leave field blank.\n";
+    ss << "A7 , \\field Air Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note Zone Air Inlet Node Name if Inlet Air Configuration is ZoneAirOnly or\n";
+    ss << "\\note ZoneAndOutdoorAir.\n";
+    ss << "\\note Simply a unique Node Name if Inlet Air Configuration is Schedule.\n";
+    ss << "\\note Otherwise, leave field blank.\n";
+    ss << "A8 , \\field Outdoor Air Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "\\note Outdoor air node name if inlet air configuration is ZoneAndOutdoorAir\n";
+    ss << "\\note or OutdoorAirOnly, otherwise leave field blank.\n";
+    ss << "A9 , \\field Inlet Air Temperature Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Used only if Inlet Air Configuration is Schedule, otherwise leave blank.\n";
+    ss << "\\note Schedule values should be degrees C.\n";
+    ss << "A10, \\field Inlet Air Humidity Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Used only if Inlet Air Configuration is Schedule, otherwise leave blank.\n";
+    ss << "\\note Schedule values are entered as a fraction (e.g. 0.5 is equal to 50%RH)\n";
+    ss << "A11, \\field Tank Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list WaterHeaterStratifiedNames\n";
+    ss << "\\note Needs to match the name used in the corresponding Water Heater object.\n";
+    ss << "\\note Must be a WaterHeater:Stratified tank.\n";
+    ss << "A12, \\field DX Coil Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list HeatPumpWaterHeaterDXCoilsWrapped\n";
+    ss << "\\note Must match the name used in the corresponding Coil:WaterHeating:AirToWaterHeatPump:Wrapped object.\n";
+    ss << "N5 , \\field Minimum Inlet Air Temperature for Compressor Operation\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum -5\n";
+    ss << "\\required-field\n";
+    ss << "\\note Heat pump compressor will not operate when the inlet air dry-bulb temperature\n";
+    ss << "\\note is below this value.\n";
+    ss << "N6 , \\field Maximum Inlet Air Temperature for Compressor Operation\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\required-field\n";
+    ss << "\\minimum 26\n";
+    ss << "\\maximum 94\n";
+    ss << "\\note Heat pump compressor will not operate when the inlet air dry-bulb temperature\n";
+    ss << "\\note is above this value.\n";
+    ss << "A13, \\field Compressor Location\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key Schedule\n";
+    ss << "\\key Zone\n";
+    ss << "\\key Outdoors\n";
+    ss << "\\note If Zone is selected, Inlet Air Configuration must be ZoneAirOnly or\n";
+    ss << "\\note ZoneAndOutdoorAir. If Schedule is selected, then you must provide a\n";
+    ss << "\\note Compressor Ambient Temperature Schedule Name below.\n";
+    ss << "A14, \\field Compressor Ambient Temperature Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Used only if Compressor Location is Schedule, otherwise leave field blank.\n";
+    ss << "A15, \\field Fan Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FansOnOff\n";
+    ss << "\\note Needs to match the name used in the corresponding Fan:OnOff object.\n";
+    ss << "A16, \\field Fan Placement\n";
+    ss << "\\type choice\n";
+    ss << "\\key BlowThrough\n";
+    ss << "\\key DrawThrough\n";
+    ss << "\\required-field\n";
+    ss << "\\note BlowThrough means the fan is located before the air coil (upstream).\n";
+    ss << "\\note DrawThrough means the fan is located after the air coil (downstream).\n";
+    ss << "N7 , \\field On Cycle Parasitic Electric Load\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Parasitic electric power consumed when the heat pump compressor operates.\n";
+    ss << "\\note Does not contribute to water heating but can impact the zone air heat balance.\n";
+    ss << "N8 , \\field Off Cycle Parasitic Electric Load\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Parasitic electric power consumed when the heat pump compressor is off.\n";
+    ss << "\\note Does not contribute to water heating but can impact the zone air heat balance.\n";
+    ss << "\\note Off-cycle parasitic power is 0 when the availability schedule is 0.\n";
+    ss << "A17, \\field Parasitic Heat Rejection Location\n";
+    ss << "\\type choice\n";
+    ss << "\\key Zone\n";
+    ss << "\\key Outdoors\n";
+    ss << "\\required-field\n";
+    ss << "\\note This field determines if the parasitic electric load impacts the zone air\n";
+    ss << "\\note heat balance. If Zone is selected, Inlet Air Configuration must be\n";
+    ss << "\\note ZoneAirOnly or ZoneAndOutdoorAir.\n";
+    ss << "A18, \\field Inlet Air Mixer Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Required only if Inlet Air Configuration is ZoneAndOutdoorAir, otherwise\n";
+    ss << "\\note leave field blank. Schedule values define whether the heat pump draws its\n";
+    ss << "\\note inlet air from the zone, outdoors or a combination of zone and outdoor air.\n";
+    ss << "\\note A schedule value of 0 denotes inlet air is drawn only from the zone.\n";
+    ss << "\\note A schedule value of 1 denotes inlet air is drawn only from outdoors.\n";
+    ss << "\\note Schedule values between 0 and 1 denote a mixture of zone and outdoor air\n";
+    ss << "\\note proportional to the schedule value.\n";
+    ss << "A19, \\field Tank Element Control Logic\n";
+    ss << "\\type choice\n";
+    ss << "\\key MutuallyExclusive\n";
+    ss << "\\key Simultaneous\n";
+    ss << "\\required-field\n";
+    ss << "\\note MutuallyExclusive means that once the tank heating element is active the\n";
+    ss << "\\note heat pump is shut down until setpoint is reached.\n";
+    ss << "\\note Simultaneous (default) means that both the tank heating element and\n";
+    ss << "\\note heat pump are used at the same time recover the tank temperature.\n";
+    ss << "N9,  \\field Control Sensor 1 Height In Stratified Tank\n";
+    ss << "\\note Used to indicate height of control sensor if Tank Object Type is WaterHeater:Stratified\n";
+    ss << "\\note If left blank, it will default to the height of Heater1\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N10, \\field Control Sensor 1 Weight\n";
+    ss << "\\note Weight to give Control Sensor 1 temperature\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\required-field\n";
+    ss << "N11; \\field Control Sensor 2 Height In Stratified Tank\n";
+    ss << "\\note Used to indicate height of control sensor if Tank Object Type is WaterHeater:Stratified\n";
+    ss << "\\note If left blank, it will default to the height of Heater2\n";
+    ss << "\\note The weight of this control sensor will be 1 - (wt. of control sensor 1)\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0.0\n";
+
+    IddObjectType objType(IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser);
+    OptionalIddObject oObj = IddObject::load("OS:WaterHeater:HeatPump:WrappedCondenser",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser);
+  return object;
+}
+
+IddObject createOS_Coil_WaterHeating_AirToWaterHeatPump_WrappedIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Coil:WaterHeating:AirToWaterHeatPump:Wrapped,\n";
+    ss << "\\memo Heat pump water heater (HPWH) heating coil, air-to-water direct-expansion (DX)\n";
+    ss << "\\memo system which includes a water heating coil, evaporator air coil, evaporator\n";
+    ss << "\\memo fan, electric compressor, and water pump. Part of a WaterHeater:HeatPump:WrappedCondenser system.\n";
+    ss << "\\min-fields 20\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference HeatPumpWaterHeaterDXCoilsWrapped\n";
+    ss << "\\note Unique name for this instance of a heat pump water heater DX coil.\n";
+    ss << "N1 , \\field Rated Heating Capacity\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Heating capacity at the rated inlet air temperatures, rated condenser inlet\n";
+    ss << "\\note water temperature, rated air flow rate, and rated water flow rate.\n";
+    ss << "\\note Can optionally include condenser pump heat.\n";
+    ss << "N2 , \\field Rated COP\n";
+    ss << "\\type real\n";
+    ss << "\\units W/W\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\required-field\n";
+    ss << "\\note Heating coefficient of performance at the rated inlet air temperatures,\n";
+    ss << "\\note rated condenser inlet water temperature, rated air flow rate, and rated water flow rate.\n";
+    ss << "\\note Can optionally include condenser pump power and evaporator fan power (see fields below).\n";
+    ss << "N3 , \\field Rated Sensible Heat Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1\n";
+    ss << "\\required-field\n";
+    ss << "\\note Gross air-side sensible heat ratio at the rated inlet air temperatures,\n";
+    ss << "\\note rated condenser inlet water temperature, rated air flow rate, and rated water flow rate.\n";
+    ss << "\\note Sensible heat ratio equals gross sensible cooling capacity divided by gross total cooling\n";
+    ss << "\\note capacity. Rated SHR (gross) should not include evaporator fan heat, only sensible cooling\n";
+    ss << "\\note and dehumidification by the coil alone.\n";
+    ss << "N4 , \\field Rated Evaporator Inlet Air Dry-Bulb Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum> 5\n";
+    ss << "\\required-field\n";
+    ss << "\\note Evaporator inlet air dry-bulb temperature corresponding to rated coil performance\n";
+    ss << "\\note (heating capacity, COP and SHR).\n";
+    ss << "N5 , \\field Rated Evaporator Inlet Air Wet-Bulb Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum> 5\n";
+    ss << "\\required-field\n";
+    ss << "\\note Evaporator inlet air wet-bulb temperature corresponding to rated coil performance\n";
+    ss << "\\note (heating capacity, COP and SHR).\n";
+    ss << "N6 , \\field Rated Condenser Water Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum> 25\n";
+    ss << "\\required-field\n";
+    ss << "\\note Condenser inlet water temperature corresponding to rated coil performance\n";
+    ss << "\\note (heating capacity, COP and SHR).\n";
+    ss << "N7 , \\field Rated Evaporator Air Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\autocalculatable\n";
+    ss << "\\required-field\n";
+    ss << "\\note Evaporator air flow rate corresponding to rated coil performance\n";
+    ss << "\\note (heating capacity, COP and SHR).\n";
+    ss << "\\note Default is 5.035E-5 m3/s/W (31.25 cfm/MBH) of rated heating capacity when autocalculated.\n";
+    ss << "A3 , \\field Evaporator Fan Power Included in Rated COP\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\required-field\n";
+    ss << "\\note Select Yes if the evaporator fan power is included in the rated COP. This choice field\n";
+    ss << "\\note impacts the calculation of compressor electric power.\n";
+    ss << "A4,  \\field Evaporator Air Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note The node from which the DX coil draws its inlet air.\n";
+    ss << "A5,  \\field Evaporator Air Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note The node to which the DX coil sends its outlet air.\n";
+    ss << "N8,  \\field Crankcase Heater Capacity\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\required-field\n";
+    ss << "\\units W\n";
+    ss << "\\note The compressor crankcase heater only operates when the dry-bulb temperature of air\n";
+    ss << "\\note surrounding the compressor is below the Maximum Ambient Temperature for Crankcase\n";
+    ss << "\\note Heater Operation and the DX coil is off.  The ambient temperature surrounding the\n";
+    ss << "\\note compressor is set by the WaterHeater:HeatPump:WrappedCondenser parent object (field Compressor Location).\n";
+    ss << "N9,  \\field Maximum Ambient Temperature for Crankcase Heater Operation\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\required-field\n";
+    ss << "\\units C\n";
+    ss << "\\note The compressor crankcase heater only operates when the dry-bulb temperature of air\n";
+    ss << "\\note surrounding the compressor is below the Maximum Outdoor Temperature for Crankcase\n";
+    ss << "\\note Heater Operation and the unit is off. The ambient temperature surrounding the\n";
+    ss << "\\note compressor is set by the WaterHeater:HeatPump:WrappedCondenser parent object (field Compressor Location).\n";
+    ss << "A6,  \\field Evaporator Air Temperature Type for Curve Objects\n";
+    ss << "\\type choice\n";
+    ss << "\\key DryBulbTemperature\n";
+    ss << "\\key WetBulbTemperature\n";
+    ss << "\\required-field\n";
+    ss << "\\note Determines temperature type for heating capacity curves and\n";
+    ss << "\\note heating COP curves. This input determines whether\n";
+    ss << "\\note the inlet air dry-bulb or wet-bulb temperature is used to evaluate these curves.\n";
+    ss << "A7,  \\field Heating Capacity Function of Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BiquadraticCubicCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "\\required-field\n";
+    ss << "\\note Heating capacity modifier curve (function of temperature) should be biquadratic or cubic.\n";
+    ss << "\\note Biquadratic curve = a + b(ta) + c(ta)^2 + d(tw) + e(tw)^2 + f(ta)(tw).\n";
+    ss << "\\note Cubic curve = a + b(ta) + c(ta)^2 + d(ta)^3.\n";
+    ss << "\\note ta = evaporator inlet air [dry-bulb or wet-bulb] temperature (C).\n";
+    ss << "\\note tw = condenser inlet water temperature (C).\n";
+    ss << "\\note The field Evaporator Air Temperature Type for Curve Objects determines if dry-bulb or wet-bulb\n";
+    ss << "\\note is used as the evaporator inlet air temperature (ta).\n";
+    ss << "A8,  \\field Heating Capacity Function of Air Flow Fraction Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Heating capacity modifier curve (function of air flow fraction) should be quadratic or cubic.\n";
+    ss << "\\note Quadratic curve = a + b(ff) + c(ff)^2.\n";
+    ss << "\\note Cubic curve = a + b(ff) + c(ff)^2 + d(ff)^3.\n";
+    ss << "\\note ff = fraction of the rated evaporator air flow rate.\n";
+    ss << "\\note Use curve coefficients of 1,0,0 or leave this field blank when neglecting performance impacts\n";
+    ss << "\\note due to variations in air flow rate fraction.\n";
+    ss << "A9,  \\field Heating COP Function of Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list BiquadraticCubicCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "\\note Heating COP modifier curve (function of temperature) should be biquadratic or cubic.\n";
+    ss << "\\note Biquadratic curve = a + b(ta) + c(ta)^2 + d(tw) + e(tw)^2 + f(ta)(tw).\n";
+    ss << "\\note Cubic curve = a + b(ta) + c(ta)^2 + d(ta)^3.\n";
+    ss << "\\note ta = evaporator inlet air [dry-bulb or wet-bulb] temperature (C).\n";
+    ss << "\\note tw = condenser inlet water temperature (C).\n";
+    ss << "\\note The field Evaporator Air Temperature Type for Curve Objects determines if dry-bulb or wet-bulb\n";
+    ss << "\\note is used as the evaporator inlet air temperature (ta).\n";
+    ss << "A10,  \\field Heating COP Function of Air Flow Fraction Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Heating COP modifier curve (function of air flow fraction) should be quadratic or cubic.\n";
+    ss << "\\note Quadratic curve = a + b(ff) + c(ff)^2.\n";
+    ss << "\\note Cubic curve = a + b(ff) + c(ff)^2 + d(ff)^3.\n";
+    ss << "\\note ff = fraction of the rated evaporator air flow rate.\n";
+    ss << "\\note Use curve coefficients of 1,0,0 or leave this field blank when neglecting performance impacts\n";
+    ss << "\\note due to variations in air flow rate fraction.\n";
+    ss << "A11; \\field Part Load Fraction Correlation Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Part Load Fraction Correlation (function of part load ratio) should be quadratic or cubic.\n";
+    ss << "\\note Quadratic curve = a + b(PLR) + c(PLR)^2.\n";
+    ss << "\\note Cubic curve = a + b(PLR) + c(PLR)^2 + d(PLR)^3.\n";
+    ss << "\\note PLR = part load ratio (heating delivered/steady state heating capacity).\n";
+    ss << "\\note Use curve coefficients of 1,0,0 or leave this field blank when neglecting performance impacts\n";
+    ss << "\\note due to variations in part load ratio.\n";
+
+    IddObjectType objType(IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped);
+    OptionalIddObject oObj = IddObject::load("OS:Coil:WaterHeating:AirToWaterHeatPump:Wrapped",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped);
+  return object;
+}
+
 IddObject createOS_WaterHeater_StratifiedIddObject() {
 
   static IddObject object;
@@ -29990,6 +32695,7 @@ IddObject createOS_WaterHeater_StratifiedIddObject() {
     ss << "\\required-field\n";
     ss << "\\type alpha\n";
     ss << "\\reference WaterHeaterNames\n";
+    ss << "\\reference WaterHeaterStratifiedNames\n";
     ss << "\\reference ConnectionObject\n";
     ss << "A3,  \\field End-Use Subcategory\n";
     ss << "\\required-field\n";
@@ -30289,7 +32995,7 @@ IddObject createOS_WaterHeater_StratifiedIddObject() {
     ss << "\\required-field\n";
     ss << "\\type integer\n";
     ss << "\\minimum 1\n";
-    ss << "\\maximum 10\n";
+    ss << "\\maximum 12\n";
     ss << "N33, \\field Additional Destratification Conductivity\n";
     ss << "\\required-field\n";
     ss << "\\type real\n";
@@ -30335,6 +33041,14 @@ IddObject createOS_WaterHeater_StratifiedIddObject() {
     ss << "\\required-field\n";
     ss << "\\type real\n";
     ss << "\\units W/m2-K\n";
+    ss << "N43, \\field Node 11 Additional Loss Coefficient\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2-K\n";
+    ss << "N43, \\field Node 12 Additional Loss Coefficient\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2-K\n";
     ss << "A22, \\field Source Side Flow Control Mode\n";
     ss << "\\required-field\n";
     ss << "\\type choice\n";
@@ -30359,6 +33073,119 @@ IddObject createOS_WaterHeater_StratifiedIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_WaterHeater_Stratified);
+  return object;
+}
+
+IddObject createOS_WaterHeater_SizingIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:WaterHeater:Sizing,\n";
+    ss << "\\min-fields 5\n";
+    ss << "\\memo This input object is used with WaterHeater:Mixed or\n";
+    ss << "\\memo with WaterHeater:Stratified to autosize tank volume and heater capacity\n";
+    ss << "\\memo This object is not needed if water heaters are not autosized.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field WaterHeater Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list WaterHeaterNames\n";
+    ss << "A3 , \\field Design Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key PeakDraw\n";
+    ss << "\\key ResidentialHUD-FHAMinimum\n";
+    ss << "\\key PerPerson\n";
+    ss << "\\key PerFloorArea\n";
+    ss << "\\key PerUnit\n";
+    ss << "\\key PerSolarCollectorArea\n";
+    ss << "N1 , \\field Time Storage Can Meet Peak Draw\n";
+    ss << "\\type real\n";
+    ss << "\\units hr\n";
+    ss << "\\note Only used for Design Mode = PeakDraw\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N2 , \\field Time for Tank Recovery\n";
+    ss << "\\type real\n";
+    ss << "\\units hr\n";
+    ss << "\\note Only used for Design Mode = PeakDraw\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N3 , \\field Nominal Tank Volume for Autosizing Plant Connections\n";
+    ss << "\\type real\n";
+    ss << "\\units m3\n";
+    ss << "\\ip-units gal\n";
+    ss << "\\note Only used if Design Mode = PeakDraw and the water heater also\n";
+    ss << "\\note has autosized flow rates for connections on the demand side of a plant loop\n";
+    ss << "N4 , \\field Number of Bedrooms\n";
+    ss << "\\type integer\n";
+    ss << "\\note Only used for Design Mode = ResidentialHUD-FHAMinimum\n";
+    ss << "\\minimum 1\n";
+    ss << "N5 , \\field Number of Bathrooms\n";
+    ss << "\\type integer\n";
+    ss << "\\note Only used for Design Mode = ResidentialHUD-FHAMinimum\n";
+    ss << "\\minimum 1\n";
+    ss << "N6 , \\field Storage Capacity per Person\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/person\n";
+    ss << "\\ip-units gal/person\n";
+    ss << "\\note Only used for Design Mode = PerPerson\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N7 , \\field Recovery Capacity per Person\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/hr-person\n";
+    ss << "\\ip-units gal/hr-person\n";
+    ss << "\\note Only used for Design Mode = PerPerson\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N8 , \\field Storage Capacity per Floor Area\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/m2\n";
+    ss << "\\ip-units gal/ft2\n";
+    ss << "\\note Only used for Design Mode = PerFloorArea\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N9 , \\field Recovery Capacity per Floor Area\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/hr-m2\n";
+    ss << "\\ip-units gal/hr-ft2\n";
+    ss << "\\note Only used for Design Mode = PerFloorArea\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N10, \\field Number of Units\n";
+    ss << "\\type real\n";
+    ss << "\\note Only used for Design Mode = PerUnit\n";
+    ss << "N11, \\field Storage Capacity per Unit\n";
+    ss << "\\units m3\n";
+    ss << "\\ip-units gal\n";
+    ss << "\\type real\n";
+    ss << "\\note Only used for Design Mode = PerUnit\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N12, \\field Recovery Capacity PerUnit\n";
+    ss << "\\units m3/hr\n";
+    ss << "\\ip-units gal/hr\n";
+    ss << "\\type real\n";
+    ss << "\\note Only used for Design Mode = PerUnit\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N13, \\field Storage Capacity per Collector Area\n";
+    ss << "\\units m3/m2\n";
+    ss << "\\ip-units gal/ft2\n";
+    ss << "\\type real\n";
+    ss << "\\note Only used for Design Mode = PerSolarCollectorArea\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N14; \\field Height Aspect Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\note only used if for WaterHeater:Stratified\n";
+    ss << "\\minimum 0.0\n";
+
+    IddObjectType objType(IddObjectType::OS_WaterHeater_Sizing);
+    OptionalIddObject oObj = IddObject::load("OS:WaterHeater:Sizing",
+                                             "OpenStudio HVAC",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_WaterHeater_Sizing);
   return object;
 }
 
@@ -31704,6 +34531,327 @@ IddObject createOS_SolarCollector_FlatPlate_PhotovoltaicThermalIddObject() {
   return object;
 }
 
+IddObject createOS_Generator_MicroTurbineIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:MicroTurbine,\n";
+    ss << "\\memo MicroTurbine generators are small combustion turbines (e.g., 25kW to 500kW). The model\n";
+    ss << "\\memo calculates electrical power output, fuel use, standby and ancillary power.\n";
+    ss << "\\memo Energy recovery from exhaust air can be used to heat water.\n";
+    ss << "\\min-fields 12\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference GeneratorNames\n";
+    ss << "\\reference MicroTurbineGeneratorNames\n";
+    ss << "A3, \\field Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for this generator. Schedule value > 0 means the generator is available.\n";
+    ss << "\\note If this field is blank, the generator is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N1, \\field Reference Electrical Power Output\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N2, \\field Minimum Full Load Electrical Power Output\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N3, \\field Maximum Full Load Electrical Power Output\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note If left blank, Maximum Full Load Electrical Power Output will be set\n";
+    ss << "\\note equal to the Reference Electrical Power Output.\n";
+    ss << "N4, \\field Reference Electrical Efficiency Using Lower Heating Value\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Electric power output divided by fuel energy input (LHV basis)\n";
+    ss << "\\note at reference conditions.\n";
+    ss << "N5, \\field Reference Combustion Air Inlet Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\default 15.0\n";
+    ss << "N6, \\field Reference Combustion Air Inlet Humidity Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\units kgWater/kgDryAir\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.00638\n";
+    ss << "N7, \\field Reference Elevation\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum -300.0\n";
+    ss << "\\default 0.0\n";
+    ss << "A4, \\field Electrical Power Function of Temperature and Elevation Curve Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "\\note curve = a + b*T + c*T**2 + d*Elev + e*Elev**2 + f*T*Elev\n";
+    ss << "\\note T = combustion air inlet temperature (C)\n";
+    ss << "\\note Elev = elevation (m)\n";
+    ss << "A5, \\field Electrical Efficiency Function of Temperature Curve Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\note Quadratic curve = a + b*T + c*T**2\n";
+    ss << "\\note Cubic curve = a + b*T + c*T**2 + d*T**3\n";
+    ss << "\\note T = combustion air inlet temperature (C)\n";
+    ss << "A6, \\field Electrical Efficiency Function of Part Load Ratio Curve Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\note Quadratic curve = a + b*PLR + c*PLR**2\n";
+    ss << "\\note Cubic curve = a + b*PLR + c*PLR**2 + d*PLR**3\n";
+    ss << "\\note PLR = ratio of Generator Load to steady state Electrical Power Output at\n";
+    ss << "\\note current operating conditions\n";
+    ss << "A7, \\field Fuel Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\default NaturalGas\n";
+    ss << "N8, \\field Fuel Higher Heating Value\n";
+    ss << "\\type real\n";
+    ss << "\\units kJ/kg\n";
+    ss << "\\default 50000\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N9, \\field Fuel Lower Heating Value\n";
+    ss << "\\type real\n";
+    ss << "\\units kJ/kg\n";
+    ss << "\\default 45450\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N10, \\field Standby Power\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\default 0.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\note Electric power consumed when the generator is available but not being called\n";
+    ss << "\\note by the Electric Load Center.\n";
+    ss << "N11, \\field Ancillary Power\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\default 0.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\note Electric power consumed by ancillary equipment (e.g., external fuel pressurization pump).\n";
+    ss << "\\note Set to zero if Reference Electrical Power Output is the 'net' value (ancillary power\n";
+    ss << "\\note already deducted). Input value is positive, but indicates negative electric generation.\n";
+    ss << "A8, \\field Ancillary Power Function of Fuel Input Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*mdot + c*mdot**2\n";
+    ss << "\\note mdot = fuel mass flow rate (kg/s)\n";
+    ss << "\\note If left blank, model assumes ancillary power defined in previous field is constant\n";
+    ss << "\\note whenever the generator is operating.\n";
+    ss << "A9, \\field Generator MicroTurbine Heat Recovery Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list MicroTurbineHeatRecoveryNames\n";
+    ss << "\\note Reference an optional OpenStudio specific object for the HeatRecovery Module itself\n";
+    ss << "A10, \\field Combustion Air Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\note Must be an outdoor air node.\n";
+    ss << "A11, \\field Combustion Air Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N12, \\field Reference Exhaust Air Mass Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/s\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "A12, \\field Exhaust Air Flow Rate Function of Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*T + c*T**2\n";
+    ss << "\\note Cubic curve = a + b*T + c*T**2 + d*T**3\n";
+    ss << "\\note T = combustion air inlet temperature (C)\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "A13, \\field Exhaust Air Flow Rate Function of Part Load Ratio Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*PLR + c*PLR**2\n";
+    ss << "\\note Cubic curve = a + b*PLR + c*PLR**2 + d*PLR**3\n";
+    ss << "\\note PLR = ratio of Generator Load to steady state Electrical Power Output at\n";
+    ss << "\\note current operating conditions.\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "N13, \\field Nominal Exhaust Air Outlet Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\note Exhaust air outlet temperature at reference conditions.\n";
+    ss << "A14, \\field Exhaust Air Temperature Function of Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*T + c*T**2\n";
+    ss << "\\note Cubic curve = a + b*T + c*T**2 + d*T**3\n";
+    ss << "\\note T = combustion air inlet temperature (C)\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "A15; \\field Exhaust Air Temperature Function of Part Load Ratio Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*PLR + c*PLR**2\n";
+    ss << "\\note Cubic curve = a + b*PLR + c*PLR**2 + d*PLR**3\n";
+    ss << "\\note PLR = ratio of Generator Load to steady state Electrical Power Output at\n";
+    ss << "\\note current operating conditions.\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_MicroTurbine);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:MicroTurbine",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_MicroTurbine);
+  return object;
+}
+
+IddObject createOS_Generator_MicroTurbine_HeatRecoveryIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:MicroTurbine:HeatRecovery,\n";
+    ss << "\\memo MicroTurbine generators are small combustion turbines (e.g., 25kW to 500kW). The model\n";
+    ss << "\\memo calculates electrical power output, fuel use, standby and ancillary power.\n";
+    ss << "\\memo Energy recovery from exhaust air can be used to heat water.\n";
+    ss << "\\memo this class is purely for OpenStudio to separate\n";
+    ss << "\\memo the HeatRecovery (StraightComponent) from the Generator:MicroTurbine(Generator)\n";
+    ss << "\\min-fields 12\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference MicroTurbineHeatRecoveryNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Heat Recovery Water Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A4, \\field Heat Recovery Water Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\required-field\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N1 , \\field Reference Thermal Efficiency Using Lower Heat Value\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Reference thermal efficiency (heat recovery to water) based on the\n";
+    ss << "\\note Lower Heating Value (LHV) of the fuel.\n";
+    ss << "N2 , \\field Reference Inlet Water Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units C\n";
+    ss << "A5 , \\field Heat Recovery Water Flow Operating Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key PlantControl\n";
+    ss << "\\key InternalControl\n";
+    ss << "\\default PlantControl\n";
+    ss << "\\note PlantControl means the heat recovery water flow rate is determined by the plant,\n";
+    ss << "\\note but the user needs to supply a heat recovery water flow rate.\n";
+    ss << "\\note InternalControl means the heat recovery water flow rate is controlled by this generator.\n";
+    ss << "\\note If 'InternalControl' is selected, then the user needs to supply a reference heat\n";
+    ss << "\\note recovery water flow rate and optionally the name of a heat recovery flow rate modifier curve.\n";
+    ss << "N6 , \\field Reference Heat Recovery Water Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "A6 , \\field Heat Recovery Water Flow Rate Function of Temperature and Power Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "\\note curve = a + b*T + c*T**2 + d*Pnet + e*Pnet + f*T*Pnet\n";
+    ss << "\\note T = heat recovery inlet water temperature\n";
+    ss << "\\note Pnet = net power output = electric power output - ancillary power\n";
+    ss << "\\note If left blank, model assumes the heat recovery water flow rate is constant whenever the\n";
+    ss << "\\note generator is operating, at the Reference HR Water Flow Rate defined in the previous field.\n";
+    ss << "A7 , \\field Thermal Efficiency Function of Temperature and Elevation Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list BicubicBiquadraticCurves\n";
+    ss << "\\object-list BiVariateTables\n";
+    ss << "\\note Bicubic curve = a + b*T + c*T**2 + d*Elev + e*Elev**2 + f*T*Elev + g*T**3 + h*Elev**3 + i*T**2*Elev + j*T*Elev**2\n";
+    ss << "\\note Biquadratic curve = a + b*T + c*T**2 + d*Elev + e*Elev**2 + f*T*Elev\n";
+    ss << "\\note T = combustion air inlet temperature (C)\n";
+    ss << "\\note Elev = elevation (m)\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "A8 , \\field Heat Recovery Rate Function of Part Load Ratio Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*PLR + c*PLR**2\n";
+    ss << "\\note Cubic curve = a + b*PLR + c*PLR**2 + d*PLR**3\n";
+    ss << "\\note PLR = ratio of Generator Load to steady state Electrical Power Output at\n";
+    ss << "\\note current operating conditions\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "A9 , \\field Heat Recovery Rate Function of Inlet Water Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*T + c*T**2\n";
+    ss << "\\note T = inlet water temperature (C)\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "A10, \\field Heat Recovery Rate Function of Water Flow Rate Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Quadratic curve = a + b*Flow + c*Flow**2\n";
+    ss << "\\note Flow = flow rate of water through the heat exchanger (m3/s)\n";
+    ss << "\\note If field is left blank, model assumes this modifier equals 1 for entire simulation.\n";
+    ss << "N7, \\field Minimum Heat Recovery Water Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N8, \\field Maximum Heat Recovery Water Flow Rate\n";
+    ss << "\\type real\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Eplus defaults to 0 but here it would be moot to have a Heat\n";
+    ss << "\\note Recovery module with a max flow of 0\n";
+    ss << "N9, \\field Maximum Heat Recovery Water Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "N10; \\field Rated Thermal to Electrical Power Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Required field when generator is used by an ElectricLoadCenter:Distribution object with Generator Operation Scheme set to FollowThermal or FollowThermalLimitElectrical\n";
+    ss << "\\note Will default to 'Reference Thermal Efficiency Using Lower Heat Value' divided by 'Reference Electrical Efficiency Using Lower Heating Value'\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_MicroTurbine_HeatRecovery);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:MicroTurbine:HeatRecovery",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_MicroTurbine_HeatRecovery);
+  return object;
+}
+
 IddObject createOS_Generator_PhotovoltaicIddObject() {
 
   static IddObject object;
@@ -31953,6 +35101,818 @@ IddObject createOS_PhotovoltaicPerformance_EquivalentOneDiodeIddObject() {
   return object;
 }
 
+IddObject createOS_Generator_FuelCellIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell,\n";
+    ss << "\\memo This generator model is the FC model from IEA Annex 42\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference GeneratorNames\n";
+    ss << "A3, \\field Power Module Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:PowerModule object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCPMNames\n";
+    ss << "A4, \\field Air Supply Name\n";
+    ss << "\\note Enter then name of a Generator:FuelCell:AirSupply object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCAirSupNames\n";
+    ss << "A5, \\field Fuel Supply Name\n";
+    ss << "\\note Enter the name of a Generator:FuelSupply object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list GenFuelSupNames\n";
+    ss << "A6, \\field Water Supply Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:WaterSupply object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCWaterSupNames\n";
+    ss << "A7, \\field Auxiliary Heater Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:AuxiliaryHeater object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCAuxHeatNames\n";
+    ss << "A8, \\field Heat Exchanger Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:ExhaustGasToWaterHeatExchanger object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCExhaustHXNames\n";
+    ss << "A9, \\field Electrical Storage Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:ElectricalStorage object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCStorageNames\n";
+    ss << "A10, \\field Inverter Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:Inverter object.\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCInverterNames\n";
+    ss << "A11; \\field Stack Cooler Name\n";
+    ss << "\\note Enter the name of a Generator:FuelCell:StackCooler object.\n";
+    ss << "\\note optional, used for PEMFC\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FCStackCoolerNames\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_PowerModuleIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:PowerModule,\n";
+    ss << "\\memo Describe the core power module subsystem of a fuel cell power generator. This includes\n";
+    ss << "\\memo the fuel cell stack, fuel reformer, and whatever ancillary devices are included inside.\n";
+    ss << "\\memo If the model has multiple FC generators that are of the exact same type, then only one\n";
+    ss << "\\memo of these objects is needed and all the Generator:FuelCell objects can reference it.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCPMNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Efficiency Curve Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key Annex42\n";
+    ss << "\\key Normalized\n";
+    ss << "A4, \\field Efficiency Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\required-field\n";
+    ss << "N1, \\field Nominal Efficiency\n";
+    ss << "\\note This field is not used.\n";
+    ss << "N2, \\field Nominal Electrical Power\n";
+    ss << "\\note This field is not used\n";
+    ss << "\\units W\n";
+    ss << "N3, \\field Number of Stops at Start of Simulation\n";
+    ss << "\\note this is Nstops in SOFC model specification\n";
+    ss << "N4, \\field Cycling Performance Degradation Coefficient\n";
+    ss << "\\note this is D in SOFC model specification\n";
+    ss << "N5, \\field Number of Run Hours at Beginning of Simulation\n";
+    ss << "\\units hr\n";
+    ss << "N6, \\field Accumulated Run Time Degradation Coefficient\n";
+    ss << "\\note this is L in SOFC model specification\n";
+    ss << "N7, \\field Run Time Degradation Initiation Time Threshold\n";
+    ss << "\\units hr\n";
+    ss << "N8, \\field Power Up Transient Limit\n";
+    ss << "\\units W/s\n";
+    ss << "\\note Maximum rate of change in electrical output [power increasing]\n";
+    ss << "N9, \\field Power Down Transient Limit\n";
+    ss << "\\units W/s\n";
+    ss << "\\note Maximum rate of change in electrical output [power decreasing]\n";
+    ss << "\\note Enter positive value for rate of change\n";
+    ss << "N10,\\field Start Up Time\n";
+    ss << "\\units s\n";
+    ss << "\\note Time from start up to normal operation\n";
+    ss << "N11,\\field Start Up Fuel\n";
+    ss << "\\units kmol\n";
+    ss << "N12,\\field Start Up Electricity Consumption\n";
+    ss << "\\units J\n";
+    ss << "N13,\\field Start Up Electricity Produced\n";
+    ss << "\\units J\n";
+    ss << "N14,\\field Shut Down Time\n";
+    ss << "\\units s\n";
+    ss << "N15,\\field Shut Down Fuel\n";
+    ss << "\\units kmol\n";
+    ss << "N16,\\field Shut Down Electricity Consumption\n";
+    ss << "\\units J\n";
+    ss << "N17,\\field Ancillary Electricity Constant Term\n";
+    ss << "N18,\\field Ancillary Electricity Linear Term\n";
+    ss << "A5, \\field Skin Loss Calculation Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key ConstantRate\n";
+    ss << "\\key UAForProcessGasTemperature\n";
+    ss << "\\key QuadraticFunctionOfFuelRate\n";
+    ss << "A6, \\field Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "N19,\\field Skin Loss Radiative Fraction\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "N20,\\field Constant Skin Loss Rate\n";
+    ss << "\\units W\n";
+    ss << "N21,\\field Skin Loss U-Factor Times Area Term\n";
+    ss << "\\units W/K\n";
+    ss << "A7, \\field Skin Loss Quadratic Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note curve is function of fuel use rate\n";
+    ss << "N22,\\field Dilution Air Flow Rate\n";
+    ss << "\\units kmol/s\n";
+    ss << "N23,\\field Stack Heat loss to Dilution Air\n";
+    ss << "\\units W\n";
+    ss << "A8, \\field Dilution Inlet Air Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "A9 ,\\field Dilution Outlet Air Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "N24, \\field Minimum Operating Point\n";
+    ss << "\\units W\n";
+    ss << "N25; \\field Maximum Operating Point\n";
+    ss << "\\units W\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_PowerModule);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:PowerModule",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_PowerModule);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_AirSupplyIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:AirSupply,\n";
+    ss << "\\memo Used to define details of the air supply subsystem for a fuel cell power generator.\n";
+    ss << "\\extensible:2\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCAirSupNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Air Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "A4, \\field Blower Power Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list CubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N1, \\field Blower Heat Loss Factor\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "A5, \\field Air Supply Rate Calculation Mode\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key AirRatiobyStoics\n";
+    ss << "\\key QuadraticFunctionofElectricPower\n";
+    ss << "\\key QuadraticFunctionofFuelRate\n";
+    ss << "N2, \\field Stoichiometric Ratio\n";
+    ss << "\\note This is the excess air \"stoics\"\n";
+    ss << "\\note the value entered is incremented by 1 in the model.\n";
+    ss << "A6, \\field Air Rate Function of Electric Power Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N3, \\field Air Rate Air Temperature Coefficient\n";
+    ss << "A7, \\field Air Rate Function of Fuel Rate Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "A8, \\field Air Intake Heat Recovery Mode\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key NoRecovery\n";
+    ss << "\\key RecoverBurnerInverterStorage\n";
+    ss << "\\key RecoverAuxiliaryBurner\n";
+    ss << "\\key RecoverInverterandStorage\n";
+    ss << "\\key RecoverInverter\n";
+    ss << "\\key RecoverElectricalStorage\n";
+    ss << "A9, \\field Air Supply Constituent Mode\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key AmbientAir\n";
+    ss << "\\key UserDefinedConstituents\n";
+    ss << "N4, \\field Number of UserDefined Constituents\n";
+    ss << "\\maximum 5\n";
+    ss << "A10, \\field Constituent 1 Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type choice\n";
+    ss << "\\key CarbonDioxide\n";
+    ss << "\\key Nitrogen\n";
+    ss << "\\key Oxygen\n";
+    ss << "\\key Water\n";
+    ss << "\\key Argon\n";
+    ss << "N5; \\field Molar Fraction 1\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_AirSupply);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:AirSupply",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_AirSupply);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_WaterSupplyIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:WaterSupply,\n";
+    ss << "\\memo Used to provide details of the water supply subsystem for a fuel cell power generator.\n";
+    ss << "\\memo This water is used for steam reforming of the fuel and is not the same\n";
+    ss << "\\memo as the water used for thermal heat recovery.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCWaterSupNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Reformer Water Flow Rate Function of Fuel Rate Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\required-field\n";
+    ss << "A4, \\field Reformer Water Pump Power Function of Fuel Rate Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list CubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\required-field\n";
+    ss << "N1, \\field Pump Heat Loss Factor\n";
+    ss << "A5, \\field Water Temperature Modeling Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key TemperatureFromAirNode\n";
+    ss << "\\key TemperatureFromWaterNode\n";
+    ss << "\\key TemperatureFromSchedule\n";
+    ss << "\\key MainsWaterTemperature\n";
+    ss << "A6, \\field Water Temperature Reference Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "A7; \\field Water Temperature Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_WaterSupply);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:WaterSupply",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_WaterSupply);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_AuxiliaryHeaterIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:AuxiliaryHeater,\n";
+    ss << "\\memo Intended for modeling an auxiliary heater for a fuel cell power generator, however this\n";
+    ss << "\\memo portion of the model is not yet available. The program still requires one of these\n";
+    ss << "\\memo objects be included even though the data are not yet used (so that internal data\n";
+    ss << "\\memo structures can be allocated).\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCAuxHeatNames\n";
+    ss << "N1, \\field Excess Air Ratio\n";
+    ss << "N2, \\field Ancillary Power Constant Term\n";
+    ss << "N3, \\field Ancillary Power Linear Term\n";
+    ss << "N4, \\field Skin Loss U-Factor Times Area Value\n";
+    ss << "\\units W/K\n";
+    ss << "A3, \\field Skin Loss Destination\n";
+    ss << "\\type choice\n";
+    ss << "\\key SurroundingZone\n";
+    ss << "\\key AirInletForFuelCell\n";
+    ss << "A4, \\field Zone Name to Receive Skin Losses\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "A5, \\field Heating Capacity Units\n";
+    ss << "\\type choice\n";
+    ss << "\\key Watts\n";
+    ss << "\\key kmol/s\n";
+    ss << "N5, \\field Maximum Heating Capacity in Watts\n";
+    ss << "\\units W\n";
+    ss << "N6, \\field Minimum Heating Capacity in Watts\n";
+    ss << "\\units W\n";
+    ss << "N7, \\field Maximum Heating Capacity in Kmol per Second\n";
+    ss << "\\units kmol/s\n";
+    ss << "N8; \\field Minimum Heating Capacity in Kmol per Second\n";
+    ss << "\\units kmol/s\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:AuxiliaryHeater",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_ExhaustGasToWaterHeatExchangerIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:ExhaustGasToWaterHeatExchanger,\n";
+    ss << "\\memo Describes the exhaust gas heat exchanger subsystem of a fuel cell power generator\n";
+    ss << "\\memo used to recovery thermal energy\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCExhaustHXNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Heat Recovery Water Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A4, \\field Heat Recovery Water Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N1, \\field Heat Recovery Water Maximum Flow Rate\n";
+    ss << "\\units m3/s\n";
+    ss << "\\ip-units gal/min\n";
+    ss << "A5, \\field Exhaust Outlet Air Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "A6, \\field Heat Exchanger Calculation Method\n";
+    ss << "\\type choice\n";
+    ss << "\\key FixedEffectiveness\n";
+    ss << "\\key EmpiricalUAeff\n";
+    ss << "\\key FundementalUAeff\n";
+    ss << "\\key Condensing\n";
+    ss << "N2, \\field Method 1 Heat Exchanger Effectiveness\n";
+    ss << "N3, \\field Method 2 Parameter hxs0\n";
+    ss << "N4, \\field Method 2 Parameter hxs1\n";
+    ss << "N5, \\field Method 2 Parameter hxs2\n";
+    ss << "N6, \\field Method 2 Parameter hxs3\n";
+    ss << "N7, \\field Method 2 Parameter hxs4\n";
+    ss << "N8, \\field Method 3 h0Gas Coefficient\n";
+    ss << "N9, \\field Method 3 NdotGasRef Coefficient\n";
+    ss << "N10, \\field Method 3 n Coefficient\n";
+    ss << "N11, \\field Method 3 Gas Area\n";
+    ss << "\\units m2\n";
+    ss << "N12, \\field Method 3 h0 Water Coefficient\n";
+    ss << "N13, \\field Method 3 N dot Water ref Coefficient\n";
+    ss << "N14, \\field Method 3 m Coefficient\n";
+    ss << "N15, \\field Method 3 Water Area\n";
+    ss << "\\units m2\n";
+    ss << "N16, \\field Method 3 F Adjustment Factor\n";
+    ss << "N17, \\field Method 4 hxl1 Coefficient\n";
+    ss << "N18, \\field Method 4 hxl2 Coefficient\n";
+    ss << "N19; \\field Method 4 Condensation Threshold\n";
+    ss << "\\units C\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:ExhaustGasToWaterHeatExchanger",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_ElectricalStorageIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:ElectricalStorage,\n";
+    ss << "\\memo Used to describe the electrical storage subsystem for a fuel cell power generator.\n";
+    ss << "\\memo The electrical storage model is a very simple \"constrained bucket\" model.\n";
+    ss << "\\memo Note that this electrical storage is embedded within the FC device.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCStorageNames\n";
+    ss << "A3, \\field Choice of Model\n";
+    ss << "\\type choice\n";
+    ss << "\\key SimpleEfficiencyWithConstraints\n";
+    ss << "N1, \\field Nominal Charging Energetic Efficiency\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N2, \\field Nominal Discharging Energetic Efficiency\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N3, \\field Simple Maximum Capacity\n";
+    ss << "\\units J\n";
+    ss << "N4, \\field Simple Maximum Power Draw\n";
+    ss << "\\units W\n";
+    ss << "N5, \\field Simple Maximum Power Store\n";
+    ss << "\\units W\n";
+    ss << "N6; \\field Initial Charge State\n";
+    ss << "\\units J\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_ElectricalStorage);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:ElectricalStorage",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_ElectricalStorage);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_InverterIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:Inverter,\n";
+    ss << "\\memo Used to describe the power condition unit subsystem of a fuel cell power generator.\n";
+    ss << "\\memo This object models an inverter system contained within a fuel cell system that\n";
+    ss << "\\memo converts from direct current (DC) to alternating current (AC).\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference FCInverterNames\n";
+    ss << "A3, \\field Inverter Efficiency Calculation Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key Quadratic\n";
+    ss << "\\key Constant\n";
+    ss << "N1, \\field Inverter Efficiency\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "A4; \\field Efficiency Function of DC Power Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_Inverter);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:Inverter",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_Inverter);
+  return object;
+}
+
+IddObject createOS_Generator_FuelCell_StackCoolerIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelCell:StackCooler,\n";
+    ss << "\\memo This object is optional and is used to define details needed to model the stack cooler\n";
+    ss << "\\memo on PEMFC.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference FCStackCoolerNames\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Heat Recovery Water Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "A4, \\field Heat Recovery Water Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "N1,  \\field Nominal Stack Temperature\n";
+    ss << "\\units C\n";
+    ss << "N2,  \\field Actual Stack Temperature\n";
+    ss << "\\units C\n";
+    ss << "N3,  \\field Coefficient r0\n";
+    ss << "N4,  \\field Coefficient r1\n";
+    ss << "N5,  \\field Coefficient r2\n";
+    ss << "N6,  \\field Coefficient r3\n";
+    ss << "N7,  \\field Stack Coolant Flow Rate\n";
+    ss << "\\units kg/s\n";
+    ss << "N8,  \\field Stack Cooler U-Factor Times Area Value\n";
+    ss << "\\units W/K\n";
+    ss << "N9,  \\field Fs-cogen Adjustment Factor\n";
+    ss << "N10, \\field Stack Cogeneration Exchanger Area\n";
+    ss << "\\units m2\n";
+    ss << "N11, \\field Stack Cogeneration Exchanger Nominal Flow Rate\n";
+    ss << "\\units kg/s\n";
+    ss << "N12, \\field Stack Cogeneration Exchanger Nominal Heat Transfer Coefficient\n";
+    ss << "\\units W/m2-K\n";
+    ss << "N13, \\field Stack Cogeneration Exchanger Nominal Heat Transfer Coefficient Exponent\n";
+    ss << "N14, \\field Stack Cooler Pump Power\n";
+    ss << "\\units W\n";
+    ss << "N15, \\field Stack Cooler Pump Heat Loss Fraction\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "N16, \\field Stack Air Cooler Fan Coefficient f0\n";
+    ss << "N17, \\field Stack Air Cooler Fan Coefficient f1\n";
+    ss << "N18; \\field Stack Air Cooler Fan Coefficient f2\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelCell_StackCooler);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelCell:StackCooler",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelCell_StackCooler);
+  return object;
+}
+
+IddObject createOS_Generator_FuelSupplyIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:FuelSupply,\n";
+    ss << "\\extensible:2\n";
+    ss << "\\max-fields 38\n";
+    ss << "\\memo Used only with Generator:FuelCell and Generator:MicroCHP\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference GenFuelSupNames\n";
+    ss << "A3, \\field Fuel Temperature Modeling Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key TemperatureFromAirNode\n";
+    ss << "\\key Scheduled\n";
+    ss << "A4, \\field Fuel Temperature Reference Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list Node\n";
+    ss << "A5, \\field Fuel Temperature Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A6, \\field Compressor Power Multiplier Function of Fuel Rate Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list CubicCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N1, \\field Compressor Heat Loss Factor\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "A7, \\field Fuel Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key GaseousConstituents\n";
+    ss << "\\key LiquidGeneric\n";
+    ss << "N2, \\field Liquid Generic Fuel Lower Heating Value\n";
+    ss << "\\units kJ/kg\n";
+    ss << "N3, \\field Liquid Generic Fuel Higher Heating Value\n";
+    ss << "\\units kJ/kg\n";
+    ss << "N4, \\field Liquid Generic Fuel Molecular Weight\n";
+    ss << "\\units g/mol\n";
+    ss << "N5, \\field Liquid Generic Fuel CO2 Emission Factor\n";
+    ss << "N6, \\field Number of Constituents in Gaseous Constituent Fuel Supply\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 12.0\n";
+    ss << "A8, \\field Constituent 1 Name\n";
+    ss << "\\type choice\n";
+    ss << "\\key CarbonDioxide\n";
+    ss << "\\key Nitrogen\n";
+    ss << "\\key Oxygen\n";
+    ss << "\\key Water\n";
+    ss << "\\key Argon\n";
+    ss << "\\key Hydrogen\n";
+    ss << "\\key Methane\n";
+    ss << "\\key Ethane\n";
+    ss << "\\key Propane\n";
+    ss << "\\key Butane\n";
+    ss << "\\key Pentane\n";
+    ss << "\\key Hexane\n";
+    ss << "\\key Methanol\n";
+    ss << "\\key Ethanol\n";
+    ss << "\\begin-extensible\n";
+    ss << "N7; \\field Constituent 1 Molar Fraction\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_FuelSupply);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:FuelSupply",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_FuelSupply);
+  return object;
+}
+
+IddObject createOS_Generator_PVWattsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Generator:PVWatts,\n";
+    ss << "\\min-fields 4\n";
+    ss << "\\memo Describes a simple set of inputs for an array of photovoltaic (PV) modules as described\n";
+    ss << "\\memo in the PVWatts software. A series of different PVWatts arrays can be connected to a\n";
+    ss << "\\memo single electric load center (preferably through an\n";
+    ss << "\\memo ElectricLoadCenter:Inverter:PVWatts). Array tilt and azimuth can be either specified\n";
+    ss << "\\memo on this object or taken from a referenced building surface or shading surface. If\n";
+    ss << "\\memo a surface is specified, the array participates normally in all shading calculations.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference GeneratorNames\n";
+    ss << "A3, \\field PVWatts Version\n";
+    ss << "\\type choice\n";
+    ss << "\\key 5\n";
+    ss << "N1, \\field DC System Capacity\n";
+    ss << "\\note Nameplate rated DC system capacity in watts\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units W\n";
+    ss << "\\minimum> 0\n";
+    ss << "A4, \\field Module Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Standard\n";
+    ss << "\\key Premium\n";
+    ss << "\\key ThinFilm\n";
+    ss << "\\default Standard\n";
+    ss << "A5, \\field Array Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key FixedOpenRack\n";
+    ss << "\\key FixedRoofMounted\n";
+    ss << "\\key OneAxis\n";
+    ss << "\\key OneAxisBacktracking\n";
+    ss << "\\key TwoAxis\n";
+    ss << "\\default FixedOpenRack\n";
+    ss << "N2, \\field System Losses\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.14\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1\n";
+    ss << "N3, \\field Tilt Angle\n";
+    ss << "\\note The tilt angle is the angle from horizontal of the photovoltaic modules in the array.\n";
+    ss << "\\type real\n";
+    ss << "\\units deg\n";
+    ss << "\\default 20\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 90\n";
+    ss << "N4, \\field Azimuth Angle\n";
+    ss << "\\note For a fixed array, the azimuth angle is the angle clockwise from true north describing\n";
+    ss << "\\note the direction that the array faces. For an array with one-axis tracking, the azimuth\n";
+    ss << "\\note angle is the angle clockwise from true north of the axis of rotation.\n";
+    ss << "\\type real\n";
+    ss << "\\units deg\n";
+    ss << "\\default 180\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum< 360\n";
+    ss << "A6, \\field Surface Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllShadingAndHTSurfNames\n";
+    ss << "N5; \\field Ground Coverage Ratio\n";
+    ss << "\\note Applies only to arrays with one-axis tracking and is the ratio of module surface area\n";
+    ss << "\\note to area of the ground or roof occupied by the array.\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.4\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1\n";
+
+    IddObjectType objType(IddObjectType::OS_Generator_PVWatts);
+    OptionalIddObject oObj = IddObject::load("OS:Generator:PVWatts",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Generator_PVWatts);
+  return object;
+}
+
+IddObject createOS_ElectricLoadCenter_Inverter_PVWattsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricLoadCenter:Inverter:PVWatts,\n";
+    ss << "\\min-fields 2\n";
+    ss << "\\memo Electric power inverter to convert from direct current (DC) to alternating current\n";
+    ss << "\\memo (AC) in an electric load center that contains Generator:PVWatts objects.\n";
+    ss << "\\memo It implements the PVWatts inverter performance curves.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference InverterList\n";
+    ss << "N1, \\field DC to AC Size Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\default 1.10\n";
+    ss << "N2; \\field Inverter Efficiency\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default 0.96\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricLoadCenter:Inverter:PVWatts",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts);
+  return object;
+}
+
 IddObject createOS_ElectricLoadCenter_Inverter_SimpleIddObject() {
 
   static IddObject object;
@@ -32066,6 +36026,217 @@ IddObject createOS_ElectricLoadCenter_Inverter_LookUpTableIddObject() {
   return object;
 }
 
+IddObject createOS_ElectricLoadCenter_Storage_SimpleIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricLoadCenter:Storage:Simple,\n";
+    ss << "\\memo Used to model storage of electricity in an electric load center.  This is a simple\n";
+    ss << "\\memo model that does not attempt to represent any of the characteristics of a real\n";
+    ss << "\\memo storage device such as a battery.  The type of power, AC or DC, depends on\n";
+    ss << "\\memo the configuration chosen as the Electrical Buss Type in the\n";
+    ss << "\\memo ElectricLoadCenter:Distribution object.\n";
+    ss << "A1 , \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\reference ElecStorageList\n";
+    ss << "A3,  \\field Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for this system. Schedule value > 0 means the system is available.\n";
+    ss << "\\note If this field is blank, the system is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A4,  \\field Zone Name\n";
+    ss << "\\note Enter name of zone to receive storage losses as heat\n";
+    ss << "\\note if blank then storage is assumed to be outdoors\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "N1 , \\field Radiative Fraction for Zone Heat Gains\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note This field contains the fraction of storage losses that enter the zone as long-wave thermal radiation.\n";
+    ss << "\\note This should be a factor between 0.0 and 1.0. The balance of the losses are convective.\n";
+    ss << "\\note This field is not used if the previous field for 'Zone Name' is left blank.\n";
+    ss << "N2,  \\field Nominal Energetic Efficiency for Charging\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "N3,  \\field Nominal Discharging Energetic Efficiency\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 1.0\n";
+    ss << "N4,  \\field Maximum Storage Capacity\n";
+    ss << "\\required-field\n";
+    ss << "\\units J\n";
+    ss << "N5,  \\field Maximum Power for Discharging\n";
+    ss << "\\required-field\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N6,  \\field Maximum Power for Charging\n";
+    ss << "\\required-field\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0.0\n";
+    ss << "N7;  \\field Initial State of Charge\n";
+    ss << "\\units J\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricLoadCenter_Storage_Simple);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricLoadCenter:Storage:Simple",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricLoadCenter_Storage_Simple);
+  return object;
+}
+
+IddObject createOS_ElectricLoadCenter_TransformerIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricLoadCenter:Transformer,\n";
+    ss << "\\memo a list of meters that can be reported are available after a run on\n";
+    ss << "\\memo the meter dictionary file (.mdd) if the Output:VariableDictionary has been requested.\n";
+    ss << "\\extensible:1\n";
+    ss << "A1 , \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference TransformerNames\n";
+    ss << "A3,  \\field Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for this system. Schedule value > 0 means the system is available.\n";
+    ss << "\\note If this field is blank, the system is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A4,  \\field Transformer Usage\n";
+    ss << "\\type choice\n";
+    ss << "\\key PowerInFromGrid\n";
+    ss << "\\key PowerOutToGrid\n";
+    ss << "\\key LoadCenterPowerConditioning\n";
+    ss << "\\default PowerInFromGrid\n";
+    ss << "\\note A transformer can be used to transfer electric energy from utility grid to\n";
+    ss << "\\note building (PowerInFromGrid)or from building on-site generation to\n";
+    ss << "\\note the grid (PowerOutToGrid) or within a load center to match generation\n";
+    ss << "\\note to the facility service main panel (LoadCenterPowerConditioning)\n";
+    ss << "A5,  \\field Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "\\note Enter name of zone to receive transformer losses as heat\n";
+    ss << "\\note if blank then transformer losses are dissipated to outdoors\n";
+    ss << "N1,  \\field Radiative Fraction\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0\n";
+    ss << "N2,  \\field Rated Capacity\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\units VA\n";
+    ss << "\\note the unit is VA, instead of kVA as usually shown on transformer nameplates.\n";
+    ss << "N3,  \\field Phase\n";
+    ss << "\\type choice\n";
+    ss << "\\key 1\n";
+    ss << "\\key 3\n";
+    ss << "\\default 3\n";
+    ss << "\\note Must be single or three phase transformer.\n";
+    ss << "\\note NOT used in the current model.\n";
+    ss << "A6,  \\field Conductor Material\n";
+    ss << "\\type choice\n";
+    ss << "\\key Copper\n";
+    ss << "\\key Aluminum\n";
+    ss << "\\default Aluminum\n";
+    ss << "\\note Winding material used by the transformer.\n";
+    ss << "N4,  \\field Full Load Temperature Rise\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 50\n";
+    ss << "\\maximum 180\n";
+    ss << "\\default 150\n";
+    ss << "N5,  \\field Fraction of Eddy Current Losses\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.1\n";
+    ss << "A7,  \\field Performance Input Method\n";
+    ss << "\\type choice\n";
+    ss << "\\key RatedLosses\n";
+    ss << "\\key NominalEfficiency\n";
+    ss << "\\default RatedLosses\n";
+    ss << "\\note User can define transformer performance by specifying\n";
+    ss << "\\note load and no load losses at rated conditions or\n";
+    ss << "\\note nameplate efficiency and maximum efficiency\n";
+    ss << "N6,  \\field Rated No Load Loss\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Only required when RatedLosses is the performance input method\n";
+    ss << "N7,  \\field Rated Load Loss\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\minimum 0\n";
+    ss << "\\note Only required when RatedLosses is the performance input method\n";
+    ss << "N8,  \\field Nameplate Efficiency\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.98\n";
+    ss << "\\note Only required when NominalEfficiency is the performance input method\n";
+    ss << "N9,  \\field Per Unit Load for Nameplate Efficiency\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.35\n";
+    ss << "\\note Percentage of the rated capacity at which the nameplate efficiency is defined\n";
+    ss << "\\note Only required when NominalEfficiency is the performance input method\n";
+    ss << "N10, \\field Reference Temperature for Nameplate Efficiency\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 20\n";
+    ss << "\\maximum 150\n";
+    ss << "\\default 75\n";
+    ss << "\\note Conductor operating temperature at which the nameplate efficiency is defined\n";
+    ss << "\\note Only required when NominalEfficiency is the performance input method\n";
+    ss << "N11, \\field Per Unit Load for Maximum Efficiency\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Percentage of the rate capacity at which the maximum efficiency is obtained\n";
+    ss << "\\note Only required when NominalEfficiency is the performance input method\n";
+    ss << "A8,  \\field Consider Transformer Loss for Utility Cost\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default Yes\n";
+    ss << "\\note Only required when the transformer is used for power in from the utility grid\n";
+    ss << "A9;  \\field Meter 1 Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type alpha\n";
+    ss << "\\memo type external-list\n";
+    ss << "\\memo external-list autoRDDmeter\n";
+    ss << "\\note Must be an electric meter (with electricity as the resource type)\n";
+    ss << "\\note Only required when transformer is used for power in from the utility grid\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricLoadCenter_Transformer);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricLoadCenter:Transformer",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricLoadCenter_Transformer);
+  return object;
+}
+
 IddObject createOS_ElectricLoadCenter_DistributionIddObject() {
 
   static IddObject object;
@@ -32086,10 +36257,16 @@ IddObject createOS_ElectricLoadCenter_DistributionIddObject() {
     ss << "\\object-list ModelObjectLists\n";
     ss << "A4 , \\field Generator Operation Scheme Type\n";
     ss << "\\note required if Generator List is entered.\n";
-    ss << "\\memo Keys DemandLimit, TrackElectrical, TrackSchedule, TrackMeter, FollowThermal and FollowThermalLimitElectrical disabled for now\n";
+    ss << "\\note Determines how generators are to be controlled\n";
     ss << "\\type choice\n";
-    ss << "\\default Baseload\n";
     ss << "\\key Baseload\n";
+    ss << "\\key DemandLimit\n";
+    ss << "\\key TrackElectrical\n";
+    ss << "\\key TrackSchedule\n";
+    ss << "\\key TrackMeter\n";
+    ss << "\\key FollowThermal\n";
+    ss << "\\key FollowThermalLimitElectrical\n";
+    ss << "\\default Baseload\n";
     ss << "N1 , \\field Demand Limit Scheme Purchased Electric Demand Limit\n";
     ss << "\\type real\n";
     ss << "\\units W\n";
@@ -32098,15 +36275,19 @@ IddObject createOS_ElectricLoadCenter_DistributionIddObject() {
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
     ss << "A6 , \\field Track Meter Scheme Meter Name\n";
+    ss << "\\type alpha\n";
     ss << "\\note required when Generator Operation Scheme Type=TrackMeter\n";
-    ss << "\\type external-list\n";
-    ss << "\\external-list autoRDDmeter\n";
+    ss << "\\memo type external-list\n";
+    ss << "\\memo external-list autoRDDmeter\n";
     ss << "A7 , \\field Electrical Buss Type\n";
     ss << "\\type choice\n";
-    ss << "\\memo Keys AlternatingCurrent, AlternatingCurrentWithStorage, DirectCurrentWithInverterDCStorage, and DirectCurrentWithInverterACStorage disabled for now\n";
+    ss << "\\key AlternatingCurrent\n";
+    ss << "\\key AlternatingCurrentWithStorage\n";
     ss << "\\key DirectCurrentWithInverter\n";
+    ss << "\\key DirectCurrentWithInverterDCStorage\n";
+    ss << "\\key DirectCurrentWithInverterACStorage\n";
     ss << "\\default DirectCurrentWithInverter\n";
-    ss << "A8 , \\field Inverter Object Name\n";
+    ss << "A8 , \\field Inverter Name\n";
     ss << "\\note required when Electrical Buss Type=DirectCurrentWithInverter, DirectCurrentWithInverterDCStorage,\n";
     ss << "\\note or DirectCurrentWithInverterACStorage\n";
     ss << "\\type object-list\n";
@@ -32116,10 +36297,84 @@ IddObject createOS_ElectricLoadCenter_DistributionIddObject() {
     ss << "\\note or DirectCurrentWithInverterACStorage\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ElecStorageList\n";
-    ss << "A10; \\field Transformer Object Name\n";
+    ss << "A10, \\field Transformer Object Name\n";
     ss << "\\note required when power needs to be output from on-site generation to the grid via transformer\n";
     ss << "\\type object-list\n";
     ss << "\\object-list TransformerNames\n";
+    ss << "A11, \\field Storage Operation Scheme\n";
+    ss << "\\note Select method to govern how storage charge and discharge is controlled\n";
+    ss << "\\type choice\n";
+    ss << "\\key TrackFacilityElectricDemandStoreExcessOnSite\n";
+    ss << "\\note TrackFacilityElectricDemandStoreExcessOnSite indicates that storage control will follow the facility power demand\n";
+    ss << "\\note while accounting for any on-site generation.  Only excess on site generation  gets stored (legacy behavior).\n";
+    ss << "\\default TrackFacilityElectricDemandStoreExcessOnSite\n";
+    ss << "\\key TrackMeterDemandStoreExcessOnSite\n";
+    ss << "\\note TrackMeterDemandStoreExcessOnSite indicates that storage discharge control will follow an electric meter named in the field called Storage Control Track Meter Name.  This scheme is similiar\n";
+    ss << "\\note to TrackFacilityElectricDemandStoreExcessOnSite except that instead of the main facility electric meter, the control is based off of a user-selected meter.\n";
+    ss << "\\key TrackChargeDischargeSchedules\n";
+    ss << "\\note TrackChargeDischargeSchedules indicates that control will follow the charging and discharging power and schedules defined in the fields called Maximum Storage Charge Grid Supply Power,\n";
+    ss << "\\note Storage Charge Grid Supply Power Fraction Schedule Name, Design Storage Discharge Grid Export Power, and Storage Discharge Grid Export Fraction Schedule Name.\n";
+    ss << "\\key FacilityDemandLeveling\n";
+    ss << "\\note FacilityDemandLeveling indicates that storage control will attempt to control the facility's power demand drawn from the utility service to a prescribed level.\n";
+    ss << "\\note The target utility demand is entered in the fields called Storage Control Utility Demand Limit and Storage Control Utility Demand Limit Fraction Schedule Name\n";
+    ss << "\\note This scheme first accounts for any on-site generation and during times of high use will discharge storage to reduce facility grid demand to meet the target level\n";
+    ss << "\\note and during times of low use will charge storage from the grid to increase facility grid demand to meet the target level.\n";
+    ss << "A12, \\field Storage Control Track Meter Name\n";
+    ss << "\\note required when Storage Operation Scheme is set to TrackMeterDemandStoreExcessOnSite.\n";
+    ss << "\\type alpha\n";
+    ss << "\\memo type external-list\n";
+    ss << "\\memo external-list autoRDDmeter\n";
+    ss << "A13, \\field Storage Converter Object Name\n";
+    ss << "\\note Name of an ElectricLoadCenter:Storage:Converter used to convert AC to DC when charging DC storage from grid supply.\n";
+    ss << "\\note A converter is expected when using Storage Operation Schemes FacilityDemandLeveling or TrackChargeDischargeSchedules\n";
+    ss << "\\note A single bidirectional device will reference both an inverter object (DC to AC) and a converter object (AC to DC).\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConverterList\n";
+    ss << "N2 , \\field Maximum Storage State of Charge Fraction\n";
+    ss << "\\note Fraction of storage capacity used as upper limit for controlling charging, for all storage operation schemes.\n";
+    ss << "\\type real\n";
+    ss << "\\default 1.0\n";
+    ss << "N3 , \\field Minimum Storage State of Charge Fraction\n";
+    ss << "\\note Fraction of storage capacity used as lower limit for controlling discharging, for all storage operation schemes.\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.0\n";
+    ss << "N4 , \\field Design Storage Control Charge Power\n";
+    ss << "\\note Maximum rate that electric power can be charged into storage.\n";
+    ss << "\\note Storage charging adjusted downward for conversion losses.\n";
+    ss << "\\note Rate is modified by fractional values in the schedule named in the next field.\n";
+    ss << "\\note Required field when using Storage Operation Schemes FacilityDemandLeveling or TrackChargeDischargeSchedules.\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "A14, \\field Storage Charge Power Fraction Schedule Name\n";
+    ss << "\\note Controls timing and magnitude of charging storage.\n";
+    ss << "\\note Required field if Storage Operation Scheme is set to TrackChargeDischargeSchedules.\n";
+    ss << "\\note Schedule values should be fractions from 0.0 to 1.0, inclusive.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N5 , \\field Design Storage Control Discharge Power\n";
+    ss << "\\note Maximum rate that electric power can be discharged from storage.\n";
+    ss << "\\note Rate is modified by fractional values in the schedule named in the next field.\n";
+    ss << "\\note Required field when using Storage Operation Schemes FacilityDemandLeveling or TrackChargeDischargeSchedules.\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "A15, \\field Storage Discharge Power Fraction Schedule Name\n";
+    ss << "\\note Controls timing and magnitude of discharging storage\n";
+    ss << "\\note Required field if Storage Operation Scheme is set to TrackChargeDischargeSchedules.\n";
+    ss << "\\note Schedule values should be fractions from 0.0 to 1.0, inclusive.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "N6,  \\field Storage Control Utility Demand Target\n";
+    ss << "\\note Target utility service demand power for discharge control.  Storage draws are adjusted upwards for conversion losses.\n";
+    ss << "\\note Required field for FacilityDemandLeveling storage operation scheme\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "A16; \\field Storage Control Utility Demand Target Fraction Schedule Name\n";
+    ss << "\\note Modifies the target utility service demand power over time.\n";
+    ss << "\\note Schedule values should be fractions from -1.0 to 1.0, inclusive.\n";
+    ss << "\\note if omitted a schedule value of 1.0 is used. Negative values indicate export to grid\n";
+    ss << "\\note Schedule is used if Storage Operation Scheme is set to FacilityDemandLeveling.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
 
     IddObjectType objType(IddObjectType::OS_ElectricLoadCenter_Distribution);
     OptionalIddObject oObj = IddObject::load("OS:ElectricLoadCenter:Distribution",
@@ -32131,6 +36386,82 @@ IddObject createOS_ElectricLoadCenter_DistributionIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_ElectricLoadCenter_Distribution);
+  return object;
+}
+
+IddObject createOS_ElectricLoadCenter_Storage_ConverterIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ElectricLoadCenter:Storage:Converter,\n";
+    ss << "\\memo This model is for converting AC to DC for grid-supplied charging of DC storage\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1 , \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\reference ConverterList\n";
+    ss << "A3 , \\field Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for this system. Schedule value > 0 means the system is available.\n";
+    ss << "\\note If this field is blank, the converter is always available.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A4 , \\field Power Conversion Efficiency Method\n";
+    ss << "\\type choice\n";
+    ss << "\\key SimpleFixed\n";
+    ss << "\\default SimpleFixed\n";
+    ss << "\\note SimpleFixed indicates power conversion losses are based on Simple Fixed Efficiency\n";
+    ss << "\\key FunctionOfPower\n";
+    ss << "\\note FunctionOfPower indicates power conversion losses are a function of normalized power using a curve or table.\n";
+    ss << "N1 , \\field Simple Fixed Efficiency\n";
+    ss << "\\note Constant efficiency for conversion of AC to DC at all power levels.\n";
+    ss << "\\note Field is only used when Power Conversion Efficiency Method is set to SimpleFixed.\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.95\n";
+    ss << "N2,  \\field Design Maximum Continuous Input Power\n";
+    ss << "\\note Required field when Power Conversion Efficiency Method is set to FunctionOfPower.\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "A5 , \\field Efficiency Function of Power Curve Name\n";
+    ss << "\\note Curve or table with a single independent variable that describes efficiency as a function of normalized power.\n";
+    ss << "\\note The \"x\" input for curve or table is the ratio of current input power divided by design power in the previous field\n";
+    ss << "\\note Required field when Power Conversion Efficiency Method is set to FunctionOfPower.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "N3 , \\field Ancillary Power Consumed In Standby\n";
+    ss << "\\note Optional standby power consumed when converter is available but no power is being conditioned.\n";
+    ss << "\\type real\n";
+    ss << "\\units W\n";
+    ss << "\\default 0.0\n";
+    ss << "A6 , \\field Zone Name\n";
+    ss << "\\note enter name of zone to receive converter losses as heat\n";
+    ss << "\\note if blank then converter is assumed to be outdoors\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "N4 ; \\field Radiative Fraction\n";
+    ss << "\\note fraction of zone heat gains treated as thermal radiation\n";
+    ss << "\\note Only used if a Zone Name is entered.\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\memo This field was defaulted to 0.0 here, because the E+ doc says that if omitted,\n";
+    ss << "\\memo all zone heat gains will be convective\n";
+
+    IddObjectType objType(IddObjectType::OS_ElectricLoadCenter_Storage_Converter);
+    OptionalIddObject oObj = IddObject::load("OS:ElectricLoadCenter:Storage:Converter",
+                                             "Electric Load Center-Generator Specifications",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ElectricLoadCenter_Storage_Converter);
   return object;
 }
 
@@ -32929,14 +37260,14 @@ IddObject createOS_OutputControl_ReportingTolerancesIddObject() {
   return object;
 }
 
-IddObject createOS_MeterIddObject() {
+IddObject createOS_Output_MeterIddObject() {
 
   static IddObject object;
 
   if (object.type() == IddObjectType::Catchall) {
     std::stringstream ss;
-    ss << "OS:Meter,\n";
-    ss << "\\memo each OS:Meter command picks meters to be put onto the standard output file (.eso) and\n";
+    ss << "OS:Output:Meter,\n";
+    ss << "\\memo each OS:Output:Meter command picks meters to be put onto the standard output file (.eso) and\n";
     ss << "\\memo meter file (.mtr). Not all meters are reported in every simulation. A list of\n";
     ss << "\\memo a list of meters that can be reported are available after a run on\n";
     ss << "\\memo the meter dictionary file (.mdd).\n";
@@ -32975,8 +37306,8 @@ IddObject createOS_MeterIddObject() {
     ss << "\\key True\n";
     ss << "\\key False\n";
 
-    IddObjectType objType(IddObjectType::OS_Meter);
-    OptionalIddObject oObj = IddObject::load("OS:Meter",
+    IddObjectType objType(IddObjectType::OS_Output_Meter);
+    OptionalIddObject oObj = IddObject::load("OS:Output:Meter",
                                              "OpenStudio Output Requests",
                                              ss.str(),
                                              objType);
@@ -32984,7 +37315,7 @@ IddObject createOS_MeterIddObject() {
     object = *oObj;
   }
 
-  OS_ASSERT(object.type() == IddObjectType::OS_Meter);
+  OS_ASSERT(object.type() == IddObjectType::OS_Output_Meter);
   return object;
 }
 
@@ -33031,9 +37362,14 @@ IddObject createOS_Output_VariableIddObject() {
     ss << "\\key RunPeriod\n";
     ss << "\\key Environment\n";
     ss << "\\key Annual\n";
-    ss << "A6; \\field Schedule Name\n";
+    ss << "A6, \\field Schedule Name\n";
     ss << "\\type object-list\n";
     ss << "\\object-list ScheduleNames\n";
+    ss << "A7; \\field Export To BCVTB\n";
+    ss << "\\type choice\n";
+    ss << "\\default False\n";
+    ss << "\\key True\n";
+    ss << "\\key False\n";
 
     IddObjectType objType(IddObjectType::OS_Output_Variable);
     OptionalIddObject oObj = IddObject::load("OS:Output:Variable",
@@ -33045,6 +37381,3022 @@ IddObject createOS_Output_VariableIddObject() {
   }
 
   OS_ASSERT(object.type() == IddObjectType::OS_Output_Variable);
+  return object;
+}
+
+IddObject createOS_Meter_CustomIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Meter:Custom,\n";
+    ss << "\\extensible:2\n";
+    ss << "\\memo Used to allow users to combine specific variables and/or meters into\n";
+    ss << "\\memo \"custom\" meter configurations. To access these meters by name, one must\n";
+    ss << "\\memo first run a simulation to generate the RDD/MDD files and names.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "A3,  \\field Fuel Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Electricity\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key Coal\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key Water\n";
+    ss << "\\key Generic\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "A4,  \\field Key Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "A5;  \\field Output Variable or Meter Name\n";
+
+    IddObjectType objType(IddObjectType::OS_Meter_Custom);
+    OptionalIddObject oObj = IddObject::load("OS:Meter:Custom",
+                                             "OpenStudio Output Requests",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Meter_Custom);
+  return object;
+}
+
+IddObject createOS_Meter_CustomDecrementIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Meter:CustomDecrement,\n";
+    ss << "\\extensible:2 - repeat last two fields, remembering to remove ; from \"inner\" fields.\n";
+    ss << "\\memo Used to allow users to combine specific variables and/or meters into\n";
+    ss << "\\memo \"custom\" meter configurations. To access these meters by name, one must\n";
+    ss << "\\memo first run a simulation to generate the RDD/MDD files and names.\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "A3,  \\field Fuel Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Electricity\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key PropaneGas\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key Coal\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key Water\n";
+    ss << "\\key Generic\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "A4,  \\field Source Meter Name\n";
+    ss << "\\required-field\n";
+    ss << "A5,  \\field Key Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "A6;  \\field Output Variable or Meter Name\n";
+
+    IddObjectType objType(IddObjectType::OS_Meter_CustomDecrement);
+    OptionalIddObject oObj = IddObject::load("OS:Meter:CustomDecrement",
+                                             "OpenStudio Output Requests",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Meter_CustomDecrement);
+  return object;
+}
+
+IddObject createOS_Output_EnergyManagementSystemIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:Output:EnergyManagementSystem,\n";
+    ss << "\\memo This object is used to control the output produced by the Energy Management System\n";
+    ss << "\\unique-object\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A3, \\field Actuator Availability Dictionary Reporting\n";
+    ss << "\\type choice\n";
+    ss << "\\key None\n";
+    ss << "\\key NotByUniqueKeyNames\n";
+    ss << "\\key Verbose\n";
+    ss << "\\default None\n";
+    ss << "A4, \\field Internal Variable Availability Dictionary Reporting\n";
+    ss << "\\type choice\n";
+    ss << "\\key None\n";
+    ss << "\\key NotByUniqueKeyNames\n";
+    ss << "\\key Verbose\n";
+    ss << "\\default None\n";
+    ss << "A5; \\field EMS Runtime Language Debug Output Level\n";
+    ss << "\\type choice\n";
+    ss << "\\key None\n";
+    ss << "\\key ErrorsOnly\n";
+    ss << "\\key Verbose\n";
+    ss << "\\default None\n";
+
+    IddObjectType objType(IddObjectType::OS_Output_EnergyManagementSystem);
+    OptionalIddObject oObj = IddObject::load("OS:Output:EnergyManagementSystem",
+                                             "OpenStudio Output Requests",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_Output_EnergyManagementSystem);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_SensorIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:Sensor,\n";
+    ss << "\\memo Declares EMS variable as a sensor\n";
+    ss << "\\memo a list of output variables and meters that can be reported are available after a run on\n";
+    ss << "\\memo the report (.rdd) or meter dictionary file (.mdd) if the Output:VariableDictionary\n";
+    ss << "\\memo has been requested.\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3, \\field Output Variable or Output Meter Index Key Name\n";
+    ss << "\\type alpha\n";
+    ss << "\\note key name listed here will override key name in Output:Variable or Output:Meter\n";
+    ss << "A4; \\field Output Variable or Output Meter Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_Sensor);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:Sensor",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_Sensor);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_ActuatorIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:Actuator,\n";
+    ss << "\\memo Hardware portion of EMS used to set up actuators in the model\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\reference ErlActuatorNames\n";
+    ss << "A3, \\field Actuated Component Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllObjects\n";
+    ss << "A4, \\field Actuated Component Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A5, \\field Actuated Component Control Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A6; \\field Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllObjects\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_Actuator);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:Actuator",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_Actuator);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_ProgramCallingManagerIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:ProgramCallingManager,\n";
+    ss << "\\extensible:1 - repeat last field, remembering to remove ; from \"inner\" fields.\n";
+    ss << "\\memo Input EMS program. a program needs a name\n";
+    ss << "\\memo a description of when it should be called\n";
+    ss << "\\memo and then lines of program code for EMS Runtime language\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlProgramCallingManagerNames\n";
+    ss << "\\note No spaces allowed in names for ErlProgramCallingManagerNames\n";
+    ss << "A3, \\field EnergyPlus Model Calling Point\n";
+    ss << "\\type choice\n";
+    ss << "\\key BeginNewEnvironment\n";
+    ss << "\\key AfterNewEnvironmentWarmUpIsComplete\n";
+    ss << "\\key BeginTimestepBeforePredictor\n";
+    ss << "\\key AfterPredictorBeforeHVACManagers\n";
+    ss << "\\key AfterPredictorAfterHVACManagers\n";
+    ss << "\\key InsideHVACSystemIterationLoop\n";
+    ss << "\\key EndOfZoneTimestepBeforeZoneReporting\n";
+    ss << "\\key EndOfZoneTimestepAfterZoneReporting\n";
+    ss << "\\key EndOfSystemTimestepBeforeHVACReporting\n";
+    ss << "\\key EndOfSystemTimestepAfterHVACReporting\n";
+    ss << "\\key EndOfZoneSizing\n";
+    ss << "\\key EndOfSystemSizing\n";
+    ss << "\\key AfterComponentInputReadIn\n";
+    ss << "\\key UserDefinedComponentModel\n";
+    ss << "\\key UnitarySystemSizing\n";
+    ss << "A4; \\field Program Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "\\object-list ErlProgramNames\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:ProgramCallingManager",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_ProgramIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:Program,\n";
+    ss << "\\extensible:1 - repeat last field, remembering to remove ; from \"inner\" fields.\n";
+    ss << "\\memo This input defines an Erl program\n";
+    ss << "\\memo Each field after the name is a line of EMS Runtime Language\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlProgramNames\n";
+    ss << "\\reference ErlProgramSubroutineNames\n";
+    ss << "\\note No spaces allowed in names for ErlProgramNames\n";
+    ss << "A3; \\field Program Line\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_Program);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:Program",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_Program);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_SubroutineIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:Subroutine,\n";
+    ss << "\\extensible:1 - repeat last field, remembering to remove ; from \"inner\" fields.\n";
+    ss << "\\memo This input defines an Erl program subroutine\n";
+    ss << "\\memo Each field after the name is a line of EMS Runtime Language\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlSubroutineNames\n";
+    ss << "\\reference ErlProgramSubroutineNames\n";
+    ss << "\\note No spaces allowed in names for ErlSubroutineNames\n";
+    ss << "A3; \\field Program Line\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type alpha\n";
+    ss << "\\required-field\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_Subroutine);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:Subroutine",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_Subroutine);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_GlobalVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:GlobalVariable,\n";
+    ss << "\\memo Declares Erl variable as having global scope\n";
+    ss << "\\memo No spaces allowed in names used for Erl variables\n";
+    ss << "\\min-fields 2\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2; \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note no spaces allowed in name\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_GlobalVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:GlobalVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_GlobalVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_OutputVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:OutputVariable,\n";
+    ss << "\\memo This object sets up an EnergyPlus output variable from an Erl variable\n";
+    ss << "\\min-fields 5\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A3, \\field EMS Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note must be an acceptable EMS variable\n";
+    ss << "A4, \\field Type of Data in Variable\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key Averaged\n";
+    ss << "\\key Summed\n";
+    ss << "A5, \\field Update Frequency\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key ZoneTimestep\n";
+    ss << "\\key SystemTimestep\n";
+    ss << "A6, \\field EMS Program or Subroutine Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramSubroutineNames\n";
+    ss << "\\note optional for global scope variables, required for local scope variables\n";
+    ss << "A7, \\field Units\n";
+    ss << "\\note optional but will result in dimensionless units for blank\n";
+    ss << "\\note EnergyPlus units are standard SI units\n";
+    ss << "\\type alpha\n";
+    ss << "A8; \\field Export To BCVTB\n";
+    ss << "\\type choice\n";
+    ss << "\\default False\n";
+    ss << "\\key True\n";
+    ss << "\\key False\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_OutputVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:OutputVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_OutputVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_MeteredOutputVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:MeteredOutputVariable,\n";
+    ss << "\\memo This object sets up an EnergyPlus output variable from an Erl variable\n";
+    ss << "\\min-fields 8\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A3, \\field EMS Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note must be an acceptable EMS variable, no spaces\n";
+    ss << "A4, \\field Update Frequency\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key ZoneTimestep\n";
+    ss << "\\key SystemTimestep\n";
+    ss << "A5, \\field EMS Program or Subroutine Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramSubroutineNames\n";
+    ss << "\\note optional for global scope variables, required for local scope variables\n";
+    ss << "A6, \\field Resource Type\n";
+    ss << "\\required-field\n";
+    ss << "\\note choose the type of fuel, water, electricity, pollution or heat rate that should be metered.\n";
+    ss << "\\type choice\n";
+    ss << "\\key Electricity\n";
+    ss << "\\key NaturalGas\n";
+    ss << "\\key Gasoline\n";
+    ss << "\\key Diesel\n";
+    ss << "\\key Coal\n";
+    ss << "\\key FuelOil#1\n";
+    ss << "\\key FuelOil#2\n";
+    ss << "\\key Propane\n";
+    ss << "\\key OtherFuel1\n";
+    ss << "\\key OtherFuel2\n";
+    ss << "\\key WaterUse\n";
+    ss << "\\key OnSiteWaterProduced\n";
+    ss << "\\key MainsWaterSupply\n";
+    ss << "\\key RainWaterCollected\n";
+    ss << "\\key WellWaterDrawn\n";
+    ss << "\\key CondensateWaterCollected\n";
+    ss << "\\key EnergyTransfer\n";
+    ss << "\\key Steam\n";
+    ss << "\\key DistrictCooling\n";
+    ss << "\\key DistrictHeating\n";
+    ss << "\\key ElectricityProducedOnSite\n";
+    ss << "\\key SolarWaterHeating\n";
+    ss << "\\key SolarAirHeating\n";
+    ss << "A7, \\field Group Type\n";
+    ss << "\\note choose a general classification, building (internal services), HVAC (air systems), or plant (hydronic systems), or system\n";
+    ss << "\\type choice\n";
+    ss << "\\required-field\n";
+    ss << "\\key Building\n";
+    ss << "\\key HVAC\n";
+    ss << "\\key Plant\n";
+    ss << "\\key System\n";
+    ss << "A8, \\field End-Use Category\n";
+    ss << "\\note choose how the metered output should be classified for end-use category\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key Heating\n";
+    ss << "\\key Cooling\n";
+    ss << "\\key InteriorLights\n";
+    ss << "\\key ExteriorLights\n";
+    ss << "\\key InteriorEquipment\n";
+    ss << "\\key ExteriorEquipment\n";
+    ss << "\\key Fans\n";
+    ss << "\\key Pumps\n";
+    ss << "\\key HeatRejection\n";
+    ss << "\\key Humidifier\n";
+    ss << "\\key HeatRecovery\n";
+    ss << "\\key WaterSystems\n";
+    ss << "\\key Refrigeration\n";
+    ss << "\\key OnSiteGeneration\n";
+    ss << "\\key HeatingCoils\n";
+    ss << "\\key CoolingCoils\n";
+    ss << "\\key Chillers\n";
+    ss << "\\key Boilers\n";
+    ss << "\\key Baseboard\n";
+    ss << "\\key HeatRecoveryForCooling\n";
+    ss << "\\key HeatRecoveryForHeating\n";
+    ss << "A9, \\field End-Use Subcategory\n";
+    ss << "\\type alpha\n";
+    ss << "\\note enter a user-defined subcategory for this metered output\n";
+    ss << "A10; \\field Units\n";
+    ss << "\\note optional but will result in dimensionless units for blank\n";
+    ss << "\\note EnergyPlus units are standard SI units\n";
+    ss << "\\type alpha\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:MeteredOutputVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_TrendVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:TrendVariable,\n";
+    ss << "\\memo This object sets up an EMS trend variable from an Erl variable\n";
+    ss << "\\memo A trend variable logs values across timesteps\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3, \\field EMS Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlVariableNames\n";
+    ss << "\\note must be a global scope EMS variable\n";
+    ss << "N1; \\field Number of Timesteps to be Logged\n";
+    ss << "\\required-field\n";
+    ss << "\\type integer\n";
+    ss << "\\minimum 1\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_TrendVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:TrendVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_TrendVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_InternalVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:InternalVariable,\n";
+    ss << "\\memo Declares EMS variable as an internal data variable\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3, \\field Internal Data Index Key Name\n";
+    ss << "\\type alpha\n";
+    ss << "A4; \\field Internal Data Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_InternalVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:InternalVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_InternalVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_CurveOrTableIndexVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:CurveOrTableIndexVariable,\n";
+    ss << "\\memo Declares EMS variable that identifies a curve or table\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3; \\field Curve or Table Object Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllCurves\n";
+    ss << "\\required-field\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:CurveOrTableIndexVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable);
+  return object;
+}
+
+IddObject createOS_EnergyManagementSystem_ConstructionIndexVariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:EnergyManagementSystem:ConstructionIndexVariable,\n";
+    ss << "\\memo Declares EMS variable that identifies a construction\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note No spaces allowed in names for ErlVariableNames\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3; \\field Construction Object Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConstructionNames\n";
+    ss << "\\required-field\n";
+
+    IddObjectType objType(IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable);
+    OptionalIddObject oObj = IddObject::load("OS:EnergyManagementSystem:ConstructionIndexVariable",
+                                             "Energy Management System (EMS)",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkSimulationControlIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkSimulationControl,\n";
+    ss << "\\min-fields 13\n";
+    ss << "\\unique-object\n";
+    ss << "\\memo This object defines the global parameters used in an Airflow Network simulation.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "A3, \\field AirflowNetwork Control\n";
+    ss << "\\type choice\n";
+    ss << "\\key MultizoneWithDistribution\n";
+    ss << "\\key MultizoneWithoutDistribution\n";
+    ss << "\\key MultizoneWithDistributionOnlyDuringFanOperation\n";
+    ss << "\\key NoMultizoneOrDistribution\n";
+    ss << "\\default NoMultizoneOrDistribution\n";
+    ss << "\\note NoMultizoneOrDistribution: Only perform Simple calculations (objects ZoneInfiltration:*,\n";
+    ss << "\\note ZoneVentilation:*, ZoneMixing, ZoneCrossMixing, ZoneRefrigerationDoorMixing,\n";
+    ss << "\\note ZoneAirBalance:OutdoorAir, ZoneEarthtube, ZoneThermalChimney, and ZoneCoolTower:Shower);\n";
+    ss << "\\note MultizoneWithoutDistribution: Use AirflowNetwork objects to simulate multizone\n";
+    ss << "\\note Airflows driven by wind during simulation time,\n";
+    ss << "\\note and objects of ZoneInfiltration:*, ZoneVentilation:*, ZoneMixing, ZoneCrossMixing\n";
+    ss << "\\note ZoneRefrigerationDoorMixing, ZoneAirBalance:OutdoorAir, ZoneEarthtube,\n";
+    ss << "\\note ZoneThermalChimney, and ZoneCoolTower:Shower are ignored;\n";
+    ss << "\\note MultizoneWithDistributionOnlyDuringFanOperation: Perform distribution system\n";
+    ss << "\\note calculations during system fan on time\n";
+    ss << "\\note and Simple calculations during system Fan off time;\n";
+    ss << "\\note MultizoneWithDistribution: Perform distribution system calculations during system\n";
+    ss << "\\note fan on time and multizone Airflow driven by wind during system fan off time.\n";
+    ss << "A4, \\field Wind Pressure Coefficient Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Input\n";
+    ss << "\\key SurfaceAverageCalculation\n";
+    ss << "\\default SurfaceAverageCalculation\n";
+    ss << "\\note Input: User must enter AirflowNetwork:MultiZone:WindPressureCoefficientArray,\n";
+    ss << "\\note AirflowNetwork:MultiZone:ExternalNode, and\n";
+    ss << "\\note AirflowNetwork:MultiZone:WindPressureCoefficientValues objects.\n";
+    ss << "\\note SurfaceAverageCalculation: used only for rectangular buildings.\n";
+    ss << "\\note If SurfaceAverageCalculation is selected,\n";
+    ss << "\\note AirflowNetwork:MultiZone:WindPressureCoefficientArray, AirflowNetwork:MultiZone:ExternalNode,\n";
+    ss << "\\note and AirflowNetwork:MultiZone:WindPressureCoefficientValues objects are not used.\n";
+    ss << "A5, \\field Height Selection for Local Wind Pressure Calculation\n";
+    ss << "\\type choice\n";
+    ss << "\\key ExternalNode\n";
+    ss << "\\key OpeningHeight\n";
+    ss << "\\default OpeningHeight\n";
+    ss << "\\note If ExternalNode is selected, the height given in the\n";
+    ss << "\\note AirflowNetwork:MultiZone:ExternalNode object will be used.\n";
+    ss << "\\note If OpeningHeight is selected, the surface opening height (centroid) will be used to\n";
+    ss << "\\note calculate local wind pressure\n";
+    ss << "\\note This field is ignored when the choice of the Wind Pressure Coefficient Type field is\n";
+    ss << "\\note SurfaceAverageCalculation.\n";
+    ss << "A6, \\field Building Type\n";
+    ss << "\\note Used only if Wind Pressure Coefficient Type = SurfaceAverageCalculation,\n";
+    ss << "\\note otherwise this field may be left blank.\n";
+    ss << "\\type choice\n";
+    ss << "\\key LowRise\n";
+    ss << "\\key HighRise\n";
+    ss << "\\default LowRise\n";
+    ss << "N1, \\field Maximum Number of Iterations\n";
+    ss << "\\type integer\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\default 500\n";
+    ss << "\\minimum> 10\n";
+    ss << "\\maximum 30000\n";
+    ss << "\\note Determines the maximum number of iterations used to converge on a solution. If this limit\n";
+    ss << "\\note is exceeded, the program terminates.\n";
+    ss << "A7, \\field Initialization Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key LinearInitializationMethod\n";
+    ss << "\\key ZeroNodePressures\n";
+    ss << "\\default ZeroNodePressures\n";
+    ss << "N2, \\field Relative Airflow Convergence Tolerance\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\default 1.E-4\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note This tolerance is defined as the absolute value of the sum of the mass Flow Rates\n";
+    ss << "\\note divided by the sum of the absolute value of the mass Flow Rates. The mass Flow Rates\n";
+    ss << "\\note described here refer to the mass Flow Rates at all Nodes in the AirflowNetwork model.\n";
+    ss << "\\note The solution converges when both this tolerance and the tolerance in the next field\n";
+    ss << "\\note (Absolute Airflow Convergence Tolerance) are satisfied.\n";
+    ss << "N3, \\field Absolute Airflow Convergence Tolerance\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/s\n";
+    ss << "\\default 1.E-6\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note This tolerance is defined as the absolute value of the sum of the mass flow rates. The mass\n";
+    ss << "\\note flow rates described here refer to the mass flow rates at all nodes in the AirflowNetwork\n";
+    ss << "\\note model. The solution converges when both this tolerance and the tolerance in the previous\n";
+    ss << "\\note field (Relative Airflow Convergence Tolerance) are satisfied.\n";
+    ss << "N4, \\field Convergence Acceleration Limit\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\note Used only for AirflowNetwork:SimulationControl\n";
+    ss << "\\minimum -1\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default -0.5\n";
+    ss << "N5, \\field Azimuth Angle of Long Axis of Building\n";
+    ss << "\\type real\n";
+    ss << "\\units deg\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 180.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Degrees clockwise from true North.\n";
+    ss << "\\note Used only if Wind Pressure Coefficient Type = SurfaceAverageCalculation.\n";
+    ss << "N6, \\field Ratio of Building Width Along Short Axis to Width Along Long Axis\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 1.0\n";
+    ss << "\\note Used only if Wind Pressure Coefficient Type = SurfaceAverageCalculation.\n";
+    ss << "A8; \\field Height Dependence of External Node Temperature\n";
+    ss << "\\note If Yes, external node temperature is height dependent.\n";
+    ss << "\\note If No, external node temperature is based on zero height.\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default No\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkSimulationControl);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkSimulationControl",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkSimulationControl);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkZoneIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkZone,\n";
+    ss << "\\min-fields 9\n";
+    ss << "\\memo This object is used to simultaneously control a thermal zone's window and door openings,\n";
+    ss << "\\memo both exterior and interior.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkNodeAndZoneNames\n";
+    ss << "A3, \\field Thermal Zone Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "\\note Enter the zone name where ventilation control is required.\n";
+    ss << "A4, \\field Ventilation Control Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key Temperature\n";
+    ss << "\\key Enthalpy\n";
+    ss << "\\key Constant\n";
+    ss << "\\key ASHRAE55Adaptive\n";
+    ss << "\\key CEN15251Adaptive\n";
+    ss << "\\key NoVent\n";
+    ss << "\\default NoVent\n";
+    ss << "\\note When Ventilation Control Mode = Temperature or Enthalpy, the following\n";
+    ss << "\\note fields are used to modulate the Ventilation Open Factor for all\n";
+    ss << "\\note window and door openings in the zone according to the zone's\n";
+    ss << "\\note indoor-outdoor temperature or enthalpy difference.\n";
+    ss << "\\note Constant: controlled by field Venting Schedule Name.\n";
+    ss << "\\note NoVent: control will not open window or door during simulation (Ventilation Open Factor = 0).\n";
+    ss << "A5, \\field Ventilation Control Zone Temperature Setpoint Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Used only if Ventilation Control Mode = Temperature or Enthalpy.\n";
+    ss << "N1, \\field Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Used only if Ventilation Control Mode = Temperature or Enthalpy.\n";
+    ss << "N2, \\field Indoor and Outdoor Temperature Difference Lower Limit For Maximum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum< 100.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Temperature.\n";
+    ss << "\\note This value must be less than the corresponding upper value (next field).\n";
+    ss << "N3, \\field Indoor and Outdoor Temperature Difference Upper Limit for Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 100.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Temperature.\n";
+    ss << "\\note This value must be greater than the corresponding lower value (previous field).\n";
+    ss << "N4, \\field Indoor and Outdoor Enthalpy Difference Lower Limit For Maximum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaJ/kg\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum< 300000.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Enthalpy.\n";
+    ss << "\\note This value must be less than the corresponding upper value (next field).\n";
+    ss << "N5, \\field Indoor and Outdoor Enthalpy Difference Upper Limit for Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaJ/kg\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 300000.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Enthalpy.\n";
+    ss << "\\note This value must be greater than the corresponding lower value (previous field).\n";
+    ss << "A6, \\field Venting Availability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Non-zero Schedule value means venting is allowed if other venting control conditions are\n";
+    ss << "\\note satisfied. A zero (or negative) Schedule value means venting is not allowed under any\n";
+    ss << "\\note The Schedule values should be greater than or equal to 0 and less than or equal to 1.\n";
+    ss << "\\note circumstances. If this Schedule is not specified then venting is allowed if\n";
+    ss << "\\note other venting control conditions are satisfied.\n";
+    ss << "\\note Not used if Ventilation Control Mode = NoVent.\n";
+    ss << "A7, \\field Single Sided Wind Pressure Coefficient Algorithm\n";
+    ss << "\\type choice\n";
+    ss << "\\key Advanced\n";
+    ss << "\\key Standard\n";
+    ss << "\\default Standard\n";
+    ss << "\\note Selecting Advanced results in EnergyPlus calculating modified Wind Pressure Coefficients\n";
+    ss << "\\note to account for wind direction and turbulence effects on single sided ventilation rates.\n";
+    ss << "\\note Model is only valid for zones with 2 openings, both of which are on a single facade.\n";
+    ss << "N6, \\field Facade Width\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 10.0\n";
+    ss << "\\note This is the whole building width along the direction of the facade of this zone.\n";
+    ss << "A8; \\field Occupant Ventilation Control Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkOccupantVentilationControlNames\n";
+    ss << "\\note Enter the name where Occupancy Ventilation Control is required.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkZone);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkZone",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkZone);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkSurfaceIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkSurface,\n";
+    ss << "\\min-fields 5\n";
+    ss << "\\memo This object specifies the properties of a surface linkage through which air flows.\n";
+    ss << "\\memo Airflow Report: Node 1 as an inside face zone;\n";
+    ss << "\\memo Node 2 as an outside face zone or external node.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Surface Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list SurfAndSubSurfNames\n";
+    ss << "\\note Enter the name of a heat transfer surface.\n";
+    ss << "A3, \\field Leakage Component Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter the name of an Airflow Network leakage component. A leakage component is\n";
+    ss << "\\note one of the following AirflowNetwork:Multizone objects:\n";
+    ss << "\\note AirflowNetwork:MultiZone:Component:DetailedOpening,\n";
+    ss << "\\note AirflowNetwork:MultiZone:Component:SimpleOpening,\n";
+    ss << "\\note AirflowNetwork:MultiZone:Surface:Crack,\n";
+    ss << "\\note AirflowNetwork:MultiZone:Surface:EffectiveLeakageArea,\n";
+    ss << "\\note AirflowNetwork:MultiZone:Component:HorizontalOpening, or\n";
+    ss << "\\note AirflowNetwork:MultiZone:Component:ZoneExhaustFan.\n";
+    ss << "\\note When the zone exhaust fan name is entered, any surface control fields below A3 are\n";
+    ss << "\\note ignored when the zone exhaust fan turns on.\n";
+    ss << "A4, \\field External Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ExternalNodeNames\n";
+    ss << "\\note Used if Wind Pressure Coefficient Type = Input in the AirflowNetwork:SimulationControl object,\n";
+    ss << "\\note otherwise this field may be left blank.\n";
+    ss << "N1, \\field Window/Door Opening Factor, or Crack Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 1.0\n";
+    ss << "\\note This field specifies a multiplier for a crack, window, or door.\n";
+    ss << "A5, \\field Ventilation Control Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key Temperature\n";
+    ss << "\\key Enthalpy\n";
+    ss << "\\key Constant\n";
+    ss << "\\key ASHRAE55Adaptive\n";
+    ss << "\\key CEN15251Adaptive\n";
+    ss << "\\key NoVent\n";
+    ss << "\\key ZoneLevel\n";
+    ss << "\\key AdjacentTemperature\n";
+    ss << "\\key AdjacentEnthalpy\n";
+    ss << "\\default ZoneLevel\n";
+    ss << "\\note When Ventilation Control Mode = Temperature or Enthalpy, the following\n";
+    ss << "\\note fields are used to modulate the Ventilation Open Factor for a\n";
+    ss << "\\note window or door opening according to the parent zone's\n";
+    ss << "\\note indoor-outdoor temperature or enthalpy difference.\n";
+    ss << "\\note When Ventilation Control Mode = AdjacentTemperature or AdjacentEnthalpy, the following\n";
+    ss << "\\note fields are used to modulate the Ventilation Open Factor for an interior\n";
+    ss << "\\note window or door opening according to temperature or enthalpy difference\n";
+    ss << "\\note between the parent zone and the adjacent zone.\n";
+    ss << "\\note Constant: controlled by field Venting Schedule Name.\n";
+    ss << "\\note NoVent: control will not open window or door during simulation (Ventilation Open Factor = 0).\n";
+    ss << "\\note ZoneLevel: control will be controlled by AirflowNetwork:MultiZone:Zone\n";
+    ss << "\\note Mode.\n";
+    ss << "A6, \\field Ventilation Control Zone Temperature Setpoint Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Used only if Ventilation Control Mode = Temperature or Enthalpy.\n";
+    ss << "N2, \\field Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Used only if Ventilation Control Mode = Temperature or Enthalpy.\n";
+    ss << "N3, \\field Indoor and Outdoor Temperature Difference Lower Limit For Maximum Venting Open Factor\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum< 100\n";
+    ss << "\\default 0.0\n";
+    ss << "N4, \\field Indoor and Outdoor Temperature Difference Upper Limit for Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaC\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 100.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Temperature.\n";
+    ss << "\\note This value must be greater than the corresponding lower value (previous field).\n";
+    ss << "N5, \\field Indoor and Outdoor Enthalpy Difference Lower Limit For Maximum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaJ/kg\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum< 300000.0\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Enthalpy.\n";
+    ss << "\\note This value must be less than the corresponding upper value (next field).\n";
+    ss << "N6, \\field Indoor and Outdoor Enthalpy Difference Upper Limit for Minimum Venting Open Factor\n";
+    ss << "\\type real\n";
+    ss << "\\units deltaJ/kg\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 300000.0\n";
+    ss << "\\note Applicable only if Ventilation Control Mode = Enthalpy.\n";
+    ss << "\\note This value must be greater than the corresponding lower value (previous field).\n";
+    ss << "A7, \\field Venting Availability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note Non-zero schedule value means venting is allowed if other venting control conditions are\n";
+    ss << "\\note satisfied. A zero (or negative) schedule value means venting is not allowed under any\n";
+    ss << "\\note circumstances. The schedule values should be greater than or equal to 0 and less than or\n";
+    ss << "\\note equal to 1. If this schedule is not specified then venting is allowed if\n";
+    ss << "\\note other venting control conditions are satisfied.\n";
+    ss << "\\note Not used if Ventilation Control Mode = NoVent or ZoneLevel.\n";
+    ss << "A8, \\field Occupant Ventilation Control Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkOccupantVentilationControlNames\n";
+    ss << "\\note Enter the name where Occupancy Ventilation Control is required.\n";
+    ss << "A9, \\field Equivalent Rectangle Method\n";
+    ss << "\\type choice\n";
+    ss << "\\key PolygonHeight\n";
+    ss << "\\Key BaseSurfaceAspectRatio\n";
+    ss << "\\Key UserDefinedAspectRatio\n";
+    ss << "\\default PolygonHeight\n";
+    ss << "\\note This field is applied to a non-rectangular window or door. The equivalent shape has\n";
+    ss << "\\note the same area as a polygonal window or door.\n";
+    ss << "N7; \\field Equivalent Rectangle Aspect Ratio\n";
+    ss << "\\note This field is used when UserDefinedAspectRatio is entered in the Equivalent\n";
+    ss << "\\note Rectangle Method field.\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 1.0\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkSurface);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkSurface",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkSurface);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkReferenceCrackConditionsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkReferenceCrackConditions,\n";
+    ss << "\\min-fields 5\n";
+    ss << "\\memo This object specifies the conditions under which the air mass flow coefficient was measured.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ReferenceCrackConditions\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Reference Temperature\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\default 20\n";
+    ss << "\\note Enter the reference temperature under which the surface crack data were obtained.\n";
+    ss << "N2, \\field Reference Barometric Pressure\n";
+    ss << "\\type real\n";
+    ss << "\\units Pa\n";
+    ss << "\\default 101325\n";
+    ss << "\\minimum 31000\n";
+    ss << "\\maximum 120000\n";
+    ss << "\\ip-units inHg\n";
+    ss << "\\note Enter the reference barometric pressure under which the surface crack data were obtained.\n";
+    ss << "N3; \\field Reference Humidity Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\units kgWater/kgDryAir\n";
+    ss << "\\default 0\n";
+    ss << "\\note Enter the reference humidity ratio under which the surface crack data were obtained.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkReferenceCrackConditions);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkReferenceCrackConditions",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkReferenceCrackConditions);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkCrackIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkCrack,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo This object specifies the properties of airflow through a crack.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference CrackNames\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Air Mass Flow Coefficient at Reference Conditions\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\units kg/s\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the air mass flow coefficient at the conditions defined\n";
+    ss << "\\note in the Reference Crack Conditions object.\n";
+    ss << "\\note Defined at 1 Pa pressure difference across this crack.\n";
+    ss << "N2, \\field Air Mass Flow Exponent\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.65\n";
+    ss << "\\note Enter the air mass flow exponent for the surface crack.\n";
+    ss << "A3; \\field Reference Crack Conditions\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ReferenceCrackConditions\n";
+    ss << "\\note Select a AirflowNetwork:MultiZone:ReferenceCrackConditions name associated with\n";
+    ss << "\\note the air mass flow coefficient entered above.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkCrack);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkCrack",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkCrack);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkEffectiveLeakageAreaIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkEffectiveLeakageArea,\n";
+    ss << "\\min-fields 6\n";
+    ss << "\\memo This object is used to define surface air leakage.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Effective Leakage Area\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m2\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the effective leakage area.\n";
+    ss << "N2, \\field Discharge Coefficient\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\default 1.0\n";
+    ss << "\\note Enter the coefficient used in the air mass flow equation.\n";
+    ss << "N3, \\field Reference Pressure Difference\n";
+    ss << "\\type real\n";
+    ss << "\\units Pa\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\default 4.0\n";
+    ss << "\\note Enter the pressure difference used to define the air mass flow coefficient and exponent.\n";
+    ss << "N4; \\field Air Mass Flow Exponent\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\default .65\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Enter the exponent used in the air mass flow equation.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkEffectiveLeakageArea);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkEffectiveLeakageArea",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkEffectiveLeakageArea);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkDetailedOpeningIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkDetailedOpening,\n";
+    ss << "\\min-fields 17\n";
+    ss << "\\extensible:5\n";
+    ss << "\\memo This object specifies the properties of airflow through windows and doors (window, door and\n";
+    ss << "\\memo glass door heat transfer subsurfaces) when they are closed or open.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Air Mass Flow Coefficient When Opening is Closed\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/s-m\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Defined at 1 Pa per meter of crack length. Enter the coefficient used in the following\n";
+    ss << "\\note equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening (window or door) is closed.\n";
+    ss << "N2, \\field Air Mass Flow Exponent When Opening is Closed\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.65\n";
+    ss << "\\note Enter the exponent used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening (window or door) is closed.\n";
+    ss << "A3, \\field Type of Rectangular Large Vertical Opening\n";
+    ss << "\\type choice\n";
+    ss << "\\key NonPivoted\n";
+    ss << "\\key HorizontallyPivoted\n";
+    ss << "\\note Select the type of vertical opening: Non-pivoted opening or Horizontally pivoted opening.\n";
+    ss << "\\default NonPivoted\n";
+    ss << "N3, \\field Extra Crack Length or Height of Pivoting Axis\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum 0\n";
+    ss << "\\default 0\n";
+    ss << "\\note Extra crack length is used for LVO Non-pivoted type with multiple openable parts.\n";
+    ss << "\\note Height of pivoting axis is used for LVO Horizontally pivoted type.\n";
+    ss << "\\note Specifies window or door characteristics that depend on the LVO type.\n";
+    ss << "\\note For Non-pivoted Type (rectangular windows and doors), this field is the extra crack length\n";
+    ss << "\\note in meters due to multiple openable parts, if present.  Extra here means in addition\n";
+    ss << "\\note to the length of the cracks on the top, bottom and sides of the window/door.\n";
+    ss << "\\note For Horizontally pivoted Type, this field gives the height of the\n";
+    ss << "\\note pivoting axis measured from the bottom of the glazed part of the window (m).\n";
+    ss << "N4, \\field Opening Factor 1\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 0\n";
+    ss << "\\default 0\n";
+    ss << "\\note This value must be specified as 0.\n";
+    ss << "\\begin-extensible\n";
+    ss << "N5, \\field Discharge Coefficient for Opening Factor 1\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default 0.001\n";
+    ss << "\\note The Discharge Coefficient indicates the fractional effectiveness\n";
+    ss << "\\note for air flow through a window or door at that Opening Factor.\n";
+    ss << "N6, \\field Width Factor for Opening Factor 1\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default 0\n";
+    ss << "\\note The Width Factor is the opening width divided by the window or door width.\n";
+    ss << "N7, \\field Height Factor for Opening Factor 1\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default 0\n";
+    ss << "\\note The Height Factor is the opening height divided by the window or door height.\n";
+    ss << "N8; \\field Start Height Factor for Opening Factor 1\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 1\n";
+    ss << "\\default 0\n";
+    ss << "\\note The Start Height Factor is the Start Height divided by the window or door height.\n";
+    ss << "\\note Start Height is the distance between the bottom of the window or door and the\n";
+    ss << "\\note bottom of the window or door opening. The sum of the Height Factor and the Start Height\n";
+    ss << "\\note Factor must be less than 1.0 in order to have the opening within the window or door\n";
+    ss << "\\note dimensions.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkDetailedOpening);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkDetailedOpening",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkDetailedOpening);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkSimpleOpeningIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkSimpleOpening,\n";
+    ss << "\\min-fields 6\n";
+    ss << "\\memo This object specifies the properties of air flow through windows and doors (window, door and\n";
+    ss << "\\memo glass door heat transfer subsurfaces) when they are closed or open.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Air Mass Flow Coefficient When Opening is Closed\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\units kg/s-m\n";
+    ss << "\\note Defined at 1 Pa pressure difference. Enter the coefficient used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening (window or door) is closed.\n";
+    ss << "N2, \\field Air Mass Flow Exponent When Opening is Closed\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\default .65\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Enter the exponent used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening (window or door) is closed.\n";
+    ss << "N3, \\field Minimum Density Difference for Two-Way Flow\n";
+    ss << "\\required-field\n";
+    ss << "\\units kg/m3\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the minimum density difference above which two-way flow may occur due to stack effect.\n";
+    ss << "N4; \\field Discharge Coefficient\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note The Discharge Coefficient indicates the fractional effectiveness\n";
+    ss << "\\note for air flow through a window or door at that Opening Factor.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkSimpleOpening);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkSimpleOpening",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkSimpleOpening);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkHorizontalOpeningIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkHorizontalOpening,\n";
+    ss << "\\min-fields 6\n";
+    ss << "\\memo This object specifies the properties of air flow through a horizontal opening\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Air Mass Flow Coefficient When Opening is Closed\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\units kg/s-m\n";
+    ss << "\\note Defined at 1 Pa pressure difference. Enter the coefficient used in the following equation:\n";
+    ss << "\\note Mass flow rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening is closed.\n";
+    ss << "N2, \\field Air Mass Flow Exponent When Opening is Closed\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\default .65\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Enter the exponent used in the following equation:\n";
+    ss << "\\note Mass flow rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when opening is closed.\n";
+    ss << "N3, \\field Sloping Plane Angle\n";
+    ss << "\\units deg\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\maximum 90\n";
+    ss << "\\default 90\n";
+    ss << "\\note Sloping plane angle = 90 is equivalent to fully open.\n";
+    ss << "N4; \\field Discharge Coefficient\n";
+    ss << "\\required-field\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note The Discharge Coefficient indicates the fractional effectiveness\n";
+    ss << "\\note for air flow through the opening at that Opening Factor.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkHorizontalOpening);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkHorizontalOpening",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkHorizontalOpening);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkOutdoorAirflowIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkOutdoorAirflow,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo This object specifies the additional crack properties for a piece of equipment\n";
+    ss << "\\memo to perform multizone airflow calculations. The crack is typically applied\n";
+    ss << "\\memo only when the component is off\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list OutdoorAirController\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter the name of a Controller:OutdoorAir object.\n";
+    ss << "A3; \\field Crack Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list CrackNames\n";
+    ss << "\\note Enter the name of the crack object to applied under appropriate conditions\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkOutdoorAirflow);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkOutdoorAirflow",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkOutdoorAirflow);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkZoneExhaustFanIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkZoneExhaustFan,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo This object specifies the additional crack properties for a piece of equipment\n";
+    ss << "\\memo to perform multizone airflow calculations. The crack is typically applied\n";
+    ss << "\\memo only when the component is off\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FansZoneExhaust\n";
+    ss << "\\reference SurfaceAirflowLeakageNames\n";
+    ss << "\\note Enter the name of a Fan:ZoneExhaust object.\n";
+    ss << "A3; \\field Crack Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list CrackNames\n";
+    ss << "\\note Enter the name of the crack object to applied under appropriate conditions\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkZoneExhaustFan);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkZoneExhaustFan",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkZoneExhaustFan);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkExternalNodeIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkExternalNode,\n";
+    ss << "\\min-fields 4\n";
+    ss << "\\memo This object defines outdoor environmental conditions outside of the building.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ExternalNodeNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "\\note This node name will be referenced by a particular building facade.\n";
+    ss << "N1, \\field External Node Height\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Designates the reference height used to calculate relative pressure.\n";
+    ss << "A3, \\field Wind Pressure Coefficient Curve Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list UniVariateCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note The name of the AirflowNetwork:MultiZone:WindPressureCoefficientValues, curve, or table object specifying the wind pressure coefficient.\n";
+    ss << "\\note object-list WPCValueNames is not supported\n";
+    ss << "A4, \\field Symmetric Wind Pressure Coefficient Curve\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default No\n";
+    ss << "\\note Specify whether the pressure curve is symmetric or not.\n";
+    ss << "\\note Specify Yes for curves that should be evaluated from 0 to 180 degrees\n";
+    ss << "\\note Specify No for curves that should be evaluated from 0 to 360 degrees\n";
+    ss << "A5; \\field Wind Angle Type\n";
+    ss << "\\type choice\n";
+    ss << "\\key Absolute\n";
+    ss << "\\key Relative\n";
+    ss << "\\default Absolute\n";
+    ss << "\\note Specify whether the angle used to compute the wind pressure coefficient is absolute or relative\n";
+    ss << "\\note Specify Relative to compute the angle between the wind direction and the surface azimuth\n";
+    ss << "\\note Specify Absolute to use the wind direction angle directly\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkExternalNode);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkExternalNode",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkExternalNode);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkPressureControllerIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkPressureController,\n";
+    ss << "\\memo This object is used to control a zone to a specified indoor pressure\n";
+    ss << "\\memo using the AirflowNetwork model. The specified pressure setpoint is used\n";
+    ss << "\\memo to control the zone exhaust fan flow rate in a controlled zone or\n";
+    ss << "\\memo the relief air flow rate in an air loop.\n";
+    ss << "\\unique-object\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference AirflowNetworkZoneControlPressureControllerNames\n";
+    ss << "A3, \\field Control Zone Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ZoneNames\n";
+    ss << "A4, \\field Control Object Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type choice\n";
+    ss << "\\key AirflowNetwork:MultiZone:Component:ZoneExhaustFan\n";
+    ss << "\\key AirflowNetwork:Distribution:Component:ReliefAirFlow\n";
+    ss << "\\note The current selection is AirflowNetwork:MultiZone:Component:ZoneExhaustFan\n";
+    ss << "\\note or AirflowNetwork:Distribution:Component:ReliefAirFlow.\n";
+    ss << "A5, \\field Control Object Name\n";
+    ss << "\\note Control names are names of individual control objects\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AFNReliefAirFlowNames\n";
+    ss << "\\object-list FansZoneExhaust\n";
+    ss << "A6, \\field Pressure Control Availability Schedule Name\n";
+    ss << "\\note Availability schedule name for pressure controller. Schedule value > 0 means the\n";
+    ss << "\\note pressure controller is enabled. If this field is blank, then pressure controller is\n";
+    ss << "\\note always enabled.\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "A7; \\field Pressure Setpoint Schedule Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkPressureController);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkPressureController",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkPressureController);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkDistributionNodeIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkDistributionNode,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo This object represents an air distribution node in the AirflowNetwork model.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkNodeAndZoneNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "A3, \\field Component Name or Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\note Designates node names defined in another object. The node name may occur in air branches.\n";
+    ss << "\\note Enter a node name to represent a node already defined in an air loop.\n";
+    ss << "\\note Leave this field blank if the Node or Object Type field below is entered as\n";
+    ss << "\\note AirLoopHVAC:ZoneMixer, AirLoopHVAC:ZoneSplitter, AirLoopHVAC:OutdoorAirSystem, or Other.\n";
+    ss << "\\object-list AirflowNetworkNodeComponentNames\n";
+    ss << "N1; \\field Node Height\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\default 0.0\n";
+    ss << "\\note Enter the reference height used to calculate the relative pressure.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkDistributionNode);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkDistributionNode",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkDistributionNode);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkLeakIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkLeak,\n";
+    ss << "\\min-fields 4\n";
+    ss << "\\memo This object defines the characteristics of a supply or return air leak.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Air Mass Flow Coefficient\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/s\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Defined at 1 Pa pressure difference across this component.\n";
+    ss << "\\note Enter the coefficient used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent\n";
+    ss << "N2; \\field Air Mass Flow Exponent\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.65\n";
+    ss << "\\note Enter the exponent used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkLeak);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkLeak",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkLeak);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkLeakageRatioIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkLeakageRatio,\n";
+    ss << "\\min-fields 6\n";
+    ss << "\\memo This object is used to define supply and return air leaks with respect to the fan's maximum\n";
+    ss << "\\memo air flow rate.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Effective Leakage Ratio\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Defined as a ratio of leak flow rate to the maximum flow rate.\n";
+    ss << "N2, \\field Maximum Flow Rate\n";
+    ss << "\\required-field\n";
+    ss << "\\units m3/s\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the maximum air flow rate in this air loop.\n";
+    ss << "N3, \\field Reference Pressure Difference\n";
+    ss << "\\required-field\n";
+    ss << "\\units Pa\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the pressure corresponding to the effective leakage ratio entered above.\n";
+    ss << "N4; \\field Air Mass Flow Exponent\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\default 0.65\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\note Enter the exponent used in the air mass flow equation.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkLeakageRatio);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkLeakageRatio",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkLeakageRatio);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkDuctIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkDuct,\n";
+    ss << "\\min-fields 9\n";
+    ss << "\\memo This object defines the relationship between pressure and air flow through the duct.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1, \\field Duct Length\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the length of the duct.\n";
+    ss << "N2, \\field Hydraulic Diameter\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the hydraulic diameter of the duct.\n";
+    ss << "\\note Hydraulic diameter is defined as 4 multiplied by cross section area divided by perimeter\n";
+    ss << "N3, \\field Cross Section Area\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m2\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the cross section area of the duct.\n";
+    ss << "N4, \\field Surface Roughness\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\default 0.0009\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the inside surface roughness of the duct.\n";
+    ss << "N5, \\field Coefficient for Local Dynamic Loss Due to Fitting\n";
+    ss << "\\type real\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\default 0.0\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\note Enter the coefficient used to calculate dynamic losses of fittings (e.g. elbows).\n";
+    ss << "N6, \\field Heat Transmittance Coefficient (U-Factor) for Duct Wall Construction\n";
+    ss << "\\note conduction only\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2-K\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.943\n";
+    ss << "\\note Default value of 0.943 is equivalent to 1.06 m2-K/W (R6) duct insulation.\n";
+    ss << "N7, \\field Overall Moisture Transmittance Coefficient from Air to Air\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/m2\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\default 0.001\n";
+    ss << "\\note Enter the overall moisture transmittance coefficient\n";
+    ss << "\\note including moisture film coefficients at both surfaces.\n";
+    ss << "N8, \\field Outside Convection Coefficient\n";
+    ss << "\\note optional. convection coefficient calculated automatically, unless specified\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2-K\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "N9; \\field Inside Convection Coefficient\n";
+    ss << "\\note optional. convection coefficient calculated automatically, unless specified\n";
+    ss << "\\type real\n";
+    ss << "\\units W/m2-K\n";
+    ss << "\\minimum> 0.0\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkDuct);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkDuct",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkDuct);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkFanIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkFan,\n";
+    ss << "\\min-fields 2\n";
+    ss << "\\memo This object defines the name of the supply air fan used in an air loop.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "A3; \\field Fan Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FansCVandOnOffandVAV\n";
+    ss << "\\note Enter the name of the fan in the primary air loop.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkFan);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkFan",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkFan);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkEquivalentDuctIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkEquivalentDuct,\n";
+    ss << "\\min-fields 4\n";
+    ss << "\\memo This object defines the properties of a coil, air-to-air heat exchanger, or terminal unit in an air loop.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "A3, \\field Component Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AFNCoilNames\n";
+    ss << "\\object-list AFNHeatExchangerNames\n";
+    ss << "\\object-list AFNTerminalUnitNames\n";
+    ss << "\\note The name of component.\n";
+    ss << "N1, \\field Air Path Length\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units m\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the air path length (depth) for the component.\n";
+    ss << "N2; \\field Air Path Hydraulic Diameter\n";
+    ss << "\\required-field\n";
+    ss << "\\units m\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the hydraulic diameter of this component. The hydraulic diameter is\n";
+    ss << "\\note defined as 4 multiplied by the cross section area divided by perimeter.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkEquivalentDuct);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkEquivalentDuct",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkEquivalentDuct);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkConstantPressureDropIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkConstantPressureDrop,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo This object defines the characteristics of a constant pressure drop component (e.g. filter).\n";
+    ss << "\\memo Each node connected to this object can not be a node of mixer, splitter, a node of air primary\n";
+    ss << "\\memo loop, or zone equipment loop. It is recommended to connect to a duct component at both ends.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkComponentNames\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "N1; \\field Pressure Difference Across the Component\n";
+    ss << "\\required-field\n";
+    ss << "\\units Pa\n";
+    ss << "\\type real\n";
+    ss << "\\minimum> 0.0\n";
+    ss << "\\note Enter the pressure drop across this component.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkConstantPressureDrop);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkConstantPressureDrop",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkConstantPressureDrop);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkReliefAirFlowIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkReliefAirFlow,\n";
+    ss << "\\min-fields 4\n";
+    ss << "\\memo This object allows variation of air flow rate to perform pressure.\n";
+    ss << "\\unique-object\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\reference AFNReliefAirFlowNames\n";
+    ss << "N1, \\field Air Mass Flow Coefficient When No Outdoor Air Flow at Reference Conditions\n";
+    ss << "\\required-field\n";
+    ss << "\\type real\n";
+    ss << "\\units kg/s\n";
+    ss << "\\minimum> 0\n";
+    ss << "\\note Enter the air mass flow coefficient at the conditions defined\n";
+    ss << "\\note in the Reference Crack Conditions object.\n";
+    ss << "\\note Defined at 1 Pa pressure difference. Enter the coefficient used in the following\n";
+    ss << "\\note equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when no outdoor air flow rate.\n";
+    ss << "N2, \\field Air Mass Flow Exponent When No Outdoor Air Flow\n";
+    ss << "\\units dimensionless\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.5\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.65\n";
+    ss << "\\note Enter the exponent used in the following equation:\n";
+    ss << "\\note Mass Flow Rate = Air Mass Flow Coefficient * (dP)^Air Mass Flow Exponent.\n";
+    ss << "\\note Used only when no outdoor air flow rate.\n";
+    ss << "A3; \\field Reference Crack Conditions\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ReferenceCrackConditions\n";
+    ss << "\\note Select a AirflowNetwork:MultiZone:ReferenceCrackConditions name associated with\n";
+    ss << "\\note the air mass flow coefficient entered above.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkReliefAirFlow);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkReliefAirFlow",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkReliefAirFlow);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkDistributionLinkageIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkDistributionLinkage,\n";
+    ss << "\\min-fields 5\n";
+    ss << "\\memo This object defines the connection between two nodes and a component.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note Enter a unique name for this object.\n";
+    ss << "A3, \\field Node 1 Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkNodeAndZoneNames\n";
+    ss << "\\note Enter the name of zone or AirflowNetwork Node.\n";
+    ss << "A4, \\field Node 2 Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkNodeAndZoneNames\n";
+    ss << "\\note Enter the name of zone or AirflowNetwork Node.\n";
+    ss << "A5, \\field Component Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkComponentNames\n";
+    ss << "\\note Enter the name of an AirflowNetwork component. A component is one of the\n";
+    ss << "\\note following AirflowNetwork:Distribution:Component objects: Leak, LeakageRatio,\n";
+    ss << "\\note Duct, ConstantVolumeFan, Coil, TerminalUnit, ConstantPressureDrop, or HeatExchanger.\n";
+    ss << "A6; \\field Thermal Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ZoneNames\n";
+    ss << "\\note Only used if component = AirflowNetwork:Distribution:Component:Duct\n";
+    ss << "\\note The zone name is where AirflowNetwork:Distribution:Component:Duct is exposed. Leave this field blank if the duct\n";
+    ss << "\\note conduction loss is ignored.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkDistributionLinkage);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkDistributionLinkage",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkDistributionLinkage);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkDuctViewFactorsIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkDuctViewFactors,\n";
+    ss << "\\memo This object is used to allow user-defined view factors to be used for duct-surface radiation\n";
+    ss << "\\memo calculations.\n";
+    ss << "\\extensible:2\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Linkage Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AirflowNetworkComponentNames\n";
+    ss << "N1, \\field Duct Surface Exposure Fraction\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N2, \\field Duct Surface Emittance\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+    ss << "\\default 0.9\n";
+    ss << "A3, \\field Surface 1 Name\n";
+    ss << "\\begin-extensible\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllHeatTranSurfNames\n";
+    ss << "N3; \\field Surface 1 View Factor\n";
+    ss << "\\type real\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\maximum 1.0\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkDuctViewFactors);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkDuctViewFactors",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkDuctViewFactors);
+  return object;
+}
+
+IddObject createOS_AirflowNetworkOccupantVentilationControlIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:AirflowNetworkOccupantVentilationControl,\n";
+    ss << "\\memo This object is used to provide advanced thermal comfort control of window opening and closing\n";
+    ss << "\\memo for both exterior and interior windows.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference AirflowNetworkOccupantVentilationControlNames\n";
+    ss << "\\note Enter the name where the advanced thermal comfort control is required.\n";
+    ss << "N1, \\field Minimum Opening Time\n";
+    ss << "\\type real\n";
+    ss << "\\units minutes\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "N2, \\field Minimum Closing Time\n";
+    ss << "\\type real\n";
+    ss << "\\units minutes\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 0.0\n";
+    ss << "A3, \\field Thermal Comfort Low Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list LinearCurves\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Enter a curve name that represents thermal comfort temperature as a\n";
+    ss << "\\note function of outdoor dry-bulb temperature. Up to two curves are allowed if the\n";
+    ss << "\\note performance cannot be represented by a single curve.\n";
+    ss << "\\note The following two fields are used if two curves are required.\n";
+    ss << "N3, \\field Thermal Comfort Temperature Boundary Point\n";
+    ss << "\\type real\n";
+    ss << "\\units C\n";
+    ss << "\\minimum 0.0\n";
+    ss << "\\default 10.0\n";
+    ss << "\\note This point is used to allow separate low and high thermal comfort temperature\n";
+    ss << "\\note curves. If a single performance curve is used, leave this field blank.\n";
+    ss << "A4, \\field Thermal Comfort High Temperature Curve Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list LinearCurves\n";
+    ss << "\\object-list QuadraticCurves\n";
+    ss << "\\object-list UniVariateTables\n";
+    ss << "\\note Enter a curve name that represents thermal comfort temperature as a\n";
+    ss << "\\note function of outdoor dry-bulb temperature. Up to two curves are allowed if the\n";
+    ss << "\\note performance cannot be represented by a single curve.\n";
+    ss << "\\note If a single performance curve is used, leave this field blank.\n";
+    ss << "N4, \\field Maximum Predicted Percentage of Dissatisfied Threshold\n";
+    ss << "\\type real\n";
+    ss << "\\units percent\n";
+    ss << "\\minimum 0\n";
+    ss << "\\maximum 100\n";
+    ss << "\\default 10.0\n";
+    ss << "A5, \\field Occupancy Check\n";
+    ss << "\\note If Yes, occupancy check will be performed as part of the opening probability check.\n";
+    ss << "\\type choice\n";
+    ss << "\\key Yes\n";
+    ss << "\\key No\n";
+    ss << "\\default No\n";
+    ss << "A6, \\field Opening Probability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note If this field is blank, the opening probability check is bypassed and opening is true.\n";
+    ss << "A7; \\field Closing Probability Schedule Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleNames\n";
+    ss << "\\note If this field is blank, the closing probability check is bypassed and closing is true.\n";
+
+    IddObjectType objType(IddObjectType::OS_AirflowNetworkOccupantVentilationControl);
+    OptionalIddObject oObj = IddObject::load("OS:AirflowNetworkOccupantVentilationControl",
+                                             "AirflowNetwork",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_AirflowNetworkOccupantVentilationControl);
+  return object;
+}
+
+IddObject createOS_ExternalInterfaceIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface,\n";
+    ss << "\\memo This object activates the external interface of EnergyPlus. If the object\n";
+    ss << "\\memo ExternalInterface is present, then all ExtnernalInterface:* objects will receive\n";
+    ss << "\\memo their values from the BCVTB interface or from FMUs at each zone time step.\n";
+    ss << "\\memo If this object is not present, then the values of these objects will be fixed at the\n";
+    ss << "\\memo value declared in the \"initial value\" field of the corresponding object, and a\n";
+    ss << "\\memo warning will be written to the EnergyPlus error file.\n";
+    ss << "\\unique-object\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2;  \\field Name of External Interface\n";
+    ss << "\\note Name of External Interface\n";
+    ss << "\\type choice\n";
+    ss << "\\default PtolemyServer\n";
+    ss << "\\key PtolemyServer\n";
+    ss << "\\key FunctionalMockupUnitImport\n";
+    ss << "\\key FunctionalMockupUnitExport\n";
+    ss << "\\note Currently, the only valid entries are PtolemyServer, FunctionalMockupUnitImport, and FunctionalMockupUnitExport.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_ScheduleIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:Schedule,\n";
+    ss << "\\min-fields 3\n";
+    ss << "\\memo A ExternalInterface:Schedule contains only one value,\n";
+    ss << "\\memo which is used during the warm-up period and the system sizing.\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ScheduleNames\n";
+    ss << "A3 , \\field Schedule Type Limits Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleTypeLimitsNames\n";
+    ss << "N1,  \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during warm-up and system sizing.\n";
+    ss << "A4; \\field Export To BCVTB\n";
+    ss << "\\type choice\n";
+    ss << "\\default True\n";
+    ss << "\\key True\n";
+    ss << "\\key False\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_Schedule);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:Schedule",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_Schedule);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_VariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:Variable,\n";
+    ss << "\\memo This input object is similar to EnergyManagementSystem:GlobalVariable. However, at\n";
+    ss << "\\memo the beginning of each zone time step, its value is set to the value received from the\n";
+    ss << "\\memo external interface. During the warm-up period and the system sizing, its value\n";
+    ss << "\\memo is set to the value specified by the field \"initial value.\" This object can be used\n";
+    ss << "\\memo to move data into Erl subroutines.\n";
+    ss << "\\min-fields 3\n";
+    ss << "A1,  \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2,  \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "N1, \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during warm-up and system sizing.\n";
+    ss << "A3; \\field Export To BCVTB\n";
+    ss << "\\type choice\n";
+    ss << "\\default True\n";
+    ss << "\\key True\n";
+    ss << "\\key False\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_Variable);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:Variable",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_Variable);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_ActuatorIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:Actuator,\n";
+    ss << "\\memo Hardware portion of EMS used to set up actuators in the model\n";
+    ss << "\\min-fields 5\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "A3 , \\field Actuated Component Unique Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllObjects\n";
+    ss << "A4 , \\field Actuated Component Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A5 , \\field Actuated Component Control Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "N1,  \\field Optional Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\note If specified, it is used during warm-up and system sizing.\n";
+    ss << "\\note If not specified, then the actuator only overwrites the\n";
+    ss << "\\note actuated component after the warm-up and system sizing.\n";
+    ss << "A6; \\field Export To BCVTB\n";
+    ss << "\\type choice\n";
+    ss << "\\default True\n";
+    ss << "\\key True\n";
+    ss << "\\key False\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_Actuator);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:Actuator",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_Actuator);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitImportIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitImport,\n";
+    ss << "\\memo This object declares an FMU\n";
+    ss << "\\min-fields 5\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "\\reference FMUFileName\n";
+    ss << "A3 , \\field FMU File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 , \\field FMU Timeout\n";
+    ss << "\\note in milli-seconds\n";
+    ss << "\\type real\n";
+    ss << "\\units ms\n";
+    ss << "\\default 0.0\n";
+    ss << "N2 ; \\field FMU LoggingOn\n";
+    ss << "\\type integer\n";
+    ss << "\\default 0\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitImport",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitImport_From_VariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitImport:From:Variable,\n";
+    ss << "\\memo This object declares an FMU input variable\n";
+    ss << "\\min-fields 7\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A3 , \\field Output:Variable Index Key Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A4 , \\field Output:Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type external-list\n";
+    ss << "\\external-list autoRDDvariable\n";
+    ss << "A5 , \\field FMU File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\retaincase\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FMUFileName\n";
+    ss << "A6 , \\field FMU Instance Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A7 ; \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitImport:From:Variable",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitImport_To_ScheduleIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitImport:To:Schedule,\n";
+    ss << "\\memo This objects contains only one value, which is used during the first\n";
+    ss << "\\memo call of EnergyPlus\n";
+    ss << "\\min-fields 6\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ScheduleNames\n";
+    ss << "A3 , \\field Schedule Type Limits Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleTypeLimitsNames\n";
+    ss << "A4 , \\field FMU File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\retaincase\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FMUFileName\n";
+    ss << "A5 , \\field FMU Instance Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A6 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitImport:To:Schedule",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitImport_To_ActuatorIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitImport:To:Actuator,\n";
+    ss << "\\memo Hardware portion of EMS used to set up actuators in the model\n";
+    ss << "\\memo that are dynamically updated from the FMU.\n";
+    ss << "\\min-fields 9\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\note This name becomes a read-only variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "A3 , \\field Actuated Component Unique Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllObjects\n";
+    ss << "A4 , \\field Actuated Component Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A5 , \\field Actuated Component Control Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A6 , \\field FMU File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\retaincase\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FMUFileName\n";
+    ss << "A7 , \\field FMU Instance Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A8 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitImport:To:Actuator",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitImport_To_VariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitImport:To:Variable,\n";
+    ss << "\\memo Declares Erl variable as having global scope\n";
+    ss << "\\memo No spaces allowed in names used for Erl variables\n";
+    ss << "\\min-fields 6\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "A3 , \\field FMU File Name\n";
+    ss << "\\required-field\n";
+    ss << "\\retaincase\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list FMUFileName\n";
+    ss << "A4 , \\field FMU Instance Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "A5 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitImport:To:Variable",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitExport_From_VariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitExport:From:Variable,\n";
+    ss << "\\memo This object declares an FMU input variable\n";
+    ss << "\\min-fields 5\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A3 , \\field Output:Variable Index Key Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A4 , \\field Output:Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type external-list\n";
+    ss << "\\external-list autoRDDvariable\n";
+    ss << "A5 ; \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitExport:From:Variable",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitExport_To_ScheduleIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitExport:To:Schedule,\n";
+    ss << "\\memo This objects contains only one value, which is used during the first\n";
+    ss << "\\memo call of EnergyPlus\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ScheduleNames\n";
+    ss << "A3 , \\field Schedule Type Limits Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ScheduleTypeLimitsNames\n";
+    ss << "A4 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitExport:To:Schedule",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitExport_To_ActuatorIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitExport:To:Actuator,\n";
+    ss << "\\memo Hardware portion of EMS used to set up actuators in the model\n";
+    ss << "\\memo that are dynamically updated from the FMU.\n";
+    ss << "\\min-fields 7\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note This name becomes a read-only variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "A3 , \\field Actuated Component Unique Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list AllObjects\n";
+    ss << "A4 , \\field Actuated Component Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A5 , \\field Actuated Component Control Type\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "A6 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitExport:To:Actuator",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator);
+  return object;
+}
+
+IddObject createOS_ExternalInterface_FunctionalMockupUnitExport_To_VariableIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:ExternalInterface:FunctionalMockupUnitExport:To:Variable,\n";
+    ss << "\\memo Declares Erl variable as having global scope\n";
+    ss << "\\memo No spaces allowed in names used for Erl variables\n";
+    ss << "\\min-fields 4\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2 , \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ErlVariableNames\n";
+    ss << "\\note This name becomes a variable for use in Erl programs\n";
+    ss << "\\note no spaces allowed in name\n";
+    ss << "A3 , \\field FMU Variable Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\retaincase\n";
+    ss << "N1 ; \\field Initial Value\n";
+    ss << "\\type real\n";
+    ss << "\\required-field\n";
+    ss << "\\note Used during the first call of EnergyPlus.\n";
+
+    IddObjectType objType(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable);
+    OptionalIddObject oObj = IddObject::load("OS:ExternalInterface:FunctionalMockupUnitExport:To:Variable",
+                                             "External Interface",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable);
+  return object;
+}
+
+IddObject createOS_PlantComponent_UserDefinedIddObject() {
+
+  static IddObject object;
+
+  if (object.type() == IddObjectType::Catchall) {
+    std::stringstream ss;
+    ss << "OS:PlantComponent:UserDefined,\n";
+    ss << "\\memo Defines a generic plant component for custom modeling\n";
+    ss << "\\memo using Energy Management System or External Interface\n";
+    ss << "\\min-fields 6\n";
+    ss << "A1, \\field Handle\n";
+    ss << "\\type handle\n";
+    ss << "\\required-field\n";
+    ss << "A2, \\field Name\n";
+    ss << "\\required-field\n";
+    ss << "\\type alpha\n";
+    ss << "\\reference ConnectionObject\n";
+    ss << "A3, \\field Main Model Program Calling Manager Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramCallingManagerNames\n";
+    ss << "A4, \\field Main Model Program Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramNames\n";
+    ss << "A5, \\field Plant Inlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\required-field\n";
+    ss << "A6, \\field Plant Outlet Node Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ConnectionNames\n";
+    ss << "\\required-field\n";
+    ss << "A7, \\field Plant Loading Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key DemandsLoad\n";
+    ss << "\\key MeetsLoadWithPassiveCapacity\n";
+    ss << "\\key MeetsLoadWithNominalCapacity\n";
+    ss << "\\key MeetsLoadWithNominalCapacityLowOutLimit\n";
+    ss << "\\key MeetsLoadWithNominalCapacityHiOutLimit\n";
+    ss << "\\required-field\n";
+    ss << "A8, \\field Plant Loop Flow Request Mode\n";
+    ss << "\\type choice\n";
+    ss << "\\key NeedsFlowIfLoopOn\n";
+    ss << "\\key NeedsFlowAndTurnsLoopOn\n";
+    ss << "\\key ReceivesWhateverFlowAvailable\n";
+    ss << "\\required-field\n";
+    ss << "A9, \\field Plant Initialization Program Calling Manager Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramCallingManagerNames\n";
+    ss << "A10, \\field Plant Initialization Program Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramNames\n";
+    ss << "A11, \\field Plant Simulation Program Calling Manager Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramCallingManagerNames\n";
+    ss << "A12, \\field Plant Simulation Program Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlProgramNames\n";
+    ss << "A13, \\field Design Volume Flow Rate Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A14, \\field Minimum Mass Flow Rate Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A15, \\field Maximum Mass Flow Rate Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A16, \\field Minimum Loading Capacity Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A17, \\field Maximum Loading Capacity Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A18, \\field Optimal Loading Capacity Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A19, \\field Outlet Temperature Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A20, \\field Mass Flow Rate Actuator\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ErlActuatorNames\n";
+    ss << "A21; \\field Ambient Zone Name\n";
+    ss << "\\type object-list\n";
+    ss << "\\object-list ThermalZoneNames\n";
+    ss << "\\note Used for modeling device losses to surrounding zone\n";
+
+    IddObjectType objType(IddObjectType::OS_PlantComponent_UserDefined);
+    OptionalIddObject oObj = IddObject::load("OS:PlantComponent:UserDefined",
+                                             "User Defined HVAC and Plant Component Models",
+                                             ss.str(),
+                                             objType);
+    OS_ASSERT(oObj);
+    object = *oObj;
+  }
+
+  OS_ASSERT(object.type() == IddObjectType::OS_PlantComponent_UserDefined);
   return object;
 }
 void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
@@ -33088,7 +40440,9 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_UtilityCost_Variable,createOS_UtilityCost_VariableIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WeatherFile,createOS_WeatherFileIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WeatherProperty_SkyTemperature,createOS_WeatherProperty_SkyTemperatureIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AdditionalProperties,createOS_AdditionalPropertiesIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_BuildingStory,createOS_BuildingStoryIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_BuildingUnit,createOS_BuildingUnitIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_DefaultConstructionSet,createOS_DefaultConstructionSetIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_DefaultScheduleSet,createOS_DefaultScheduleSetIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_DefaultSubSurfaceConstructions,createOS_DefaultSubSurfaceConstructionsIddObject));
@@ -33113,6 +40467,8 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WindowMaterial_Shade,createOS_WindowMaterial_ShadeIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WindowMaterial_SimpleGlazingSystem,createOS_WindowMaterial_SimpleGlazingSystemIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_StandardsInformation_Material,createOS_StandardsInformation_MaterialIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_MaterialProperty_GlazingSpectralData,createOS_MaterialProperty_GlazingSpectralDataIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings,createOS_MaterialProperty_MoisturePenetrationDepth_SettingsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Construction,createOS_ConstructionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Construction_CfactorUndergroundWall,createOS_Construction_CfactorUndergroundWallIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Construction_FfactorGroundFloor,createOS_Construction_FfactorGroundFloorIddObject));
@@ -33124,11 +40480,14 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Lights_Definition,createOS_Lights_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Luminaire_Definition,createOS_Luminaire_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricEquipment_Definition,createOS_ElectricEquipment_DefinitionIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition,createOS_ElectricEquipment_ITE_AirCooled_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_GasEquipment_Definition,createOS_GasEquipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_HotWaterEquipment_Definition,createOS_HotWaterEquipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SteamEquipment_Definition,createOS_SteamEquipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_OtherEquipment_Definition,createOS_OtherEquipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_Lights_Definition,createOS_Exterior_Lights_DefinitionIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_FuelEquipment_Definition,createOS_Exterior_FuelEquipment_DefinitionIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_WaterEquipment_Definition,createOS_Exterior_WaterEquipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_Compact,createOS_Schedule_CompactIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_Day,createOS_Schedule_DayIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_Week,createOS_Schedule_WeekIddObject));
@@ -33139,6 +40498,8 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_FixedInterval,createOS_Schedule_FixedIntervalIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_VariableInterval,createOS_Schedule_VariableIntervalIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ScheduleTypeLimits,createOS_ScheduleTypeLimitsIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_External_File,createOS_External_FileIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Schedule_File,createOS_Schedule_FileIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Building,createOS_BuildingIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_DaylightingDevice_Shelf,createOS_DaylightingDevice_ShelfIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Facility,createOS_FacilityIddObject));
@@ -33153,13 +40514,17 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WindowProperty_FrameAndDivider,createOS_WindowProperty_FrameAndDividerIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SurfaceProperty_ConvectionCoefficients,createOS_SurfaceProperty_ConvectionCoefficientsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SurfaceProperty_ConvectionCoefficients_MultipleSurface,createOS_SurfaceProperty_ConvectionCoefficients_MultipleSurfaceIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter,createOS_SurfaceProperty_ExposedFoundationPerimeterIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SurfaceProperty_OtherSideCoefficients,createOS_SurfaceProperty_OtherSideCoefficientsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SurfaceProperty_OtherSideConditionsModel,createOS_SurfaceProperty_OtherSideConditionsModelIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Foundation_Kiva,createOS_Foundation_KivaIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Foundation_Kiva_Settings,createOS_Foundation_Kiva_SettingsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_InternalMass,createOS_InternalMassIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_People,createOS_PeopleIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Lights,createOS_LightsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Luminaire,createOS_LuminaireIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricEquipment,createOS_ElectricEquipmentIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricEquipment_ITE_AirCooled,createOS_ElectricEquipment_ITE_AirCooledIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_GasEquipment,createOS_GasEquipmentIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_HotWaterEquipment,createOS_HotWaterEquipmentIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SteamEquipment,createOS_SteamEquipmentIddObject));
@@ -33167,6 +40532,8 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SpaceInfiltration_DesignFlowRate,createOS_SpaceInfiltration_DesignFlowRateIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SpaceInfiltration_EffectiveLeakageArea,createOS_SpaceInfiltration_EffectiveLeakageAreaIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_Lights,createOS_Exterior_LightsIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_FuelEquipment,createOS_Exterior_FuelEquipmentIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Exterior_WaterEquipment,createOS_Exterior_WaterEquipmentIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Daylighting_Control,createOS_Daylighting_ControlIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Glare_Sensor,createOS_Glare_SensorIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_IlluminanceMap,createOS_IlluminanceMapIddObject));
@@ -33200,6 +40567,7 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitaryHeatPump_AirToAir,createOS_AirLoopHVAC_UnitaryHeatPump_AirToAirIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass,createOS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitarySystem,createOS_AirLoopHVAC_UnitarySystemIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_UnitarySystemPerformance_Multispeed,createOS_UnitarySystemPerformance_MultispeedIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirLoopHVAC_ZoneMixer,createOS_AirLoopHVAC_ZoneMixerIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirLoopHVAC_ZoneSplitter,createOS_AirLoopHVAC_ZoneSplitterIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat,createOS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheatIddObject));
@@ -33209,8 +40577,10 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_SeriesPIU_Reheat,createOS_AirTerminal_SingleDuct_SeriesPIU_ReheatIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ParallelPIU_Reheat,createOS_AirTerminal_SingleDuct_ParallelPIU_ReheatIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction,createOS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInductionIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam,createOS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeamIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam,createOS_AirTerminal_SingleDuct_ConstantVolume_CooledBeamIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled,createOS_AirTerminal_SingleDuct_UncontrolledIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat,createOS_AirTerminal_SingleDuct_ConstantVolume_NoReheatIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_NoReheat,createOS_AirTerminal_SingleDuct_VAV_NoReheatIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_Reheat,createOS_AirTerminal_SingleDuct_VAV_ReheatIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_DualDuct_VAV_OutdoorAir,createOS_AirTerminal_DualDuct_VAV_OutdoorAirIddObject));
@@ -33218,9 +40588,15 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirTerminal_DualDuct_VAV,createOS_AirTerminal_DualDuct_VAVIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManagerAssignmentList,createOS_AvailabilityManagerAssignmentListIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_Scheduled,createOS_AvailabilityManager_ScheduledIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_ScheduledOn,createOS_AvailabilityManager_ScheduledOnIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_ScheduledOff,createOS_AvailabilityManager_ScheduledOffIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_NightCycle,createOS_AvailabilityManager_NightCycleIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_OptimumStart,createOS_AvailabilityManager_OptimumStartIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_DifferentialThermostat,createOS_AvailabilityManager_DifferentialThermostatIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff,createOS_AvailabilityManager_HighTemperatureTurnOffIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn,createOS_AvailabilityManager_HighTemperatureTurnOnIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff,createOS_AvailabilityManager_LowTemperatureTurnOffIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn,createOS_AvailabilityManager_LowTemperatureTurnOnIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_NightVentilation,createOS_AvailabilityManager_NightVentilationIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AvailabilityManager_HybridVentilation,createOS_AvailabilityManager_HybridVentilationIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Boiler_HotWater,createOS_Boiler_HotWaterIddObject));
@@ -33243,6 +40619,8 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_GroundHeatExchanger_Vertical,createOS_GroundHeatExchanger_VerticalIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_GroundHeatExchanger_HorizontalTrench,createOS_GroundHeatExchanger_HorizontalTrenchIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_Cooling_CooledBeam,createOS_Coil_Cooling_CooledBeamIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_Cooling_FourPipeBeam,createOS_Coil_Cooling_FourPipeBeamIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_Heating_FourPipeBeam,createOS_Coil_Heating_FourPipeBeamIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_Cooling_DX_SingleSpeed,createOS_Coil_Cooling_DX_SingleSpeedIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode,createOS_Coil_Cooling_DX_TwoStageWithHumidityControlModeIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_CoilPerformance_DX_Cooling,createOS_CoilPerformance_DX_CoolingIddObject));
@@ -33361,6 +40739,8 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_OneStageCooling,createOS_SetpointManager_SingleZone_OneStageCoolingIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_OneStageHeating,createOS_SetpointManager_SingleZone_OneStageHeatingIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Humidity_Maximum,createOS_SetpointManager_SingleZone_Humidity_MaximumIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Cooling,createOS_SetpointManager_SingleZone_CoolingIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Heating,createOS_SetpointManager_SingleZone_HeatingIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Sizing_Plant,createOS_Sizing_PlantIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Sizing_System,createOS_Sizing_SystemIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Sizing_Zone,createOS_Sizing_ZoneIddObject));
@@ -33394,7 +40774,10 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterHeater_Mixed,createOS_WaterHeater_MixedIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterHeater_HeatPump,createOS_WaterHeater_HeatPumpIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump,createOS_Coil_WaterHeating_AirToWaterHeatPumpIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser,createOS_WaterHeater_HeatPump_WrappedCondenserIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped,createOS_Coil_WaterHeating_AirToWaterHeatPump_WrappedIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterHeater_Stratified,createOS_WaterHeater_StratifiedIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterHeater_Sizing,createOS_WaterHeater_SizingIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterUse_Equipment,createOS_WaterUse_EquipmentIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterUse_Equipment_Definition,createOS_WaterUse_Equipment_DefinitionIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_WaterUse_Connections,createOS_WaterUse_ConnectionsIddObject));
@@ -33411,12 +40794,29 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SolarCollector_IntegralCollectorStorage,createOS_SolarCollector_IntegralCollectorStorageIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SolarCollectorPerformance_PhotovoltaicThermal_Simple,createOS_SolarCollectorPerformance_PhotovoltaicThermal_SimpleIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_SolarCollector_FlatPlate_PhotovoltaicThermal,createOS_SolarCollector_FlatPlate_PhotovoltaicThermalIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_MicroTurbine,createOS_Generator_MicroTurbineIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_MicroTurbine_HeatRecovery,createOS_Generator_MicroTurbine_HeatRecoveryIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_Photovoltaic,createOS_Generator_PhotovoltaicIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_PhotovoltaicPerformance_Simple,createOS_PhotovoltaicPerformance_SimpleIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_PhotovoltaicPerformance_EquivalentOneDiode,createOS_PhotovoltaicPerformance_EquivalentOneDiodeIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell,createOS_Generator_FuelCellIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_PowerModule,createOS_Generator_FuelCell_PowerModuleIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_AirSupply,createOS_Generator_FuelCell_AirSupplyIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_WaterSupply,createOS_Generator_FuelCell_WaterSupplyIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater,createOS_Generator_FuelCell_AuxiliaryHeaterIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger,createOS_Generator_FuelCell_ExhaustGasToWaterHeatExchangerIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_ElectricalStorage,createOS_Generator_FuelCell_ElectricalStorageIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_Inverter,createOS_Generator_FuelCell_InverterIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelCell_StackCooler,createOS_Generator_FuelCell_StackCoolerIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_FuelSupply,createOS_Generator_FuelSupplyIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Generator_PVWatts,createOS_Generator_PVWattsIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts,createOS_ElectricLoadCenter_Inverter_PVWattsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_Simple,createOS_ElectricLoadCenter_Inverter_SimpleIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_LookUpTable,createOS_ElectricLoadCenter_Inverter_LookUpTableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Storage_Simple,createOS_ElectricLoadCenter_Storage_SimpleIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Transformer,createOS_ElectricLoadCenter_TransformerIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Distribution,createOS_ElectricLoadCenter_DistributionIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ElectricLoadCenter_Storage_Converter,createOS_ElectricLoadCenter_Storage_ConverterIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ComponentCost_Adjustments,createOS_ComponentCost_AdjustmentsIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_LifeCycleCost,createOS_LifeCycleCostIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_CurrencyType,createOS_CurrencyTypeIddObject));
@@ -33424,8 +40824,61 @@ void IddFactorySingleton::registerOpenStudioObjectsInCallbackMap() {
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_LifeCycleCost_UsePriceEscalation,createOS_LifeCycleCost_UsePriceEscalationIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_UtilityBill,createOS_UtilityBillIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_OutputControl_ReportingTolerances,createOS_OutputControl_ReportingTolerancesIddObject));
-  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Meter,createOS_MeterIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Output_Meter,createOS_Output_MeterIddObject));
   m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Output_Variable,createOS_Output_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Meter_Custom,createOS_Meter_CustomIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Meter_CustomDecrement,createOS_Meter_CustomDecrementIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_Output_EnergyManagementSystem,createOS_Output_EnergyManagementSystemIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_Sensor,createOS_EnergyManagementSystem_SensorIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_Actuator,createOS_EnergyManagementSystem_ActuatorIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager,createOS_EnergyManagementSystem_ProgramCallingManagerIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_Program,createOS_EnergyManagementSystem_ProgramIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_Subroutine,createOS_EnergyManagementSystem_SubroutineIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_GlobalVariable,createOS_EnergyManagementSystem_GlobalVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_OutputVariable,createOS_EnergyManagementSystem_OutputVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable,createOS_EnergyManagementSystem_MeteredOutputVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_TrendVariable,createOS_EnergyManagementSystem_TrendVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_InternalVariable,createOS_EnergyManagementSystem_InternalVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable,createOS_EnergyManagementSystem_CurveOrTableIndexVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable,createOS_EnergyManagementSystem_ConstructionIndexVariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkSimulationControl,createOS_AirflowNetworkSimulationControlIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkZone,createOS_AirflowNetworkZoneIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkSurface,createOS_AirflowNetworkSurfaceIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkReferenceCrackConditions,createOS_AirflowNetworkReferenceCrackConditionsIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkCrack,createOS_AirflowNetworkCrackIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkEffectiveLeakageArea,createOS_AirflowNetworkEffectiveLeakageAreaIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkDetailedOpening,createOS_AirflowNetworkDetailedOpeningIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkSimpleOpening,createOS_AirflowNetworkSimpleOpeningIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkHorizontalOpening,createOS_AirflowNetworkHorizontalOpeningIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkOutdoorAirflow,createOS_AirflowNetworkOutdoorAirflowIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkZoneExhaustFan,createOS_AirflowNetworkZoneExhaustFanIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkExternalNode,createOS_AirflowNetworkExternalNodeIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkPressureController,createOS_AirflowNetworkPressureControllerIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkDistributionNode,createOS_AirflowNetworkDistributionNodeIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkLeak,createOS_AirflowNetworkLeakIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkLeakageRatio,createOS_AirflowNetworkLeakageRatioIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkDuct,createOS_AirflowNetworkDuctIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkFan,createOS_AirflowNetworkFanIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkEquivalentDuct,createOS_AirflowNetworkEquivalentDuctIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkConstantPressureDrop,createOS_AirflowNetworkConstantPressureDropIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkReliefAirFlow,createOS_AirflowNetworkReliefAirFlowIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkDistributionLinkage,createOS_AirflowNetworkDistributionLinkageIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkDuctViewFactors,createOS_AirflowNetworkDuctViewFactorsIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_AirflowNetworkOccupantVentilationControl,createOS_AirflowNetworkOccupantVentilationControlIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface,createOS_ExternalInterfaceIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_Schedule,createOS_ExternalInterface_ScheduleIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_Variable,createOS_ExternalInterface_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_Actuator,createOS_ExternalInterface_ActuatorIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport,createOS_ExternalInterface_FunctionalMockupUnitImportIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable,createOS_ExternalInterface_FunctionalMockupUnitImport_From_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule,createOS_ExternalInterface_FunctionalMockupUnitImport_To_ScheduleIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator,createOS_ExternalInterface_FunctionalMockupUnitImport_To_ActuatorIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable,createOS_ExternalInterface_FunctionalMockupUnitImport_To_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable,createOS_ExternalInterface_FunctionalMockupUnitExport_From_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule,createOS_ExternalInterface_FunctionalMockupUnitExport_To_ScheduleIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator,createOS_ExternalInterface_FunctionalMockupUnitExport_To_ActuatorIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable,createOS_ExternalInterface_FunctionalMockupUnitExport_To_VariableIddObject));
+  m_callbackMap.insert(IddObjectCallbackMap::value_type(IddObjectType::OS_PlantComponent_UserDefined,createOS_PlantComponent_UserDefinedIddObject));
 }
 
 

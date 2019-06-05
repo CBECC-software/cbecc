@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_STANDARDSINFORMATIONCONSTRUCTION_HPP
 #define MODEL_STANDARDSINFORMATIONCONSTRUCTION_HPP
@@ -34,10 +44,10 @@ namespace detail {
   class StandardsInformationConstruction_Impl;
 }
 
-/** StandardsInformationConstruction is the ModelObject that wraps OpenStudio IDD object 
- *  'OS:StandardsInformation:ConstructionFields'. StandardsInformationConstruction provides a 
- *  place to register information about a construction that building energy standards often need 
- *  to know, but is irrelevant to simulation. It contains user-specified values that are not 
+/** StandardsInformationConstruction is the ModelObject that wraps OpenStudio IDD object
+ *  'OS:StandardsInformation:ConstructionFields'. StandardsInformationConstruction provides a
+ *  place to register information about a construction that building energy standards often need
+ *  to know, but is irrelevant to simulation. It contains user-specified values that are not
  *  generally checked against input or output data. */
 class MODEL_API StandardsInformationConstruction : public ModelObject {
  public:
@@ -88,8 +98,8 @@ class MODEL_API StandardsInformationConstruction : public ModelObject {
   /** Returns a list of suggestions for standards construction type based on intendedSurfaceType. */
   std::vector<std::string> suggestedStandardsConstructionTypes() const;
 
-  /** Return the layer of construction() whose thickness can be perturbed (usually to reach a 
-   *  certain property value for the overall construction), if the construction() exists and is a 
+  /** Return the layer of construction() whose thickness can be perturbed (usually to reach a
+   *  certain property value for the overall construction), if the construction() exists and is a
    *  LayeredConstruction. */
   boost::optional<Material> perturbableLayer() const;
 
@@ -144,24 +154,24 @@ class MODEL_API StandardsInformationConstruction : public ModelObject {
   bool setIntendedSurfaceType(const std::string& type);
   void resetIntendedSurfaceType();
 
-  /** Set the constructionType to type. To be used with standardsinterface, this string should 
-   *  match an appropriate enumeration value in the standardsinterface::DataDictionary. The 
+  /** Set the constructionType to type. To be used with standardsinterface, this string should
+   *  match an appropriate enumeration value in the standardsinterface::DataDictionary. The
    *  enumeration for which this should be a value generally varies by intendedSurfaceType(). */
-  void setStandardsConstructionType(const std::string& type);
+  bool setStandardsConstructionType(const std::string& type);
   void resetStandardsConstructionType();
 
-  /** Set the perturbableLayer to the one at layerIndex. Returns false if construction() is not a 
-   *  LayeredConstruction or 
+  /** Set the perturbableLayer to the one at layerIndex. Returns false if construction() is not a
+   *  LayeredConstruction or
    *
-   *  \code 
-   *  layerIndex >= construction().get().cast<LayeredConstruction>().numLayers(). 
+   *  \code
+   *  layerIndex >= construction().get().cast<LayeredConstruction>().numLayers().
    *  \endcode */
   bool setPerturbableLayer(unsigned layerIndex);
 
-  /** Set the perturbableLayer to material. Returns false if construction() is not a 
-   *  LayeredConstruction or 
+  /** Set the perturbableLayer to material. Returns false if construction() is not a
+   *  LayeredConstruction or
    *
-   *  \code 
+   *  \code
    *  MaterialVector layers = construction().get().cast<LayeredConstruction>().layers();
    *  std::find(layers.begin(),layers.end(),material) == layers.end();
    *  \endcode */
@@ -170,19 +180,19 @@ class MODEL_API StandardsInformationConstruction : public ModelObject {
   /** Clears all PerturbableLayer information, including type. */
   void resetPerturbableLayer();
 
-  /** Set the perturbableLayerType to type. Can be one of the provided types, or a free-form 
+  /** Set the perturbableLayerType to type. Can be one of the provided types, or a free-form
    *  string. \sa standardPerturbableLayerTypeValues */
-  void setPerturbableLayerType(const std::string& type);
+  bool setPerturbableLayerType(const std::string& type);
   void resetPerturbableLayerType();
 
-  void setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType);
+  bool setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType);
   void resetOtherPerturbableLayerType();
 
-  void setConstructionStandard(const std::string& constructionStandard);
+  bool setConstructionStandard(const std::string& constructionStandard);
 
   void resetConstructionStandard();
 
-  void setConstructionStandardSource(const std::string& constructionStandardSource);
+  bool setConstructionStandardSource(const std::string& constructionStandardSource);
 
   void resetConstructionStandardSource();
 
@@ -214,7 +224,9 @@ class MODEL_API StandardsInformationConstruction : public ModelObject {
 
   void resetFenestrationGasFill();
 
-  void setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating);
+  bool setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating);
+
+  void setFenestrationLowEmissivityCoatingNoFail(bool fenestrationLowEmissivityCoating);
 
   void resetFenestrationLowEmissivityCoating();
 
@@ -233,7 +245,7 @@ class MODEL_API StandardsInformationConstruction : public ModelObject {
   explicit StandardsInformationConstruction(const ConstructionBase& construction);
 
   explicit StandardsInformationConstruction(
-      std::shared_ptr<detail::StandardsInformationConstruction_Impl> impl);  
+      std::shared_ptr<detail::StandardsInformationConstruction_Impl> impl);
   /// @endcond
  private:
   REGISTER_LOGGER("openstudio.model.StandardsInformationConstruction");
@@ -246,7 +258,6 @@ typedef boost::optional<StandardsInformationConstruction> OptionalStandardsInfor
 typedef std::vector<StandardsInformationConstruction> StandardsInformationConstructionVector;
 
 } // model
-} // openstudio 
+} // openstudio
 
 #endif // MODEL_STANDARDSINFORMATIONCONSTRUCTION_HPP
-

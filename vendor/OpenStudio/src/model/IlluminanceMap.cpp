@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "IlluminanceMap.hpp"
 #include "IlluminanceMap_Impl.hpp"
@@ -58,8 +68,6 @@ namespace detail {
   const std::vector<std::string>& IlluminanceMap_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -155,19 +163,22 @@ namespace detail {
     return isEmpty(OS_IlluminanceMapFields::NumberofYGridPoints);
   }
 
-  void IlluminanceMap_Impl::setOriginXCoordinate(double originXCoordinate) {
+  bool IlluminanceMap_Impl::setOriginXCoordinate(double originXCoordinate) {
     bool result = setDouble(OS_IlluminanceMapFields::OriginXCoordinate, originXCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
-  void IlluminanceMap_Impl::setOriginYCoordinate(double originYCoordinate) {
+  bool IlluminanceMap_Impl::setOriginYCoordinate(double originYCoordinate) {
     bool result = setDouble(OS_IlluminanceMapFields::OriginYCoordinate, originYCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
-  void IlluminanceMap_Impl::setOriginZCoordinate(double originZCoordinate) {
+  bool IlluminanceMap_Impl::setOriginZCoordinate(double originZCoordinate) {
     bool result = setDouble(OS_IlluminanceMapFields::OriginZCoordinate, originZCoordinate);
     OS_ASSERT(result);
+    return result;
   }
 
   bool IlluminanceMap_Impl::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
@@ -200,9 +211,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void IlluminanceMap_Impl::setXLength(double xLength) {
+  bool IlluminanceMap_Impl::setXLength(double xLength) {
     bool result = setDouble(OS_IlluminanceMapFields::XLength, xLength);
     OS_ASSERT(result);
+    return result;
   }
 
   void IlluminanceMap_Impl::resetXLength() {
@@ -220,9 +232,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void IlluminanceMap_Impl::setYLength(double yLength) {
+  bool IlluminanceMap_Impl::setYLength(double yLength) {
     bool result = setDouble(OS_IlluminanceMapFields::YLength, yLength);
     OS_ASSERT(result);
+    return result;
   }
 
   void IlluminanceMap_Impl::resetYLength() {
@@ -255,7 +268,7 @@ namespace detail {
     return result;
   }
 
-  bool IlluminanceMap_Impl::setTransformation(const openstudio::Transformation& transformation) 
+  bool IlluminanceMap_Impl::setTransformation(const openstudio::Transformation& transformation)
   {
     bool test;
 
@@ -384,16 +397,16 @@ bool IlluminanceMap::isNumberofYGridPointsDefaulted() const {
   return getImpl<detail::IlluminanceMap_Impl>()->isNumberofYGridPointsDefaulted();
 }
 
-void IlluminanceMap::setOriginXCoordinate(double originXCoordinate) {
-  getImpl<detail::IlluminanceMap_Impl>()->setOriginXCoordinate(originXCoordinate);
+bool IlluminanceMap::setOriginXCoordinate(double originXCoordinate) {
+  return getImpl<detail::IlluminanceMap_Impl>()->setOriginXCoordinate(originXCoordinate);
 }
 
-void IlluminanceMap::setOriginYCoordinate(double originYCoordinate) {
-  getImpl<detail::IlluminanceMap_Impl>()->setOriginYCoordinate(originYCoordinate);
+bool IlluminanceMap::setOriginYCoordinate(double originYCoordinate) {
+  return getImpl<detail::IlluminanceMap_Impl>()->setOriginYCoordinate(originYCoordinate);
 }
 
-void IlluminanceMap::setOriginZCoordinate(double originZCoordinate) {
-  getImpl<detail::IlluminanceMap_Impl>()->setOriginZCoordinate(originZCoordinate);
+bool IlluminanceMap::setOriginZCoordinate(double originZCoordinate) {
+  return getImpl<detail::IlluminanceMap_Impl>()->setOriginZCoordinate(originZCoordinate);
 }
 
 bool IlluminanceMap::setPsiRotationAroundXAxis(double psiRotationAroundXAxis) {
@@ -420,8 +433,8 @@ void IlluminanceMap::resetPhiRotationAroundZAxis() {
   getImpl<detail::IlluminanceMap_Impl>()->resetPhiRotationAroundZAxis();
 }
 
-void IlluminanceMap::setXLength(double xLength) {
-  getImpl<detail::IlluminanceMap_Impl>()->setXLength(xLength);
+bool IlluminanceMap::setXLength(double xLength) {
+  return getImpl<detail::IlluminanceMap_Impl>()->setXLength(xLength);
 }
 
 void IlluminanceMap::resetXLength() {
@@ -436,8 +449,8 @@ void IlluminanceMap::resetNumberofXGridPoints() {
   getImpl<detail::IlluminanceMap_Impl>()->resetNumberofXGridPoints();
 }
 
-void IlluminanceMap::setYLength(double yLength) {
-  getImpl<detail::IlluminanceMap_Impl>()->setYLength(yLength);
+bool IlluminanceMap::setYLength(double yLength) {
+  return getImpl<detail::IlluminanceMap_Impl>()->setYLength(yLength);
 }
 
 void IlluminanceMap::resetYLength() {
@@ -475,11 +488,10 @@ std::vector<Point3d> IlluminanceMap::corners() const
 
 /// @cond
 IlluminanceMap::IlluminanceMap(std::shared_ptr<detail::IlluminanceMap_Impl> impl)
-  : SpaceItem(impl)
+  : SpaceItem(std::move(impl))
 {}
 /// @endcond
 
 
 } // model
 } // openstudio
-

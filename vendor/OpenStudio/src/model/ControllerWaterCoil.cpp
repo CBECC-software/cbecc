@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ControllerWaterCoil.hpp"
 #include "ControllerWaterCoil_Impl.hpp"
@@ -56,8 +66,7 @@ ControllerWaterCoil_Impl::ControllerWaterCoil_Impl(const ControllerWaterCoil_Imp
 const std::vector<std::string>& ControllerWaterCoil_Impl::outputVariableNames() const
 {
   static std::vector<std::string> result;
-  if (result.empty()){
-  }
+    // Not appropriate: no specific output
   return result;
 }
 
@@ -162,7 +171,7 @@ void ControllerWaterCoil_Impl::resetActuatorVariable() {
   OS_ASSERT(result);
 }
 
-void ControllerWaterCoil_Impl::setControllerConvergenceTolerance(boost::optional<double> controllerConvergenceTolerance) {
+bool ControllerWaterCoil_Impl::setControllerConvergenceTolerance(boost::optional<double> controllerConvergenceTolerance) {
   bool result = false;
   if (controllerConvergenceTolerance) {
     result = setDouble(OS_Controller_WaterCoilFields::ControllerConvergenceTolerance, controllerConvergenceTolerance.get());
@@ -170,6 +179,7 @@ void ControllerWaterCoil_Impl::setControllerConvergenceTolerance(boost::optional
     result = setString(OS_Controller_WaterCoilFields::ControllerConvergenceTolerance, "");
   }
   OS_ASSERT(result);
+  return result;
 }
 
 void ControllerWaterCoil_Impl::resetControllerConvergenceTolerance() {
@@ -182,7 +192,7 @@ void ControllerWaterCoil_Impl::autosizeControllerConvergenceTolerance() {
   OS_ASSERT(result);
 }
 
-void ControllerWaterCoil_Impl::setMaximumActuatedFlow(boost::optional<double> maximumActuatedFlow) {
+bool ControllerWaterCoil_Impl::setMaximumActuatedFlow(boost::optional<double> maximumActuatedFlow) {
   bool result = false;
   if (maximumActuatedFlow) {
     result = setDouble(OS_Controller_WaterCoilFields::MaximumActuatedFlow, maximumActuatedFlow.get());
@@ -190,6 +200,7 @@ void ControllerWaterCoil_Impl::setMaximumActuatedFlow(boost::optional<double> ma
     result = setString(OS_Controller_WaterCoilFields::MaximumActuatedFlow, "");
   }
   OS_ASSERT(result);
+  return result;
 }
 
 void ControllerWaterCoil_Impl::resetMaximumActuatedFlow() {
@@ -202,9 +213,10 @@ void ControllerWaterCoil_Impl::autosizeMaximumActuatedFlow() {
   OS_ASSERT(result);
 }
 
-void ControllerWaterCoil_Impl::setMinimumActuatedFlow(double minimumActuatedFlow) {
+bool ControllerWaterCoil_Impl::setMinimumActuatedFlow(double minimumActuatedFlow) {
   bool result = setDouble(OS_Controller_WaterCoilFields::MinimumActuatedFlow, minimumActuatedFlow);
   OS_ASSERT(result);
+  return result;
 }
 
 void ControllerWaterCoil_Impl::resetMinimumActuatedFlow() {
@@ -222,26 +234,54 @@ boost::optional<Node> ControllerWaterCoil_Impl::actuatorNode() const
   return this->getObject<ModelObject>().getModelObjectTarget<Node>(OS_Controller_WaterCoilFields::ActuatorNodeName);
 }
 
-void ControllerWaterCoil_Impl::setSensorNode( Node & node )
+bool ControllerWaterCoil_Impl::setSensorNode( Node & node )
 {
-  this->setPointer(OS_Controller_WaterCoilFields::SensorNodeName,node.handle());
+  return this->setPointer(OS_Controller_WaterCoilFields::SensorNodeName,node.handle());
 }
 
-void ControllerWaterCoil_Impl::setActuatorNode( Node & node )
+bool ControllerWaterCoil_Impl::setActuatorNode( Node & node )
 {
-  this->setPointer(OS_Controller_WaterCoilFields::ActuatorNodeName,node.handle());
+  return this->setPointer(OS_Controller_WaterCoilFields::ActuatorNodeName,node.handle());
 }
 
-void ControllerWaterCoil_Impl::setWaterCoil( const HVACComponent & comp )
+bool ControllerWaterCoil_Impl::setWaterCoil( const HVACComponent & comp )
 {
   auto result = setPointer(OS_Controller_WaterCoilFields::WaterCoilName,comp.handle());
   OS_ASSERT(result);
+  return result;
 }
 
 boost::optional<HVACComponent> ControllerWaterCoil_Impl::waterCoil() const
 {
   return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_Controller_WaterCoilFields::WaterCoilName);
 }
+
+  boost::optional<double> ControllerWaterCoil_Impl::autosizedControllerConvergenceTolerance() const {
+    return getAutosizedValue("Controller Convergence Tolerance", "");
+  }
+
+  boost::optional<double> ControllerWaterCoil_Impl::autosizedMaximumActuatedFlow() const {
+    return getAutosizedValue("Maximum Actuated Flow", "m3/s");
+  }
+
+  void ControllerWaterCoil_Impl::autosize() {
+    autosizeControllerConvergenceTolerance();
+    autosizeMaximumActuatedFlow();
+  }
+
+  void ControllerWaterCoil_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedControllerConvergenceTolerance();
+    if (val) {
+      setControllerConvergenceTolerance(val.get());
+    }
+
+    val = autosizedMaximumActuatedFlow();
+    if (val) {
+      setMaximumActuatedFlow(val.get());
+    }
+
+  }
 
 } // detail
 
@@ -336,8 +376,8 @@ void ControllerWaterCoil::resetActuatorVariable() {
   getImpl<detail::ControllerWaterCoil_Impl>()->resetActuatorVariable();
 }
 
-void ControllerWaterCoil::setControllerConvergenceTolerance(double controllerConvergenceTolerance) {
-  getImpl<detail::ControllerWaterCoil_Impl>()->setControllerConvergenceTolerance(controllerConvergenceTolerance);
+bool ControllerWaterCoil::setControllerConvergenceTolerance(double controllerConvergenceTolerance) {
+  return getImpl<detail::ControllerWaterCoil_Impl>()->setControllerConvergenceTolerance(controllerConvergenceTolerance);
 }
 
 void ControllerWaterCoil::resetControllerConvergenceTolerance() {
@@ -348,8 +388,8 @@ void ControllerWaterCoil::autosizeControllerConvergenceTolerance() {
   getImpl<detail::ControllerWaterCoil_Impl>()->autosizeControllerConvergenceTolerance();
 }
 
-void ControllerWaterCoil::setMaximumActuatedFlow(double maximumActuatedFlow) {
-  getImpl<detail::ControllerWaterCoil_Impl>()->setMaximumActuatedFlow(maximumActuatedFlow);
+bool ControllerWaterCoil::setMaximumActuatedFlow(double maximumActuatedFlow) {
+  return getImpl<detail::ControllerWaterCoil_Impl>()->setMaximumActuatedFlow(maximumActuatedFlow);
 }
 
 void ControllerWaterCoil::resetMaximumActuatedFlow() {
@@ -360,8 +400,8 @@ void ControllerWaterCoil::autosizeMaximumActuatedFlow() {
   getImpl<detail::ControllerWaterCoil_Impl>()->autosizeMaximumActuatedFlow();
 }
 
-void ControllerWaterCoil::setMinimumActuatedFlow(double minimumActuatedFlow) {
-  getImpl<detail::ControllerWaterCoil_Impl>()->setMinimumActuatedFlow(minimumActuatedFlow);
+bool ControllerWaterCoil::setMinimumActuatedFlow(double minimumActuatedFlow) {
+  return getImpl<detail::ControllerWaterCoil_Impl>()->setMinimumActuatedFlow(minimumActuatedFlow);
 }
 
 void ControllerWaterCoil::resetMinimumActuatedFlow() {
@@ -378,24 +418,31 @@ boost::optional<Node> ControllerWaterCoil::actuatorNode() const
   return getImpl<detail::ControllerWaterCoil_Impl>()->actuatorNode();
 }
 
-void ControllerWaterCoil::setSensorNode( Node & node )
+bool ControllerWaterCoil::setSensorNode( Node & node )
 {
-  getImpl<detail::ControllerWaterCoil_Impl>()->setSensorNode( node );
+  return getImpl<detail::ControllerWaterCoil_Impl>()->setSensorNode( node );
 }
 
-void ControllerWaterCoil::setActuatorNode( Node & node )
+bool ControllerWaterCoil::setActuatorNode( Node & node )
 {
-  getImpl<detail::ControllerWaterCoil_Impl>()->setActuatorNode( node );
+  return getImpl<detail::ControllerWaterCoil_Impl>()->setActuatorNode( node );
 }
 
 /// @cond
 ControllerWaterCoil::ControllerWaterCoil(std::shared_ptr<detail::ControllerWaterCoil_Impl> impl)
-  : HVACComponent(impl)
+  : HVACComponent(std::move(impl))
 {}
 /// @endcond
 
 
+  boost::optional<double> ControllerWaterCoil::autosizedControllerConvergenceTolerance() const {
+    return getImpl<detail::ControllerWaterCoil_Impl>()->autosizedControllerConvergenceTolerance();
+  }
+
+  boost::optional<double> ControllerWaterCoil::autosizedMaximumActuatedFlow() const {
+    return getImpl<detail::ControllerWaterCoil_Impl>()->autosizedMaximumActuatedFlow();
+  }
+
 } // model
 
 } // openstudio
-

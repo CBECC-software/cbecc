@@ -1,33 +1,38 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Assert.hpp"
-#include "Optional.hpp"
 #include "StringHelpers.hpp"
 #include "../math/FloatCompare.hpp"
 
-#include <boost/regex.hpp>
-#include <boost/algorithm/string.hpp>
 
-#include <cmath> 
 #include <iomanip>
-#include <sstream>
 
 namespace openstudio {
 
@@ -55,8 +60,12 @@ std::string toUnderscoreCase(const std::string& s) {
   //std::string result = toLowerCamelCase(s);
   //result = boost::regex_replace(result,boost::regex("(.)([A-Z])"),"$1_\\l$2");
 
+  std::string result = boost::replace_all_copy(s, "OpenStudio", "Openstudio");
+  boost::replace_all(result, "EnergyPlus", "Energyplus");
+
   //http://stackoverflow.com/questions/1509915/converting-camel-case-to-underscore-case-in-ruby
-  std::string result = boost::regex_replace(s, boost::regex("[^a-zA-Z0-9]"), " ");
+  // DLM: there is a to_underscore method in the BCL gem, this should be synchronized
+  result = boost::regex_replace(result, boost::regex("[^a-zA-Z0-9]"), " ");
   result = boost::regex_replace(result, boost::regex("([\\-]+)"), "_");
   result = boost::regex_replace(result, boost::regex("([\\s]+)"), "_");
   result = boost::regex_replace(result, boost::regex("([A-Za-z])([0-9])"), "$1_$2");
@@ -92,30 +101,46 @@ std::string iddObjectNameToIdfObjectName(const std::string& s) {
   return result;
 }
 
-std::string toNeatString(double value, 
-                         unsigned numFractionalDigits, 
+std::string toNeatString(double value,
+                         unsigned numFractionalDigits,
                          bool applyCommas)
 {
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(numFractionalDigits) << value;
-  std::string result = ss.str();
-  if (applyCommas) {
-    boost::smatch m;
-    bool ok = boost::regex_match(result,
-                                 m,
-                                 boost::regex("(-?[0-9]{1,3})([0-9]{3})*(\\.[0-9]+|$)"),
-                                 boost::match_extra);
-    OS_ASSERT(ok);
-    ss.str("");
-    ss << std::string(m[1].first,m[1].second);
-    for (std::string::const_iterator start = m[1].second; start != m[3].first; ) {
-      std::string::const_iterator end = start;
-      ++(++(++end));
-      ss << "," << std::string(start,end);
-      start = end;
+
+  std::string result;
+
+  if (std::isinf(value)) {
+    if (value > 0) {
+      result = "+Inf";
+    } else {
+      result = "-Inf";
     }
-    ss << std::string(m[3].first,m[3].second);
+  } else if (std::isnan(value)) {
+    result = "NaN";
+
+  } else {
+
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(numFractionalDigits) << value;
     result = ss.str();
+
+    if (applyCommas) {
+      boost::smatch m;
+      bool ok = boost::regex_match(result,
+          m,
+          boost::regex("(-?[0-9]{1,3})([0-9]{3})*(\\.[0-9]+|$)"),
+          boost::match_extra);
+      OS_ASSERT(ok);
+      ss.str("");
+      ss << std::string(m[1].first,m[1].second);
+      for (std::string::const_iterator start = m[1].second; start != m[3].first; ) {
+        std::string::const_iterator end = start;
+        ++(++(++end));
+        ss << "," << std::string(start,end);
+        start = end;
+      }
+      ss << std::string(m[3].first,m[3].second);
+      result = ss.str();
+    }
   }
   return result;
 }
@@ -154,7 +179,7 @@ unsigned numFractionalDigits(double value,unsigned numSigFigs) {
 }
 
 std::pair<unsigned,unsigned> numFractionalDigits(const std::vector<double>& values,
-                                                 unsigned numSigFigs) 
+                                                 unsigned numSigFigs)
 {
   if (numSigFigs == 0u) {
     LOG_FREE_AND_THROW("openstudio.core.StringHelpers","Number of significant figures must be > 0.");
@@ -191,7 +216,7 @@ double toNumSigFigs(double value, unsigned numSigFigs) {
 
   double absValue = fabs(value);
   bool negative = (value != absValue);
-  
+
   double orderOfMagnitude = floor(log10(absValue)); // 1683 => 3
                                                     // 0.001683892 => -3
   //                             X.XXXXX             add more sig-figs
@@ -283,11 +308,89 @@ std::vector <std::string> splitString(const std::string &string, char delimiter)
     while(std::getline(stream, substring, delimiter)) { // Loop and fill the results vector
       results.push_back(substring);
     }
-    if(*(string.end() - 1) == ',') { // Add an empty string if the last char is the delimiter
+    if(*(string.end() - 1) == delimiter) { // Add an empty string if the last char is the delimiter
       results.push_back(std::string());
     }
   }
   return results;
 }
+
+std::vector<std::string> splitEMSLineToTokens(const std::string& line, const std::string delimiters) {
+
+  // Split line to get 'tokens' and look for ModelObject names
+  // Note: JM 2018-08-16: Really this parser should match the E+ one, so probably split on operators, handle parenthesis, etc
+  // The idea is to split on ' +-*/^=<>&|' which are the operators
+  // We also need to ignore the reserved keywords and functions
+
+  std::vector<std::string> reservedKeyWords = {
+    // Constant built-in variables
+    "NULL",
+    "FALSE",
+    "TRUE",
+    "OFF",
+    "ON",
+    "PI",
+
+    // Dynamic built-in variables
+    "YEAR",
+    "MONTH",
+    "DAYOFMONTH",
+    "DAYOFWEEK",
+    "DAYOFYEAR",
+    "HOUR",
+    "MINUTE",
+    "HOLIDAY",
+    "DAYLIGHTSAVINGS",
+    "CURRENTTIME",
+    "SUNISUP",
+    "ISRAINING",
+    "SYSTEMTIMESTEP",
+    "ZONETIMESTEP",
+    "CURRENTENVIRONMENT",
+    "ACTUALDATEANDTIME",
+    "ACTUALTIME",
+    "WARMUPFLAG",
+
+    // Statement Keywords
+    "RUN",
+    "RETURN",
+    "SET",
+    "IF",
+    "ELSEIF",
+    "ELSE",
+    "ENDIF",
+    "WHILE",
+    "ENDWHILE",
+  };
+
+
+  std::vector<std::string> tokens;
+  boost::split(tokens, line, boost::is_any_of(delimiters));
+
+  for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ) {
+    // We trim eventual parenthesis
+    boost::replace_all(*it, "(", "");
+    boost::replace_all(*it, ")", "");
+    // We trim leading and trailing whitespaces (shouldn't be necesssary with boost::split)
+    boost::trim(*it);
+
+    // We Delete the token:
+
+          // If there's nothing left in the token,
+    if (  (it->empty())
+          // or it starts with "@" (function)
+          || (boost::starts_with(*it, "@"))
+          // or its one of the reserved keyword above
+          || (std::find(reservedKeyWords.begin(), reservedKeyWords.end(), boost::to_upper_copy<std::string>(*it)) != reservedKeyWords.end())
+        )
+    {
+      it = tokens.erase(it);
+    } else {
+      ++it;
+    }
+  } return tokens;
+
+}
+
 
 } // openstudio

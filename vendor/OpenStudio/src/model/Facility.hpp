@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_FACILITY_HPP
 #define MODEL_FACILITY_HPP
@@ -33,8 +43,10 @@ class EndUses;
 namespace model {
 
 class Building;
-class Meter;
+class OutputMeter;
 class ExteriorLights;
+class ExteriorFuelEquipment;
+class ExteriorWaterEquipment;
 
 namespace detail {
 
@@ -47,17 +59,18 @@ namespace detail {
  *  Facility is a unique object which parents the Building in the model.  Conceptually,
  *  the Facility object includes the Building as well as exterior equipment,
  *  parking lot lighting, water systems for grounds, etc.  The Facility object currently does not
- *  have any fields, it is simply used to access \link Meter Meters \endlink and high level results 
- *  which include exterior end uses. Facility does not have a public constructor because it is a unique ModelObject.  
- *  To get the Facility object for a Model or create one if it does not yet exist use model.getUniqueObject<Facility>().  
+ *  have any fields, it is simply used to access \link OutputMeter OutputMeters \endlink and high level results
+ *  which include exterior end uses. Facility does not have a public constructor because it is a unique ModelObject.
+ *  To get the Facility object for a Model or create one if it does not yet exist use model.getUniqueObject<Facility>().
  *  To get the Facility object for a Model but not create one if it does not yet exist use model.getOptionalUniqueObject<Facility>().
  */
 class MODEL_API Facility : public ParentObject {
+
  public:
   virtual ~Facility() {}
 
   static IddObjectType iddObjectType();
-  
+
   /// Returns all FuelTypes which are fossil fuels.
   static std::vector<FuelType> fossilFuels();
 
@@ -75,10 +88,10 @@ class MODEL_API Facility : public ParentObject {
   /// Returns the child Building.
   boost::optional<Building> building() const;
 
-  /// Returns all \link Meter Meters \endlink at the Facility level.
-  std::vector<Meter> meters() const;
-  
-  boost::optional<Meter> getMeterByFuelType(
+  /// Returns all \link OutputMeter OutputMeters \endlink at the Facility level.
+  std::vector<OutputMeter> meters() const;
+
+  boost::optional<OutputMeter> getMeterByFuelType(
       const FuelType& fuelType,
       const std::string& reportingFrequency="Hourly",
       const boost::optional<EndUseType>& endUseType=boost::none,
@@ -86,6 +99,12 @@ class MODEL_API Facility : public ParentObject {
 
   /// Returns all ExteriorLights.
   std::vector<ExteriorLights> exteriorLights() const;
+
+  /// Returns all ExteriorFuelEquipment.
+  std::vector<ExteriorFuelEquipment> exteriorFuelEquipments() const;
+
+  /// Returns all ExteriorWaterEquipment.
+  std::vector<ExteriorWaterEquipment> exteriorWaterEquipments() const;
 
   //@}
   /** @name Other */
@@ -118,7 +137,7 @@ class MODEL_API Facility : public ParentObject {
   /// Returns the annual total cost per net conditioned building area associated with the given fuel type in dollars per square meter.
   /// Requires EnergyPlus simulation output to calculate.
   boost::optional<double> annualTotalCostPerNetConditionedBldgArea(const FuelType& fuel) const;
-  
+
   /// Returns the annual total cost for all fuel types in dollars. Requires EnergyPlus simulation output to calculate.
   /// Attribute name: annualTotalUtilityCost
   boost::optional<double> annualTotalUtilityCost() const;
@@ -143,7 +162,7 @@ class MODEL_API Facility : public ParentObject {
   /// Attribute name: annualWaterTotalCost
   boost::optional<double> annualWaterTotalCost() const;
 
-  /// Returns the total capital cost associated with the building in dollars by summing all costs from all 
+  /// Returns the total capital cost associated with the building in dollars by summing all costs from all
   /// ComponentCost_LineItem objects.  Requires EnergyPlus simulation output and LifeCycleCost_Parameters input object to calculate.
   /// \todo: only ComponentCost_LineItem of line item type "Construction" are currently handled
   /// \todo: this should not require life cycle parameters to calculate
@@ -673,7 +692,7 @@ class MODEL_API Facility : public ParentObject {
 
 
   explicit Facility(Model& model);
-   
+
   //@}
 
   /// @cond

@@ -1,26 +1,39 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "../ForwardTranslator.hpp"
 #include "../../model/Model.hpp"
 #include "../../model/AirLoopHVAC.hpp"
 #include "../../model/AirLoopHVAC_Impl.hpp"
+
+#include "../../model/AvailabilityManagerAssignmentList.hpp"
+#include "../../model/AvailabilityManagerAssignmentList_Impl.hpp"
 #include "../../model/AvailabilityManager.hpp"
 #include "../../model/AvailabilityManager_Impl.hpp"
 #include "../../model/AvailabilityManagerHybridVentilation.hpp"
@@ -176,7 +189,7 @@ void addRequiredSetpointManagers(const AirLoopHVAC & airLoopHVAC)
         spm.addToNode(upperNode);
         spm.setName(upperNode.name().get() + " OS Default SPM");
       }
-    } 
+    }
 
     for( auto & lowerNode : lowerNodes )
     {
@@ -193,7 +206,7 @@ void addRequiredSetpointManagers(const AirLoopHVAC & airLoopHVAC)
 
     if( boost::optional<AirLoopHVACOutdoorAirSystem> oaSystem = airLoopHVAC.airLoopHVACOutdoorAirSystem() )
     {
-      boost::optional<Node> outboardOANode = oaSystem->outboardOANode(); 
+      boost::optional<Node> outboardOANode = oaSystem->outboardOANode();
       std::vector<Node> oaNodes = subsetCastVector<Node>(oaSystem->oaComponents());
       if( outboardOANode )
       {
@@ -219,7 +232,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
   Model t_model = airLoopHVAC.model();
 
   addRequiredSetpointManagers(airLoopHVAC);
-  
+
   // Create a new IddObjectType::AirLoopHVAC
   IdfObject idfObject(IddObjectType::AirLoopHVAC);
   m_idfObjects.push_back(idfObject);
@@ -314,7 +327,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
     {
       controllers.push_back(controller.get());
     }
-  } 
+  }
 
   if( controllers.size() > 0 )
   {
@@ -335,48 +348,43 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
       {
         _controllerList.setString(i,_controller->iddObject().name());
         _controllerList.setString(i + 1,_controller->name().get());
-        
+
         i++;
         i++;
       }
     }
   }
 
-  // Availability Manager List Name
-  IdfObject availabilityManagerAssignmentListIdf(openstudio::IddObjectType::AvailabilityManagerAssignmentList);
-  availabilityManagerAssignmentListIdf.setName(airLoopHVACName + "Availability Manager List");
-  m_idfObjects.push_back(availabilityManagerAssignmentListIdf);
+  // AvailabilityManagerAssignmentList
+  {
+    // The AvailabilityManagerAssignment list is translated by itself, we just need to set its name on the right IDF field
+    AvailabilityManagerAssignmentList avmList = airLoopHVAC.getImpl<openstudio::model::detail::AirLoopHVAC_Impl>()->availabilityManagerAssignmentList();
 
-  idfObject.setString(openstudio::AirLoopHVACFields::AvailabilityManagerListName,
-                      availabilityManagerAssignmentListIdf.name().get());
-
-  auto createdAvailabilityManagerScheduled = [&]() {
-    IdfObject idf(IddObjectType::AvailabilityManager_Scheduled);
-    idf.setName(airLoopHVACName + " Availability Manager");
-    m_idfObjects.push_back(idf);
-
-    idf.setString(openstudio::AvailabilityManager_ScheduledFields::ScheduleName,
-      airLoopHVAC.availabilitySchedule().name().get());
-
-    auto eg = availabilityManagerAssignmentListIdf.pushExtensibleGroup();
-    eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerObjectType,idf.iddObject().name());
-    eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerName,idf.name().get());
-  };
-
-  if( auto availabilityManager = airLoopHVAC.availabilityManager() ) {
-    auto idf = translateAndMapModelObject(availabilityManager.get());
-    OS_ASSERT(idf);
-    if( availabilityManager->optionalCast<model::AvailabilityManagerHybridVentilation>() ) {
-      // AvailabilityManagerHybridVentilation is an odd duck, it is not allowed on availabilityManagerAssignmentList.
-      // Poor thing :(
-      createdAvailabilityManagerScheduled();
-    } else {
-      auto eg = availabilityManagerAssignmentListIdf.pushExtensibleGroup();
-      eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerObjectType,idf->iddObject().name());
-      eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerName,idf->name().get());
+    // If the avmList isn't empty of just with an HybridVentilation, it should have been translated
+    if( boost::optional<IdfObject> _avmList = this->translateAndMapModelObject(avmList) ) {
+      idfObject.setString(AirLoopHVACFields::AvailabilityManagerListName, _avmList->name().get());
     }
-  } else {
-    createdAvailabilityManagerScheduled();
+    // Otherwise, we default to the old behavior
+    else {
+      IdfObject availabilityManagerAssignmentListIdf(openstudio::IddObjectType::AvailabilityManagerAssignmentList);
+      availabilityManagerAssignmentListIdf.setName(airLoopHVACName + "Availability Manager List");
+      m_idfObjects.push_back(availabilityManagerAssignmentListIdf);
+
+      idfObject.setString(openstudio::AirLoopHVACFields::AvailabilityManagerListName,
+          availabilityManagerAssignmentListIdf.name().get());
+
+      IdfObject idf(IddObjectType::AvailabilityManager_Scheduled);
+      idf.setName(airLoopHVACName + " Availability Manager");
+      m_idfObjects.push_back(idf);
+
+      idf.setString(openstudio::AvailabilityManager_ScheduledFields::ScheduleName,
+          airLoopHVAC.availabilitySchedule().name().get());
+
+      auto eg = availabilityManagerAssignmentListIdf.pushExtensibleGroup();
+      eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerObjectType,idf.iddObject().name());
+      eg.setString(AvailabilityManagerAssignmentListExtensibleFields::AvailabilityManagerName,idf.name().get());
+    }
+
   }
 
   // Design Supply Air Flow Rate
@@ -394,29 +402,13 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
   branchList.setName(airLoopHVACName + " Supply Branches");
   m_idfObjects.push_back(branchList);
 
-  auto maximumFlowRate = [](const std::vector<ModelObject> & objects) {
-    boost::optional<double> result;
-
-    auto constantSpeedfans = subsetCastVector<model::FanConstantVolume>(objects);
-    if( constantSpeedfans.size() > 0u ) {
-      result = constantSpeedfans.back().maximumFlowRate();     
-    }
-
-    auto variableSpeedfans = subsetCastVector<model::FanVariableVolume>(objects);
-    if( variableSpeedfans.size() > 0 ) {
-      result = variableSpeedfans.back().maximumFlowRate();
-    }
-
-    return result;
-  };
-
   auto supplyInletNode = airLoopHVAC.supplyInletNode();
   auto supplyOutletNodes = airLoopHVAC.supplyOutletNodes();
   auto splitter = airLoopHVAC.supplySplitter();
   if( splitter ) {
     // Dual Duct - There will be three branches, and two outlet nodes
     OS_ASSERT(supplyOutletNodes.size() == 2u );
-  
+
     IdfObject _connectorList(IddObjectType::ConnectorList);
     _connectorList.setName( airLoopHVACName + " Connector List" );
     m_idfObjects.push_back(_connectorList);
@@ -439,12 +431,6 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
       branch.setName( airLoopHVACName + " Main Branch");
       populateBranch(branch,comps,airLoopHVAC,true);
 
-      if( auto value = maximumFlowRate(comps) ) {
-        branch.setDouble(BranchFields::MaximumFlowRate,value.get());
-      } else {
-        branch.setString(BranchFields::MaximumFlowRate,"Autosize");
-      }
-
       auto eg = branchList.pushExtensibleGroup();
       eg.setString(BranchListExtensibleFields::BranchName,branch.name().get());
 
@@ -459,12 +445,6 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
       branch.setName( airLoopHVACName + " Dual Duct Branch 1");
       populateBranch(branch,comps,airLoopHVAC,true);
 
-      if( auto value = maximumFlowRate(comps) ) {
-        branch.setDouble(BranchFields::MaximumFlowRate,value.get());
-      } else {
-        branch.setString(BranchFields::MaximumFlowRate,"Autosize");
-      }
-
       auto eg = branchList.pushExtensibleGroup();
       eg.setString(BranchListExtensibleFields::BranchName,branch.name().get());
 
@@ -478,12 +458,6 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
       m_idfObjects.push_back(branch);
       branch.setName( airLoopHVACName + " Dual Duct Branch 2");
       populateBranch(branch,comps,airLoopHVAC,true);
-
-      if( auto value = maximumFlowRate(comps) ) {
-        branch.setDouble(BranchFields::MaximumFlowRate,value.get());
-      } else {
-        branch.setString(BranchFields::MaximumFlowRate,"Autosize");
-      }
 
       auto branchListEg = branchList.pushExtensibleGroup();
       branchListEg.setString(BranchListExtensibleFields::BranchName,branch.name().get());
@@ -500,12 +474,6 @@ boost::optional<IdfObject> ForwardTranslator::translateAirLoopHVAC( AirLoopHVAC 
     m_idfObjects.push_back(branch);
     branch.setName( airLoopHVACName + " Main Branch");
     populateBranch(branch,comps,airLoopHVAC,true);
-
-    if( auto value = maximumFlowRate(comps) ) {
-      branch.setDouble(BranchFields::MaximumFlowRate,value.get());
-    } else {
-      branch.setString(BranchFields::MaximumFlowRate,"Autosize");
-    }
 
     auto eg = branchList.pushExtensibleGroup();
     eg.setString(BranchListExtensibleFields::BranchName,branch.name().get());

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "HVACTemplates.hpp"
 #include "Model.hpp"
@@ -32,6 +42,8 @@
 #include "ZoneHVACPackagedTerminalAirConditioner_Impl.hpp"
 #include "BoilerHotWater.hpp"
 #include "BoilerHotWater_Impl.hpp"
+#include "WaterHeaterMixed.hpp"
+#include "WaterHeaterMixed_Impl.hpp"
 #include "PumpVariableSpeed.hpp"
 #include "PumpVariableSpeed_Impl.hpp"
 #include "PlantLoop.hpp"
@@ -80,8 +92,8 @@
 #include "AirLoopHVACUnitaryHeatPumpAirToAir_Impl.hpp"
 #include "AirTerminalSingleDuctParallelPIUReheat.hpp"
 #include "AirTerminalSingleDuctParallelPIUReheat_Impl.hpp"
-#include "AirTerminalSingleDuctUncontrolled.hpp"
-#include "AirTerminalSingleDuctUncontrolled_Impl.hpp"
+#include "AirTerminalSingleDuctConstantVolumeNoReheat.hpp"
+#include "AirTerminalSingleDuctConstantVolumeNoReheat_Impl.hpp"
 #include "AirTerminalSingleDuctVAVReheat.hpp"
 #include "AirTerminalSingleDuctVAVReheat_Impl.hpp"
 #include "ControllerOutdoorAir.hpp"
@@ -96,101 +108,65 @@
 #include "Mixer_Impl.hpp"
 #include "CoolingTowerSingleSpeed.hpp"
 #include "CoolingTowerSingleSpeed_Impl.hpp"
+#include "PumpConstantSpeed.hpp"
+#include "WaterUseEquipmentDefinition.hpp"
+#include "WaterUseEquipment.hpp"
+#include "WaterUseConnections.hpp"
+
 #include "../utilities/time/Time.hpp"
 
 namespace openstudio {
 
 namespace model {
 
-Schedule deckTempSchedule( Model & model )
-{
-  //Make a time stamp to use in multiple places
-  Time osTime = Time(0,24,0,0);
-  
-  //Schedule Ruleset
-  ScheduleRuleset deckTempSchedule = ScheduleRuleset(model);
-  deckTempSchedule.setName("Deck_Temperature");
-
-  //Winter Design Day
-  ScheduleDay deckTempScheduleWinter = ScheduleDay(model);
-  deckTempSchedule.setWinterDesignDaySchedule(deckTempScheduleWinter);
-  deckTempSchedule.winterDesignDaySchedule().setName("Deck_Temperature_Winter_Design_Day");
-  deckTempSchedule.winterDesignDaySchedule().addValue(osTime,12.8);
-
-  //Summer Design Day
-  ScheduleDay deckTempScheduleSummer = ScheduleDay(model);
-  deckTempSchedule.setSummerDesignDaySchedule(deckTempScheduleSummer);
-  deckTempSchedule.summerDesignDaySchedule().setName("Deck_Temperature_Summer_Design_Day");
-  deckTempSchedule.summerDesignDaySchedule().addValue(osTime,12.8);  
-
-  //All other days
-  deckTempSchedule.defaultDaySchedule().setName("Deck_Temperature_Default");
-  deckTempSchedule.defaultDaySchedule().addValue(osTime,12.8);
-
-  return deckTempSchedule;
-}
-
-Schedule hotWaterTempSchedule( Model & model )
+Schedule makeSchedule( Model & model, std::string name = "Hot_Water_Temperature", double targetTemperature = 67.0)
 {
  //Make a time stamp to use in multiple places
   Time osTime = Time(0,24,0,0);
-  
+
   //Schedule Ruleset
-  ScheduleRuleset hotWaterTempSchedule = ScheduleRuleset(model);
-  hotWaterTempSchedule.setName("Hot_Water_Temperature");
+  ScheduleRuleset TempSchedule = ScheduleRuleset(model);
+  TempSchedule.setName(name);
 
   //Winter Design Day
-  ScheduleDay hotWaterTempScheduleWinter = ScheduleDay(model);
-  hotWaterTempSchedule.setWinterDesignDaySchedule(hotWaterTempScheduleWinter);
-  hotWaterTempSchedule.winterDesignDaySchedule().setName("Hot_Water_Temperature_Winter_Design_Day");
-  hotWaterTempSchedule.winterDesignDaySchedule().addValue(osTime,67);
+  ScheduleDay TempScheduleWinter = ScheduleDay(model);
+  TempSchedule.setWinterDesignDaySchedule(TempScheduleWinter);
+  TempSchedule.winterDesignDaySchedule().setName(name + "_Winter_Design_Day");
+  TempSchedule.winterDesignDaySchedule().addValue(osTime,targetTemperature);
 
   //Summer Design Day
-  ScheduleDay hotWaterTempScheduleSummer = ScheduleDay(model);
-  hotWaterTempSchedule.setSummerDesignDaySchedule(hotWaterTempScheduleSummer);
-  hotWaterTempSchedule.summerDesignDaySchedule().setName("Hot_Water_Temperature_Summer_Design_Day");
-  hotWaterTempSchedule.summerDesignDaySchedule().addValue(osTime,67);  
+  ScheduleDay TempScheduleSummer = ScheduleDay(model);
+  TempSchedule.setSummerDesignDaySchedule(TempScheduleSummer);
+  TempSchedule.summerDesignDaySchedule().setName(name +"_Summer_Design_Day");
+  TempSchedule.summerDesignDaySchedule().addValue(osTime, targetTemperature);
 
   //All other days
-  hotWaterTempSchedule.defaultDaySchedule().setName("Hot_Water_Temperature_Default");
-  hotWaterTempSchedule.defaultDaySchedule().addValue(osTime,67);
+  TempSchedule.defaultDaySchedule().setName(name + "_Default");
+  TempSchedule.defaultDaySchedule().addValue(osTime, targetTemperature);
 
-  return hotWaterTempSchedule;
+  return TempSchedule;
+}
+
+Schedule deckTempSchedule( Model & model )
+{
+  return makeSchedule(model, "Deck_Temperature", 12.8);
+}
+
+Schedule hotWaterTempSchedule( Model & model)
+{
+  return makeSchedule(model, "Hot_Water_Temperature", 67.0);
 }
 
 Schedule chilledWaterTempSchedule( Model & model )
 {
- //Make a time stamp to use in multiple places
-  Time osTime = Time(0,24,0,0);
-
-  //Schedule Ruleset
-  ScheduleRuleset chilledWaterSchedule = ScheduleRuleset(model);
-  chilledWaterSchedule.setName("Chilled_Water_Temperature");
-
-  //Winter Design Day
-  ScheduleDay chilledWaterScheduleWinter = ScheduleDay(model);
-  chilledWaterSchedule.setWinterDesignDaySchedule(chilledWaterScheduleWinter);
-  chilledWaterSchedule.winterDesignDaySchedule().setName("Chilled_Water_Temperature_Winter_Design_Day");
-  chilledWaterSchedule.winterDesignDaySchedule().addValue(osTime,6.7);
-
-  //Summer Design Day
-  ScheduleDay chilledWaterScheduleSummer = ScheduleDay(model);
-  chilledWaterSchedule.setSummerDesignDaySchedule(chilledWaterScheduleSummer);
-  chilledWaterSchedule.summerDesignDaySchedule().setName("Chilled_Water_Temperature_Summer_Design_Day");
-  chilledWaterSchedule.summerDesignDaySchedule().addValue(osTime,6.7);  
-
-  //All other days
-  chilledWaterSchedule.defaultDaySchedule().setName("Chilled_Water_Temperature_Default");
-  chilledWaterSchedule.defaultDaySchedule().addValue(osTime,6.7);
-
-  return chilledWaterSchedule;
+  return makeSchedule(model, "Chilled_Water_Temperature", 6.7);
 }
 
 ZoneHVACPackagedTerminalAirConditioner addSystemType1(Model & model)
 {
   Model tempModel;
   Schedule availabilitySchedule = model.alwaysOnDiscreteSchedule();
-    
+
   model::FanConstantVolume fan(model,availabilitySchedule);
   fan.setPressureRise(500);
 
@@ -200,7 +176,7 @@ ZoneHVACPackagedTerminalAirConditioner addSystemType1(Model & model)
 
 
   model::ZoneHVACPackagedTerminalAirConditioner ptac( model,
-                                                      availabilitySchedule, 
+                                                      availabilitySchedule,
                                                       fan,
                                                       heatingCoil,
                                                       coolingCoil );
@@ -247,7 +223,7 @@ void addSystemType1(Model & model, std::vector<ThermalZone> zones)
 
     boiler.setNormalizedBoilerEfficiencyCurve(boilerCurve);
     boiler.setEfficiencyCurveTemperatureEvaluationVariable("LeavingBoiler");
-    
+
     pump.addToNode(hotWaterInletNode);
 
     Node node = hotWaterPlant.supplySplitter().lastOutletModelObject()->cast<Node>();
@@ -293,7 +269,7 @@ ZoneHVACPackagedTerminalHeatPump addSystemType2(Model & model)
   CoilHeatingDXSingleSpeed heatingCoil(model);
 
   model::ZoneHVACPackagedTerminalHeatPump pthp( model,
-                                                availabilitySchedule, 
+                                                availabilitySchedule,
                                                 fan,
                                                 heatingCoil,
                                                 coolingCoil,
@@ -332,7 +308,7 @@ Loop addSystemType3(Model & model)
   //set the default parameters correctly for a constant volume system with no VAV terminals
   sizingSystem.setTypeofLoadtoSizeOn("Sensible");
   sizingSystem.autosizeDesignOutdoorAirFlowRate();
-  sizingSystem.setMinimumSystemAirFlowRatio(1.0);
+  sizingSystem.setCentralHeatingMaximumSystemAirFlowRatio(1.0);
   sizingSystem.setPreheatDesignTemperature(7.0);
   sizingSystem.setPreheatDesignHumidityRatio(0.008);
   sizingSystem.setPrecoolDesignTemperature(12.8);
@@ -373,7 +349,7 @@ Loop addSystemType3(Model & model)
   Node node1 = fan.outletModelObject()->cast<Node>();
   setpointMSZR.addToNode(node1);
 
-  AirTerminalSingleDuctUncontrolled terminal(model,_alwaysOnSchedule); 
+  AirTerminalSingleDuctConstantVolumeNoReheat terminal(model,_alwaysOnSchedule);
 
   airLoopHVAC.addBranchForHVACComponent(terminal);
 
@@ -398,7 +374,7 @@ Loop addSystemType4(Model & model)
   //set the default parameters correctly for a constant volume system with no VAV terminals
   sizingSystem.setTypeofLoadtoSizeOn("Sensible");
   sizingSystem.autosizeDesignOutdoorAirFlowRate();
-  sizingSystem.setMinimumSystemAirFlowRatio(1.0);
+  sizingSystem.setCentralHeatingMaximumSystemAirFlowRatio(1.0);
   sizingSystem.setPreheatDesignTemperature(7.0);
   sizingSystem.setPreheatDesignHumidityRatio(0.008);
   sizingSystem.setPrecoolDesignTemperature(12.8);
@@ -435,8 +411,8 @@ Loop addSystemType4(Model & model)
   heatingCoil.addToNode(supplyOutletNode);
   coilHeatingElectric.addToNode(supplyOutletNode);
   supplyFan.addToNode(supplyOutletNode);
-  
-  AirTerminalSingleDuctUncontrolled terminal(model,_alwaysOnSchedule); 
+
+  AirTerminalSingleDuctConstantVolumeNoReheat terminal(model,_alwaysOnSchedule);
 
   airLoopHVAC.addBranchForHVACComponent(terminal);
 
@@ -522,7 +498,7 @@ Loop addSystemType5(Model & model)
 
   PipeAdiabatic pipe(model);
   hotWaterPlant.addSupplyBranchForComponent(pipe);
-  
+
   PipeAdiabatic pipe2(model);
   pipe2.addToNode(hotWaterOutletNode);
 
@@ -673,7 +649,7 @@ Loop addSystemType7(Model & model)
 
   hotWaterDemandOutlet.addToNode(hotWaterDemandOutletNode);
   hotWaterDemandInlet.addToNode(hotWaterDemandInletNode);
-  
+
   PipeAdiabatic pipe2(model);
   pipe2.addToNode(hotWaterOutletNode);
 
@@ -738,7 +714,7 @@ Loop addSystemType7(Model & model)
 
   PipeAdiabatic pipe3(model);
   chilledWaterPlant.addSupplyBranchForComponent(pipe3);
-  
+
   PipeAdiabatic pipe4(model);
   pipe4.addToNode(chilledWaterOutletNode);
 
@@ -762,7 +738,7 @@ Loop addSystemType7(Model & model)
 
   PipeAdiabatic chilledWaterDemandOutlet(model);
   chilledWaterDemandOutlet.addToNode(chilledWaterDemandOutletNode);
-  
+
   // Condenser System
 
   PlantLoop condenserSystem(model);
@@ -906,7 +882,7 @@ Loop addSystemType9(Model & model)
   //set the default parameters correctly for a constant volume system with no VAV terminals
   sizingSystem.setTypeofLoadtoSizeOn("Sensible");
   sizingSystem.autosizeDesignOutdoorAirFlowRate();
-  sizingSystem.setMinimumSystemAirFlowRatio(1.0);
+  sizingSystem.setCentralHeatingMaximumSystemAirFlowRatio(1.0);
   sizingSystem.setPreheatDesignTemperature(7.0);
   sizingSystem.setPreheatDesignHumidityRatio(0.008);
   sizingSystem.setPrecoolDesignTemperature(12.8);
@@ -944,7 +920,7 @@ Loop addSystemType9(Model & model)
   Node node1 = fan.outletModelObject()->cast<Node>();
   setpointMSZR.addToNode(node1);
 
-  AirTerminalSingleDuctUncontrolled terminal(model,_alwaysOnSchedule); 
+  AirTerminalSingleDuctConstantVolumeNoReheat terminal(model,_alwaysOnSchedule);
 
   airLoopHVAC.addBranchForHVACComponent(terminal);
 
@@ -968,7 +944,7 @@ Loop addSystemType10(Model & model)
   //set the default parameters correctly for a constant volume system with no VAV terminals
   sizingSystem.setTypeofLoadtoSizeOn("Sensible");
   sizingSystem.autosizeDesignOutdoorAirFlowRate();
-  sizingSystem.setMinimumSystemAirFlowRatio(1.0);
+  sizingSystem.setCentralHeatingMaximumSystemAirFlowRatio(1.0);
   sizingSystem.setPreheatDesignTemperature(7.0);
   sizingSystem.setPreheatDesignHumidityRatio(0.008);
   sizingSystem.setPrecoolDesignTemperature(12.8);
@@ -1006,11 +982,223 @@ Loop addSystemType10(Model & model)
   Node node1 = fan.outletModelObject()->cast<Node>();
   setpointMSZR.addToNode(node1);
 
-  AirTerminalSingleDuctUncontrolled terminal(model,_alwaysOnSchedule); 
+  AirTerminalSingleDuctConstantVolumeNoReheat terminal(model,_alwaysOnSchedule);
 
   airLoopHVAC.addBranchForHVACComponent(terminal);
 
   return airLoopHVAC;
+}
+
+Loop addSHWLoop(Model& model) {
+
+  Model tempModel;
+  // Make a schedule at 140°F
+  Schedule shwSchedule = makeSchedule(tempModel, "SHW_Temperature_140F", 60).clone(model).cast<Schedule>();
+
+  Schedule _alwaysOnSchedule = model.alwaysOnDiscreteSchedule();
+
+  // SHW Plant
+  PlantLoop shwPlant(model);
+  shwPlant.setName("Service Water Loop");
+
+  // Initialize nodes
+  Node shwOutletNode = shwPlant.supplyOutletNode();
+  Node shwInletNode = shwPlant.supplyInletNode();
+  Node shwDemandOutletNode = shwPlant.demandOutletNode();
+  Node shwDemandInletNode = shwPlant.demandInletNode();
+
+  // Set temperatures
+  shwPlant.setMaximumLoopTemperature(60);
+  shwPlant.setMinimumLoopTemperature(10);
+  SizingPlant sizingPlant = shwPlant.sizingPlant();
+  sizingPlant.setLoopType("Heating");
+  // Supply at 60°C (140°F), delta is 5°K (9°F)
+  sizingPlant.setDesignLoopExitTemperature(60);
+  sizingPlant.setLoopDesignTemperatureDifference(5.0);
+
+  SetpointManagerScheduled shwSPM(model,shwSchedule);
+  shwSPM.addToNode(shwOutletNode);
+
+
+  // Pump: assume 10 ft of head, just from friction (recirculation)
+  PumpConstantSpeed swh_pump(model);
+  swh_pump.setRatedPumpHead(29891);
+  swh_pump.setPumpControlType("Intermittent");
+  swh_pump.addToNode(shwInletNode);
+
+
+  // WaterHeater
+  // Mostly taken from prototype input for HighRiseApartment
+  WaterHeaterMixed wh(model);
+  // Connect it to loop
+  shwPlant.addSupplyBranchForComponent(wh);
+  // 600 gal, 140F cut-out, delta of 5K(9F) means cut-in is 131°F
+  wh.setName("600 gal Water Heater - 600 kBtu/hr");
+  wh.setTankVolume(2.2712470703819108);
+  wh.setSetpointTemperatureSchedule(shwSchedule);
+  wh.setDeadbandTemperatureDifference(5);
+  // 600 kBTU/h
+  wh.setHeaterMaximumCapacity(175842);
+  // Max temp is 180F
+  wh.setMaximumTemperatureLimit(82.22222);
+  wh.setHeaterControlType("Cycle");
+  wh.setOffCycleParasiticHeatFractiontoTank(0.8);
+  wh.setIndirectWaterHeatingRecoveryTime(1.5); // 1.5hrs
+
+  // Assume gas
+  wh.setHeaterFuelType("Gas");
+  // Result from running the prototype building for 90.1-2013 HighRiseApartment
+  wh.setHeaterThermalEfficiency(0.80154340529419);
+
+  // Set it to Ambient schedule, at 70°F
+  Schedule ambientSchedule = makeSchedule(tempModel, "Water Heater Ambient Temp Schedule - 70F", 21.11).clone(model).cast<Schedule>();
+  wh.setAmbientTemperatureSchedule(ambientSchedule);
+  wh.setAmbientTemperatureIndicator("Schedule");
+
+  // 8742 Btu/hr (from prototype)
+  wh.setOffCycleParasiticFuelConsumptionRate(2562);
+  wh.setOnCycleParasiticFuelConsumptionRate(2562);
+  wh.setOffCycleParasiticFuelType("Gas");
+  wh.setOnCycleParasiticFuelType("Gas");
+  wh.setOffCycleLossCoefficienttoAmbientTemperature(6.0);
+  wh.setOnCycleLossCoefficienttoAmbientTemperature(6.0);
+  wh.setEndUseSubcategory("Service Hot Water Heating");
+
+
+  // Make a typical DHW Demand schedule
+  ScheduleRuleset dhw_flow_sch(model);
+  dhw_flow_sch.setName("ESTAR MFHR DHW Fraction Schedule");
+
+  ScheduleDay dhw_sch_day = dhw_flow_sch.defaultDaySchedule();
+  dhw_sch_day.setName("ESTAR MFHR DHW Schedule Day");
+
+  // dhw_flow_sch.setScheduleTypeLimits(frac);
+
+  // map of schedule info:
+  // Key is the hour until
+  // Value is the value
+  //
+  std::map <int, double> schInfo =
+  {
+    std::pair<int, double>( 6, 0.05 ),
+    std::pair<int, double>( 7, 0.3 ),
+    std::pair<int, double>( 8, 0.5 ),
+    std::pair<int, double>( 9, 0.4 ),
+    std::pair<int, double>( 11, 0.3 ),
+    std::pair<int, double>( 12, 0.35 ),
+    std::pair<int, double>( 13, 0.40 ),
+    std::pair<int, double>( 15, 0.35 ),
+    std::pair<int, double>( 17, 0.30 ),
+    std::pair<int, double>( 19, 0.5 ),
+    std::pair<int, double>( 20, 0.40 ),
+    std::pair<int, double>( 21, 0.35 ),
+    std::pair<int, double>( 22, 0.45 ),
+    std::pair<int, double>( 23, 0.3 ),
+    std::pair<int, double>( 24, 0.05 ),
+  };
+
+
+  std::map<int, double>::iterator it;
+
+
+  double dhw_daily_frac = 0;
+  int lastHour = 0;
+  for ( it = schInfo.begin(); it != schInfo.end(); it++ )
+  {
+    int hour = it->first;
+    double value = it->second;
+    Time t = Time(0, hour, 0, 0);
+    dhw_sch_day.addValue(t, value);
+    dhw_daily_frac += (hour - lastHour) * it->second;
+    lastHour = hour;
+  }
+
+  // Assume occupancy type = "Medium" => 25 GPM / person
+  // Assume 100 apartments, with 200 occupants, Medium Occupancy, and some standard GPMs (1.5 kitchen, 1.0 bathroom, 1.2 showerheads)
+  int num_occupants = 200;
+  int gpm_per_person_per_day = 25;
+  int baseline_occupant_gal_per_day = num_occupants * gpm_per_person_per_day;
+  // One kitchen, one bath per apartment
+  int num_kitchen_faucets = 100;
+  int num_bathroom_faucets = 100;
+  double proposed_gpm_kitchen = 1.5;
+  double proposed_gpm_bathroom = 1.0;
+  double proposed_gpm_showerhead = 1.2;
+
+  // Calculate the weighted average gpm for faucets
+  double proposed_gpm_faucet_weighted = (num_kitchen_faucets * proposed_gpm_kitchen + num_bathroom_faucets * proposed_gpm_bathroom)
+                                      / (num_kitchen_faucets + num_bathroom_faucets);
+
+  double proposed_occupant_gal_per_day = baseline_occupant_gal_per_day * (0.36 + (0.54*proposed_gpm_showerhead + 0.1*proposed_gpm_faucet_weighted ) / 2.5);
+
+  // No dishwashers nor laundry
+  double total_gal_per_day = proposed_occupant_gal_per_day;
+
+  // Divide by total daily fraction
+  double dhw_gpm = total_gal_per_day / (60*dhw_daily_frac);
+
+
+
+   // Add a sample service hot water connection
+  WaterUseEquipmentDefinition water_use_equip_def(model);
+  water_use_equip_def.setName("SWH Definition");
+  water_use_equip_def.setName("Whole Building Water Equipment Definition - 100 units 200 occupants");
+  water_use_equip_def.setPeakFlowRate(dhw_gpm * 6.309019639949753e-05);
+
+  // Set Fraction sensible and latent
+
+  //Make a time stamp to use in multiple places
+  Time osTime = Time(0,24,0,0);
+
+  //Schedule Ruleset
+  ScheduleRuleset fracSchedule = ScheduleRuleset(model);
+  fracSchedule.setName("Fraction Sensible - 0.2");
+  fracSchedule.defaultDaySchedule().setName("Fraction Sensible DefaultDay - 0.2");
+  fracSchedule.defaultDaySchedule().addValue(osTime, 0.2);
+  water_use_equip_def.setSensibleFractionSchedule(fracSchedule);
+
+  fracSchedule = ScheduleRuleset(model);
+  fracSchedule.setName("Fraction Sensible - 0.05");
+  fracSchedule.defaultDaySchedule().setName("Fraction Latent DefaultDay - 0.05");
+  fracSchedule.defaultDaySchedule().addValue(osTime, 0.05);
+  water_use_equip_def.setLatentFractionSchedule(fracSchedule);
+
+  // TODO: make 120F?
+  water_use_equip_def.setTargetTemperatureSchedule(shwSchedule);
+
+
+
+  WaterUseEquipment water_use_equip(water_use_equip_def);
+  water_use_equip.setFlowRateFractionSchedule(dhw_flow_sch);
+  water_use_equip.setName("ESTAR MFHR Whole Building Water Use Equipment");
+
+  // add water use connection
+  WaterUseConnections water_use_connection(model);
+  water_use_connection.addWaterUseEquipment(water_use_equip);
+  water_use_connection.setName("ESTAR MFHR DHW Water Use Connection");
+
+  shwPlant.addDemandBranchForComponent(water_use_connection);
+
+
+
+/*
+ *  PipeAdiabatic shwBypass(model);
+ *  shwPlant.addDemandBranchForComponent(shwBypass);
+ *
+ *  shwPlant.addDemandBranchForComponent(coilHeatingWater);
+ *
+ *  PipeAdiabatic shwDemandInlet(model);
+ *  PipeAdiabatic shwDemandOutlet(model);
+ *
+ *  shwDemandOutlet.addToNode(shwDemandOutletNode);
+ *  shwDemandInlet.addToNode(shwDemandInletNode);
+ *
+ *  PipeAdiabatic pipe2(model);
+ *  pipe2.addToNode(shwOutletNode);
+ *
+ */
+
+  return shwPlant;
 }
 
 } // model

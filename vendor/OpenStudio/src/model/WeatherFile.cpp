@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "WeatherFile.hpp"
 #include "WeatherFile_Impl.hpp"
@@ -78,8 +88,6 @@ namespace detail {
   const std::vector<std::string>& WeatherFile_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -162,29 +170,34 @@ namespace detail {
     return getString(OS_WeatherFileFields::Checksum,true);
   }
 
-  void WeatherFile_Impl::setCity(std::string city) {
+  bool WeatherFile_Impl::setCity(std::string city) {
     bool result = setString(OS_WeatherFileFields::City, city);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setStateProvinceRegion(std::string stateProvinceRegion) {
+  bool WeatherFile_Impl::setStateProvinceRegion(std::string stateProvinceRegion) {
     bool result = setString(OS_WeatherFileFields::StateProvinceRegion, stateProvinceRegion);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setCountry(std::string country) {
+  bool WeatherFile_Impl::setCountry(std::string country) {
     bool result = setString(OS_WeatherFileFields::Country, country);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setDataSource(std::string dataSource) {
+  bool WeatherFile_Impl::setDataSource(std::string dataSource) {
     bool result = setString(OS_WeatherFileFields::DataSource, dataSource);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setWMONumber(std::string wMONumber) {
+  bool WeatherFile_Impl::setWMONumber(std::string wMONumber) {
     bool result = setString(OS_WeatherFileFields::WMONumber, wMONumber);
     OS_ASSERT(result);
+    return result;
   }
 
   bool WeatherFile_Impl::setLatitude(double latitude) {
@@ -212,7 +225,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 /*
-  void WeatherFile_Impl::setUrl(boost::optional<std::string> url) {
+  bool WeatherFile_Impl::setUrl(boost::optional<std::string> url) {
     bool result = false;
     if (url) {
       result = setString(OS_WeatherFileFields::Url, url.get());
@@ -220,11 +233,13 @@ namespace detail {
       result = setString(OS_WeatherFileFields::Url, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setUrl(std::string url) {
+  bool WeatherFile_Impl::setUrl(std::string url) {
     bool result = setString(OS_WeatherFileFields::Url, url);
     OS_ASSERT(result);
+    return result;
   }
 
   void WeatherFile_Impl::resetUrl() {
@@ -232,7 +247,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void WeatherFile_Impl::setChecksum(boost::optional<std::string> checksum) {
+  bool WeatherFile_Impl::setChecksum(boost::optional<std::string> checksum) {
     bool result = false;
     if (checksum) {
       result = setString(OS_WeatherFileFields::Checksum, checksum.get());
@@ -240,11 +255,13 @@ namespace detail {
       result = setString(OS_WeatherFileFields::Checksum, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
-  void WeatherFile_Impl::setChecksum(std::string checksum) {
+  bool WeatherFile_Impl::setChecksum(std::string checksum) {
     bool result = setString(OS_WeatherFileFields::Checksum, checksum);
     OS_ASSERT(result);
+    return result;
   }
 
   void WeatherFile_Impl::resetChecksum() {
@@ -265,7 +282,7 @@ namespace detail {
     if (currentPath){
 
       // try to load absolute path
-      if (currentPath->is_complete() && boost::filesystem::exists(*currentPath)) {
+      if (currentPath->is_complete() && openstudio::filesystem::exists(*currentPath)) {
         try {
           result = EpwFile(*currentPath);
           return result;
@@ -277,8 +294,8 @@ namespace detail {
 
       // try relative path
       if (!dir.empty()){
-        openstudio::path newPath = boost::filesystem::complete(*currentPath, dir);
-        if (boost::filesystem::exists(newPath)) {
+        openstudio::path newPath = openstudio::filesystem::complete(*currentPath, dir);
+        if (openstudio::filesystem::exists(newPath)) {
           try {
             result = EpwFile(newPath);
             return result;
@@ -311,25 +328,25 @@ namespace detail {
   bool WeatherFile_Impl::makeUrlAbsolute(const openstudio::path& searchDirectory) {
     boost::optional<openstudio::path> currentPath = this->path();
     if (currentPath){
-      if (currentPath->is_complete() && boost::filesystem::exists(*currentPath)) {
+      if (currentPath->is_complete() && openstudio::filesystem::exists(*currentPath)) {
         return true;
       }
       openstudio::path newPath, workingPath(*currentPath);
       if (!currentPath->is_complete()) {
-        newPath = boost::filesystem::system_complete(workingPath);
+        newPath = openstudio::filesystem::system_complete(workingPath);
         LOG(Debug,"Current path '" << toString(*currentPath) << "' not complete. "
             << "After calling system_complete have '" << toString(newPath) << "'.");
       }
-      if (newPath.empty() || !boost::filesystem::exists(newPath)) {
+      if (newPath.empty() || !openstudio::filesystem::exists(newPath)) {
         newPath = searchDirectory / *currentPath;
         LOG(Debug,"Going to look for '" << toString(newPath) << "'.");
       }
-      if (newPath.empty() || !boost::filesystem::exists(newPath)) {
+      if (newPath.empty() || !openstudio::filesystem::exists(newPath)) {
         workingPath = currentPath->filename();
         newPath = searchDirectory / workingPath;
         LOG(Debug,"Going to look for '" << toString(newPath) << "'.");
       }
-      if (newPath.empty() || !boost::filesystem::exists(newPath)) {
+      if (newPath.empty() || !openstudio::filesystem::exists(newPath)) {
         return false;
       }
       std::string weatherFileUrl = toString(toURL(newPath));
@@ -354,6 +371,22 @@ namespace detail {
     }
 
     return result;
+  }
+
+  std::vector<EMSActuatorNames> WeatherFile_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{ {"Weather Data", "Outdoor Dry Bulb"},
+                                             {"Weather Data", "Outdoor Dew Point"},
+                                             {"Weather Data", "Outdoor Relative Humidity"},
+                                             {"Weather Data", "Diffuse Solar"},
+                                             {"Weather Data", "Direct Solar"},
+                                             {"Weather Data", "Wind Speed"},
+                                             {"Weather Data", "Wind Direction"}};
+    return actuators;
+  }
+
+  std::vector<std::string> WeatherFile_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types;
+    return types;
   }
 
 } // detail
@@ -432,24 +465,24 @@ boost::optional<std::string> WeatherFile::checksum() const {
   return getImpl<detail::WeatherFile_Impl>()->checksum();
 }
 
-void WeatherFile::setCity(std::string city) {
-  getImpl<detail::WeatherFile_Impl>()->setCity(city);
+bool WeatherFile::setCity(std::string city) {
+  return getImpl<detail::WeatherFile_Impl>()->setCity(city);
 }
 
-void WeatherFile::setStateProvinceRegion(std::string stateProvinceRegion) {
-  getImpl<detail::WeatherFile_Impl>()->setStateProvinceRegion(stateProvinceRegion);
+bool WeatherFile::setStateProvinceRegion(std::string stateProvinceRegion) {
+  return getImpl<detail::WeatherFile_Impl>()->setStateProvinceRegion(stateProvinceRegion);
 }
 
-void WeatherFile::setCountry(std::string country) {
-  getImpl<detail::WeatherFile_Impl>()->setCountry(country);
+bool WeatherFile::setCountry(std::string country) {
+  return getImpl<detail::WeatherFile_Impl>()->setCountry(country);
 }
 
-void WeatherFile::setDataSource(std::string dataSource) {
-  getImpl<detail::WeatherFile_Impl>()->setDataSource(dataSource);
+bool WeatherFile::setDataSource(std::string dataSource) {
+  return getImpl<detail::WeatherFile_Impl>()->setDataSource(dataSource);
 }
 
-void WeatherFile::setWMONumber(std::string wMONumber) {
-  getImpl<detail::WeatherFile_Impl>()->setWMONumber(wMONumber);
+bool WeatherFile::setWMONumber(std::string wMONumber) {
+  return getImpl<detail::WeatherFile_Impl>()->setWMONumber(wMONumber);
 }
 
 bool WeatherFile::setLatitude(double latitude) {
@@ -472,24 +505,24 @@ void WeatherFile::resetElevation() {
   getImpl<detail::WeatherFile_Impl>()->resetElevation();
 }
 /*
-void WeatherFile::setUrl(boost::optional<std::string> url) {
-  getImpl<detail::WeatherFile_Impl>()->setUrl(url);
+bool WeatherFile::setUrl(boost::optional<std::string> url) {
+  return getImpl<detail::WeatherFile_Impl>()->setUrl(url);
 }
 
-void WeatherFile::setUrl(std::string url) {
-  getImpl<detail::WeatherFile_Impl>()->setUrl(url);
+bool WeatherFile::setUrl(std::string url) {
+  return getImpl<detail::WeatherFile_Impl>()->setUrl(url);
 }
 
 void WeatherFile::resetUrl() {
   getImpl<detail::WeatherFile_Impl>()->resetUrl();
 }
 
-void WeatherFile::setChecksum(boost::optional<std::string> checksum) {
-  getImpl<detail::WeatherFile_Impl>()->setChecksum(checksum);
+bool WeatherFile::setChecksum(boost::optional<std::string> checksum) {
+  return getImpl<detail::WeatherFile_Impl>()->setChecksum(checksum);
 }
 
-void WeatherFile::setChecksum(std::string checksum) {
-  getImpl<detail::WeatherFile_Impl>()->setChecksum(checksum);
+bool WeatherFile::setChecksum(std::string checksum) {
+  return getImpl<detail::WeatherFile_Impl>()->setChecksum(checksum);
 }
 
 void WeatherFile::resetChecksum() {
@@ -519,7 +552,7 @@ boost::optional<std::string> WeatherFile::environmentName() const {
 
 /// @cond
 WeatherFile::WeatherFile(std::shared_ptr<detail::WeatherFile_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 WeatherFile::WeatherFile(Model& model)
   : ModelObject(WeatherFile::iddObjectType(),model)
@@ -530,4 +563,3 @@ WeatherFile::WeatherFile(Model& model)
 
 } // model
 } // openstudio
-

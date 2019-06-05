@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_LAYEREDCONSTRUCTION_IMPL_HPP
 #define MODEL_LAYEREDCONSTRUCTION_IMPL_HPP
@@ -42,10 +52,10 @@ class ModelPartitionMaterial;
 namespace detail {
 
   class MODEL_API LayeredConstruction_Impl : public ConstructionBase_Impl {
-    Q_OBJECT;
-    Q_PROPERTY(unsigned numberOfLayers READ numLayers STORED false);
 
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> insulation READ insulationAsModelObject WRITE setInsulationAsModelObject RESET resetInsulation);
+
+
+
    public:
     /** @name Constructors and Destructors */
     //@{
@@ -53,15 +63,15 @@ namespace detail {
     // Construct completely new object.
     LayeredConstruction_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
 
-    // Construct from existing workspace object (typically when Model is being constructed 
+    // Construct from existing workspace object (typically when Model is being constructed
     // from Workspace).
-    LayeredConstruction_Impl(const openstudio::detail::WorkspaceObject_Impl& other, 
-                             Model_Impl* model, 
+    LayeredConstruction_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
+                             Model_Impl* model,
                              bool keepHandle);
 
     // Clone copy constructor.
-    LayeredConstruction_Impl(const LayeredConstruction_Impl& other, 
-                             Model_Impl* model, 
+    LayeredConstruction_Impl(const LayeredConstruction_Impl& other,
+                             Model_Impl* model,
                              bool keepHandle);
 
     virtual ~LayeredConstruction_Impl() {}
@@ -70,8 +80,8 @@ namespace detail {
     /** @name Getters */
     //@{
 
-    /** Returns the material layers that make up this construction. Listed in order from outside in, 
-     *  that is, the Material at index 0 faces out, from the point of view of the Zone, should this 
+    /** Returns the material layers that make up this construction. Listed in order from outside in,
+     *  that is, the Material at index 0 faces out, from the point of view of the Zone, should this
      *  LayeredConstruction be associated with a PlanarSurface. */
     std::vector<Material> layers() const;
 
@@ -91,20 +101,20 @@ namespace detail {
 
     virtual bool setLayer(const ModelPartitionMaterial& modelPartitionMaterial);
 
-    /** Set the u-factor of this surface in W/m^2*K, if possible. value should already include 
-     *  appropriate film coefficients. By default, assumes still air indoors and 15 mph outdoor air 
+    /** Set the u-factor of this surface in W/m^2*K, if possible. value should already include
+     *  appropriate film coefficients. By default, assumes still air indoors and 15 mph outdoor air
      *  speed. */
     virtual bool setUFactor(double value) override;
 
-    /** Set the u-factor of this surface in W/m^2*K, if possible. filmResistance (m^2*K/W) may be 
+    /** Set the u-factor of this surface in W/m^2*K, if possible. filmResistance (m^2*K/W) may be
      *  used to convert value to a conductance. */
     virtual bool setUFactor(double value,double filmResistance) override;
 
-    /** Set the conductance of this surface in W/m^2*K, if possible. value should not include any film 
+    /** Set the conductance of this surface in W/m^2*K, if possible. value should not include any film
      *  coefficients. */
     virtual bool setThermalConductance(double value);
 
-    /** Set the conductance of this surface in W/m^2*K, if possible. filmResistance (m^2*K/W) may be 
+    /** Set the conductance of this surface in W/m^2*K, if possible. filmResistance (m^2*K/W) may be
      *  used to convert value to a u-factor. */
     virtual bool setThermalConductance(double value,double filmResistance);
 
@@ -140,7 +150,7 @@ namespace detail {
     /** Returns true if this construction has the same layers but in reverse order as other one. */
     bool reverseEqualLayers(const LayeredConstruction& other) const;
 
-    /** Returns layer indices that do not actually point to a Material. Before simulation, the 
+    /** Returns layer indices that do not actually point to a Material. Before simulation, the
      *  returned vector should be empty. */
     std::vector<unsigned> nullLayers() const;
 
@@ -162,7 +172,7 @@ namespace detail {
      *  thermalResistance if necessary. */
     virtual boost::optional<double> thermalConductance(double filmResistance) const override;
 
-    /** Get the heat capacity of this construction (J/m^2*K). Only works for 
+    /** Get the heat capacity of this construction (J/m^2*K). Only works for
      *  \link LayeredConstruction LayeredConstructions \endlink of \link StandardOpaqueMaterial
      *  StandardOpaqueMaterials \endlink. */
     virtual boost::optional<double> heatCapacity() const override;
@@ -176,12 +186,6 @@ namespace detail {
     /// get visible transmittance (unitless)
     virtual boost::optional<double> visibleTransmittance() const override;
 
-    /** Returns a ValidityReport for this Gas object containing all errors at or below level. 
-     *  Adds on to the WorkspaceObject requirements by ensuring that the layers in the construction
-     *  make sense. At StrictnessLevel::Draft, the construction should be opaque, fenestration, or 
-     *  model partition, and at StrictnessLevel::Final, have no null layers. */
-    virtual ValidityReport validityReport(StrictnessLevel level,bool checkNames) const;
-
     //@}
     /** @name Standards Methods */
     //@{
@@ -189,15 +193,15 @@ namespace detail {
     /** Returns the layer designated as insulation, if such a designation has been made. */
     boost::optional<OpaqueMaterial> insulation() const;
 
-    /** Notes that insulationLayer is the perturbable insulation layer. Only works if 
+    /** Notes that insulationLayer is the perturbable insulation layer. Only works if
      *  insulationLayer is already in this construction. */
     bool setInsulation(const OpaqueMaterial& insulationLayer);
 
-    /** Removes any existing insulation layer designations. Does not touch the actual composition 
+    /** Removes any existing insulation layer designations. Does not touch the actual composition
      *  of the construction. */
     void resetInsulation();
 
-    void ensureUniqueLayers(); 
+    void ensureUniqueLayers();
 
     //@}
 
@@ -205,10 +209,8 @@ namespace detail {
 
     friend class LayeredConstruction;
 
-    virtual void populateValidityReport(ValidityReport& report,bool checkNames) const override;
-
     // Erase all nullLayers, and return the new value for layerIndex, if it is affected by erasures.
-    // If layerIndex was originally pointing to a nullLayer, upon return it will point to the first 
+    // If layerIndex was originally pointing to a nullLayer, upon return it will point to the first
     // non-null layer after its original position.
     unsigned mf_clearNullLayers(unsigned layerIndex = 0);
 

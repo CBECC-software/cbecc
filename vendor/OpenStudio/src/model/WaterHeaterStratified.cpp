@@ -1,26 +1,38 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "WaterHeaterStratified.hpp"
 #include "WaterHeaterStratified_Impl.hpp"
 #include "WaterHeaterHeatPump.hpp"
 #include "WaterHeaterHeatPump_Impl.hpp"
+#include "WaterHeaterHeatPumpWrappedCondenser.hpp"
+#include "WaterHeaterHeatPumpWrappedCondenser_Impl.hpp"
 #include "Schedule.hpp"
 #include "Schedule_Impl.hpp"
 #include "ThermalZone.hpp"
@@ -66,8 +78,105 @@ namespace detail {
 
   const std::vector<std::string>& WaterHeaterStratified_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
+    static std::vector<std::string> result{
+      // In common with WaterHeater:Mixed
+      "Water Heater Tank Temperature",
+      "Water Heater Final Tank Temperature",
+      "Water Heater Heat Loss Rate",
+      "Water Heater Heat Loss Energy",
+      "Water Heater Use Side Mass Flow Rate",
+      "Water Heater Use Side Inlet Temperature",
+      "Water Heater Use Side Outlet Temperature",
+      "Water Heater Use Side Heat Transfer Rate",
+      "Water Heater Use Side Heat Transfer Energy",
+      "Water Heater Source Side Mass Flow Rate",
+      "Water Heater Source Side Inlet Temperature",
+      "Water Heater Source Side Outlet Temperature",
+      "Water Heater Source Side Heat Transfer Rate",
+      "Water Heater Source Side Heat Transfer Energy",
+      "Water Heater Off Cycle Parasitic Tank Heat Transfer Rate",
+      "Water Heater Off Cycle Parasitic Tank Heat Transfer Energy",
+      "Water Heater On Cycle Parasitic Tank Heat Transfer Rate",
+      "Water Heater On Cycle Parasitic Tank Heat Transfer Energy",
+      "Water Heater Total Demand Heat Transfer Rate",
+      "Water Heater Total Demand Energy",
+      "Water Heater Heating Rate",
+      "Water Heater Heating Energy",
+      "Water Heater Unmet Demand Heat Transfer Rate",
+      "Water Heater Unmet Demand Heat Transfer Energy",
+      "Water Heater Venting Heat Transfer Rate",
+      "Water Heater Venting Heat Transfer Energy",
+      "Water Heater Net Heat Transfer Rate",
+      "Water Heater Net Heat Transfer Energy",
+      "Water Heater Cycle On Count",
+      "Water Heater Runtime Fraction",
+      "Water Heater Part Load Ratio",
+      "Water Heater Electric Power",
+
+      // This should be based on fuel type
+
+      //"Water Heater <Fuel Type> Rate",
+      //"Water Heater <Fuel Type> Energy",
+          // Fuel type specific
+      // TODO: DLM: the return type of this method needs to change to std::vector<std::string> in ModelObject
+          // until then, make this include all possible outputVariableNames for class regardless of fuelType
+          // std::string fuelType = this->fuelType();
+      // if (fuelType == "Electricity") {
+      "Water Heater Electric Power",
+      "Water Heater Electric Energy",
+      // } else if (fuelType == "NaturalGas") {
+      "Water Heater Gas Rate",
+      "Water Heater Gas Energy",
+      // } else if (fuelType == "PropaneGas") {
+      "Water Heater Propane Rate",
+      "Water Heater Propane Energy",
+      // } else if (fuelType == "FuelOil#1") {
+      "Water Heater FuelOil#1 Rate",
+      "Water Heater FuelOil#1 Energy",
+      // } else if (fuelType == "FuelOil#2") {
+      "Water Heater FuelOil#2 Rate",
+      "Water Heater FuelOil#2 Energy",
+      // } else if (fuelType == "Coal") {
+      "Water Heater Coal Rate",
+      "Water Heater Coal Energy",
+      // } else if (fuelType == "Diesel") {
+      "Water Heater Diesel Rate",
+      "Water Heater Diesel Energy",
+      // } else if (fuelType == "Gasoline") {
+      "Water Heater Gasoline Rate",
+      "Water Heater Gasoline Energy",
+      // } else if (fuelType == "OtherFuel1") {
+      "Water Heater OtherFuel1 Rate",
+      "Water Heater OtherFuel1 Energy",
+      // } else if (fuelType == "OtherFuel2") {
+      "Water Heater OtherFuel2 Rate",
+      "Water Heater OtherFuel2 Energy",
+      // }
+
+      // TODO: implement these too...
+      //"Water Heater Off Cycle Parasitic <Fuel Type> Rate",
+      //"Water Heater Off Cycle Parasitic <Fuel Type> Energy",
+      //"Water Heater On Cycle Parasitic <Fuel Type> Rate",
+      // "Water Heater On Cycle Parasitic <Fuel Type> Energy",
+      //
+      "Water Heater Water Volume Flow Rate",
+      "Water Heater Water Volume",
+
+
+      // Specific to Stratified
+      "Water Heater Heater 1 Heating Rate",
+      "Water Heater Heater 2 Heating Rate",
+      "Water Heater Heater 1 Heating Energy",
+      "Water Heater Heater 2 Heating Energy",
+      "Water Heater Heater 1 Cycle On Count",
+      "Water Heater Heater 2 Cycle On Count",
+      "Water Heater Heater 1 Runtime Fraction",
+      "Water Heater Heater 2 Runtime Fraction"
+    };
+    // TODO: his should really be a check on whether the node is defined...
+    for (int i = 1; i <= 12; ++i) {
+      result.push_back("Water Heater Temperature Node " + std::to_string(i));
+      result.push_back("Water Heater Final Temperature Node " + std::to_string(i));
     }
     return result;
   }
@@ -108,22 +217,22 @@ namespace detail {
     return result;
   }
 
-  unsigned WaterHeaterStratified_Impl::supplyInletPort()
+  unsigned WaterHeaterStratified_Impl::supplyInletPort() const
   {
     return OS_WaterHeater_StratifiedFields::UseSideInletNodeName;
   }
 
-  unsigned WaterHeaterStratified_Impl::supplyOutletPort()
+  unsigned WaterHeaterStratified_Impl::supplyOutletPort() const
   {
     return OS_WaterHeater_StratifiedFields::UseSideOutletNodeName;
   }
 
-  unsigned WaterHeaterStratified_Impl::demandInletPort()
+  unsigned WaterHeaterStratified_Impl::demandInletPort() const
   {
     return OS_WaterHeater_StratifiedFields::SourceSideInletNodeName;
   }
 
-  unsigned WaterHeaterStratified_Impl::demandOutletPort()
+  unsigned WaterHeaterStratified_Impl::demandOutletPort() const
   {
     return OS_WaterHeater_StratifiedFields::SourceSideOutletNodeName;
   }
@@ -511,6 +620,18 @@ namespace detail {
     return value.get();
   }
 
+  double WaterHeaterStratified_Impl::node11AdditionalLossCoefficient() const {
+    boost::optional<double> value = getDouble(OS_WaterHeater_StratifiedFields::Node11AdditionalLossCoefficient,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  double WaterHeaterStratified_Impl::node12AdditionalLossCoefficient() const {
+    boost::optional<double> value = getDouble(OS_WaterHeater_StratifiedFields::Node12AdditionalLossCoefficient,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
   std::string WaterHeaterStratified_Impl::sourceSideFlowControlMode() const {
     boost::optional<std::string> value = getString(OS_WaterHeater_StratifiedFields::SourceSideFlowControlMode,true);
     OS_ASSERT(value);
@@ -521,9 +642,10 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_WaterHeater_StratifiedFields::IndirectAlternateSetpointTemperatureScheduleName);
   }
 
-  void WaterHeaterStratified_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool WaterHeaterStratified_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_WaterHeater_StratifiedFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   bool WaterHeaterStratified_Impl::setTankVolume(boost::optional<double> tankVolume) {
@@ -574,9 +696,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void WaterHeaterStratified_Impl::setMaximumTemperatureLimit(double maximumTemperatureLimit) {
+  bool WaterHeaterStratified_Impl::setMaximumTemperatureLimit(double maximumTemperatureLimit) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::MaximumTemperatureLimit, maximumTemperatureLimit);
     OS_ASSERT(result);
+    return result;
   }
 
   bool WaterHeaterStratified_Impl::setHeaterPriorityControl(std::string heaterPriorityControl) {
@@ -723,7 +846,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void WaterHeaterStratified_Impl::setAmbientTemperatureOutdoorAirNodeName(boost::optional<std::string> ambientTemperatureOutdoorAirNodeName) {
+  bool WaterHeaterStratified_Impl::setAmbientTemperatureOutdoorAirNodeName(boost::optional<std::string> ambientTemperatureOutdoorAirNodeName) {
     bool result(false);
     if (ambientTemperatureOutdoorAirNodeName) {
       result = setString(OS_WaterHeater_StratifiedFields::AmbientTemperatureOutdoorAirNodeName, ambientTemperatureOutdoorAirNodeName.get());
@@ -733,6 +856,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void WaterHeaterStratified_Impl::resetAmbientTemperatureOutdoorAirNodeName() {
@@ -919,54 +1043,76 @@ namespace detail {
     return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode1AdditionalLossCoefficient(double node1AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode1AdditionalLossCoefficient(double node1AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node1AdditionalLossCoefficient, node1AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode2AdditionalLossCoefficient(double node2AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode2AdditionalLossCoefficient(double node2AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node2AdditionalLossCoefficient, node2AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode3AdditionalLossCoefficient(double node3AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode3AdditionalLossCoefficient(double node3AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node3AdditionalLossCoefficient, node3AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode4AdditionalLossCoefficient(double node4AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode4AdditionalLossCoefficient(double node4AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node4AdditionalLossCoefficient, node4AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode5AdditionalLossCoefficient(double node5AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode5AdditionalLossCoefficient(double node5AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node5AdditionalLossCoefficient, node5AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode6AdditionalLossCoefficient(double node6AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode6AdditionalLossCoefficient(double node6AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node6AdditionalLossCoefficient, node6AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode7AdditionalLossCoefficient(double node7AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode7AdditionalLossCoefficient(double node7AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node7AdditionalLossCoefficient, node7AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode8AdditionalLossCoefficient(double node8AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode8AdditionalLossCoefficient(double node8AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node8AdditionalLossCoefficient, node8AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode9AdditionalLossCoefficient(double node9AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode9AdditionalLossCoefficient(double node9AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node9AdditionalLossCoefficient, node9AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void WaterHeaterStratified_Impl::setNode10AdditionalLossCoefficient(double node10AdditionalLossCoefficient) {
+  bool WaterHeaterStratified_Impl::setNode10AdditionalLossCoefficient(double node10AdditionalLossCoefficient) {
     bool result = setDouble(OS_WaterHeater_StratifiedFields::Node10AdditionalLossCoefficient, node10AdditionalLossCoefficient);
     OS_ASSERT(result);
+    return result;
+  }
+
+  bool WaterHeaterStratified_Impl::setNode11AdditionalLossCoefficient(double node11AdditionalLossCoefficient) {
+    bool result = setDouble(OS_WaterHeater_StratifiedFields::Node11AdditionalLossCoefficient, node11AdditionalLossCoefficient);
+    OS_ASSERT(result);
+    return result;
+  }
+
+  bool WaterHeaterStratified_Impl::setNode12AdditionalLossCoefficient(double node12AdditionalLossCoefficient) {
+    bool result = setDouble(OS_WaterHeater_StratifiedFields::Node12AdditionalLossCoefficient, node12AdditionalLossCoefficient);
+    OS_ASSERT(result);
+    return result;
   }
 
   bool WaterHeaterStratified_Impl::setSourceSideFlowControlMode(std::string sourceSideFlowControlMode) {
@@ -997,16 +1143,84 @@ namespace detail {
 
   boost::optional<ZoneHVACComponent> WaterHeaterStratified_Impl::containingZoneHVACComponent() const
   {
-    auto hpwhs = model().getModelObjects<model::WaterHeaterHeatPump>();
-    auto t_Handle = handle();
-    
-    for( const auto & hpwh : hpwhs ) {
-      if( hpwh.tank().handle() == t_Handle ) {
-        return hpwh;
+    {
+      auto hpwhs = model().getConcreteModelObjects<model::WaterHeaterHeatPump>();
+      auto t_Handle = handle();
+      for( const auto & hpwh : hpwhs ) {
+        if( hpwh.tank().handle() == t_Handle ) {
+          return hpwh;
+        }
+      }
+    }
+
+    {
+      auto hpwhs = model().getConcreteModelObjects<model::WaterHeaterHeatPumpWrappedCondenser>();
+      auto t_Handle = handle();
+      for( const auto & hpwh : hpwhs ) {
+        if( hpwh.tank().handle() == t_Handle ) {
+          return hpwh;
+        }
       }
     }
 
     return boost::none;
+  }
+
+  boost::optional<double> WaterHeaterStratified_Impl::autosizedTankVolume() const {
+    return getAutosizedValue("Design Size Tank Volume", "m3");
+  }
+
+  boost::optional<double> WaterHeaterStratified_Impl::autosizedTankHeight() const {
+    return getAutosizedValue("Design Size Tank Height", "m");
+  }
+
+  boost::optional<double> WaterHeaterStratified_Impl::autosizedHeater1Capacity() const {
+    return getAutosizedValue("Design Size Heater 1 Capacity", "W");
+  }
+
+  boost::optional<double> WaterHeaterStratified_Impl::autosizedUseSideDesignFlowRate() const {
+    return getAutosizedValue("Design Size Use Side Design Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> WaterHeaterStratified_Impl::autosizedSourceSideDesignFlowRate() const {
+    return getAutosizedValue("Design Size Source Side Design Flow Rate", "m3/s");
+  }
+
+  void WaterHeaterStratified_Impl::autosize() {
+    autosizeTankVolume();
+    autosizeTankHeight();
+    autosizeHeater1Capacity();
+    autosizeUseSideDesignFlowRate();
+    autosizeSourceSideDesignFlowRate();
+  }
+
+  void WaterHeaterStratified_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedTankVolume();
+    if (val) {
+      setTankVolume(val.get());
+    }
+
+    val = autosizedTankHeight();
+    if (val) {
+      setTankHeight(val.get());
+    }
+
+    val = autosizedHeater1Capacity();
+    if (val) {
+      setHeater1Capacity(val.get());
+    }
+
+    val = autosizedUseSideDesignFlowRate();
+    if (val) {
+      setUseSideDesignFlowRate(val.get());
+    }
+
+    val = autosizedSourceSideDesignFlowRate();
+    if (val) {
+      setSourceSideDesignFlowRate(val.get());
+    }
+
   }
 
 } // detail
@@ -1041,7 +1255,7 @@ WaterHeaterStratified::WaterHeaterStratified(const Model& model)
 
   setHeaterFuelType("Electricity");
   setHeaterThermalEfficiency(0.98);
-  
+
   setOffCycleParasiticFuelConsumptionRate(10.0);
   setOffCycleParasiticFuelType("Electricity");
   setOffCycleParasiticHeatFractiontoTank(0);
@@ -1088,6 +1302,8 @@ WaterHeaterStratified::WaterHeaterStratified(const Model& model)
   setNode8AdditionalLossCoefficient(0);
   setNode9AdditionalLossCoefficient(0);
   setNode10AdditionalLossCoefficient(0);
+  setNode11AdditionalLossCoefficient(0);
+  setNode12AdditionalLossCoefficient(0);
 
   setSourceSideFlowControlMode("IndirectHeatPrimarySetpoint");
 }
@@ -1396,6 +1612,14 @@ double WaterHeaterStratified::node10AdditionalLossCoefficient() const {
   return getImpl<detail::WaterHeaterStratified_Impl>()->node10AdditionalLossCoefficient();
 }
 
+double WaterHeaterStratified::node11AdditionalLossCoefficient() const {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->node11AdditionalLossCoefficient();
+}
+
+double WaterHeaterStratified::node12AdditionalLossCoefficient() const {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->node12AdditionalLossCoefficient();
+}
+
 std::string WaterHeaterStratified::sourceSideFlowControlMode() const {
   return getImpl<detail::WaterHeaterStratified_Impl>()->sourceSideFlowControlMode();
 }
@@ -1404,8 +1628,8 @@ boost::optional<Schedule> WaterHeaterStratified::indirectAlternateSetpointTemper
   return getImpl<detail::WaterHeaterStratified_Impl>()->indirectAlternateSetpointTemperatureSchedule();
 }
 
-void WaterHeaterStratified::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool WaterHeaterStratified::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 bool WaterHeaterStratified::setTankVolume(double tankVolume) {
@@ -1436,8 +1660,8 @@ void WaterHeaterStratified::resetTankPerimeter() {
   getImpl<detail::WaterHeaterStratified_Impl>()->resetTankPerimeter();
 }
 
-void WaterHeaterStratified::setMaximumTemperatureLimit(double maximumTemperatureLimit) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setMaximumTemperatureLimit(maximumTemperatureLimit);
+bool WaterHeaterStratified::setMaximumTemperatureLimit(double maximumTemperatureLimit) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setMaximumTemperatureLimit(maximumTemperatureLimit);
 }
 
 bool WaterHeaterStratified::setHeaterPriorityControl(std::string heaterPriorityControl) {
@@ -1540,8 +1764,8 @@ void WaterHeaterStratified::resetAmbientTemperatureThermalZone() {
   getImpl<detail::WaterHeaterStratified_Impl>()->resetAmbientTemperatureThermalZone();
 }
 
-void WaterHeaterStratified::setAmbientTemperatureOutdoorAirNodeName(std::string ambientTemperatureOutdoorAirNodeName) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setAmbientTemperatureOutdoorAirNodeName(ambientTemperatureOutdoorAirNodeName);
+bool WaterHeaterStratified::setAmbientTemperatureOutdoorAirNodeName(std::string ambientTemperatureOutdoorAirNodeName) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setAmbientTemperatureOutdoorAirNodeName(ambientTemperatureOutdoorAirNodeName);
 }
 
 void WaterHeaterStratified::resetAmbientTemperatureOutdoorAirNodeName() {
@@ -1660,44 +1884,52 @@ bool WaterHeaterStratified::setAdditionalDestratificationConductivity(double add
   return getImpl<detail::WaterHeaterStratified_Impl>()->setAdditionalDestratificationConductivity(additionalDestratificationConductivity);
 }
 
-void WaterHeaterStratified::setNode1AdditionalLossCoefficient(double node1AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode1AdditionalLossCoefficient(node1AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode1AdditionalLossCoefficient(double node1AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode1AdditionalLossCoefficient(node1AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode2AdditionalLossCoefficient(double node2AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode2AdditionalLossCoefficient(node2AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode2AdditionalLossCoefficient(double node2AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode2AdditionalLossCoefficient(node2AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode3AdditionalLossCoefficient(double node3AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode3AdditionalLossCoefficient(node3AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode3AdditionalLossCoefficient(double node3AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode3AdditionalLossCoefficient(node3AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode4AdditionalLossCoefficient(double node4AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode4AdditionalLossCoefficient(node4AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode4AdditionalLossCoefficient(double node4AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode4AdditionalLossCoefficient(node4AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode5AdditionalLossCoefficient(double node5AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode5AdditionalLossCoefficient(node5AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode5AdditionalLossCoefficient(double node5AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode5AdditionalLossCoefficient(node5AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode6AdditionalLossCoefficient(double node6AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode6AdditionalLossCoefficient(node6AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode6AdditionalLossCoefficient(double node6AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode6AdditionalLossCoefficient(node6AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode7AdditionalLossCoefficient(double node7AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode7AdditionalLossCoefficient(node7AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode7AdditionalLossCoefficient(double node7AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode7AdditionalLossCoefficient(node7AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode8AdditionalLossCoefficient(double node8AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode8AdditionalLossCoefficient(node8AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode8AdditionalLossCoefficient(double node8AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode8AdditionalLossCoefficient(node8AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode9AdditionalLossCoefficient(double node9AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode9AdditionalLossCoefficient(node9AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode9AdditionalLossCoefficient(double node9AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode9AdditionalLossCoefficient(node9AdditionalLossCoefficient);
 }
 
-void WaterHeaterStratified::setNode10AdditionalLossCoefficient(double node10AdditionalLossCoefficient) {
-  getImpl<detail::WaterHeaterStratified_Impl>()->setNode10AdditionalLossCoefficient(node10AdditionalLossCoefficient);
+bool WaterHeaterStratified::setNode10AdditionalLossCoefficient(double node10AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode10AdditionalLossCoefficient(node10AdditionalLossCoefficient);
+}
+
+bool WaterHeaterStratified::setNode11AdditionalLossCoefficient(double node11AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode11AdditionalLossCoefficient(node11AdditionalLossCoefficient);
+}
+
+bool WaterHeaterStratified::setNode12AdditionalLossCoefficient(double node12AdditionalLossCoefficient) {
+  return getImpl<detail::WaterHeaterStratified_Impl>()->setNode12AdditionalLossCoefficient(node12AdditionalLossCoefficient);
 }
 
 bool WaterHeaterStratified::setSourceSideFlowControlMode(std::string sourceSideFlowControlMode) {
@@ -1714,10 +1946,29 @@ void WaterHeaterStratified::resetIndirectAlternateSetpointTemperatureSchedule() 
 
 /// @cond
 WaterHeaterStratified::WaterHeaterStratified(std::shared_ptr<detail::WaterHeaterStratified_Impl> impl)
-  : WaterToWaterComponent(impl)
+  : WaterToWaterComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> WaterHeaterStratified::autosizedTankVolume() const {
+    return getImpl<detail::WaterHeaterStratified_Impl>()->autosizedTankVolume();
+  }
+
+  boost::optional<double> WaterHeaterStratified::autosizedTankHeight() const {
+    return getImpl<detail::WaterHeaterStratified_Impl>()->autosizedTankHeight();
+  }
+
+  boost::optional<double> WaterHeaterStratified::autosizedHeater1Capacity() const {
+    return getImpl<detail::WaterHeaterStratified_Impl>()->autosizedHeater1Capacity();
+  }
+
+  boost::optional<double> WaterHeaterStratified::autosizedUseSideDesignFlowRate() const {
+    return getImpl<detail::WaterHeaterStratified_Impl>()->autosizedUseSideDesignFlowRate();
+  }
+
+  boost::optional<double> WaterHeaterStratified::autosizedSourceSideDesignFlowRate() const {
+    return getImpl<detail::WaterHeaterStratified_Impl>()->autosizedSourceSideDesignFlowRate();
+  }
+
 } // model
 } // openstudio
-

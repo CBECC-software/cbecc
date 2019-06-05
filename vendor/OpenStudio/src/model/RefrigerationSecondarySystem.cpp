@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationSecondarySystem.hpp"
 #include "RefrigerationSecondarySystem_Impl.hpp"
@@ -73,9 +83,34 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationSecondarySystem_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // TODO: implement checks
+      // FOR SECONDARY SYSTEMS SERVING CASES AND/OR WALKINS:
+      "Refrigeration Secondary Loop Pump Electric Power",
+      "Refrigeration Secondary Loop Pump Electric Energy",
+      "Refrigeration Secondary Loop Load Heat Transfer Rate",
+      "Refrigeration Secondary Loop Load Heat Transfer Energy",
+      "Refrigeration Secondary Loop Total Heat Transfer Rate",
+      "Refrigeration Secondary Loop Total Heat Transfer Energy",
+      "Refrigeration Secondary Loop Estimated Refrigerant Inventory Mass",
+      "Refrigeration Secondary Loop Pipe Heat Gain Rate",
+      "Refrigeration Secondary Loop Pipe Heat Gain Energy",
+      "Refrigeration Secondary Loop Receiver Heat Gain Rate",
+      "Refrigeration Secondary Loop Receiver Heat Gain Energy",
+      // FOR SECONDARY SYSTEMS SERVING AIR CHILLERS:
+      "Refrigeration Air Chiller Secondary Loop Pump Electric Power",
+      "Refrigeration Air Chiller Secondary Loop Pump Electric Energy",
+      "Refrigeration Air Chiller Secondary Loop Load Heat Transfer Rate",
+      "Refrigeration Air Chiller Secondary Loop Load Heat Transfer Energy",
+      "Refrigeration Air Chiller Secondary Loop Total Heat Transfer Rate",
+      "Refrigeration Air Chiller Secondary Loop Total Heat Transfer Energy",
+      "Refrigeration Air Chiller Secondary Loop Estimated Refrigerant Inventory Mass",
+      "Refrigeration Air Chiller Secondary Loop Volume Flow Rate",
+      "Refrigeration Air Chiller Secondary Loop Pipe Heat Gain Rate",
+      "Refrigeration Air Chiller Secondary Loop Pipe Heat Gain Energy",
+      "Refrigeration Air Chiller Secondary Loop Receiver Heat Gain Rate",
+      "Refrigeration Air Chiller Secondary Loop Receiver Heat Gain Energy"
+    };
     return result;
   }
 
@@ -312,14 +347,14 @@ namespace detail {
             modelObjectList->removeModelObject(elem);
           }
       }
-    }  
+    }
   }
 
   template <class T>
   void RefrigerationSecondarySystem_Impl::removeTemplate( const T & modelObject, boost::optional<ModelObjectList>& modelObjectList ) {
     if( modelObjectList ) {
       modelObjectList->removeModelObject(modelObject);
-    }  
+    }
   }
 
   template <class T>
@@ -456,17 +491,19 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setEvaporatorEvaporatingTemperature(double evaporatorEvaporatingTemperature) {
+  bool RefrigerationSecondarySystem_Impl::setEvaporatorEvaporatingTemperature(double evaporatorEvaporatingTemperature) {
     bool result = setDouble(OS_Refrigeration_SecondarySystemFields::EvaporatorEvaporatingTemperature, evaporatorEvaporatingTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
-  void RefrigerationSecondarySystem_Impl::setEvaporatorApproachTemperatureDifference(double evaporatorApproachTemperatureDifference) {
+  bool RefrigerationSecondarySystem_Impl::setEvaporatorApproachTemperatureDifference(double evaporatorApproachTemperatureDifference) {
     bool result = setDouble(OS_Refrigeration_SecondarySystemFields::EvaporatorApproachTemperatureDifference, evaporatorApproachTemperatureDifference);
     OS_ASSERT(result);
+    return result;
   }
 
-  void RefrigerationSecondarySystem_Impl::setEvaporatorRangeTemperatureDifference(boost::optional<double> evaporatorRangeTemperatureDifference) {
+  bool RefrigerationSecondarySystem_Impl::setEvaporatorRangeTemperatureDifference(boost::optional<double> evaporatorRangeTemperatureDifference) {
     bool result(false);
     if (evaporatorRangeTemperatureDifference) {
       result = setDouble(OS_Refrigeration_SecondarySystemFields::EvaporatorRangeTemperatureDifference, evaporatorRangeTemperatureDifference.get());
@@ -476,6 +513,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetEvaporatorRangeTemperatureDifference() {
@@ -483,9 +521,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setNumberofPumpsinLoop(int numberofPumpsinLoop) {
+  bool RefrigerationSecondarySystem_Impl::setNumberofPumpsinLoop(int numberofPumpsinLoop) {
     bool result = setInt(OS_Refrigeration_SecondarySystemFields::NumberofPumpsinLoop, numberofPumpsinLoop);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetNumberofPumpsinLoop() {
@@ -591,9 +630,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setSumUADistributionPiping(double sumUADistributionPiping) {
+  bool RefrigerationSecondarySystem_Impl::setSumUADistributionPiping(double sumUADistributionPiping) {
     bool result = setDouble(OS_Refrigeration_SecondarySystemFields::SumUADistributionPiping, sumUADistributionPiping);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetSumUADistributionPiping() {
@@ -618,9 +658,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setSumUAReceiverSeparatorShell(double sumUAReceiverSeparatorShell) {
+  bool RefrigerationSecondarySystem_Impl::setSumUAReceiverSeparatorShell(double sumUAReceiverSeparatorShell) {
     bool result = setDouble(OS_Refrigeration_SecondarySystemFields::SumUAReceiver_SeparatorShell, sumUAReceiverSeparatorShell);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetSumUAReceiverSeparatorShell() {
@@ -645,9 +686,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setEvaporatorRefrigerantInventory(double evaporatorRefrigerantInventory) {
+  bool RefrigerationSecondarySystem_Impl::setEvaporatorRefrigerantInventory(double evaporatorRefrigerantInventory) {
     bool result = setDouble(OS_Refrigeration_SecondarySystemFields::EvaporatorRefrigerantInventory, evaporatorRefrigerantInventory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetEvaporatorRefrigerantInventory() {
@@ -655,9 +697,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationSecondarySystem_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool RefrigerationSecondarySystem_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Refrigeration_SecondarySystemFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationSecondarySystem_Impl::resetEndUseSubcategory() {
@@ -906,24 +949,24 @@ void RefrigerationSecondarySystem::resetEvaporatorFlowRateforSecondaryFluid() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetEvaporatorFlowRateforSecondaryFluid();
 }
 
-void RefrigerationSecondarySystem::setEvaporatorEvaporatingTemperature(double evaporatorEvaporatingTemperature) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorEvaporatingTemperature(evaporatorEvaporatingTemperature);
+bool RefrigerationSecondarySystem::setEvaporatorEvaporatingTemperature(double evaporatorEvaporatingTemperature) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorEvaporatingTemperature(evaporatorEvaporatingTemperature);
 }
 
-void RefrigerationSecondarySystem::setEvaporatorApproachTemperatureDifference(double evaporatorApproachTemperatureDifference) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorApproachTemperatureDifference(evaporatorApproachTemperatureDifference);
+bool RefrigerationSecondarySystem::setEvaporatorApproachTemperatureDifference(double evaporatorApproachTemperatureDifference) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorApproachTemperatureDifference(evaporatorApproachTemperatureDifference);
 }
 
-void RefrigerationSecondarySystem::setEvaporatorRangeTemperatureDifference(double evaporatorRangeTemperatureDifference) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorRangeTemperatureDifference(evaporatorRangeTemperatureDifference);
+bool RefrigerationSecondarySystem::setEvaporatorRangeTemperatureDifference(double evaporatorRangeTemperatureDifference) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorRangeTemperatureDifference(evaporatorRangeTemperatureDifference);
 }
 
 void RefrigerationSecondarySystem::resetEvaporatorRangeTemperatureDifference() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetEvaporatorRangeTemperatureDifference();
 }
 
-void RefrigerationSecondarySystem::setNumberofPumpsinLoop(int numberofPumpsinLoop) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setNumberofPumpsinLoop(numberofPumpsinLoop);
+bool RefrigerationSecondarySystem::setNumberofPumpsinLoop(int numberofPumpsinLoop) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setNumberofPumpsinLoop(numberofPumpsinLoop);
 }
 
 void RefrigerationSecondarySystem::resetNumberofPumpsinLoop() {
@@ -986,8 +1029,8 @@ void RefrigerationSecondarySystem::resetPumpMotorHeattoFluid() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetPumpMotorHeattoFluid();
 }
 
-void RefrigerationSecondarySystem::setSumUADistributionPiping(double sumUADistributionPiping) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setSumUADistributionPiping(sumUADistributionPiping);
+bool RefrigerationSecondarySystem::setSumUADistributionPiping(double sumUADistributionPiping) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setSumUADistributionPiping(sumUADistributionPiping);
 }
 
 void RefrigerationSecondarySystem::resetSumUADistributionPiping() {
@@ -1002,8 +1045,8 @@ void RefrigerationSecondarySystem::resetDistributionPipingZone() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetDistributionPipingZone();
 }
 
-void RefrigerationSecondarySystem::setSumUAReceiverSeparatorShell(double sumUAReceiverSeparatorShell) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setSumUAReceiverSeparatorShell(sumUAReceiverSeparatorShell);
+bool RefrigerationSecondarySystem::setSumUAReceiverSeparatorShell(double sumUAReceiverSeparatorShell) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setSumUAReceiverSeparatorShell(sumUAReceiverSeparatorShell);
 }
 
 void RefrigerationSecondarySystem::resetSumUAReceiverSeparatorShell() {
@@ -1018,16 +1061,16 @@ void RefrigerationSecondarySystem::resetReceiverSeparatorZone() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetReceiverSeparatorZone();
 }
 
-void RefrigerationSecondarySystem::setEvaporatorRefrigerantInventory(double evaporatorRefrigerantInventory) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorRefrigerantInventory(evaporatorRefrigerantInventory);
+bool RefrigerationSecondarySystem::setEvaporatorRefrigerantInventory(double evaporatorRefrigerantInventory) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEvaporatorRefrigerantInventory(evaporatorRefrigerantInventory);
 }
 
 void RefrigerationSecondarySystem::resetEvaporatorRefrigerantInventory() {
   getImpl<detail::RefrigerationSecondarySystem_Impl>()->resetEvaporatorRefrigerantInventory();
 }
 
-void RefrigerationSecondarySystem::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool RefrigerationSecondarySystem::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::RefrigerationSecondarySystem_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void RefrigerationSecondarySystem::resetEndUseSubcategory() {
@@ -1036,10 +1079,9 @@ void RefrigerationSecondarySystem::resetEndUseSubcategory() {
 
 /// @cond
 RefrigerationSecondarySystem::RefrigerationSecondarySystem(std::shared_ptr<detail::RefrigerationSecondarySystem_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

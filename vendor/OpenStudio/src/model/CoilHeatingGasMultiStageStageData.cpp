@@ -1,24 +1,38 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilHeatingGasMultiStageStageData.hpp"
 #include "CoilHeatingGasMultiStageStageData_Impl.hpp"
+#include "../model/CoilHeatingGasMultiStage.hpp"
+#include "../model/CoilHeatingGasMultiStage_Impl.hpp"
+#include "../model/Model.hpp"
+#include "../model/Model_Impl.hpp"
 #include <utilities/idd/OS_Coil_Heating_Gas_MultiStage_StageData_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
 #include "../utilities/units/Unit.hpp"
@@ -54,8 +68,6 @@ namespace detail {
   const std::vector<std::string>& CoilHeatingGasMultiStageStageData_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -106,9 +118,69 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CoilHeatingGasMultiStageStageData_Impl::setParasiticElectricLoad(double ParasiticElectricLoad) {
+  bool CoilHeatingGasMultiStageStageData_Impl::setParasiticElectricLoad(double ParasiticElectricLoad) {
     bool result = setDouble(OS_Coil_Heating_Gas_MultiStage_StageDataFields::ParasiticElectricLoad, ParasiticElectricLoad);
     OS_ASSERT(result);
+    return result;
+  }
+
+  boost::optional<std::tuple<int, CoilHeatingGasMultiStage>> CoilHeatingGasMultiStageStageData_Impl::stageIndexAndParentCoil() const {
+
+    boost::optional<std::tuple<int, CoilHeatingGasMultiStage>> result;
+
+    // This coil performance object can only be found in a CoilHeatingGasMultiStage
+    // Check all CoilHeatingGasMultiStages in the model, seeing if this is inside of one of them.
+    boost::optional<int> stageIndex;
+    boost::optional<CoilHeatingGasMultiStage> parentCoil;
+    auto coilHeatingGasMultiStages = this->model().getConcreteModelObjects<CoilHeatingGasMultiStage>();
+    for (const auto & coilInModel : coilHeatingGasMultiStages) {
+      // Check the coil performance objects in this coil to see if one of them is this object
+      std::vector< CoilHeatingGasMultiStageStageData> perfStages = coilInModel.stages();
+      int i = 1;
+      for (auto perfStage : perfStages) {
+        if (perfStage.handle() == this->handle()) {
+          stageIndex = i;
+          parentCoil = coilInModel;
+          break;
+        }
+        i++;
+      }
+    }
+
+    // Warn if this coil performance object was not found inside a coil
+    if (!parentCoil) {
+      LOG(Warn, name().get() + " was not found inside a CoilCoolingDXMultiSpeed in the model, cannot retrieve the autosized value.");
+      return result;
+    }
+
+    return std::make_tuple(stageIndex.get(), parentCoil.get());
+  }
+
+  boost::optional<double> CoilHeatingGasMultiStageStageData_Impl::autosizedNominalCapacity() const {
+    auto indexAndNameOpt = stageIndexAndParentCoil();
+    boost::optional<double> result;
+    if (!indexAndNameOpt) {
+      return result;
+    }
+    auto indexAndName = indexAndNameOpt.get();
+    int index = std::get<0>(indexAndName);
+    CoilHeatingGasMultiStage parentCoil = std::get<1>(indexAndName);
+    std::string sqlField = "Design Size Stage " + std::to_string(index) + " Nominal Capacity";
+
+    return parentCoil.getAutosizedValue(sqlField, "W");
+  }
+
+  void CoilHeatingGasMultiStageStageData_Impl::autosize() {
+    autosizeNominalCapacity();
+  }
+
+  void CoilHeatingGasMultiStageStageData_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedNominalCapacity();
+    if (val) {
+      setNominalCapacity(val.get());
+    }
+
   }
 
 } // detail
@@ -155,16 +227,31 @@ void CoilHeatingGasMultiStageStageData::autosizeNominalCapacity() {
   getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->autosizeNominalCapacity();
 }
 
-void CoilHeatingGasMultiStageStageData::setParasiticElectricLoad(double ParasiticElectricLoad) {
-  getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->setParasiticElectricLoad(ParasiticElectricLoad);
+bool CoilHeatingGasMultiStageStageData::setParasiticElectricLoad(double ParasiticElectricLoad) {
+  return getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->setParasiticElectricLoad(ParasiticElectricLoad);
 }
 
 /// @cond
 CoilHeatingGasMultiStageStageData::CoilHeatingGasMultiStageStageData(std::shared_ptr<detail::CoilHeatingGasMultiStageStageData_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> CoilHeatingGasMultiStageStageData::autosizedNominalCapacity() const {
+    return getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->autosizedNominalCapacity();
+  }
+
+  void CoilHeatingGasMultiStageStageData::autosize() {
+    return getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->autosize();
+  }
+
+  void CoilHeatingGasMultiStageStageData::applySizingValues() {
+    return getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->applySizingValues();
+  }
+
+  boost::optional<std::tuple<int, CoilHeatingGasMultiStage>> CoilHeatingGasMultiStageStageData::stageIndexAndParentCoil() const {
+    return getImpl<detail::CoilHeatingGasMultiStageStageData_Impl>()->stageIndexAndParentCoil();
+  }
+
 } // model
 } // openstudio
-

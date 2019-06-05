@@ -1,30 +1,38 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "URLHelpers.hpp"
-#include "Path.hpp"
-#include "String.hpp"
 
 #include <QRegularExpression>
 
 namespace openstudio {
-  
+
 QUrl completeURL(const QUrl &t_source, const std::vector<QUrl> &t_searchPaths, bool throwOnFailure)
 {
   if (t_source.scheme() == "file" || t_source.scheme().isEmpty())
@@ -39,7 +47,7 @@ QUrl completeURL(const QUrl &t_source, const std::vector<QUrl> &t_searchPaths, b
 
     for (const auto & searchitr : t_searchPaths)
     {
-      //search for files here... 
+      //search for files here...
       /// \todo support remote urls
       if (searchitr.scheme() == "file" || searchitr.scheme().isEmpty())
       {
@@ -47,11 +55,11 @@ QUrl completeURL(const QUrl &t_source, const std::vector<QUrl> &t_searchPaths, b
 
         openstudio::path completepath = searchpath / origpath;
 
-        if (boost::filesystem::exists(completepath))
+        if (openstudio::filesystem::exists(completepath))
         {
           return QUrl::fromLocalFile(toQString(completepath));
         }
-      }    
+      }
     }
   } else {
     return t_source;
@@ -74,7 +82,7 @@ QUrl toURL(const std::string& s) {
 }
 
 std::string toString(const QUrl& url) {
-  // reimplementation of toString(QString) b/c direct use of that method led to 
+  // reimplementation of toString(QString) b/c direct use of that method led to
   // MSVS warning C4717: recursive on all control paths
   const QByteArray& qb = url.toString().toUtf8();
   return std::string(qb.data());
@@ -95,7 +103,7 @@ boost::optional<openstudio::path> getOptionalOriginalPath(const Url& url)
   if (url.scheme() == "file" || url.scheme().isEmpty()){
     QString localFile = url.toLocalFile();
 
-    // test for root slash added to windows paths, "/E:/test/CloudTest/scripts/StandardReports/measure.rb" 
+    // test for root slash added to windows paths, "/E:/test/CloudTest/scripts/StandardReports/measure.rb"
     const QRegularExpression regexp("^\\/([a-zA-Z]:\\/.*)");
     QRegularExpressionMatch match = regexp.match(localFile);
     if (match.hasMatch()){

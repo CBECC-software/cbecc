@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "../ForwardTranslator.hpp"
 
@@ -67,7 +77,7 @@ boost::optional<IdfObject> ForwardTranslator::translateScheduleVariableInterval(
   m_idfObjects.push_back(idfObject);
 
   idfObject.setName(modelObject.name().get());
-  
+
   boost::optional<ScheduleTypeLimits> scheduleTypeLimits = modelObject.scheduleTypeLimits();
   if (scheduleTypeLimits){
     boost::optional<IdfObject> idfScheduleTypeLimits = translateAndMapModelObject(*scheduleTypeLimits);
@@ -100,7 +110,7 @@ boost::optional<IdfObject> ForwardTranslator::translateScheduleVariableInterval(
   Date lastDate = firstReportDateTime.date();
   Time dayDelta = Time(1.0);
   // The day number of the date that data was last written relative to the first date
-  //double lastDay = 0.0; 
+  //double lastDay = 0.0;
   int lastDay = 0;
   // Adjust the floating point day delta to be relative to the beginning of the first day and
   // shift the start of the loop if needed
@@ -121,14 +131,14 @@ boost::optional<IdfObject> ForwardTranslator::translateScheduleVariableInterval(
   fieldIndex = startNewDay(idfObject,fieldIndex,lastDate);
 
   for(unsigned int i=start; i < values.size()-1; i++){
-    // Loop over the time series values and write out values to the 
+    // Loop over the time series values and write out values to the
     // schedule. This version is based on the seconds from the start
     // of the time series, so should not be vulnerable to round-off.
-    // It was translated from the day version, so there could be 
+    // It was translated from the day version, so there could be
     // issues associated with that.
     //
     // We still have a potential aliasing problem unless the API has
-    // enforced that the times in the time series are all distinct when 
+    // enforced that the times in the time series are all distinct when
     // rounded to the minute. Is that happening?
     int secondsFromStartOfDay = secondsFromFirst[i] % 86400;
     int today = (secondsFromFirst[i]-secondsFromStartOfDay)/86400;
@@ -156,7 +166,7 @@ boost::optional<IdfObject> ForwardTranslator::translateScheduleVariableInterval(
       Time time(0,0,0,secondsFromStartOfDay);
       int hours = time.hours();
       int minutes = time.minutes() + floor((time.seconds()/60.0) + 0.5);
-      // This is a little dangerous, but all of the problematic 24:00 
+      // This is a little dangerous, but all of the problematic 24:00
       // times that might need to cause a day++ should be caught above.
       if(minutes==60){
         hours += 1;
@@ -170,7 +180,7 @@ boost::optional<IdfObject> ForwardTranslator::translateScheduleVariableInterval(
   unsigned int i = values.size()-1;
   // We'll skip a sanity check here, but it might be a good idea to add one at some point
   fieldIndex = addUntil(idfObject,fieldIndex,24,0,values[i]);
-  
+
   return idfObject;
 }
 

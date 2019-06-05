@@ -13,6 +13,7 @@
 %import <model/ModelGeometry.i>
 %import <model/ModelHVAC.i>
 
+// All base classes for PV, Generators, inverters and Electrical Storage
 %{
   #include <model/PhotovoltaicPerformance.hpp>
   #include <model/PhotovoltaicPerformance_Impl.hpp>
@@ -20,14 +21,28 @@
   #include <model/Generator_Impl.hpp>
   #include <model/Inverter.hpp>
   #include <model/Inverter_Impl.hpp>
+  #include <model/ElectricalStorage.hpp>
+  #include <model/ElectricalStorage_Impl.hpp>
 %}
+
+// DLM: TODO TEMP REMOVE!
+%{
+  #include <model/FloorplanJSForwardTranslator.hpp>
+  #include <model/ThreeJSForwardTranslator.hpp>
+  #include <model/ThreeJSReverseTranslator.hpp>
+  #include <model/ModelMerger.hpp>
+%}
+%include <model/FloorplanJSForwardTranslator.hpp>
+%include <model/ThreeJSForwardTranslator.hpp>
+%include <model/ThreeJSReverseTranslator.hpp>
+%include <model/ModelMerger.hpp>
 
 
 #if defined SWIGCSHARP
 
   #undef _csharp_module_name
   #define _csharp_module_name OpenStudioModelGenerators
-  
+
 #endif
 
 namespace openstudio {
@@ -38,23 +53,81 @@ namespace openstudio {
   }
 }
 
+%extend openstudio::model::AirSupplyConstituent {
+  // Use the overloaded operator<< for string representation
+  std::string __str__() {
+    std::ostringstream os;
+    os << *$self;
+    return os.str();
+  }
+};
+
+%extend openstudio::model::FuelSupplyConstituent {
+  // Use the overloaded operator<< for string representation
+  std::string __str__() {
+    std::ostringstream os;
+    os << *$self;
+    return os.str();
+  }
+};
+
 MODELOBJECT_TEMPLATES(PhotovoltaicPerformance);
 MODELOBJECT_TEMPLATES(Generator);
 MODELOBJECT_TEMPLATES(Inverter);
+MODELOBJECT_TEMPLATES(ElectricalStorage);
+MODELOBJECT_TEMPLATES(AirSupplyConstituent);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellAirSupply);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellAuxiliaryHeater);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellElectricalStorage);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellExhaustGasToWaterHeatExchanger);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellInverter);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellPowerModule);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellStackCooler);
+MODELOBJECT_TEMPLATES(GeneratorFuelCellWaterSupply);
+MODELOBJECT_TEMPLATES(FuelSupplyConstituent);
+MODELOBJECT_TEMPLATES(GeneratorFuelSupply);
+MODELOBJECT_TEMPLATES(GeneratorFuelCell);
 MODELOBJECT_TEMPLATES(GeneratorPhotovoltaic);
+// Puting the GeneratorMicroTurbineHeatRecovery first so that the GeneratorMicroTurbine knows about it
+MODELOBJECT_TEMPLATES(GeneratorMicroTurbineHeatRecovery);
+MODELOBJECT_TEMPLATES(GeneratorMicroTurbine);
+MODELOBJECT_TEMPLATES(GeneratorPVWatts);
+MODELOBJECT_TEMPLATES(ElectricLoadCenterTransformer);
 MODELOBJECT_TEMPLATES(ElectricLoadCenterDistribution);
 MODELOBJECT_TEMPLATES(ElectricLoadCenterInverterLookUpTable);
 MODELOBJECT_TEMPLATES(ElectricLoadCenterInverterSimple);
+MODELOBJECT_TEMPLATES(ElectricLoadCenterInverterPVWatts);
+MODELOBJECT_TEMPLATES(ElectricLoadCenterStorageSimple);
+MODELOBJECT_TEMPLATES(ElectricLoadCenterStorageConverter);
 MODELOBJECT_TEMPLATES(PhotovoltaicPerformanceEquivalentOneDiode);
 MODELOBJECT_TEMPLATES(PhotovoltaicPerformanceSimple);
 
 SWIG_MODELOBJECT(PhotovoltaicPerformance, 0);
 SWIG_MODELOBJECT(Generator, 0);
 SWIG_MODELOBJECT(Inverter, 0);
+SWIG_MODELOBJECT(ElectricalStorage, 0);
+SWIG_MODELOBJECT(GeneratorFuelCellAirSupply, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellAuxiliaryHeater, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellElectricalStorage, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellExhaustGasToWaterHeatExchanger, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellInverter, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellPowerModule, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellStackCooler, 1);
+SWIG_MODELOBJECT(GeneratorFuelCellWaterSupply, 1);
+SWIG_MODELOBJECT(GeneratorFuelSupply, 1);
+SWIG_MODELOBJECT(GeneratorFuelCell, 0);
 SWIG_MODELOBJECT(GeneratorPhotovoltaic, 1);
+// Puting the GeneratorMicroTurbineHeatRecovery first so that the GeneratorMicroTurbine knows about it
+SWIG_MODELOBJECT(GeneratorMicroTurbineHeatRecovery, 1);
+SWIG_MODELOBJECT(GeneratorMicroTurbine, 1);
+SWIG_MODELOBJECT(GeneratorPVWatts, 1);
+SWIG_MODELOBJECT(ElectricLoadCenterTransformer, 1);
 SWIG_MODELOBJECT(ElectricLoadCenterDistribution, 1);
 SWIG_MODELOBJECT(ElectricLoadCenterInverterLookUpTable, 1);
 SWIG_MODELOBJECT(ElectricLoadCenterInverterSimple, 1);
+SWIG_MODELOBJECT(ElectricLoadCenterInverterPVWatts, 1);
+SWIG_MODELOBJECT(ElectricLoadCenterStorageSimple, 1);
+SWIG_MODELOBJECT(ElectricLoadCenterStorageConverter, 1);
 SWIG_MODELOBJECT(PhotovoltaicPerformanceEquivalentOneDiode, 1);
 SWIG_MODELOBJECT(PhotovoltaicPerformanceSimple, 1);
 
@@ -73,18 +146,18 @@ SWIG_MODELOBJECT(PhotovoltaicPerformanceSimple, 1);
 #if defined(SWIGCSHARP)
   //%pragma(csharp) imclassimports=%{
   %pragma(csharp) moduleimports=%{
-  
+
     using System;
     using System.Runtime.InteropServices;
-        
+
     public partial class PlanarSurface : ParentObject {
       public GeneratorPhotovoltaicVector generatorPhotovoltaics()
       {
         return OpenStudio.OpenStudioModelGenerators.getGeneratorPhotovoltaics(this);
       }
-    }  
-    
+    }
+
   %}
 #endif
 
-#endif 
+#endif

@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "DataFixture.hpp"
@@ -38,8 +48,8 @@ using namespace openstudio;
 TEST_F(DataFixture, Attribute_BoolTrue)
 {
   openstudio::path xmlPath = openstudio::toPath("./report_bool_true.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("bool", true, std::string("units"));
@@ -50,9 +60,9 @@ TEST_F(DataFixture, Attribute_BoolTrue)
   EXPECT_EQ("units", attribute.units().get());
 
   // save to xml
-  attribute.saveToXml(xmlPath);
+  ASSERT_TRUE(attribute.saveToXml(xmlPath));
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("bool", testAttribute->name());
@@ -65,8 +75,8 @@ TEST_F(DataFixture, Attribute_BoolTrue)
 TEST_F(DataFixture, Attribute_Integer)
 {
   openstudio::path xmlPath = openstudio::toPath("./report_integer.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("int", 1);
@@ -78,7 +88,7 @@ TEST_F(DataFixture, Attribute_Integer)
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("int", testAttribute->name());
@@ -90,8 +100,8 @@ TEST_F(DataFixture, Attribute_Integer)
 TEST_F(DataFixture, Attribute_Unsigned)
 {
   openstudio::path xmlPath = openstudio::toPath("./report_unsigned.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("unsigned", 1u);
@@ -103,7 +113,7 @@ TEST_F(DataFixture, Attribute_Unsigned)
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("unsigned", testAttribute->name());
@@ -115,8 +125,8 @@ TEST_F(DataFixture, Attribute_Unsigned)
 TEST_F(DataFixture, Attribute_Double_Small)
 {
   openstudio::path xmlPath = openstudio::toPath("./report_double_small.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("double", 1.5);
@@ -124,11 +134,11 @@ TEST_F(DataFixture, Attribute_Double_Small)
   EXPECT_EQ(AttributeValueType::Double, attribute.valueType().value());
   EXPECT_EQ(1.5, attribute.valueAsDouble());
   EXPECT_FALSE(attribute.units());
-  
+
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("double", testAttribute->name());
@@ -140,8 +150,8 @@ TEST_F(DataFixture, Attribute_Double_Small)
 TEST_F(DataFixture, Attribute_Double_Big)
 {
   openstudio::path xmlPath = openstudio::toPath("./report_double_big.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("double", 1.189679819371987395175049501E32);
@@ -149,11 +159,11 @@ TEST_F(DataFixture, Attribute_Double_Big)
   EXPECT_EQ(AttributeValueType::Double, attribute.valueType().value());
   EXPECT_DOUBLE_EQ(1.189679819371987395175049501E32, attribute.valueAsDouble());
   EXPECT_FALSE(attribute.units());
-  
+
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("double", testAttribute->name());
@@ -167,8 +177,8 @@ TEST_F(DataFixture, Attribute_String)
 {
 
   openstudio::path xmlPath = openstudio::toPath("./report_string.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   Attribute attribute("string", "value");
@@ -180,7 +190,7 @@ TEST_F(DataFixture, Attribute_String)
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("string", testAttribute->name());
@@ -193,8 +203,8 @@ TEST_F(DataFixture, Attribute_AttributeVector)
 {
 
   openstudio::path xmlPath = openstudio::toPath("./report_attribute_vector.xml");
-  if(boost::filesystem::exists(xmlPath)){
-    boost::filesystem::remove(xmlPath);
+  if(openstudio::filesystem::exists(xmlPath)){
+    openstudio::filesystem::remove(xmlPath);
   }
 
   std::vector<Attribute> attributes;
@@ -212,7 +222,7 @@ TEST_F(DataFixture, Attribute_AttributeVector)
   // save to xml
   attribute.saveToXml(xmlPath);
 
-  // load 
+  // load
   boost::optional<Attribute> testAttribute = Attribute::loadFromXml(xmlPath);
   ASSERT_TRUE(testAttribute);
   EXPECT_EQ("vector", testAttribute->name());
@@ -362,8 +372,8 @@ TEST_F(DataFixture, Attribute_NotEqual)
 
 TEST_F(DataFixture, Attribute_NumberFormatting) {
   double value(3.14159e52);
-  
-  QString str = QString::number(value);  
+
+  QString str = QString::number(value);
   EXPECT_EQ("3.14159e+52",toString(str)); // original behavior, bad for http
 
   str = QString::number(value,'G',std::numeric_limits<double>::digits10);

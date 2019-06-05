@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "ModelFixture.hpp"
@@ -63,37 +73,37 @@ TEST_F(ModelFixture, FanOnOff_DefaultConstructors)
 {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_EXIT ( 
-  {  
+  ASSERT_EXIT (
+  {
     Model m;
     Schedule s = m.alwaysOnDiscreteSchedule();
     FanOnOff testObject = FanOnOff(m, s);
 
-    exit(0); 
+    exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 
-  ASSERT_EXIT ( 
-  {  
+  ASSERT_EXIT (
+  {
     Model m;
     Schedule s = m.alwaysOnDiscreteSchedule();
     CurveExponent fanPowerFuncSpeedCurve(m);
     CurveCubic fanEfficiencyFuncSpeedCurve(m);
     FanOnOff testObject = FanOnOff(m, s, fanPowerFuncSpeedCurve, fanEfficiencyFuncSpeedCurve);
 
-    exit(0); 
+    exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 
-  ASSERT_EXIT ( 
-  {  
+  ASSERT_EXIT (
+  {
     Model m;
     Schedule s = m.alwaysOnDiscreteSchedule();
     CurveExponent fanPowerFuncSpeedCurve(m);
     CurveQuadratic fanEfficiencyFuncSpeedCurve(m);
     FanOnOff testObject = FanOnOff(m, s, fanPowerFuncSpeedCurve, fanEfficiencyFuncSpeedCurve);
 
-    exit(0); 
+    exit(0);
   } ,
     ::testing::ExitedWithCode(0), "" );
 }
@@ -171,7 +181,7 @@ TEST_F(ModelFixture, FanOnOff_CloneOneModelWithDefaultData)
     EXPECT_TRUE(it->parent());
   }
 
-  EXPECT_DOUBLE_EQ(0.6, testObjectClone.fanEfficiency());
+  EXPECT_DOUBLE_EQ(0.6, testObjectClone.fanTotalEfficiency());
   EXPECT_DOUBLE_EQ(300, testObjectClone.pressureRise());
   EXPECT_DOUBLE_EQ(0.8, testObjectClone.motorEfficiency());
   EXPECT_TRUE(testObjectClone.isMaximumFlowRateAutosized());
@@ -194,18 +204,18 @@ TEST_F(ModelFixture, FanOnOff_CloneOneModelWithCustomData)
   Schedule s = m.alwaysOnDiscreteSchedule();
   FanOnOff testObject = FanOnOff(m, s);
   testObject.setPressureRise(999.0);
-  testObject.setFanEfficiency(0.99);
+  testObject.setFanTotalEfficiency(0.99);
   testObject.setMaximumFlowRate(999.0);
 
   CurveExponent fanPowerFuncSpeedCurve(m);
   CurveCubic fanEfficiencyFuncSpeedCurve(m);
-  
+
   testObject.setFanPowerRatioFunctionofSpeedRatioCurve(fanPowerFuncSpeedCurve);
   testObject.setFanEfficiencyRatioFunctionofSpeedRatioCurve(fanEfficiencyFuncSpeedCurve);
 
   FanOnOff testObjectClone = testObject.clone(m).cast<FanOnOff>();
   EXPECT_DOUBLE_EQ(999.0, testObjectClone.pressureRise());
-  EXPECT_DOUBLE_EQ(0.99, testObjectClone.fanEfficiency());
+  EXPECT_DOUBLE_EQ(0.99, testObjectClone.fanTotalEfficiency());
   EXPECT_DOUBLE_EQ(999.0, testObjectClone.maximumFlowRate().get());
   EXPECT_EQ(testObject.fanPowerRatioFunctionofSpeedRatioCurve().handle(), testObjectClone.fanPowerRatioFunctionofSpeedRatioCurve().handle());
   EXPECT_EQ(fanPowerFuncSpeedCurve.handle(), testObjectClone.fanPowerRatioFunctionofSpeedRatioCurve().handle());
@@ -256,7 +266,7 @@ TEST_F(ModelFixture, FanOnOff_CloneTwoModelsWithDefaultData)
     EXPECT_TRUE(it->parent());
   }
 
-  EXPECT_DOUBLE_EQ(0.6, testObjectClone2.fanEfficiency());
+  EXPECT_DOUBLE_EQ(0.6, testObjectClone2.fanTotalEfficiency());
   EXPECT_DOUBLE_EQ(300, testObjectClone2.pressureRise());
   EXPECT_DOUBLE_EQ(0.8, testObjectClone2.motorEfficiency());
   EXPECT_TRUE(testObjectClone2.isMaximumFlowRateAutosized());
@@ -273,12 +283,12 @@ TEST_F(ModelFixture, FanOnOff_CloneTwoModelsWithCustomData)
   Schedule s = m.alwaysOnDiscreteSchedule();
   FanOnOff testObject = FanOnOff(m, s);
   testObject.setPressureRise(999.0);
-  testObject.setFanEfficiency(0.99);
+  testObject.setFanTotalEfficiency(0.99);
   testObject.setMaximumFlowRate(999.0);
 
   CurveExponent fanPowerFuncSpeedCurve(m);
   CurveCubic fanEfficiencyFuncSpeedCurve(m);
-  
+
   testObject.setFanPowerRatioFunctionofSpeedRatioCurve(fanPowerFuncSpeedCurve);
   testObject.setFanEfficiencyRatioFunctionofSpeedRatioCurve(fanEfficiencyFuncSpeedCurve);
 
@@ -336,7 +346,7 @@ TEST_F(ModelFixture, FanOnOff_CloneTwoModelsWithCustomData)
   }
 
   EXPECT_DOUBLE_EQ(999.0, testObjectClone2.pressureRise());
-  EXPECT_DOUBLE_EQ(0.99, testObjectClone2.fanEfficiency());
+  EXPECT_DOUBLE_EQ(0.99, testObjectClone2.fanTotalEfficiency());
   EXPECT_DOUBLE_EQ(999.0, testObjectClone2.maximumFlowRate().get());
   EXPECT_NE(testObject.fanPowerRatioFunctionofSpeedRatioCurve().handle(), testObjectClone2.fanPowerRatioFunctionofSpeedRatioCurve().handle());
   EXPECT_NE(fanPowerFuncSpeedCurve.handle(), testObjectClone2.fanPowerRatioFunctionofSpeedRatioCurve().handle());
@@ -359,12 +369,22 @@ TEST_F(ModelFixture,FanOnOff_Test_Setters_and_Getters)
   EXPECT_EQ(test_sched, testObject.availabilitySchedule());
 
   // Field Fan Efficiency
+  EXPECT_TRUE(testObject.setFanTotalEfficiency(0.8));
+  EXPECT_DOUBLE_EQ(0.8, testObject.fanTotalEfficiency());
+  EXPECT_FALSE(testObject.isFanTotalEfficiencyDefaulted());
+
+  testObject.resetFanTotalEfficiency();
+  EXPECT_TRUE(testObject.isFanTotalEfficiencyDefaulted());
+
+  // Test the deprecated older name
+
   EXPECT_TRUE(testObject.setFanEfficiency(0.7));
   EXPECT_DOUBLE_EQ(0.7, testObject.fanEfficiency());
   EXPECT_FALSE(testObject.isFanEfficiencyDefaulted());
 
   testObject.resetFanEfficiency();
   EXPECT_TRUE(testObject.isFanEfficiencyDefaulted());
+
 
   // Field Pressure Rise
 
@@ -517,7 +537,7 @@ TEST_F(ModelFixture,FanOnOff_containingZoneHVACComponent_ZoneHVACUnitHeater)
   ZoneHVACUnitHeater zoneHVACUnitHeater(m, s, fan, heatingCoil);
 
   boost::optional<ZoneHVACComponent> component = fan.containingZoneHVACComponent();
-  EXPECT_FALSE(component);
+  EXPECT_TRUE(component);
 }
 
 TEST_F(ModelFixture,FanOnOff_containingZoneHVACComponent_ZoneHVACTerminalUnitVariableRefrigerantFlow)

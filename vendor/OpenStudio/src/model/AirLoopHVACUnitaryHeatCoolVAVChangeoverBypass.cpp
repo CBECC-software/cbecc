@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass.hpp"
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl.hpp"
@@ -62,8 +72,6 @@ namespace detail {
   const std::vector<std::string>& AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -404,12 +412,12 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::HeatingCoil);
   }
 
-  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::inletPort()
+  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::inletPort() const
   {
     return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirInletNode;
   }
 
-  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outletPort()
+  unsigned AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::outletPort() const
   {
     return OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypassFields::AirOutletNode;
   }
@@ -479,11 +487,94 @@ namespace detail {
     return result;
   }
 
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringCoolingOperation() const {
+    return getAutosizedValue("maximum cooling air flow rate", "m3/s");
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateDuringHeatingOperation() const {
+    return getAutosizedValue("maximum heating air flow rate", "m3/s");
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getAutosizedValue("maximum air flow rate when compressor/coil is off", "m3/s");
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringCoolingOperation() const {
+    return getAutosizedValue("maximum outside air flow rate in cooling", "m3/s");
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateDuringHeatingOperation() const {
+    return getAutosizedValue("maximum outdoor air flow rate in heating", "m3/s");
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getAutosizedValue("maximum outdoor air flow rate when compressor is off", "m3/s");
+  }
+
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::autosize() {
+    autosizeSystemAirFlowRateDuringCoolingOperation();
+    autosizeSystemAirFlowRateDuringHeatingOperation();
+    autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    autosizeOutdoorAirFlowRateDuringCoolingOperation();
+    autosizeOutdoorAirFlowRateDuringHeatingOperation();
+    autosizeOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
+
+  void AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedSystemAirFlowRateDuringCoolingOperation();
+    if (val) {
+      setSystemAirFlowRateDuringCoolingOperation(val.get());
+    }
+
+    val = autosizedSystemAirFlowRateDuringHeatingOperation();
+    if (val) {
+      setSystemAirFlowRateDuringHeatingOperation(val.get());
+    }
+
+    val = autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    if (val) {
+      setSystemAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
+    }
+
+    val = autosizedOutdoorAirFlowRateDuringCoolingOperation();
+    if (val) {
+      setOutdoorAirFlowRateDuringCoolingOperation(val.get());
+    }
+
+    val = autosizedOutdoorAirFlowRateDuringHeatingOperation();
+    if (val) {
+      setOutdoorAirFlowRateDuringHeatingOperation(val.get());
+    }
+
+    val = autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+    if (val) {
+      setOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded(val.get());
+    }
+
+  }
+
+  std::vector<EMSActuatorNames> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate"},
+                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Cooling Operation"},
+                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During Heating Operation"},
+                                            {"AirLoopHVAC:UnitaryHeatCool", "Autosized Supply Air Flow Rate During No Heating or Cooling Operation"},
+                                            {"Unitary HVAC", "Sensible Load Request"},
+                                            {"Unitary HVAC", "Moisture Load Request"}};
+    return actuators;
+  }
+
+  std::vector<std::string> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Unitary HVAC Design Heating Capacity",
+                                   "Unitary HVAC Design Cooling Capacity"};
+    return types;
+  }
+
 } // detail
 
 AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(const Model& model,
-  const HVACComponent& fan, 
-  const HVACComponent& coolingCoil, 
+  const HVACComponent& fan,
+  const HVACComponent& coolingCoil,
   const HVACComponent& heatingCoil)
   : StraightComponent(AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::iddObjectType(),model)
 {
@@ -492,19 +583,19 @@ AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChan
   bool ok;
   ok = setCoolingCoil(coolingCoil);
   if( ! ok ) {
-    LOG_AND_THROW("Unable to set cooling coil"); 
+    LOG_AND_THROW("Unable to set cooling coil");
   }
   ok = setHeatingCoil(heatingCoil);
   if( ! ok ) {
-    LOG_AND_THROW("Unable to set heating coil"); 
+    LOG_AND_THROW("Unable to set heating coil");
   }
   ok = setSupplyAirFan(fan);
   if( ! ok ) {
-    LOG_AND_THROW("Unable to set fan"); 
+    LOG_AND_THROW("Unable to set fan");
   }
 
   autosizeSystemAirFlowRateDuringCoolingOperation();
-  autosizeSystemAirFlowRateDuringHeatingOperation(); 
+  autosizeSystemAirFlowRateDuringHeatingOperation();
   autosizeSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
   autosizeOutdoorAirFlowRateDuringCoolingOperation();
   autosizeOutdoorAirFlowRateDuringHeatingOperation();
@@ -733,9 +824,33 @@ bool AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::setDehumidificationControlTy
 
 /// @cond
 AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass(std::shared_ptr<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedSystemAirFlowRateDuringCoolingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedSystemAirFlowRateDuringCoolingOperation();
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedSystemAirFlowRateDuringHeatingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedSystemAirFlowRateDuringHeatingOperation();
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedSystemAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedOutdoorAirFlowRateDuringCoolingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedOutdoorAirFlowRateDuringCoolingOperation();
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedOutdoorAirFlowRateDuringHeatingOperation() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedOutdoorAirFlowRateDuringHeatingOperation();
+  }
+
+  boost::optional<double> AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass::autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded() const {
+    return getImpl<detail::AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl>()->autosizedOutdoorAirFlowRateWhenNoCoolingorHeatingisNeeded();
+  }
 
 } // model
 } // openstudio

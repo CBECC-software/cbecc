@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_EVAPORATIVECOOLERDIRECTRESEARCHSPECIAL_HPP
 #define MODEL_EVAPORATIVECOOLERDIRECTRESEARCHSPECIAL_HPP
@@ -73,14 +83,14 @@ class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponen
   double coolerEffectiveness() const;
 
   /** Sets the value of the CoolerEffectiveness field. **/
-  void setCoolerEffectiveness( double value );
+  bool setCoolerEffectiveness( double value );
 
   /** Returns the value of the RecirculatingWaterPumpPowerConsumption field. **/
   /** In EnergyPlus 8.3.0 and above this property maps to the EnergyPlus field "Recirculating Water Pump Design Power" **/
   boost::optional<double> recirculatingWaterPumpPowerConsumption() const;
 
   /** Sets the value of the RecirculatingWaterPumpPowerConsumption field. **/
-  void setRecirculatingWaterPumpPowerConsumption( double value );
+  bool setRecirculatingWaterPumpPowerConsumption( double value );
 
   void autosizeRecirculatingWaterPumpPowerConsumption();
 
@@ -90,7 +100,7 @@ class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponen
   boost::optional<double> primaryAirDesignFlowRate() const;
 
   /** Sets the value of the PrimaryAirDesignFlowRate field. **/
-  void setPrimaryAirDesignFlowRate( double value );
+  bool setPrimaryAirDesignFlowRate( double value );
 
   void autosizePrimaryAirDesignFlowRate();
 
@@ -100,19 +110,19 @@ class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponen
   boost::optional<Node> sensorNode() const;
 
   /** Sets the Node referred to by the SensorNodeName field. **/
-  void setSensorNode( const Node & node );
+  bool setSensorNode( const Node & node );
 
   /** Returns the value of the DriftLossFraction field. **/
   double driftLossFraction() const;
 
   /** Sets the value of the DriftLossFraction field. **/
-  void setDriftLossFraction( double value );
+  bool setDriftLossFraction( double value );
 
   /** Returns the value of the BlowdownConcentrationRatio field. **/
   double blowdownConcentrationRatio() const;
 
   /** Sets the value of the BlowdownConcentrationRatio field. **/
-  void setBlowdownConcentrationRatio( double value );
+  bool setBlowdownConcentrationRatio( double value );
 
   boost::optional<Curve> effectivenessFlowRatioModifierCurve() const;
 
@@ -122,13 +132,35 @@ class MODEL_API EvaporativeCoolerDirectResearchSpecial : public StraightComponen
 
   double waterPumpPowerSizingFactor() const;
 
-  void setWaterPumpPowerSizingFactor(double waterPumpPowerSizingFactor);
+  bool setWaterPumpPowerSizingFactor(double waterPumpPowerSizingFactor);
 
   boost::optional<Curve> waterPumpPowerModifierCurve() const;
 
   bool setWaterPumpPowerModifierCurve(const Curve& curve);
 
   void resetWaterPumpPowerModifierCurve();
+
+  /** Sets the minimum and maximum operation temperatures **/
+
+  /** Returns the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
+  double evaporativeOperationMinimumDrybulbTemperature() const;
+  /** Sets the value of the EvaporativeOperationMinimumDrybulbTemperature field. **/
+  bool setEvaporativeOperationMinimumDrybulbTemperature(double evaporativeOperationMinimumDrybulbTemperature);
+
+  /** Returns the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
+  double evaporativeOperationMaximumLimitWetbulbTemperature() const;
+  /** Sets the value of the EvaporativeOperationMaximumLimitWetbulbTemperature field. **/
+  bool setEvaporativeOperationMaximumLimitWetbulbTemperature(double evaporativeOperationMaximumLimitWetbulbTemperature);
+
+  /** Returns the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
+  double evaporativeOperationMaximumLimitDrybulbTemperature() const;
+  /** Sets the value of the EvaporativeOperationMaximumLimitDrybulbTemperature field. **/
+  bool setEvaporativeOperationMaximumLimitDrybulbTemperature(double evaporativeOperationMaximumLimitDrybulbTemperature);
+
+
+  boost::optional<double> autosizedRecirculatingWaterPumpPowerConsumption() const ;
+
+  boost::optional<double> autosizedPrimaryAirDesignFlowRate() const ;
 
   //@}
  protected:
@@ -154,4 +186,3 @@ typedef std::vector<EvaporativeCoolerDirectResearchSpecial> EvaporativeCoolerDir
 } // openstudio
 
 #endif // MODEL_EVAPORATIVECOOLERDIRECTRESEARCHSPECIAL_HPP
-

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "AirLoopHVACReturnPlenum.hpp"
 #include "AirLoopHVACReturnPlenum_Impl.hpp"
@@ -25,6 +35,8 @@
 #include "AirLoopHVACSupplyPlenum_Impl.hpp"
 #include "AirLoopHVACZoneSplitter.hpp"
 #include "AirLoopHVACZoneSplitter_Impl.hpp"
+#include "ZoneHVACComponent.hpp"
+#include "ZoneHVACComponent_Impl.hpp"
 #include "ThermalZone.hpp"
 #include "ThermalZone_Impl.hpp"
 #include "Model.hpp"
@@ -35,9 +47,12 @@
 #include "Node_Impl.hpp"
 #include "PortList.hpp"
 #include "PortList_Impl.hpp"
+#include "Connection.hpp"
+#include "Connection_Impl.hpp"
+#include "ZoneHVACIdealLoadsAirSystem.hpp"
+#include "ZoneHVACIdealLoadsAirSystem_Impl.hpp"
 #include <utilities/idd/OS_AirLoopHVAC_ReturnPlenum_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
-
 
 namespace openstudio {
 namespace model {
@@ -69,8 +84,6 @@ namespace detail {
   const std::vector<std::string>& AirLoopHVACReturnPlenum_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -141,89 +154,112 @@ namespace detail {
     bool result = true;
 
     Model _model = model();
-
     // Is the node in this model
-    if( node.model() != _model )
-    {
-      result = false;
+    if ( node.model() != _model ) {
+      return false;
     }
 
-    // Is the node part of an air loop
-    boost::optional<AirLoopHVAC> nodeAirLoop = node.airLoopHVAC();
+    auto thisObject = getObject<AirLoopHVACReturnPlenum>();
 
-    if( ! nodeAirLoop )
-    {
-      result = false;
+    auto outletObj = node.outletModelObject();
+    auto inletObj = node.inletModelObject();
+
+    boost::optional<ZoneHVACComponent> zoneHVAC;
+    if ( outletObj ) {
+      zoneHVAC = outletObj->optionalCast<ZoneHVACComponent>();
     }
 
-    // Is this plenum already connected to a different air loop
-    boost::optional<AirLoopHVAC> currentAirLoopHVAC = airLoopHVAC();
-    if( currentAirLoopHVAC && (currentAirLoopHVAC.get() != nodeAirLoop) )
-    {
-      result = false;
-    }
-
-    boost::optional<ModelObject> outletObj = node.outletModelObject();
-    boost::optional<ModelObject> inletObj = node.inletModelObject();
-    boost::optional<AirLoopHVACZoneMixer> mixer;
-
-    // Is the immediate downstream object to the node a mixer
-    if( result )
-    {
-      mixer = nodeAirLoop->zoneMixer();
-
-      if( ! (outletObj && mixer && (outletObj.get() == mixer.get()) ) ) 
-      {
+    // Plenum can be attached to ZoneHVAC OR AirLoopHVAC
+    if ( zoneHVAC ) {
+      // don't let a plenum connect to ZoneHVAC and AirLoopHVAC at the same time
+      if ( airLoopHVAC() ) {
         result = false;
       }
-    }
 
-    // Make sure there is not already a return plenum
-    if( result )
-    {
-      if(  inletObj && inletObj->optionalCast<AirLoopHVACReturnPlenum>() )
-      {
+      boost::optional<ThermalZone> zone;
+
+      if ( inletObj ) {
+        auto pl = inletObj->optionalCast<PortList>();
+        if ( pl ) {
+          zone = pl->thermalZone();
+        }
+      }
+
+      if ( ! zone ) {
         result = false;
       }
-    }
 
-    // Is there a zone on this branch
-    if( result )
-    {
-      Splitter splitter = nodeAirLoop->zoneSplitter();
-      if( nodeAirLoop->demandComponents(splitter,node,ThermalZone::iddObjectType()).empty() )
-      {
+      if ( result ) {
+        _model.connect(node, node.outletPort(), thisObject, thisObject.nextInletPort());
+
+        Node zoneHVACInletNode(_model);
+        _model.connect(zoneHVACInletNode, zoneHVACInletNode.outletPort(), zoneHVAC.get(), zoneHVAC->inletPort());
+        auto pl = inducedAirOutletPortList();
+        _model.connect(pl, pl.nextPort(), zoneHVACInletNode, zoneHVACInletNode.inletPort());
+      }
+    } else {
+      // Is the node part of an air loop
+      auto nodeAirLoop = node.airLoopHVAC();
+
+      if ( ! nodeAirLoop ) {
         result = false;
       }
-    }
 
-    if( result )
-    {
-      unsigned inletObjectPort;
-      unsigned outletObjectPort;
-      boost::optional<ModelObject> inletModelObject;
-      boost::optional<ModelObject> outletModelObject;
-
-      inletModelObject = node;
-      inletObjectPort = node.outletPort();
-      outletModelObject = outletObj;
-      outletObjectPort = node.connectedObjectPort(node.outletPort()).get();
-
-      AirLoopHVACReturnPlenum thisObject = getObject<AirLoopHVACReturnPlenum>();
-
-      if( currentAirLoopHVAC )
-      {
-        mixer->removePortForBranch(mixer->branchIndexForInletModelObject(inletModelObject.get()));
-        _model.connect(inletModelObject.get(),inletObjectPort,thisObject,thisObject.nextInletPort());
+      // Is this plenum already connected to a different air loop
+      auto currentAirLoopHVAC = airLoopHVAC();
+      if ( currentAirLoopHVAC && (currentAirLoopHVAC.get() != nodeAirLoop) ) {
+        result = false;
       }
-      else
-      {
-        Node plenumOutletNode(_model);
-        plenumOutletNode.createName();
 
-        _model.connect(inletModelObject.get(),inletObjectPort,thisObject,thisObject.nextInletPort());
-        _model.connect(thisObject,thisObject.outletPort(),plenumOutletNode,plenumOutletNode.inletPort());
-        _model.connect(plenumOutletNode,plenumOutletNode.outletPort(),outletModelObject.get(),outletObjectPort);
+      boost::optional<AirLoopHVACZoneMixer> mixer;
+      // Is the immediate downstream object to the node a mixer
+      if ( result ) {
+        mixer = nodeAirLoop->zoneMixer();
+
+        if( ! (outletObj && mixer && (outletObj.get() == mixer.get()) ) )
+        {
+          result = false;
+        }
+      }
+
+      // Make sure there is not already a return plenum
+      if ( result ) {
+        if (  inletObj && inletObj->optionalCast<AirLoopHVACReturnPlenum>() ) {
+          result = false;
+        }
+      }
+
+      // Is there a zone on this branch
+      if ( result ) {
+        Splitter splitter = nodeAirLoop->zoneSplitter();
+        if ( nodeAirLoop->demandComponents(splitter,node,ThermalZone::iddObjectType()).empty() ) {
+          result = false;
+        }
+      }
+
+      if ( result ) {
+        unsigned inletObjectPort;
+        unsigned outletObjectPort;
+        boost::optional<ModelObject> inletModelObject;
+        boost::optional<ModelObject> outletModelObject;
+
+        inletModelObject = node;
+        inletObjectPort = node.outletPort();
+        outletModelObject = outletObj;
+        outletObjectPort = node.connectedObjectPort(node.outletPort()).get();
+
+
+        if ( currentAirLoopHVAC ) {
+          mixer->removePortForBranch(mixer->branchIndexForInletModelObject(inletModelObject.get()));
+          _model.connect(inletModelObject.get(),inletObjectPort,thisObject,thisObject.nextInletPort());
+        } else {
+          Node plenumOutletNode(_model);
+          plenumOutletNode.createName();
+
+          _model.connect(inletModelObject.get(),inletObjectPort,thisObject,thisObject.nextInletPort());
+          _model.connect(thisObject,thisObject.outletPort(),plenumOutletNode,plenumOutletNode.inletPort());
+          _model.connect(plenumOutletNode,plenumOutletNode.outletPort(),outletModelObject.get(),outletObjectPort);
+        }
       }
     }
 
@@ -236,7 +272,7 @@ namespace detail {
 
     return addBranchForZoneImpl(thermalZone,t_terminal);
   }
-  
+
   bool AirLoopHVACReturnPlenum_Impl::addBranchForZone(openstudio::model::ThermalZone & thermalZone, HVACComponent & terminal)
   {
     boost::optional<HVACComponent> t_terminal = terminal;
@@ -273,7 +309,7 @@ namespace detail {
     OS_ASSERT(splitter);
     OS_ASSERT(mixer);
 
-    return AirLoopHVAC_Impl::addBranchForZoneImpl(thermalZone,t_airLoopHVAC.get(),splitter.get(),mixer.get(),terminal);
+    return AirLoopHVAC_Impl::addBranchForZoneImpl(thermalZone,t_airLoopHVAC.get(),splitter.get(),mixer.get(),true,terminal);
   }
 
   std::vector<IdfObject> AirLoopHVACReturnPlenum_Impl::remove()
@@ -289,7 +325,7 @@ namespace detail {
            it != t_inletModelObjects.rend();
            ++it )
       {
-        unsigned branchIndex = branchIndexForInletModelObject(*it); 
+        unsigned branchIndex = branchIndexForInletModelObject(*it);
         unsigned t_inletPort = inletPort(branchIndex);
         unsigned connectedObjectOutletPort = connectedObjectPort(t_inletPort).get();
 
@@ -302,9 +338,68 @@ namespace detail {
       OS_ASSERT(node);
       zoneMixer.removePortForBranch(zoneMixer.branchIndexForInletModelObject(node.get()));
       node->remove();
+    } else {
+      auto outlet = outletModelObject();
+      auto h = handle();
+
+      auto zoneHVAC = t_model.getModelObjects<ZoneHVACComponent>();
+      for ( auto & hvac : zoneHVAC ) {
+        auto plenum = hvac.returnPlenum();
+        if ( plenum && ( plenum->handle() == h ) ) {
+          hvac.removeReturnPlenum();
+        }
+      }
+
+      if ( outlet ) {
+        outlet->remove();
+      }
     }
 
     return Mixer_Impl::remove();
+  }
+
+  // If every zone on the plenum has exactly one piece of equipment
+  // and that equipment is a ZoneHVACIdealLoadsAirSystem
+  // then return a list of all them,
+  // This is used privatly in the translator to work around an EnergyPlus bug
+  std::vector<model::ZoneHVACIdealLoadsAirSystem> AirLoopHVACReturnPlenum_Impl::zoneHVACIdealLoadsAirSystems() const
+  {
+    std::vector<model::ZoneHVACIdealLoadsAirSystem> result;
+    bool doworkaround = true;
+    auto inlets = inletModelObjects();
+    for ( const auto & inlet : inlets ) {
+      auto node = inlet.optionalCast<Node>();
+      if ( node ) {
+        auto nodeinlet = node->inletModelObject();
+        if ( nodeinlet ) {
+          auto pl = nodeinlet->optionalCast<PortList>();
+          if ( pl ) {
+            auto zone = pl->thermalZone();
+            auto equipment = zone.equipment();
+            if ( equipment.size() < 2 ) {
+              if ( equipment.size() == 1 ) {
+                auto ideal = equipment.front().optionalCast<ZoneHVACIdealLoadsAirSystem>();
+                if ( ideal ) {
+                  result.push_back( ideal.get() );
+                } else {
+                  doworkaround = false;
+                  break;
+                }
+              }
+            } else {
+              doworkaround = false;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if ( ! doworkaround ) {
+      result.clear(); 
+    }
+
+    return result;
   }
 
 } // detail
@@ -363,7 +458,7 @@ bool AirLoopHVACReturnPlenum::addBranchForZone(openstudio::model::ThermalZone & 
 
 /// @cond
 AirLoopHVACReturnPlenum::AirLoopHVACReturnPlenum(std::shared_ptr<detail::AirLoopHVACReturnPlenum_Impl> impl)
-  : Mixer(impl)
+  : Mixer(std::move(impl))
 {}
 /// @endcond
 

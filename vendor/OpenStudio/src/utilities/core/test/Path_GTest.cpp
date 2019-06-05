@@ -1,35 +1,51 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
 #include <resources.hxx>
 
-#include <boost/filesystem.hpp>
+
 #include "CoreFixture.hpp"
 #include "../Path.hpp"
 #include "../PathHelpers.hpp"
 #include "../URLHelpers.hpp"
+#include "../Filesystem.hpp"
+#include "utilities/sql/SqlFileDataDictionary.hpp"
+
+#include <QTextCodec>
+#include <clocale>
 
 using openstudio::path;
 using openstudio::toPath;
 using openstudio::toString;
+using openstudio::toQString;
 using openstudio::completePathToFile;
 using openstudio::setFileExtension;
 using openstudio::makeParentFolder;
@@ -42,11 +58,11 @@ using openstudio::isNetworkPathAvailable;
 void logBeforeAndAfterPathInformation(const std::string& functionName,
                                       const path& before,const path& after) {
   std::stringstream ssb,ssa;
-  
+
   printPathInformation(ssb,before);
   printPathInformation(ssa,after);
-  
-  LOG_FREE(Debug,"CoreFixture","Before " << functionName << ": " << ssb.str() << std::endl 
+
+  LOG_FREE(Debug,"CoreFixture","Before " << functionName << ": " << ssb.str() << std::endl
            << "After " << functionName << ": " << ssa.str() << std::endl);
 }
 
@@ -73,10 +89,10 @@ TEST_F(CoreFixture, Path_CompletePathToFile)
   result = completePathToFile(p);
   logBeforeAndAfterPathInformation("completePathToFile",p,result);
   EXPECT_TRUE(result.empty());
-  
+
 }
 
-TEST_F(CoreFixture, Path_toString) 
+TEST_F(CoreFixture, Path_toString)
 {
   EXPECT_EQ("energyplus/5ZoneAirCooled/eplusout.sql", toString(toPath("energyplus/5ZoneAirCooled/eplusout.sql")));
   EXPECT_EQ("energyplus/5ZoneAirCooled/eplusout.sql", toString(toPath("energyplus\\5ZoneAirCooled\\eplusout.sql")));
@@ -92,7 +108,7 @@ TEST_F(CoreFixture, Path_toString)
   EXPECT_EQ("/energyplus/5ZoneAirCooled", toString(toPath("\\energyplus\\5ZoneAirCooled")));
 }
 
-TEST_F(CoreFixture, Path_RelativePathToFile) 
+TEST_F(CoreFixture, Path_RelativePathToFile)
 {
   path relPath = toPath("energyplus/5ZoneAirCooled/eplusout.sql");
   path fullPath = resourcesPath() / relPath;
@@ -106,16 +122,16 @@ TEST_F(CoreFixture, Path_SetFileExtension)
   // example usage for assigning proper file extension
   path p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/in");
   path result = setFileExtension(p,"idf");
-  EXPECT_TRUE(boost::filesystem::extension(p).empty());
-  EXPECT_TRUE(toString(boost::filesystem::extension(result)) == std::string(".idf"));
-  EXPECT_TRUE(boost::filesystem::exists(result));
-  EXPECT_TRUE(boost::filesystem::is_regular_file(result));
+  EXPECT_TRUE(openstudio::filesystem::extension(p).empty());
+  EXPECT_TRUE(toString(openstudio::filesystem::extension(result)) == std::string(".idf"));
+  EXPECT_TRUE(openstudio::filesystem::exists(result));
+  EXPECT_TRUE(openstudio::filesystem::is_regular_file(result));
 
   // passes out path as is if file extension already set
   p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/in.idf");
   result = setFileExtension(p,"idf");
-  EXPECT_TRUE(toString(boost::filesystem::extension(p)) == std::string(".idf"));
-  EXPECT_TRUE(toString(boost::filesystem::extension(result)) == std::string(".idf"));
+  EXPECT_TRUE(toString(openstudio::filesystem::extension(p)) == std::string(".idf"));
+  EXPECT_TRUE(toString(openstudio::filesystem::extension(result)) == std::string(".idf"));
 
   // will not replace extension, but will log warning and alert user by returning empty path
   p = toPath("energyplus/5ZoneAirCooled/in.osm");
@@ -125,12 +141,12 @@ TEST_F(CoreFixture, Path_SetFileExtension)
   // will replace extension if asked
   p = toPath("energyplus/5ZoneAirCooled/in.osm");
   result = setFileExtension(p,"idf",true,false);
-  EXPECT_TRUE(toString(boost::filesystem::extension(result)) == std::string(".idf"));
+  EXPECT_TRUE(toString(openstudio::filesystem::extension(result)) == std::string(".idf"));
 
   // setFileExtension does not care about existence
   p = toPath("fakeDir/fakeDirOrFile");
   result = setFileExtension(p,"jjj",true);
-  EXPECT_TRUE(toString(boost::filesystem::extension(result)) == std::string(".jjj"));
+  EXPECT_TRUE(toString(openstudio::filesystem::extension(result)) == std::string(".jjj"));
 }
 
 TEST_F(CoreFixture, Path_MakeParentFolder)
@@ -138,41 +154,41 @@ TEST_F(CoreFixture, Path_MakeParentFolder)
   // path to directory
   // add one folder
   path p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/MyTestFolder/");
-  EXPECT_FALSE(boost::filesystem::is_directory(p));
-  EXPECT_FALSE(boost::filesystem::exists(p));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(p));
+  EXPECT_FALSE(openstudio::filesystem::exists(p));
   EXPECT_TRUE(makeParentFolder(p));
-  EXPECT_TRUE(boost::filesystem::is_directory(p));
-  EXPECT_TRUE(boost::filesystem::exists(p));
-  EXPECT_EQ(static_cast<unsigned>(1),boost::filesystem::remove_all(p));
+  EXPECT_TRUE(openstudio::filesystem::is_directory(p));
+  EXPECT_TRUE(openstudio::filesystem::exists(p));
+  EXPECT_EQ(static_cast<unsigned>(1),openstudio::filesystem::remove_all(p));
 
   // path to file
   // add parent folder
   p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/MyTestFolder/in.idf");
-  EXPECT_FALSE(boost::filesystem::is_directory(p.parent_path()));
-  EXPECT_FALSE(boost::filesystem::exists(p.parent_path()));
-  EXPECT_FALSE(boost::filesystem::is_regular_file(p));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(p.parent_path()));
+  EXPECT_FALSE(openstudio::filesystem::exists(p.parent_path()));
+  EXPECT_FALSE(openstudio::filesystem::is_regular_file(p));
   EXPECT_TRUE(makeParentFolder(p));
-  EXPECT_TRUE(boost::filesystem::is_directory(p.parent_path()));
-  EXPECT_TRUE(boost::filesystem::exists(p.parent_path()));
-  EXPECT_FALSE(boost::filesystem::is_regular_file(p));
-  EXPECT_EQ(static_cast<unsigned>(1),boost::filesystem::remove_all(p.parent_path()));
+  EXPECT_TRUE(openstudio::filesystem::is_directory(p.parent_path()));
+  EXPECT_TRUE(openstudio::filesystem::exists(p.parent_path()));
+  EXPECT_FALSE(openstudio::filesystem::is_regular_file(p));
+  EXPECT_EQ(static_cast<unsigned>(1),openstudio::filesystem::remove_all(p.parent_path()));
 
   // path to directory/directory
   // do not add any folders
   p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/MyTestFolder1/MyTestFolder2/MyTestFolder3/");
-  EXPECT_FALSE(boost::filesystem::is_directory(p));
-  EXPECT_FALSE(boost::filesystem::exists(p));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(p));
+  EXPECT_FALSE(openstudio::filesystem::exists(p));
   EXPECT_FALSE(makeParentFolder(p));
-  EXPECT_FALSE(boost::filesystem::is_directory(p));
-  EXPECT_FALSE(boost::filesystem::exists(p));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(p));
+  EXPECT_FALSE(openstudio::filesystem::exists(p));
 
   // path to directory/directory
   // add folders recursively
   p = resourcesPath()/toPath("energyplus/5ZoneAirCooled/MyTestFolder1/MyTestFolder2/MyTestFolder3/");
-  EXPECT_FALSE(boost::filesystem::is_directory(p));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(p));
   EXPECT_TRUE(makeParentFolder(p,path(),true));
-  EXPECT_TRUE(boost::filesystem::is_directory(p));
-  EXPECT_EQ(static_cast<unsigned>(3),boost::filesystem::remove_all(p.parent_path().parent_path().parent_path()));
+  EXPECT_TRUE(openstudio::filesystem::is_directory(p));
+  EXPECT_EQ(static_cast<unsigned>(3),openstudio::filesystem::remove_all(p.parent_path().parent_path().parent_path()));
 
   // path to directory/directory/file
   // use base
@@ -180,17 +196,17 @@ TEST_F(CoreFixture, Path_MakeParentFolder)
   p = toPath("energyplus/5ZoneAirCooled/MyTestFolder1/MyTestFolder2/MyTestFolder3/in.idf");
   path base = resourcesPath();
   path tmp = base/p;
-  EXPECT_FALSE(boost::filesystem::is_directory(tmp.parent_path()));
-  EXPECT_FALSE(boost::filesystem::is_regular_file(tmp));
+  EXPECT_FALSE(openstudio::filesystem::is_directory(tmp.parent_path()));
+  EXPECT_FALSE(openstudio::filesystem::is_regular_file(tmp));
   EXPECT_TRUE(makeParentFolder(p,base,true));
-  EXPECT_TRUE(boost::filesystem::is_directory(tmp.parent_path()));
-  EXPECT_FALSE(boost::filesystem::is_regular_file(tmp));
-  EXPECT_EQ(static_cast<unsigned>(3),boost::filesystem::remove_all(tmp.parent_path().parent_path().parent_path()));
+  EXPECT_TRUE(openstudio::filesystem::is_directory(tmp.parent_path()));
+  EXPECT_FALSE(openstudio::filesystem::is_regular_file(tmp));
+  EXPECT_EQ(static_cast<unsigned>(3),openstudio::filesystem::remove_all(tmp.parent_path().parent_path().parent_path()));
 }
 
 TEST_F(CoreFixture, Path_WindowsPathOnUnix)
 {
-  // want to make sure we do not end up with "/E:/test/CloudTest/scripts/StandardReports/measure.rb" 
+  // want to make sure we do not end up with "/E:/test/CloudTest/scripts/StandardReports/measure.rb"
   openstudio::path file = openstudio::toPath("E:/test/CloudTest/scripts/StandardReports/measure.rb");
   EXPECT_FALSE(file.empty());
   EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file));
@@ -202,65 +218,65 @@ TEST_F(CoreFixture, Path_WindowsPathOnUnix)
   EXPECT_TRUE(file.has_extension());
   EXPECT_EQ(".rb", openstudio::toString(file.extension()));
 #ifdef _WINDOWS
-  EXPECT_TRUE(file.has_root_name()); 
-  EXPECT_EQ("E:", openstudio::toString(file.root_name())); 
-  EXPECT_TRUE(file.has_root_directory()); 
-  EXPECT_EQ("/", openstudio::toString(file.root_directory())); 
-  EXPECT_TRUE(file.has_root_path()); 
-  EXPECT_EQ("E:/", openstudio::toString(file.root_path())); 
+  EXPECT_TRUE(file.has_root_name());
+  EXPECT_EQ("E:", openstudio::toString(file.root_name()));
+  EXPECT_TRUE(file.has_root_directory());
+  EXPECT_EQ("/", openstudio::toString(file.root_directory()));
+  EXPECT_TRUE(file.has_root_path());
+  EXPECT_EQ("E:/", openstudio::toString(file.root_path()));
   EXPECT_TRUE(file.has_relative_path());
   EXPECT_EQ("test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file.relative_path()));
-  EXPECT_TRUE(file.is_absolute()); 
-  EXPECT_FALSE(file.is_relative()); 
+  EXPECT_TRUE(file.is_absolute());
+  EXPECT_FALSE(file.is_relative());
 #else
-  EXPECT_FALSE(file.has_root_name()); 
+  EXPECT_FALSE(file.has_root_name());
   EXPECT_EQ("", openstudio::toString(file.root_name()));
   EXPECT_FALSE(file.has_root_directory());
-  EXPECT_EQ("", openstudio::toString(file.root_directory())); 
+  EXPECT_EQ("", openstudio::toString(file.root_directory()));
   EXPECT_FALSE(file.has_root_path());
-  EXPECT_EQ("", openstudio::toString(file.root_path())); 
+  EXPECT_EQ("", openstudio::toString(file.root_path()));
   EXPECT_TRUE(file.has_relative_path());
-  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file.relative_path())); 
-  EXPECT_FALSE(file.is_absolute()); 
-  EXPECT_TRUE(file.is_relative()); 
+  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file.relative_path()));
+  EXPECT_FALSE(file.is_absolute());
+  EXPECT_TRUE(file.is_relative());
 #endif
- 
+
   file = openstudio::toPath("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb");
   EXPECT_FALSE(file.empty());
   EXPECT_TRUE(file.has_extension());
   EXPECT_EQ(".rb", openstudio::toString(file.extension()));
 #ifdef _WINDOWS
-  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file)); 
-  EXPECT_EQ("measure.rb", openstudio::toString(file.filename())); 
+  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file));
+  EXPECT_EQ("measure.rb", openstudio::toString(file.filename()));
   EXPECT_TRUE(file.has_root_name());
-  EXPECT_EQ("E:", openstudio::toString(file.root_name())); 
+  EXPECT_EQ("E:", openstudio::toString(file.root_name()));
   EXPECT_TRUE(file.has_root_directory());
-  EXPECT_EQ("/", openstudio::toString(file.root_directory())); 
-  EXPECT_TRUE(file.has_root_path()); 
-  EXPECT_EQ("E:/", openstudio::toString(file.root_path())); 
+  EXPECT_EQ("/", openstudio::toString(file.root_directory()));
+  EXPECT_TRUE(file.has_root_path());
+  EXPECT_EQ("E:/", openstudio::toString(file.root_path()));
   EXPECT_TRUE(file.has_relative_path());
   EXPECT_EQ("test/CloudTest/scripts/StandardReports/measure.rb", openstudio::toString(file.relative_path()));
-  EXPECT_TRUE(file.has_parent_path()); 
-  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports", openstudio::toString(file.parent_path()));  
+  EXPECT_TRUE(file.has_parent_path());
+  EXPECT_EQ("E:/test/CloudTest/scripts/StandardReports", openstudio::toString(file.parent_path()));
   EXPECT_TRUE(file.has_stem());
-  EXPECT_EQ("measure", openstudio::toString(file.stem())); 
-  EXPECT_TRUE(file.is_absolute()); 
-  EXPECT_FALSE(file.is_relative()); 
+  EXPECT_EQ("measure", openstudio::toString(file.stem()));
+  EXPECT_TRUE(file.is_absolute());
+  EXPECT_FALSE(file.is_relative());
 #else
-  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file)); 
-  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file.filename())); 
+  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file));
+  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file.filename()));
   EXPECT_FALSE(file.has_root_name());
   EXPECT_EQ("", openstudio::toString(file.root_name()));
   EXPECT_FALSE(file.has_root_directory());
-  EXPECT_EQ("", openstudio::toString(file.root_directory())); 
-  EXPECT_FALSE(file.has_root_path());  
-  EXPECT_EQ("", openstudio::toString(file.root_path())); 
+  EXPECT_EQ("", openstudio::toString(file.root_directory()));
+  EXPECT_FALSE(file.has_root_path());
+  EXPECT_EQ("", openstudio::toString(file.root_path()));
   EXPECT_TRUE(file.has_relative_path());
-  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file.relative_path())); 
+  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure.rb", openstudio::toString(file.relative_path()));
   EXPECT_FALSE(file.has_parent_path());
-  EXPECT_EQ("", openstudio::toString(file.parent_path())); 
+  EXPECT_EQ("", openstudio::toString(file.parent_path()));
   EXPECT_TRUE(file.has_stem());
-  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure", openstudio::toString(file.stem())); 
+  EXPECT_EQ("E:\\test\\CloudTest\\scripts\\StandardReports\\measure", openstudio::toString(file.stem()));
   EXPECT_FALSE(file.is_absolute());
   EXPECT_TRUE(file.is_relative());
 #endif
@@ -270,7 +286,7 @@ TEST_F(CoreFixture, Path_WindowsPathOnUnix)
 TEST_F(CoreFixture, OriginalPath_FromUrl)
 {
   // mimics code in ToolBasedJob::acquireRequiredFiles
-  // want to make sure we do not end up with "/E:/test/CloudTest/scripts/StandardReports/measure.rb" 
+  // want to make sure we do not end up with "/E:/test/CloudTest/scripts/StandardReports/measure.rb"
   openstudio::Url url("file:///E:/test/CloudTest/scripts/StandardReports/measure.rb");
   openstudio::path file = openstudio::getOriginalPath(url);
   std::string str = openstudio::toString(file);
@@ -372,4 +388,96 @@ TEST_F(CoreFixture, IsNetworkPath)
   EXPECT_FALSE(isNetworkPath(path));
   EXPECT_FALSE(isNetworkPathAvailable(path));
   */
+}
+
+TEST_F(CoreFixture, Path_Conversions)
+{
+  std::string s;
+  std::wstring w;
+  path p;
+
+  s = std::string("basic_path");
+  w = std::wstring(L"basic_path");
+  p = path(s);
+  EXPECT_EQ(s, p.string());
+  EXPECT_EQ(s, toQString(p).toStdString());
+  EXPECT_EQ(s, toString(p));
+  EXPECT_EQ(s, toQString(toString(p)).toStdString());
+  EXPECT_EQ(s, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(s, toPath(toQString(toString(p))).string());
+  EXPECT_EQ(w, p.wstring());
+  EXPECT_EQ(w, toQString(p).toStdWString());
+  //EXPECT_EQ(w, toString(p));
+  EXPECT_EQ(w, toQString(toString(p)).toStdWString());
+  //EXPECT_EQ(w, std::wstring(toQString(toString(p)).toUtf16()));
+  EXPECT_EQ(w, toPath(toQString(toString(p))).wstring());
+
+  p = path(w);
+  EXPECT_EQ(s, p.string());
+  EXPECT_EQ(s, toQString(p).toStdString());
+  EXPECT_EQ(s, toString(p));
+  EXPECT_EQ(s, toQString(toString(p)).toStdString());
+  EXPECT_EQ(s, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(s, toPath(toQString(toString(p))).string());
+
+  p = path(w);
+  EXPECT_EQ(s, p.string());
+  EXPECT_EQ(s, toQString(p).toStdString());
+  EXPECT_EQ(s, toString(p));
+  EXPECT_EQ(s, toQString(toString(p)).toStdString());
+  EXPECT_EQ(s, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(s, toPath(toQString(toString(p))).string());
+
+  // http://utf8everywhere.org/
+
+
+  // from http://www.nubaria.com/en/blog/?p=289
+
+  // Chinese characters for "zhongwen" ("Chinese language").
+  const char kChineseSampleText[] = {-28, -72, -83, -26, -106, -121, 0};
+
+  // Arabic "al-arabiyya" ("Arabic").
+  const char kArabicSampleText[] = {-40, -89, -39, -124, -40, -71, -40, -79, -40, -88, -39, -118, -40, -87, 0};
+
+  // Spanish word "canon" with an "n" with "~" on top and an "o" with an acute accent.
+  const char kSpanishSampleText[] = {99, 97, -61, -79, -61, -77, 110, 0};
+
+  std::string t;
+  QString q;
+
+  t = std::string(kChineseSampleText);
+  q = QString::fromUtf8(t.c_str());
+  p = toPath(t);
+  EXPECT_EQ(t, std::string(toQString(p).toUtf8()));
+  EXPECT_EQ(t, toString(p));
+  EXPECT_EQ(t, toString(toQString(toString(p))));
+  EXPECT_EQ(t, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(t, toString(toPath(toQString(toString(p)))));
+
+  t = std::string(kArabicSampleText);
+  q = QString::fromUtf8(t.c_str());
+  p = toPath(t);
+  EXPECT_EQ(t, std::string(toQString(p).toUtf8()));
+  EXPECT_EQ(t, toString(p));
+  EXPECT_EQ(t, toString(toQString(toString(p))));
+  EXPECT_EQ(t, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(t, toString(toPath(toQString(toString(p)))));
+
+  t = std::string(kSpanishSampleText);
+  q = QString::fromUtf8(t.c_str());
+  p = toPath(t);
+  EXPECT_EQ(t, std::string(toQString(p).toUtf8()));
+  EXPECT_EQ(t, toString(p));
+  EXPECT_EQ(t, toString(toQString(toString(p))));
+  EXPECT_EQ(t, std::string(toQString(toString(p)).toUtf8()));
+  EXPECT_EQ(t, toString(toPath(toQString(toString(p)))));
+
+}
+
+TEST_F(CoreFixture, LastLevelDirectoryWithDot) {
+  // We want to make sure that we don't end up with "A measure with 90" (test for #3249)
+  openstudio::path measure_directory = openstudio::toPath("C:/users/user name/OpenStudio/Measures/A measure with 90.1 dots");
+  openstudio::path lastLevelDir = openstudio::getLastLevelDirectoryName(measure_directory);
+  EXPECT_EQ("A measure with 90.1 dots", toString(lastLevelDir));
+  EXPECT_EQ(measure_directory, measure_directory.parent_path() / lastLevelDir);
 }

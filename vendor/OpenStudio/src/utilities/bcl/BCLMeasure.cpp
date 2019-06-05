@@ -1,44 +1,49 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "BCLMeasure.hpp"
 #include "LocalBCL.hpp"
 
-#include "../core/ApplicationPathHelpers.hpp"
-#include "../core/System.hpp"
-#include "../core/Path.hpp"
 #include "../core/PathHelpers.hpp"
+#include "../core/FilesystemHelpers.hpp"
 #include "../core/StringHelpers.hpp"
 #include "../core/FileReference.hpp"
-#include "../data/Attribute.hpp"
 #include "../core/Assert.hpp"
-#include "../core/Checksum.hpp"
 
 #include <OpenStudio.hxx>
 
 #include <QDir>
-#include <QDomDocument>
-#include <QFile>
 #include <QSettings>
 #include <QRegularExpression>
 
-#include <boost/filesystem.hpp>
+
+#include <src/utilities/embedded_files.hxx>
 
 namespace openstudio{
 
@@ -61,22 +66,18 @@ namespace openstudio{
       return false;
     }
 
-    openstudio::path xmlPath = boost::filesystem::system_complete(m_bclXML.path());
+    openstudio::path xmlPath = openstudio::filesystem::system_complete(m_bclXML.path());
 
-    QDir srcDir(toQString(source));
-    
-    for (const QFileInfo &info : srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot))
+    for (const auto &path : openstudio::filesystem::directory_files(source))
     {
-      QString srcItemPath = toQString(source) + "/" + info.fileName();
-      QString dstItemPath = toQString(destination) + "/" + info.fileName();
-      if (info.isFile())
+      const auto srcItemPath = source / path;
+      const auto dstItemPath = destination / path;
+
+      if (m_bclXML.hasFile(srcItemPath) || (xmlPath == openstudio::filesystem::system_complete(srcItemPath)))
       {
-        if (m_bclXML.hasFile(toPath(srcItemPath)) || (xmlPath == boost::filesystem::system_complete(toPath(srcItemPath))))
+        if (!openstudio::filesystem::copy_file_no_throw(srcItemPath, dstItemPath))
         {
-          if (!QFile::copy(srcItemPath, dstItemPath))
-          {
-            return false;
-          }
+          return false;
         }
       }
     }
@@ -85,35 +86,44 @@ namespace openstudio{
   }
 
   BCLMeasure::BCLMeasure(const std::string& name, const std::string& className, const openstudio::path& dir,
-                         const std::string& taxonomyTag, MeasureType measureType, 
+                         const std::string& taxonomyTag, MeasureType measureType,
                          const std::string& description, const std::string& modelerDescription)
-    : m_directory(boost::filesystem::system_complete(dir)),
+    : m_directory(openstudio::filesystem::system_complete(dir)),
       m_bclXML(BCLXMLType::MeasureXML)
   {
-
+    openstudio::path measureDocDir = dir / toPath("docs");
     openstudio::path measureTestDir = dir / toPath("tests");
     std::string lowerClassName = toUnderscoreCase(className);
 
     createDirectory(dir);
+    createDirectory(measureDocDir);
     createDirectory(measureTestDir);
 
     // read in template files
-    QString measureTemplate;
-    QString testTemplate;
+    std::string measureTemplate;
+    std::string licenseTemplate = ":/templates/common/LICENSE.md";
+    std::string readmeTemplate = ":/templates/common/README.md.erb";
+    std::string docTemplate = ":/templates/common/docs/.gitkeep";;
+    std::string testTemplate;
+
     QString templateClassName;
     QString templateName = "NAME_TEXT";
     QString templateDescription = "DESCRIPTION_TEXT";
     QString templateModelerDescription = "MODELER_DESCRIPTION_TEXT";
     std::vector<BCLMeasureArgument> arguments;
-    QString testOSM;
-    QString resourceFile;
+    std::vector<BCLMeasureOutput> outputs;
+    std::string testOSM;
+    std::string testEPW;
+    std::string resourceFile;
+
     openstudio::path testOSMPath;
+    openstudio::path testEPWPath;
     openstudio::path resourceFilePath;
     if (measureType == MeasureType::ModelMeasure){
       measureTemplate = ":/templates/ModelMeasure/measure.rb";
       testTemplate = ":/templates/ModelMeasure/tests/model_measure_test.rb";
       testOSM = ":/templates/ModelMeasure/tests/example_model.osm";
-      templateClassName = "ModelMeasure";
+      templateClassName = "ModelMeasureName";
 
       createDirectory(dir / toPath("tests"));
       testOSMPath = dir / toPath("tests/example_model.osm");
@@ -131,7 +141,7 @@ namespace openstudio{
     }else if (measureType == MeasureType::EnergyPlusMeasure){
       measureTemplate = ":/templates/EnergyPlusMeasure/measure.rb";
       testTemplate = ":/templates/EnergyPlusMeasure/tests/energyplus_measure_test.rb";
-      templateClassName = "EnergyPlusMeasure";
+      templateClassName = "EnergyPlusMeasureName";
 
       createDirectory(dir / toPath("tests"));
 
@@ -139,8 +149,8 @@ namespace openstudio{
       std::string argDisplayName("New zone name");
       std::string argDescription("This name will be used as the name of the new zone.");
       std::string argType("String");
-      BCLMeasureArgument arg(argName, argDisplayName, argDescription, argType, 
-                             boost::none, true, false, boost::none, 
+      BCLMeasureArgument arg(argName, argDisplayName, argDescription, argType,
+                             boost::none, true, false, boost::none,
                              std::vector<std::string>(), std::vector<std::string>(),
                              boost::none, boost::none);
       arguments.push_back(arg);
@@ -148,7 +158,7 @@ namespace openstudio{
     }else if (measureType == MeasureType::UtilityMeasure){
       measureTemplate = ":/templates/UtilityMeasure/measure.rb";
       testTemplate = ":/templates/UtilityMeasure/tests/utility_measure_test.rb";
-      templateClassName = "UtilityMeasure";
+      templateClassName = "UtilityMeasureName";
 
       createDirectory(dir / toPath("tests"));
 
@@ -156,11 +166,13 @@ namespace openstudio{
       measureTemplate = ":/templates/ReportingMeasure/measure.rb";
       testTemplate = ":/templates/ReportingMeasure/tests/reporting_measure_test.rb";
       testOSM = ":/templates/ReportingMeasure/tests/example_model.osm";
+      testEPW = ":/templates/ReportingMeasure/tests/USA_CO_Golden-NREL.724666_TMY3.epw";
       resourceFile = ":/templates/ReportingMeasure/resources/report.html.in";
-      templateClassName = "ReportingMeasure";
+      templateClassName = "ReportingMeasureName";
 
       createDirectory(dir / toPath("tests"));
       testOSMPath = dir / toPath("tests/example_model.osm");
+      testEPWPath = dir / toPath("tests/USA_CO_Golden-NREL.724666_TMY3.epw");
 
       createDirectory(dir / toPath("resources"));
       resourceFilePath = dir / toPath("resources/report.html.in");
@@ -168,64 +180,65 @@ namespace openstudio{
     }
 
     QString measureString;
-    if (!measureTemplate.isEmpty()){
-      QFile file(measureTemplate);
-      if(file.open(QFile::ReadOnly)){
-        QTextStream docIn(&file);
-        measureString = docIn.readAll();
-        measureString.replace(templateClassName, toQString(className));
-        measureString.replace(templateName, toQString(name));
-        measureString.replace(templateModelerDescription, toQString(modelerDescription)); // put first as this includes description tag
-        measureString.replace(templateDescription, toQString(description));
-        file.close();
-      }
+    if (!measureTemplate.empty()){
+      measureString = toQString(::openstudio::embedded_files::getFileAsString(measureTemplate));
+      measureString.replace(templateClassName, toQString(className));
+      measureString.replace(templateName, toQString(name));
+      measureString.replace(templateModelerDescription, toQString(modelerDescription)); // put first as this includes description tag
+      measureString.replace(templateDescription, toQString(description));
+    }
+
+    QString licenseString;
+    if (!licenseTemplate.empty()){
+      licenseString = toQString(::openstudio::embedded_files::getFileAsString(licenseTemplate));
+    }
+
+    QString readmeString;
+    if (!readmeTemplate.empty()){
+      readmeString = toQString(::openstudio::embedded_files::getFileAsString(readmeTemplate));
+    }
+
+    QString docString;
+    if (!docTemplate.empty()){
+      docString = toQString(::openstudio::embedded_files::getFileAsString(docTemplate));
     }
 
     QString testString;
-    if (!testTemplate.isEmpty()){
-      QFile file(testTemplate);
-      if(file.open(QFile::ReadOnly)){
-        QTextStream docIn(&file);
-        testString = docIn.readAll();
-        testString.replace(templateClassName, toQString(className));
-        file.close();
-      }
+    if (!testTemplate.empty()){
+      testString = toQString(::openstudio::embedded_files::getFileAsString(testTemplate));
+      testString.replace(templateClassName, toQString(className));
     }
 
     QString testOSMString;
-    if (!testOSM.isEmpty()){
-      QFile file(testOSM);
-      if(file.open(QFile::ReadOnly)){
-        QTextStream docIn(&file);
-        testOSMString = docIn.readAll();
-        file.close();
-      }
+    if (!testOSM.empty()){
+      testOSMString = toQString(::openstudio::embedded_files::getFileAsString(testOSM));
+    }
+
+    QString testEPWString;
+    if (!testEPW.empty()){
+      testEPWString = toQString(::openstudio::embedded_files::getFileAsString(testEPW));
     }
 
     QString resourceFileString;
-    if (!resourceFile.isEmpty()){
-      QFile file(resourceFile);
-      if(file.open(QFile::ReadOnly)){
-        QTextStream docIn(&file);
-        resourceFileString = docIn.readAll();
-        file.close();
-      }
+    if (!resourceFile.empty()){
+      resourceFileString = toQString(::openstudio::embedded_files::getFileAsString(resourceFile));
     }
 
     // write files
     openstudio::path measureXMLPath = dir / toPath("measure.xml");
     openstudio::path measureScriptPath = dir / toPath("measure.rb");
+    openstudio::path measureLicensePath = dir / toPath("LICENSE.md");
+    openstudio::path measureReadmePath = dir / toPath("README.md.erb");
+    openstudio::path measureDocPath = measureDocDir / toPath(".gitkeep");
     openstudio::path measureTestPath = measureTestDir / toPath(lowerClassName + "_test.rb");
 
     // write measure.rb
     {
-      QFile file(toQString(measureScriptPath));
-      bool opened = file.open(QIODevice::WriteOnly);
-      if (!opened){
+      openstudio::filesystem::ofstream file(measureScriptPath, std::ios_base::binary);
+      if (!file.is_open()){
         LOG_AND_THROW("Cannot write measure.rb to '" << toString(measureScriptPath) << "'");
       }
-      QTextStream textStream(&file);
-      textStream << measureString;
+      openstudio::filesystem::write(file, measureString);
       file.close();
 
       BCLFileReference measureScriptFileReference(measureScriptPath, true);
@@ -234,15 +247,55 @@ namespace openstudio{
       m_bclXML.addFile(measureScriptFileReference);
     }
 
+    // write LICENSE.md
+    {
+      openstudio::filesystem::ofstream file(measureLicensePath, std::ios_base::binary);
+      if (!file.is_open()){
+        LOG_AND_THROW("Cannot write LICENSE.md to '" << toString(measureLicensePath) << "'");
+      }
+      openstudio::filesystem::write(file, licenseString);
+      file.close();
+
+      BCLFileReference measureLicenseFileReference(measureLicensePath, true);
+      measureLicenseFileReference.setUsageType("license");
+      m_bclXML.addFile(measureLicenseFileReference);
+    }
+
+    // write README.md.erb
+    {
+      openstudio::filesystem::ofstream file(measureReadmePath, std::ios_base::binary);
+      if (!file.is_open()){
+        LOG_AND_THROW("Cannot write README.md.erb to '" << toString(measureReadmePath) << "'");
+      }
+      openstudio::filesystem::write(file, readmeString);
+      file.close();
+
+      BCLFileReference measureReadmeFileReference(measureReadmePath, true);
+      measureReadmeFileReference.setUsageType("readmeerb");
+      m_bclXML.addFile(measureReadmeFileReference);
+    }
+
+    // write docs
+    {
+      openstudio::filesystem::ofstream file(measureDocPath, std::ios_base::binary);
+      if (!file.is_open()){
+        LOG_AND_THROW("Cannot write doc file to '" << toString(measureDocPath) << "'");
+      }
+      openstudio::filesystem::write(file, docString);
+      file.close();
+
+      BCLFileReference measureDocFileReference(measureDocPath, true);
+      measureDocFileReference.setUsageType("doc");
+      m_bclXML.addFile(measureDocFileReference);
+    }
+
     // write test
     {
-      QFile file(toQString(measureTestPath));
-      bool opened = file.open(QIODevice::WriteOnly);
-      if (!opened){
+      openstudio::filesystem::ofstream file(measureTestPath, std::ios_base::binary);
+      if (!file.is_open()){
         LOG_AND_THROW("Cannot write test file to '" << toString(measureTestPath) << "'");
       }
-      QTextStream textStream(&file);
-      textStream << testString;
+      openstudio::filesystem::write(file, testString);
       file.close();
 
       BCLFileReference measureTestFileReference(measureTestPath, true);
@@ -251,15 +304,13 @@ namespace openstudio{
     }
 
     // write test osm
-    { 
+    {
       if (!testOSMString.isEmpty()){
-        QFile file(toQString(testOSMPath));
-        bool opened = file.open(QIODevice::WriteOnly);
-        if (!opened){
+        openstudio::filesystem::ofstream file(testOSMPath, std::ios_base::binary);
+        if (!file.is_open()){
           LOG_AND_THROW("Cannot write test osm file to '" << toString(testOSMPath) << "'");
         }
-        QTextStream textStream(&file);
-        textStream << testOSMString;
+        openstudio::filesystem::write(file, testOSMString);
         file.close();
 
         BCLFileReference measureTestOSMFileReference(testOSMPath, true);
@@ -268,16 +319,32 @@ namespace openstudio{
       }
     }
 
+    // write test epw
+    {
+      if (!testEPWString.isEmpty()){
+        QFile file(toQString(testEPWPath));
+        bool opened = file.open(QIODevice::WriteOnly);
+        if (!opened){
+          LOG_AND_THROW("Cannot write test epw file to '" << toString(testEPWPath) << "'");
+        }
+        QTextStream textStream(&file);
+        textStream << testEPWString;
+        file.close();
+
+        BCLFileReference measureTestEPWFileReference(testEPWPath, true);
+        measureTestEPWFileReference.setUsageType("test");
+        m_bclXML.addFile(measureTestEPWFileReference);
+      }
+    }
+
     // write resource
     {
       if (!resourceFileString.isEmpty()){
-        QFile file(toQString(resourceFilePath));
-        bool opened = file.open(QIODevice::WriteOnly);
-        if (!opened){
+        openstudio::filesystem::ofstream file(resourceFilePath, std::ios_base::binary);
+        if (!file.is_open()){
           LOG_AND_THROW("Cannot write resource file to '" << toString(resourceFilePath) << "'");
         }
-        QTextStream textStream(&file);
-        textStream << resourceFileString;
+        openstudio::filesystem::write(file, resourceFileString);
         file.close();
 
         BCLFileReference resourceFileReference(resourceFilePath, true);
@@ -293,6 +360,7 @@ namespace openstudio{
     m_bclXML.setDescription(description);
     m_bclXML.setModelerDescription(modelerDescription);
     m_bclXML.setArguments(arguments);
+    m_bclXML.setOutputs(outputs);
     m_bclXML.addTag(taxonomyTag);
     this->setMeasureType(measureType);
 
@@ -303,7 +371,7 @@ namespace openstudio{
   }
 
   BCLMeasure::BCLMeasure(const openstudio::path& dir)
-    : m_directory(boost::filesystem::system_complete(dir)),
+    : m_directory(openstudio::filesystem::system_complete(dir)),
       m_bclXML(BCLXMLType::MeasureXML)
   {
     openstudio::path xmlPath = m_directory / toPath("measure.xml");
@@ -361,7 +429,7 @@ namespace openstudio{
     }
 
     if (result.isEmpty()){
-      result = QString("A") + createUUID().toString();
+      result = QString("A") + openstudio::toQString(createUUID());
       result.replace('{',"").replace('}',"").replace('-',"");
     }else if (!startsWithLetter){
       result.prepend("A");
@@ -379,13 +447,14 @@ namespace openstudio{
     }
     return result;
   }
-
+  /*
   std::vector<BCLMeasure> BCLMeasure::patApplicationMeasures()
   {
     openstudio::path path = patApplicationMeasuresDir();
     return getMeasuresInDir(path);
   }
-
+  */
+  /*
   openstudio::path BCLMeasure::patApplicationMeasuresDir()
   {
     openstudio::path result;
@@ -394,9 +463,10 @@ namespace openstudio{
     }else{
       result = getApplicationRunDirectory().parent_path() / openstudio::toPath("share/openstudio-" + openStudioVersion() + "/pat/Measures");
     }
-    return boost::filesystem::system_complete(result);
+    return openstudio::filesystem::system_complete(result);
   }
-
+  */
+  /*
   BCLMeasure BCLMeasure::alternativeModelMeasure() {
     return BCLMeasure(patApplicationMeasuresDir() / toPath("ReplaceModel"));
   }
@@ -416,7 +486,7 @@ namespace openstudio{
   BCLMeasure BCLMeasure::radianceMeasure() {
     return BCLMeasure(patApplicationMeasuresDir() / toPath("RadianceMeasure"));
   }
-
+  */
   std::vector<BCLMeasure> BCLMeasure::localBCLMeasures()
   {
     return LocalBCL::instance().measures();
@@ -433,7 +503,7 @@ namespace openstudio{
     QSettings settings("OpenStudio", "BCLMeasure");
     QString value = settings.value("userMeasuresDir", QDir::homePath().append("/OpenStudio/Measures")).toString();
     openstudio::path result = toPath(value);
-    return boost::filesystem::system_complete(result);
+    return openstudio::filesystem::system_complete(result);
   }
 
   bool BCLMeasure::setUserMeasuresDir(const openstudio::path& userMeasuresDir)
@@ -575,8 +645,8 @@ namespace openstudio{
     }
 
     try{
-      boost::filesystem::directory_iterator endit; // default construction yields past-the-end
-      boost::filesystem::directory_iterator it(dir);
+      openstudio::filesystem::directory_iterator endit; // default construction yields past-the-end
+      openstudio::filesystem::directory_iterator it(dir);
       for( ; it != endit; ++it )
       {
         if ( is_directory(it->status()) )
@@ -623,6 +693,11 @@ namespace openstudio{
     return toUUID("{" + versionId() + "}");
   }
 
+  boost::optional<DateTime> BCLMeasure::versionModified() const
+  {
+    return m_bclXML.versionModified();
+  }
+
   std::string BCLMeasure::xmlChecksum() const
   {
     return m_bclXML.xmlChecksum();
@@ -656,6 +731,11 @@ namespace openstudio{
   std::vector<BCLMeasureArgument> BCLMeasure::arguments() const
   {
     return m_bclXML.arguments();
+  }
+
+  std::vector<BCLMeasureOutput> BCLMeasure::outputs() const
+  {
+    return m_bclXML.outputs();
   }
 
   std::vector<std::string> BCLMeasure::tags() const
@@ -708,9 +788,14 @@ namespace openstudio{
     m_bclXML.setModelerDescription(description);
   }
 
-  void BCLMeasure::setArguments(const std::vector<BCLMeasureArgument>& arguments)
+  void BCLMeasure::setArguments(const std::vector<BCLMeasureArgument>& args)
   {
-    m_bclXML.setArguments(arguments);
+    m_bclXML.setArguments(args);
+  }
+
+  void BCLMeasure::setOutputs(const std::vector<BCLMeasureOutput>& outputs)
+  {
+    m_bclXML.setOutputs(outputs);
   }
 
    std::string BCLMeasure::taxonomyTag() const
@@ -818,25 +903,24 @@ namespace openstudio{
     m_bclXML.incrementVersionId();
   }
 
-  bool BCLMeasure::updateMeasureScript(const MeasureType& oldMeasureType, const MeasureType& newMeasureType, 
-                                       const std::string& oldClassName, const std::string& newClassName, 
-                                       const std::string& name, const std::string& description, 
+  bool BCLMeasure::updateMeasureScript(const MeasureType& oldMeasureType, const MeasureType& newMeasureType,
+                                       const std::string& oldClassName, const std::string& newClassName,
+                                       const std::string& name, const std::string& description,
                                        const std::string& modelerDescription)
   {
     boost::optional<openstudio::path> path = primaryRubyScriptPath();
     if (path && exists(*path)){
 
       QString fileString;
-      QFile file(toQString(*path));
-      if (file.open(QFile::ReadOnly)){
+      openstudio::filesystem::ifstream file(*path, std::ios_base::binary);
+      if (file.is_open()){
 
         QRegularExpression::PatternOptions opts = QRegularExpression::DotMatchesEverythingOption | QRegularExpression::MultilineOption;
-        QString nameFunction = "\\1def name\n\\1  return \" " + toQString(name) + "\"\n\\1end";
+        QString nameFunction = "\\1def name\n\\1  return \"" + toQString(name) + "\"\n\\1end";
         QString descriptionFunction = "\\1def description\n\\1  return \"" + toQString(description) + "\"\n\\1end";
         QString modelerDescriptionFunction = "\\1def modeler_description\n\\1  return \"" + toQString(modelerDescription) + "\"\n\\1end";
 
-        QTextStream docIn(&file);
-        fileString = docIn.readAll();
+        fileString = openstudio::filesystem::read_as_QByteArray(file);
 
         if (oldMeasureType != newMeasureType){
           fileString.replace(toQString(oldMeasureType.valueName()), toQString(newMeasureType.valueName()));
@@ -853,10 +937,10 @@ namespace openstudio{
         fileString.replace(QRegularExpression("^(\\s+)def\\s+modeler_description(.*?)end[\\s#]?$", opts), modelerDescriptionFunction);
         file.close();
 
-        if (file.open(QIODevice::WriteOnly)){
-          QTextStream textStream(&file);
-          textStream << fileString;
-          file.close();
+        openstudio::filesystem::ofstream ofile(*path, std::ios_base::binary);
+        if (ofile.is_open()){
+          openstudio::filesystem::write(ofile, fileString);
+          ofile.close();
           return true;
         }
       }
@@ -864,7 +948,7 @@ namespace openstudio{
 
     return false;
   }
-  
+
   bool BCLMeasure::updateMeasureTests(const std::string& oldClassName, const std::string& newClassName)
   {
     bool result = true;
@@ -879,30 +963,33 @@ namespace openstudio{
         std::string oldLowerClassName = toUnderscoreCase(oldClassName);
         std::string newLowerClassName = toUnderscoreCase(newClassName);
 
-        QString oldPath = toQString(fileRef.path());
-        QString newPath = oldPath;
+        openstudio::path oldPath = fileRef.path();
+        openstudio::path newPath = oldPath;
+
+        QString oldFileName = toQString(fileRef.path().filename());
+        QString newFileName = oldFileName;
         if (!oldLowerClassName.empty() && !newLowerClassName.empty() && oldLowerClassName != newLowerClassName){
           QString temp = toQString(oldLowerClassName);
-          int index = newPath.lastIndexOf(temp);
+          int index = newFileName.lastIndexOf(temp);
           if (index >= 0){
-            newPath.replace(index, temp.size(), toQString(newLowerClassName));
+            newFileName.replace(index, temp.size(), toQString(newLowerClassName));
+            newPath = oldPath.parent_path() / toPath(newFileName);
+
+            if (openstudio::filesystem::exists(newPath)) {
+              // somehow this file already exists (e.g. no name change), don't clobber it
+              newPath = oldPath;
+            }else{
+              openstudio::filesystem::copy_file(oldPath, newPath);
+              openstudio::filesystem::remove(oldPath);
+            }
           }
         }
 
-        if (QFile::exists(newPath)) {
-          // somehow this file already exists, don't clobber it
-          newPath = oldPath;
-        }else{
-          QFile::copy(oldPath, newPath);
-          QFile::remove(oldPath);
-        }
-        
         QString fileString;
-        QFile file(newPath);
-        if (file.open(QFile::ReadOnly)){
+        openstudio::filesystem::ifstream file(newPath, std::ios_base::binary);
+        if (file.is_open()){
 
-          QTextStream docIn(&file);
-          fileString = docIn.readAll();
+          fileString = openstudio::filesystem::read_as_QByteArray(file);
           if (!oldClassName.empty() && !newClassName.empty() && oldClassName != newClassName){
             // DLM: might also want to check that oldClassName is greater than 3 characters long?
             // should we be doing a more selective replace (like require leading space and trailing space, ., or :)?
@@ -910,10 +997,10 @@ namespace openstudio{
           }
           file.close();
 
-          if (file.open(QIODevice::WriteOnly)){
-            QTextStream textStream(&file);
-            textStream << fileString;
-            file.close();
+          openstudio::filesystem::ofstream file2(newPath, std::ios_base::binary);
+          if (file2.is_open()){
+            openstudio::filesystem::write(file2, fileString);
+            file2.close();
 
           } else {
             result = false;
@@ -932,7 +1019,7 @@ namespace openstudio{
   {
     m_bclXML.clearFiles();
   }
-  
+
   void BCLMeasure::addAttribute(const Attribute& attribute)
   {
     m_bclXML.addAttribute(attribute);
@@ -947,10 +1034,25 @@ namespace openstudio{
   {
     return m_bclXML.removeAttributes(name);
   }
- 
+
   void BCLMeasure::clearAttributes()
   {
     m_bclXML.clearAttributes();
+  }
+
+  bool BCLMeasure::missingRequiredFields() const
+  {
+    bool missing = (
+      uid().empty() ||
+      versionId().empty() ||
+      xmlChecksum().empty() ||
+      name().empty() ||
+      displayName().empty() ||
+      className().empty() ||
+      description().empty() ||
+      modelerDescription().empty()
+      );
+    return missing;
   }
 
   bool BCLMeasure::checkForUpdatesFiles()
@@ -960,10 +1062,18 @@ namespace openstudio{
     std::vector<BCLFileReference> filesToRemove;
     std::vector<BCLFileReference> filesToAdd;
     for (BCLFileReference file : m_bclXML.files()) {
+      std::string filename = file.fileName();
       if (!exists(file.path())){
         result = true;
         // what if this is the measure.rb file?
         filesToRemove.push_back(file);
+      }else if (filename.empty() || boost::starts_with(filename, ".")){
+        if (filename == ".gitkeep") {
+          // allow this file
+        } else {
+          result = true;
+          filesToRemove.push_back(file);
+        }
       }else if (file.checkForUpdate()){
         result = true;
         filesToAdd.push_back(file);
@@ -973,40 +1083,82 @@ namespace openstudio{
     // look for new files and add them
     openstudio::path srcDir = m_directory / "tests";
     openstudio::path ignoreDir = srcDir / "output";
-    for (const QFileInfo &info : QDir(toQString(srcDir)).entryInfoList(QDir::Files))
-    {
-      openstudio::path srcItemPath = srcDir / toPath(info.fileName());
-      openstudio::path parentPath = srcItemPath.parent_path();
-      bool ignore = false;
-      while (!parentPath.empty()){
-        if (parentPath == ignoreDir){
+
+    if (openstudio::filesystem::is_directory(srcDir)) {
+      for (const auto &file : openstudio::filesystem::directory_files(srcDir))
+      {
+        openstudio::path srcItemPath = srcDir / file;
+        openstudio::path parentPath = srcItemPath.parent_path();
+        bool ignore = false;
+
+        std::string filename = toString(file.filename());
+        if (filename.empty() || boost::starts_with(filename, ".")){
           ignore = true;
-          break;
         }
-        parentPath = parentPath.parent_path();
-      }
 
-      if (ignore){
-        continue;
-      }
+        while (!ignore && !parentPath.empty()){
+          if (parentPath == ignoreDir){
+            ignore = true;
+            break;
+          }
+          parentPath = parentPath.parent_path();
+        }
 
-      if (!m_bclXML.hasFile(srcItemPath)){
-        BCLFileReference file(srcItemPath, true);
-        file.setUsageType("test");
-        result = true;
-        filesToAdd.push_back(file);
+        if (ignore){
+          continue;
+        }
+
+        if (!m_bclXML.hasFile(srcItemPath)){
+          BCLFileReference file(srcItemPath, true);
+          file.setUsageType("test");
+          result = true;
+          filesToAdd.push_back(file);
+        }
       }
     }
 
     srcDir = m_directory / "resources";
-    for (const QFileInfo &info : QDir(toQString(srcDir)).entryInfoList(QDir::Files))
-    {
-      openstudio::path srcItemPath = srcDir / toPath(info.fileName());
-      if (!m_bclXML.hasFile(srcItemPath)){
-        BCLFileReference file(srcItemPath, true);
-        file.setUsageType("resource");
-        result = true;
-        filesToAdd.push_back(file);
+    if (openstudio::filesystem::is_directory(srcDir)) {
+      for (const auto &file : openstudio::filesystem::directory_files(srcDir))
+      {
+        openstudio::path srcItemPath = srcDir / file;
+
+        std::string filename = toString(file.filename());
+        if (filename.empty() || boost::starts_with(filename, ".")){
+          continue;
+        }
+
+        if (!m_bclXML.hasFile(srcItemPath)){
+          BCLFileReference file(srcItemPath, true);
+          file.setUsageType("resource");
+          result = true;
+          filesToAdd.push_back(file);
+        }
+      }
+    }
+
+    srcDir = m_directory / "docs";
+    if (openstudio::filesystem::is_directory(srcDir)) {
+      for (const auto &file : openstudio::filesystem::directory_files(srcDir))
+      {
+        openstudio::path srcItemPath = srcDir / file;
+
+        std::string filename = toString(file.filename());
+        if (filename.empty() || boost::starts_with(filename, ".")){
+          if (filename == ".gitkeep") {
+            // allow this file
+          } else {
+            continue;
+          }
+
+        }
+
+        if (!m_bclXML.hasFile(srcItemPath)){
+          BCLFileReference file(srcItemPath, true);
+          file.setUsageType("doc");
+          result = true;
+          filesToAdd.push_back(file);
+        }
       }
     }
 
@@ -1018,6 +1170,39 @@ namespace openstudio{
         file.setUsageType("script");
         // we don't know what the actual version this was created for, we also don't know minimum version
         file.setSoftwareProgramVersion(openStudioVersion());
+        result = true;
+        filesToAdd.push_back(file);
+      }
+    }
+
+    // check for LICENSE.md
+    srcItemPath = m_directory / toPath("LICENSE.md");
+    if (!m_bclXML.hasFile(srcItemPath)){
+      if (exists(srcItemPath)){
+        BCLFileReference file(srcItemPath, true);
+        file.setUsageType("license");
+        result = true;
+        filesToAdd.push_back(file);
+      }
+    }
+
+    // check for README.me
+    srcItemPath = m_directory / toPath("README.md");
+    if (!m_bclXML.hasFile(srcItemPath)){
+      if (exists(srcItemPath)){
+        BCLFileReference file(srcItemPath, true);
+        file.setUsageType("readme");
+        result = true;
+        filesToAdd.push_back(file);
+      }
+    }
+
+    // check for README.me.erb
+    srcItemPath = m_directory / toPath("README.md.erb");
+    if (!m_bclXML.hasFile(srcItemPath)){
+      if (exists(srcItemPath)){
+        BCLFileReference file(srcItemPath, true);
+        file.setUsageType("readmeerb");
         result = true;
         filesToAdd.push_back(file);
       }
@@ -1061,7 +1246,7 @@ namespace openstudio{
 
   boost::optional<BCLMeasure> BCLMeasure::clone(const openstudio::path& newDir) const
   {
-    if (QFile::exists(toQString(newDir))){
+    if (openstudio::filesystem::exists(newDir)){
       if (!isEmptyDirectory(newDir)){
         return boost::none;
       }

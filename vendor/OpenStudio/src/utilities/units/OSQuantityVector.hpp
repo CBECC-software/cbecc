@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_UNITS_OSQUANTITYVECTOR_HPP
 #define UTILITIES_UNITS_OSQUANTITYVECTOR_HPP
@@ -31,9 +41,9 @@ namespace openstudio {
 class Quantity;
 
 /** Represents a vector of \link Quantity quantities \endlink all with the same units.
- *  Provides performance improvements over directly operating on std::vector<Quantity>. 
- *  The constructors and assignment operator ensure that this class behaves as "plain 
- *  old data" (POD) by cloning any units information (to avoid multiple objects 
+ *  Provides performance improvements over directly operating on std::vector<Quantity>.
+ *  The constructors and assignment operator ensure that this class behaves as "plain
+ *  old data" (POD) by cloning any units information (to avoid multiple objects
  *  pointing to the exact same unit data). */
 class UTILITIES_API OSQuantityVector {
  public:
@@ -58,13 +68,13 @@ class UTILITIES_API OSQuantityVector {
 
   /** Returns a clone of this object's units. */
   Unit units() const;
-  
+
   UnitSystem system() const;
 
   Scale scale() const;
 
-  /** Creates a vector of separate quantities. Note that it is better to do mathematical 
-   *  operations and convert units using OSOptionalQuantity. Only use this method once the 
+  /** Creates a vector of separate quantities. Note that it is better to do mathematical
+   *  operations and convert units using OSOptionalQuantity. Only use this method once the
    *  values and units of this OSOptionalQuantity are fixed. */
   std::vector<Quantity> quantities() const;
 
@@ -73,7 +83,7 @@ class UTILITIES_API OSQuantityVector {
 
   Quantity getQuantity(unsigned i) const;
 
-  /** Return value is equivalent to values().empty(). */ 
+  /** Return value is equivalent to values().empty(). */
   bool empty() const;
 
   /** Return value is equivalent to values().size(). */
@@ -95,7 +105,7 @@ class UTILITIES_API OSQuantityVector {
   /** Removes the last value in this OSQuantityVector. */
   void pop_back();
 
-  /** Changes the size of this OSQuantityVector to n, using value to fill in any newly 
+  /** Changes the size of this OSQuantityVector to n, using value to fill in any newly
    *  created elements as necessary. \post{size() == n} */
   void resize(unsigned n, double value=0.0);
 
@@ -118,11 +128,11 @@ class UTILITIES_API OSQuantityVector {
   /** Throws if !units().optionalCast<TemperatureUnit>(). */
   bool isRelative() const;
 
-  /** Set temperature as absolute. Throws if !units().optionalCast<TemperatureUnit>(). 
+  /** Set temperature as absolute. Throws if !units().optionalCast<TemperatureUnit>().
    *  \post{isAbsolute()} */
   void setAsAbsolute();
 
-  /** Set temperature as relative. Throws if !units().optionalCast<TemperatureUnit>(). 
+  /** Set temperature as relative. Throws if !units().optionalCast<TemperatureUnit>().
    *  \post{isRelative()} */
   void setAsRelative();
 
@@ -207,23 +217,23 @@ UTILITIES_API OSQuantityVector operator-(const Quantity& lQuantity,
 /** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator*(const OSQuantityVector& lVector,
                                          const Quantity& rQuantity);
-                                         
-/** \relates OSQuantityVector */                                         
+
+/** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator*(const OSQuantityVector& lVector, double d);
 
 /** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator*(const Quantity& lQuantity,
                                          const OSQuantityVector& rVector);
-                                         
-/** \relates OSQuantityVector */                                         
+
+/** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator*(double d,
                                          const OSQuantityVector& rVector);
 
 /** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator/(const OSQuantityVector& lVector,
                                          const Quantity& rQuantity);
-                                         
-/** \relates OSQuantityVector */                                         
+
+/** \relates OSQuantityVector */
 UTILITIES_API OSQuantityVector operator/(const OSQuantityVector& lVector, double d);
 
 /** \relates OSQuantityVector */

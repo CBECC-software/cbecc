@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationCompressor.hpp"
 #include "RefrigerationCompressor_Impl.hpp"
@@ -63,9 +73,21 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationCompressor_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // TODO: Implement checks
+      // THE FOLLOWING OUTPUTS ARE AVAILABLE FOR SYSTEMS THAT SERVE CASES AND/OR WALKINS:
+      "Refrigeration Compressor Electric Power",
+      "Refrigeration Compressor Electric Energy",
+      "Refrigeration Compressor Heat Transfer Rate",
+      "Refrigeration Compressor Heat Transfer Energy",
+      "Refrigeration Compressor Run Time Fraction",
+      // THE FOLLOWING OUTPUTS ARE AVAILABLE FOR SYSTEMS THAT SERVE AIR CHILLERS:
+      "Refrigeration Air Chiller System Compressor Electric Power",
+      "Refrigeration Air Chiller System Compressor Electric Energy",
+      "Refrigeration Air Chiller System Compressor Heat Transfer Rate",
+      "Refrigeration Air Chiller System Compressor Heat Transfer Energy",
+      "Refrigeration Chiller Compressor Run TimeFraction"
+    };
     return result;
   }
 
@@ -182,7 +204,7 @@ namespace detail {
     return result;
   }
 
-  void RefrigerationCompressor_Impl::setRatedSuperheat(boost::optional<double> ratedSuperheat) {
+  bool RefrigerationCompressor_Impl::setRatedSuperheat(boost::optional<double> ratedSuperheat) {
     bool result(false);
     if (ratedSuperheat) {
       result = setDouble(OS_Refrigeration_CompressorFields::RatedSuperheat, ratedSuperheat.get());
@@ -193,6 +215,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCompressor_Impl::resetRatedSuperheat() {
@@ -200,7 +223,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCompressor_Impl::setRatedReturnGasTemperature(boost::optional<double> ratedReturnGasTemperature) {
+  bool RefrigerationCompressor_Impl::setRatedReturnGasTemperature(boost::optional<double> ratedReturnGasTemperature) {
     bool result(false);
     if (ratedReturnGasTemperature) {
       result = setDouble(OS_Refrigeration_CompressorFields::RatedReturnGasTemperature, ratedReturnGasTemperature.get());
@@ -211,6 +234,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCompressor_Impl::resetRatedReturnGasTemperature() {
@@ -218,7 +242,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCompressor_Impl::setRatedLiquidTemperature(boost::optional<double> ratedLiquidTemperature) {
+  bool RefrigerationCompressor_Impl::setRatedLiquidTemperature(boost::optional<double> ratedLiquidTemperature) {
     bool result(false);
     if (ratedLiquidTemperature) {
       result = setDouble(OS_Refrigeration_CompressorFields::RatedLiquidTemperature, ratedLiquidTemperature.get());
@@ -229,6 +253,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCompressor_Impl::resetRatedLiquidTemperature() {
@@ -236,7 +261,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCompressor_Impl::setRatedSubcooling(boost::optional<double> ratedSubcooling) {
+  bool RefrigerationCompressor_Impl::setRatedSubcooling(boost::optional<double> ratedSubcooling) {
     bool result(false);
     if (ratedSubcooling) {
       result = setDouble(OS_Refrigeration_CompressorFields::RatedSubcooling, ratedSubcooling.get());
@@ -247,6 +272,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCompressor_Impl::resetRatedSubcooling() {
@@ -254,9 +280,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCompressor_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool RefrigerationCompressor_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Refrigeration_CompressorFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCompressor_Impl::resetEndUseSubcategory() {
@@ -322,7 +349,7 @@ RefrigerationCompressor::RefrigerationCompressor(const Model& model)
   : ParentObject(RefrigerationCompressor::iddObjectType(),model)
 {
   OS_ASSERT(getImpl<detail::RefrigerationCompressor_Impl>());
-  
+
   CurveBicubic powerCurve = CurveBicubic(model);
   powerCurve.setName("Refrigeration Compressor Power Curve");
   powerCurve.setCoefficient1Constant(4451.46);
@@ -365,7 +392,7 @@ RefrigerationCompressor::RefrigerationCompressor(const Model& model)
   capacityCurve.setInputUnitTypeforX("Temperature");
   capacityCurve.setInputUnitTypeforY("Temperature");
   capacityCurve.setOutputUnitType("Capacity");
-  
+
   ok = setRefrigerationCompressorCapacityCurve(capacityCurve);
   OS_ASSERT(ok);
 
@@ -438,40 +465,40 @@ bool RefrigerationCompressor::setRefrigerationCompressorCapacityCurve(const Curv
   return getImpl<detail::RefrigerationCompressor_Impl>()->setRefrigerationCompressorCapacityCurve(curveBicubic);
 }
 
-void RefrigerationCompressor::setRatedSuperheat(double ratedSuperheat) {
-  getImpl<detail::RefrigerationCompressor_Impl>()->setRatedSuperheat(ratedSuperheat);
+bool RefrigerationCompressor::setRatedSuperheat(double ratedSuperheat) {
+  return getImpl<detail::RefrigerationCompressor_Impl>()->setRatedSuperheat(ratedSuperheat);
 }
 
 void RefrigerationCompressor::resetRatedSuperheat() {
   getImpl<detail::RefrigerationCompressor_Impl>()->resetRatedSuperheat();
 }
 
-void RefrigerationCompressor::setRatedReturnGasTemperature(double ratedReturnGasTemperature) {
-  getImpl<detail::RefrigerationCompressor_Impl>()->setRatedReturnGasTemperature(ratedReturnGasTemperature);
+bool RefrigerationCompressor::setRatedReturnGasTemperature(double ratedReturnGasTemperature) {
+  return getImpl<detail::RefrigerationCompressor_Impl>()->setRatedReturnGasTemperature(ratedReturnGasTemperature);
 }
 
 void RefrigerationCompressor::resetRatedReturnGasTemperature() {
   getImpl<detail::RefrigerationCompressor_Impl>()->resetRatedReturnGasTemperature();
 }
 
-void RefrigerationCompressor::setRatedLiquidTemperature(double ratedLiquidTemperature) {
-  getImpl<detail::RefrigerationCompressor_Impl>()->setRatedLiquidTemperature(ratedLiquidTemperature);
+bool RefrigerationCompressor::setRatedLiquidTemperature(double ratedLiquidTemperature) {
+  return getImpl<detail::RefrigerationCompressor_Impl>()->setRatedLiquidTemperature(ratedLiquidTemperature);
 }
 
 void RefrigerationCompressor::resetRatedLiquidTemperature() {
   getImpl<detail::RefrigerationCompressor_Impl>()->resetRatedLiquidTemperature();
 }
 
-void RefrigerationCompressor::setRatedSubcooling(double ratedSubcooling) {
-  getImpl<detail::RefrigerationCompressor_Impl>()->setRatedSubcooling(ratedSubcooling);
+bool RefrigerationCompressor::setRatedSubcooling(double ratedSubcooling) {
+  return getImpl<detail::RefrigerationCompressor_Impl>()->setRatedSubcooling(ratedSubcooling);
 }
 
 void RefrigerationCompressor::resetRatedSubcooling() {
   getImpl<detail::RefrigerationCompressor_Impl>()->resetRatedSubcooling();
 }
 
-void RefrigerationCompressor::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::RefrigerationCompressor_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool RefrigerationCompressor::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::RefrigerationCompressor_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void RefrigerationCompressor::resetEndUseSubcategory() {
@@ -504,10 +531,9 @@ void RefrigerationCompressor::resetTranscriticalCompressorCapacityCurve() {
 
 /// @cond
 RefrigerationCompressor::RefrigerationCompressor(std::shared_ptr<detail::RefrigerationCompressor_Impl> impl)
-  : ParentObject(impl)
+  : ParentObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

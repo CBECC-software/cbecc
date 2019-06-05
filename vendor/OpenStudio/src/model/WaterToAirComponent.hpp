@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_WATERTOAIRCOMPONENT_HPP
 #define MODEL_WATERTOAIRCOMPONENT_HPP
@@ -35,8 +45,8 @@ class AirLoopHVAC;
 
 class PlantLoop;
 
-/** WaterToAirComponent is the base class for model objects which interact with 
- *  an air stream and a water stream.  
+/** WaterToAirComponent is the base class for model objects which interact with
+ *  an air stream and a water stream.
  *
  *  These objects are typically water coils such as the EnergyPlus IDD objects
  *  named Coil:Heating:Water and Coil:Cooling:Water.
@@ -46,29 +56,29 @@ class MODEL_API WaterToAirComponent : public HVACComponent
   public:
   virtual ~WaterToAirComponent() {}
 
-  /** Returns the air inlet port. **/ 
-  virtual unsigned airInletPort();
+  /** Returns the air inlet port. **/
+  virtual unsigned airInletPort() const;
 
   /** Returns the air outlet port. **/
-  virtual unsigned airOutletPort();
+  virtual unsigned airOutletPort() const;
 
   /** Returns the optional ModelObject connected to the air inlet port. **/
-  virtual boost::optional<ModelObject> airInletModelObject();
+  virtual boost::optional<ModelObject> airInletModelObject() const;
 
   /** Returns the optional ModelObject connected to the air outlet port. **/
-  virtual boost::optional<ModelObject> airOutletModelObject();
+  virtual boost::optional<ModelObject> airOutletModelObject() const;
 
   /** Returns the water inlet port. **/
-  virtual unsigned waterInletPort();
+  virtual unsigned waterInletPort() const;
 
   /** Returns the water outlet port. **/
-  virtual unsigned waterOutletPort();
+  virtual unsigned waterOutletPort() const;
 
   /** Returns the optional ModelObject connected to the water inlet port. **/
-  virtual boost::optional<ModelObject> waterInletModelObject();
+  virtual boost::optional<ModelObject> waterInletModelObject() const;
 
   /** Returns the optional ModelObject connected to the water outlet port. **/
-  virtual boost::optional<ModelObject> waterOutletModelObject();
+  virtual boost::optional<ModelObject> waterOutletModelObject() const;
 
   virtual boost::optional<AirLoopHVAC> airLoopHVAC() const;
 
@@ -104,7 +114,7 @@ class MODEL_API WaterToAirComponent : public HVACComponent
 
   friend class openstudio::IdfObject;
 
-  /// @cond 
+  /// @cond
 
   typedef detail::WaterToAirComponent_Impl ImplType;
 

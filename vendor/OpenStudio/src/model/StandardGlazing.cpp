@@ -1,26 +1,39 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "StandardGlazing.hpp"
 #include "StandardGlazing_Impl.hpp"
 
 #include <utilities/idd/IddFactory.hxx>
+
+#include "MaterialPropertyGlazingSpectralData.hpp"
+#include "MaterialPropertyGlazingSpectralData_Impl.hpp"
 
 #include <utilities/idd/OS_WindowMaterial_Glazing_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
@@ -59,8 +72,6 @@ namespace detail {
   const std::vector<std::string>& StandardGlazing_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -75,7 +86,17 @@ namespace detail {
   }
 
   boost::optional<std::string> StandardGlazing_Impl::windowGlassSpectralDataSetName() const {
-    return getString(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName,true);
+    LOG(Warn, "StandardGlazing::windowGlassSpectralDataSetName is deprecated, use StandardGlazing::windowGlassSpectralDataSet instead");
+    boost::optional<MaterialPropertyGlazingSpectralData> spectralData = windowGlassSpectralDataSet();
+    if (spectralData){
+      return spectralData->name();
+    }
+    return boost::none;
+  }
+
+  boost::optional<MaterialPropertyGlazingSpectralData> StandardGlazing_Impl::windowGlassSpectralDataSet() const
+  {
+    return getObject<ModelObject>().getModelObjectTarget<MaterialPropertyGlazingSpectralData>(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName);
   }
 
   double StandardGlazing_Impl::thickness() const {
@@ -274,20 +295,46 @@ namespace detail {
     return result;
   }
 
-  void StandardGlazing_Impl::setWindowGlassSpectralDataSetName(boost::optional<std::string> windowGlassSpectralDataSetName) {
+  bool StandardGlazing_Impl::setWindowGlassSpectralDataSetName(boost::optional<std::string> windowGlassSpectralDataSetName) {
+    LOG(Warn, "StandardGlazing::setWindowGlassSpectralDataSetName is deprecated, use StandardGlazing::setWindowGlassSpectralDataSet");
     bool result(false);
     if (windowGlassSpectralDataSetName) {
       result = setString(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName, windowGlassSpectralDataSetName.get());
+      if (result){
+        result = setOpticalDataType("Spectral");
+        OS_ASSERT(result);
+      }
     }
     else {
       resetWindowGlassSpectralDataSetName();
       result = true;
+      result = setOpticalDataType("SpectralAverage");
+      OS_ASSERT(result);
     }
-    OS_ASSERT(result);
+    return result;
   }
 
   void StandardGlazing_Impl::resetWindowGlassSpectralDataSetName() {
+    LOG(Warn, "StandardGlazing::resetWindowGlassSpectralDataSetName is deprecated, use StandardGlazing::resetWindowGlassSpectralDataSet");
     bool result = setString(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName, "");
+    OS_ASSERT(result);
+    result = setOpticalDataType("SpectralAverage");
+    OS_ASSERT(result);
+  }
+
+  bool StandardGlazing_Impl::setWindowGlassSpectralDataSet(const MaterialPropertyGlazingSpectralData& spectralData) {
+    bool result = setPointer(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName, spectralData.handle());
+    if (result){
+      result = setOpticalDataType("Spectral");
+      OS_ASSERT(result);
+    }
+    return result;
+  }
+
+  void StandardGlazing_Impl::resetWindowGlassSpectralDataSet() {
+    bool result = setString(OS_WindowMaterial_GlazingFields::WindowGlassSpectralDataSetName, "");
+    OS_ASSERT(result);
+    result = setOpticalDataType("SpectralAverage");
     OS_ASSERT(result);
   }
 
@@ -602,8 +649,8 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardGlazing_Impl::setSolarDiffusing(bool solarDiffusing) {
-    setBooleanFieldValue(OS_WindowMaterial_GlazingFields::SolarDiffusing, solarDiffusing);
+  bool StandardGlazing_Impl::setSolarDiffusing(bool solarDiffusing) {
+    return setBooleanFieldValue(OS_WindowMaterial_GlazingFields::SolarDiffusing, solarDiffusing);;
   }
 
   void StandardGlazing_Impl::resetSolarDiffusing() {
@@ -795,6 +842,10 @@ boost::optional<std::string> StandardGlazing::windowGlassSpectralDataSetName() c
   return getImpl<detail::StandardGlazing_Impl>()->windowGlassSpectralDataSetName();
 }
 
+boost::optional<MaterialPropertyGlazingSpectralData> StandardGlazing::windowGlassSpectralDataSet() const {
+  return getImpl<detail::StandardGlazing_Impl>()->windowGlassSpectralDataSet();
+}
+
 double StandardGlazing::solarTransmittance() const {
   return getImpl<detail::StandardGlazing_Impl>()->solarTransmittance();
 }
@@ -935,12 +986,20 @@ bool StandardGlazing::setOpticalDataType(std::string opticalDataType) {
   return getImpl<detail::StandardGlazing_Impl>()->setOpticalDataType(opticalDataType);
 }
 
-void StandardGlazing::setWindowGlassSpectralDataSetName(std::string windowGlassSpectralDataSetName) {
-  getImpl<detail::StandardGlazing_Impl>()->setWindowGlassSpectralDataSetName(windowGlassSpectralDataSetName);
+bool StandardGlazing::setWindowGlassSpectralDataSetName(const std::string& windowGlassSpectralDataSetName) {
+  return getImpl<detail::StandardGlazing_Impl>()->setWindowGlassSpectralDataSetName(windowGlassSpectralDataSetName);
 }
 
 void StandardGlazing::resetWindowGlassSpectralDataSetName() {
   getImpl<detail::StandardGlazing_Impl>()->resetWindowGlassSpectralDataSetName();
+}
+
+bool StandardGlazing::setWindowGlassSpectralDataSet(const MaterialPropertyGlazingSpectralData& spectralData) {
+  return getImpl<detail::StandardGlazing_Impl>()->setWindowGlassSpectralDataSet(spectralData);
+}
+
+void StandardGlazing::resetWindowGlassSpectralDataSet() {
+  getImpl<detail::StandardGlazing_Impl>()->resetWindowGlassSpectralDataSet();
 }
 
 bool StandardGlazing::setSolarTransmittance(double value) {
@@ -1099,8 +1158,13 @@ void StandardGlazing::resetDirtCorrectionFactorforSolarandVisibleTransmittance()
   getImpl<detail::StandardGlazing_Impl>()->resetDirtCorrectionFactorforSolarandVisibleTransmittance();
 }
 
-void StandardGlazing::setSolarDiffusing(bool solarDiffusing) {
-  getImpl<detail::StandardGlazing_Impl>()->setSolarDiffusing(solarDiffusing);
+bool StandardGlazing::setSolarDiffusing(bool solarDiffusing) {
+  return getImpl<detail::StandardGlazing_Impl>()->setSolarDiffusing(solarDiffusing);
+}
+
+void StandardGlazing::setSolarDiffusingNoFail(bool solarDiffusing) {
+  bool result = getImpl<detail::StandardGlazing_Impl>()->setSolarDiffusing(solarDiffusing);
+  OS_ASSERT(result);
 }
 
 void StandardGlazing::resetSolarDiffusing() {
@@ -1141,10 +1205,9 @@ bool StandardGlazing::setThermalResistance(double value) {
 
 /// @cond
 StandardGlazing::StandardGlazing(std::shared_ptr<detail::StandardGlazing_Impl> impl)
-  : Glazing(impl)
+  : Glazing(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

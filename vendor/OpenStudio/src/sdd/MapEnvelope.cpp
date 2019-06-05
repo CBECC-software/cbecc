@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ReverseTranslator.hpp"
 #include "ForwardTranslator.hpp"
@@ -55,7 +65,6 @@
 #include "../utilities/units/WhUnit.hpp"
 #include "../utilities/core/Assert.hpp"
 
-#include <QFile>
 #include <QDomDocument>
 #include <QDomElement>
 
@@ -94,7 +103,7 @@ namespace sdd {
         if( ! material )
         {
           LOG(Error,"Construction: " << construction.name().get() << " references material: " << materialName << " that is not defined.");
-        
+
           // DLM: what to do?  Remove the construction?
         } else{
           materials.push_back(*material);
@@ -116,30 +125,30 @@ namespace sdd {
       materials = construction.layers(); // DLM: get materials again in case new ones were cloned
 
       OS_ASSERT(n == materials.size());
- 
+
       model.setFastNaming(wasFastNaming);
 
 
       if (n > 0){
 
-        // DLM: are these fields only on layered constructions? 
+        // DLM: are these fields only on layered constructions?
         QDomElement extRoughnessElement = element.firstChildElement("ExtRoughness"); // enumerated value
-        QDomElement extSolAbsElement = element.firstChildElement("ExtSolAbs"); 
-        QDomElement extThrmlAbsElement = element.firstChildElement("ExtThrmlAbs"); 
-        QDomElement extVisAbsElement = element.firstChildElement("ExtVisAbs"); 
-        QDomElement intSolAbsElement = element.firstChildElement("IntSolAbs"); 
-        QDomElement intThrmlAbsElement = element.firstChildElement("IntThrmlAbs"); 
-        QDomElement intVisAbsElement = element.firstChildElement("IntVisAbs"); 
+        QDomElement extSolAbsElement = element.firstChildElement("ExtSolAbs");
+        QDomElement extThrmlAbsElement = element.firstChildElement("ExtThrmlAbs");
+        QDomElement extVisAbsElement = element.firstChildElement("ExtVisAbs");
+        QDomElement intSolAbsElement = element.firstChildElement("IntSolAbs");
+        QDomElement intThrmlAbsElement = element.firstChildElement("IntThrmlAbs");
+        QDomElement intVisAbsElement = element.firstChildElement("IntVisAbs");
 
         if (materials[0].optionalCast<model::StandardOpaqueMaterial>()){
           model::StandardOpaqueMaterial extMaterial = materials[0].cast<model::StandardOpaqueMaterial>();
-          
+
           std::string roughness = "MediumRough";
           if (!extRoughnessElement.isNull()){
             roughness = extRoughnessElement.text().toStdString();
           }
           extMaterial.setRoughness(roughness);
-      
+
           if (!extThrmlAbsElement.isNull()){
             extMaterial.setThermalAbsorptance(extThrmlAbsElement.text().toDouble());
           }
@@ -147,19 +156,19 @@ namespace sdd {
           if (!extSolAbsElement.isNull()){
             extMaterial.setSolarAbsorptance(extSolAbsElement.text().toDouble());
           }
-            
+
           if (!extVisAbsElement.isNull()){
             extMaterial.setVisibleAbsorptance(extVisAbsElement.text().toDouble());
           }
         }else if (materials[0].optionalCast<model::MasslessOpaqueMaterial>()){
           model::MasslessOpaqueMaterial extMaterial = materials[0].cast<model::MasslessOpaqueMaterial>();
-          
+
           std::string roughness = "MediumRough";
           if (!extRoughnessElement.isNull()){
             roughness = extRoughnessElement.text().toStdString();
           }
           extMaterial.setRoughness(roughness);
-      
+
           if (!extThrmlAbsElement.isNull()){
             extMaterial.setThermalAbsorptance(extThrmlAbsElement.text().toDouble());
           }
@@ -167,7 +176,7 @@ namespace sdd {
           if (!extSolAbsElement.isNull()){
             extMaterial.setSolarAbsorptance(extSolAbsElement.text().toDouble());
           }
-            
+
           if (!extVisAbsElement.isNull()){
             extMaterial.setVisibleAbsorptance(extVisAbsElement.text().toDouble());
           }
@@ -210,10 +219,10 @@ namespace sdd {
       result = construction;
 
     }else if (specificationElement.text() == "CFactor"){
-  
-      // DLM: per input from David Reddy this construction will be cloned 
+
+      // DLM: per input from David Reddy this construction will be cloned
       // for each surface that uses it and height set per surface
-      // 
+      //
 
       QDomElement cFactorElement = element.firstChildElement("CFactor");
       if (cFactorElement.isNull()){
@@ -224,7 +233,7 @@ namespace sdd {
       openstudio::model::CFactorUndergroundWallConstruction construction(model);
       construction.setName(name);
 
-      // sdd units = Btu/(hr*ft^2*F), os units = W/(m^2*K) 
+      // sdd units = Btu/(hr*ft^2*F), os units = W/(m^2*K)
       Quantity cFactorIP(cFactorElement.text().toDouble(), BTUUnit(BTUExpnt(1,-2,-1,-1)));
       OptionalQuantity cFactorSI = QuantityConverter::instance().convert(cFactorIP, UnitSystem(UnitSystem::Wh));
       OS_ASSERT(cFactorSI);
@@ -235,7 +244,7 @@ namespace sdd {
 
     }else if (specificationElement.text() == "FFactor"){
 
-      // DLM: per input from David Reddy this construction will be cloned 
+      // DLM: per input from David Reddy this construction will be cloned
       // for each surface that uses it and area and perimeter set per surface
 
       QDomElement fFactorElement = element.firstChildElement("FFactor");
@@ -246,7 +255,7 @@ namespace sdd {
 
       openstudio::model::FFactorGroundFloorConstruction construction(model);
       construction.setName(name);
-            
+
       // sdd units = Btu/(hr*ft*F), os units = W/(m*K)
       Quantity fFactorIP(fFactorElement.text().toDouble(), BTUUnit(BTUExpnt(1,-1,-1,-1)));
       OptionalQuantity fFactorSI = QuantityConverter::instance().convert(fFactorIP, UnitSystem(UnitSystem::Wh));
@@ -286,7 +295,7 @@ namespace sdd {
     }
 
     if (!nameElement.isNull() && !uFactorElement.isNull()){
-      
+
       // sdd units = Btu/(hr*ft^2*F), os units = W/m^2-K
       Quantity uFactorIP(uFactorElement.text().toDouble(), BTUUnit(BTUExpnt(1,-2,-1,-1)));
       OptionalQuantity uFactorWh = QuantityConverter::instance().convert(uFactorIP, whSys);
@@ -352,7 +361,7 @@ namespace sdd {
     }
 
     if (!nameElement.isNull() && !shgcElement.isNull() && !uFactorElement.isNull() && !vtElement.isNull()){
-      
+
       std::string name = escapeName(nameElement.text());
 
       openstudio::model::SimpleGlazing material(model);
@@ -378,10 +387,10 @@ namespace sdd {
     }
     return boost::none;
   }
-  
+
   boost::optional<openstudio::model::ModelObject> ReverseTranslator::translateMaterial(const QDomElement& element, const QDomDocument& doc, openstudio::model::Model& model)
   {
-   
+
     //SIExpnt(int kg=0,int m=0,int s=0,int K=0,..)
     //IPExpnt(int lbm=0,int ft=0,int s=0,int R=0,..)
     //BTUExpnt(int btu=0,int ft=0,int h=0,int R=0,..)
@@ -397,7 +406,7 @@ namespace sdd {
     QDomElement densityElement = element.firstChildElement("Dens"); // lb/ft^3 // DLM: is this right? schema says could also be lb/ft^2
     QDomElement specificHeatElement = element.firstChildElement("SpecHt"); // Btu/(lb*F)
     //QDomElement thermalAbsorptanceElement = element.firstChildElement("ThrmlAbs"); // 0-1
-    //QDomElement solarAbsorbanceElement = element.firstChildElement("SolAbs"); // 0-1 
+    //QDomElement solarAbsorbanceElement = element.firstChildElement("SolAbs"); // 0-1
     //QDomElement visibleAbsorptanceElement = element.firstChildElement("VisAbs"); // 0-1
     QDomElement rValueElement = element.firstChildElement("RVal"); // hr*ft2*degF/Btu
 
@@ -421,7 +430,7 @@ namespace sdd {
       Visible Absorptance, IDD default of 0.7
     */
     if (!nameElement.isNull() && !thicknessElement.isNull() && !thermalConductivityElement.isNull() && !densityElement.isNull() && !specificHeatElement.isNull()){
-      
+
       openstudio::model::StandardOpaqueMaterial material(model);
 
       material.setName(name);
@@ -472,7 +481,7 @@ namespace sdd {
       //if (!solarAbsorbanceElement.isNull()){
       //  material.setSolarAbsorptance(solarAbsorbanceElement.text().toDouble());
       //}
-        
+
       // DLM: set on construction
       //if (!visibleAbsorptanceElement.isNull()){
       //  material.setVisibleAbsorptance(visibleAbsorptanceElement.text().toDouble());
@@ -491,7 +500,7 @@ namespace sdd {
       Visible Absorptance, IDD default of 0.7
     */
     if (!nameElement.isNull() && !rValueElement.isNull()){
-      
+
       openstudio::model::MasslessOpaqueMaterial material(model);
 
       material.setName(name);
@@ -519,7 +528,7 @@ namespace sdd {
       //if (!solarAbsorbanceElement.isNull()){
       //  material.setSolarAbsorptance(solarAbsorbanceElement.text().toDouble());
       //}
-        
+
       // DLM: set on construction
       //if (!visibleAbsorptanceElement.isNull()){
       //  material.setVisibleAbsorptance(visibleAbsorptanceElement.text().toDouble());
@@ -536,7 +545,7 @@ namespace sdd {
   boost::optional<QDomElement> ForwardTranslator::translateConstructionBase(const openstudio::model::ConstructionBase& constructionBase, QDomDocument& doc)
   {
     QDomElement result;
-    
+
     if (constructionBase.optionalCast<model::LayeredConstruction>()){
       model::LayeredConstruction construction = constructionBase.cast<model::LayeredConstruction>();
       model::StandardsInformationConstruction info = constructionBase.standardsInformation();
@@ -558,9 +567,9 @@ namespace sdd {
           return boost::none;
         }
       }
-      
+
       result = doc.createElement("ConsAssm");
-      
+
       // name
       std::string name = construction.name().get();
       QDomElement nameElement = doc.createElement("Name");
@@ -673,7 +682,7 @@ namespace sdd {
         // DLM: Not input
         // ext solarAbsorptance
         //if (extSolarAbsorptance){
-        //  QDomElement solarAbsorptanceElement = doc.createElement("ExtSolAbs"); 
+        //  QDomElement solarAbsorptanceElement = doc.createElement("ExtSolAbs");
         //  result.appendChild(solarAbsorptanceElement);
         //  solarAbsorptanceElement.appendChild(doc.createTextNode(QString::number(*extSolarAbsorptance)));
         //}
@@ -697,7 +706,7 @@ namespace sdd {
         // DLM: Not input
         // int solarAbsorptance
         //if (intSolarAbsorptance){
-        //  QDomElement solarAbsorptanceElement = doc.createElement("IntSolAbs"); 
+        //  QDomElement solarAbsorptanceElement = doc.createElement("IntSolAbs");
         //  result.appendChild(solarAbsorptanceElement);
         //  solarAbsorptanceElement.appendChild(doc.createTextNode(QString::number(*intSolarAbsorptance)));
         //}
@@ -735,7 +744,7 @@ namespace sdd {
       model::FFactorGroundFloorConstruction construction =  constructionBase.cast<model::FFactorGroundFloorConstruction>();
 
       result = doc.createElement("ConsAssm");
-      
+
       // name
       std::string name = construction.name().get();
       QDomElement nameElement = doc.createElement("Name");
@@ -773,7 +782,7 @@ namespace sdd {
       model::CFactorUndergroundWallConstruction construction =  constructionBase.cast<model::CFactorUndergroundWallConstruction>();
 
       result = doc.createElement("ConsAssm");
-      
+
       // name
       std::string name = construction.name().get();
       QDomElement nameElement = doc.createElement("Name");
@@ -807,7 +816,7 @@ namespace sdd {
       m_translatedObjects[construction.handle()] = result;
 
     }
-    
+
     // todo: handle u-factor constructions
 
     return result;
@@ -825,7 +834,7 @@ namespace sdd {
       model::StandardsInformationConstruction info = constructionBase.standardsInformation();
 
       result = doc.createElement("DrCons");
-      
+
       // name
       std::string name = construction.name().get();
       QDomElement nameElement = doc.createElement("Name");
@@ -916,7 +925,7 @@ namespace sdd {
       model::StandardsInformationConstruction info = constructionBase.standardsInformation();
 
       result = doc.createElement("FenCons");
-      
+
       // name
       std::string name = construction.name().get();
       QDomElement nameElement = doc.createElement("Name");
@@ -944,7 +953,7 @@ namespace sdd {
       // VT - optional, done
       // VTCOG - optional, not supported
 
-      
+
       boost::optional<std::string> fenestrationType = info.fenestrationType();
       boost::optional<std::string> fenType;
       boost::optional<std::string> fenProdType;
@@ -976,7 +985,7 @@ namespace sdd {
             fenProdType = "FixedWindow";
           } else if (istringEqual("Operable Window", *fenestrationType)){
             fenProdType = "OperableWindow";
-            
+
             // DLM: todo set operableWinConfiguration
             //operableWinConfiguration = "CasementAwning" or "Sliding"
           } else if (istringEqual("Curtain Wall", *fenestrationType)){
@@ -1012,7 +1021,7 @@ namespace sdd {
           assmContext = "SiteBuilt";
         }
       }
-      
+
       boost::optional<std::string> greenhouseGardenWin;
 
       boost::optional<std::string> fenFrm;
@@ -1067,7 +1076,7 @@ namespace sdd {
         if (layers[0].optionalCast<model::SimpleGlazing>()){
 
           model::SimpleGlazing simpleGlazing = layers[0].cast<model::SimpleGlazing>();
-          
+
           shgc = simpleGlazing.solarHeatGainCoefficient();
 
           // os units = W/m2-K, sdd units = Btu/(hr*f2t*F)
@@ -1154,8 +1163,8 @@ namespace sdd {
         result->appendChild(diffusingElement);
         diffusingElement.appendChild(doc.createTextNode(toQString(*diffusing)));
       }
-      
-      
+
+
 
       if (shgc){
         QDomElement shgcElement = doc.createElement("SHGC");
@@ -1236,7 +1245,7 @@ namespace sdd {
     boost::optional<std::string> compositeFramingDepth = info.compositeFramingDepth();
     boost::optional<std::string> compositeFramingSize = info.compositeFramingSize();
     boost::optional<std::string> compositeCavityInsulation = info.compositeCavityInsulation();
-  
+
     if (standardsCategory){
       QDomElement element = doc.createElement("CodeCat");
       result.appendChild(element);
@@ -1290,6 +1299,6 @@ namespace sdd {
     return result;
   }
 
-    
+
 } // sdd
 } // openstudio

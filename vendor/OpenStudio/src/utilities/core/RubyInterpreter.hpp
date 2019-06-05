@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_CORE_RUBYINTERPRETER_HPP
 #define UTILITIES_CORE_RUBYINTERPRETER_HPP
@@ -24,7 +34,7 @@
 
 #include <QDir>
 
-// SWIGRubyRuntime.hxx includes ruby.h which includes ruby/win32.h, which has some brain damaged notions of 
+// SWIGRubyRuntime.hxx includes ruby.h which includes ruby/win32.h, which has some brain damaged notions of
 // what standard errno values should be. We solved this in systemoutliner with some creative
 // compilation firewalls and opaque types and such. We don't have quite as much flexibility here
 // because we want to use templates to give us type safety and return types and such.
@@ -622,7 +632,7 @@ namespace openstudio
 
           if (!rubypath.empty())
           {
-#if defined(WIN32) 
+#if defined(WIN32)
 #if (defined(_M_X64) || defined(__amd64__))
             addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/site_ruby/2.0.0"));
             addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/site_ruby/2.0.0/x64-msvcr100")); // DLM: remove?
@@ -645,7 +655,7 @@ namespace openstudio
             addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/vendor_ruby/2.0.0/i386-msvcrt"));
             addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/vendor_ruby"));
             addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/2.0.0"));
-            addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/2.0.0/i386-mingw32")); // DLM: same for both builds           
+            addIncludePath(rubyArgs, rubypath / openstudio::toPath("lib/ruby/2.0.0/i386-mingw32")); // DLM: same for both builds
 #endif
 #endif
           }
@@ -676,6 +686,179 @@ namespace openstudio
             evalString("require '" + openstudio::toString(t_moduleSearchPath / openstudio::toPath(*itr)) + "'");
           }
 
+  // "typedefs" for backwards compatibility
+  // keep synchronized with \openstudiocore\ruby\init_openstudio.cpp
+  std::string ruby_typedef_script = R"END(
+module OpenStudio
+module Ruleset
+
+  # support for name deprecated as of 0.10.1
+  class UserScriptArgument < OpenStudio::Measure::OSArgument
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "UserScriptArgument is deprecated, use OpenStudio::Measure::Argument instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 0.10.1
+  class OptionalUserScriptArgument < OpenStudio::Measure::OptionalOSArgument
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OptionalUserScriptArgument is deprecated, use OpenStudio::Measure::OptionalOSArgument instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 0.10.1
+  class UserScriptArgumentVector < OpenStudio::Measure::OSArgumentVector
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "UserScriptArgumentVector is deprecated, use OpenStudio::Measure::OSArgumentVector instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 0.10.1
+  class UserScriptArgumentMap < OpenStudio::Measure::OSArgumentMap
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "UserScriptArgumentMap is deprecated, use OpenStudio::Measure::OSArgumentMap instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class UserScript < OpenStudio::Measure::OSMeasure
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "UserScript is deprecated, use OpenStudio::Measure::OSMeasure instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class ModelUserScript < OpenStudio::Measure::ModelMeasure
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "ModelUserScript is deprecated, use OpenStudio::Measure::ModelMeasure instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class WorkspaceUserScript < OpenStudio::Measure::EnergyPlusMeasure
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "WorkspaceUserScript is deprecated, use OpenStudio::Measure::EnergyPlusMeasure instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class ReportingUserScript < OpenStudio::Measure::ReportingMeasure
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "ReportingUserScript is deprecated, use OpenStudio::Measure::ReportingMeasure instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class OSArgument < OpenStudio::Measure::OSArgument
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSArgument is deprecated, use OpenStudio::Measure::OSArgument instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  def self.convertOSArgumentVectorToMap(argument_vector)
+    OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OpenStudio::Ruleset::convertOSArgumentVectorToMap is deprecated, use OpenStudio::Measure::convertOSArgumentVectorToMap instead.")
+    return OpenStudio::Measure::convertOSArgumentVectorToMap(argument_vector)
+  end
+
+  # support for name deprecated as of 2.0.0
+  class OSArgumentVector < OpenStudio::Measure::OSArgumentVector
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSArgumentVector is deprecated, use OpenStudio::Measure::OSArgumentVector instead.")
+      super
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class OSArgumentMap < OpenStudio::Measure::OSArgumentMap
+    def initialize
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSArgumentMap is deprecated, use OpenStudio::Measure::OSArgumentMap instead.")
+      super
+    end
+  end
+
+  # class was replaced by OpenStudio::WorkflowStepResult
+#  # support for name deprecated as of 2.0.0
+#  class OSResult < OpenStudio::Measure::OSResult
+#    def initialize
+#      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSResult is deprecated, use OpenStudio::Measure::OSResult instead.")
+#      super
+#    end
+#  end
+#
+#  # support for name deprecated as of 2.0.0
+#  class OSResultVector < OpenStudio::Measure::OSResultVector
+#    def initialize
+#      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSResultVector is deprecated, use OpenStudio::Measure::OSResultVector instead.")
+#      super
+#    end
+#  end
+
+  # support for name deprecated as of 2.0.0
+  class OSRunner < OpenStudio::Measure::OSRunner
+    def initialize(workflow_json = nil)
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "OSRunner is deprecated, use OpenStudio::Measure::OSRunner instead.")
+      if workflow_json.nil?
+        workflow_json = OpenStudio::WorkflowJSON.new
+        OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "No workflow provided, using empty WorkflowJSON.")
+      end
+      super(workflow_json)
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  class RubyUserScriptInfo < OpenStudio::Measure::OSMeasureInfo
+    def initialize(*args)
+      OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "RubyUserScriptInfo is deprecated, use OpenStudio::Measure::OSMeasureInfo instead.")
+      if args.size == 1
+        super(args[0])
+      elsif args.size == 8
+        super(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8])
+      end
+    end
+  end
+
+  # support for name deprecated as of 2.0.0
+  def self.infoExtractorRubyFunction
+    OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "Ruleset is deprecated, use OpenStudio::Measure::infoExtractorRubyFunction instead.")
+    return OpenStudio::Measure.infoExtractorRubyFunction
+  end
+
+  # support for name deprecated as of 2.0.0
+  def self.getInfo(measure, model, workspace)
+    OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "Ruleset is deprecated, use OpenStudio::Measure::getInfo instead.")
+    return OpenStudio::Measure.getInfo(measure, model, workspace)
+  end
+
+  # support for name deprecated as of 2.0.0
+  def self.makeChoiceArgumentOfWorkspaceObjects(name, iddObjectType, workspace, required=true)
+    OpenStudio::logFree(OpenStudio::Warn, "OpenStudio.Measure", "Ruleset is deprecated, use OpenStudio::Measure::makeChoiceArgumentOfWorkspaceObjects instead.")
+    return OpenStudio::Measure.makeChoiceArgumentOfWorkspaceObjects(name, iddObjectType, workspace, required)
+  end
+
+end # module Ruleset
+end # module OpenStudio
+
+module OpenStudio
+  def self.getSharedResourcesPath()
+    OpenStudio::logFree(OpenStudio::Warn, "OpenStudio", "getSharedResourcesPath is deprecated.")
+    return OpenStudio::Path.new()
+  end
+end # module OpenStudio
+
+)END";
+
+  evalString(ruby_typedef_script);
+
           // register some default types that we want to pass in / out of the ruby system
           registerType<int>("int");
           registerType<long>("long");
@@ -698,8 +881,8 @@ namespace openstudio
           delete[] m_argv;
         }
 
-        /// Register a type along with its vector and optional versions so that it can be used 
-        /// from within the Ruby wrapper. These are necessary because there's no way to divine 
+        /// Register a type along with its vector and optional versions so that it can be used
+        /// from within the Ruby wrapper. These are necessary because there's no way to divine
         /// the unmangled type name.
         template<typename Type>
         void registerType(const std::string &t_name)
@@ -716,10 +899,10 @@ namespace openstudio
         // the description is translated into a C++ exception, which is thrown as an openstudio::RubyException.
         void evalString(const std::string &t_str)
         {
-          
+
           VALUE val = rb_str_new2(t_str.c_str());
           int error;
-          
+
           // save and restore the current working directory in case the call to ruby upsets it
           QDir cwd = QDir::current();
           rb_protect(evaluateSimpleImpl,val,&error);
@@ -737,7 +920,7 @@ namespace openstudio
             std::string loc(str);
 
             throw RubyException(err, loc);
-          } 
+          }
         }
 
         /// Execute a function by name with 0 parameters and no return value
@@ -752,7 +935,7 @@ namespace openstudio
         /// Execute a function by name with 1 parameter and no return value
         template<typename ReturnType, typename Param1>
           void exec(
-              const std::string &t_functionName, 
+              const std::string &t_functionName,
               Param1 t_param1)
           {
             std::vector<VALUE> params;
@@ -764,7 +947,7 @@ namespace openstudio
         /// Execute a function by name with 2 parameters and no return value
         template<typename ReturnType, typename Param1, typename Param2>
           ReturnType exec(
-              const std::string &t_functionName, 
+              const std::string &t_functionName,
               Param1 t_param1,
               Param2 t_param2)
           {
@@ -804,7 +987,7 @@ namespace openstudio
         /// Execute a function by name with 1 parameter and a return value
         template<typename ReturnType, typename Param1>
           ReturnType execWithReturn(
-              const std::string &t_functionName, 
+              const std::string &t_functionName,
               Param1 t_param1)
           {
             std::vector<VALUE> params;
@@ -817,7 +1000,7 @@ namespace openstudio
         /// Execute a function by name with 2 parameters and a return value
         template<typename ReturnType, typename Param1, typename Param2>
           ReturnType execWithReturn(
-              const std::string &t_functionName, 
+              const std::string &t_functionName,
               Param1 t_param1,
               Param2 t_param2)
           {
@@ -858,13 +1041,13 @@ namespace openstudio
 
       private:
         // explicitly unimplemented copy and assignment operators
-        RubyInterpreter &operator=(const RubyInterpreter &); 
+        RubyInterpreter &operator=(const RubyInterpreter &);
         RubyInterpreter(const RubyInterpreter &);
 
         std::map<std::string, std::string> m_types;
 
         // Used for our rb_protect calls.
-        static VALUE evaluateSimpleImpl(VALUE arg) 
+        static VALUE evaluateSimpleImpl(VALUE arg)
         {
           return rb_eval_string(StringValuePtr(arg));
         }
@@ -917,7 +1100,7 @@ namespace openstudio
 
           VALUE retval = rb_gv_get("$embedded_ruby_return");
           return retval;
-        } 
+        }
 
         template<typename Param>
           VALUE newPointerObj(Param t_param)
@@ -990,145 +1173,145 @@ namespace openstudio
 #endif
 
 #ifdef OLD_EINPROGRESS
-#undef EINPROGRESS 
+#undef EINPROGRESS
 #define EINPROGRESS OLD_EINPROGRESS
 #undef OLD_EINPROGRESS
 #endif
 
 #ifdef OLD_EALREADY
-#undef EALREADY 
+#undef EALREADY
 #define EALREADY OLD_EALREADY
 #undef OLD_EALREADY
 #endif
 
 #ifdef OLD_ENOTSOCK
-#undef ENOTSOCK 
+#undef ENOTSOCK
 #define ENOTSOCK OLD_ENOTSOCK
 #undef OLD_ENOTSOCK
 #endif
 
 #ifdef OLD_EDESTADDRREQ
-#undef EDESTADDRREQ 
+#undef EDESTADDRREQ
 #define EDESTADDRREQ OLD_EDESTADDRREQ
 #undef OLD_EDESTADDRREQ
 #endif
 
 #ifdef OLD_EMSGSIZE
-#undef EMSGSIZE 
+#undef EMSGSIZE
 #define EMSGSIZE OLD_EMSGSIZE
 #undef OLD_EMSGSIZE
 #endif
 
 #ifdef OLD_EPROTOTYPE
-#undef EPROTOTYPE 
+#undef EPROTOTYPE
 #define EPROTOTYPE OLD_EPROTOTYPE
 #undef OLD_EPROTOTYPE
 #endif
 
 #ifdef OLD_ENOPROTOOPT
-#undef ENOPROTOOPT 
+#undef ENOPROTOOPT
 #define ENOPROTOOPT OLD_ENOPROTOOPT
 #undef OLD_ENOPROTOOPT
 #endif
 
 #ifdef OLD_EPROTONOSUPPORT
-#undef EPROTONOSUPPORT 
+#undef EPROTONOSUPPORT
 #define EPROTONOSUPPORT OLD_EPROTONOSUPPORT
 #undef OLD_EPROTONOSUPPORT
 #endif
 
 #ifdef OLD_EOPNOTSUPP
-#undef EOPNOTSUPP 
+#undef EOPNOTSUPP
 #define EOPNOTSUPP OLD_EOPNOTSUPP
 #undef OLD_EOPNOTSUPP
 #endif
 
 #ifdef OLD_EAFNOSUPPORT
-#undef EAFNOSUPPORT 
+#undef EAFNOSUPPORT
 #define EAFNOSUPPORT OLD_EAFNOSUPPORT
 #undef OLD_EAFNOSUPPORT
 #endif
 
 #ifdef OLD_EADDRINUSE
-#undef EADDRINUSE 
+#undef EADDRINUSE
 #define EADDRINUSE OLD_EADDRINUSE
 #undef OLD_EADDRINUSE
 #endif
 
 #ifdef OLD_EADDRNOTAVAIL
-#undef EADDRNOTAVAIL 
+#undef EADDRNOTAVAIL
 #define EADDRNOTAVAIL OLD_EADDRNOTAVAIL
 #undef OLD_EADDRNOTAVAIL
 #endif
 
 #ifdef OLD_ENETDOWN
-#undef ENETDOWN 
+#undef ENETDOWN
 #define ENETDOWN OLD_ENETDOWN
 #undef OLD_ENETDOWN
 #endif
 
 #ifdef OLD_ENETUNREACH
-#undef ENETUNREACH 
+#undef ENETUNREACH
 #define ENETUNREACH OLD_ENETUNREACH
 #undef OLD_ENETUNREACH
 #endif
 
 #ifdef OLD_ENETRESET
-#undef ENETRESET 
+#undef ENETRESET
 #define ENETRESET OLD_ENETRESET
 #undef OLD_ENETRESET
 #endif
 
 #ifdef OLD_ECONNABORTED
-#undef ECONNABORTED 
+#undef ECONNABORTED
 #define ECONNABORTED OLD_ECONNABORTED
 #undef OLD_ECONNABORTED
 #endif
 
 #ifdef OLD_ECONNRESET
-#undef ECONNRESET 
+#undef ECONNRESET
 #define ECONNRESET OLD_ECONNRESET
 #undef OLD_ECONNRESET
 #endif
 
 #ifdef OLD_ENOBUFS
-#undef ENOBUFS 
+#undef ENOBUFS
 #define ENOBUFS OLD_ENOBUFS
 #undef OLD_ENOBUFS
 #endif
 
 #ifdef OLD_EISCONN
-#undef EISCONN 
+#undef EISCONN
 #define EISCONN OLD_EISCONN
 #undef OLD_EISCONN
 #endif
 
 #ifdef OLD_ENOTCONN
-#undef ENOTCONN 
+#undef ENOTCONN
 #define ENOTCONN OLD_ENOTCONN
 #undef OLD_ENOTCONN
 #endif
 
 #ifdef OLD_ETIMEDOUT
-#undef ETIMEDOUT 
+#undef ETIMEDOUT
 #define ETIMEDOUT OLD_ETIMEDOUT
 #undef OLD_ETIMEDOUT
 #endif
 
 #ifdef OLD_ECONNREFUSED
-#undef ECONNREFUSED 
+#undef ECONNREFUSED
 #define ECONNREFUSED OLD_ECONNREFUSED
 #undef OLD_ECONNREFUSED
 #endif
 
 #ifdef OLD_ELOOP
-#undef ELOOP 
+#undef ELOOP
 #define ELOOP OLD_ELOOP
 #undef OLD_ELOOP
 #endif
 
 #ifdef OLD_EHOSTUNREACH
-#undef EHOSTUNREACH 
+#undef EHOSTUNREACH
 #define EHOSTUNREACH OLD_EHOSTUNREACH
 #undef OLD_EHOSTUNREACH
 #endif

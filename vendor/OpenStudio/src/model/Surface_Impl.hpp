@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_SURFACE_IMPL_HPP
 #define MODEL_SURFACE_IMPL_HPP
@@ -26,6 +36,8 @@
 namespace openstudio {
 namespace model {
 
+class AirflowNetworkSurface;
+class AirflowNetworkComponent;
 class Space;
 class SubSurface;
 class Surface;
@@ -34,38 +46,19 @@ class SurfaceIntersection;
 class ConstructionBase;
 class SurfacePropertyOtherSideCoefficients;
 class SurfacePropertyOtherSideConditionsModel;
+class SurfacePropertyConfectionCoefficients;
+class FoundationKiva;
 
 namespace detail {
 
   /** Surface_Impl is a PlanarSurface_Impl that is the implementation class for Surface.*/
   class MODEL_API Surface_Impl : public PlanarSurface_Impl {
-    Q_OBJECT;
-    Q_PROPERTY(std::string surfaceType READ surfaceType WRITE setSurfaceType);
-    Q_PROPERTY(std::vector<std::string> surfaceTypeValues READ surfaceTypeValues);
-    Q_PROPERTY(std::string outsideBoundaryCondition READ outsideBoundaryCondition WRITE setOutsideBoundaryCondition);
-    Q_PROPERTY(std::vector<std::string> outsideBoundaryConditionValues READ outsideBoundaryConditionValues);
-    Q_PROPERTY(std::string sunExposure READ sunExposure WRITE setSunExposure RESET resetSunExposure);
-    Q_PROPERTY(std::vector<std::string> sunExposureValues READ sunExposureValues);
-    Q_PROPERTY(bool isSunExposureDefaulted READ isSunExposureDefaulted);
-    Q_PROPERTY(std::string windExposure READ windExposure WRITE setWindExposure RESET resetWindExposure);
-    Q_PROPERTY(std::vector<std::string> windExposureValues READ windExposureValues);
-    Q_PROPERTY(bool isWindExposureDefaulted READ isWindExposureDefaulted);
-    Q_PROPERTY(boost::optional<double> viewFactortoGround READ viewFactortoGround WRITE setViewFactortoGround RESET resetViewFactortoGround);
-    Q_PROPERTY(bool isViewFactortoGroundDefaulted READ isViewFactortoGroundDefaulted);
-    Q_PROPERTY(bool isViewFactortoGroundAutocalculated READ isViewFactortoGroundAutocalculated);
-    Q_PROPERTY(boost::optional<double> numberofVertices READ numberofVertices WRITE setNumberofVertices RESET resetNumberofVertices);
-    Q_PROPERTY(bool isNumberofVerticesDefaulted READ isNumberofVerticesDefaulted);
-    Q_PROPERTY(bool isNumberofVerticesAutocalculated READ isNumberofVerticesAutocalculated);
-    Q_PROPERTY(bool isPartOfEnvelope READ isPartOfEnvelope);
 
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> space READ spaceAsModelObject WRITE setSpaceAsModelObject);
-    Q_PROPERTY(std::vector<openstudio::model::ModelObject> subSurfaces READ subSurfacesAsModelObjects);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> adjacentSurface READ adjacentSurfaceAsModelObject WRITE setAdjacentSurfaceAsModelObject RESET resetAdjacentSurface);
    public:
     /** @name Constructors and Destructors */
     //@{
 
-    Surface_Impl(const IdfObject& idfObject, 
+    Surface_Impl(const IdfObject& idfObject,
                  Model_Impl* model,
                  bool keepHandle);
 
@@ -89,10 +82,12 @@ namespace detail {
 
     virtual std::vector<IdfObject> remove() override;
 
+    virtual ModelObject clone(Model model) const override;
+
     virtual std::vector<IddObjectType> allowableChildTypes() const override;
 
     virtual const std::vector<std::string>& outputVariableNames() const override;
-    
+
     virtual IddObjectType iddObjectType() const override;
 
     virtual bool subtractFromGrossArea() const override;
@@ -158,6 +153,10 @@ namespace detail {
 
     bool isNumberofVerticesAutocalculated() const;
 
+    virtual std::vector<EMSActuatorNames> emsActuatorNames() const override;
+
+    virtual std::vector<std::string> emsInternalVariableNames() const override;
+
     //@}
     /** @name Setters */
     //@{
@@ -205,7 +204,9 @@ namespace detail {
     bool setAdjacentSurface(Surface& surface);
 
     void resetAdjacentSurface();
-    
+
+    boost::optional<SurfacePropertyConvectionCoefficients> surfacePropertyConvectionCoefficients() const;
+
     boost::optional<SurfacePropertyOtherSideCoefficients> surfacePropertyOtherSideCoefficients() const;
 
     bool setSurfacePropertyOtherSideCoefficients(SurfacePropertyOtherSideCoefficients& otherSideCoefficients);
@@ -246,13 +247,13 @@ namespace detail {
     double skylightToProjectedFloorRatio() const;
 
     boost::optional<SubSurface> setWindowToWallRatio(double wwr);
-    
+
     boost::optional<SubSurface> setWindowToWallRatio(double wwr, double desiredHeightOffset, bool heightOffsetFromFloor);
 
-    std::vector<SubSurface> applyViewAndDaylightingGlassRatios(double viewGlassToWallRatio, double daylightingGlassToWallRatio, 
+    std::vector<SubSurface> applyViewAndDaylightingGlassRatios(double viewGlassToWallRatio, double daylightingGlassToWallRatio,
                                                                double desiredViewGlassSillHeight, double desiredDaylightingGlassHeaderHeight,
-                                                               double exteriorShadingProjectionFactor, double interiorShelfProjectionFactor, 
-                                                               const boost::optional<ConstructionBase>& viewGlassConstruction, 
+                                                               double exteriorShadingProjectionFactor, double interiorShelfProjectionFactor,
+                                                               const boost::optional<ConstructionBase>& viewGlassConstruction,
                                                                const boost::optional<ConstructionBase>& daylightingGlassConstruction);
 
     std::vector<ShadingSurfaceGroup> shadingSurfaceGroups() const;
@@ -260,6 +261,25 @@ namespace detail {
     std::vector<Surface> splitSurfaceForSubSurfaces();
 
     std::vector<SubSurface> createSubSurfaces(const std::vector<std::vector<Point3d> >& faces, double inset, const boost::optional<ConstructionBase>& construction);
+
+    AirflowNetworkSurface getAirflowNetworkSurface(const AirflowNetworkComponent &surfaceAirflowLeakage);
+
+    boost::optional<AirflowNetworkSurface> airflowNetworkSurface() const;
+
+    bool setAdjacentFoundation(const FoundationKiva& kiva);
+
+    boost::optional<FoundationKiva> adjacentFoundation() const;
+
+    void resetAdjacentFoundation();
+
+    // if surface property exposed foundation perimeter already exists, do nothing and return nil; creates the surface property exposed foundation perimeter if it does not already exist and return it;
+    boost::optional<SurfacePropertyExposedFoundationPerimeter> createSurfacePropertyExposedFoundationPerimeter(std::string exposedPerimeterCalculationMethod, double exposedPerimeter);
+
+    // returns the surface property exposed foundation perimeter if set
+    boost::optional<SurfacePropertyExposedFoundationPerimeter> surfacePropertyExposedFoundationPerimeter() const;
+
+    // resets the surface property exposed foundation perimeter
+    void resetSurfacePropertyExposedFoundationPerimeter();
 
    protected:
    private:

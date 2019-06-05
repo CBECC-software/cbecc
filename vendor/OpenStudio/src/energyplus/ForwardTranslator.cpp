@@ -1,23 +1,34 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "EnergyPlusAPI.hpp"
+#include <src/energyplus/embedded_files.hxx>
 
 #include "ForwardTranslator.hpp"
 
@@ -29,6 +40,8 @@
 #include "../model/Construction_Impl.hpp"
 #include "../model/ConstructionWithInternalSource.hpp"
 #include "../model/ConstructionWithInternalSource_Impl.hpp"
+#include "../model/WaterUseEquipment.hpp"
+#include "../model/WaterUseEquipment_Impl.hpp"
 #include "../model/RunPeriod.hpp"
 #include "../model/RunPeriod_Impl.hpp"
 #include "../model/RunPeriodControlSpecialDays.hpp"
@@ -41,6 +54,9 @@
 #include "../model/UtilityBill_Impl.hpp"
 #include "../model/ElectricLoadCenterDistribution.hpp"
 #include "../model/ElectricLoadCenterDistribution_Impl.hpp"
+#include "../model/ShadingControl.hpp"
+#include "../model/ShadingControl_Impl.hpp"
+#include "../model/AdditionalProperties.hpp"
 #include "../model/ConcreteModelObjects.hpp"
 
 #include "../utilities/idf/Workspace.hpp"
@@ -49,6 +65,7 @@
 #include "../utilities/idf/WorkspaceObjectOrder.hpp"
 #include "../utilities/core/Logger.hpp"
 #include "../utilities/core/Assert.hpp"
+#include "../utilities/core/FilesystemHelpers.hpp"
 #include "../utilities/geometry/BoundingBox.hpp"
 #include "../utilities/time/Time.hpp"
 #include "../utilities/plot/ProgressBar.hpp"
@@ -62,14 +79,12 @@
 #include <utilities/idd/OutputControl_Table_Style_FieldEnums.hxx>
 #include <utilities/idd/Output_VariableDictionary_FieldEnums.hxx>
 #include <utilities/idd/Output_SQLite_FieldEnums.hxx>
-#include <utilities/idd/ProgramControl_FieldEnums.hxx>
 #include <utilities/idd/LifeCycleCost_NonrecurringCost_FieldEnums.hxx>
 #include <utilities/idd/SetpointManager_MixedAir_FieldEnums.hxx>
 
 #include "../utilities/idd/IddEnums.hpp"
 
 #include <QFile>
-#include <QTextStream>
 #include <QThread>
 
 #include <sstream>
@@ -89,7 +104,7 @@ ForwardTranslator::ForwardTranslator()
   m_logSink.setThreadId(QThread::currentThread());
   createFluidPropertiesMap();
 
-  // temp code 
+  // temp code
   m_keepRunControlSpecialDays = false;
   m_ipTabularOutput = false;
   m_excludeLCCObjects = false;
@@ -97,7 +112,7 @@ ForwardTranslator::ForwardTranslator()
 
 Workspace ForwardTranslator::translateModel( const Model & model, ProgressBar* progressBar )
 {
-  Model modelCopy = model.clone().cast<Model>();
+  Model modelCopy = model.clone(true).cast<Model>();
 
   m_progressBar = progressBar;
   if (m_progressBar){
@@ -168,6 +183,10 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
   model::Version version = model.getUniqueModelObject<model::Version>();
   translateAndMapModelObject(version);
 
+  // translate Timestep second (this initializes it if need be)
+  model::Timestep timestep = model.getUniqueModelObject<model::Timestep>();
+  translateAndMapModelObject(timestep);
+
   // resolve surface marching conflicts before combining thermal zones or removing spaces
   // as those operations may change search distances
   resolveMatchedSurfaceConstructionConflicts(model);
@@ -178,6 +197,29 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
     if (!space.thermalZone()){
       LOG(Warn, "Space " << space.name().get() << " is not associated with a ThermalZone, it will not be translated.");
       space.remove();
+    }
+  }
+
+  // remove orphan surfaces
+  for (PlanarSurface planarSurface : model.getModelObjects<PlanarSurface>()){
+    if (!planarSurface.planarSurfaceGroup()){
+      // a sub surface may have already been removed if the parent surface was removed
+      if (!planarSurface.handle().isNull()){
+        LOG(Warn, planarSurface.briefDescription() << " is not associated with a PlanarSurfaceGroup, it will not be translated.");
+        planarSurface.remove();
+      }
+    }
+  }
+
+  // remove orphan loads
+  for (SpaceLoad spaceLoad : model.getModelObjects<SpaceLoad>()){
+    if (spaceLoad.optionalCast<model::WaterUseEquipment>()){
+      // WaterUseEquipment is not required to be attached to a space
+      continue;
+    }
+    if ((!spaceLoad.space()) && (!spaceLoad.spaceType())){
+      LOG(Warn, spaceLoad.briefDescription() << " is not associated with a Space or SpaceType, it will not be translated.");
+      spaceLoad.remove();
     }
   }
 
@@ -210,19 +252,39 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
     boost::optional<SpaceType> spaceTypeOfOtherEquipment = otherEquipment.spaceType();
     if (spaceTypeOfOtherEquipment){
       //loop through the spaces in this space type and make a new instance for each one
-      std::vector<Space> spaces = spaceTypeOfOtherEquipment.get().spaces();      
-      for (Space space : spaces){      
+      std::vector<Space> spaces = spaceTypeOfOtherEquipment.get().spaces();
+      for (Space space : spaces){
         OtherEquipment otherEquipmentForSpace = otherEquipment.clone().cast<OtherEquipment>();
         otherEquipmentForSpace.setSpace(space);
         //make a nice name for the thing
-        
+
         //std::string otherEquipmentForSpaceName = otherEquipment.name()
         //otherEquipment.setName("newName")
       }
       //now, delete the one that points to a spacetype
       otherEquipment.remove();
     }
-  }  
+  }
+
+  // Energyplus only allows single zone input for ITE object. If space type is assigned in OS, 
+  // will translate to multiple ITE objects assigned to each zone under the same space type.
+  // then delete the one that pointed to a spacetype.
+  // By doing this, we can solve the potential problem that if this load is applied to a space type, 
+  // the load gets copied to each space of the space type, which may cause conflict of supply air node.
+  std::vector<ElectricEquipmentITEAirCooled> iTEAirCooledEquipments = model.getConcreteModelObjects<ElectricEquipmentITEAirCooled>();
+  for (ElectricEquipmentITEAirCooled iTequipment : iTEAirCooledEquipments) {
+    boost::optional<SpaceType> spaceTypeOfITEquipment = iTequipment.spaceType();
+    if (spaceTypeOfITEquipment) {
+      //loop through the spaces in this space type and make a new instance for each one
+      std::vector<Space> spaces = spaceTypeOfITEquipment.get().spaces();
+      for (Space space : spaces) {
+        ElectricEquipmentITEAirCooled iTEquipmentForSpace = iTequipment.clone().cast<ElectricEquipmentITEAirCooled>();
+        iTEquipmentForSpace.setSpace(space);
+      }
+      //now, delete the one that points to a spacetype
+      iTequipment.remove();
+    }
+  }
 
   // Temporary workaround for EnergyPlusTeam #4451
   // requested by http://code.google.com/p/cbecc/issues/detail?id=736
@@ -236,7 +298,7 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
         // lowest point will have z = 0 in relative coordinates
         std::vector<Space> spaces = thermalZone.spaces();
         OS_ASSERT(spaces.size() == 1);
-        
+
         double minZ = z;
         BoundingBox bb = spaces[0].boundingBox();
         if (bb.minZ()){
@@ -249,6 +311,15 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
         bool test = spaces[0].changeTransformation(newT);
         OS_ASSERT(test);
       }
+    }
+  }
+
+  // remove orphan Generator:MicroTurbine
+  for (auto& chp : model.getConcreteModelObjects<GeneratorMicroTurbine>()){
+    if (!chp.electricLoadCenterDistribution()){
+      LOG(Warn, "GeneratorMicroTurbine " << chp.name().get() << " is not referenced by any ElectricLoadCenterDistribution, it will not be translated.");
+      chp.remove();
+      continue;
     }
   }
 
@@ -265,11 +336,48 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
     }
   }
 
+  // remove orphan Generator:PVWatts
+  for (auto& pv : model.getConcreteModelObjects<GeneratorPVWatts>()){
+    if (!pv.electricLoadCenterDistribution()){
+      LOG(Warn, "GeneratorPVWatts " << pv.name().get() << " is not referenced by any ElectricLoadCenterDistribution, it will not be translated.");
+      pv.remove();
+      continue;
+    }
+  }
+
+  // remove orphan Generator:FuelCell
+  for (auto& fc : model.getConcreteModelObjects<GeneratorFuelCell>()){
+    if (!fc.electricLoadCenterDistribution()){
+      //get the HX from the FC since that is the parent and remove it, thus removing the FC
+      LOG(Warn, "GeneratorFuelCell " << fc.name().get() << " is not referenced by any ElectricLoadCenterDistribution, it will not be translated.");
+      fc.heatExchanger().remove();
+      //fc.remove();
+      continue;
+    }
+  }
+
+  // Remove orphan Storage
+  for (auto& storage : model.getModelObjects<ElectricalStorage>()) {
+    if (!storage.electricLoadCenterDistribution()){
+      LOG(Warn, "Electrical Storage " << storage.name().get() << " is not referenced by any ElectricLoadCenterDistribution, it will not be translated.");
+      storage.remove();
+    }
+  }
+
+  // Remove orphan Converters
+  for (auto& converter : model.getConcreteModelObjects<ElectricLoadCenterStorageConverter>()){
+    if (!converter.electricLoadCenterDistribution()){
+      LOG(Warn, "Converter " << converter.name().get() << " is not referenced by any ElectricLoadCenterDistribution, it will not be translated.");
+      converter.remove();
+    }
+  }
+
   // Remove empty electric load center distribution objects (e.g. with no generators)
   // requested by jmarrec, https://github.com/NREL/OpenStudio/pull/1927
+  // add check for transformers
   for (auto& elcd : model.getConcreteModelObjects<ElectricLoadCenterDistribution>()){
-    if (elcd.generators().empty()){
-      LOG(Warn, "ElectricLoadCenterDistribution " << elcd.name().get() << " is not referenced by any generators, it will not be translated.");
+    if ((elcd.generators().empty())&&(!elcd.transformer())){
+      LOG(Warn, "ElectricLoadCenterDistribution " << elcd.name().get() << " is not referenced by any generators or transformers, it will not be translated.");
       if (auto inverter = elcd.inverter()){
         inverter->remove();
       }
@@ -284,13 +392,63 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
     }
   }
 
+  // ensure shading controls only reference windows in a single zone and determine control sequence number
+  // DLM: ideally E+ would not need to know the zone, shading controls could work across zones
+  std::vector<ShadingControl> shadingControls = model.getConcreteModelObjects<ShadingControl>();
+  std::sort(shadingControls.begin(), shadingControls.end(), WorkspaceObjectNameLess());
+  std::map<Handle, ShadingControlVector> zoneHandleToShadingControlVectorMap;
+  for (auto& shadingControl : shadingControls) {
+    std::set<Handle> thisZoneHandleSet;
+    for (auto& subSurface : shadingControl.subSurfaces()) {
+      boost::optional<Space> space = subSurface.space();
+      if (space) {
+        boost::optional<ThermalZone> thermalZone = space->thermalZone();
+        if (thermalZone) {
+          Handle zoneHandle = thermalZone->handle();
+          if (thisZoneHandleSet.empty()) {
+            // first thermal zone, no clone
+            thisZoneHandleSet.insert(zoneHandle);
+            auto it = zoneHandleToShadingControlVectorMap.find(zoneHandle);
+            if (it == zoneHandleToShadingControlVectorMap.end()) {
+              zoneHandleToShadingControlVectorMap.insert(std::make_pair(zoneHandle, std::vector<ShadingControl>()));
+            }
+            it = zoneHandleToShadingControlVectorMap.find(zoneHandle);
+            OS_ASSERT(it != zoneHandleToShadingControlVectorMap.end());
+            it->second.push_back(shadingControl);
+            shadingControl.additionalProperties().setFeature("Shading Control Sequence Number", (int)it->second.size());
+          } else if (thisZoneHandleSet.find(zoneHandle) != thisZoneHandleSet.end()) {
+            // already in here, good to go
+
+          } else {
+            // additional thermal zone, must clone
+            thisZoneHandleSet.insert(zoneHandle);
+            ShadingControl clone = shadingControl.clone(model).cast<ShadingControl>();
+            // assign clone to control subSurface
+            subSurface.setShadingControl(clone);
+            auto it = zoneHandleToShadingControlVectorMap.find(zoneHandle);
+            if (it == zoneHandleToShadingControlVectorMap.end()) {
+              zoneHandleToShadingControlVectorMap.insert(std::make_pair(zoneHandle, std::vector<ShadingControl>()));
+            }
+            it = zoneHandleToShadingControlVectorMap.find(zoneHandle);
+            OS_ASSERT(it != zoneHandleToShadingControlVectorMap.end());
+            it->second.push_back(clone);
+            clone.additionalProperties().setFeature("Shading Control Sequence Number", (int)it->second.size());
+          }
+        } else {
+          LOG(Warn, "Cannot find ThermalZone for " << subSurface.briefDescription() << " referencing " << shadingControl.briefDescription());
+        }
+      } else {
+        LOG(Warn, "Cannot find Space for " << subSurface.briefDescription() << " referencing " << shadingControl.briefDescription());
+      }
+    }
+  }
 
 
   // temp code
   if (!m_keepRunControlSpecialDays){
     // DLM: we will not translate these objects until we support holidays in the GUI
     // we will not warn users because these objects are not exposed in the GUI
-    for (model::RunPeriodControlSpecialDays holiday : model.getConcreteModelObjects<model::RunPeriodControlSpecialDays>()){ 
+    for (model::RunPeriodControlSpecialDays holiday : model.getConcreteModelObjects<model::RunPeriodControlSpecialDays>()){
       holiday.remove();
     }
   }
@@ -305,7 +463,7 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
         if (!model.getConcreteModelObjects<LifeCycleCost>().empty()){
           LOG(Warn, "No LifeCycleCostParameters but LifeCycleCosts are present, adding default LifeCycleCostParameters.");
         }
-        
+
         // always add this object so E+ results section exists
         lifeCycleCostParameters = model.getUniqueModelObject<LifeCycleCostParameters>();
       }
@@ -325,11 +483,6 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
       simulationControl = model.getUniqueModelObject<model::SimulationControl>();
     }
     translateAndMapModelObject(*simulationControl);
-
-    // Add a ProgramControl object to force a single threaded simulation
-    IdfObject programControl(openstudio::IddObjectType::ProgramControl);
-    programControl.setInt(openstudio::ProgramControlFields::NumberofThreadsAllowed,1);
-    m_idfObjects.push_back(programControl);
 
     // ensure that sizing parameters control exists
     boost::optional<model::SizingParameters> sizingParameters = model.getOptionalUniqueModelObject<model::SizingParameters>();
@@ -359,13 +512,22 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
     std::vector<UtilityBill> utilityBills = model.getConcreteModelObjects<UtilityBill>();
     for (UtilityBill utilityBill : utilityBills){
       // these meters and variables will be translated later
-      Meter consumptionMeter = utilityBill.consumptionMeter();
-      boost::optional<Meter> peakDemandMeter = utilityBill.peakDemandMeter();
+      OutputMeter consumptionMeter = utilityBill.consumptionMeter();
+      boost::optional<OutputMeter> peakDemandMeter = utilityBill.peakDemandMeter();
     }
   }
 
   translateConstructions(model);
   translateSchedules(model);
+
+  // Translate the Outdoor Air Node
+  {
+    auto node = model.outdoorAirNode();
+    // Create a new IddObjectType::OutdoorAir_Node
+    IdfObject idfObject(IddObjectType::OutdoorAir_Node);
+    m_idfObjects.push_back(idfObject);
+    idfObject.setName(node.name().get());
+  }
 
   // get air loops in sorted order
   std::vector<AirLoopHVAC> airLoops = model.getConcreteModelObjects<AirLoopHVAC>();
@@ -387,6 +549,9 @@ Workspace ForwardTranslator::translateModelPrivate( model::Model & model, bool f
   for (PlantLoop plantLoop : plantLoops){
     translateAndMapModelObject(plantLoop);
   }
+
+  // translate AFN
+  translateAirflowNetwork(model);
 
   // now loop over all objects
   for (const IddObjectType& iddObjectType : iddObjectsToTranslate()){
@@ -424,13 +589,13 @@ struct ChildSorter {
   ChildSorter(std::vector<IddObjectType>& iddObjectTypes)
     : m_iddObjectTypes(iddObjectTypes)
   {}
-  
+
   // sort first by position in iddObjectTypes and then by name
   bool operator()(const model::ModelObject& a, const model::ModelObject& b) const
   {
     auto ita = std::find(m_iddObjectTypes.begin(), m_iddObjectTypes.end(), a.iddObject().type());
     auto itb = std::find(m_iddObjectTypes.begin(), m_iddObjectTypes.end(), b.iddObject().type());
-  
+
     if (ita < itb){
       return true;
     }else if (ita > itb){
@@ -468,6 +633,11 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
 
   switch(modelObject.iddObject().type().value())
   {
+  case openstudio::IddObjectType::OS_AdditionalProperties :
+    {
+      // no op
+      break;
+    }
   case openstudio::IddObjectType::OS_AirConditioner_VariableRefrigerantFlow :
     {
       model::AirConditionerVariableRefrigerantFlow vrf = modelObject.cast<AirConditionerVariableRefrigerantFlow>();
@@ -492,10 +662,22 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateAirLoopHVACSupplyPlenum(airLoopHVACSupplyPlenum);
       break;
     }
+  case openstudio::IddObjectType::OS_AirTerminal_DualDuct_ConstantVolume :
+    {
+      auto mo = modelObject.cast<AirTerminalDualDuctConstantVolume>();
+      retVal = translateAirTerminalDualDuctConstantVolume(mo);
+      break;
+    }
   case openstudio::IddObjectType::OS_AirTerminal_DualDuct_VAV :
     {
       auto mo = modelObject.cast<AirTerminalDualDuctVAV>();
       retVal = translateAirTerminalDualDuctVAV(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AirTerminal_DualDuct_VAV_OutdoorAir :
+    {
+      auto mo = modelObject.cast<AirTerminalDualDuctVAVOutdoorAir>();
+      retVal = translateAirTerminalDualDuctVAVOutdoorAir(mo);
       break;
     }
   case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction :
@@ -516,6 +698,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateAirTerminalSingleDuctConstantVolumeCooledBeam(airTerminal);
       break;
     }
+  case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam :
+    {
+      model::AirTerminalSingleDuctConstantVolumeFourPipeBeam airTerminal = modelObject.cast<AirTerminalSingleDuctConstantVolumeFourPipeBeam>();
+      retVal = translateAirTerminalSingleDuctConstantVolumeFourPipeBeam(airTerminal);
+      break;
+    }
   case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_ParallelPIU_Reheat :
     {
       model::AirTerminalSingleDuctParallelPIUReheat airTerminal = modelObject.cast<AirTerminalSingleDuctParallelPIUReheat>();
@@ -528,10 +716,10 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateAirTerminalSingleDuctSeriesPIUReheat(airTerminal);
       break;
     }
-  case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled :
+  case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat :
     {
-      model::AirTerminalSingleDuctUncontrolled airTerminal = modelObject.cast<AirTerminalSingleDuctUncontrolled>();
-      retVal = translateAirTerminalSingleDuctUncontrolled(airTerminal);
+      model::AirTerminalSingleDuctConstantVolumeNoReheat airTerminal = modelObject.cast<AirTerminalSingleDuctConstantVolumeNoReheat>();
+      retVal = translateAirTerminalSingleDuctConstantVolumeNoReheat(airTerminal);
       break;
     }
   case openstudio::IddObjectType::OS_AirTerminal_SingleDuct_VAV_NoReheat :
@@ -608,11 +796,27 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     }
   case openstudio::IddObjectType::OS_AvailabilityManagerAssignmentList :
     {
-      return retVal;
+      auto mo = modelObject.cast<AvailabilityManagerAssignmentList>();
+      retVal = translateAvailabilityManagerAssignmentList(mo);
+      break;
     }
   case openstudio::IddObjectType::OS_AvailabilityManager_Scheduled :
     {
-      return retVal;
+      auto mo = modelObject.cast<AvailabilityManagerScheduled>();
+      retVal = translateAvailabilityManagerScheduled(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AvailabilityManager_ScheduledOn :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerScheduledOn>();
+      retVal = translateAvailabilityManagerScheduledOn(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AvailabilityManager_ScheduledOff :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerScheduledOff>();
+      retVal = translateAvailabilityManagerScheduledOff(mo);
+      break;
     }
   case openstudio::IddObjectType::OS_Material_AirWall :
     {
@@ -650,6 +854,30 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateAvailabilityManagerNightCycle(mo);
       break;
     }
+  case openstudio::IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerHighTemperatureTurnOn>();
+      retVal = translateAvailabilityManagerHighTemperatureTurnOn(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerHighTemperatureTurnOff>();
+      retVal = translateAvailabilityManagerHighTemperatureTurnOff(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerLowTemperatureTurnOn>();
+      retVal = translateAvailabilityManagerLowTemperatureTurnOn(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff :
+    {
+      auto mo = modelObject.cast<AvailabilityManagerLowTemperatureTurnOff>();
+      retVal = translateAvailabilityManagerLowTemperatureTurnOff(mo);
+      break;
+    }
   case openstudio::IddObjectType::OS_Boiler_HotWater :
     {
       model::BoilerHotWater boiler = modelObject.cast<BoilerHotWater>();
@@ -673,17 +901,17 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       // no-op
       return retVal;
     }
-  // case openstudio::IddObjectType::OS_CentralHeatPumpSystem :
-  //   {
-  //     model::CentralHeatPumpSystem mo = modelObject.cast<CentralHeatPumpSystem>();
-  //     retVal = translateCentralHeatPumpSystem(mo);
-  //     break;
-  //   }
-  // case openstudio::IddObjectType::OS_CentralHeatPumpSystem_Module :
-  //   {
-  //     // no-op
-  //     return retVal;
-  //   }
+  case openstudio::IddObjectType::OS_CentralHeatPumpSystem :
+    {
+      model::CentralHeatPumpSystem mo = modelObject.cast<CentralHeatPumpSystem>();
+      retVal = translateCentralHeatPumpSystem(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_CentralHeatPumpSystem_Module :
+    {
+      // no-op
+      return retVal;
+    }
   case openstudio::IddObjectType::OS_Chiller_Absorption :
     {
       auto mo = modelObject.cast<ChillerAbsorption>();
@@ -702,12 +930,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateChillerElectricEIR(chiller);
       break;
     }
-  // case openstudio::IddObjectType::OS_ChillerHeaterPerformance_Electric_EIR :
-  //   {
-  //     model::ChillerHeaterPerformanceElectricEIR mo = modelObject.cast<ChillerHeaterPerformanceElectricEIR>();
-  //     retVal = translateChillerHeaterPerformanceElectricEIR(mo);
-  //     break;
-  //   }
+  case openstudio::IddObjectType::OS_ChillerHeaterPerformance_Electric_EIR :
+    {
+      model::ChillerHeaterPerformanceElectricEIR mo = modelObject.cast<ChillerHeaterPerformanceElectricEIR>();
+      retVal = translateChillerHeaterPerformanceElectricEIR(mo);
+      break;
+    }
   case openstudio::IddObjectType::OS_ClimateZones:
   {
     // no-op
@@ -727,7 +955,17 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     }
   case openstudio::IddObjectType::OS_Coil_Cooling_CooledBeam:
     {
-      // DLM: is this a no-op?
+      // This is handled directly in ATU:SingleDuct:ConstantVolume::CooledBeam
+      break;
+    }
+  case openstudio::IddObjectType::OS_Coil_Cooling_FourPipeBeam:
+    {
+      // This is handled directly in ATU:SingleDuct:ConstantVolume::FourPipeBeam
+      break;
+    }
+  case openstudio::IddObjectType::OS_Coil_Heating_FourPipeBeam:
+    {
+      // This is handled directly in ATU:SingleDuct:ConstantVolume::FourPipeBeam
       break;
     }
   case openstudio::IddObjectType::OS_Coil_Cooling_DX_SingleSpeed :
@@ -857,7 +1095,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       if( this->isHVACComponentWithinUnitary(coil) ) {
         retVal = translateCoilHeatingDXVariableSpeedWithoutUnitary(coil);
       } else {
-        retVal = translateCoilHeatingDXVariableSpeed(coil); 
+        retVal = translateCoilHeatingDXVariableSpeed(coil);
       }
       break;
     }
@@ -966,6 +1204,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     {
       auto mo = modelObject.cast<CoilWaterHeatingAirToWaterHeatPump>();
       retVal = translateCoilWaterHeatingAirToWaterHeatPump(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped :
+    {
+      auto mo = modelObject.cast<CoilWaterHeatingAirToWaterHeatPumpWrapped>();
+      retVal = translateCoilWaterHeatingAirToWaterHeatPumpWrapped(mo);
       break;
     }
   case openstudio::IddObjectType::OS_ComponentData :
@@ -1279,6 +1523,17 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       // no-op
       break;
     }
+  case openstudio::IddObjectType::OS_ElectricEquipment_ITE_AirCooled:
+  {
+    model::ElectricEquipmentITEAirCooled equipmentITE = modelObject.cast<ElectricEquipmentITEAirCooled>();
+    retVal = translateElectricEquipmentITEAirCooled(equipmentITE);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition:
+  {
+    // no-op
+    break;
+  }
   case openstudio::IddObjectType::OS_ElectricLoadCenter_Distribution:
   {
     model::ElectricLoadCenterDistribution temp = modelObject.cast<ElectricLoadCenterDistribution>();
@@ -1295,6 +1550,102 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
   {
     model::ElectricLoadCenterInverterSimple temp = modelObject.cast<ElectricLoadCenterInverterSimple>();
     retVal = translateElectricLoadCenterInverterSimple(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts:
+  {
+    model::ElectricLoadCenterInverterPVWatts temp = modelObject.cast<ElectricLoadCenterInverterPVWatts>();
+    retVal = translateElectricLoadCenterInverterPVWatts(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ElectricLoadCenter_Storage_Simple:
+  {
+    model::ElectricLoadCenterStorageSimple temp = modelObject.cast<ElectricLoadCenterStorageSimple>();
+    retVal = translateElectricLoadCenterStorageSimple(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ElectricLoadCenter_Storage_Converter:
+  {
+    model::ElectricLoadCenterStorageConverter temp = modelObject.cast<ElectricLoadCenterStorageConverter>();
+    retVal = translateElectricLoadCenterStorageConverter(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ElectricLoadCenter_Transformer:
+  {
+    model::ElectricLoadCenterTransformer temp = modelObject.cast<ElectricLoadCenterTransformer>();
+    retVal = translateElectricLoadCenterTransformer(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_Actuator:
+  {
+    model::EnergyManagementSystemActuator actuator = modelObject.cast<EnergyManagementSystemActuator>();
+    retVal = translateEnergyManagementSystemActuator(actuator);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable:
+  {
+    model::EnergyManagementSystemConstructionIndexVariable civ = modelObject.cast<EnergyManagementSystemConstructionIndexVariable>();
+    retVal = translateEnergyManagementSystemConstructionIndexVariable(civ);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable:
+  {
+    model::EnergyManagementSystemCurveOrTableIndexVariable cotiv = modelObject.cast<EnergyManagementSystemCurveOrTableIndexVariable>();
+    retVal = translateEnergyManagementSystemCurveOrTableIndexVariable(cotiv);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_GlobalVariable:
+  {
+    model::EnergyManagementSystemGlobalVariable globalVariable = modelObject.cast<EnergyManagementSystemGlobalVariable>();
+    retVal = translateEnergyManagementSystemGlobalVariable(globalVariable);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_InternalVariable:
+  {
+    model::EnergyManagementSystemInternalVariable internalVariable = modelObject.cast<EnergyManagementSystemInternalVariable>();
+    retVal = translateEnergyManagementSystemInternalVariable(internalVariable);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable:
+  {
+    model::EnergyManagementSystemMeteredOutputVariable mov = modelObject.cast<EnergyManagementSystemMeteredOutputVariable>();
+    retVal = translateEnergyManagementSystemMeteredOutputVariable(mov);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_OutputVariable:
+  {
+    model::EnergyManagementSystemOutputVariable outputVariable = modelObject.cast<EnergyManagementSystemOutputVariable>();
+    retVal = translateEnergyManagementSystemOutputVariable(outputVariable);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_Program:
+  {
+    model::EnergyManagementSystemProgram program = modelObject.cast<EnergyManagementSystemProgram>();
+    retVal = translateEnergyManagementSystemProgram(program);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager:
+  {
+    model::EnergyManagementSystemProgramCallingManager programCallingManager = modelObject.cast<EnergyManagementSystemProgramCallingManager>();
+    retVal = translateEnergyManagementSystemProgramCallingManager(programCallingManager);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_Sensor:
+  {
+    model::EnergyManagementSystemSensor sensor = modelObject.cast<EnergyManagementSystemSensor>();
+    retVal = translateEnergyManagementSystemSensor(sensor);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_Subroutine:
+  {
+    model::EnergyManagementSystemSubroutine subroutine = modelObject.cast<EnergyManagementSystemSubroutine>();
+    retVal = translateEnergyManagementSystemSubroutine(subroutine);
+    break;
+  }
+  case openstudio::IddObjectType::OS_EnergyManagementSystem_TrendVariable:
+  {
+    model::EnergyManagementSystemTrendVariable trendVariable = modelObject.cast<EnergyManagementSystemTrendVariable>();
+    retVal = translateEnergyManagementSystemTrendVariable(trendVariable);
     break;
   }
   case openstudio::IddObjectType::OS_EvaporativeCooler_Direct_ResearchSpecial :
@@ -1332,6 +1683,109 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       // no-op
       break;
     }
+
+  case openstudio::IddObjectType::OS_Exterior_FuelEquipment :
+    {
+      model::ExteriorFuelEquipment mo = modelObject.cast<ExteriorFuelEquipment>();
+      retVal = translateExteriorFuelEquipment(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Exterior_FuelEquipment_Definition:
+    {
+      // no-op
+      break;
+    }
+
+  case openstudio::IddObjectType::OS_Exterior_WaterEquipment :
+    {
+      model::ExteriorWaterEquipment mo = modelObject.cast<ExteriorWaterEquipment>();
+      retVal = translateExteriorWaterEquipment(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Exterior_WaterEquipment_Definition:
+    {
+      // no-op
+      break;
+    }
+
+  case openstudio::IddObjectType::OS_ExternalInterface :
+    {
+      model::ExternalInterface ei = modelObject.cast<ExternalInterface>();
+      retVal = translateExternalInterface(ei);
+      break;
+    }
+  case openstudio::IddObjectType::OS_ExternalInterface_Actuator :
+    {
+      model::ExternalInterfaceActuator ei = modelObject.cast<ExternalInterfaceActuator>();
+      retVal = translateExternalInterfaceActuator(ei);
+      break;
+    }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitExportFromVariable ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitExportFromVariable>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitExportFromVariable(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitExportToActuator ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitExportToActuator>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitExportToActuator(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitExportToSchedule ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitExportToSchedule>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitExportToSchedule(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitExportToVariable ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitExportToVariable>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitExportToVariable(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitImport ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitImport>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitImport(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitImportFromVariable ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitImportFromVariable>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitImportFromVariable(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitImportToActuator ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitImportToActuator>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitImportToActuator(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitImportToSchedule ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitImportToSchedule>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitImportToSchedule(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable:
+  {
+    model::ExternalInterfaceFunctionalMockupUnitImportToVariable ei = modelObject.cast<ExternalInterfaceFunctionalMockupUnitImportToVariable>();
+    retVal = translateExternalInterfaceFunctionalMockupUnitImportToVariable(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_Schedule:
+  {
+    model::ExternalInterfaceSchedule ei = modelObject.cast<ExternalInterfaceSchedule>();
+    retVal = translateExternalInterfaceSchedule(ei);
+    break;
+  }
+  case openstudio::IddObjectType::OS_ExternalInterface_Variable:
+  {
+    model::ExternalInterfaceVariable ei = modelObject.cast<ExternalInterfaceVariable>();
+    retVal = translateExternalInterfaceVariable(ei);
+    break;
+  }
   case openstudio::IddObjectType::OS_Facility :
     {
       // no-op
@@ -1355,13 +1809,13 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateFanVariableVolume(fan);
       break;
     }
-    
+
   case openstudio::IddObjectType::OS_Fan_ZoneExhaust :
     {
       model::FanZoneExhaust fan = modelObject.cast<FanZoneExhaust>();
       retVal = translateFanZoneExhaust(fan);
       break;
-    } 
+    }
   case openstudio::IddObjectType::OS_FluidCooler_SingleSpeed:
   {
     model::FluidCoolerSingleSpeed fluidCoolerSingleSpeed = modelObject.cast<FluidCoolerSingleSpeed>();
@@ -1374,10 +1828,112 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     retVal = translateFluidCoolerTwoSpeed(fluidCoolerTwoSpeed);
     break;
   }
+  case openstudio::IddObjectType::OS_Foundation_Kiva:
+  {
+    model::FoundationKiva kiva = modelObject.cast<FoundationKiva>();
+    retVal = translateFoundationKiva(kiva);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Foundation_Kiva_Settings:
+  {
+    model::FoundationKivaSettings kivaSettings = modelObject.cast<FoundationKivaSettings>();
+    retVal = translateFoundationKivaSettings(kivaSettings);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_MicroTurbine:
+  {
+    // Will also translate the Generator:MicroTurbine:HeatRecovery if there is one attached to the Generator:MicroTurbine
+    model::GeneratorMicroTurbine mchp = modelObject.cast<GeneratorMicroTurbine>();
+    retVal = translateGeneratorMicroTurbine(mchp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_MicroTurbine_HeatRecovery:
+  {
+    // no-op, just Log a Trace message
+    LOG(Trace, "OS_Generator_MicroTurbine_HeatRecovery is not translated by itself but in the parent GeneratorMicroTurbine");
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell:
+  {
+    // Will also translate all children of Generator:FuelCell (Generator:FuelCell:AirSupply, etc)
+    model::GeneratorFuelCell temp = modelObject.cast<GeneratorFuelCell>();
+    retVal = translateGeneratorFuelCell(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_AirSupply:
+  {
+    model::GeneratorFuelCellAirSupply temp = modelObject.cast<GeneratorFuelCellAirSupply>();
+    retVal = translateGeneratorFuelCellAirSupply(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater:
+  {
+    model::GeneratorFuelCellAuxiliaryHeater temp = modelObject.cast<GeneratorFuelCellAuxiliaryHeater>();
+    retVal = translateGeneratorFuelCellAuxiliaryHeater(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_ElectricalStorage:
+  {
+    model::GeneratorFuelCellElectricalStorage temp = modelObject.cast<GeneratorFuelCellElectricalStorage>();
+    retVal = translateGeneratorFuelCellElectricalStorage(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger:
+  {
+    model::GeneratorFuelCellExhaustGasToWaterHeatExchanger temp = modelObject.cast<GeneratorFuelCellExhaustGasToWaterHeatExchanger>();
+    retVal = translateGeneratorFuelCellExhaustGasToWaterHeatExchanger(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_Inverter:
+  {
+    model::GeneratorFuelCellInverter temp = modelObject.cast<GeneratorFuelCellInverter>();
+    retVal = translateGeneratorFuelCellInverter(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_PowerModule:
+  {
+    model::GeneratorFuelCellPowerModule temp = modelObject.cast<GeneratorFuelCellPowerModule>();
+    retVal = translateGeneratorFuelCellPowerModule(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_StackCooler:
+  {
+    model::GeneratorFuelCellStackCooler temp = modelObject.cast<GeneratorFuelCellStackCooler>();
+    retVal = translateGeneratorFuelCellStackCooler(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelCell_WaterSupply:
+  {
+    model::GeneratorFuelCellWaterSupply temp = modelObject.cast<GeneratorFuelCellWaterSupply>();
+    retVal = translateGeneratorFuelCellWaterSupply(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_FuelSupply:
+  {
+    model::GeneratorFuelSupply temp = modelObject.cast<GeneratorFuelSupply>();
+    retVal = translateGeneratorFuelSupply(temp);
+    break;
+  }
+  // TODO: JM 2018-10-12 Placeholder for Generator:MicroCHP if/when it is implemented
+  // to remember that translateGeneratorMicroCHP should be calling translation of child GeneratorFuelSupply as needed
+  /*
+   *case openstudio::IddObjectType::OS_Generator_MicroCHP:
+   *{
+   *  model::GeneratorFuelSupply temp = modelObject.cast<GeneratorMicroCHP>();
+   *  retVal = translateGeneratorMicroCHP(temp);
+   *  break;
+   *}
+   */
   case openstudio::IddObjectType::OS_Generator_Photovoltaic:
   {
     model::GeneratorPhotovoltaic temp = modelObject.cast<GeneratorPhotovoltaic>();
     retVal = translateGeneratorPhotovoltaic(temp);
+    break;
+  }
+  case openstudio::IddObjectType::OS_Generator_PVWatts:
+  {
+    model::GeneratorPVWatts temp = modelObject.cast<GeneratorPVWatts>();
+    retVal = translateGeneratorPVWatts(temp);
     break;
   }
   case openstudio::IddObjectType::OS_Glare_Sensor:
@@ -1514,6 +2070,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateWaterHeaterHeatPump(mo);
       break;
     }
+  case openstudio::IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser :
+    {
+      auto mo = modelObject.cast<WaterHeaterHeatPumpWrappedCondenser>();
+      retVal = translateWaterHeaterHeatPumpWrappedCondenser(mo);
+      break;
+    }
   case openstudio::IddObjectType::OS_WaterHeater_Stratified :
     {
       model::WaterHeaterStratified waterHeaterStratified = modelObject.cast<WaterHeaterStratified>();
@@ -1628,16 +2190,34 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateMasslessOpaqueMaterial(material);
       break;
     }
+  case openstudio::IddObjectType::OS_MaterialProperty_GlazingSpectralData :
+    {
+      model::MaterialPropertyGlazingSpectralData spectralData = modelObject.cast<MaterialPropertyGlazingSpectralData>();
+      retVal = translateMaterialPropertyGlazingSpectralData(spectralData);
+      break;
+    }
+  case openstudio::IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings :
+    {
+      model::MaterialPropertyMoisturePenetrationDepthSettings empd = modelObject.cast<MaterialPropertyMoisturePenetrationDepthSettings>();
+      retVal = translateMaterialPropertyMoisturePenetrationDepthSettings(empd);
+      break;
+    }
   case openstudio::IddObjectType::OS_Material_RoofVegetation :
     {
       model::RoofVegetation material = modelObject.cast<RoofVegetation>();
       retVal = translateRoofVegetation(material);
       break;
     }
-  case openstudio::IddObjectType::OS_Meter :
+  case openstudio::IddObjectType::OS_Meter_Custom :
     {
-      model::Meter meter = modelObject.cast<Meter>();
-      retVal = translateMeter(meter);
+      model::MeterCustom meterCustom = modelObject.cast<MeterCustom>();
+      retVal = translateMeterCustom(meterCustom);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Meter_CustomDecrement :
+    {
+      model::MeterCustomDecrement meterCustomDecrement = modelObject.cast<MeterCustomDecrement>();
+      retVal = translateMeterCustomDecrement(meterCustomDecrement);
       break;
     }
   case openstudio::IddObjectType::OS_ModelObjectList :
@@ -1686,6 +2266,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translatePlantComponentTemperatureSource(mo);
       break;
     }
+  case openstudio::IddObjectType::OS_PlantComponent_UserDefined:
+  {
+    model::PlantComponentUserDefined mo = modelObject.cast<PlantComponentUserDefined>();
+    retVal = translatePlantComponentUserDefined(mo);
+    break;
+  }
   case openstudio::IddObjectType::OS_PlantEquipmentOperation_CoolingLoad :
     {
       auto mo = modelObject.cast<PlantEquipmentOperationCoolingLoad>();
@@ -1758,12 +2344,24 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateOutputControlReportingTolerances(outputControl);
       break;
     }
+  case openstudio::IddObjectType::OS_Output_Meter :
+    {
+      model::OutputMeter meter = modelObject.cast<OutputMeter>();
+      retVal = translateOutputMeter(meter);
+      break;
+    }
   case openstudio::IddObjectType::OS_Output_Variable :
     {
       model::OutputVariable outputVariable = modelObject.cast<OutputVariable>();
       retVal = translateOutputVariable(outputVariable);
       break;
     }
+  case openstudio::IddObjectType::OS_Output_EnergyManagementSystem:
+  {
+    model::OutputEnergyManagementSystem outputEnergyManagementSystem = modelObject.cast<OutputEnergyManagementSystem>();
+    retVal = translateOutputEnergyManagementSystem(outputEnergyManagementSystem);
+    break;
+  }
   case openstudio::IddObjectType::OS_People :
     {
       model::People people = modelObject.cast<People>();
@@ -1803,7 +2401,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     {
       LOG(Warn, "OS_ProgramControl is not currently translated");
       break;
-    } 
+    }
   case openstudio::IddObjectType::OS_RadianceParameters:
     {
       // no-op
@@ -1891,7 +2489,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       model::RefrigerationTranscriticalSystem refrigerationTranscriticalSystem = modelObject.cast<RefrigerationTranscriticalSystem>();
       retVal = translateRefrigerationTranscriticalSystem(refrigerationTranscriticalSystem);
       break;
-    }    
+    }
   case openstudio::IddObjectType::OS_Refrigeration_WalkIn :
     {
       model::RefrigerationWalkIn refrigerationWalkIn = modelObject.cast<RefrigerationWalkIn>();
@@ -1950,6 +2548,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateScheduleFixedInterval(schedule);
       break;
     }
+  case  openstudio::IddObjectType::OS_Schedule_File:
+   {
+    model::ScheduleFile schedule = modelObject.cast<ScheduleFile>();
+    retVal = translateScheduleFile(schedule);
+    break;
+   }
   case  openstudio::IddObjectType::OS_Schedule_Rule :
     {
       // no-op
@@ -2075,6 +2679,18 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       retVal = translateSetpointManagerScheduledDualSetpoint(spm);
       break;
     }
+  case  openstudio::IddObjectType::OS_SetpointManager_SingleZone_Cooling :
+    {
+      model::SetpointManagerSingleZoneCooling spm = modelObject.cast<SetpointManagerSingleZoneCooling>();
+      retVal = translateSetpointManagerSingleZoneCooling(spm);
+      break;
+    }
+  case  openstudio::IddObjectType::OS_SetpointManager_SingleZone_Heating :
+    {
+      model::SetpointManagerSingleZoneHeating spm = modelObject.cast<SetpointManagerSingleZoneHeating>();
+      retVal = translateSetpointManagerSingleZoneHeating(spm);
+      break;
+    }
   case  openstudio::IddObjectType::OS_SetpointManager_SingleZone_Humidity_Maximum :
     {
       model::SetpointManagerSingleZoneHumidityMaximum spm = modelObject.cast<SetpointManagerSingleZoneHumidityMaximum>();
@@ -2122,7 +2738,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
       model::ShadingControl shadingControl = modelObject.cast<ShadingControl>();
       retVal = translateShadingControl(shadingControl);
       break;
-    }    
+    }
   case  openstudio::IddObjectType::OS_ShadingSurface :
     {
       model::ShadingSurface shadingSurface = modelObject.cast<ShadingSurface>();
@@ -2187,6 +2803,24 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     {
       model::SiteGroundTemperatureBuildingSurface mo = modelObject.cast<SiteGroundTemperatureBuildingSurface>();
       retVal = translateSiteGroundTemperatureBuildingSurface(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Site_GroundTemperature_Deep :
+    {
+      model::SiteGroundTemperatureDeep mo = modelObject.cast<SiteGroundTemperatureDeep>();
+      retVal = translateSiteGroundTemperatureDeep(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Site_GroundTemperature_FCfactorMethod :
+    {
+      model::SiteGroundTemperatureFCfactorMethod mo = modelObject.cast<SiteGroundTemperatureFCfactorMethod>();
+      retVal = translateSiteGroundTemperatureFCfactorMethod(mo);
+      break;
+    }
+  case openstudio::IddObjectType::OS_Site_GroundTemperature_Shallow :
+    {
+      model::SiteGroundTemperatureShallow mo = modelObject.cast<SiteGroundTemperatureShallow>();
+      retVal = translateSiteGroundTemperatureShallow(mo);
       break;
     }
   case openstudio::IddObjectType::OS_Site_WaterMainsTemperature :
@@ -2289,6 +2923,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     retVal = translateSurfacePropertyConvectionCoefficientsMultipleSurface(obj);
     break;
   }
+  case openstudio::IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter:
+  {
+    model::SurfacePropertyExposedFoundationPerimeter obj = modelObject.cast<SurfacePropertyExposedFoundationPerimeter>();
+    retVal = translateSurfacePropertyExposedFoundationPerimeter(obj);
+    break;
+  }
   case openstudio::IddObjectType::OS_SurfaceProperty_OtherSideCoefficients:
   {
     model::SurfacePropertyOtherSideCoefficients obj = modelObject.cast<SurfacePropertyOtherSideCoefficients>();
@@ -2347,6 +2987,12 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     {
       model::Timestep timestep = modelObject.cast<Timestep>();
       retVal = translateTimestep(timestep);
+      break;
+    }
+  case openstudio::IddObjectType::OS_UnitarySystemPerformance_Multispeed :
+    {
+      model::UnitarySystemPerformanceMultispeed sysPerfMultispeed = modelObject.cast<UnitarySystemPerformanceMultispeed>();
+      retVal = translateUnitarySystemPerformanceMultispeed(sysPerfMultispeed);
       break;
     }
   case openstudio::IddObjectType::OS_UtilityBill:
@@ -2467,7 +3113,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
   case openstudio::IddObjectType::OS_ZoneAirContaminantBalance :
     {
       auto mo = modelObject.cast<ZoneAirContaminantBalance>();
-      retVal = translateZoneAirContaminantBalance(mo); 
+      retVal = translateZoneAirContaminantBalance(mo);
       break;
     }
   case openstudio::IddObjectType::OS_ZoneAirHeatBalanceAlgorithm :
@@ -2484,8 +3130,9 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
     }
   case openstudio::IddObjectType::OS_ZoneCapacitanceMultiplier_ResearchSpecial :
     {
-      // no-op
-      return retVal;
+      model::ZoneCapacitanceMultiplierResearchSpecial mo = modelObject.cast<ZoneCapacitanceMultiplierResearchSpecial>();
+      retVal = translateZoneCapacitanceMultiplierResearchSpecial(mo);
+      break;
     }
   case openstudio::IddObjectType::OS_ZoneControl_ContaminantController :
     {
@@ -2664,7 +3311,7 @@ boost::optional<IdfObject> ForwardTranslator::translateAndMapModelObject(ModelOb
 
     // sort these objects as well
     std::sort(children.begin(), children.end(), ChildSorter(types));
-    
+
     for(auto & elem : children)
     {
       if (std::find(types.begin(),types.end(),elem.iddObject().type()) != types.end()) {
@@ -2731,11 +3378,16 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_Site);
   result.push_back(IddObjectType::OS_Site_GroundReflectance);
   result.push_back(IddObjectType::OS_Site_GroundTemperature_BuildingSurface);
+  result.push_back(IddObjectType::OS_Site_GroundTemperature_Deep);
+  result.push_back(IddObjectType::OS_Site_GroundTemperature_FCfactorMethod);
+  result.push_back(IddObjectType::OS_Site_GroundTemperature_Shallow);
   result.push_back(IddObjectType::OS_Site_WaterMainsTemperature);
   result.push_back(IddObjectType::OS_ClimateZones);
   result.push_back(IddObjectType::OS_SizingPeriod_DesignDay);
   result.push_back(IddObjectType::OS_SizingPeriod_WeatherFileConditionType);
   result.push_back(IddObjectType::OS_SizingPeriod_WeatherFileDays);
+  result.push_back(IddObjectType::OS_Foundation_Kiva);
+  result.push_back(IddObjectType::OS_Foundation_Kiva_Settings);
 
   result.push_back(IddObjectType::OS_UtilityCost_Charge_Block);
   result.push_back(IddObjectType::OS_UtilityCost_Charge_Simple);
@@ -2777,6 +3429,7 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_Lights);
   result.push_back(IddObjectType::OS_Luminaire);
   result.push_back(IddObjectType::OS_ElectricEquipment);
+  result.push_back(IddObjectType::OS_ElectricEquipment_ITE_AirCooled);
   result.push_back(IddObjectType::OS_GasEquipment);
   result.push_back(IddObjectType::OS_HotWaterEquipment);
   result.push_back(IddObjectType::OS_SteamEquipment);
@@ -2784,6 +3437,9 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_SpaceInfiltration_DesignFlowRate);
   result.push_back(IddObjectType::OS_SpaceInfiltration_EffectiveLeakageArea);
   result.push_back(IddObjectType::OS_Exterior_Lights);
+  result.push_back(IddObjectType::OS_Exterior_FuelEquipment);
+  result.push_back(IddObjectType::OS_Exterior_WaterEquipment);
+
 
   result.push_back(IddObjectType::OS_AirLoopHVAC);
   result.push_back(IddObjectType::OS_AirLoopHVAC_ControllerList);
@@ -2792,10 +3448,12 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_AirLoopHVAC_UnitaryCoolOnly);
   result.push_back(IddObjectType::OS_AirLoopHVAC_ZoneMixer);
   result.push_back(IddObjectType::OS_AirLoopHVAC_ZoneSplitter);
+  result.push_back(IddObjectType::OS_AirTerminal_DualDuct_ConstantVolume);
+  result.push_back(IddObjectType::OS_AirTerminal_DualDuct_VAV_OutdoorAir);
   result.push_back(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam);
-  result.push_back(IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled);
-  result.push_back(IddObjectType::OS_AvailabilityManagerAssignmentList);
-  result.push_back(IddObjectType::OS_AvailabilityManager_Scheduled);
+  result.push_back(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat);
+  // Unlike other AVMs, this one doesn't live on the AVM AssignmentList, so need to tell it to translate all the time
+  result.push_back(IddObjectType::OS_AvailabilityManager_HybridVentilation);
   result.push_back(IddObjectType::OS_Chiller_Electric_EIR);
   result.push_back(IddObjectType::OS_Coil_Cooling_DX_SingleSpeed);
   result.push_back(IddObjectType::OS_Coil_Cooling_DX_TwoSpeed);
@@ -2830,7 +3488,7 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_Curve_Triquadratic);
   result.push_back(IddObjectType::OS_Table_MultiVariableLookup);
   result.push_back(IddObjectType::OS_DistrictCooling);
-  result.push_back(IddObjectType::OS_DistrictHeating); 
+  result.push_back(IddObjectType::OS_DistrictHeating);
   result.push_back(IddObjectType::OS_EvaporativeCooler_Direct_ResearchSpecial);
   result.push_back(IddObjectType::OS_Fan_ConstantVolume);
   result.push_back(IddObjectType::OS_Fan_OnOff);
@@ -2850,24 +3508,74 @@ std::vector<IddObjectType> ForwardTranslator::iddObjectsToTranslateInitializer()
   result.push_back(IddObjectType::OS_Refrigeration_TranscriticalSystem);
 
   result.push_back(IddObjectType::OS_ElectricLoadCenter_Distribution);
+  result.push_back(IddObjectType::OS_Generator_MicroTurbine);
+  result.push_back(IddObjectType::OS_Generator_FuelCell);
+  // Fuel Cell is responsible for translating these
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_AirSupply);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_ElectricalStorage);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_Inverter);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_PowerModule);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_StackCooler);
+  // result.push_back(IddObjectType::OS_Generator_FuelCell_WaterSupply);
+  // Fuel Cell (and MicroCHP when implemented) are responsible for translating this one
+  // result.push_back(IddObjectType::OS_Generator_FuelSupply);
+
   result.push_back(IddObjectType::OS_Generator_Photovoltaic);
+  result.push_back(IddObjectType::OS_Generator_PVWatts);
   result.push_back(IddObjectType::OS_PhotovoltaicPerformance_EquivalentOneDiode);
   result.push_back(IddObjectType::OS_PhotovoltaicPerformance_Simple);
   result.push_back(IddObjectType::OS_ElectricLoadCenter_Inverter_LookUpTable);
   result.push_back(IddObjectType::OS_ElectricLoadCenter_Inverter_Simple);
+  result.push_back(IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts);
+  result.push_back(IddObjectType::OS_ElectricLoadCenter_Storage_Simple);
+  result.push_back(IddObjectType::OS_ElectricLoadCenter_Storage_Converter);
+  result.push_back(IddObjectType::OS_ElectricLoadCenter_Transformer);
 
   // put these down here so they have a chance to be translated with their "parent"
   result.push_back(IddObjectType::OS_LifeCycleCost);
 
-  result.push_back(IddObjectType::OS_Meter);
+  result.push_back(IddObjectType::OS_Output_Meter);
+  result.push_back(IddObjectType::OS_Meter_Custom);
+  result.push_back(IddObjectType::OS_Meter_CustomDecrement);
   result.push_back(IddObjectType::OS_Output_Variable);
 
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_GlobalVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_InternalVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_Sensor);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_Actuator);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_Program);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_Subroutine);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_OutputVariable);
+  result.push_back(IddObjectType::OS_EnergyManagementSystem_TrendVariable);
+  result.push_back(IddObjectType::OS_Output_EnergyManagementSystem);
+
+  result.push_back(IddObjectType::OS_ExternalInterface);
+  result.push_back(IddObjectType::OS_ExternalInterface_Actuator);
+  result.push_back(IddObjectType::OS_ExternalInterface_Schedule);
+  result.push_back(IddObjectType::OS_ExternalInterface_Variable);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule);
+  result.push_back(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable);
   return result;
 }
 
 void ForwardTranslator::translateConstructions(const model::Model & model)
 {
   std::vector<IddObjectType> iddObjectTypes;
+  iddObjectTypes.push_back(IddObjectType::OS_MaterialProperty_GlazingSpectralData);
+  iddObjectTypes.push_back(IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings);
   iddObjectTypes.push_back(IddObjectType::OS_Material);
   iddObjectTypes.push_back(IddObjectType::OS_Material_AirGap);
   iddObjectTypes.push_back(IddObjectType::OS_Material_AirWall);
@@ -2902,9 +3610,11 @@ void ForwardTranslator::translateConstructions(const model::Model & model)
 
   iddObjectTypes.push_back(IddObjectType::OS_SurfaceProperty_OtherSideCoefficients);
   iddObjectTypes.push_back(IddObjectType::OS_SurfaceProperty_OtherSideConditionsModel);
+  iddObjectTypes.push_back(IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter);
+  iddObjectTypes.push_back(IddObjectType::OS_SurfaceProperty_ConvectionCoefficients);
 
   for (const IddObjectType& iddObjectType : iddObjectTypes){
-    
+
     // get objects by type in sorted order
     std::vector<WorkspaceObject> objects = model.getObjectsByType(iddObjectType);
     std::sort(objects.begin(), objects.end(), WorkspaceObjectNameLess());
@@ -2947,9 +3657,10 @@ void ForwardTranslator::translateSchedules(const model::Model & model)
   iddObjectTypes.push_back(IddObjectType::OS_Schedule_Ruleset);
   iddObjectTypes.push_back(IddObjectType::OS_Schedule_FixedInterval);
   iddObjectTypes.push_back(IddObjectType::OS_Schedule_VariableInterval);
+  iddObjectTypes.push_back(IddObjectType::OS_Schedule_File);
 
   for (const IddObjectType& iddObjectType : iddObjectTypes){
-    
+
     // get objects by type in sorted order
     objects = model.getObjectsByType(iddObjectType);
     std::sort(objects.begin(), objects.end(), WorkspaceObjectNameLess());
@@ -2983,6 +3694,264 @@ void ForwardTranslator::translateSchedules(const model::Model & model)
     translateAndMapModelObject(schedule);
     schedule = model.alwaysOnContinuousSchedule();
     translateAndMapModelObject(schedule);
+  }
+}
+
+void ForwardTranslator::translateAirflowNetwork(const model::Model & model)
+{
+  // translate AFN if there is a simulation control object
+  boost::optional<model::AirflowNetworkSimulationControl> afnSimulationControl = model.getOptionalUniqueModelObject<model::AirflowNetworkSimulationControl>();
+  if (afnSimulationControl) {
+    translateAirflowNetworkSimulationControl(afnSimulationControl.get());
+
+    // Zones
+    std::vector<model::AirflowNetworkZone> zones = model.getConcreteModelObjects<model::AirflowNetworkZone>();
+    std::sort(zones.begin(), zones.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : zones) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkZone(modelObject);
+    }
+
+    // Reference Crack Conditions
+    std::vector<model::AirflowNetworkReferenceCrackConditions> refcracks = model.getConcreteModelObjects<model::AirflowNetworkReferenceCrackConditions>();
+    std::sort(refcracks.begin(), refcracks.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : refcracks) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkReferenceCrackConditions(modelObject);
+    }
+
+    // Cracks
+    std::vector<model::AirflowNetworkCrack> cracks = model.getConcreteModelObjects<model::AirflowNetworkCrack>();
+    std::sort(cracks.begin(), cracks.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : cracks) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkCrack(modelObject);
+    }
+
+    // Effective Leakage Area
+    std::vector<model::AirflowNetworkEffectiveLeakageArea> elas = model.getConcreteModelObjects<model::AirflowNetworkEffectiveLeakageArea>();
+    std::sort(elas.begin(), elas.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : elas) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkEffectiveLeakageArea(modelObject);
+    }
+
+    // Simple Openings
+    std::vector<model::AirflowNetworkSimpleOpening> simples = model.getConcreteModelObjects<model::AirflowNetworkSimpleOpening>();
+    std::sort(simples.begin(), simples.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : simples) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkSimpleOpening(modelObject);
+    }
+
+    // Detailed Openings
+    std::vector<model::AirflowNetworkDetailedOpening> detaileds = model.getConcreteModelObjects<model::AirflowNetworkDetailedOpening>();
+    std::sort(detaileds.begin(), detaileds.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : detaileds) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkDetailedOpening(modelObject);
+    }
+
+    // Horizontal Openings
+    std::vector<model::AirflowNetworkHorizontalOpening> horzs = model.getConcreteModelObjects<model::AirflowNetworkHorizontalOpening>();
+    std::sort(horzs.begin(), horzs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : horzs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkHorizontalOpening(modelObject);
+    }
+
+    // Surfaces
+    std::vector<model::AirflowNetworkSurface> surfs = model.getConcreteModelObjects<model::AirflowNetworkSurface>();
+    std::sort(surfs.begin(), surfs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : surfs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkSurface(modelObject);
+    }
+
+    // Nodes
+    std::vector<model::AirflowNetworkDistributionNode> nodes = model.getConcreteModelObjects<model::AirflowNetworkDistributionNode>();
+    std::sort(nodes.begin(), nodes.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : nodes) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkDistributionNode(modelObject);
+    }
+
+    // Linkages
+    std::vector<model::AirflowNetworkDistributionLinkage> links = model.getConcreteModelObjects<model::AirflowNetworkDistributionLinkage>();
+    std::sort(links.begin(), links.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : links) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkDistributionLinkage(modelObject);
+    }
+
+    // External Nodes
+    std::vector<model::AirflowNetworkExternalNode> exts = model.getConcreteModelObjects<model::AirflowNetworkExternalNode>();
+    std::sort(exts.begin(), exts.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : exts) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkExternalNode(modelObject);
+    }
+
+    // Zone Exhaust Fan
+    std::vector<model::AirflowNetworkZoneExhaustFan> zefs = model.getConcreteModelObjects<model::AirflowNetworkZoneExhaustFan>();
+    std::sort(zefs.begin(), zefs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : zefs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkZoneExhaustFan(modelObject);
+    }
+
+    // Fan
+    std::vector<model::AirflowNetworkFan> fans = model.getConcreteModelObjects<model::AirflowNetworkFan>();
+    std::sort(fans.begin(), fans.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : fans) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkFan(modelObject);
+    }
+
+    // Duct
+    std::vector<model::AirflowNetworkDuct> ducts = model.getConcreteModelObjects<model::AirflowNetworkDuct>();
+    std::sort(ducts.begin(), ducts.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : ducts) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkDuct(modelObject);
+    }
+
+    // Equivalent Duct
+    std::vector<model::AirflowNetworkEquivalentDuct> equivds = model.getConcreteModelObjects<model::AirflowNetworkEquivalentDuct>();
+    std::sort(equivds.begin(), equivds.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : equivds) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkEquivalentDuct(modelObject);
+    }
+
+    // Leakage Ratio
+    std::vector<model::AirflowNetworkLeakageRatio> lrs = model.getConcreteModelObjects<model::AirflowNetworkLeakageRatio>();
+    std::sort(lrs.begin(), lrs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : lrs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkLeakageRatio(modelObject);
+    }
+
+    // Constant Pressure Drops
+    std::vector<model::AirflowNetworkConstantPressureDrop> constps = model.getConcreteModelObjects<model::AirflowNetworkConstantPressureDrop>();
+    std::sort(constps.begin(), constps.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : constps) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkConstantPressureDrop(modelObject);
+    }
+
+    // Outdoor Air Flow
+    std::vector<model::AirflowNetworkOutdoorAirflow> oafs = model.getConcreteModelObjects<model::AirflowNetworkOutdoorAirflow>();
+    std::sort(oafs.begin(), oafs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : oafs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkOutdoorAirflow(modelObject);
+    }
+
+    // Duct VFs
+    std::vector<model::AirflowNetworkDuctViewFactors> ductvfs = model.getConcreteModelObjects<model::AirflowNetworkDuctViewFactors>();
+    std::sort(ductvfs.begin(), ductvfs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : ductvfs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkDuctViewFactors(modelObject);
+    }
+
+    // Occupant Ventilation Control
+    std::vector<model::AirflowNetworkOccupantVentilationControl> occvcs = model.getConcreteModelObjects<model::AirflowNetworkOccupantVentilationControl>();
+    std::sort(occvcs.begin(), occvcs.end(), WorkspaceObjectNameLess());
+    for (auto modelObject : occvcs) {
+      LOG(Trace, "Translating " << modelObject.briefDescription() << ".");
+      translateAirflowNetworkOccupantVentilationControl(modelObject);
+    }
+
+  } else {
+
+    int count = 0;
+
+    // Zones
+    std::vector<model::AirflowNetworkZone> zones = model.getConcreteModelObjects<model::AirflowNetworkZone>();
+    count += zones.size();
+
+    // Reference Crack Conditions
+    std::vector<model::AirflowNetworkReferenceCrackConditions> refcracks = model.getConcreteModelObjects<model::AirflowNetworkReferenceCrackConditions>();
+    count += refcracks.size();
+
+    // Cracks
+    std::vector<model::AirflowNetworkCrack> cracks = model.getConcreteModelObjects<model::AirflowNetworkCrack>();
+    count += cracks.size();
+
+    // Effective Leakage Area
+    std::vector<model::AirflowNetworkEffectiveLeakageArea> elas = model.getConcreteModelObjects<model::AirflowNetworkEffectiveLeakageArea>();
+    count += elas.size();
+
+    // Simple Openings
+    std::vector<model::AirflowNetworkSimpleOpening> simples = model.getConcreteModelObjects<model::AirflowNetworkSimpleOpening>();
+    count += simples.size();
+
+    // Detailed Openings
+    std::vector<model::AirflowNetworkDetailedOpening> detaileds = model.getConcreteModelObjects<model::AirflowNetworkDetailedOpening>();
+    count += detaileds.size();
+
+    // Horizontal Openings
+    std::vector<model::AirflowNetworkHorizontalOpening> horzs = model.getConcreteModelObjects<model::AirflowNetworkHorizontalOpening>();
+    count += horzs.size();
+
+    // Surfaces
+    std::vector<model::AirflowNetworkSurface> surfs = model.getConcreteModelObjects<model::AirflowNetworkSurface>();
+    count += surfs.size();
+
+    // Nodes
+    std::vector<model::AirflowNetworkDistributionNode> nodes = model.getConcreteModelObjects<model::AirflowNetworkDistributionNode>();
+    count += nodes.size();
+
+    // Linkages
+    std::vector<model::AirflowNetworkDistributionLinkage> links = model.getConcreteModelObjects<model::AirflowNetworkDistributionLinkage>();
+    count += links.size();
+
+    // External Nodes
+    std::vector<model::AirflowNetworkExternalNode> exts = model.getConcreteModelObjects<model::AirflowNetworkExternalNode>();
+    count += exts.size();
+
+    // Zone Exhaust Fan
+    std::vector<model::AirflowNetworkZoneExhaustFan> zefs = model.getConcreteModelObjects<model::AirflowNetworkZoneExhaustFan>();
+    count += zefs.size();
+
+    // Fan
+    std::vector<model::AirflowNetworkFan> fans = model.getConcreteModelObjects<model::AirflowNetworkFan>();
+    count += fans.size();
+
+    // Duct
+    std::vector<model::AirflowNetworkDuct> ducts = model.getConcreteModelObjects<model::AirflowNetworkDuct>();
+    count += ducts.size();
+
+    // Equivalent Duct
+    std::vector<model::AirflowNetworkEquivalentDuct> equivds = model.getConcreteModelObjects<model::AirflowNetworkEquivalentDuct>();
+    count += equivds.size();
+
+    // Leakage Ratio
+    std::vector<model::AirflowNetworkLeakageRatio> lrs = model.getConcreteModelObjects<model::AirflowNetworkLeakageRatio>();
+    count += lrs.size();
+
+    // Constant Pressure Drops
+    std::vector<model::AirflowNetworkConstantPressureDrop> constps = model.getConcreteModelObjects<model::AirflowNetworkConstantPressureDrop>();
+    count += constps.size();
+
+    // Outdoor Air Flow
+    std::vector<model::AirflowNetworkOutdoorAirflow> oafs = model.getConcreteModelObjects<model::AirflowNetworkOutdoorAirflow>();
+    count += oafs.size();
+
+    // Duct VFs
+    std::vector<model::AirflowNetworkDuctViewFactors> ductvfs = model.getConcreteModelObjects<model::AirflowNetworkDuctViewFactors>();
+    count += ductvfs.size();
+
+    // Occupant Ventilation Control
+    std::vector<model::AirflowNetworkOccupantVentilationControl> occvcs = model.getConcreteModelObjects<model::AirflowNetworkOccupantVentilationControl>();
+    count += occvcs.size();
+
+    if (count) {
+      LOG(Warn, "No AirflowNetworkSimulationControl found in model, skipping forward translation of " << count << " AirflowNetwork objects.");
+    }
+
   }
 }
 
@@ -3097,7 +4066,7 @@ model::ConstructionBase ForwardTranslator::reverseConstruction(const model::Cons
   }
 
   model::LayeredConstruction layeredConstruction = construction.cast<model::LayeredConstruction>();
-  
+
   if (layeredConstruction.isSymmetric()){
     m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), construction));
     return construction;
@@ -3105,13 +4074,13 @@ model::ConstructionBase ForwardTranslator::reverseConstruction(const model::Cons
 
   if (construction.optionalCast<model::Construction>()){
     model::Construction reversed = construction.cast<model::Construction>().reverseConstruction();
-    m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed)); 
+    m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed));
     return reversed;
   }
 
   if (construction.optionalCast<model::ConstructionWithInternalSource>()){
     model::ConstructionWithInternalSource reversed = construction.cast<model::ConstructionWithInternalSource>().reverseConstructionWithInternalSource();
-    m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed)); 
+    m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed));
     return reversed;
   }
 
@@ -3124,7 +4093,7 @@ model::ConstructionBase ForwardTranslator::reverseConstruction(const model::Cons
   model::Construction reversed = model::Construction(construction.model());
   reversed.setName(construction.name().get() + " Reversed");
   reversed.setLayers(layers);
-  m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed)); 
+  m_constructionHandleToReversedConstructions.insert(std::make_pair(construction.handle(), reversed));
 
   return reversed;
 }
@@ -3142,7 +4111,7 @@ void ForwardTranslator::resolveMatchedSurfaceConstructionConflicts(model::Model&
     if (processedSurfaces.find(surface.handle()) != processedSurfaces.end()){
       continue;
     }
-    
+
     model::OptionalSurface adjacentSurface = surface.adjacentSurface();
     if (!adjacentSurface){
       processedSurfaces.insert(surface.handle());
@@ -3254,7 +4223,7 @@ void ForwardTranslator::resolveMatchedSurfaceConstructionConflicts(model::Model&
 
     // both surfaces return a construction, they are not the same, and both have same search distance
 
-    if (constructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>() && 
+    if (constructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>() &&
         adjacentConstructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>()){
       if (constructionWithSearchDistance->first.cast<model::LayeredConstruction>().reverseEqualLayers(adjacentConstructionWithSearchDistance->first.cast<model::LayeredConstruction>())){
         // these constructions are reverse equal
@@ -3289,7 +4258,7 @@ void ForwardTranslator::resolveMatchedSubSurfaceConstructionConflicts(model::Mod
     if (processedSubSurfaces.find(subSurface.handle()) != processedSubSurfaces.end()){
       continue;
     }
-    
+
     model::OptionalSubSurface adjacentSubSurface = subSurface.adjacentSubSurface();
     if (!adjacentSubSurface){
       processedSubSurfaces.insert(subSurface.handle());
@@ -3401,7 +4370,7 @@ void ForwardTranslator::resolveMatchedSubSurfaceConstructionConflicts(model::Mod
 
     // both surfaces return a construction, they are not the same, and both have same search distance
 
-    if (constructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>() && 
+    if (constructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>() &&
         adjacentConstructionWithSearchDistance->first.optionalCast<model::LayeredConstruction>()){
       if (constructionWithSearchDistance->first.cast<model::LayeredConstruction>().reverseEqualLayers(adjacentConstructionWithSearchDistance->first.cast<model::LayeredConstruction>())){
         // these constructions are reverse equal
@@ -3489,14 +4458,8 @@ IdfObject ForwardTranslator::createRegisterAndNameIdfObject(const IddObjectType&
 }
 
 boost::optional<IdfFile> ForwardTranslator::findIdfFile(const std::string& path) {
-  QFile file(QString().fromStdString(path));
-  bool opened = file.open(QIODevice::ReadOnly | QIODevice::Text);
-  OS_ASSERT(opened);
-
-  QTextStream in(&file);
   std::stringstream ss;
-  ss << in.readAll().toStdString();
-
+  ss << ::energyplus::embedded_files::getFileAsString(path);
   return IdfFile::load(ss, IddFileType::EnergyPlus);
 }
 
@@ -3513,7 +4476,7 @@ bool ForwardTranslator::isHVACComponentWithinUnitary(const model::HVACComponent&
   else if( hvacComponent.containingStraightComponent() )
   {
     return true;
-  }    
+  }
   else
   {
     return false;
@@ -3774,9 +4737,9 @@ void ForwardTranslator::fixSPMsForUnitarySystem(const model::HVACComponent & uni
     if( ! oaSystems.empty() ) {
       auto reliefComponents = oaSystems.back().oaComponents();
       supplyComponents.insert(supplyComponents.end(),reliefComponents.begin(),reliefComponents.end());
-    } 
+    }
     auto upstreamNodes = subsetCastVector<model::Node>(supplyComponents);
-  
+
     for( const auto & node : upstreamNodes ) {
       auto spms = subsetCastVector<model::SetpointManagerMixedAir>(node.setpointManagers());
       for( auto & spm : spms ) {

@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_IDD_IDDENUMS_HPP
 #define UTILITIES_IDD_IDDENUMS_HPP
@@ -41,21 +51,21 @@ namespace openstudio {
  *  rest of the enumeration values designate subsets of the \link openstudio::IddFactorySingleton
  *  IddFactory\endlink (the current versions of the EnergyPlus and OpenStudio IDDs, and all
  *  objects in the factory). */
-#ifdef SWIG 
+#ifdef SWIG
   OPENSTUDIO_ENUM(IddFileType, )
 #else
 struct UTILITIES_API IddFileType: public ::EnumBase<IddFileType> {
- public: 
+ public:
   enum domain : int;
 
   IddFileType()
-   : EnumBase<IddFileType>(0) {} 
-  IddFileType(const std::string &t_name) 
-   : EnumBase<IddFileType>(t_name) {} 
-  IddFileType(int t_value) 
-   : EnumBase<IddFileType>(t_value) {} 
+   : EnumBase<IddFileType>(0) {}
+  IddFileType(const std::string &t_name)
+   : EnumBase<IddFileType>(t_name) {}
+  IddFileType(int t_value)
+   : EnumBase<IddFileType>(t_value) {}
 
-  static std::string enumName() 
+  static std::string enumName()
   { return "IddFileType"; }
 
   domain value() const { return static_cast<domain>(EnumBase<IddFileType>::value()); }
@@ -88,7 +98,7 @@ typedef boost::optional<std::set<IddFileType> > OptionalIddFileTypeSet;
 
 /** \class IddObjectType
  *  \brief Enumeration of the \link openstudio::IddObject IddObject\endlink types available
- *  through the \link openstudio::IddFactorySingleton IddFactory\endlink. 
+ *  through the \link openstudio::IddFactorySingleton IddFactory\endlink.
  *  \details Catchall is the default constructed \link openstudio::IddObject IddObject\endlink
  *  type. UserCustom is the default type for \link openstudio::IddObject IddObjects\endlink
  *  constructed by \link openstudio::IddObject::load IddObject::load\endlink. UserCustom objects
@@ -99,21 +109,21 @@ typedef boost::optional<std::set<IddFileType> > OptionalIddFileTypeSet;
  *  types are derived from the IDD files used to create \link openstudio::IddFactorySingleton
  *  IddFactory\endlink. See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp.
  * */
-#ifdef SWIG 
+#ifdef SWIG
   OPENSTUDIO_ENUM(IddObjectType, )
 #else
 struct UTILITIES_API IddObjectType: public ::EnumBase<IddObjectType> {
- public: 
+ public:
   enum domain : int;
 
   IddObjectType()
-   : EnumBase<IddObjectType>(0) {} 
-  IddObjectType(const std::string &t_name) 
-   : EnumBase<IddObjectType>(t_name) {} 
-  IddObjectType(int t_value) 
-   : EnumBase<IddObjectType>(t_value) {} 
+   : EnumBase<IddObjectType>(0) {}
+  IddObjectType(const std::string &t_name)
+   : EnumBase<IddObjectType>(t_name) {}
+  IddObjectType(int t_value)
+   : EnumBase<IddObjectType>(t_value) {}
 
-  static std::string enumName() 
+  static std::string enumName()
   { return "IddObjectType"; }
 
   domain value() const { return static_cast<domain>(EnumBase<IddObjectType>::value()); }

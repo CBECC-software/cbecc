@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "FanConstantVolume.hpp"
 #include "FanConstantVolume_Impl.hpp"
@@ -34,9 +44,13 @@
 #include "ZoneHVACFourPipeFanCoil_Impl.hpp"
 #include "ZoneHVACUnitHeater.hpp"
 #include "ZoneHVACUnitHeater_Impl.hpp"
+#include "ZoneHVACUnitVentilator.hpp"
+#include "ZoneHVACUnitVentilator_Impl.hpp"
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
 #include "SetpointManagerMixedAir.hpp"
+#include "AirflowNetworkFan.hpp"
+#include "AirflowNetworkFan_Impl.hpp"
 #include <utilities/idd/IddFactory.hxx>
 
 #include <utilities/idd/OS_Fan_VariableVolume_FieldEnums.hxx>
@@ -70,10 +84,8 @@ namespace detail {
 
   const std::vector<std::string>& FanVariableVolume_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
-    return result;
+    static std::vector<std::string> results{"Fan Electric Power", "Fan Rise in Air Temperature", "Fan Heat Gain to Air", "Fan Electric Energy", "Fan Air Mass Flow Rate"};
+    return results;
   }
 
   IddObjectType FanVariableVolume_Impl::iddObjectType() const {
@@ -107,21 +119,21 @@ namespace detail {
     return value.get();
   }
 
-  double FanVariableVolume_Impl::fanEfficiency() const {
-    boost::optional<double> value = getDouble(OS_Fan_VariableVolumeFields::FanEfficiency,true);
+  double FanVariableVolume_Impl::fanTotalEfficiency() const {
+    boost::optional<double> value = getDouble(OS_Fan_VariableVolumeFields::FanTotalEfficiency,true);
     OS_ASSERT(value);
     return value.get();
   }
 
-  Quantity FanVariableVolume_Impl::getFanEfficiency(bool returnIP) const {
-    OptionalDouble value = fanEfficiency();
-    OSOptionalQuantity result = getQuantityFromDouble(OS_Fan_VariableVolumeFields::FanEfficiency, value, returnIP);
+  Quantity FanVariableVolume_Impl::getFanTotalEfficiency(bool returnIP) const {
+    OptionalDouble value = fanTotalEfficiency();
+    OSOptionalQuantity result = getQuantityFromDouble(OS_Fan_VariableVolumeFields::FanTotalEfficiency, value, returnIP);
     OS_ASSERT(result.isSet());
     return result.get();
   }
 
-  bool FanVariableVolume_Impl::isFanEfficiencyDefaulted() const {
-    return isEmpty(OS_Fan_VariableVolumeFields::FanEfficiency);
+  bool FanVariableVolume_Impl::isFanTotalEfficiencyDefaulted() const {
+    return isEmpty(OS_Fan_VariableVolumeFields::FanTotalEfficiency);
   }
 
   double FanVariableVolume_Impl::pressureRise() const {
@@ -206,7 +218,7 @@ namespace detail {
 
   bool FanVariableVolume_Impl::isMotorEfficiencyDefaulted() const {
     return isEmpty(OS_Fan_VariableVolumeFields::MotorEfficiency);
-  }  
+  }
 
   double FanVariableVolume_Impl::motorInAirstreamFraction() const {
     boost::optional<double> value = getDouble(OS_Fan_VariableVolumeFields::MotorInAirstreamFraction,true);
@@ -288,27 +300,28 @@ namespace detail {
     return result;
   }
 
-  bool FanVariableVolume_Impl::setFanEfficiency(double fanEfficiency) {
-    bool result = setDouble(OS_Fan_VariableVolumeFields::FanEfficiency, fanEfficiency);
+  bool FanVariableVolume_Impl::setFanTotalEfficiency(double fanTotalEfficiency) {
+    bool result = setDouble(OS_Fan_VariableVolumeFields::FanTotalEfficiency, fanTotalEfficiency);
     return result;
   }
 
-  bool FanVariableVolume_Impl::setFanEfficiency(const Quantity& fanEfficiency) {
-    OptionalDouble value = getDoubleFromQuantity(OS_Fan_VariableVolumeFields::FanEfficiency,fanEfficiency);
+  bool FanVariableVolume_Impl::setFanTotalEfficiency(const Quantity& fanTotalEfficiency) {
+    OptionalDouble value = getDoubleFromQuantity(OS_Fan_VariableVolumeFields::FanTotalEfficiency,fanTotalEfficiency);
     if (!value) {
       return false;
     }
-    return setFanEfficiency(value.get());
+    return setFanTotalEfficiency(value.get());
   }
 
-  void FanVariableVolume_Impl::resetFanEfficiency() {
-    bool result = setString(OS_Fan_VariableVolumeFields::FanEfficiency, "");
+  void FanVariableVolume_Impl::resetFanTotalEfficiency() {
+    bool result = setString(OS_Fan_VariableVolumeFields::FanTotalEfficiency, "");
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setPressureRise(double pressureRise) {
+  bool FanVariableVolume_Impl::setPressureRise(double pressureRise) {
     bool result = setDouble(OS_Fan_VariableVolumeFields::PressureRise, pressureRise);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setPressureRise(const Quantity& pressureRise) {
@@ -451,7 +464,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setFanPowerCoefficient1(boost::optional<double> fanPowerCoefficient1) {
+  bool FanVariableVolume_Impl::setFanPowerCoefficient1(boost::optional<double> fanPowerCoefficient1) {
     bool result(false);
     if (fanPowerCoefficient1) {
       result = setDouble(OS_Fan_VariableVolumeFields::FanPowerCoefficient1, fanPowerCoefficient1.get());
@@ -461,6 +474,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setFanPowerCoefficient1(const OSOptionalQuantity& fanPowerCoefficient1) {
@@ -485,7 +499,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setFanPowerCoefficient2(boost::optional<double> fanPowerCoefficient2) {
+  bool FanVariableVolume_Impl::setFanPowerCoefficient2(boost::optional<double> fanPowerCoefficient2) {
     bool result(false);
     if (fanPowerCoefficient2) {
       result = setDouble(OS_Fan_VariableVolumeFields::FanPowerCoefficient2, fanPowerCoefficient2.get());
@@ -495,6 +509,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setFanPowerCoefficient2(const OSOptionalQuantity& fanPowerCoefficient2) {
@@ -519,7 +534,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setFanPowerCoefficient3(boost::optional<double> fanPowerCoefficient3) {
+  bool FanVariableVolume_Impl::setFanPowerCoefficient3(boost::optional<double> fanPowerCoefficient3) {
     bool result(false);
     if (fanPowerCoefficient3) {
       result = setDouble(OS_Fan_VariableVolumeFields::FanPowerCoefficient3, fanPowerCoefficient3.get());
@@ -529,6 +544,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setFanPowerCoefficient3(const OSOptionalQuantity& fanPowerCoefficient3) {
@@ -553,7 +569,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setFanPowerCoefficient4(boost::optional<double> fanPowerCoefficient4) {
+  bool FanVariableVolume_Impl::setFanPowerCoefficient4(boost::optional<double> fanPowerCoefficient4) {
     bool result(false);
     if (fanPowerCoefficient4) {
       result = setDouble(OS_Fan_VariableVolumeFields::FanPowerCoefficient4, fanPowerCoefficient4.get());
@@ -563,6 +579,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setFanPowerCoefficient4(const OSOptionalQuantity& fanPowerCoefficient4) {
@@ -587,7 +604,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setFanPowerCoefficient5(boost::optional<double> fanPowerCoefficient5) {
+  bool FanVariableVolume_Impl::setFanPowerCoefficient5(boost::optional<double> fanPowerCoefficient5) {
     bool result(false);
     if (fanPowerCoefficient5) {
       result = setDouble(OS_Fan_VariableVolumeFields::FanPowerCoefficient5, fanPowerCoefficient5.get());
@@ -597,6 +614,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanVariableVolume_Impl::setFanPowerCoefficient5(const OSOptionalQuantity& fanPowerCoefficient5) {
@@ -621,9 +639,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanVariableVolume_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool FanVariableVolume_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Fan_VariableVolumeFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void FanVariableVolume_Impl::resetEndUseSubcategory() {
@@ -631,54 +650,39 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  unsigned FanVariableVolume_Impl::inletPort()
+  unsigned FanVariableVolume_Impl::inletPort() const
   {
     return OS_Fan_VariableVolumeFields::AirInletNodeName;
   }
 
-  unsigned FanVariableVolume_Impl::outletPort()
+  unsigned FanVariableVolume_Impl::outletPort() const
   {
     return OS_Fan_VariableVolumeFields::AirOutletNodeName;
   }
 
   bool FanVariableVolume_Impl::addToNode(Node & node)
   {
-    if( boost::optional<AirLoopHVAC> airLoop = node.airLoopHVAC() )
-    {
-      boost::optional<AirLoopHVACOutdoorAirSystem> oaSystem = airLoop->airLoopHVACOutdoorAirSystem();
-      if( airLoop->supplyComponent(node.handle()) || (oaSystem && oaSystem->component(node.handle())) )
-      {
-        unsigned fanCount = airLoop->supplyComponents(IddObjectType::OS_Fan_ConstantVolume).size();
-        fanCount += airLoop->supplyComponents(IddObjectType::OS_Fan_VariableVolume).size();
+    auto oaSystem = node.airLoopHVACOutdoorAirSystem();
+    auto airLoop = node.airLoopHVAC();
 
-        if( oaSystem )
-        {
-          fanCount += subsetCastVector<FanConstantVolume>(oaSystem->components()).size();
-          fanCount += subsetCastVector<FanVariableVolume>(oaSystem->components()).size();
-        }
-
-        if( fanCount > 1 )
-        {
-          return false;
-        }
-
-        if( StraightComponent_Impl::addToNode(node) ) 
-        {
+    if( (airLoop && airLoop->supplyComponent(node.handle())) || (oaSystem && oaSystem->component(node.handle())) ) {
+      if( StraightComponent_Impl::addToNode(node) ) {
+        if ( airLoop ) {
           SetpointManagerMixedAir::updateFanInletOutletNodes(airLoop.get());
-          return true;
         }
+        return true;
       }
     }
 
     return false;
   }
 
-  openstudio::Quantity FanVariableVolume_Impl::fanEfficiency_SI() const {
-    return getFanEfficiency(false);
+  openstudio::Quantity FanVariableVolume_Impl::fanTotalEfficiency_SI() const {
+    return getFanTotalEfficiency(false);
   }
 
-  openstudio::Quantity FanVariableVolume_Impl::fanEfficiency_IP() const {
-    return getFanEfficiency(true);
+  openstudio::Quantity FanVariableVolume_Impl::fanTotalEfficiency_IP() const {
+    return getFanTotalEfficiency(true);
   }
 
   openstudio::Quantity FanVariableVolume_Impl::pressureRise_SI() const {
@@ -817,9 +821,9 @@ namespace detail {
 
     for( const auto & zoneHVACFourPipeFanCoil : zoneHVACFourPipeFanCoils )
     {
-      if( boost::optional<HVACComponent> coil = zoneHVACFourPipeFanCoil.supplyAirFan() )
+      if( boost::optional<HVACComponent> fan = zoneHVACFourPipeFanCoil.supplyAirFan() )
       {
-        if( coil->handle() == this->handle() )
+        if( fan->handle() == this->handle() )
         {
           return zoneHVACFourPipeFanCoil;
         }
@@ -834,9 +838,26 @@ namespace detail {
 
     for( const auto & elem : zoneHVACUnitHeater )
     {
-      if( boost::optional<HVACComponent> coil = elem.supplyAirFan() )
+      if( boost::optional<HVACComponent> fan = elem.supplyAirFan() )
       {
-        if( coil->handle() == this->handle() )
+        if( fan->handle() == this->handle() )
+        {
+          return elem;
+        }
+      }
+    }
+
+    // ZoneHVACUnitVentilator
+
+    std::vector<ZoneHVACUnitVentilator> zoneHVACUnitVentilator;
+
+    zoneHVACUnitVentilator = this->model().getConcreteModelObjects<ZoneHVACUnitVentilator>();
+
+    for( const auto & elem : zoneHVACUnitVentilator )
+    {
+      if( boost::optional<HVACComponent> fan = elem.supplyAirFan() )
+      {
+        if( fan->handle() == this->handle() )
         {
           return elem;
         }
@@ -844,6 +865,60 @@ namespace detail {
     }
 
     return boost::none;
+  }
+
+  AirflowNetworkFan FanVariableVolume_Impl::getAirflowNetworkFan()
+  {
+    auto opt = airflowNetworkFan();
+    if (opt) {
+      return opt.get();
+    }
+    return AirflowNetworkFan(model(), handle());
+  }
+
+  boost::optional<AirflowNetworkFan> FanVariableVolume_Impl::airflowNetworkFan() const
+  {
+    std::vector<AirflowNetworkFan> myAFNitems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkFan>(AirflowNetworkFan::iddObjectType());
+    auto count = myAFNitems.size();
+    if (count == 1) {
+      return myAFNitems[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFNitems[0];
+    }
+    return boost::none;
+  }
+
+  boost::optional<double> FanVariableVolume_Impl::autosizedMaximumFlowRate() const {
+    return getAutosizedValue("Design Size Maximum Flow Rate", "m3/s");
+  }
+
+  void FanVariableVolume_Impl::autosize() {
+    autosizeMaximumFlowRate();
+  }
+
+  void FanVariableVolume_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedMaximumFlowRate();
+    if (val) {
+      setMaximumFlowRate(val.get());
+    }
+
+  }
+
+  std::vector<EMSActuatorNames> FanVariableVolume_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Fan", "Fan Air Mass Flow Rate"},
+                                            {"Fan", "Fan Pressure Rise"},
+                                            {"Fan", "Fan Total Efficiency"},
+                                            {"Fan", "Fan Autosized Air Flow Rate"}};
+    return actuators;
+  }
+
+  std::vector<std::string> FanVariableVolume_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Fan Maximum Mass Flow Rate",
+                                   "Fan Nominal Pressure Rise",
+                                   "Fan Nominal Total Efficiency"};
+    return types;
   }
 
 } // detail
@@ -860,7 +935,7 @@ FanVariableVolume::FanVariableVolume(const Model& model, Schedule & schedule)
                   << schedule.briefDescription() << ".");
   }
   setEndUseSubcategory("");
-  setFanEfficiency(0.6045);
+  setFanTotalEfficiency(0.6045);
   setPressureRise(1017.592);
   autosizeMaximumFlowRate();
   setFanPowerMinimumFlowRateInputMethod("FixedFlowRate");
@@ -884,7 +959,7 @@ FanVariableVolume::FanVariableVolume(const Model& model)
   setAvailabilitySchedule(schedule);
 
   setEndUseSubcategory("");
-  setFanEfficiency(0.6045);
+  setFanTotalEfficiency(0.6045);
   setPressureRise(1017.592);
   autosizeMaximumFlowRate();
   setFanPowerMinimumFlowRateInputMethod("FixedFlowRate");
@@ -917,17 +992,57 @@ Schedule FanVariableVolume::availabilitySchedule() const {
   return getImpl<detail::FanVariableVolume_Impl>()->availabilitySchedule();
 }
 
+
+// New Fan Total Efficiency
+double FanVariableVolume::fanTotalEfficiency() const {
+  return getImpl<detail::FanVariableVolume_Impl>()->fanTotalEfficiency();
+}
+
+Quantity FanVariableVolume::getFanTotalEfficiency(bool returnIP) const {
+  return getImpl<detail::FanVariableVolume_Impl>()->getFanTotalEfficiency(returnIP);
+}
+
+bool FanVariableVolume::isFanTotalEfficiencyDefaulted() const {
+  return getImpl<detail::FanVariableVolume_Impl>()->isFanTotalEfficiencyDefaulted();
+}
+
+bool FanVariableVolume::setFanTotalEfficiency(double fanTotalEfficiency) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+bool FanVariableVolume::setFanTotalEfficiency(const Quantity& fanTotalEfficiency) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+void FanVariableVolume::resetFanTotalEfficiency() {
+  getImpl<detail::FanVariableVolume_Impl>()->resetFanTotalEfficiency();
+}
+
+// Deprecrated methods
 double FanVariableVolume::fanEfficiency() const {
-  return getImpl<detail::FanVariableVolume_Impl>()->fanEfficiency();
+  return getImpl<detail::FanVariableVolume_Impl>()->fanTotalEfficiency();
 }
 
 Quantity FanVariableVolume::getFanEfficiency(bool returnIP) const {
-  return getImpl<detail::FanVariableVolume_Impl>()->getFanEfficiency(returnIP);
+  return getImpl<detail::FanVariableVolume_Impl>()->getFanTotalEfficiency(returnIP);
 }
 
 bool FanVariableVolume::isFanEfficiencyDefaulted() const {
-  return getImpl<detail::FanVariableVolume_Impl>()->isFanEfficiencyDefaulted();
+  return getImpl<detail::FanVariableVolume_Impl>()->isFanTotalEfficiencyDefaulted();
 }
+
+bool FanVariableVolume::setFanEfficiency(double fanTotalEfficiency) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+bool FanVariableVolume::setFanEfficiency(const Quantity& fanTotalEfficiency) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+void FanVariableVolume::resetFanEfficiency() {
+  getImpl<detail::FanVariableVolume_Impl>()->resetFanTotalEfficiency();
+}
+
 
 double FanVariableVolume::pressureRise() const {
   return getImpl<detail::FanVariableVolume_Impl>()->pressureRise();
@@ -1053,20 +1168,8 @@ bool FanVariableVolume::setAvailabilitySchedule(Schedule& schedule) {
   return getImpl<detail::FanVariableVolume_Impl>()->setAvailabilitySchedule(schedule);
 }
 
-bool FanVariableVolume::setFanEfficiency(double fanEfficiency) {
-  return getImpl<detail::FanVariableVolume_Impl>()->setFanEfficiency(fanEfficiency);
-}
-
-bool FanVariableVolume::setFanEfficiency(const Quantity& fanEfficiency) {
-  return getImpl<detail::FanVariableVolume_Impl>()->setFanEfficiency(fanEfficiency);
-}
-
-void FanVariableVolume::resetFanEfficiency() {
-  getImpl<detail::FanVariableVolume_Impl>()->resetFanEfficiency();
-}
-
-void FanVariableVolume::setPressureRise(double pressureRise) {
-  getImpl<detail::FanVariableVolume_Impl>()->setPressureRise(pressureRise);
+bool FanVariableVolume::setPressureRise(double pressureRise) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setPressureRise(pressureRise);
 }
 
 bool FanVariableVolume::setPressureRise(const Quantity& pressureRise) {
@@ -1145,8 +1248,8 @@ void FanVariableVolume::resetMotorInAirstreamFraction() {
   getImpl<detail::FanVariableVolume_Impl>()->resetMotorInAirstreamFraction();
 }
 
-void FanVariableVolume::setFanPowerCoefficient1(double fanPowerCoefficient1) {
-  getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient1(fanPowerCoefficient1);
+bool FanVariableVolume::setFanPowerCoefficient1(double fanPowerCoefficient1) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient1(fanPowerCoefficient1);
 }
 
 bool FanVariableVolume::setFanPowerCoefficient1(const Quantity& fanPowerCoefficient1) {
@@ -1157,8 +1260,8 @@ void FanVariableVolume::resetFanPowerCoefficient1() {
   getImpl<detail::FanVariableVolume_Impl>()->resetFanPowerCoefficient1();
 }
 
-void FanVariableVolume::setFanPowerCoefficient2(double fanPowerCoefficient2) {
-  getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient2(fanPowerCoefficient2);
+bool FanVariableVolume::setFanPowerCoefficient2(double fanPowerCoefficient2) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient2(fanPowerCoefficient2);
 }
 
 bool FanVariableVolume::setFanPowerCoefficient2(const Quantity& fanPowerCoefficient2) {
@@ -1169,8 +1272,8 @@ void FanVariableVolume::resetFanPowerCoefficient2() {
   getImpl<detail::FanVariableVolume_Impl>()->resetFanPowerCoefficient2();
 }
 
-void FanVariableVolume::setFanPowerCoefficient3(double fanPowerCoefficient3) {
-  getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient3(fanPowerCoefficient3);
+bool FanVariableVolume::setFanPowerCoefficient3(double fanPowerCoefficient3) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient3(fanPowerCoefficient3);
 }
 
 bool FanVariableVolume::setFanPowerCoefficient3(const Quantity& fanPowerCoefficient3) {
@@ -1181,8 +1284,8 @@ void FanVariableVolume::resetFanPowerCoefficient3() {
   getImpl<detail::FanVariableVolume_Impl>()->resetFanPowerCoefficient3();
 }
 
-void FanVariableVolume::setFanPowerCoefficient4(double fanPowerCoefficient4) {
-  getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient4(fanPowerCoefficient4);
+bool FanVariableVolume::setFanPowerCoefficient4(double fanPowerCoefficient4) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient4(fanPowerCoefficient4);
 }
 
 bool FanVariableVolume::setFanPowerCoefficient4(const Quantity& fanPowerCoefficient4) {
@@ -1193,8 +1296,8 @@ void FanVariableVolume::resetFanPowerCoefficient4() {
   getImpl<detail::FanVariableVolume_Impl>()->resetFanPowerCoefficient4();
 }
 
-void FanVariableVolume::setFanPowerCoefficient5(double fanPowerCoefficient5) {
-  getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient5(fanPowerCoefficient5);
+bool FanVariableVolume::setFanPowerCoefficient5(double fanPowerCoefficient5) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setFanPowerCoefficient5(fanPowerCoefficient5);
 }
 
 bool FanVariableVolume::setFanPowerCoefficient5(const Quantity& fanPowerCoefficient5) {
@@ -1205,20 +1308,33 @@ void FanVariableVolume::resetFanPowerCoefficient5() {
   getImpl<detail::FanVariableVolume_Impl>()->resetFanPowerCoefficient5();
 }
 
-void FanVariableVolume::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::FanVariableVolume_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool FanVariableVolume::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::FanVariableVolume_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void FanVariableVolume::resetEndUseSubcategory() {
   getImpl<detail::FanVariableVolume_Impl>()->resetEndUseSubcategory();
 }
 
+AirflowNetworkFan FanVariableVolume::getAirflowNetworkFan()
+{
+  return getImpl<detail::FanVariableVolume_Impl>()->getAirflowNetworkFan();
+}
+
+boost::optional<AirflowNetworkFan> FanVariableVolume::airflowNetworkFan() const
+{
+  return getImpl<detail::FanVariableVolume_Impl>()->airflowNetworkFan();
+}
+
 /// @cond
 FanVariableVolume::FanVariableVolume(std::shared_ptr<detail::FanVariableVolume_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> FanVariableVolume::autosizedMaximumFlowRate() const {
+    return getImpl<detail::FanVariableVolume_Impl>()->autosizedMaximumFlowRate();
+  }
+
 } // model
 } // openstudio
-

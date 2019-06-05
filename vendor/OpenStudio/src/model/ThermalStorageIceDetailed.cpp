@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ThermalStorageIceDetailed.hpp"
 #include "ThermalStorageIceDetailed_Impl.hpp"
@@ -67,9 +77,24 @@ namespace detail {
 
   const std::vector<std::string>& ThermalStorageIceDetailed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Ice Thermal Storage Cooling Rate",
+      "Ice Thermal Storage Change Fraction",
+      "Ice Thermal Storage End Fraction",
+      "Ice Thermal Storage Mass Flow Rate",
+      "Ice Thermal Storage Bypass Mass Flow Rate",
+      "Ice Thermal Storage Tank Mass Flow Rate",
+      "Ice Thermal Storage Fluid Inlet Temperature",
+      "Ice Thermal Storage Blended Outlet Temperature",
+      "Ice Thermal Storage Tank Outlet Temperature",
+      "Ice Thermal Storage Cooling Discharge Rate",
+      "Ice Thermal Storage Cooling Discharge Energy",
+      "Ice Thermal Storage Cooling Charge Rate",
+      "Ice Thermal Storage Cooling Charge Energy",
+      "Ice Thermal Storage Ancillary Electric Power",
+      "Ice Thermal Storage Ancillary Electric Energy",
+      "Ice Thermal Storage On Coil Fraction"
+    };
     return result;
   }
 
@@ -164,9 +189,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void ThermalStorageIceDetailed_Impl::setCapacity(double capacity) {
+  bool ThermalStorageIceDetailed_Impl::setCapacity(double capacity) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::Capacity, capacity);
     OS_ASSERT(result);
+    return result;
   }
 
   bool ThermalStorageIceDetailed_Impl::setDischargingCurve(const Curve& dischargingCurve) {
@@ -179,29 +205,34 @@ namespace detail {
     return result;
   }
 
-  void ThermalStorageIceDetailed_Impl::setTimestepoftheCurveData(double timestepoftheCurveData) {
+  bool ThermalStorageIceDetailed_Impl::setTimestepoftheCurveData(double timestepoftheCurveData) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::TimestepoftheCurveData, timestepoftheCurveData);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ThermalStorageIceDetailed_Impl::setParasiticElectricLoadDuringDischarging(double parasiticElectricLoadDuringDischarging) {
+  bool ThermalStorageIceDetailed_Impl::setParasiticElectricLoadDuringDischarging(double parasiticElectricLoadDuringDischarging) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::ParasiticElectricLoadDuringDischarging, parasiticElectricLoadDuringDischarging);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ThermalStorageIceDetailed_Impl::setParasiticElectricLoadDuringCharging(double parasiticElectricLoadDuringCharging) {
+  bool ThermalStorageIceDetailed_Impl::setParasiticElectricLoadDuringCharging(double parasiticElectricLoadDuringCharging) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::ParasiticElectricLoadDuringCharging, parasiticElectricLoadDuringCharging);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ThermalStorageIceDetailed_Impl::setTankLossCoefficient(double tankLossCoefficient) {
+  bool ThermalStorageIceDetailed_Impl::setTankLossCoefficient(double tankLossCoefficient) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::TankLossCoefficient, tankLossCoefficient);
     OS_ASSERT(result);
+    return result;
   }
 
-  void ThermalStorageIceDetailed_Impl::setFreezingTemperatureofStorageMedium(double freezingTemperatureofStorageMedium) {
+  bool ThermalStorageIceDetailed_Impl::setFreezingTemperatureofStorageMedium(double freezingTemperatureofStorageMedium) {
     bool result = setDouble(OS_ThermalStorage_Ice_DetailedFields::FreezingTemperatureofStorageMedium, freezingTemperatureofStorageMedium);
     OS_ASSERT(result);
+    return result;
   }
 
   bool ThermalStorageIceDetailed_Impl::setThawProcessIndicator(std::string thawProcessIndicator) {
@@ -217,11 +248,11 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<Curve>(OS_ThermalStorage_Ice_DetailedFields::ChargingCurve);
   }
 
-  unsigned ThermalStorageIceDetailed_Impl::inletPort() {
+  unsigned ThermalStorageIceDetailed_Impl::inletPort() const {
     return OS_ThermalStorage_Ice_DetailedFields::InletNodeName;
   }
 
-  unsigned ThermalStorageIceDetailed_Impl::outletPort() {
+  unsigned ThermalStorageIceDetailed_Impl::outletPort() const {
     return OS_ThermalStorage_Ice_DetailedFields::OutletNodeName;
   }
 
@@ -261,7 +292,7 @@ ThermalStorageIceDetailed::ThermalStorageIceDetailed(const Model& model)
   OS_ASSERT(getImpl<detail::ThermalStorageIceDetailed_Impl>());
 
   {
-    CurveQuadraticLinear curve(model);  
+    CurveQuadraticLinear curve(model);
     curve.setCoefficient1Constant(0.0);
     curve.setCoefficient2x(0.09);
     curve.setCoefficient3xPOW2(-0.15);
@@ -358,8 +389,8 @@ void ThermalStorageIceDetailed::resetAvailabilitySchedule() {
   getImpl<detail::ThermalStorageIceDetailed_Impl>()->resetAvailabilitySchedule();
 }
 
-void ThermalStorageIceDetailed::setCapacity(double capacity) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setCapacity(capacity);
+bool ThermalStorageIceDetailed::setCapacity(double capacity) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setCapacity(capacity);
 }
 
 bool ThermalStorageIceDetailed::setDischargingCurve(const Curve& dischargingCurve) {
@@ -370,24 +401,24 @@ bool ThermalStorageIceDetailed::setChargingCurve(const Curve& chargingCurve) {
   return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setChargingCurve(chargingCurve);
 }
 
-void ThermalStorageIceDetailed::setTimestepoftheCurveData(double timestepoftheCurveData) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setTimestepoftheCurveData(timestepoftheCurveData);
+bool ThermalStorageIceDetailed::setTimestepoftheCurveData(double timestepoftheCurveData) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setTimestepoftheCurveData(timestepoftheCurveData);
 }
 
-void ThermalStorageIceDetailed::setParasiticElectricLoadDuringDischarging(double parasiticElectricLoadDuringDischarging) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setParasiticElectricLoadDuringDischarging(parasiticElectricLoadDuringDischarging);
+bool ThermalStorageIceDetailed::setParasiticElectricLoadDuringDischarging(double parasiticElectricLoadDuringDischarging) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setParasiticElectricLoadDuringDischarging(parasiticElectricLoadDuringDischarging);
 }
 
-void ThermalStorageIceDetailed::setParasiticElectricLoadDuringCharging(double parasiticElectricLoadDuringCharging) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setParasiticElectricLoadDuringCharging(parasiticElectricLoadDuringCharging);
+bool ThermalStorageIceDetailed::setParasiticElectricLoadDuringCharging(double parasiticElectricLoadDuringCharging) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setParasiticElectricLoadDuringCharging(parasiticElectricLoadDuringCharging);
 }
 
-void ThermalStorageIceDetailed::setTankLossCoefficient(double tankLossCoefficient) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setTankLossCoefficient(tankLossCoefficient);
+bool ThermalStorageIceDetailed::setTankLossCoefficient(double tankLossCoefficient) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setTankLossCoefficient(tankLossCoefficient);
 }
 
-void ThermalStorageIceDetailed::setFreezingTemperatureofStorageMedium(double freezingTemperatureofStorageMedium) {
-  getImpl<detail::ThermalStorageIceDetailed_Impl>()->setFreezingTemperatureofStorageMedium(freezingTemperatureofStorageMedium);
+bool ThermalStorageIceDetailed::setFreezingTemperatureofStorageMedium(double freezingTemperatureofStorageMedium) {
+  return getImpl<detail::ThermalStorageIceDetailed_Impl>()->setFreezingTemperatureofStorageMedium(freezingTemperatureofStorageMedium);
 }
 
 bool ThermalStorageIceDetailed::setThawProcessIndicator(std::string thawProcessIndicator) {
@@ -396,10 +427,9 @@ bool ThermalStorageIceDetailed::setThawProcessIndicator(std::string thawProcessI
 
 /// @cond
 ThermalStorageIceDetailed::ThermalStorageIceDetailed(std::shared_ptr<detail::ThermalStorageIceDetailed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

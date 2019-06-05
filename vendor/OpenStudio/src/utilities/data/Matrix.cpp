@@ -1,25 +1,34 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Matrix.hpp"
 
-#include "../core/Optional.hpp"
 #include "../math/FloatCompare.hpp"
 
 #include <random>
@@ -59,8 +68,8 @@ namespace openstudio{
   {
     double result = 0.0;
 
-    unsigned M = x.size();
-    unsigned N = y.size();
+    size_t M = x.size();
+    size_t N = y.size();
 
     if ((M != v.size1()) || (N != v.size2())){
       return result;
@@ -155,7 +164,7 @@ namespace openstudio{
   /// assumes that x and y are strictly increasing
   Vector interp(const Vector& x, const Vector& y, const Matrix& v, const Vector& xi, double yi, InterpMethod interpMethod, ExtrapMethod extrapMethod)
   {
-    unsigned M = x.size();
+    size_t M = x.size();
 
     Vector result(M);
 
@@ -174,7 +183,7 @@ namespace openstudio{
   /// assumes that x and y are strictly increasing
   Vector interp(const Vector& x, const Vector& y, const Matrix& v, double xi, const Vector& yi, InterpMethod interpMethod, ExtrapMethod extrapMethod)
   {
-    unsigned N = y.size();
+    size_t N = y.size();
 
     Vector result(N);
 
@@ -193,8 +202,8 @@ namespace openstudio{
   /// assumes that x and y are strictly increasing
   Matrix interp(const Vector& x, const Vector& y, const Matrix& v, const Vector& xi, const Vector& yi, InterpMethod interpMethod, ExtrapMethod extrapMethod)
   {
-    unsigned M = x.size();
-    unsigned N = y.size();
+    size_t M = x.size();
+    size_t N = y.size();
 
     Matrix result(M, N);
 
@@ -232,11 +241,11 @@ namespace openstudio{
   /// take the natural logarithm of a Matrix
   Matrix log(const Matrix& v)
   {
-    unsigned M = v.size1();
-    unsigned N = v.size2();
+    size_t M = v.size1();
+    size_t N = v.size2();
     Matrix result(M, N);
-    for (unsigned i = 0; i < M; ++i){
-      for (unsigned j = 0; j < N; ++j){
+    for (size_t i = 0; i < M; ++i){
+      for (size_t j = 0; j < N; ++j){
         result(i,j) = std::log(v(i,j));
       }
     }
@@ -247,11 +256,11 @@ namespace openstudio{
   Matrix log(const Matrix& v, double base)
   {
     double logBase = std::log(base);
-    unsigned M = v.size1();
-    unsigned N = v.size2();
+    size_t M = v.size1();
+    size_t N = v.size2();
     Matrix result(M, N);
-    for (unsigned i = 0; i < M; ++i){
-      for (unsigned j = 0; j < N; ++j){
+    for (size_t i = 0; i < M; ++i){
+      for (size_t j = 0; j < N; ++j){
         result(i,j) = std::log(v(i,j)) / logBase;
       }
     }
@@ -275,7 +284,7 @@ namespace openstudio{
     // ETH@20120723 Started seeing this as DataFixture.Matrix_RandMatrix hanging on Windows 7,
     // with BoostPro installer.
     // handle degenerate case
-    OptionalDouble singlePoint;
+    boost::optional<double> singlePoint;
     if (equal(a,b)) {
       singlePoint = (a + b) / 2.0;
     }
@@ -340,7 +349,7 @@ namespace openstudio{
   double mean(const Matrix& matrix)
   {
     double avg = 0;
-    unsigned N = matrix.size1()*matrix.size2();
+    size_t N = matrix.size1()*matrix.size2();
     if (N > 0){
       avg = sum(matrix) / N;
     }
@@ -353,8 +362,8 @@ namespace openstudio{
     double tol = 0.001;
 
     std::vector<std::vector<unsigned> > result;
-    
-    unsigned N = matrix.size1();
+
+    size_t N = matrix.size1();
     if (N != matrix.size2()){
       return result;
     }
@@ -386,7 +395,7 @@ namespace openstudio{
     // raise A to the Nth power, maximum distance between two nodes
     for (unsigned i = 0; i < N; ++i){
       A = prod(A,A);
-    } 
+    }
 
     std::set<unsigned> added;
     for (unsigned i = 0; i < N; ++i){

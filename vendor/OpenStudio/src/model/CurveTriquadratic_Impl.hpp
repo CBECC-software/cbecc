@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_CURVETRIQUADRATIC_IMPL_HPP
 #define MODEL_CURVETRIQUADRATIC_IMPL_HPP
@@ -30,50 +40,50 @@ namespace detail {
 
   /** CurveTriquadratic_Impl is a Curve_Impl that is the implementation class for CurveTriquadratic.*/
   class MODEL_API CurveTriquadratic_Impl : public Curve_Impl {
-    Q_OBJECT;
-    Q_PROPERTY(boost::optional<double> coefficient1Constant READ coefficient1Constant WRITE setCoefficient1Constant RESET resetCoefficient1Constant);
-    Q_PROPERTY(boost::optional<double> coefficient2xPOW2 READ coefficient2xPOW2 WRITE setCoefficient2xPOW2 RESET resetCoefficient2xPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient3x READ coefficient3x WRITE setCoefficient3x RESET resetCoefficient3x);
-    Q_PROPERTY(boost::optional<double> coefficient4yPOW2 READ coefficient4yPOW2 WRITE setCoefficient4yPOW2 RESET resetCoefficient4yPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient5y READ coefficient5y WRITE setCoefficient5y RESET resetCoefficient5y);
-    Q_PROPERTY(boost::optional<double> coefficient6zPOW2 READ coefficient6zPOW2 WRITE setCoefficient6zPOW2 RESET resetCoefficient6zPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient7z READ coefficient7z WRITE setCoefficient7z RESET resetCoefficient7z);
-    Q_PROPERTY(boost::optional<double> coefficient8xPOW2TIMESYPOW2 READ coefficient8xPOW2TIMESYPOW2 WRITE setCoefficient8xPOW2TIMESYPOW2 RESET resetCoefficient8xPOW2TIMESYPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient9xTIMESY READ coefficient9xTIMESY WRITE setCoefficient9xTIMESY RESET resetCoefficient9xTIMESY);
-    Q_PROPERTY(boost::optional<double> coefficient10xTIMESYPOW2 READ coefficient10xTIMESYPOW2 WRITE setCoefficient10xTIMESYPOW2 RESET resetCoefficient10xTIMESYPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient11xPOW2TIMESY READ coefficient11xPOW2TIMESY WRITE setCoefficient11xPOW2TIMESY RESET resetCoefficient11xPOW2TIMESY);
-    Q_PROPERTY(boost::optional<double> coefficient12xPOW2TIMESZPOW2 READ coefficient12xPOW2TIMESZPOW2 WRITE setCoefficient12xPOW2TIMESZPOW2 RESET resetCoefficient12xPOW2TIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient13xTIMESZ READ coefficient13xTIMESZ WRITE setCoefficient13xTIMESZ RESET resetCoefficient13xTIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient14xTIMESZPOW2 READ coefficient14xTIMESZPOW2 WRITE setCoefficient14xTIMESZPOW2 RESET resetCoefficient14xTIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient15xPOW2TIMESZ READ coefficient15xPOW2TIMESZ WRITE setCoefficient15xPOW2TIMESZ RESET resetCoefficient15xPOW2TIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient16yPOW2TIMESZPOW2 READ coefficient16yPOW2TIMESZPOW2 WRITE setCoefficient16yPOW2TIMESZPOW2 RESET resetCoefficient16yPOW2TIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient17yTIMESZ READ coefficient17yTIMESZ WRITE setCoefficient17yTIMESZ RESET resetCoefficient17yTIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient18yTIMESZPOW2 READ coefficient18yTIMESZPOW2 WRITE setCoefficient18yTIMESZPOW2 RESET resetCoefficient18yTIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient19yPOW2TIMESZ READ coefficient19yPOW2TIMESZ WRITE setCoefficient19yPOW2TIMESZ RESET resetCoefficient19yPOW2TIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient20xPOW2TIMESYPOW2TIMESZPOW2 READ coefficient20xPOW2TIMESYPOW2TIMESZPOW2 WRITE setCoefficient20xPOW2TIMESYPOW2TIMESZPOW2 RESET resetCoefficient20xPOW2TIMESYPOW2TIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient21xPOW2TIMESYPOW2TIMESZ READ coefficient21xPOW2TIMESYPOW2TIMESZ WRITE setCoefficient21xPOW2TIMESYPOW2TIMESZ RESET resetCoefficient21xPOW2TIMESYPOW2TIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient22xPOW2TIMESYTIMESZPOW2 READ coefficient22xPOW2TIMESYTIMESZPOW2 WRITE setCoefficient22xPOW2TIMESYTIMESZPOW2 RESET resetCoefficient22xPOW2TIMESYTIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient23xTIMESYPOW2TIMESZPOW2 READ coefficient23xTIMESYPOW2TIMESZPOW2 WRITE setCoefficient23xTIMESYPOW2TIMESZPOW2 RESET resetCoefficient23xTIMESYPOW2TIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient24xPOW2TIMESYTIMESZ READ coefficient24xPOW2TIMESYTIMESZ WRITE setCoefficient24xPOW2TIMESYTIMESZ RESET resetCoefficient24xPOW2TIMESYTIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient25xTIMESYPOW2TIMESZ READ coefficient25xTIMESYPOW2TIMESZ WRITE setCoefficient25xTIMESYPOW2TIMESZ RESET resetCoefficient25xTIMESYPOW2TIMESZ);
-    Q_PROPERTY(boost::optional<double> coefficient26xTIMESYTIMESZPOW2 READ coefficient26xTIMESYTIMESZPOW2 WRITE setCoefficient26xTIMESYTIMESZPOW2 RESET resetCoefficient26xTIMESYTIMESZPOW2);
-    Q_PROPERTY(boost::optional<double> coefficient27xTIMESYTIMESZ READ coefficient27xTIMESYTIMESZ WRITE setCoefficient27xTIMESYTIMESZ RESET resetCoefficient27xTIMESYTIMESZ);
-    Q_PROPERTY(boost::optional<double> minimumValueofx READ minimumValueofx WRITE setMinimumValueofx RESET resetMinimumValueofx);
-    Q_PROPERTY(boost::optional<double> maximumValueofx READ maximumValueofx WRITE setMaximumValueofx RESET resetMaximumValueofx);
-    Q_PROPERTY(boost::optional<double> minimumValueofy READ minimumValueofy WRITE setMinimumValueofy RESET resetMinimumValueofy);
-    Q_PROPERTY(boost::optional<double> maximumValueofy READ maximumValueofy WRITE setMaximumValueofy RESET resetMaximumValueofy);
-    Q_PROPERTY(boost::optional<double> minimumValueofz READ minimumValueofz WRITE setMinimumValueofz RESET resetMinimumValueofz);
-    Q_PROPERTY(boost::optional<double> maximumValueofz READ maximumValueofz WRITE setMaximumValueofz RESET resetMaximumValueofz);
-    Q_PROPERTY(boost::optional<double> minimumCurveOutput READ minimumCurveOutput WRITE setMinimumCurveOutput RESET resetMinimumCurveOutput);
-    Q_PROPERTY(boost::optional<double> maximumCurveOutput READ maximumCurveOutput WRITE setMaximumCurveOutput RESET resetMaximumCurveOutput);
-    Q_PROPERTY(std::string inputUnitTypeforX READ inputUnitTypeforX WRITE setInputUnitTypeforX RESET resetInputUnitTypeforX);
-    Q_PROPERTY(bool isInputUnitTypeforXDefaulted READ isInputUnitTypeforXDefaulted);
-    Q_PROPERTY(std::string inputUnitTypeforY READ inputUnitTypeforY WRITE setInputUnitTypeforY RESET resetInputUnitTypeforY);
-    Q_PROPERTY(bool isInputUnitTypeforYDefaulted READ isInputUnitTypeforYDefaulted);
-    Q_PROPERTY(std::string inputUnitTypeforZ READ inputUnitTypeforZ WRITE setInputUnitTypeforZ RESET resetInputUnitTypeforZ);
-    Q_PROPERTY(bool isInputUnitTypeforZDefaulted READ isInputUnitTypeforZDefaulted);
-    Q_PROPERTY(std::string outputUnitType READ outputUnitType WRITE setOutputUnitType RESET resetOutputUnitType);
-    Q_PROPERTY(bool isOutputUnitTypeDefaulted READ isOutputUnitTypeDefaulted);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
    public:
 
     /** @name Constructors and Destructors */
@@ -197,143 +207,143 @@ namespace detail {
     /** @name Setters */
     //@{
 
-    void setCoefficient1Constant(boost::optional<double> coefficient1Constant);
+    bool setCoefficient1Constant(boost::optional<double> coefficient1Constant);
 
     void resetCoefficient1Constant();
 
-    void setCoefficient2xPOW2(boost::optional<double> coefficient2xPOW2);
+    bool setCoefficient2xPOW2(boost::optional<double> coefficient2xPOW2);
 
     void resetCoefficient2xPOW2();
 
-    void setCoefficient3x(boost::optional<double> coefficient3x);
+    bool setCoefficient3x(boost::optional<double> coefficient3x);
 
     void resetCoefficient3x();
 
-    void setCoefficient4yPOW2(boost::optional<double> coefficient4yPOW2);
+    bool setCoefficient4yPOW2(boost::optional<double> coefficient4yPOW2);
 
     void resetCoefficient4yPOW2();
 
-    void setCoefficient5y(boost::optional<double> coefficient5y);
+    bool setCoefficient5y(boost::optional<double> coefficient5y);
 
     void resetCoefficient5y();
 
-    void setCoefficient6zPOW2(boost::optional<double> coefficient6zPOW2);
+    bool setCoefficient6zPOW2(boost::optional<double> coefficient6zPOW2);
 
     void resetCoefficient6zPOW2();
 
-    void setCoefficient7z(boost::optional<double> coefficient7z);
+    bool setCoefficient7z(boost::optional<double> coefficient7z);
 
     void resetCoefficient7z();
 
-    void setCoefficient8xPOW2TIMESYPOW2(boost::optional<double> coefficient8xPOW2TIMESYPOW2);
+    bool setCoefficient8xPOW2TIMESYPOW2(boost::optional<double> coefficient8xPOW2TIMESYPOW2);
 
     void resetCoefficient8xPOW2TIMESYPOW2();
 
-    void setCoefficient9xTIMESY(boost::optional<double> coefficient9xTIMESY);
+    bool setCoefficient9xTIMESY(boost::optional<double> coefficient9xTIMESY);
 
     void resetCoefficient9xTIMESY();
 
-    void setCoefficient10xTIMESYPOW2(boost::optional<double> coefficient10xTIMESYPOW2);
+    bool setCoefficient10xTIMESYPOW2(boost::optional<double> coefficient10xTIMESYPOW2);
 
     void resetCoefficient10xTIMESYPOW2();
 
-    void setCoefficient11xPOW2TIMESY(boost::optional<double> coefficient11xPOW2TIMESY);
+    bool setCoefficient11xPOW2TIMESY(boost::optional<double> coefficient11xPOW2TIMESY);
 
     void resetCoefficient11xPOW2TIMESY();
 
-    void setCoefficient12xPOW2TIMESZPOW2(boost::optional<double> coefficient12xPOW2TIMESZPOW2);
+    bool setCoefficient12xPOW2TIMESZPOW2(boost::optional<double> coefficient12xPOW2TIMESZPOW2);
 
     void resetCoefficient12xPOW2TIMESZPOW2();
 
-    void setCoefficient13xTIMESZ(boost::optional<double> coefficient13xTIMESZ);
+    bool setCoefficient13xTIMESZ(boost::optional<double> coefficient13xTIMESZ);
 
     void resetCoefficient13xTIMESZ();
 
-    void setCoefficient14xTIMESZPOW2(boost::optional<double> coefficient14xTIMESZPOW2);
+    bool setCoefficient14xTIMESZPOW2(boost::optional<double> coefficient14xTIMESZPOW2);
 
     void resetCoefficient14xTIMESZPOW2();
 
-    void setCoefficient15xPOW2TIMESZ(boost::optional<double> coefficient15xPOW2TIMESZ);
+    bool setCoefficient15xPOW2TIMESZ(boost::optional<double> coefficient15xPOW2TIMESZ);
 
     void resetCoefficient15xPOW2TIMESZ();
 
-    void setCoefficient16yPOW2TIMESZPOW2(boost::optional<double> coefficient16yPOW2TIMESZPOW2);
+    bool setCoefficient16yPOW2TIMESZPOW2(boost::optional<double> coefficient16yPOW2TIMESZPOW2);
 
     void resetCoefficient16yPOW2TIMESZPOW2();
 
-    void setCoefficient17yTIMESZ(boost::optional<double> coefficient17yTIMESZ);
+    bool setCoefficient17yTIMESZ(boost::optional<double> coefficient17yTIMESZ);
 
     void resetCoefficient17yTIMESZ();
 
-    void setCoefficient18yTIMESZPOW2(boost::optional<double> coefficient18yTIMESZPOW2);
+    bool setCoefficient18yTIMESZPOW2(boost::optional<double> coefficient18yTIMESZPOW2);
 
     void resetCoefficient18yTIMESZPOW2();
 
-    void setCoefficient19yPOW2TIMESZ(boost::optional<double> coefficient19yPOW2TIMESZ);
+    bool setCoefficient19yPOW2TIMESZ(boost::optional<double> coefficient19yPOW2TIMESZ);
 
     void resetCoefficient19yPOW2TIMESZ();
 
-    void setCoefficient20xPOW2TIMESYPOW2TIMESZPOW2(boost::optional<double> coefficient20xPOW2TIMESYPOW2TIMESZPOW2);
+    bool setCoefficient20xPOW2TIMESYPOW2TIMESZPOW2(boost::optional<double> coefficient20xPOW2TIMESYPOW2TIMESZPOW2);
 
     void resetCoefficient20xPOW2TIMESYPOW2TIMESZPOW2();
 
-    void setCoefficient21xPOW2TIMESYPOW2TIMESZ(boost::optional<double> coefficient21xPOW2TIMESYPOW2TIMESZ);
+    bool setCoefficient21xPOW2TIMESYPOW2TIMESZ(boost::optional<double> coefficient21xPOW2TIMESYPOW2TIMESZ);
 
     void resetCoefficient21xPOW2TIMESYPOW2TIMESZ();
 
-    void setCoefficient22xPOW2TIMESYTIMESZPOW2(boost::optional<double> coefficient22xPOW2TIMESYTIMESZPOW2);
+    bool setCoefficient22xPOW2TIMESYTIMESZPOW2(boost::optional<double> coefficient22xPOW2TIMESYTIMESZPOW2);
 
     void resetCoefficient22xPOW2TIMESYTIMESZPOW2();
 
-    void setCoefficient23xTIMESYPOW2TIMESZPOW2(boost::optional<double> coefficient23xTIMESYPOW2TIMESZPOW2);
+    bool setCoefficient23xTIMESYPOW2TIMESZPOW2(boost::optional<double> coefficient23xTIMESYPOW2TIMESZPOW2);
 
     void resetCoefficient23xTIMESYPOW2TIMESZPOW2();
 
-    void setCoefficient24xPOW2TIMESYTIMESZ(boost::optional<double> coefficient24xPOW2TIMESYTIMESZ);
+    bool setCoefficient24xPOW2TIMESYTIMESZ(boost::optional<double> coefficient24xPOW2TIMESYTIMESZ);
 
     void resetCoefficient24xPOW2TIMESYTIMESZ();
 
-    void setCoefficient25xTIMESYPOW2TIMESZ(boost::optional<double> coefficient25xTIMESYPOW2TIMESZ);
+    bool setCoefficient25xTIMESYPOW2TIMESZ(boost::optional<double> coefficient25xTIMESYPOW2TIMESZ);
 
     void resetCoefficient25xTIMESYPOW2TIMESZ();
 
-    void setCoefficient26xTIMESYTIMESZPOW2(boost::optional<double> coefficient26xTIMESYTIMESZPOW2);
+    bool setCoefficient26xTIMESYTIMESZPOW2(boost::optional<double> coefficient26xTIMESYTIMESZPOW2);
 
     void resetCoefficient26xTIMESYTIMESZPOW2();
 
-    void setCoefficient27xTIMESYTIMESZ(boost::optional<double> coefficient27xTIMESYTIMESZ);
+    bool setCoefficient27xTIMESYTIMESZ(boost::optional<double> coefficient27xTIMESYTIMESZ);
 
     void resetCoefficient27xTIMESYTIMESZ();
 
-    void setMinimumValueofx(boost::optional<double> minimumValueofx);
+    bool setMinimumValueofx(boost::optional<double> minimumValueofx);
 
     void resetMinimumValueofx();
 
-    void setMaximumValueofx(boost::optional<double> maximumValueofx);
+    bool setMaximumValueofx(boost::optional<double> maximumValueofx);
 
     void resetMaximumValueofx();
 
-    void setMinimumValueofy(boost::optional<double> minimumValueofy);
+    bool setMinimumValueofy(boost::optional<double> minimumValueofy);
 
     void resetMinimumValueofy();
 
-    void setMaximumValueofy(boost::optional<double> maximumValueofy);
+    bool setMaximumValueofy(boost::optional<double> maximumValueofy);
 
     void resetMaximumValueofy();
 
-    void setMinimumValueofz(boost::optional<double> minimumValueofz);
+    bool setMinimumValueofz(boost::optional<double> minimumValueofz);
 
     void resetMinimumValueofz();
 
-    void setMaximumValueofz(boost::optional<double> maximumValueofz);
+    bool setMaximumValueofz(boost::optional<double> maximumValueofz);
 
     void resetMaximumValueofz();
 
-    void setMinimumCurveOutput(boost::optional<double> minimumCurveOutput);
+    bool setMinimumCurveOutput(boost::optional<double> minimumCurveOutput);
 
     void resetMinimumCurveOutput();
 
-    void setMaximumCurveOutput(boost::optional<double> maximumCurveOutput);
+    bool setMaximumCurveOutput(boost::optional<double> maximumCurveOutput);
 
     void resetMaximumCurveOutput();
 
@@ -369,4 +379,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_CURVETRIQUADRATIC_IMPL_HPP
-

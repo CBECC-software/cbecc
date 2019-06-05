@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationCondenserWaterCooled.hpp"
 #include "RefrigerationCondenserWaterCooled_Impl.hpp"
@@ -62,21 +72,39 @@ namespace detail {
     : StraightComponent_Impl(other,model,keepHandle)
   {}
 
-  unsigned RefrigerationCondenserWaterCooled_Impl::inletPort()
+  unsigned RefrigerationCondenserWaterCooled_Impl::inletPort() const
   {
     return OS_Refrigeration_Condenser_WaterCooledFields::WaterInletNodeName;
   }
 
-  unsigned RefrigerationCondenserWaterCooled_Impl::outletPort()
+  unsigned RefrigerationCondenserWaterCooled_Impl::outletPort() const
   {
     return OS_Refrigeration_Condenser_WaterCooledFields::WaterOutletNodeName;
   }
 
   const std::vector<std::string>& RefrigerationCondenserWaterCooled_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // TODO: Implement checks
+      // FOR CONDENSERS COOLING SYSTEMS SERVING CASES AND/OR WALKINS:
+      "Refrigeration System Condenser Heat Transfer Rate",
+      "Refrigeration System Condenser Heat Transfer Energy",
+      "Refrigeration System Condenser Total Recovered Heat Transfer Rate",
+      "Refrigeration System Condenser Non Refrigeration Recovered Heat Transfer Rate",
+      "Refrigeration System Condenser Heat Recovered for Non-Refrigeration Purposes Energy",
+      "Refrigeration System Condenser Defrost Recovered Heat Transfer Rate",
+      "Refrigeration System Condenser Defrost Recovered Heat Transfer Energy",
+      "Refrigeration System Condenser Water Mass Flow Rate",
+      // FOR CONDENSERS COOLING SYSTEMS SERVING AIR CHILLERS:
+      "Refrigeration Air Chiller System Condenser Heat Transfer Rate",
+      "Refrigeration Air Chiller System Condenser Heat Transfer Energy",
+      "Refrigeration Air Chiller System Condenser Total Recovered Heat Transfer Rate",
+      "Refrigeration Air Chiller System Condenser Non Refrigeration Recovered Heat Transfer Rate",
+      "Refrigeration Air Chiller System Condenser Non Refrigeration Recovered Heat Transfer Energy",
+      "Refrigeration Air Chiller System Condenser Defrost Recovered Heat Transfer Rate",
+      "Refrigeration Air Chiller System Condenser Defrost Recovered Heat Transfer Energy",
+      "Refrigeration Air Chiller System Condenser Fluid Mass Flow Rate"
+    };
     return result;
   }
 
@@ -313,9 +341,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCondenserWaterCooled_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool RefrigerationCondenserWaterCooled_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Refrigeration_Condenser_WaterCooledFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCondenserWaterCooled_Impl::resetEndUseSubcategory() {
@@ -323,7 +352,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCondenserWaterCooled_Impl::setCondenserRefrigerantOperatingChargeInventory(boost::optional<double> condenserRefrigerantOperatingChargeInventory) {
+  bool RefrigerationCondenserWaterCooled_Impl::setCondenserRefrigerantOperatingChargeInventory(boost::optional<double> condenserRefrigerantOperatingChargeInventory) {
     bool result(false);
     if (condenserRefrigerantOperatingChargeInventory) {
       result = setDouble(OS_Refrigeration_Condenser_WaterCooledFields::CondenserRefrigerantOperatingChargeInventory, condenserRefrigerantOperatingChargeInventory.get());
@@ -333,6 +362,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCondenserWaterCooled_Impl::resetCondenserRefrigerantOperatingChargeInventory() {
@@ -340,7 +370,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCondenserWaterCooled_Impl::setCondensateReceiverRefrigerantInventory(boost::optional<double> condensateReceiverRefrigerantInventory) {
+  bool RefrigerationCondenserWaterCooled_Impl::setCondensateReceiverRefrigerantInventory(boost::optional<double> condensateReceiverRefrigerantInventory) {
     bool result(false);
     if (condensateReceiverRefrigerantInventory) {
       result = setDouble(OS_Refrigeration_Condenser_WaterCooledFields::CondensateReceiverRefrigerantInventory, condensateReceiverRefrigerantInventory.get());
@@ -350,6 +380,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCondenserWaterCooled_Impl::resetCondensateReceiverRefrigerantInventory() {
@@ -357,7 +388,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationCondenserWaterCooled_Impl::setCondensatePipingRefrigerantInventory(boost::optional<double> condensatePipingRefrigerantInventory) {
+  bool RefrigerationCondenserWaterCooled_Impl::setCondensatePipingRefrigerantInventory(boost::optional<double> condensatePipingRefrigerantInventory) {
     bool result(false);
     if (condensatePipingRefrigerantInventory) {
       result = setDouble(OS_Refrigeration_Condenser_WaterCooledFields::CondensatePipingRefrigerantInventory, condensatePipingRefrigerantInventory.get());
@@ -367,6 +398,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationCondenserWaterCooled_Impl::resetCondensatePipingRefrigerantInventory() {
@@ -398,7 +430,7 @@ RefrigerationCondenserWaterCooled::RefrigerationCondenserWaterCooled(const Model
 
   // Brian provided value for 'ConstantFlow'
   setWaterDesignFlowRate(0.0025);
-  
+
   //  0.003,                   !- Water Maximum Flow Rate {m3/s}
   setWaterMaximumFlowRate(0.003);
 
@@ -566,32 +598,32 @@ void RefrigerationCondenserWaterCooled::resetWaterMinimumWaterInletTemperature()
   getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->resetWaterMinimumWaterInletTemperature();
 }
 
-void RefrigerationCondenserWaterCooled::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool RefrigerationCondenserWaterCooled::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void RefrigerationCondenserWaterCooled::resetEndUseSubcategory() {
   getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->resetEndUseSubcategory();
 }
 
-void RefrigerationCondenserWaterCooled::setCondenserRefrigerantOperatingChargeInventory(double condenserRefrigerantOperatingChargeInventory) {
-  getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondenserRefrigerantOperatingChargeInventory(condenserRefrigerantOperatingChargeInventory);
+bool RefrigerationCondenserWaterCooled::setCondenserRefrigerantOperatingChargeInventory(double condenserRefrigerantOperatingChargeInventory) {
+  return getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondenserRefrigerantOperatingChargeInventory(condenserRefrigerantOperatingChargeInventory);
 }
 
 void RefrigerationCondenserWaterCooled::resetCondenserRefrigerantOperatingChargeInventory() {
   getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->resetCondenserRefrigerantOperatingChargeInventory();
 }
 
-void RefrigerationCondenserWaterCooled::setCondensateReceiverRefrigerantInventory(double condensateReceiverRefrigerantInventory) {
-  getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondensateReceiverRefrigerantInventory(condensateReceiverRefrigerantInventory);
+bool RefrigerationCondenserWaterCooled::setCondensateReceiverRefrigerantInventory(double condensateReceiverRefrigerantInventory) {
+  return getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondensateReceiverRefrigerantInventory(condensateReceiverRefrigerantInventory);
 }
 
 void RefrigerationCondenserWaterCooled::resetCondensateReceiverRefrigerantInventory() {
   getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->resetCondensateReceiverRefrigerantInventory();
 }
 
-void RefrigerationCondenserWaterCooled::setCondensatePipingRefrigerantInventory(double condensatePipingRefrigerantInventory) {
-  getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondensatePipingRefrigerantInventory(condensatePipingRefrigerantInventory);
+bool RefrigerationCondenserWaterCooled::setCondensatePipingRefrigerantInventory(double condensatePipingRefrigerantInventory) {
+  return getImpl<detail::RefrigerationCondenserWaterCooled_Impl>()->setCondensatePipingRefrigerantInventory(condensatePipingRefrigerantInventory);
 }
 
 void RefrigerationCondenserWaterCooled::resetCondensatePipingRefrigerantInventory() {
@@ -600,10 +632,9 @@ void RefrigerationCondenserWaterCooled::resetCondensatePipingRefrigerantInventor
 
 /// @cond
 RefrigerationCondenserWaterCooled::RefrigerationCondenserWaterCooled(std::shared_ptr<detail::RefrigerationCondenserWaterCooled_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

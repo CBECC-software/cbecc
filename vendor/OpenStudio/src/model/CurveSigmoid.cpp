@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CurveSigmoid.hpp"
 #include "CurveSigmoid_Impl.hpp"
@@ -58,9 +68,10 @@ namespace detail {
 
   const std::vector<std::string>& CurveSigmoid_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Performance Curve Output Value",
+      "Performance Curve Input Variable 1 Value"
+    };
     return result;
   }
 
@@ -154,42 +165,49 @@ namespace detail {
     return isEmpty(OS_Curve_SigmoidFields::OutputUnitType);
   }
 
-  void CurveSigmoid_Impl::setCoefficient1C1(double coefficient1C1) {
+  bool CurveSigmoid_Impl::setCoefficient1C1(double coefficient1C1) {
     bool result = setDouble(OS_Curve_SigmoidFields::Coefficient1C1, coefficient1C1);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setCoefficient2C2(double coefficient2C2) {
+  bool CurveSigmoid_Impl::setCoefficient2C2(double coefficient2C2) {
     bool result = setDouble(OS_Curve_SigmoidFields::Coefficient2C2, coefficient2C2);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setCoefficient3C3(double coefficient3C3) {
+  bool CurveSigmoid_Impl::setCoefficient3C3(double coefficient3C3) {
     bool result = setDouble(OS_Curve_SigmoidFields::Coefficient3C3, coefficient3C3);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setCoefficient4C4(double coefficient4C4) {
+  bool CurveSigmoid_Impl::setCoefficient4C4(double coefficient4C4) {
     bool result = setDouble(OS_Curve_SigmoidFields::Coefficient4C4, coefficient4C4);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setCoefficient5C5(double coefficient5C5) {
+  bool CurveSigmoid_Impl::setCoefficient5C5(double coefficient5C5) {
     bool result = setDouble(OS_Curve_SigmoidFields::Coefficient5C5, coefficient5C5);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setMinimumValueofx(double minimumValueofx) {
+  bool CurveSigmoid_Impl::setMinimumValueofx(double minimumValueofx) {
     bool result = setDouble(OS_Curve_SigmoidFields::MinimumValueofx, minimumValueofx);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setMaximumValueofx(double maximumValueofx) {
+  bool CurveSigmoid_Impl::setMaximumValueofx(double maximumValueofx) {
     bool result = setDouble(OS_Curve_SigmoidFields::MaximumValueofx, maximumValueofx);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveSigmoid_Impl::setMinimumCurveOutput(boost::optional<double> minimumCurveOutput) {
+  bool CurveSigmoid_Impl::setMinimumCurveOutput(boost::optional<double> minimumCurveOutput) {
     bool result = false;
     if (minimumCurveOutput) {
       result = setDouble(OS_Curve_SigmoidFields::MinimumCurveOutput, minimumCurveOutput.get());
@@ -197,6 +215,7 @@ namespace detail {
       result = setString(OS_Curve_SigmoidFields::MinimumCurveOutput, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveSigmoid_Impl::resetMinimumCurveOutput() {
@@ -204,7 +223,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CurveSigmoid_Impl::setMaximumCurveOutput(boost::optional<double> maximumCurveOutput) {
+  bool CurveSigmoid_Impl::setMaximumCurveOutput(boost::optional<double> maximumCurveOutput) {
     bool result = false;
     if (maximumCurveOutput) {
       result = setDouble(OS_Curve_SigmoidFields::MaximumCurveOutput, maximumCurveOutput.get());
@@ -212,6 +231,7 @@ namespace detail {
       result = setString(OS_Curve_SigmoidFields::MaximumCurveOutput, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveSigmoid_Impl::resetMaximumCurveOutput() {
@@ -322,44 +342,44 @@ bool CurveSigmoid::isOutputUnitTypeDefaulted() const {
   return getImpl<detail::CurveSigmoid_Impl>()->isOutputUnitTypeDefaulted();
 }
 
-void CurveSigmoid::setCoefficient1C1(double coefficient1C1) {
-  getImpl<detail::CurveSigmoid_Impl>()->setCoefficient1C1(coefficient1C1);
+bool CurveSigmoid::setCoefficient1C1(double coefficient1C1) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setCoefficient1C1(coefficient1C1);
 }
 
-void CurveSigmoid::setCoefficient2C2(double coefficient2C2) {
-  getImpl<detail::CurveSigmoid_Impl>()->setCoefficient2C2(coefficient2C2);
+bool CurveSigmoid::setCoefficient2C2(double coefficient2C2) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setCoefficient2C2(coefficient2C2);
 }
 
-void CurveSigmoid::setCoefficient3C3(double coefficient3C3) {
-  getImpl<detail::CurveSigmoid_Impl>()->setCoefficient3C3(coefficient3C3);
+bool CurveSigmoid::setCoefficient3C3(double coefficient3C3) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setCoefficient3C3(coefficient3C3);
 }
 
-void CurveSigmoid::setCoefficient4C4(double coefficient4C4) {
-  getImpl<detail::CurveSigmoid_Impl>()->setCoefficient4C4(coefficient4C4);
+bool CurveSigmoid::setCoefficient4C4(double coefficient4C4) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setCoefficient4C4(coefficient4C4);
 }
 
-void CurveSigmoid::setCoefficient5C5(double coefficient5C5) {
-  getImpl<detail::CurveSigmoid_Impl>()->setCoefficient5C5(coefficient5C5);
+bool CurveSigmoid::setCoefficient5C5(double coefficient5C5) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setCoefficient5C5(coefficient5C5);
 }
 
-void CurveSigmoid::setMinimumValueofx(double minimumValueofx) {
-  getImpl<detail::CurveSigmoid_Impl>()->setMinimumValueofx(minimumValueofx);
+bool CurveSigmoid::setMinimumValueofx(double minimumValueofx) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setMinimumValueofx(minimumValueofx);
 }
 
-void CurveSigmoid::setMaximumValueofx(double maximumValueofx) {
-  getImpl<detail::CurveSigmoid_Impl>()->setMaximumValueofx(maximumValueofx);
+bool CurveSigmoid::setMaximumValueofx(double maximumValueofx) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setMaximumValueofx(maximumValueofx);
 }
 
-void CurveSigmoid::setMinimumCurveOutput(double minimumCurveOutput) {
-  getImpl<detail::CurveSigmoid_Impl>()->setMinimumCurveOutput(minimumCurveOutput);
+bool CurveSigmoid::setMinimumCurveOutput(double minimumCurveOutput) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setMinimumCurveOutput(minimumCurveOutput);
 }
 
 void CurveSigmoid::resetMinimumCurveOutput() {
   getImpl<detail::CurveSigmoid_Impl>()->resetMinimumCurveOutput();
 }
 
-void CurveSigmoid::setMaximumCurveOutput(double maximumCurveOutput) {
-  getImpl<detail::CurveSigmoid_Impl>()->setMaximumCurveOutput(maximumCurveOutput);
+bool CurveSigmoid::setMaximumCurveOutput(double maximumCurveOutput) {
+  return getImpl<detail::CurveSigmoid_Impl>()->setMaximumCurveOutput(maximumCurveOutput);
 }
 
 void CurveSigmoid::resetMaximumCurveOutput() {
@@ -384,10 +404,9 @@ void CurveSigmoid::resetOutputUnitType() {
 
 /// @cond
 CurveSigmoid::CurveSigmoid(std::shared_ptr<detail::CurveSigmoid_Impl> impl)
-  : Curve(impl)
+  : Curve(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

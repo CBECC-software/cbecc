@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "FanZoneExhaust.hpp"
 #include "FanZoneExhaust_Impl.hpp"
@@ -26,6 +36,10 @@
 #include "Node_Impl.hpp"
 #include "PortList.hpp"
 #include "PortList_Impl.hpp"
+#include "AirflowNetworkZoneExhaustFan.hpp"
+#include "AirflowNetworkZoneExhaustFan_Impl.hpp"
+#include "AirflowNetworkCrack.hpp"
+#include "AirflowNetworkCrack_Impl.hpp"
 
 #include "Model.hpp"
 #include "Model_Impl.hpp"
@@ -71,14 +85,20 @@ namespace detail {
 
   const std::vector<std::string>& FanZoneExhaust_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
-    return result;
+    static std::vector<std::string> results{"Fan Electric Power", "Fan Rise in Air Temperature", "Fan Heat Gain to Air", "Fan Electric Energy", "Fan Air Mass Flow Rate", "Fan Unbalanced Air Mass Flow Rate", "Fan Balanced Air Mass Flow Rate"};
+    return results;
   }
 
   IddObjectType FanZoneExhaust_Impl::iddObjectType() const {
     return FanZoneExhaust::iddObjectType();
+  }
+
+  std::vector<ModelObject> FanZoneExhaust_Impl::children() const
+  {
+    std::vector<ModelObject> result;
+    std::vector<AirflowNetworkZoneExhaustFan> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkZoneExhaustFan>(AirflowNetworkZoneExhaustFan::iddObjectType());
+    result.insert(result.end(), myAFNItems.begin(), myAFNItems.end());
+    return result;
   }
 
   std::vector<ScheduleTypeKey> FanZoneExhaust_Impl::getScheduleTypeKeys(const Schedule& schedule) const
@@ -104,8 +124,8 @@ namespace detail {
     }
     return result;
   }
-  
-  boost::optional<ThermalZone> FanZoneExhaust_Impl::thermalZone()
+
+  boost::optional<ThermalZone> FanZoneExhaust_Impl::thermalZone() const
   {
     boost::optional<ThermalZone> result;
 
@@ -127,8 +147,8 @@ namespace detail {
     }
 
     return result;
-  }  
-  
+  }
+
   bool FanZoneExhaust_Impl::addToThermalZone(ThermalZone & thermalZone)
   {
     Model m = this->model();
@@ -156,7 +176,7 @@ namespace detail {
 
     m.connect(exhaustNode,exhaustNode.outletPort(),mo,this->inletPort());
 
-    // Node (Exhaust Fan Outlet Node) 
+    // Node (Exhaust Fan Outlet Node)
 
     Node exhaustFanOutletNode(m);
 
@@ -171,8 +191,8 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_Fan_ZoneExhaustFields::AvailabilityScheduleName);
   }
 
-  double FanZoneExhaust_Impl::fanEfficiency() const {
-    boost::optional<double> value = getDouble(OS_Fan_ZoneExhaustFields::FanEfficiency,true);
+  double FanZoneExhaust_Impl::fanTotalEfficiency() const {
+    boost::optional<double> value = getDouble(OS_Fan_ZoneExhaustFields::FanTotalEfficiency,true);
     OS_ASSERT(value);
     return value.get();
   }
@@ -196,7 +216,7 @@ namespace detail {
   {
     return OS_Fan_ZoneExhaustFields::AirOutletNodeName;
   }
-  
+
   std::string FanZoneExhaust_Impl::endUseSubcategory() const {
     boost::optional<std::string> value = getString(OS_Fan_ZoneExhaustFields::EndUseSubcategory,true);
     OS_ASSERT(value);
@@ -234,14 +254,15 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  bool FanZoneExhaust_Impl::setFanEfficiency(double fanEfficiency) {
-    bool result = setDouble(OS_Fan_ZoneExhaustFields::FanEfficiency, fanEfficiency);
+  bool FanZoneExhaust_Impl::setFanTotalEfficiency(double fanTotalEfficiency) {
+    bool result = setDouble(OS_Fan_ZoneExhaustFields::FanTotalEfficiency, fanTotalEfficiency);
     return result;
   }
 
-  void FanZoneExhaust_Impl::setPressureRise(double pressureRise) {
+  bool FanZoneExhaust_Impl::setPressureRise(double pressureRise) {
     bool result = setDouble(OS_Fan_ZoneExhaustFields::PressureRise, pressureRise);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanZoneExhaust_Impl::setMaximumFlowRate(boost::optional<double> maximumFlowRate) {
@@ -261,9 +282,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanZoneExhaust_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool FanZoneExhaust_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Fan_ZoneExhaustFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanZoneExhaust_Impl::setFlowFractionSchedule(Schedule& schedule) {
@@ -310,6 +332,49 @@ namespace detail {
     OS_ASSERT(result);
   }
 
+  std::vector<EMSActuatorNames> FanZoneExhaust_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Fan", "Fan Air Mass Flow Rate"},
+                                            {"Fan", "Fan Pressure Rise"},
+                                            {"Fan", "Fan Total Efficiency"},
+                                            {"Fan", "Fan Autosized Air Flow Rate"}};
+    return actuators;
+  }
+
+  std::vector<std::string> FanZoneExhaust_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Fan Maximum Mass Flow Rate",
+                                   "Fan Nominal Pressure Rise",
+                                   "Fan Nominal Total Efficiency"};
+    return types;
+  }
+
+  AirflowNetworkZoneExhaustFan FanZoneExhaust_Impl::getAirflowNetworkZoneExhaustFan(const AirflowNetworkCrack& crack)
+  {
+    boost::optional<AirflowNetworkZoneExhaustFan> opt = airflowNetworkZoneExhaustFan();
+    if (opt) {
+      boost::optional<AirflowNetworkCrack> oldCrack = opt->crack();
+      if (oldCrack){
+        if (oldCrack->handle() == crack.handle()){
+          return opt.get();
+        }
+      }
+      opt->remove();
+    }
+    return AirflowNetworkZoneExhaustFan(model(), crack, handle());
+  }
+
+  boost::optional<AirflowNetworkZoneExhaustFan> FanZoneExhaust_Impl::airflowNetworkZoneExhaustFan() const
+  {
+    std::vector<AirflowNetworkZoneExhaustFan> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkZoneExhaustFan>(AirflowNetworkZoneExhaustFan::iddObjectType());
+    auto count = myAFNItems.size();
+    if (count == 1) {
+      return myAFNItems[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork ZoneExhaustFan attached, returning first.");
+      return myAFNItems[0];
+    }
+    return boost::none;
+  }
+
 } // detail
 
 FanZoneExhaust::FanZoneExhaust(const Model& model)
@@ -317,7 +382,7 @@ FanZoneExhaust::FanZoneExhaust(const Model& model)
 {
   OS_ASSERT(getImpl<detail::FanZoneExhaust_Impl>());
 
-  setFanEfficiency(0.60);
+  setFanTotalEfficiency(0.60);
   setPressureRise(0);
   setEndUseSubcategory("General");
   setSystemAvailabilityManagerCouplingMode("Decoupled");
@@ -336,8 +401,13 @@ boost::optional<Schedule> FanZoneExhaust::availabilitySchedule() const {
   return getImpl<detail::FanZoneExhaust_Impl>()->availabilitySchedule();
 }
 
+
+double FanZoneExhaust::fanTotalEfficiency() const {
+  return getImpl<detail::FanZoneExhaust_Impl>()->fanTotalEfficiency();
+}
+
 double FanZoneExhaust::fanEfficiency() const {
-  return getImpl<detail::FanZoneExhaust_Impl>()->fanEfficiency();
+  return getImpl<detail::FanZoneExhaust_Impl>()->fanTotalEfficiency();
 }
 
 double FanZoneExhaust::pressureRise() const {
@@ -376,12 +446,16 @@ void FanZoneExhaust::resetAvailabilitySchedule() {
   getImpl<detail::FanZoneExhaust_Impl>()->resetAvailabilitySchedule();
 }
 
-bool FanZoneExhaust::setFanEfficiency(double fanEfficiency) {
-  return getImpl<detail::FanZoneExhaust_Impl>()->setFanEfficiency(fanEfficiency);
+bool FanZoneExhaust::setFanTotalEfficiency(double fanTotalEfficiency) {
+  return getImpl<detail::FanZoneExhaust_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
 }
 
-void FanZoneExhaust::setPressureRise(double pressureRise) {
-  getImpl<detail::FanZoneExhaust_Impl>()->setPressureRise(pressureRise);
+bool FanZoneExhaust::setFanEfficiency(double fanTotalEfficiency) {
+  return getImpl<detail::FanZoneExhaust_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+bool FanZoneExhaust::setPressureRise(double pressureRise) {
+  return getImpl<detail::FanZoneExhaust_Impl>()->setPressureRise(pressureRise);
 }
 
 bool FanZoneExhaust::setMaximumFlowRate(double maximumFlowRate) {
@@ -392,8 +466,8 @@ void FanZoneExhaust::resetMaximumFlowRate() {
   getImpl<detail::FanZoneExhaust_Impl>()->resetMaximumFlowRate();
 }
 
-void FanZoneExhaust::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::FanZoneExhaust_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool FanZoneExhaust::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::FanZoneExhaust_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 bool FanZoneExhaust::setFlowFractionSchedule(Schedule& schedule) {
@@ -424,12 +498,21 @@ void FanZoneExhaust::resetBalancedExhaustFractionSchedule() {
   getImpl<detail::FanZoneExhaust_Impl>()->resetBalancedExhaustFractionSchedule();
 }
 
+AirflowNetworkZoneExhaustFan FanZoneExhaust::getAirflowNetworkZoneExhaustFan(const AirflowNetworkCrack& crack)
+{
+  return getImpl<detail::FanZoneExhaust_Impl>()->getAirflowNetworkZoneExhaustFan(crack);
+}
+
+boost::optional<AirflowNetworkZoneExhaustFan> FanZoneExhaust::airflowNetworkZoneExhaustFan() const
+{
+  return getImpl<detail::FanZoneExhaust_Impl>()->airflowNetworkZoneExhaustFan();
+}
+
 /// @cond
 FanZoneExhaust::FanZoneExhaust(std::shared_ptr<detail::FanZoneExhaust_Impl> impl)
-  : ZoneHVACComponent(impl)
+  : ZoneHVACComponent(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

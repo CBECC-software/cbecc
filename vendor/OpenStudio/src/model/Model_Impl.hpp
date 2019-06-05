@@ -1,36 +1,50 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_MODEL_IMPL_HPP
 #define MODEL_MODEL_IMPL_HPP
 
 #include "ComponentWatcher.hpp"
 #include "Building.hpp"
+#include "FoundationKivaSettings.hpp"
 #include "LifeCycleCostParameters.hpp"
 #include "RunPeriod.hpp"
 #include "YearDescription.hpp"
 #include "WeatherFile.hpp"
 
+#include "../nano/nano_signal_slot.hpp" // Signal-Slot replacement
+
 #include "../utilities/idf/Workspace.hpp"
 #include "../utilities/idf/Workspace_Impl.hpp"
 #include "../utilities/idf/WorkspaceObject.hpp"
 #include "../utilities/idf/WorkspaceObject_Impl.hpp"
+#include "../utilities/filetypes/WorkflowJSON.hpp"
 
 #include <boost/optional.hpp>
 
@@ -55,6 +69,7 @@ class ModelObject;
 class Component;
 class ComponentData;
 class Schedule;
+class Node;
 class SpaceType;
 
 namespace detail {
@@ -63,7 +78,7 @@ namespace detail {
 
   /** Container for the OpenStudio Building Model hierarchy. */
   class MODEL_API Model_Impl : public openstudio::detail::Workspace_Impl {
-    Q_OBJECT;
+
    public:
     /** @name Constructors and Destructors */
     //@{
@@ -116,6 +131,9 @@ namespace detail {
     /** @name Getters */
     //@{
 
+    /// Get the WorkflowJSON
+    WorkflowJSON workflowJSON() const;
+
     /// Get the sql file
     boost::optional<openstudio::SqlFile> sqlFile() const;
 
@@ -123,10 +141,14 @@ namespace detail {
      *  object which can be significantly faster than calling getOptionalUniqueModelObject<Building>(). */
     boost::optional<Building> building() const;
 
+    /** Get the FoundationKivaSettings object if there is one, this implementation uses a cached reference to the FoundationKivaSettings
+     *  object which can be significantly faster than calling getOptionalUniqueModelObject<FoundationKivaSettings>(). */
+    boost::optional<FoundationKivaSettings> foundationKivaSettings() const;    
+    
     /** Get the LifeCycleCostParameters object if there is one, this implementation uses a cached reference to the LifeCycleCostParameters
      *  object which can be significantly faster than calling getOptionalUniqueModelObject<LifeCycleCostParameters>(). */
     boost::optional<LifeCycleCostParameters> lifeCycleCostParameters() const;
-    
+
     /** Get the RunPeriod object if there is one, this implementation uses a cached reference to the RunPeriod
      *  object which can be significantly faster than calling getOptionalUniqueModelObject<RunPeriod>(). */
     boost::optional<RunPeriod> runPeriod() const;
@@ -135,17 +157,46 @@ namespace detail {
      *  object which can be significantly faster than calling getOptionalUniqueModelObject<YearDescription>(). */
     boost::optional<YearDescription> yearDescription() const;
 
+    /** Get or create the YearDescription object if there is one, then call method from YearDescription. */
+    // DLM: this is due to issues exporting the model::YearDescription object because of name conflict with utilities::YearDescription.
+    boost::optional<int> calendarYear() const;
+    std::string dayofWeekforStartDay() const;
+    bool isDayofWeekforStartDayDefaulted() const;
+    bool isLeapYear() const;
+    bool isIsLeapYearDefaulted() const;
+    bool setCalendarYear(int calendarYear);
+    void resetCalendarYear();
+    bool setDayofWeekforStartDay(std::string dayofWeekforStartDay);
+    void resetDayofWeekforStartDay();
+    bool setIsLeapYear(bool isLeapYear);
+    void resetIsLeapYear();
+    int assumedYear();
+    openstudio::Date makeDate(openstudio::MonthOfYear monthOfYear, unsigned dayOfMonth);
+    openstudio::Date makeDate(unsigned monthOfYear, unsigned dayOfMonth);
+    openstudio::Date makeDate(openstudio::NthDayOfWeekInMonth n, openstudio::DayOfWeek dayOfWeek, openstudio::MonthOfYear monthOfYear);
+    openstudio::Date makeDate(unsigned dayOfYear);
+
     /** Get the WeatherFile object if there is one, this implementation uses a cached reference to the WeatherFile
      *  object which can be significantly faster than calling getOptionalUniqueModelObject<WeatherFile>(). */
     boost::optional<WeatherFile> weatherFile() const;
 
     Schedule alwaysOnDiscreteSchedule() const;
 
+    std::string alwaysOnDiscreteScheduleName() const;
+
     Schedule alwaysOffDiscreteSchedule() const;
+
+    std::string alwaysOffDiscreteScheduleName() const;
 
     Schedule alwaysOnContinuousSchedule() const;
 
+    std::string alwaysOnContinuousScheduleName() const;
+
+    Node outdoorAirNode() const;
+
     SpaceType plenumSpaceType() const;
+
+    std::string plenumSpaceTypeName() const;
 
     //@}
     /** @name Setters */
@@ -164,6 +215,11 @@ namespace detail {
     virtual std::shared_ptr<openstudio::detail::WorkspaceObject_Impl> createObject(
         const std::shared_ptr<openstudio::detail::WorkspaceObject_Impl>& originalObjectImplPtr,
         bool keepHandle) override;
+
+    /// Set the WorkflowJSON
+    bool setWorkflowJSON(const WorkflowJSON& workflowJSON);
+
+    void resetWorkflowJSON();
 
     /// set the sql file
     virtual bool setSqlFile(const openstudio::SqlFile& sqlFile);
@@ -197,17 +253,25 @@ namespace detail {
 
     void disconnect(ModelObject object, unsigned port);
 
-   public slots :
+    //@}
+    /** @name Nano Signals */
+    //@{
+
+    Nano::Signal<void(openstudio::model::detail::ModelObject_Impl *, IddObjectType, openstudio::UUID)> initialModelObject;
+
+    Nano::Signal<void()> initialReportComplete;
+
+   //@}
+
+   // public slots :
 
     virtual void obsoleteComponentWatcher(const ComponentWatcher& watcher);
 
     virtual void reportInitialModelObjects();
 
-   signals:
+    void autosize();
 
-    void initialModelObject(openstudio::model::detail::ModelObject_Impl* modelObject, IddObjectType iddObjectType, const openstudio::UUID& handle);
-
-    void initialReportComplete();
+    void applySizingValues();
 
    private:
     // explicitly unimplemented copy constructor
@@ -228,21 +292,48 @@ namespace detail {
 
     void mf_createComponentWatcher(ComponentData& componentData);
 
+    WorkflowJSON m_workflowJSON;
+
   private:
 
     mutable boost::optional<Building> m_cachedBuilding;
+    mutable boost::optional<FoundationKivaSettings> m_cachedFoundationKivaSettings;
     mutable boost::optional<LifeCycleCostParameters> m_cachedLifeCycleCostParameters;
     mutable boost::optional<RunPeriod> m_cachedRunPeriod;
     mutable boost::optional<YearDescription> m_cachedYearDescription;
     mutable boost::optional<WeatherFile> m_cachedWeatherFile;
 
-  private slots:
+  // private slots:
+    void clearCachedData();
+    void clearCachedBuilding(const Handle& handle);
+    void clearCachedFoundationKivaSettings(const Handle& handle);
+    void clearCachedLifeCycleCostParameters(const Handle& handle);
+    void clearCachedRunPeriod(const Handle& handle);
+    void clearCachedYearDescription(const Handle& handle);
+    void clearCachedWeatherFile(const Handle& handle);
 
-    void clearCachedBuilding();
-    void clearCachedLifeCycleCostParameters();
-    void clearCachedRunPeriod();
-    void clearCachedYearDescription();
-    void clearCachedWeatherFile();
+    typedef std::function<std::shared_ptr<openstudio::detail::WorkspaceObject_Impl>(Model_Impl *, const std::shared_ptr<openstudio::detail::WorkspaceObject_Impl>&, bool)> CopyConstructorFunction;
+    typedef std::map<IddObjectType, CopyConstructorFunction> CopyConstructorMap;
+
+    typedef std::function<std::shared_ptr<openstudio::detail::WorkspaceObject_Impl>(Model_Impl *, const IdfObject&, bool)> NewConstructorFunction;
+    typedef std::map<IddObjectType, NewConstructorFunction> NewConstructorMap;
+
+    // The purpose of ModelObjectCreator is to support static initialization of two large maps.
+    // One is a map from IddObjectType to a function that creates a new ModelObject instance,
+    // The other is a map from IddObjectType to a function that creates a copy of an existing 
+    //
+    // See Model_Impl::createObject implementation to see applicaiton of this class.
+    struct ModelObjectCreator {
+        explicit ModelObjectCreator();
+
+        std::shared_ptr<openstudio::detail::WorkspaceObject_Impl> getNew(Model_Impl * model, const IdfObject& obj, bool keepHandle) const;
+        std::shared_ptr<openstudio::detail::WorkspaceObject_Impl> getCopy(Model_Impl * model, const std::shared_ptr<openstudio::detail::WorkspaceObject_Impl>& obj, bool keepHandle) const;
+
+        CopyConstructorMap m_copyMap;
+        NewConstructorMap m_newMap;
+    };
+
+    static const ModelObjectCreator modelObjectCreator;
 
   };
 

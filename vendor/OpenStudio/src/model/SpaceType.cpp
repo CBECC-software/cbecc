@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "SpaceType.hpp"
 #include "SpaceType_Impl.hpp"
@@ -45,6 +55,10 @@
 #include "ElectricEquipment_Impl.hpp"
 #include "ElectricEquipmentDefinition.hpp"
 #include "ElectricEquipmentDefinition_Impl.hpp"
+#include "ElectricEquipmentITEAirCooled.hpp"
+#include "ElectricEquipmentITEAirCooled_Impl.hpp"
+#include "ElectricEquipmentITEAirCooledDefinition.hpp"
+#include "ElectricEquipmentITEAirCooledDefinition_Impl.hpp"
 #include "GasEquipment.hpp"
 #include "GasEquipment_Impl.hpp"
 #include "GasEquipmentDefinition.hpp"
@@ -82,13 +96,16 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QString>
 
 namespace openstudio {
 namespace model {
 
 namespace detail {
 
-  QMap<QString, QVariant> SpaceType_Impl::m_standardsMap;
+  QJsonArray SpaceType_Impl::m_standardsArr;
 
   SpaceType_Impl::SpaceType_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
     : ResourceObject_Impl(idfObject,model,keepHandle)
@@ -113,8 +130,6 @@ namespace detail {
   const std::vector<std::string>& SpaceType_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -146,6 +161,10 @@ namespace detail {
     ElectricEquipmentVector electricEquipment = this->electricEquipment();
     result.insert(result.end(), electricEquipment.begin(), electricEquipment.end());
 
+    // IT electric equipment
+    ElectricEquipmentITEAirCooledVector electricEquipmentITEAirCooled = this->electricEquipmentITEAirCooled();
+    result.insert(result.end(), electricEquipmentITEAirCooled.begin(), electricEquipmentITEAirCooled.end());
+
     // gas equipment
     GasEquipmentVector gasEquipment = this->gasEquipment();
     result.insert(result.end(), gasEquipment.begin(), gasEquipment.end());
@@ -171,6 +190,15 @@ namespace detail {
     result.insert(result.end(), spaceInfiltrationEffectiveLeakageAreas.begin(), spaceInfiltrationEffectiveLeakageAreas.end());
 
     return result;
+  }
+
+  boost::optional<std::string> SpaceType_Impl::setNameProtected(const std::string& newName)
+  {
+    // don't allow user to change name of plenum space type since this is found by name in Model::plenumSpaceType
+    if (istringEqual(this->model().plenumSpaceTypeName(), this->nameString())){
+      return this->nameString();
+    }
+    return ResourceObject_Impl::setName(newName);
   }
 
   boost::optional<DefaultConstructionSet> SpaceType_Impl::defaultConstructionSet() const
@@ -245,7 +273,7 @@ namespace detail {
   {
     setString(OS_SpaceTypeFields::DefaultScheduleSetName, "");
   }
- 
+
   boost::optional<RenderingColor> SpaceType_Impl::renderingColor() const
   {
     return getObject<ModelObject>().getModelObjectTarget<RenderingColor>(OS_SpaceTypeFields::GroupRenderingName);
@@ -261,30 +289,138 @@ namespace detail {
     setString(OS_SpaceTypeFields::GroupRenderingName, "");
   }
 
+
+  boost::optional<std::string> SpaceType_Impl::standardsTemplate() const
+  {
+    boost::optional<std::string> result;
+    if( boost::optional<std::string> standardsTemplate = getString(OS_SpaceTypeFields::StandardsTemplate, false, true) ) {
+      result = standardsTemplate.get();
+    } else {
+      // If not set, try to inherit from building
+      boost::optional<Building> building = this->model().getOptionalUniqueModelObject<Building>();
+      if (building){
+        result = building->standardsTemplate();
+      }
+    }
+    return result;
+  }
+
+  std::vector<std::string> SpaceType_Impl::suggestedStandardsTemplates() const
+  {
+    std::vector<std::string> result;
+
+    boost::optional<std::string> standardsTemplate = this->standardsTemplate();
+
+    // include values from json
+    parseStandardsJSON();
+
+    // Find the possible template names
+    // m_standardsArr is an array of hashes (no nested levels)
+    for( const QJsonValue& v: m_standardsArr) {
+      QJsonObject space_type = v.toObject();
+      result.push_back(toString(space_type["template"].toString()));
+    }
+
+    // include values from model
+
+    boost::optional<Building> building = this->model().getOptionalUniqueModelObject<Building>();
+    boost::optional<std::string> buildingStandardsTemplate;
+    if (building){
+      buildingStandardsTemplate = building->standardsTemplate();
+    }
+
+    for (const SpaceType& other : this->model().getConcreteModelObjects<SpaceType>()){
+      if (other.handle() == this->handle()){
+        continue;
+      }
+      boost::optional<std::string> otherTemplate = other.standardsTemplate();
+      if (otherTemplate){
+        result.push_back(*otherTemplate);
+      }
+    }
+
+    // remove buildingStandardsTemplate and standardsTemplate
+    IstringFind finder;
+    if (buildingStandardsTemplate){
+      finder.addTarget(*buildingStandardsTemplate);
+    }
+    if (standardsTemplate){
+      finder.addTarget(*standardsTemplate);
+    }
+    auto it = std::remove_if(result.begin(), result.end(), finder);
+    result.resize( std::distance(result.begin(),it) );
+
+    // sort
+    std::sort(result.begin(), result.end(), IstringCompare());
+
+    // make unique
+    // DLM: have to sort before calling unique, unique only works on consecutive elements
+    it = std::unique(result.begin(), result.end(), IstringEqual());
+    result.resize( std::distance(result.begin(),it) );
+
+    // add building value to front
+    if (buildingStandardsTemplate){
+      result.insert(result.begin(), *buildingStandardsTemplate);
+    }
+
+    // add current to front
+    if (standardsTemplate){
+      result.insert(result.begin(), *standardsTemplate);
+    }
+
+    return result;
+  }
+
+  bool SpaceType_Impl::setStandardsTemplate(const std::string& standardsTemplate)
+  {
+    bool test = setString(OS_SpaceTypeFields::StandardsTemplate, standardsTemplate);
+    OS_ASSERT(test);
+    return test;
+  }
+
+  void SpaceType_Impl::resetStandardsTemplate()
+  {
+    bool test = setString(OS_SpaceTypeFields::StandardsTemplate, "");
+    OS_ASSERT(test);
+  }
+
+  /** STANDARDS BUILDING TYPE */
   boost::optional<std::string> SpaceType_Impl::standardsBuildingType() const
   {
-    return getString(OS_SpaceTypeFields::StandardsBuildingType, false, true);
+    boost::optional<std::string> result;
+    if( boost::optional<std::string> standardsBuildingType = getString(OS_SpaceTypeFields::StandardsBuildingType, false, true) ) {
+      result = standardsBuildingType.get();
+    } else {
+      // If not set, try to inherit from building
+      boost::optional<Building> building = this->model().getOptionalUniqueModelObject<Building>();
+      if (building){
+        result = building->standardsBuildingType();
+      }
+    }
+
+    return result;
   }
 
   std::vector<std::string> SpaceType_Impl::suggestedStandardsBuildingTypes() const
   {
     std::vector<std::string> result;
-  
+
+
+    boost::optional<std::string> standardsTemplate = this->standardsTemplate();
     boost::optional<std::string> standardsBuildingType = this->standardsBuildingType();
 
-    // include values from json
-    parseStandardsMap();
+    // include values from json if template is already set
+    if( standardsTemplate ){
+      parseStandardsJSON();
 
-    QMap<QString, QVariant> templates = m_standardsMap["space_types"].toMap();
-    for (QString template_name : templates.uniqueKeys()) {
-      QMap<QString, QVariant> climate_sets = templates[template_name].toMap();
-      for (QString climate_set_name : climate_sets.uniqueKeys()) {
-
-        QMap<QString, QVariant> building_types = climate_sets[climate_set_name].toMap();
-        for (QString building_type_name : building_types.uniqueKeys()) {
-          
-          result.push_back(toString(building_type_name));
-
+      // Find the possible building_type names that have the template name
+      // m_standardsArr is an array of hashes (no nested levels)
+      for( const QJsonValue& v: m_standardsArr) {
+        QJsonObject space_type = v.toObject();
+        // TODO: use case insensitive compare?
+        // if( QString::compare(space_type["building_type"].toString(), toQString(*standardsBuildingType), Qt::CaseInsensitive) )
+        if( space_type["template"].toString() == toQString(*standardsTemplate) ) {
+          result.push_back(toString(space_type["building_type"].toString()));
         }
       }
     }
@@ -315,16 +451,16 @@ namespace detail {
     if (standardsBuildingType){
       finder.addTarget(*standardsBuildingType);
     }
-    auto it = std::remove_if(result.begin(), result.end(), finder); 
-    result.resize( std::distance(result.begin(),it) ); 
+    auto it = std::remove_if(result.begin(), result.end(), finder);
+    result.resize( std::distance(result.begin(),it) );
 
     // sort
     std::sort(result.begin(), result.end(), IstringCompare());
 
     // make unique
     // DLM: have to sort before calling unique, unique only works on consecutive elements
-    it = std::unique(result.begin(), result.end(), IstringEqual()); 
-    result.resize( std::distance(result.begin(),it) ); 
+    it = std::unique(result.begin(), result.end(), IstringEqual());
+    result.resize( std::distance(result.begin(),it) );
 
     // add building value to front
     if (buildingStandardsBuildingType){
@@ -352,6 +488,7 @@ namespace detail {
     OS_ASSERT(test);
   }
 
+  /** STANDARDS SPACE TYPE */
   boost::optional<std::string> SpaceType_Impl::standardsSpaceType() const
   {
     return getString(OS_SpaceTypeFields::StandardsSpaceType, false, true);
@@ -361,24 +498,23 @@ namespace detail {
   {
     std::vector<std::string> result;
 
+    boost::optional<std::string> standardsTemplate = this->standardsTemplate();
     boost::optional<std::string> standardsBuildingType = this->standardsBuildingType();
     boost::optional<std::string> standardsSpaceType = this->standardsSpaceType();
 
-    // include values from json
-    if (standardsBuildingType){
-      parseStandardsMap();
+    // include values from json if template and building_type are set
+    if (standardsTemplate && standardsBuildingType){
+      parseStandardsJSON();
 
-      QMap<QString, QVariant> templates = m_standardsMap["space_types"].toMap();
-      for (QString template_name : templates.uniqueKeys()) {
-        QMap<QString, QVariant> climate_sets = templates[template_name].toMap();
-        for (QString climate_set_name : climate_sets.uniqueKeys()) {
-
-          QMap<QString, QVariant> building_types = climate_sets[climate_set_name].toMap();
-          QMap<QString, QVariant> specific_types = building_types[toQString(*standardsBuildingType)].toMap();
-          for (QString specific_type_name : specific_types.uniqueKeys()) {
-            result.push_back(toString(specific_type_name));
-
-          }
+      // Find the possible space_type names that have the right template and building_type name
+      // m_standardsArr is an array of hashes (no nested levels)
+      for( const QJsonValue& v: m_standardsArr) {
+        QJsonObject space_type = v.toObject();
+        // TODO: use case insensitive compare?
+        // if( QString::compare(space_type["building_type"].toString(), toQString(*standardsBuildingType), Qt::CaseInsensitive) )
+        if( (space_type["template"].toString() == toQString(*standardsTemplate)) &&
+            (space_type["building_type"].toString() == toQString(*standardsBuildingType)) ) {
+          result.push_back(toString(space_type["space_type"].toString()));
         }
       }
     }
@@ -417,16 +553,16 @@ namespace detail {
     if (standardsSpaceType){
       finder.addTarget(*standardsSpaceType);
     }
-    auto it = std::remove_if(result.begin(), result.end(), finder); 
-    result.resize( std::distance(result.begin(),it) ); 
+    auto it = std::remove_if(result.begin(), result.end(), finder);
+    result.resize( std::distance(result.begin(),it) );
 
     // sort
     std::sort(result.begin(), result.end(), IstringCompare());
 
     // make unique
     // DLM: have to sort before calling unique, unique only works on consecutive elements
-    it = std::unique(result.begin(), result.end(), IstringEqual()); 
-    result.resize( std::distance(result.begin(),it) ); 
+    it = std::unique(result.begin(), result.end(), IstringEqual());
+    result.resize( std::distance(result.begin(),it) );
 
     // add current to front
     if (standardsSpaceType){
@@ -491,6 +627,11 @@ namespace detail {
   {
     return getObject<ModelObject>().getModelObjectSources<ElectricEquipment>(
       ElectricEquipment::iddObjectType());
+  }
+
+  ElectricEquipmentITEAirCooledVector SpaceType_Impl::electricEquipmentITEAirCooled() const {
+    return getObject<ModelObject>().getModelObjectSources<ElectricEquipmentITEAirCooled>(
+      ElectricEquipmentITEAirCooled::iddObjectType());
   }
 
   GasEquipmentVector SpaceType_Impl::gasEquipment() const
@@ -587,11 +728,11 @@ namespace detail {
     return setPeoplePerFloorArea(*peoplePerFloorArea,templatePeople);
   }
 
-  bool SpaceType_Impl::setPeoplePerFloorArea(double peoplePerFloorArea, 
+  bool SpaceType_Impl::setPeoplePerFloorArea(double peoplePerFloorArea,
                                                   const boost::optional<People>& templatePeople)
   {
     if (peoplePerFloorArea < 0.0) {
-      LOG(Error,"SpaceType cannot set peoplePerFloorArea to " << peoplePerFloorArea 
+      LOG(Error,"SpaceType cannot set peoplePerFloorArea to " << peoplePerFloorArea
           << ", the value must be >= 0.0.");
       return false;
     }
@@ -639,11 +780,11 @@ namespace detail {
     return setSpaceFloorAreaPerPerson(*spaceFloorAreaPerPerson,templatePeople);
   }
 
-  bool SpaceType_Impl::setSpaceFloorAreaPerPerson(double spaceFloorAreaPerPerson, 
-                                                  const boost::optional<People>& templatePeople) 
+  bool SpaceType_Impl::setSpaceFloorAreaPerPerson(double spaceFloorAreaPerPerson,
+                                                  const boost::optional<People>& templatePeople)
   {
     if (lessThanOrEqual(spaceFloorAreaPerPerson,0.0)) {
-      LOG(Error,"SpaceType cannot set spaceFloorAreaPerPerson to " << spaceFloorAreaPerPerson 
+      LOG(Error,"SpaceType cannot set spaceFloorAreaPerPerson to " << spaceFloorAreaPerPerson
           << ", the value must be > 0.0.");
       return false;
     }
@@ -727,7 +868,7 @@ namespace detail {
       double lightingPowerPerFloorArea,const boost::optional<Lights>& templateLights)
   {
     if (lightingPowerPerFloorArea < 0.0) {
-      LOG(Error,"SpaceType cannot set lightingPowerPerFloorArea to " 
+      LOG(Error,"SpaceType cannot set lightingPowerPerFloorArea to "
           << lightingPowerPerFloorArea << ", the value must be >= 0.0.");
       return false;
     }
@@ -840,8 +981,8 @@ namespace detail {
     return result;
   }
 
-  double SpaceType_Impl::getLightingPowerPerFloorArea(double floorArea, 
-                                                           double numPeople) const 
+  double SpaceType_Impl::getLightingPowerPerFloorArea(double floorArea,
+                                                           double numPeople) const
   {
     double result(0.0);
     for (const Lights& lightsObject : lights()) {
@@ -854,7 +995,7 @@ namespace detail {
   }
 
   double SpaceType_Impl::getLightingPowerPerPerson(double floorArea, double numPeople) const {
-    double result(0.0); 
+    double result(0.0);
     for (const Lights& lightsObject : lights()) {
       result += lightsObject.getPowerPerPerson(floorArea,numPeople);
     }
@@ -872,6 +1013,19 @@ namespace detail {
         result += temp.get();
       }
       else {
+        return boost::none;
+      }
+    }
+    return result;
+  }
+
+  boost::optional<double> SpaceType_Impl::electricEquipmentITEAirCooledPowerPerFloorArea() const {
+    double result(0.0);
+    for (const ElectricEquipmentITEAirCooled& iTequipment : electricEquipmentITEAirCooled()) {
+      OptionalDouble temp = iTequipment.wattsperZoneFloorArea();
+      if (temp) {
+        result += temp.get();
+      } else {
         return boost::none;
       }
     }
@@ -898,13 +1052,13 @@ namespace detail {
       const boost::optional<ElectricEquipment>& templateElectricEquipment)
   {
     if (electricEquipmentPowerPerFloorArea < 0.0) {
-      LOG(Error,"SpaceType cannot set electricEquipmentPowerPerFloorArea " 
+      LOG(Error,"SpaceType cannot set electricEquipmentPowerPerFloorArea "
           << electricEquipmentPowerPerFloorArea << ", the value must be >= 0.0.");
       return false;
     }
 
     // create or modify ElectricEquipment and ElectricEquipmentDefinition object
-    OptionalElectricEquipment myEquipment = 
+    OptionalElectricEquipment myEquipment =
         getMySpaceLoadInstance<ElectricEquipment,ElectricEquipmentDefinition>(templateElectricEquipment);
     if (!myEquipment) {
       LOG(Error,"The templateElectricEquipment object must be in the same Model as this SpaceType.");
@@ -961,13 +1115,13 @@ namespace detail {
       const boost::optional<ElectricEquipment>& templateElectricEquipment)
   {
     if (electricEquipmentPowerPerPerson < 0.0) {
-      LOG(Error,"SpaceType cannot set electricEquipmentPowerPerPerson " 
+      LOG(Error,"SpaceType cannot set electricEquipmentPowerPerPerson "
           << electricEquipmentPowerPerPerson << ", the value must be >= 0.0.");
       return false;
     }
 
     // create or modify ElectricEquipment and ElectricEquipmentDefinition object
-    OptionalElectricEquipment myEquipment = 
+    OptionalElectricEquipment myEquipment =
         getMySpaceLoadInstance<ElectricEquipment,ElectricEquipmentDefinition>(templateElectricEquipment);
     if (!myEquipment) {
       LOG(Error,"The templateElectricEquipment object must be in the same Model as this SpaceType.");
@@ -998,7 +1152,7 @@ namespace detail {
     return result;
   }
 
-  double SpaceType_Impl::getElectricEquipmentPowerPerFloorArea(double floorArea, 
+  double SpaceType_Impl::getElectricEquipmentPowerPerFloorArea(double floorArea,
                                                                     double numPeople) const
   {
     double result(0.0);
@@ -1008,7 +1162,7 @@ namespace detail {
     return result;
   }
 
-  double SpaceType_Impl::getElectricEquipmentPowerPerPerson(double floorArea, 
+  double SpaceType_Impl::getElectricEquipmentPowerPerPerson(double floorArea,
                                                             double numPeople) const
   {
     double result(0.0);
@@ -1052,13 +1206,13 @@ namespace detail {
       const boost::optional<GasEquipment>& templateGasEquipment)
   {
     if (gasEquipmentPowerPerFloorArea < 0.0) {
-      LOG(Error,"SpaceType cannot set gasEquipmentPowerPerFloorArea " 
+      LOG(Error,"SpaceType cannot set gasEquipmentPowerPerFloorArea "
           << gasEquipmentPowerPerFloorArea << ", the value must be >= 0.0.");
       return false;
     }
 
     // create or modify GasEquipment and GasEquipmentDefinition object
-    OptionalGasEquipment myEquipment = 
+    OptionalGasEquipment myEquipment =
         getMySpaceLoadInstance<GasEquipment,GasEquipmentDefinition>(templateGasEquipment);
     if (!myEquipment) {
       LOG(Error,"The templateGasEquipment object must be in the same Model as this SpaceType.");
@@ -1114,13 +1268,13 @@ namespace detail {
       const boost::optional<GasEquipment>& templateGasEquipment)
   {
     if (gasEquipmentPowerPerPerson < 0.0) {
-      LOG(Error,"SpaceType cannot set gasEquipmentPowerPerPerson " 
+      LOG(Error,"SpaceType cannot set gasEquipmentPowerPerPerson "
           << gasEquipmentPowerPerPerson << ", the value must be >= 0.0.");
       return false;
     }
 
     // create or modify GasEquipment and GasEquipmentDefinition object
-    OptionalGasEquipment myEquipment = 
+    OptionalGasEquipment myEquipment =
         getMySpaceLoadInstance<GasEquipment,GasEquipmentDefinition>(templateGasEquipment);
     if (!myEquipment) {
       LOG(Error,"The templateGasEquipment object must be in the same Model as this SpaceType.");
@@ -1151,7 +1305,7 @@ namespace detail {
     return result;
   }
 
-  double SpaceType_Impl::getGasEquipmentPowerPerFloorArea(double floorArea, 
+  double SpaceType_Impl::getGasEquipmentPowerPerFloorArea(double floorArea,
                                                                double numPeople) const
   {
     double result(0.0);
@@ -1230,6 +1384,11 @@ namespace detail {
 
   std::vector<ModelObject> SpaceType_Impl::electricEquipmentAsModelObjects() const {
     ModelObjectVector result = castVector<ModelObject>(electricEquipment());
+    return result;
+  }
+
+  std::vector<ModelObject> SpaceType_Impl::electricEquipmentITEAirCooledAsModelObjects() const {
+    ModelObjectVector result = castVector<ModelObject>(electricEquipmentITEAirCooled());
     return result;
   }
 
@@ -1353,20 +1512,31 @@ namespace detail {
     OS_ASSERT(count == 1);
   }
 
-  void SpaceType_Impl::parseStandardsMap() const
+  void SpaceType_Impl::parseStandardsJSON() const
   {
-    if (m_standardsMap.empty()){
-      QFile file(":/resources/standards/OpenStudio_Standards.json");
+    if (m_standardsArr.empty()){
+      QFile file(":/resources/standards/OpenStudio_Standards_space_types_merged.json");
       if (file.open(QFile::ReadOnly)) {
         QJsonParseError parseError;
         QJsonDocument jsonDoc = QJsonDocument::fromJson(file.readAll(), &parseError);
         file.close();
         if( QJsonParseError::NoError == parseError.error) {
-          m_standardsMap = jsonDoc.object().toVariantMap();
+          QJsonObject jsonObj = jsonDoc.object();
+          if( (jsonObj.size() == 1) && jsonObj.contains("space_types") && jsonObj["space_types"].isArray()) {
+            m_standardsArr = jsonObj["space_types"].toArray();
+          } else {
+            LOG_AND_THROW("Wrong format encountered in JSON file at 'resources/standards/OpenStudio_Standards_space_types.json'");
+          }
+        } else {
+          LOG_AND_THROW("Problem occured in parsing JSON file at 'resources/standards/OpenStudio_Standards_space_types.json'");
         }
+      } else {
+        LOG_AND_THROW("Cannot open file at 'resources/standards/OpenStudio_Standards_space_types.json' for parsing");
       }
     }
   }
+
+
 
 } // detail
 
@@ -1429,6 +1599,26 @@ bool SpaceType::setRenderingColor(const RenderingColor& renderingColor)
 void SpaceType::resetRenderingColor()
 {
   getImpl<detail::SpaceType_Impl>()->resetRenderingColor();
+}
+
+boost::optional<std::string> SpaceType::standardsTemplate() const
+{
+  return getImpl<detail::SpaceType_Impl>()->standardsTemplate();
+}
+
+std::vector<std::string> SpaceType::suggestedStandardsTemplates() const
+{
+  return getImpl<detail::SpaceType_Impl>()->suggestedStandardsTemplates();
+}
+
+bool SpaceType::setStandardsTemplate(const std::string& standardsTemplate)
+{
+  return getImpl<detail::SpaceType_Impl>()->setStandardsTemplate(standardsTemplate);
+}
+
+void SpaceType::resetStandardsTemplate()
+{
+  getImpl<detail::SpaceType_Impl>()->resetStandardsTemplate();
 }
 
 boost::optional<std::string> SpaceType::standardsBuildingType() const
@@ -1495,6 +1685,11 @@ std::vector<Luminaire> SpaceType::luminaires() const {
 std::vector<ElectricEquipment> SpaceType::electricEquipment() const {
   return getImpl<detail::SpaceType_Impl>()->electricEquipment();
 }
+
+std::vector<ElectricEquipmentITEAirCooled> SpaceType::electricEquipmentITEAirCooled() const {
+  return getImpl<detail::SpaceType_Impl>()->electricEquipmentITEAirCooled();
+}
+
 
 std::vector<GasEquipment> SpaceType::gasEquipment() const {
   return getImpl<detail::SpaceType_Impl>()->gasEquipment();
@@ -1589,7 +1784,7 @@ bool SpaceType::setLightingPowerPerFloorArea(double lightingPowerPerFloorArea) {
   return getImpl<detail::SpaceType_Impl>()->setLightingPowerPerFloorArea(lightingPowerPerFloorArea);
 }
 
-bool SpaceType::setLightingPowerPerFloorArea(double lightingPowerPerFloorArea, 
+bool SpaceType::setLightingPowerPerFloorArea(double lightingPowerPerFloorArea,
                                        const Lights& templateLights)
 {
   return getImpl<detail::SpaceType_Impl>()->setLightingPowerPerFloorArea(lightingPowerPerFloorArea,templateLights);
@@ -1622,6 +1817,11 @@ double SpaceType::getLightingPowerPerPerson(double floorArea, double numPeople) 
 boost::optional<double> SpaceType::electricEquipmentPowerPerFloorArea() const {
   return getImpl<detail::SpaceType_Impl>()->electricEquipmentPowerPerFloorArea();
 }
+
+boost::optional<double> SpaceType::electricEquipmentITEAirCooledPowerPerFloorArea() const {
+  return getImpl<detail::SpaceType_Impl>()->electricEquipmentITEAirCooledPowerPerFloorArea();
+}
+
 
 bool SpaceType::setElectricEquipmentPowerPerFloorArea(double electricEquipmentPowerPerFloorArea) {
   return getImpl<detail::SpaceType_Impl>()->setElectricEquipmentPowerPerFloorArea(electricEquipmentPowerPerFloorArea);
@@ -1707,9 +1907,14 @@ double SpaceType::floorArea() const
   return getImpl<detail::SpaceType_Impl>()->floorArea();
 }
 
+boost::optional<std::string> SpaceType::setNameProtected(const std::string& newName)
+{
+  return getImpl<detail::SpaceType_Impl>()->setNameProtected(newName);
+}
+
 /// @cond
 SpaceType::SpaceType(std::shared_ptr<detail::SpaceType_Impl> impl)
-  : ResourceObject(impl)
+  : ResourceObject(std::move(impl))
 {}
 /// @endcond
 

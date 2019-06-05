@@ -1,27 +1,38 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_PLANTLOOP_HPP
 #define MODEL_PLANTLOOP_HPP
 
 #include "ModelAPI.hpp"
 #include "Loop.hpp"
+#include "../utilities/core/Deprecated.hpp"
 
 namespace openstudio {
 
@@ -40,6 +51,7 @@ class PlantEquipmentOperationScheme;
 class PlantEquipmentOperationHeatingLoad;
 class PlantEquipmentOperationCoolingLoad;
 class Schedule;
+class AvailabilityManager;
 
 /** PlantLoop is an interface to the EnergyPlus IDD object
  *  named "PlantLoop"
@@ -60,11 +72,13 @@ class MODEL_API PlantLoop : public Loop {
 
   static std::vector<std::string> loadDistributionSchemeValues();
 
+  static std::vector<std::string> fluidTypeValues();
+
   /** Prior to OS 1.11.0 the options where
       Optimal, Sequential, and Uniform.
       E+ changed the available options to.
       Optimal, SequentialLoad, UniformLoad, UniformPLR, SequentialUniformPLR
-      in version 8.2.0. 
+      in version 8.2.0.
 
       OS did not catch up to the new options until 1.11.0. In 1.11.0 existing OS files will
       be upgraded to use the new options. Sequential will be version translated to
@@ -82,23 +96,27 @@ class MODEL_API PlantLoop : public Loop {
 
   std::string fluidType();
 
-  void setFluidType( const std::string & value );
+  bool setFluidType( const std::string & value );
+
+  bool setGlycolConcentration(int glycolConcentration);
+
+  int glycolConcentration() const;
 
   Node loopTemperatureSetpointNode();
 
-  void setLoopTemperatureSetpointNode( Node & node );
+  bool setLoopTemperatureSetpointNode( Node & node );
 
   double maximumLoopTemperature();
 
-  void setMaximumLoopTemperature( double value );
+  bool setMaximumLoopTemperature( double value );
 
   double minimumLoopTemperature();
 
-  void setMinimumLoopTemperature( double value );
+  bool setMinimumLoopTemperature( double value );
 
   boost::optional<double> maximumLoopFlowRate();
 
-  void setMaximumLoopFlowRate( double value );
+  bool setMaximumLoopFlowRate( double value );
 
   bool isMaximumLoopFlowRateAutosized();
 
@@ -106,7 +124,7 @@ class MODEL_API PlantLoop : public Loop {
 
   boost::optional<double> minimumLoopFlowRate();
 
-  void setMinimumLoopFlowRate( double value );
+  bool setMinimumLoopFlowRate( double value );
 
   bool isMinimumLoopFlowRateAutosized();
 
@@ -114,7 +132,7 @@ class MODEL_API PlantLoop : public Loop {
 
   boost::optional<double> plantLoopVolume();
 
-  void setPlantLoopVolume( double value );
+  bool setPlantLoopVolume( double value );
 
   bool isPlantLoopVolumeAutocalculated();
 
@@ -127,17 +145,17 @@ class MODEL_API PlantLoop : public Loop {
   void resetCommonPipeSimulation();
 
   /** In OpenStudio there are three levels of "priority" for PlantEquipmentOperationScheme instances.
-    * Priority here means that if there are multiple operation schemes that list the same equipment, 
+    * Priority here means that if there are multiple operation schemes that list the same equipment,
     * the one with the highest priority will define operation for that equipment.
     * The operation scheme defined for primaryPlantEquipmentOperationScheme() is the highest priority,
     * followed by any component setpoint operation. Heating and cooling load operation,
     * defined by plantEquipmentOperationHeatingLoad() and plantEquipmentOperationCoolingLoad() has the lowest priority.
     *
     * No operation scheme is required for plant operation. OpenStudio will provide suitable defaults if none are provied.
-    * If any operation schemes, including primary, heating load, or cooling load, are defined then the default logic is 
+    * If any operation schemes, including primary, heating load, or cooling load, are defined then the default logic is
     * entirely disabled.
     *
-    * OpenStudio does not define a PlantEquipmentOperationComponentSetpoint, which is defined in EnergyPlus, 
+    * OpenStudio does not define a PlantEquipmentOperationComponentSetpoint, which is defined in EnergyPlus,
     * but the funcitonality is supported. In OpenStudio placing a setpoint manager on a component outlet
     * node will trigger OpenStudio to produce a component setpoint operation scheme on export to EnergyPlus.
     * This component setpoint behavior is in place even if there are other primary, heating load, or cooling load schemes defined.
@@ -181,8 +199,8 @@ class MODEL_API PlantLoop : public Loop {
 
   boost::optional<Schedule> primaryPlantEquipmentOperationSchemeSchedule() const;
 
-  /** Set the hours of operation for which the ComponentSetpointOperationScheme, if any, applies. 
-   *  The existance of ComponentSetpointOperationSchemes is controlled by the existance of 
+  /** Set the hours of operation for which the ComponentSetpointOperationScheme, if any, applies.
+   *  The existance of ComponentSetpointOperationSchemes is controlled by the existance of
    *  setpoint managers on the plant component outlet nodes.
   **/
   bool setComponentSetpointOperationSchemeSchedule(Schedule &);
@@ -204,10 +222,10 @@ class MODEL_API PlantLoop : public Loop {
   Node demandOutletNode() const override;
 
   /** Returns the supply side Mixer. **/
-  Mixer supplyMixer();
+  Mixer supplyMixer() const;
 
   /** Returns the supply side Splitter. **/
-  Splitter supplySplitter();
+  Splitter supplySplitter() const;
 
   /** Returns the demand side Mixer. **/
   Mixer demandMixer();
@@ -215,7 +233,7 @@ class MODEL_API PlantLoop : public Loop {
   /** Returns the demand side Splitter. **/
   Splitter demandSplitter();
 
-  /** Adds a new demand branch for component and returns a bool indicating success. 
+  /** Adds a new demand branch for component and returns a bool indicating success.
    */
   bool addSupplyBranchForComponent( HVACComponent hvacComponent );
 
@@ -245,11 +263,86 @@ class MODEL_API PlantLoop : public Loop {
 
   SizingPlant sizingPlant() const;
 
-  protected:
+  boost::optional<double> autosizedMaximumLoopFlowRate() const ;
+
+  boost::optional<double> autosizedPlantLoopVolume() const;
+
+  /*
+   * Return all AvailabilityManagers assigned to this list, in the priority order
+   *  AvailabilityManagers are used to override the system availabilitySchedule() with one of OpenStudio's
+   *  supported AvailabilityManager types.
+   */
+  std::vector<AvailabilityManager> availabilityManagers() const;
+
+  /*
+   * Add a new AvailabilityManager at the end of the list (priority = last).
+   */
+  bool addAvailabilityManager(const AvailabilityManager & availabilityManager);
+
+  /*
+   * Add a new AvailabilityManager to the list which a given priority (1 to x).
+   * Internally calls addAvailabilityManager then setPriority, see remarks there
+   */
+  bool addAvailabilityManager(const AvailabilityManager & availabilityManager, unsigned priority);
+
+
+  /*
+   * Set all availabilityManagers using a list of AvailabilityManagers
+   */
+  bool setAvailabilityManagers(const std::vector<AvailabilityManager> & avms);
+
+   /*
+   * Removes all AvailabilityManagers assigned (TODO: should that affect the availabilitySchedule?)
+   */
+  void resetAvailabilityManagers();
+
+  /*
+   * Remove the given AvailabilityManager from this AvailabilityManagerAssignmentList
+   */
+  bool removeAvailabilityManager(const AvailabilityManager& avm);
+
+  /*
+   * Remove the availabilityManager at the given priority
+   * Returns false if the priority isn't between 1 and the number of AVMs
+   */
+  bool removeAvailabilityManager(unsigned priority);
+
+  /*
+   * You can shuffle the priority of a given AvailabilityManager after having added it
+   * If priority is below 1, it's reset to 1.
+   * If priority is greater than the number of availability managers, will reset to last
+   */
+  bool setAvailabilityManagerPriority(const AvailabilityManager & availabilityManager, unsigned priority);
+
+  /*
+   * Get the priority of the AvailabilityManager given as argument
+   */
+  unsigned availabilityManagerPriority(const AvailabilityManager & availabilityManager) const;
+
+
+  // TODO: DEPRECATED SECTION Remove in the future (deprecated around 2.3.0)
+  /*
+   * Returns the first availability Manager used
+   */
+  OS_DEPRECATED boost::optional<AvailabilityManager> availabilityManager() const;
+
+  /* Deprecated, kept for backward compatibility with existing scripts, will be removed in a future version
+   * Behavior is that it will remove all AVMs assigned to this loop, and replace it with the one passed as argument
+   */
+  OS_DEPRECATED bool setAvailabilityManager(const AvailabilityManager& availabilityManager);
+
+  /*
+   * Clears all AVMs (forwards to resetAvailabilabilityManagers
+   **/
+  OS_DEPRECATED void resetAvailabilityManager();
+  // END DEPRECATED
+
+ protected:
 
   friend class Model;
 
   friend class openstudio::IdfObject;
+  friend class openstudio::detail::IdfObject_Impl;
 
   /// @cond
 
@@ -257,7 +350,7 @@ class MODEL_API PlantLoop : public Loop {
 
   explicit PlantLoop(std::shared_ptr<ImplType> impl);
 
-  private:
+ private:
 
   unsigned supplyInletPort() const;
 

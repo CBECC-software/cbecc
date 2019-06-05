@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "PortList.hpp"
 #include "PortList_Impl.hpp"
@@ -66,8 +76,6 @@ PortList_Impl::PortList_Impl(const PortList_Impl& other,
 const std::vector<std::string>& PortList_Impl::outputVariableNames() const
 {
   static std::vector<std::string> result;
-  if (result.empty()){
-  }
   return result;
 }
 
@@ -116,7 +124,7 @@ ThermalZone PortList_Impl::thermalZone() const
 
 std::vector<openstudio::IdfObject> PortList_Impl::remove()
 {
-  //std::vector<Node> nodes = this->nodes(); 
+  //std::vector<Node> nodes = this->nodes();
 
   //for( std::vector<Node>::iterator it = nodes.begin();
   //     it < nodes.end();
@@ -128,7 +136,7 @@ std::vector<openstudio::IdfObject> PortList_Impl::remove()
   return ModelObject_Impl::remove();
 }
 
-unsigned PortList_Impl::port(unsigned portIndex)
+unsigned PortList_Impl::port(unsigned portIndex) const
 {
   unsigned result;
   result = numNonextensibleFields();
@@ -136,7 +144,7 @@ unsigned PortList_Impl::port(unsigned portIndex)
   return result;
 }
 
-unsigned PortList_Impl::portIndex(unsigned port)
+unsigned PortList_Impl::portIndex(unsigned port) const
 {
   unsigned result;
   result = numNonextensibleFields();
@@ -144,12 +152,12 @@ unsigned PortList_Impl::portIndex(unsigned port)
   return result;
 }
 
-unsigned PortList_Impl::nextPort()
+unsigned PortList_Impl::nextPort() const
 {
   return port( nextPortIndex() );
 }
 
-boost::optional<ModelObject> PortList_Impl::modelObject(unsigned portIndex)
+boost::optional<ModelObject> PortList_Impl::modelObject(unsigned portIndex) const
 {
   return connectedObject( port( portIndex ) );
 }
@@ -167,7 +175,7 @@ boost::optional<ModelObject> PortList_Impl::lastModelObject()
   }
 }
 
-std::vector<ModelObject> PortList_Impl::modelObjects()
+std::vector<ModelObject> PortList_Impl::modelObjects() const
 {
   std::vector<ModelObject> result;
   for( int i = 0; i <= int(nextPortIndex()) - 1; i++ )
@@ -195,7 +203,7 @@ unsigned PortList_Impl::newPortAfterIndex(unsigned portIndex)
   return this->port(portIndex++);
 }
 
-unsigned PortList_Impl::portIndexForModelObject( ModelObject & modelObject, bool * ok )
+unsigned PortList_Impl::portIndexForModelObject( ModelObject & modelObject, bool * ok ) const
 {
   for(unsigned i = 0; i < nextPortIndex(); i++)
   {
@@ -209,7 +217,7 @@ unsigned PortList_Impl::portIndexForModelObject( ModelObject & modelObject, bool
   return 0;
 }
 
-unsigned PortList_Impl::nextPortIndex()
+unsigned PortList_Impl::nextPortIndex() const
 {
   unsigned i = 0;
   OptionalModelObject modelObject;
@@ -251,38 +259,82 @@ void PortList_Impl::removePort(unsigned port)
   eraseExtensibleGroup(port - numNonextensibleFields());
 }
 
-unsigned PortList_Impl::airLoopHVACPort()
+std::vector<unsigned> PortList_Impl::airLoopHVACPortIndexes() const
+{
+  std::vector<unsigned> result;
+
+  std::vector<ModelObject> objects = modelObjects();
+  for( const auto & elem : objects ) {
+    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() ) {
+      if( hvacComponent->airLoopHVAC() ) {
+        result.push_back(portIndexForModelObject(hvacComponent.get()));
+      }
+    }
+  }
+
+  return result;
+}
+
+unsigned PortList_Impl::airLoopHVACPortIndex() const
 {
   std::vector<ModelObject> objects = modelObjects();
 
-  for( const auto & elem : objects )
-  {
-    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() )
-    {
-      if( hvacComponent->airLoopHVAC() )
-      {
+  for( const auto & elem : objects ) {
+    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() ) {
+      if( hvacComponent->airLoopHVAC() ) {
         return portIndexForModelObject(hvacComponent.get());
-      } 
+      }
     }
   }
 
   return nextPortIndex();
 }
 
-boost::optional<ModelObject> PortList_Impl::airLoopHVACModelObject()
+unsigned PortList_Impl::airLoopHVACPort() const
+{
+  unsigned portIndex = airLoopHVACPortIndex();
+
+  return port(portIndex);
+}
+
+std::vector<unsigned> PortList_Impl::airLoopHVACPorts() const
+{
+  std::vector<unsigned> result;
+
+  auto indexes = airLoopHVACPortIndexes();
+  for ( auto index : indexes ) {
+    result.push_back(port(index));
+  }
+
+  return result;
+}
+
+boost::optional<ModelObject> PortList_Impl::airLoopHVACModelObject() const
 {
   boost::optional<ModelObject> result;
 
   std::vector<ModelObject> objects = modelObjects();
-
-  for( const auto & elem : objects )
-  {
-    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() )
-    {
-      if( hvacComponent->airLoopHVAC() )
-      {
+  for( const auto & elem : objects ) {
+    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() ) {
+      if( hvacComponent->airLoopHVAC() ) {
         result = hvacComponent;
-      } 
+      }
+    }
+  }
+
+  return result;
+}
+
+std::vector<ModelObject> PortList_Impl::airLoopHVACModelObjects() const
+{
+  std::vector<ModelObject> result;
+
+  std::vector<ModelObject> objects = modelObjects();
+  for( const auto & elem : objects ) {
+    if( boost::optional<HVACComponent> hvacComponent = elem.optionalCast<HVACComponent>() ) {
+      if( hvacComponent->airLoopHVAC() ) {
+        result.push_back(hvacComponent.get());
+      }
     }
   }
 
@@ -308,7 +360,7 @@ bool PortList_Impl::setHVACComponent(const HVACComponent & hvacComponent)
 } // detail
 
 PortList::PortList(const HVACComponent& comp)
-  : ModelObject(PortList::iddObjectType(),comp.model())
+  : ModelObject(PortList::iddObjectType(),comp.model(),true)
 {
   OS_ASSERT(getImpl<detail::PortList_Impl>());
 
@@ -319,22 +371,22 @@ IddObjectType PortList::iddObjectType() {
   return IddObjectType(IddObjectType::OS_PortList);
 }
 
-unsigned PortList::port(unsigned portIndex)
+unsigned PortList::port(unsigned portIndex) const
 {
   return getImpl<detail::PortList_Impl>()->port(portIndex);
 }
 
-unsigned PortList::portIndex(unsigned port)
+unsigned PortList::portIndex(unsigned port) const
 {
   return getImpl<detail::PortList_Impl>()->portIndex(port);
 }
 
-unsigned PortList::nextPort()
+unsigned PortList::nextPort() const
 {
   return getImpl<detail::PortList_Impl>()->nextPort();
 }
 
-boost::optional<ModelObject> PortList::modelObject(unsigned portIndex)
+boost::optional<ModelObject> PortList::modelObject(unsigned portIndex) const
 {
   return getImpl<detail::PortList_Impl>()->modelObject(portIndex);
 }
@@ -344,17 +396,17 @@ boost::optional<ModelObject> PortList::lastModelObject()
   return getImpl<detail::PortList_Impl>()->lastModelObject();
 }
 
-std::vector<ModelObject> PortList::modelObjects()
+std::vector<ModelObject> PortList::modelObjects() const
 {
   return getImpl<detail::PortList_Impl>()->modelObjects();
 }
 
-unsigned PortList::portIndexForModelObject( ModelObject & modelObject )
+unsigned PortList::portIndexForModelObject( ModelObject & modelObject ) const
 {
   return getImpl<detail::PortList_Impl>()->portIndexForModelObject(modelObject);
 }
 
-unsigned PortList::nextPortIndex()
+unsigned PortList::nextPortIndex() const
 {
   return getImpl<detail::PortList_Impl>()->nextPortIndex();
 }
@@ -364,19 +416,39 @@ ThermalZone PortList::thermalZone() const
   return getImpl<detail::PortList_Impl>()->thermalZone();
 }
 
-unsigned PortList::airLoopHVACPort()
+unsigned PortList::airLoopHVACPort() const
 {
   return getImpl<detail::PortList_Impl>()->airLoopHVACPort();
 }
 
-boost::optional<ModelObject> PortList::airLoopHVACModelObject()
+std::vector<unsigned> PortList::airLoopHVACPorts() const
+{
+  return getImpl<detail::PortList_Impl>()->airLoopHVACPorts();
+}
+
+unsigned PortList::airLoopHVACPortIndex() const
+{
+  return getImpl<detail::PortList_Impl>()->airLoopHVACPortIndex();
+}
+
+std::vector<unsigned> PortList::airLoopHVACPortIndexes() const
+{
+  return getImpl<detail::PortList_Impl>()->airLoopHVACPortIndexes();
+}
+
+boost::optional<ModelObject> PortList::airLoopHVACModelObject() const
 {
   return getImpl<detail::PortList_Impl>()->airLoopHVACModelObject();
 }
 
+std::vector<ModelObject> PortList::airLoopHVACModelObjects() const
+{
+  return getImpl<detail::PortList_Impl>()->airLoopHVACModelObjects();
+}
+
 /// @cond
 PortList::PortList(std::shared_ptr<detail::PortList_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 

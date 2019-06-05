@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
@@ -57,7 +67,7 @@
 #include "../DefaultSurfaceConstructions_Impl.hpp"
 #include "../SpaceType.hpp"
 #include "../SpaceType_Impl.hpp"
-#include "../Relationship.hpp"
+// #include "../Relationship.hpp"
 #include "../DaylightingDeviceShelf.hpp"
 #include "../InteriorPartitionSurface.hpp"
 #include "../InteriorPartitionSurfaceGroup.hpp"
@@ -113,7 +123,7 @@ TEST_F(ModelFixture, Surface_SetVertices)
 
   Point3dVector points;
   Point3dVector testPoints;
-  
+
   // triangle with unit area
   points.clear();
   points.push_back(Point3d(0, 2, 0));
@@ -188,7 +198,7 @@ TEST_F(ModelFixture, Surface_Initialization)
 
   Point3dVector points;
   Point3dVector testPoints;
-  
+
   points.clear();
   points.push_back(Point3d(0, 2, 0));
   points.push_back(Point3d(0, 0, 0));
@@ -254,7 +264,7 @@ TEST_F(ModelFixture, Surface_Area)
   EXPECT_EQ(1.0, surface.grossArea());
   EXPECT_EQ(1.0, surface.netArea());
   EXPECT_EQ(1.0, triangulatedArea(surface.triangulation()));
-  
+
   // square with unit area
   points.clear();
   points.push_back(Point3d(0, 1, 0));
@@ -423,7 +433,7 @@ TEST_F(ModelFixture, Surface_BuildingComponentLibraryRoofConstruction)
 TEST_F(ModelFixture, AirWall)
 {
   Model model;
-    
+
   // triangle with unit area
   Point3dVector points;
   points.push_back(Point3d(0, 2, 0));
@@ -593,49 +603,51 @@ TEST_F(ModelFixture, Surface_Construction_Relationship)
   vertices.push_back(Point3d(1,0,1));
   Surface surface(vertices, model);
 
+  // Removed due to removal of attributes
   // can't get relationship as attribute
-  boost::optional<Attribute> attribute = surface.getAttribute("construction");
-  EXPECT_FALSE(attribute);
+  // boost::optional<Attribute> attribute = surface.getAttribute("construction");
+  // EXPECT_FALSE(attribute);
 
   // can't get attributes as relationship
-  EXPECT_TRUE(surface.getAttribute("name"));
-  EXPECT_FALSE(surface.getRelationship("name"));
-  EXPECT_TRUE(surface.getAttribute("grossArea"));
-  EXPECT_FALSE(surface.getRelationship("grossArea"));
+  // EXPECT_TRUE(surface.getAttribute("name"));
+  // EXPECT_FALSE(surface.getRelationship("name"));
+  // EXPECT_TRUE(surface.getAttribute("grossArea"));
+  // EXPECT_FALSE(surface.getRelationship("grossArea"));
 
+  // Removed due to phasing out Relationships
   // no construction yet
-  StringVector relationshipNames = surface.relationshipNames();
-  EXPECT_FALSE(std::find(relationshipNames.begin(),
-                         relationshipNames.end(),
-                         "construction") == relationshipNames.end());
-  RelationshipVector relationships = surface.relationships();
-  NameFinder<Relationship> finder("construction");
-  EXPECT_FALSE(std::find_if(relationships.begin(),
-                            relationships.end(),
-                            finder) == relationships.end());
-  boost::optional<Relationship> relationship = surface.getRelationship("construction");
-  ASSERT_TRUE(relationship);
-  EXPECT_EQ(surface.handle(), relationship->modelObject().handle());
-  ASSERT_TRUE(relationship->isSingular());
-  ASSERT_TRUE(relationship->isSettable());
-  EXPECT_FALSE(relationship->relatedModelObject());
-  EXPECT_TRUE(relationship->resetRelatedModelObject());
-  EXPECT_FALSE(relationship->relatedModelObject());
+  // StringVector relationshipNames = surface.relationshipNames();
+  // EXPECT_FALSE(std::find(relationshipNames.begin(),
+  //                        relationshipNames.end(),
+  //                        "construction") == relationshipNames.end());
+  // RelationshipVector relationships = surface.relationships();
+  // NameFinder<Relationship> finder("construction");
+  // EXPECT_FALSE(std::find_if(relationships.begin(),
+  //                           relationships.end(),
+  //                           finder) == relationships.end());
+  // boost::optional<Relationship> relationship = surface.getRelationship("construction");
+  // ASSERT_TRUE(relationship);
+  // EXPECT_EQ(surface.handle(), relationship->modelObject().handle());
+  // ASSERT_TRUE(relationship->isSingular());
+  // ASSERT_TRUE(relationship->isSettable());
+  // EXPECT_FALSE(relationship->relatedModelObject());
+  // EXPECT_TRUE(relationship->resetRelatedModelObject());
+  // EXPECT_FALSE(relationship->relatedModelObject());
 
-  // make material
-  StandardOpaqueMaterial material(model);
+  // // make material
+  // StandardOpaqueMaterial material(model);
 
-  EXPECT_FALSE(relationship->setRelatedModelObject(material));
-  EXPECT_FALSE(relationship->relatedModelObject());
+  // EXPECT_FALSE(relationship->setRelatedModelObject(material));
+  // EXPECT_FALSE(relationship->relatedModelObject());
 
-  // make construction
-  Construction construction(model);
+  // // make construction
+  // Construction construction(model);
 
-  EXPECT_TRUE(relationship->setRelatedModelObject(construction));
-  ASSERT_TRUE(relationship->relatedModelObject());
-  EXPECT_EQ(construction.handle(), relationship->relatedModelObject()->handle());
-  ASSERT_TRUE(surface.construction());
-  EXPECT_EQ(construction.handle(), surface.construction()->handle());
+  // EXPECT_TRUE(relationship->setRelatedModelObject(construction));
+  // ASSERT_TRUE(relationship->relatedModelObject());
+  // EXPECT_EQ(construction.handle(), relationship->relatedModelObject()->handle());
+  // ASSERT_TRUE(surface.construction());
+  // EXPECT_EQ(construction.handle(), surface.construction()->handle());
 
   // not yet implemented
   //EXPECT_TRUE(relationship->resetRelatedModelObject());
@@ -995,10 +1007,12 @@ TEST_F(ModelFixture,Surface_IddAssumptions) {
   // outside boundary condition is hand-mapped to similar enums in standardsinterface.
   // if this test starts failing, please re-map the standardsinterface
   StringVector keys = Surface::validOutsideBoundaryConditionValues();
-  EXPECT_EQ(14u, keys.size());
+
+  EXPECT_EQ(15u, keys.size());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"Adiabatic",std::placeholders::_1)) == keys.end());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"Surface",std::placeholders::_1)) == keys.end());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"Outdoors",std::placeholders::_1)) == keys.end());
+  EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"Foundation",std::placeholders::_1)) == keys.end());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"Ground",std::placeholders::_1)) == keys.end());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"GroundFCfactorMethod",std::placeholders::_1)) == keys.end());
   EXPECT_FALSE(std::find_if(keys.begin(),keys.end(),std::bind(istringEqual,"OtherSideCoefficients",std::placeholders::_1)) == keys.end());
@@ -1380,14 +1394,14 @@ TEST_F(ModelFixture, Surface_Initializer2)
   Model model;
   SurfaceWorkspaceWatcher watcher(model);
   EXPECT_FALSE(watcher.objectAdded());
-  
+
   IdfObject idfObject(IddObjectType::OS_Surface);
   model.addObject(idfObject);
   EXPECT_TRUE(watcher.objectAdded());
-  
+
   std::vector<Surface> surfaces = model.getModelObjects<Surface>();
   ASSERT_EQ(1u, surfaces.size());
-  
+
   Surface surface = surfaces[0];
   EXPECT_EQ(0u, surface.vertices().size());
 
@@ -1768,7 +1782,7 @@ TEST_F(ModelFixture, Surface_ChangeAdjacentSurface_SameSpace){
   EXPECT_EQ("Outdoors", surface2.outsideBoundaryCondition());
   EXPECT_FALSE(surface2.adjacentSurface());
   EXPECT_FALSE(subSurface2.adjacentSubSurface());
-  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());  
+  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());
   ASSERT_TRUE(surface3.adjacentSurface());
   EXPECT_EQ(surface1.handle(), surface3.adjacentSurface()->handle());
   EXPECT_FALSE(subSurface3.adjacentSubSurface());
@@ -1780,7 +1794,7 @@ TEST_F(ModelFixture, Surface_ChangeAdjacentSurface_SameSpace){
   EXPECT_EQ("Surface", surface2.outsideBoundaryCondition());
   ASSERT_TRUE(surface2.adjacentSurface());
   EXPECT_EQ(surface3.handle(), surface2.adjacentSurface()->handle());
-  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());  
+  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());
   ASSERT_TRUE(surface3.adjacentSurface());
   EXPECT_EQ(surface2.handle(), surface3.adjacentSurface()->handle());
 }
@@ -1880,7 +1894,7 @@ TEST_F(ModelFixture, Surface_ChangeAdjacentSurface_DiffSpaces){
   EXPECT_EQ("Outdoors", surface2.outsideBoundaryCondition());
   EXPECT_FALSE(surface2.adjacentSurface());
   EXPECT_FALSE(subSurface2.adjacentSubSurface());
-  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());  
+  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());
   ASSERT_TRUE(surface3.adjacentSurface());
   EXPECT_EQ(surface1.handle(), surface3.adjacentSurface()->handle());
   EXPECT_FALSE(subSurface3.adjacentSubSurface());
@@ -1892,7 +1906,7 @@ TEST_F(ModelFixture, Surface_ChangeAdjacentSurface_DiffSpaces){
   EXPECT_EQ("Surface", surface2.outsideBoundaryCondition());
   ASSERT_TRUE(surface2.adjacentSurface());
   EXPECT_EQ(surface3.handle(), surface2.adjacentSurface()->handle());
-  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());  
+  EXPECT_EQ("Surface", surface3.outsideBoundaryCondition());
   ASSERT_TRUE(surface3.adjacentSurface());
   EXPECT_EQ(surface2.handle(), surface3.adjacentSurface()->handle());
 }
@@ -1944,7 +1958,7 @@ TEST_F(ModelFixture, Surface_Intersect_CompletelyContained){
   points.push_back(Point3d(4, 6, 0));
   EXPECT_TRUE(circularEqual(surface1.vertices(), points));
   EXPECT_DOUBLE_EQ(surface2Area, surface1.grossArea());
-  
+
   for (const Surface& surface : space1.surfaces()){
     if (surface.handle() != surface1.handle()){
       bool test = false;
@@ -2038,7 +2052,7 @@ TEST_F(ModelFixture, Surface_Intersect_SameHeight_PartialOverlap){
   points.push_back(Point3d(10, 10, 0));
   points.push_back(Point3d(7,  10, 0));
   EXPECT_TRUE(circularEqual(surface1.vertices(), points));
-  
+
   for (const Surface& surface : space1.surfaces()){
     if (surface.handle() != surface1.handle()){
       points.clear();
@@ -2120,7 +2134,7 @@ TEST_F(ModelFixture, Surface_Intersect_DifferentHeight_PartialOverlap){
   points.push_back(Point3d(10, 10, 0));
   points.push_back(Point3d(7,  10, 0));
   EXPECT_TRUE(circularEqual(surface1.vertices(), points));
-  
+
   for (const Surface& surface : space1.surfaces()){
     if (surface.handle() != surface1.handle()){
       points.clear();
@@ -2206,7 +2220,7 @@ TEST_F(ModelFixture, Surface_Intersect_DifferentHeight_ShareOneEdge_PartialOverl
   points.push_back(Point3d(10, 10, 0));
   points.push_back(Point3d(7,  10, 0));
   EXPECT_TRUE(circularEqual(surface1.vertices(), points));
-  
+
   for (const Surface& surface : space1.surfaces()){
     if (surface.handle() != surface1.handle()){
       points.clear();
@@ -2845,7 +2859,7 @@ TEST_F(ModelFixture, Surface_Intersect_UShape){
     EXPECT_TRUE(test);
   }
 
-  
+
   for (const Surface& surface : space2.surfaces()){
     bool test = false;
 
@@ -3423,7 +3437,7 @@ TEST_F(ModelFixture, Surface_Figure8_OppositeSense){
   points.push_back(Point3d(10, 20, 0));
   points.push_back(Point3d(10, 10, 0));
   points.push_back(Point3d(10,  5, 0));
-  
+
   EXPECT_THROW(Surface(points, model), openstudio::Exception);
 }
 
@@ -3465,10 +3479,10 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     // call with all zeros
     double viewGlassToWallRatio = 0.0;
     double daylightingGlassToWallRatio = 0.0;
-    double desiredViewGlassSillHeight = 0.0; 
+    double desiredViewGlassSillHeight = 0.0;
     double desiredDaylightingGlassHeaderHeight = 0.0;
     double exteriorShadingProjectionFactor = 0.0;
-    double interiorShelfProjectionFactor = 0.0; 
+    double interiorShelfProjectionFactor = 0.0;
     boost::optional<ConstructionBase> viewGlassConstruction;
     boost::optional<ConstructionBase> daylightingGlassConstruction;
 
@@ -3476,9 +3490,9 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     Space space(model);
     Surface surface(vertices, model);
     surface.setSpace(space);
-    std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio, 
+    std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio,
                                                                                 desiredViewGlassSillHeight, desiredDaylightingGlassHeaderHeight,
-                                                                                exteriorShadingProjectionFactor, interiorShelfProjectionFactor, 
+                                                                                exteriorShadingProjectionFactor, interiorShelfProjectionFactor,
                                                                                 viewGlassConstruction, daylightingGlassConstruction);
     EXPECT_EQ(0, result.size());
     EXPECT_DOUBLE_EQ(area, surface.grossArea());
@@ -3489,10 +3503,10 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     // just view glass, different sill heights
     double viewGlassToWallRatio = 0.2;
     double daylightingGlassToWallRatio = 0.0;
-    double desiredViewGlassSillHeight = 0.0; 
+    double desiredViewGlassSillHeight = 0.0;
     double desiredDaylightingGlassHeaderHeight = 0.0;
     double exteriorShadingProjectionFactor = 0.0;
-    double interiorShelfProjectionFactor = 0.0; 
+    double interiorShelfProjectionFactor = 0.0;
 
     for (desiredViewGlassSillHeight = 0.0; desiredViewGlassSillHeight < height; desiredViewGlassSillHeight += height/10.0){
 
@@ -3502,9 +3516,9 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
       Space space(model);
       Surface surface(vertices, model);
       surface.setSpace(space);
-      std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio, 
+      std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio,
                                                                                   desiredViewGlassSillHeight, desiredDaylightingGlassHeaderHeight,
-                                                                                  exteriorShadingProjectionFactor, interiorShelfProjectionFactor, 
+                                                                                  exteriorShadingProjectionFactor, interiorShelfProjectionFactor,
                                                                                   viewGlassConstruction, daylightingGlassConstruction);
       ASSERT_EQ(1, result.size());
       EXPECT_DOUBLE_EQ(area, surface.grossArea());
@@ -3521,10 +3535,10 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     // just daylighting glass, different header heights
     double viewGlassToWallRatio = 0.0;
     double daylightingGlassToWallRatio = 0.2;
-    double desiredViewGlassSillHeight = 0.0; 
+    double desiredViewGlassSillHeight = 0.0;
     double desiredDaylightingGlassHeaderHeight = 0.0;
     double exteriorShadingProjectionFactor = 0.0;
-    double interiorShelfProjectionFactor = 0.0; 
+    double interiorShelfProjectionFactor = 0.0;
 
     for (desiredDaylightingGlassHeaderHeight = 0.0; desiredDaylightingGlassHeaderHeight < height; desiredDaylightingGlassHeaderHeight += height/10.0){
 
@@ -3534,9 +3548,9 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
       Space space(model);
       Surface surface(vertices, model);
       surface.setSpace(space);
-      std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio, 
+      std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio,
                                                                                   desiredViewGlassSillHeight, desiredDaylightingGlassHeaderHeight,
-                                                                                  exteriorShadingProjectionFactor, interiorShelfProjectionFactor, 
+                                                                                  exteriorShadingProjectionFactor, interiorShelfProjectionFactor,
                                                                                   viewGlassConstruction, daylightingGlassConstruction);
       ASSERT_EQ(1, result.size());
       EXPECT_DOUBLE_EQ(area, surface.grossArea());
@@ -3553,10 +3567,10 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     // just daylighting glass with inside shelf
     double viewGlassToWallRatio = 0.0;
     double daylightingGlassToWallRatio = 0.2;
-    double desiredViewGlassSillHeight = 0.0; 
+    double desiredViewGlassSillHeight = 0.0;
     double desiredDaylightingGlassHeaderHeight = 0.2;
     double exteriorShadingProjectionFactor = 0.5;
-    double interiorShelfProjectionFactor = 0.5; 
+    double interiorShelfProjectionFactor = 0.5;
 
     Model model;
     Construction viewGlassConstruction(model);
@@ -3564,9 +3578,9 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     Space space(model);
     Surface surface(vertices, model);
     surface.setSpace(space);
-    std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio, 
+    std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio,
                                                                                 desiredViewGlassSillHeight, desiredDaylightingGlassHeaderHeight,
-                                                                                exteriorShadingProjectionFactor, interiorShelfProjectionFactor, 
+                                                                                exteriorShadingProjectionFactor, interiorShelfProjectionFactor,
                                                                                 viewGlassConstruction, daylightingGlassConstruction);
     ASSERT_EQ(1, result.size());
     EXPECT_DOUBLE_EQ(area, surface.grossArea());
@@ -3585,10 +3599,10 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
     // both glass, different header heights
     double viewGlassToWallRatio = 0.2;
     double daylightingGlassToWallRatio = 0.2;
-    double desiredViewGlassSillHeight = 0.0; 
+    double desiredViewGlassSillHeight = 0.0;
     double desiredDaylightingGlassHeaderHeight = 0.0;
     double exteriorShadingProjectionFactor = 0.0;
-    double interiorShelfProjectionFactor = 0.0; 
+    double interiorShelfProjectionFactor = 0.0;
 
     for (desiredViewGlassSillHeight = 0.0; desiredViewGlassSillHeight < height; desiredViewGlassSillHeight += height/10.0){
       for (desiredDaylightingGlassHeaderHeight = 0.0; desiredDaylightingGlassHeaderHeight < height; desiredDaylightingGlassHeaderHeight += height/10.0){
@@ -3599,9 +3613,9 @@ TEST_F(ModelFixture, ApplyViewAndDaylightingGlassRatios)
         Space space(model);
         Surface surface(vertices, model);
         surface.setSpace(space);
-        std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio, 
+        std::vector<SubSurface> result = surface.applyViewAndDaylightingGlassRatios(viewGlassToWallRatio, daylightingGlassToWallRatio,
                                                                                     desiredViewGlassSillHeight, desiredDaylightingGlassHeaderHeight,
-                                                                                    exteriorShadingProjectionFactor, interiorShelfProjectionFactor, 
+                                                                                    exteriorShadingProjectionFactor, interiorShelfProjectionFactor,
                                                                                     viewGlassConstruction, daylightingGlassConstruction);
         ASSERT_EQ(2, result.size());
         EXPECT_DOUBLE_EQ(area, surface.grossArea());

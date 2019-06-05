@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "AirTerminalSingleDuctSeriesPIUReheat.hpp"
 #include "AirTerminalSingleDuctSeriesPIUReheat_Impl.hpp"
@@ -80,9 +90,15 @@ namespace detail {
 
   const std::vector<std::string>& AirTerminalSingleDuctSeriesPIUReheat_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // These apply to all AirTerminals
+      "Zone Air Terminal Sensible Heating Energy",
+      "Zone Air Terminal Sensible Heating Rate",
+      "Zone Air Terminal Sensible Cooling Energy",
+      "Zone Air Terminal Sensible Cooling Rate"
+
+      // No specific output for this one
+    };
     return result;
   }
 
@@ -92,7 +108,6 @@ namespace detail {
 
   std::vector<ScheduleTypeKey> AirTerminalSingleDuctSeriesPIUReheat_Impl::getScheduleTypeKeys(const Schedule& schedule) const
   {
-    // TODO: Check schedule display names.
     std::vector<ScheduleTypeKey> result;
     UnsignedVector fieldIndices = getSourceIndices(schedule.handle());
     UnsignedVector::const_iterator b(fieldIndices.begin()), e(fieldIndices.end());
@@ -249,7 +264,7 @@ namespace detail {
     return result;
   }
 
-  void AirTerminalSingleDuctSeriesPIUReheat_Impl::setMaximumHotWaterorSteamFlowRate(boost::optional<double> maximumHotWaterorSteamFlowRate) {
+  bool AirTerminalSingleDuctSeriesPIUReheat_Impl::setMaximumHotWaterorSteamFlowRate(boost::optional<double> maximumHotWaterorSteamFlowRate) {
     bool result(false);
     if (maximumHotWaterorSteamFlowRate) {
       result = setDouble(OS_AirTerminal_SingleDuct_SeriesPIU_ReheatFields::MaximumHotWaterorSteamFlowRate, maximumHotWaterorSteamFlowRate.get());
@@ -259,6 +274,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void AirTerminalSingleDuctSeriesPIUReheat_Impl::resetMaximumHotWaterorSteamFlowRate() {
@@ -289,12 +305,12 @@ namespace detail {
     return getObject<ModelObject>().getModelObjectTarget<HVACComponent>(OS_AirTerminal_SingleDuct_SeriesPIU_ReheatFields::ReheatCoilName);
   }
 
-  unsigned AirTerminalSingleDuctSeriesPIUReheat_Impl::inletPort() 
+  unsigned AirTerminalSingleDuctSeriesPIUReheat_Impl::inletPort() const
   {
     return OS_AirTerminal_SingleDuct_SeriesPIU_ReheatFields::SupplyAirInletNode;
   }
 
-  unsigned AirTerminalSingleDuctSeriesPIUReheat_Impl::outletPort() 
+  unsigned AirTerminalSingleDuctSeriesPIUReheat_Impl::outletPort() const
   {
     return OS_AirTerminal_SingleDuct_SeriesPIU_ReheatFields::OutletNode;
   }
@@ -351,7 +367,7 @@ namespace detail {
                               sourcePort.get(),
                               inletNode,
                               inletNode.inletPort() );
-              
+
               _model.connect( inletNode,
                               inletNode.outletPort(),
                               thisObject,
@@ -388,7 +404,7 @@ namespace detail {
                 setFanAvailabilitySchedule(schedule);
               }
 
-              return true; 
+              return true;
             }
           }
         }
@@ -413,14 +429,14 @@ namespace detail {
   {
     AirTerminalSingleDuctSeriesPIUReheat modelObjectClone = StraightComponent_Impl::clone(model).cast<AirTerminalSingleDuctSeriesPIUReheat>();
 
-    modelObjectClone.setString(modelObjectClone.secondaryAirInletPort(),""); 
+    modelObjectClone.setString(modelObjectClone.secondaryAirInletPort(),"");
 
     // clone coil
 
     HVACComponent coil = this->reheatCoil();
 
     HVACComponent coilClone = coil.clone(model).cast<HVACComponent>();
-    
+
     modelObjectClone.setReheatCoil(coilClone);
 
     // clone fan
@@ -474,14 +490,18 @@ namespace detail {
     return result;
   }
 
-  void AirTerminalSingleDuctSeriesPIUReheat_Impl::setFanAvailabilitySchedule(Schedule & schedule) {
+  bool AirTerminalSingleDuctSeriesPIUReheat_Impl::setFanAvailabilitySchedule(Schedule & schedule) {
     auto component = fan();
     if( auto constantFan = component.optionalCast<FanConstantVolume>() ) {
-      constantFan->setAvailabilitySchedule(schedule);
+      return constantFan->setAvailabilitySchedule(schedule);
     } else if(  auto onOffFan = component.optionalCast<FanOnOff>() ) {
-      onOffFan->setAvailabilitySchedule(schedule);
+      return onOffFan->setAvailabilitySchedule(schedule);
     } else if( auto variableFan = component.optionalCast<FanVariableVolume>() ) {
-      variableFan->setAvailabilitySchedule(schedule);
+      return variableFan->setAvailabilitySchedule(schedule);
+    } else {
+      // Should never get here!
+      LOG(Error, "Unknown assigned Fan Type ('" << component.iddObjectType().valueName() << "') for " << briefDescription());
+      return false;
     }
   }
 
@@ -494,7 +514,7 @@ namespace detail {
 
     boost::optional<ModelObject> sourceModelObject = this->inletModelObject();
     boost::optional<unsigned> sourcePort = this->connectedObjectPort(this->inletPort());
-    
+
     boost::optional<ModelObject> targetModelObject = this->outletModelObject();
     boost::optional<unsigned> targetPort = this->connectedObjectPort(this->outletPort());
 
@@ -556,10 +576,57 @@ namespace detail {
     return StraightComponent_Impl::remove();
   }
 
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat_Impl::autosizedMaximumAirFlowRate() const {
+    return getAutosizedValue("Design Size Maximum Air Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat_Impl::autosizedMaximumPrimaryAirFlowRate() const {
+    return getAutosizedValue("Design Size Maximum Primary Air Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat_Impl::autosizedMinimumPrimaryAirFlowFraction() const {
+    return getAutosizedValue("Design Size Minimum Primary Air Flow Fraction", "");
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat_Impl::autosizedMaximumHotWaterorSteamFlowRate() const {
+    return getAutosizedValue("Design Size Maximum Reheat Water Flow Rate", "m3/s");
+  }
+
+  void AirTerminalSingleDuctSeriesPIUReheat_Impl::autosize() {
+    autosizeMaximumAirFlowRate();
+    autosizeMaximumPrimaryAirFlowRate();
+    autosizeMinimumPrimaryAirFlowFraction();
+    autosizeMaximumHotWaterorSteamFlowRate();
+  }
+
+  void AirTerminalSingleDuctSeriesPIUReheat_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedMaximumAirFlowRate();
+    if (val) {
+      setMaximumAirFlowRate(val.get());
+    }
+
+    val = autosizedMaximumPrimaryAirFlowRate();
+    if (val) {
+      setMaximumPrimaryAirFlowRate(val.get());
+    }
+
+    val = autosizedMinimumPrimaryAirFlowFraction();
+    if (val) {
+      setMinimumPrimaryAirFlowFraction(val.get());
+    }
+
+    val = autosizedMaximumHotWaterorSteamFlowRate();
+    if (val) {
+      setMaximumHotWaterorSteamFlowRate(val.get());
+    }
+
+  }
+
 } // detail
 
 AirTerminalSingleDuctSeriesPIUReheat::AirTerminalSingleDuctSeriesPIUReheat(const Model& model,
-                                                                           HVACComponent & fan, 
+                                                                           HVACComponent & fan,
                                                                            HVACComponent & reheatCoil)
   : StraightComponent(AirTerminalSingleDuctSeriesPIUReheat::iddObjectType(),model)
 {
@@ -672,8 +739,8 @@ bool AirTerminalSingleDuctSeriesPIUReheat::setReheatCoil(const HVACComponent& co
   return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->setReheatCoil(coil);
 }
 
-void AirTerminalSingleDuctSeriesPIUReheat::setMaximumHotWaterorSteamFlowRate(double maximumHotWaterorSteamFlowRate) {
-  getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->setMaximumHotWaterorSteamFlowRate(maximumHotWaterorSteamFlowRate);
+bool AirTerminalSingleDuctSeriesPIUReheat::setMaximumHotWaterorSteamFlowRate(double maximumHotWaterorSteamFlowRate) {
+  return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->setMaximumHotWaterorSteamFlowRate(maximumHotWaterorSteamFlowRate);
 }
 
 void AirTerminalSingleDuctSeriesPIUReheat::resetMaximumHotWaterorSteamFlowRate() {
@@ -704,10 +771,25 @@ boost::optional<Node> AirTerminalSingleDuctSeriesPIUReheat::secondaryAirInletNod
 
 /// @cond
 AirTerminalSingleDuctSeriesPIUReheat::AirTerminalSingleDuctSeriesPIUReheat(std::shared_ptr<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat::autosizedMaximumAirFlowRate() const {
+    return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->autosizedMaximumAirFlowRate();
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat::autosizedMaximumPrimaryAirFlowRate() const {
+    return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->autosizedMaximumPrimaryAirFlowRate();
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat::autosizedMinimumPrimaryAirFlowFraction() const {
+    return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->autosizedMinimumPrimaryAirFlowFraction();
+  }
+
+  boost::optional<double> AirTerminalSingleDuctSeriesPIUReheat::autosizedMaximumHotWaterorSteamFlowRate() const {
+    return getImpl<detail::AirTerminalSingleDuctSeriesPIUReheat_Impl>()->autosizedMaximumHotWaterorSteamFlowRate();
+  }
+
 } // model
 } // openstudio
-

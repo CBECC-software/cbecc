@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <utilities/idd/IddFactory.hxx>
 #include <utilities/idd/IddEnums.hxx>
@@ -24,7 +34,7 @@
 #include <utilities/core/Assert.hpp>
 #include <utilities/core/Compare.hpp>
 #include <utilities/core/Containers.hpp>
-#include <utilities/core/ApplicationPathHelpers.hpp>
+#include <utilities/embedded_files.hxx>
 
 #include <OpenStudio.hxx>
 
@@ -94,14 +104,14 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneCapacitanceMultiplier_ResearchSpecial,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Timestep,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ConvergenceLimits,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ProgramControl,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::HVACSystemRootFindingAlgorithm,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Compliance_Building,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Site_Location,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Site_VariableLocation,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SizingPeriod_DesignDay,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SizingPeriod_WeatherFileDays,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SizingPeriod_WeatherFileConditionType,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::RunPeriod,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::RunPeriod_CustomRange,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::RunPeriodControl_SpecialDays,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::RunPeriodControl_DaylightSavingTime,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WeatherProperty_SkyTemperature,IddFileType::EnergyPlus));
@@ -132,6 +142,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Schedule_Year,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Schedule_Compact,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Schedule_Constant,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Schedule_File_Shading,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Schedule_File,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Material,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Material_NoMass,IddFileType::EnergyPlus));
@@ -159,6 +170,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowMaterial_Gap_EquivalentLayer,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_MoisturePenetrationDepth_Settings,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_PhaseChange,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_PhaseChangeHysteresis,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_VariableThermalConductivity,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_HeatAndMoistureTransfer_Settings,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::MaterialProperty_HeatAndMoistureTransfer_SorptionIsotherm,IddFileType::EnergyPlus));
@@ -172,6 +184,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Construction_FfactorGroundFloor,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Construction_InternalSource,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowThermalModel_Params,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowsCalculationEngine,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Construction_ComplexFenestrationState,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Construction_WindowEquivalentLayer,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Construction_WindowDataFile,IddFileType::EnergyPlus));
@@ -201,7 +214,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Window_Interzone,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Door_Interzone,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GlazedDoor_Interzone,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowProperty_ShadingControl,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowShadingControl,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowProperty_FrameAndDivider,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowProperty_AirflowControl,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::WindowProperty_StormWindow,IddFileType::EnergyPlus));
@@ -220,9 +233,14 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_HeatTransferAlgorithm_MultipleSurface,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_HeatTransferAlgorithm_SurfaceList,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_HeatTransferAlgorithm_Construction,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_HeatBalanceSourceTerm,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceControl_MovableInsulation,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_OtherSideCoefficients,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_OtherSideConditionsModel,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_Underwater,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Foundation_Kiva,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Foundation_Kiva_Settings,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_ExposedFoundationPerimeter,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceConvectionAlgorithm_Inside_AdaptiveModelSelections,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceConvectionAlgorithm_Outside_AdaptiveModelSelections,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceConvectionAlgorithm_Inside_UserCurve,IddFileType::EnergyPlus));
@@ -232,6 +250,9 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperties_VaporCoefficients,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_ExteriorNaturalVentedCavity,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_SolarIncidentInside,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_LocalEnvironment,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneProperty_LocalEnvironment,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceProperty_SurroundingSurfaces,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ComplexFenestrationProperty_SolarAbsorbedLayers,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneProperty_UserViewFactors_bySurfaceName,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatTransfer_Control,IddFileType::EnergyPlus));
@@ -297,8 +318,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SurfaceContaminantSourceAndSink_Generic_DepositionVelocitySink,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneContaminantSourceAndSink_Generic_DepositionRateSink,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Daylighting_Controls,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Daylighting_DELight_Controls,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Daylighting_DELight_ReferencePoint,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Daylighting_ReferencePoint,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Daylighting_DELight_ComplexFenestration,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::DaylightingDevice_Tubular,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::DaylightingDevice_Shelf,IddFileType::EnergyPlus));
@@ -331,6 +351,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_MultiZone_ExternalNode,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_MultiZone_WindPressureCoefficientArray,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_MultiZone_WindPressureCoefficientValues,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_ZoneControl_PressureController,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Node,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_Leak,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_LeakageRatio,IddFileType::EnergyPlus));
@@ -340,8 +361,12 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_HeatExchanger,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_TerminalUnit,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_ConstantPressureDrop,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_OutdoorAirFlow,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Component_ReliefAirFlow,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_Linkage,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_Distribution_DuctViewFactors,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_OccupantVentilationControl,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_IntraZone_Node,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirflowNetwork_IntraZone_Linkage,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Exterior_Lights,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Exterior_FuelEquipment,IddFileType::EnergyPlus));
@@ -383,6 +408,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Sizing_Parameters,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Sizing_Zone,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::DesignSpecification_ZoneHVAC_Sizing,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::DesignSpecification_AirTerminal_Sizing,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Sizing_System,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Sizing_Plant,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OutputControl_Sizing_Style,IddFileType::EnergyPlus));
@@ -413,12 +439,14 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_UnitVentilator,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_UnitHeater,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_EvaporativeCoolerUnit,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_HybridUnitaryHVAC,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_OutdoorAirUnit,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_OutdoorAirUnit_EquipmentList,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_TerminalUnit_VariableRefrigerantFlow,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Water,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Steam,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Electric,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_CoolingPanel_RadiantConvective_Water,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_Baseboard_Convective_Water,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_Baseboard_Convective_Electric,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_LowTemperatureRadiant_VariableFlow,IddFileType::EnergyPlus));
@@ -430,23 +458,25 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_VentilatedSlab_SlabGroup,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_Uncontrolled,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ConstantVolume_Reheat,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ConstantVolume_NoReheat,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_NoReheat,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_Reheat,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_Reheat_VariableSpeedFan,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_SeriesPIU_Reheat,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ParallelPIU_Reheat,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_ConstantVolume_CooledBeam,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_InletSideMixer,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_SupplySideMixer,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_SingleDuct_Mixer,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_DualDuct_ConstantVolume,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_DualDuct_VAV,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirTerminal_DualDuct_VAV_OutdoorAir,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_AirDistributionUnit,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_EquipmentList,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneHVAC_EquipmentConnections,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Fan_SystemModel,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Fan_ConstantVolume,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Fan_VariableVolume,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Fan_OnOff,IddFileType::EnergyPlus));
@@ -469,7 +499,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Steam,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Electric,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Electric_MultiStage,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Gas,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Fuel,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Gas_MultiStage,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_Desuperheater,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Heating_DX_SingleSpeed,IddFileType::EnergyPlus));
@@ -489,6 +519,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::CoilSystem_Heating_DX,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::CoilSystem_Cooling_Water_HeatExchangerAssisted,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::CoilSystem_Cooling_DX_HeatExchangerAssisted,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::CoilSystem_IntegratedHeatPump_AirSource,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Coil_Cooling_DX_SingleSpeed_ThermalStorage,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::EvaporativeCooler_Direct_CelDekPad,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::EvaporativeCooler_Indirect_CelDekPad,IddFileType::EnergyPlus));
@@ -515,6 +546,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirLoopHVAC_UnitaryHeatPump_AirToAir_MultiSpeed,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirConditioner_VariableRefrigerantFlow,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl_HR,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ZoneTerminalUnitList,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Controller_WaterCoil,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Controller_OutdoorAir,IddFileType::EnergyPlus));
@@ -557,10 +589,10 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollectorPerformance_FlatPlate,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollector_FlatPlate_Water,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollector_FlatPlate_PhotovoltaicThermal,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollectorPerformance_PhotovoltaicThermal_Simple,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollector_IntegralCollectorStorage,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollectorPerformance_IntegralCollectorStorage,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollector_UnglazedTranspired,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollectorPerformance_PhotovoltaicThermal_Simple,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::SolarCollector_UnglazedTranspired_Multisystem,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Boiler_HotWater,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Boiler_Steam,IddFileType::EnergyPlus));
@@ -593,7 +625,11 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::EvaporativeFluidCooler_TwoSpeed,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FluidCooler_SingleSpeed,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FluidCooler_TwoSpeed,IddFileType::EnergyPlus));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Vertical,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_System,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Vertical_Properties,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Vertical_Array,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Vertical_Single,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_ResponseFactors,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Pond,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_Surface,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::GroundHeatExchanger_HorizontalTrench,IddFileType::EnergyPlus));
@@ -729,6 +765,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::PhotovoltaicPerformance_Simple,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::PhotovoltaicPerformance_EquivalentOneDiode,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::PhotovoltaicPerformance_Sandia,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Generator_PVWatts,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::ElectricLoadCenter_Inverter_PVWatts,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Generator_FuelCell,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Generator_FuelCell_PowerModule,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Generator_FuelCell_AirSupply,IddFileType::EnergyPlus));
@@ -762,11 +800,19 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_PressureSensorOffset_OutdoorAir,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_TemperatureSensorOffset_ReturnAir,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_EnthalpySensorOffset_ReturnAir,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_TemperatureSensorOffset_ChillerSupplyWater,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_TemperatureSensorOffset_CoilSupplyAir,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_TemperatureSensorOffset_CondenserSupplyWater,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_ThermostatOffset,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_HumidistatOffset,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_AirFilter,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_Boiler,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_EvaporativeCooler,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_Chiller,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_CoolingTower,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::FaultModel_Fouling_Coil,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Matrix_TwoDimension,IddFileType::EnergyPlus));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::HybridModel_Zone,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Curve_Linear,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Curve_QuadLinear,IddFileType::EnergyPlus));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::Curve_Quadratic,IddFileType::EnergyPlus));
@@ -884,7 +930,9 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_UtilityCost_Variable,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WeatherFile,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WeatherProperty_SkyTemperature,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AdditionalProperties,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_BuildingStory,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_BuildingUnit,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_DefaultConstructionSet,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_DefaultScheduleSet,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_DefaultSubSurfaceConstructions,IddFileType::OpenStudio));
@@ -909,6 +957,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WindowMaterial_Shade,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WindowMaterial_SimpleGlazingSystem,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_StandardsInformation_Material,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_MaterialProperty_GlazingSpectralData,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Construction,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Construction_CfactorUndergroundWall,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Construction_FfactorGroundFloor,IddFileType::OpenStudio));
@@ -920,11 +970,14 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Lights_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Luminaire_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricEquipment_Definition,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_GasEquipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_HotWaterEquipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SteamEquipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_OtherEquipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_Lights_Definition,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_FuelEquipment_Definition,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_WaterEquipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_Compact,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_Day,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_Week,IddFileType::OpenStudio));
@@ -935,6 +988,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_FixedInterval,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_VariableInterval,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ScheduleTypeLimits,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_External_File,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Schedule_File,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Building,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_DaylightingDevice_Shelf,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Facility,IddFileType::OpenStudio));
@@ -949,13 +1004,17 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WindowProperty_FrameAndDivider,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SurfaceProperty_ConvectionCoefficients,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SurfaceProperty_ConvectionCoefficients_MultipleSurface,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SurfaceProperty_OtherSideCoefficients,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SurfaceProperty_OtherSideConditionsModel,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Foundation_Kiva,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Foundation_Kiva_Settings,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_InternalMass,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_People,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Lights,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Luminaire,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricEquipment,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricEquipment_ITE_AirCooled,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_GasEquipment,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_HotWaterEquipment,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SteamEquipment,IddFileType::OpenStudio));
@@ -963,6 +1022,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SpaceInfiltration_DesignFlowRate,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SpaceInfiltration_EffectiveLeakageArea,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_Lights,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_FuelEquipment,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Exterior_WaterEquipment,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Daylighting_Control,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Glare_Sensor,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_IlluminanceMap,IddFileType::OpenStudio));
@@ -996,6 +1057,7 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitaryHeatPump_AirToAir,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirLoopHVAC_UnitarySystem,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_UnitarySystemPerformance_Multispeed,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirLoopHVAC_ZoneMixer,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirLoopHVAC_ZoneSplitter,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat,IddFileType::OpenStudio));
@@ -1005,8 +1067,10 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_SeriesPIU_Reheat,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ParallelPIU_Reheat,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_NoReheat,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_SingleDuct_VAV_Reheat,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_DualDuct_VAV_OutdoorAir,IddFileType::OpenStudio));
@@ -1014,9 +1078,15 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirTerminal_DualDuct_VAV,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManagerAssignmentList,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_Scheduled,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_ScheduledOn,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_ScheduledOff,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_NightCycle,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_OptimumStart,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_DifferentialThermostat,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_NightVentilation,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AvailabilityManager_HybridVentilation,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Boiler_HotWater,IddFileType::OpenStudio));
@@ -1039,6 +1109,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_GroundHeatExchanger_Vertical,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_GroundHeatExchanger_HorizontalTrench,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_Cooling_CooledBeam,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_Cooling_FourPipeBeam,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_Heating_FourPipeBeam,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_Cooling_DX_SingleSpeed,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_CoilPerformance_DX_Cooling,IddFileType::OpenStudio));
@@ -1157,6 +1229,8 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_OneStageCooling,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_OneStageHeating,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Humidity_Maximum,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Cooling,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SetpointManager_SingleZone_Heating,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Sizing_Plant,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Sizing_System,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Sizing_Zone,IddFileType::OpenStudio));
@@ -1190,7 +1264,10 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterHeater_Mixed,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterHeater_HeatPump,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterHeater_Stratified,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterHeater_Sizing,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterUse_Equipment,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterUse_Equipment_Definition,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_WaterUse_Connections,IddFileType::OpenStudio));
@@ -1207,12 +1284,29 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SolarCollector_IntegralCollectorStorage,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SolarCollectorPerformance_PhotovoltaicThermal_Simple,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_SolarCollector_FlatPlate_PhotovoltaicThermal,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_MicroTurbine,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_MicroTurbine_HeatRecovery,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_Photovoltaic,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_PhotovoltaicPerformance_Simple,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_PhotovoltaicPerformance_EquivalentOneDiode,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_PowerModule,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_AirSupply,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_WaterSupply,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_ElectricalStorage,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_Inverter,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelCell_StackCooler,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_FuelSupply,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Generator_PVWatts,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_Simple,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Inverter_LookUpTable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Storage_Simple,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Transformer,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Distribution,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ElectricLoadCenter_Storage_Converter,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ComponentCost_Adjustments,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_LifeCycleCost,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_CurrencyType,IddFileType::OpenStudio));
@@ -1220,8 +1314,61 @@ IddFactorySingleton::IddFactorySingleton() {
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_LifeCycleCost_UsePriceEscalation,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_UtilityBill,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_OutputControl_ReportingTolerances,IddFileType::OpenStudio));
-  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Meter,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Output_Meter,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Output_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Meter_Custom,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Meter_CustomDecrement,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_Output_EnergyManagementSystem,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_Sensor,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_Actuator,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_Program,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_Subroutine,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_GlobalVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_OutputVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_TrendVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_InternalVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkSimulationControl,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkZone,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkSurface,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkReferenceCrackConditions,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkCrack,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkEffectiveLeakageArea,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkDetailedOpening,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkSimpleOpening,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkHorizontalOpening,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkOutdoorAirflow,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkZoneExhaustFan,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkExternalNode,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkPressureController,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkDistributionNode,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkLeak,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkLeakageRatio,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkDuct,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkFan,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkEquivalentDuct,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkConstantPressureDrop,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkReliefAirFlow,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkDistributionLinkage,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkDuctViewFactors,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_AirflowNetworkOccupantVentilationControl,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_Schedule,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_Actuator,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable,IddFileType::OpenStudio));
+  m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::OS_PlantComponent_UserDefined,IddFileType::OpenStudio));
   m_sourceFileMap.insert(IddObjectSourceFileMap::value_type(IddObjectType::CommentOnly,IddFileType::OpenStudio));
 
 }
@@ -1231,10 +1378,10 @@ std::string IddFactorySingleton::getVersion(IddFileType fileType) const {
 
   switch (fileType.value()) {
     case IddFileType::EnergyPlus :
-      result = "8.5.0";
+      result = "9.0.1";
       break;
     case IddFileType::OpenStudio :
-      result = "1.11.3";
+      result = "2.7.2";
       break;
     default :
       LOG_AND_THROW("No version to return for IddFileType " << fileType.valueDescription() << ".");
@@ -1248,8 +1395,8 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
   switch (fileType.value()) {
     case IddFileType::EnergyPlus :
       result
-        << "!IDD_Version 8.5.0" << std::endl
-        << "!IDD_BUILD 85848eef40" << std::endl
+        << "!IDD_Version 9.0.1" << std::endl
+        << "!IDD_BUILD TBD" << std::endl
         << "! **************************************************************************" << std::endl
         << "! This file is the Input Data Dictionary (IDD) for EnergyPlus." << std::endl
         << "! The IDD defines the syntax and data model for each type of input \"Object.\"" << std::endl
@@ -1285,7 +1432,10 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
         << "!  \\note            Note describing the field and its valid values. If multiple lines," << std::endl
         << "!                   start each line with \\note. Limit line length to 100 characters." << std::endl
         << "!" << std::endl
-        << "!  \\required-field  To flag fields which may not be left blank" << std::endl
+        << "!  \\required-field  To flag fields which must have a value. If the idf input is blank and" << std::endl
+        << "!                   there is a \\default, then the default will be used. However, as of v8.6.0" << std::endl
+        << "!                   the use of \\required-field and \\default on the same field is discouraged" << std::endl
+        << "!                   and instances with both have been changed." << std::endl
         << "!                     (this comment has no \"value\")" << std::endl
         << "!" << std::endl
         << "!  \\begin-extensible  Marks the first field at which the object accepts an extensible" << std::endl
@@ -1312,7 +1462,10 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
         << "!" << std::endl
         << "!  \\maximum<        Maximum that must be < than the following value" << std::endl
         << "!" << std::endl
-        << "!  \\default         Default for the field (if N/A then omit entire line)" << std::endl
+        << "!  \\default         Default for the field (if N/A then omit entire line). If a default is" << std::endl
+        << "!                   added to an existing field, then \\required-field should be removed if present." << std::endl
+        << "!                   Defaults are filled in only if the field is within \\min-fields, or the actual" << std::endl
+        << "!                   object is longer than this field." << std::endl
         << "!" << std::endl
         << "!  \\deprecated      This field is not really used and will be deleted from the object." << std::endl
         << "!                   The required information is gotten internally or" << std::endl
@@ -1546,6 +1699,8 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
         << "!      s/m                    =>   s/ft                0.3048" << std::endl
         << "!      V/K                    =>   V/F                 0.555555555555556" << std::endl
         << "!      W                      =>   Btu/h               3.4121412858518" << std::endl
+        << "!      W/((m3/s)-Pa)          =>   W/((gal/min)-ftH20) 0.188582274697355" << std::endl
+        << "!      W/((m3/s)-Pa)          =>   W/((ft3/min)-inH2O) 0.117556910599482" << std::endl
         << "!      W/(m3/s)               =>   W/(ft3/min)         0.0004719475" << std::endl
         << "!      W/K                    =>   Btu/h-F             1.89563404769544" << std::endl
         << "!      W/m                    =>   Btu/h-ft            1.04072" << std::endl
@@ -1562,12 +1717,20 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
         << "!" << std::endl
         << "!      kPa                    =>   inHg                0.29523" << std::endl
         << "!      m                      =>   in                  39.3700787401575" << std::endl
+        << "!      m3/hr                  =>   gal/hr              264.172037284185" << std::endl
+        << "!      m3/hr-m2               =>   gal/hr-ft2          24.5423853466941" << std::endl
+        << "!      m3/hr-person           =>   gal/hr-person       264.172037284185" << std::endl
+        << "!      m3/m2                  =>   gal/ft2             24.5423853466941" << std::endl
+        << "!      m3/person              =>   gal/person          264.172037284185" << std::endl
         << "!      m3/s                   =>   gal/min             15850.3222370511" << std::endl
+        << "!      m3/s-m                 =>   gal/min-ft          4831.17821785317" << std::endl
+        << "!      m3/s-W                 =>   (gal/min)/(Btu/h)   4645.27137336702" << std::endl
         << "!      Pa                     =>   ftH2O               0.00033455" << std::endl
         << "!      Pa                     =>   inH2O               0.00401463" << std::endl
         << "!      Pa                     =>   inHg                0.00029613" << std::endl
         << "!      Pa                     =>   Pa                  1" << std::endl
         << "!      W                      =>   W                   1" << std::endl
+        << "!      W/(m3/s)               =>   W/(gal/min)         0.0000630902" << std::endl
         << "!      W/m2                   =>   W/m2                1" << std::endl
         << "!      W/m-K                  =>   Btu/h-ft-F          0.577796066000163" << std::endl
         << "!      W/person               =>   W/person            1" << std::endl
@@ -1576,8 +1739,8 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
         << "!      $" << std::endl
         << "!      1/hr" << std::endl
         << "!      A" << std::endl
-        << "!      Ah" << std::endl
         << "!      A/V" << std::endl
+        << "!      Ah" << std::endl
         << "!      Availability" << std::endl
         << "!      Control" << std::endl
         << "!      cycles/hr" << std::endl
@@ -1613,7 +1776,7 @@ std::string IddFactorySingleton::getHeader(IddFileType fileType) const {
       break;
     case IddFileType::OpenStudio :
       result
-        << "!IDD_Version 1.11.3" << std::endl
+        << "!IDD_Version 2.7.2" << std::endl
         << "! *****************************************************************************" << std::endl
         << "! This file is the Input Data Dictionary (IDD) for OpenStudio Model." << std::endl
         << "!" << std::endl
@@ -1919,12 +2082,14 @@ boost::optional<IddFile> IddFactorySingleton::getIddFile(IddFileType fileType, c
     if (it != m_osIddFiles.end()) {
       return it->second;
     }
-    openstudio::path iddPath = getSharedResourcesPath() / toPath("osversion");
+    std::string iddPath = ":/idd/versions";
     std::stringstream folderString;
     folderString << version.major() << "_" << version.minor() << "_" << version.patch().get();
-    iddPath = iddPath / toPath(folderString.str() + "/OpenStudio.idd");
-    if (boost::filesystem::exists(iddPath) && (version < currentVersion)) {
-      result = IddFile::load(iddPath);
+    iddPath += "/" + folderString.str() + "/OpenStudio.idd";
+    if (::openstudio::embedded_files::hasFile(iddPath) && (version < currentVersion)) {
+      std::stringstream ss;
+      ss << ::openstudio::embedded_files::getFileAsString(iddPath);
+      result = IddFile::load(ss);
     }
     if (result) {
       QMutexLocker l(&m_callbackmutex);
@@ -1974,14 +2139,14 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::ZoneCapacitanceMultiplier_ResearchSpecial, "ZoneCapacitanceMultiplier_ResearchSpecial", "ZoneCapacitanceMultiplier:ResearchSpecial"},
 { IddObjectType::Timestep, "Timestep", "Timestep"},
 { IddObjectType::ConvergenceLimits, "ConvergenceLimits", "ConvergenceLimits"},
-{ IddObjectType::ProgramControl, "ProgramControl", "ProgramControl"},
+{ IddObjectType::HVACSystemRootFindingAlgorithm, "HVACSystemRootFindingAlgorithm", "HVACSystemRootFindingAlgorithm"},
 { IddObjectType::Compliance_Building, "Compliance_Building", "Compliance:Building"},
 { IddObjectType::Site_Location, "Site_Location", "Site:Location"},
+{ IddObjectType::Site_VariableLocation, "Site_VariableLocation", "Site:VariableLocation"},
 { IddObjectType::SizingPeriod_DesignDay, "SizingPeriod_DesignDay", "SizingPeriod:DesignDay"},
 { IddObjectType::SizingPeriod_WeatherFileDays, "SizingPeriod_WeatherFileDays", "SizingPeriod:WeatherFileDays"},
 { IddObjectType::SizingPeriod_WeatherFileConditionType, "SizingPeriod_WeatherFileConditionType", "SizingPeriod:WeatherFileConditionType"},
 { IddObjectType::RunPeriod, "RunPeriod", "RunPeriod"},
-{ IddObjectType::RunPeriod_CustomRange, "RunPeriod_CustomRange", "RunPeriod:CustomRange"},
 { IddObjectType::RunPeriodControl_SpecialDays, "RunPeriodControl_SpecialDays", "RunPeriodControl:SpecialDays"},
 { IddObjectType::RunPeriodControl_DaylightSavingTime, "RunPeriodControl_DaylightSavingTime", "RunPeriodControl:DaylightSavingTime"},
 { IddObjectType::WeatherProperty_SkyTemperature, "WeatherProperty_SkyTemperature", "WeatherProperty:SkyTemperature"},
@@ -2012,6 +2177,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::Schedule_Year, "Schedule_Year", "Schedule:Year"},
 { IddObjectType::Schedule_Compact, "Schedule_Compact", "Schedule:Compact"},
 { IddObjectType::Schedule_Constant, "Schedule_Constant", "Schedule:Constant"},
+{ IddObjectType::Schedule_File_Shading, "Schedule_File_Shading", "Schedule:File:Shading"},
 { IddObjectType::Schedule_File, "Schedule_File", "Schedule:File"},
 { IddObjectType::Material, "Material", "Material"},
 { IddObjectType::Material_NoMass, "Material_NoMass", "Material:NoMass"},
@@ -2039,6 +2205,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::WindowMaterial_Gap_EquivalentLayer, "WindowMaterial_Gap_EquivalentLayer", "WindowMaterial:Gap:EquivalentLayer"},
 { IddObjectType::MaterialProperty_MoisturePenetrationDepth_Settings, "MaterialProperty_MoisturePenetrationDepth_Settings", "MaterialProperty:MoisturePenetrationDepth:Settings"},
 { IddObjectType::MaterialProperty_PhaseChange, "MaterialProperty_PhaseChange", "MaterialProperty:PhaseChange"},
+{ IddObjectType::MaterialProperty_PhaseChangeHysteresis, "MaterialProperty_PhaseChangeHysteresis", "MaterialProperty:PhaseChangeHysteresis"},
 { IddObjectType::MaterialProperty_VariableThermalConductivity, "MaterialProperty_VariableThermalConductivity", "MaterialProperty:VariableThermalConductivity"},
 { IddObjectType::MaterialProperty_HeatAndMoistureTransfer_Settings, "MaterialProperty_HeatAndMoistureTransfer_Settings", "MaterialProperty:HeatAndMoistureTransfer:Settings"},
 { IddObjectType::MaterialProperty_HeatAndMoistureTransfer_SorptionIsotherm, "MaterialProperty_HeatAndMoistureTransfer_SorptionIsotherm", "MaterialProperty:HeatAndMoistureTransfer:SorptionIsotherm"},
@@ -2052,6 +2219,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::Construction_FfactorGroundFloor, "Construction_FfactorGroundFloor", "Construction:FfactorGroundFloor"},
 { IddObjectType::Construction_InternalSource, "Construction_InternalSource", "Construction:InternalSource"},
 { IddObjectType::WindowThermalModel_Params, "WindowThermalModel_Params", "WindowThermalModel:Params"},
+{ IddObjectType::WindowsCalculationEngine, "WindowsCalculationEngine", "WindowsCalculationEngine"},
 { IddObjectType::Construction_ComplexFenestrationState, "Construction_ComplexFenestrationState", "Construction:ComplexFenestrationState"},
 { IddObjectType::Construction_WindowEquivalentLayer, "Construction_WindowEquivalentLayer", "Construction:WindowEquivalentLayer"},
 { IddObjectType::Construction_WindowDataFile, "Construction_WindowDataFile", "Construction:WindowDataFile"},
@@ -2081,7 +2249,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::Window_Interzone, "Window_Interzone", "Window:Interzone"},
 { IddObjectType::Door_Interzone, "Door_Interzone", "Door:Interzone"},
 { IddObjectType::GlazedDoor_Interzone, "GlazedDoor_Interzone", "GlazedDoor:Interzone"},
-{ IddObjectType::WindowProperty_ShadingControl, "WindowProperty_ShadingControl", "WindowProperty:ShadingControl"},
+{ IddObjectType::WindowShadingControl, "WindowShadingControl", "WindowShadingControl"},
 { IddObjectType::WindowProperty_FrameAndDivider, "WindowProperty_FrameAndDivider", "WindowProperty:FrameAndDivider"},
 { IddObjectType::WindowProperty_AirflowControl, "WindowProperty_AirflowControl", "WindowProperty:AirflowControl"},
 { IddObjectType::WindowProperty_StormWindow, "WindowProperty_StormWindow", "WindowProperty:StormWindow"},
@@ -2100,9 +2268,14 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::SurfaceProperty_HeatTransferAlgorithm_MultipleSurface, "SurfaceProperty_HeatTransferAlgorithm_MultipleSurface", "SurfaceProperty:HeatTransferAlgorithm:MultipleSurface"},
 { IddObjectType::SurfaceProperty_HeatTransferAlgorithm_SurfaceList, "SurfaceProperty_HeatTransferAlgorithm_SurfaceList", "SurfaceProperty:HeatTransferAlgorithm:SurfaceList"},
 { IddObjectType::SurfaceProperty_HeatTransferAlgorithm_Construction, "SurfaceProperty_HeatTransferAlgorithm_Construction", "SurfaceProperty:HeatTransferAlgorithm:Construction"},
+{ IddObjectType::SurfaceProperty_HeatBalanceSourceTerm, "SurfaceProperty_HeatBalanceSourceTerm", "SurfaceProperty:HeatBalanceSourceTerm"},
 { IddObjectType::SurfaceControl_MovableInsulation, "SurfaceControl_MovableInsulation", "SurfaceControl:MovableInsulation"},
 { IddObjectType::SurfaceProperty_OtherSideCoefficients, "SurfaceProperty_OtherSideCoefficients", "SurfaceProperty:OtherSideCoefficients"},
 { IddObjectType::SurfaceProperty_OtherSideConditionsModel, "SurfaceProperty_OtherSideConditionsModel", "SurfaceProperty:OtherSideConditionsModel"},
+{ IddObjectType::SurfaceProperty_Underwater, "SurfaceProperty_Underwater", "SurfaceProperty:Underwater"},
+{ IddObjectType::Foundation_Kiva, "Foundation_Kiva", "Foundation:Kiva"},
+{ IddObjectType::Foundation_Kiva_Settings, "Foundation_Kiva_Settings", "Foundation:Kiva:Settings"},
+{ IddObjectType::SurfaceProperty_ExposedFoundationPerimeter, "SurfaceProperty_ExposedFoundationPerimeter", "SurfaceProperty:ExposedFoundationPerimeter"},
 { IddObjectType::SurfaceConvectionAlgorithm_Inside_AdaptiveModelSelections, "SurfaceConvectionAlgorithm_Inside_AdaptiveModelSelections", "SurfaceConvectionAlgorithm:Inside:AdaptiveModelSelections"},
 { IddObjectType::SurfaceConvectionAlgorithm_Outside_AdaptiveModelSelections, "SurfaceConvectionAlgorithm_Outside_AdaptiveModelSelections", "SurfaceConvectionAlgorithm:Outside:AdaptiveModelSelections"},
 { IddObjectType::SurfaceConvectionAlgorithm_Inside_UserCurve, "SurfaceConvectionAlgorithm_Inside_UserCurve", "SurfaceConvectionAlgorithm:Inside:UserCurve"},
@@ -2112,6 +2285,9 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::SurfaceProperties_VaporCoefficients, "SurfaceProperties_VaporCoefficients", "SurfaceProperties:VaporCoefficients"},
 { IddObjectType::SurfaceProperty_ExteriorNaturalVentedCavity, "SurfaceProperty_ExteriorNaturalVentedCavity", "SurfaceProperty:ExteriorNaturalVentedCavity"},
 { IddObjectType::SurfaceProperty_SolarIncidentInside, "SurfaceProperty_SolarIncidentInside", "SurfaceProperty:SolarIncidentInside"},
+{ IddObjectType::SurfaceProperty_LocalEnvironment, "SurfaceProperty_LocalEnvironment", "SurfaceProperty:LocalEnvironment"},
+{ IddObjectType::ZoneProperty_LocalEnvironment, "ZoneProperty_LocalEnvironment", "ZoneProperty:LocalEnvironment"},
+{ IddObjectType::SurfaceProperty_SurroundingSurfaces, "SurfaceProperty_SurroundingSurfaces", "SurfaceProperty:SurroundingSurfaces"},
 { IddObjectType::ComplexFenestrationProperty_SolarAbsorbedLayers, "ComplexFenestrationProperty_SolarAbsorbedLayers", "ComplexFenestrationProperty:SolarAbsorbedLayers"},
 { IddObjectType::ZoneProperty_UserViewFactors_bySurfaceName, "ZoneProperty_UserViewFactors_bySurfaceName", "ZoneProperty:UserViewFactors:bySurfaceName"},
 { IddObjectType::GroundHeatTransfer_Control, "GroundHeatTransfer_Control", "GroundHeatTransfer:Control"},
@@ -2177,8 +2353,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::SurfaceContaminantSourceAndSink_Generic_DepositionVelocitySink, "SurfaceContaminantSourceAndSink_Generic_DepositionVelocitySink", "SurfaceContaminantSourceAndSink:Generic:DepositionVelocitySink"},
 { IddObjectType::ZoneContaminantSourceAndSink_Generic_DepositionRateSink, "ZoneContaminantSourceAndSink_Generic_DepositionRateSink", "ZoneContaminantSourceAndSink:Generic:DepositionRateSink"},
 { IddObjectType::Daylighting_Controls, "Daylighting_Controls", "Daylighting:Controls"},
-{ IddObjectType::Daylighting_DELight_Controls, "Daylighting_DELight_Controls", "Daylighting:DELight:Controls"},
-{ IddObjectType::Daylighting_DELight_ReferencePoint, "Daylighting_DELight_ReferencePoint", "Daylighting:DELight:ReferencePoint"},
+{ IddObjectType::Daylighting_ReferencePoint, "Daylighting_ReferencePoint", "Daylighting:ReferencePoint"},
 { IddObjectType::Daylighting_DELight_ComplexFenestration, "Daylighting_DELight_ComplexFenestration", "Daylighting:DELight:ComplexFenestration"},
 { IddObjectType::DaylightingDevice_Tubular, "DaylightingDevice_Tubular", "DaylightingDevice:Tubular"},
 { IddObjectType::DaylightingDevice_Shelf, "DaylightingDevice_Shelf", "DaylightingDevice:Shelf"},
@@ -2211,6 +2386,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::AirflowNetwork_MultiZone_ExternalNode, "AirflowNetwork_MultiZone_ExternalNode", "AirflowNetwork:MultiZone:ExternalNode"},
 { IddObjectType::AirflowNetwork_MultiZone_WindPressureCoefficientArray, "AirflowNetwork_MultiZone_WindPressureCoefficientArray", "AirflowNetwork:MultiZone:WindPressureCoefficientArray"},
 { IddObjectType::AirflowNetwork_MultiZone_WindPressureCoefficientValues, "AirflowNetwork_MultiZone_WindPressureCoefficientValues", "AirflowNetwork:MultiZone:WindPressureCoefficientValues"},
+{ IddObjectType::AirflowNetwork_ZoneControl_PressureController, "AirflowNetwork_ZoneControl_PressureController", "AirflowNetwork:ZoneControl:PressureController"},
 { IddObjectType::AirflowNetwork_Distribution_Node, "AirflowNetwork_Distribution_Node", "AirflowNetwork:Distribution:Node"},
 { IddObjectType::AirflowNetwork_Distribution_Component_Leak, "AirflowNetwork_Distribution_Component_Leak", "AirflowNetwork:Distribution:Component:Leak"},
 { IddObjectType::AirflowNetwork_Distribution_Component_LeakageRatio, "AirflowNetwork_Distribution_Component_LeakageRatio", "AirflowNetwork:Distribution:Component:LeakageRatio"},
@@ -2220,8 +2396,12 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::AirflowNetwork_Distribution_Component_HeatExchanger, "AirflowNetwork_Distribution_Component_HeatExchanger", "AirflowNetwork:Distribution:Component:HeatExchanger"},
 { IddObjectType::AirflowNetwork_Distribution_Component_TerminalUnit, "AirflowNetwork_Distribution_Component_TerminalUnit", "AirflowNetwork:Distribution:Component:TerminalUnit"},
 { IddObjectType::AirflowNetwork_Distribution_Component_ConstantPressureDrop, "AirflowNetwork_Distribution_Component_ConstantPressureDrop", "AirflowNetwork:Distribution:Component:ConstantPressureDrop"},
+{ IddObjectType::AirflowNetwork_Distribution_Component_OutdoorAirFlow, "AirflowNetwork_Distribution_Component_OutdoorAirFlow", "AirflowNetwork:Distribution:Component:OutdoorAirFlow"},
+{ IddObjectType::AirflowNetwork_Distribution_Component_ReliefAirFlow, "AirflowNetwork_Distribution_Component_ReliefAirFlow", "AirflowNetwork:Distribution:Component:ReliefAirFlow"},
 { IddObjectType::AirflowNetwork_Distribution_Linkage, "AirflowNetwork_Distribution_Linkage", "AirflowNetwork:Distribution:Linkage"},
+{ IddObjectType::AirflowNetwork_Distribution_DuctViewFactors, "AirflowNetwork_Distribution_DuctViewFactors", "AirflowNetwork:Distribution:DuctViewFactors"},
 { IddObjectType::AirflowNetwork_OccupantVentilationControl, "AirflowNetwork_OccupantVentilationControl", "AirflowNetwork:OccupantVentilationControl"},
+{ IddObjectType::AirflowNetwork_IntraZone_Node, "AirflowNetwork_IntraZone_Node", "AirflowNetwork:IntraZone:Node"},
 { IddObjectType::AirflowNetwork_IntraZone_Linkage, "AirflowNetwork_IntraZone_Linkage", "AirflowNetwork:IntraZone:Linkage"},
 { IddObjectType::Exterior_Lights, "Exterior_Lights", "Exterior:Lights"},
 { IddObjectType::Exterior_FuelEquipment, "Exterior_FuelEquipment", "Exterior:FuelEquipment"},
@@ -2263,6 +2443,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::Sizing_Parameters, "Sizing_Parameters", "Sizing:Parameters"},
 { IddObjectType::Sizing_Zone, "Sizing_Zone", "Sizing:Zone"},
 { IddObjectType::DesignSpecification_ZoneHVAC_Sizing, "DesignSpecification_ZoneHVAC_Sizing", "DesignSpecification:ZoneHVAC:Sizing"},
+{ IddObjectType::DesignSpecification_AirTerminal_Sizing, "DesignSpecification_AirTerminal_Sizing", "DesignSpecification:AirTerminal:Sizing"},
 { IddObjectType::Sizing_System, "Sizing_System", "Sizing:System"},
 { IddObjectType::Sizing_Plant, "Sizing_Plant", "Sizing:Plant"},
 { IddObjectType::OutputControl_Sizing_Style, "OutputControl_Sizing_Style", "OutputControl:Sizing:Style"},
@@ -2293,12 +2474,14 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::ZoneHVAC_UnitVentilator, "ZoneHVAC_UnitVentilator", "ZoneHVAC:UnitVentilator"},
 { IddObjectType::ZoneHVAC_UnitHeater, "ZoneHVAC_UnitHeater", "ZoneHVAC:UnitHeater"},
 { IddObjectType::ZoneHVAC_EvaporativeCoolerUnit, "ZoneHVAC_EvaporativeCoolerUnit", "ZoneHVAC:EvaporativeCoolerUnit"},
+{ IddObjectType::ZoneHVAC_HybridUnitaryHVAC, "ZoneHVAC_HybridUnitaryHVAC", "ZoneHVAC:HybridUnitaryHVAC"},
 { IddObjectType::ZoneHVAC_OutdoorAirUnit, "ZoneHVAC_OutdoorAirUnit", "ZoneHVAC:OutdoorAirUnit"},
 { IddObjectType::ZoneHVAC_OutdoorAirUnit_EquipmentList, "ZoneHVAC_OutdoorAirUnit_EquipmentList", "ZoneHVAC:OutdoorAirUnit:EquipmentList"},
 { IddObjectType::ZoneHVAC_TerminalUnit_VariableRefrigerantFlow, "ZoneHVAC_TerminalUnit_VariableRefrigerantFlow", "ZoneHVAC:TerminalUnit:VariableRefrigerantFlow"},
 { IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Water, "ZoneHVAC_Baseboard_RadiantConvective_Water", "ZoneHVAC:Baseboard:RadiantConvective:Water"},
 { IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Steam, "ZoneHVAC_Baseboard_RadiantConvective_Steam", "ZoneHVAC:Baseboard:RadiantConvective:Steam"},
 { IddObjectType::ZoneHVAC_Baseboard_RadiantConvective_Electric, "ZoneHVAC_Baseboard_RadiantConvective_Electric", "ZoneHVAC:Baseboard:RadiantConvective:Electric"},
+{ IddObjectType::ZoneHVAC_CoolingPanel_RadiantConvective_Water, "ZoneHVAC_CoolingPanel_RadiantConvective_Water", "ZoneHVAC:CoolingPanel:RadiantConvective:Water"},
 { IddObjectType::ZoneHVAC_Baseboard_Convective_Water, "ZoneHVAC_Baseboard_Convective_Water", "ZoneHVAC:Baseboard:Convective:Water"},
 { IddObjectType::ZoneHVAC_Baseboard_Convective_Electric, "ZoneHVAC_Baseboard_Convective_Electric", "ZoneHVAC:Baseboard:Convective:Electric"},
 { IddObjectType::ZoneHVAC_LowTemperatureRadiant_VariableFlow, "ZoneHVAC_LowTemperatureRadiant_VariableFlow", "ZoneHVAC:LowTemperatureRadiant:VariableFlow"},
@@ -2310,23 +2493,25 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::ZoneHVAC_VentilatedSlab_SlabGroup, "ZoneHVAC_VentilatedSlab_SlabGroup", "ZoneHVAC:VentilatedSlab:SlabGroup"},
 { IddObjectType::AirTerminal_SingleDuct_Uncontrolled, "AirTerminal_SingleDuct_Uncontrolled", "AirTerminal:SingleDuct:Uncontrolled"},
 { IddObjectType::AirTerminal_SingleDuct_ConstantVolume_Reheat, "AirTerminal_SingleDuct_ConstantVolume_Reheat", "AirTerminal:SingleDuct:ConstantVolume:Reheat"},
+{ IddObjectType::AirTerminal_SingleDuct_ConstantVolume_NoReheat, "AirTerminal_SingleDuct_ConstantVolume_NoReheat", "AirTerminal:SingleDuct:ConstantVolume:NoReheat"},
 { IddObjectType::AirTerminal_SingleDuct_VAV_NoReheat, "AirTerminal_SingleDuct_VAV_NoReheat", "AirTerminal:SingleDuct:VAV:NoReheat"},
 { IddObjectType::AirTerminal_SingleDuct_VAV_Reheat, "AirTerminal_SingleDuct_VAV_Reheat", "AirTerminal:SingleDuct:VAV:Reheat"},
-{ IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat, "AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat", "AirTerminal:SingleDuct:VAV:HeatAndCool:Reheat"},
+{ IddObjectType::AirTerminal_SingleDuct_VAV_Reheat_VariableSpeedFan, "AirTerminal_SingleDuct_VAV_Reheat_VariableSpeedFan", "AirTerminal:SingleDuct:VAV:Reheat:VariableSpeedFan"},
 { IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat, "AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat", "AirTerminal:SingleDuct:VAV:HeatAndCool:NoReheat"},
+{ IddObjectType::AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat, "AirTerminal_SingleDuct_VAV_HeatAndCool_Reheat", "AirTerminal:SingleDuct:VAV:HeatAndCool:Reheat"},
 { IddObjectType::AirTerminal_SingleDuct_SeriesPIU_Reheat, "AirTerminal_SingleDuct_SeriesPIU_Reheat", "AirTerminal:SingleDuct:SeriesPIU:Reheat"},
 { IddObjectType::AirTerminal_SingleDuct_ParallelPIU_Reheat, "AirTerminal_SingleDuct_ParallelPIU_Reheat", "AirTerminal:SingleDuct:ParallelPIU:Reheat"},
 { IddObjectType::AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction, "AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction", "AirTerminal:SingleDuct:ConstantVolume:FourPipeInduction"},
 { IddObjectType::AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam, "AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam", "AirTerminal:SingleDuct:ConstantVolume:FourPipeBeam"},
 { IddObjectType::AirTerminal_SingleDuct_ConstantVolume_CooledBeam, "AirTerminal_SingleDuct_ConstantVolume_CooledBeam", "AirTerminal:SingleDuct:ConstantVolume:CooledBeam"},
-{ IddObjectType::AirTerminal_SingleDuct_InletSideMixer, "AirTerminal_SingleDuct_InletSideMixer", "AirTerminal:SingleDuct:InletSideMixer"},
-{ IddObjectType::AirTerminal_SingleDuct_SupplySideMixer, "AirTerminal_SingleDuct_SupplySideMixer", "AirTerminal:SingleDuct:SupplySideMixer"},
+{ IddObjectType::AirTerminal_SingleDuct_Mixer, "AirTerminal_SingleDuct_Mixer", "AirTerminal:SingleDuct:Mixer"},
 { IddObjectType::AirTerminal_DualDuct_ConstantVolume, "AirTerminal_DualDuct_ConstantVolume", "AirTerminal:DualDuct:ConstantVolume"},
 { IddObjectType::AirTerminal_DualDuct_VAV, "AirTerminal_DualDuct_VAV", "AirTerminal:DualDuct:VAV"},
 { IddObjectType::AirTerminal_DualDuct_VAV_OutdoorAir, "AirTerminal_DualDuct_VAV_OutdoorAir", "AirTerminal:DualDuct:VAV:OutdoorAir"},
 { IddObjectType::ZoneHVAC_AirDistributionUnit, "ZoneHVAC_AirDistributionUnit", "ZoneHVAC:AirDistributionUnit"},
 { IddObjectType::ZoneHVAC_EquipmentList, "ZoneHVAC_EquipmentList", "ZoneHVAC:EquipmentList"},
 { IddObjectType::ZoneHVAC_EquipmentConnections, "ZoneHVAC_EquipmentConnections", "ZoneHVAC:EquipmentConnections"},
+{ IddObjectType::Fan_SystemModel, "Fan_SystemModel", "Fan:SystemModel"},
 { IddObjectType::Fan_ConstantVolume, "Fan_ConstantVolume", "Fan:ConstantVolume"},
 { IddObjectType::Fan_VariableVolume, "Fan_VariableVolume", "Fan:VariableVolume"},
 { IddObjectType::Fan_OnOff, "Fan_OnOff", "Fan:OnOff"},
@@ -2349,7 +2534,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::Coil_Heating_Steam, "Coil_Heating_Steam", "Coil:Heating:Steam"},
 { IddObjectType::Coil_Heating_Electric, "Coil_Heating_Electric", "Coil:Heating:Electric"},
 { IddObjectType::Coil_Heating_Electric_MultiStage, "Coil_Heating_Electric_MultiStage", "Coil:Heating:Electric:MultiStage"},
-{ IddObjectType::Coil_Heating_Gas, "Coil_Heating_Gas", "Coil:Heating:Gas"},
+{ IddObjectType::Coil_Heating_Fuel, "Coil_Heating_Fuel", "Coil:Heating:Fuel"},
 { IddObjectType::Coil_Heating_Gas_MultiStage, "Coil_Heating_Gas_MultiStage", "Coil:Heating:Gas:MultiStage"},
 { IddObjectType::Coil_Heating_Desuperheater, "Coil_Heating_Desuperheater", "Coil:Heating:Desuperheater"},
 { IddObjectType::Coil_Heating_DX_SingleSpeed, "Coil_Heating_DX_SingleSpeed", "Coil:Heating:DX:SingleSpeed"},
@@ -2369,6 +2554,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::CoilSystem_Heating_DX, "CoilSystem_Heating_DX", "CoilSystem:Heating:DX"},
 { IddObjectType::CoilSystem_Cooling_Water_HeatExchangerAssisted, "CoilSystem_Cooling_Water_HeatExchangerAssisted", "CoilSystem:Cooling:Water:HeatExchangerAssisted"},
 { IddObjectType::CoilSystem_Cooling_DX_HeatExchangerAssisted, "CoilSystem_Cooling_DX_HeatExchangerAssisted", "CoilSystem:Cooling:DX:HeatExchangerAssisted"},
+{ IddObjectType::CoilSystem_IntegratedHeatPump_AirSource, "CoilSystem_IntegratedHeatPump_AirSource", "CoilSystem:IntegratedHeatPump:AirSource"},
 { IddObjectType::Coil_Cooling_DX_SingleSpeed_ThermalStorage, "Coil_Cooling_DX_SingleSpeed_ThermalStorage", "Coil:Cooling:DX:SingleSpeed:ThermalStorage"},
 { IddObjectType::EvaporativeCooler_Direct_CelDekPad, "EvaporativeCooler_Direct_CelDekPad", "EvaporativeCooler:Direct:CelDekPad"},
 { IddObjectType::EvaporativeCooler_Indirect_CelDekPad, "EvaporativeCooler_Indirect_CelDekPad", "EvaporativeCooler:Indirect:CelDekPad"},
@@ -2395,6 +2581,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::AirLoopHVAC_UnitaryHeatPump_AirToAir_MultiSpeed, "AirLoopHVAC_UnitaryHeatPump_AirToAir_MultiSpeed", "AirLoopHVAC:UnitaryHeatPump:AirToAir:MultiSpeed"},
 { IddObjectType::AirConditioner_VariableRefrigerantFlow, "AirConditioner_VariableRefrigerantFlow", "AirConditioner:VariableRefrigerantFlow"},
 { IddObjectType::AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl, "AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl", "AirConditioner:VariableRefrigerantFlow:FluidTemperatureControl"},
+{ IddObjectType::AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl_HR, "AirConditioner_VariableRefrigerantFlow_FluidTemperatureControl_HR", "AirConditioner:VariableRefrigerantFlow:FluidTemperatureControl:HR"},
 { IddObjectType::ZoneTerminalUnitList, "ZoneTerminalUnitList", "ZoneTerminalUnitList"},
 { IddObjectType::Controller_WaterCoil, "Controller_WaterCoil", "Controller:WaterCoil"},
 { IddObjectType::Controller_OutdoorAir, "Controller_OutdoorAir", "Controller:OutdoorAir"},
@@ -2437,10 +2624,10 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::SolarCollectorPerformance_FlatPlate, "SolarCollectorPerformance_FlatPlate", "SolarCollectorPerformance:FlatPlate"},
 { IddObjectType::SolarCollector_FlatPlate_Water, "SolarCollector_FlatPlate_Water", "SolarCollector:FlatPlate:Water"},
 { IddObjectType::SolarCollector_FlatPlate_PhotovoltaicThermal, "SolarCollector_FlatPlate_PhotovoltaicThermal", "SolarCollector:FlatPlate:PhotovoltaicThermal"},
+{ IddObjectType::SolarCollectorPerformance_PhotovoltaicThermal_Simple, "SolarCollectorPerformance_PhotovoltaicThermal_Simple", "SolarCollectorPerformance:PhotovoltaicThermal:Simple"},
 { IddObjectType::SolarCollector_IntegralCollectorStorage, "SolarCollector_IntegralCollectorStorage", "SolarCollector:IntegralCollectorStorage"},
 { IddObjectType::SolarCollectorPerformance_IntegralCollectorStorage, "SolarCollectorPerformance_IntegralCollectorStorage", "SolarCollectorPerformance:IntegralCollectorStorage"},
 { IddObjectType::SolarCollector_UnglazedTranspired, "SolarCollector_UnglazedTranspired", "SolarCollector:UnglazedTranspired"},
-{ IddObjectType::SolarCollectorPerformance_PhotovoltaicThermal_Simple, "SolarCollectorPerformance_PhotovoltaicThermal_Simple", "SolarCollectorPerformance:PhotovoltaicThermal:Simple"},
 { IddObjectType::SolarCollector_UnglazedTranspired_Multisystem, "SolarCollector_UnglazedTranspired_Multisystem", "SolarCollector:UnglazedTranspired:Multisystem"},
 { IddObjectType::Boiler_HotWater, "Boiler_HotWater", "Boiler:HotWater"},
 { IddObjectType::Boiler_Steam, "Boiler_Steam", "Boiler:Steam"},
@@ -2473,7 +2660,11 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::EvaporativeFluidCooler_TwoSpeed, "EvaporativeFluidCooler_TwoSpeed", "EvaporativeFluidCooler:TwoSpeed"},
 { IddObjectType::FluidCooler_SingleSpeed, "FluidCooler_SingleSpeed", "FluidCooler:SingleSpeed"},
 { IddObjectType::FluidCooler_TwoSpeed, "FluidCooler_TwoSpeed", "FluidCooler:TwoSpeed"},
-{ IddObjectType::GroundHeatExchanger_Vertical, "GroundHeatExchanger_Vertical", "GroundHeatExchanger:Vertical"},
+{ IddObjectType::GroundHeatExchanger_System, "GroundHeatExchanger_System", "GroundHeatExchanger:System"},
+{ IddObjectType::GroundHeatExchanger_Vertical_Properties, "GroundHeatExchanger_Vertical_Properties", "GroundHeatExchanger:Vertical:Properties"},
+{ IddObjectType::GroundHeatExchanger_Vertical_Array, "GroundHeatExchanger_Vertical_Array", "GroundHeatExchanger:Vertical:Array"},
+{ IddObjectType::GroundHeatExchanger_Vertical_Single, "GroundHeatExchanger_Vertical_Single", "GroundHeatExchanger:Vertical:Single"},
+{ IddObjectType::GroundHeatExchanger_ResponseFactors, "GroundHeatExchanger_ResponseFactors", "GroundHeatExchanger:ResponseFactors"},
 { IddObjectType::GroundHeatExchanger_Pond, "GroundHeatExchanger_Pond", "GroundHeatExchanger:Pond"},
 { IddObjectType::GroundHeatExchanger_Surface, "GroundHeatExchanger_Surface", "GroundHeatExchanger:Surface"},
 { IddObjectType::GroundHeatExchanger_HorizontalTrench, "GroundHeatExchanger_HorizontalTrench", "GroundHeatExchanger:HorizontalTrench"},
@@ -2609,6 +2800,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::PhotovoltaicPerformance_Simple, "PhotovoltaicPerformance_Simple", "PhotovoltaicPerformance:Simple"},
 { IddObjectType::PhotovoltaicPerformance_EquivalentOneDiode, "PhotovoltaicPerformance_EquivalentOneDiode", "PhotovoltaicPerformance:EquivalentOne-Diode"},
 { IddObjectType::PhotovoltaicPerformance_Sandia, "PhotovoltaicPerformance_Sandia", "PhotovoltaicPerformance:Sandia"},
+{ IddObjectType::Generator_PVWatts, "Generator_PVWatts", "Generator:PVWatts"},
+{ IddObjectType::ElectricLoadCenter_Inverter_PVWatts, "ElectricLoadCenter_Inverter_PVWatts", "ElectricLoadCenter:Inverter:PVWatts"},
 { IddObjectType::Generator_FuelCell, "Generator_FuelCell", "Generator:FuelCell"},
 { IddObjectType::Generator_FuelCell_PowerModule, "Generator_FuelCell_PowerModule", "Generator:FuelCell:PowerModule"},
 { IddObjectType::Generator_FuelCell_AirSupply, "Generator_FuelCell_AirSupply", "Generator:FuelCell:AirSupply"},
@@ -2642,11 +2835,19 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::FaultModel_PressureSensorOffset_OutdoorAir, "FaultModel_PressureSensorOffset_OutdoorAir", "FaultModel:PressureSensorOffset:OutdoorAir"},
 { IddObjectType::FaultModel_TemperatureSensorOffset_ReturnAir, "FaultModel_TemperatureSensorOffset_ReturnAir", "FaultModel:TemperatureSensorOffset:ReturnAir"},
 { IddObjectType::FaultModel_EnthalpySensorOffset_ReturnAir, "FaultModel_EnthalpySensorOffset_ReturnAir", "FaultModel:EnthalpySensorOffset:ReturnAir"},
+{ IddObjectType::FaultModel_TemperatureSensorOffset_ChillerSupplyWater, "FaultModel_TemperatureSensorOffset_ChillerSupplyWater", "FaultModel:TemperatureSensorOffset:ChillerSupplyWater"},
+{ IddObjectType::FaultModel_TemperatureSensorOffset_CoilSupplyAir, "FaultModel_TemperatureSensorOffset_CoilSupplyAir", "FaultModel:TemperatureSensorOffset:CoilSupplyAir"},
+{ IddObjectType::FaultModel_TemperatureSensorOffset_CondenserSupplyWater, "FaultModel_TemperatureSensorOffset_CondenserSupplyWater", "FaultModel:TemperatureSensorOffset:CondenserSupplyWater"},
 { IddObjectType::FaultModel_ThermostatOffset, "FaultModel_ThermostatOffset", "FaultModel:ThermostatOffset"},
 { IddObjectType::FaultModel_HumidistatOffset, "FaultModel_HumidistatOffset", "FaultModel:HumidistatOffset"},
 { IddObjectType::FaultModel_Fouling_AirFilter, "FaultModel_Fouling_AirFilter", "FaultModel:Fouling:AirFilter"},
+{ IddObjectType::FaultModel_Fouling_Boiler, "FaultModel_Fouling_Boiler", "FaultModel:Fouling:Boiler"},
+{ IddObjectType::FaultModel_Fouling_EvaporativeCooler, "FaultModel_Fouling_EvaporativeCooler", "FaultModel:Fouling:EvaporativeCooler"},
+{ IddObjectType::FaultModel_Fouling_Chiller, "FaultModel_Fouling_Chiller", "FaultModel:Fouling:Chiller"},
+{ IddObjectType::FaultModel_Fouling_CoolingTower, "FaultModel_Fouling_CoolingTower", "FaultModel:Fouling:CoolingTower"},
 { IddObjectType::FaultModel_Fouling_Coil, "FaultModel_Fouling_Coil", "FaultModel:Fouling:Coil"},
 { IddObjectType::Matrix_TwoDimension, "Matrix_TwoDimension", "Matrix:TwoDimension"},
+{ IddObjectType::HybridModel_Zone, "HybridModel_Zone", "HybridModel:Zone"},
 { IddObjectType::Curve_Linear, "Curve_Linear", "Curve:Linear"},
 { IddObjectType::Curve_QuadLinear, "Curve_QuadLinear", "Curve:QuadLinear"},
 { IddObjectType::Curve_Quadratic, "Curve_Quadratic", "Curve:Quadratic"},
@@ -2763,7 +2964,9 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_UtilityCost_Variable, "OS_UtilityCost_Variable", "OS:UtilityCost:Variable"},
 { IddObjectType::OS_WeatherFile, "OS_WeatherFile", "OS:WeatherFile"},
 { IddObjectType::OS_WeatherProperty_SkyTemperature, "OS_WeatherProperty_SkyTemperature", "OS:WeatherProperty:SkyTemperature"},
+{ IddObjectType::OS_AdditionalProperties, "OS_AdditionalProperties", "OS:AdditionalProperties"},
 { IddObjectType::OS_BuildingStory, "OS_BuildingStory", "OS:BuildingStory"},
+{ IddObjectType::OS_BuildingUnit, "OS_BuildingUnit", "OS:BuildingUnit"},
 { IddObjectType::OS_DefaultConstructionSet, "OS_DefaultConstructionSet", "OS:DefaultConstructionSet"},
 { IddObjectType::OS_DefaultScheduleSet, "OS_DefaultScheduleSet", "OS:DefaultScheduleSet"},
 { IddObjectType::OS_DefaultSubSurfaceConstructions, "OS_DefaultSubSurfaceConstructions", "OS:DefaultSubSurfaceConstructions"},
@@ -2788,6 +2991,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_WindowMaterial_Shade, "OS_WindowMaterial_Shade", "OS:WindowMaterial:Shade"},
 { IddObjectType::OS_WindowMaterial_SimpleGlazingSystem, "OS_WindowMaterial_SimpleGlazingSystem", "OS:WindowMaterial:SimpleGlazingSystem"},
 { IddObjectType::OS_StandardsInformation_Material, "OS_StandardsInformation_Material", "OS:StandardsInformation:Material"},
+{ IddObjectType::OS_MaterialProperty_GlazingSpectralData, "OS_MaterialProperty_GlazingSpectralData", "OS:MaterialProperty:GlazingSpectralData"},
+{ IddObjectType::OS_MaterialProperty_MoisturePenetrationDepth_Settings, "OS_MaterialProperty_MoisturePenetrationDepth_Settings", "OS:MaterialProperty:MoisturePenetrationDepth:Settings"},
 { IddObjectType::OS_Construction, "OS_Construction", "OS:Construction"},
 { IddObjectType::OS_Construction_CfactorUndergroundWall, "OS_Construction_CfactorUndergroundWall", "OS:Construction:CfactorUndergroundWall"},
 { IddObjectType::OS_Construction_FfactorGroundFloor, "OS_Construction_FfactorGroundFloor", "OS:Construction:FfactorGroundFloor"},
@@ -2799,11 +3004,14 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_Lights_Definition, "OS_Lights_Definition", "OS:Lights:Definition"},
 { IddObjectType::OS_Luminaire_Definition, "OS_Luminaire_Definition", "OS:Luminaire:Definition"},
 { IddObjectType::OS_ElectricEquipment_Definition, "OS_ElectricEquipment_Definition", "OS:ElectricEquipment:Definition"},
+{ IddObjectType::OS_ElectricEquipment_ITE_AirCooled_Definition, "OS_ElectricEquipment_ITE_AirCooled_Definition", "OS:ElectricEquipment:ITE:AirCooled:Definition"},
 { IddObjectType::OS_GasEquipment_Definition, "OS_GasEquipment_Definition", "OS:GasEquipment:Definition"},
 { IddObjectType::OS_HotWaterEquipment_Definition, "OS_HotWaterEquipment_Definition", "OS:HotWaterEquipment:Definition"},
 { IddObjectType::OS_SteamEquipment_Definition, "OS_SteamEquipment_Definition", "OS:SteamEquipment:Definition"},
 { IddObjectType::OS_OtherEquipment_Definition, "OS_OtherEquipment_Definition", "OS:OtherEquipment:Definition"},
 { IddObjectType::OS_Exterior_Lights_Definition, "OS_Exterior_Lights_Definition", "OS:Exterior:Lights:Definition"},
+{ IddObjectType::OS_Exterior_FuelEquipment_Definition, "OS_Exterior_FuelEquipment_Definition", "OS:Exterior:FuelEquipment:Definition"},
+{ IddObjectType::OS_Exterior_WaterEquipment_Definition, "OS_Exterior_WaterEquipment_Definition", "OS:Exterior:WaterEquipment:Definition"},
 { IddObjectType::OS_Schedule_Compact, "OS_Schedule_Compact", "OS:Schedule:Compact"},
 { IddObjectType::OS_Schedule_Day, "OS_Schedule_Day", "OS:Schedule:Day"},
 { IddObjectType::OS_Schedule_Week, "OS_Schedule_Week", "OS:Schedule:Week"},
@@ -2814,6 +3022,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_Schedule_FixedInterval, "OS_Schedule_FixedInterval", "OS:Schedule:FixedInterval"},
 { IddObjectType::OS_Schedule_VariableInterval, "OS_Schedule_VariableInterval", "OS:Schedule:VariableInterval"},
 { IddObjectType::OS_ScheduleTypeLimits, "OS_ScheduleTypeLimits", "OS:ScheduleTypeLimits"},
+{ IddObjectType::OS_External_File, "OS_External_File", "OS:External:File"},
+{ IddObjectType::OS_Schedule_File, "OS_Schedule_File", "OS:Schedule:File"},
 { IddObjectType::OS_Building, "OS_Building", "OS:Building"},
 { IddObjectType::OS_DaylightingDevice_Shelf, "OS_DaylightingDevice_Shelf", "OS:DaylightingDevice:Shelf"},
 { IddObjectType::OS_Facility, "OS_Facility", "OS:Facility"},
@@ -2828,13 +3038,17 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_WindowProperty_FrameAndDivider, "OS_WindowProperty_FrameAndDivider", "OS:WindowProperty:FrameAndDivider"},
 { IddObjectType::OS_SurfaceProperty_ConvectionCoefficients, "OS_SurfaceProperty_ConvectionCoefficients", "OS:SurfaceProperty:ConvectionCoefficients"},
 { IddObjectType::OS_SurfaceProperty_ConvectionCoefficients_MultipleSurface, "OS_SurfaceProperty_ConvectionCoefficients_MultipleSurface", "OS:SurfaceProperty:ConvectionCoefficients:MultipleSurface"},
+{ IddObjectType::OS_SurfaceProperty_ExposedFoundationPerimeter, "OS_SurfaceProperty_ExposedFoundationPerimeter", "OS:SurfaceProperty:ExposedFoundationPerimeter"},
 { IddObjectType::OS_SurfaceProperty_OtherSideCoefficients, "OS_SurfaceProperty_OtherSideCoefficients", "OS:SurfaceProperty:OtherSideCoefficients"},
 { IddObjectType::OS_SurfaceProperty_OtherSideConditionsModel, "OS_SurfaceProperty_OtherSideConditionsModel", "OS:SurfaceProperty:OtherSideConditionsModel"},
+{ IddObjectType::OS_Foundation_Kiva, "OS_Foundation_Kiva", "OS:Foundation:Kiva"},
+{ IddObjectType::OS_Foundation_Kiva_Settings, "OS_Foundation_Kiva_Settings", "OS:Foundation:Kiva:Settings"},
 { IddObjectType::OS_InternalMass, "OS_InternalMass", "OS:InternalMass"},
 { IddObjectType::OS_People, "OS_People", "OS:People"},
 { IddObjectType::OS_Lights, "OS_Lights", "OS:Lights"},
 { IddObjectType::OS_Luminaire, "OS_Luminaire", "OS:Luminaire"},
 { IddObjectType::OS_ElectricEquipment, "OS_ElectricEquipment", "OS:ElectricEquipment"},
+{ IddObjectType::OS_ElectricEquipment_ITE_AirCooled, "OS_ElectricEquipment_ITE_AirCooled", "OS:ElectricEquipment:ITE:AirCooled"},
 { IddObjectType::OS_GasEquipment, "OS_GasEquipment", "OS:GasEquipment"},
 { IddObjectType::OS_HotWaterEquipment, "OS_HotWaterEquipment", "OS:HotWaterEquipment"},
 { IddObjectType::OS_SteamEquipment, "OS_SteamEquipment", "OS:SteamEquipment"},
@@ -2842,6 +3056,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_SpaceInfiltration_DesignFlowRate, "OS_SpaceInfiltration_DesignFlowRate", "OS:SpaceInfiltration:DesignFlowRate"},
 { IddObjectType::OS_SpaceInfiltration_EffectiveLeakageArea, "OS_SpaceInfiltration_EffectiveLeakageArea", "OS:SpaceInfiltration:EffectiveLeakageArea"},
 { IddObjectType::OS_Exterior_Lights, "OS_Exterior_Lights", "OS:Exterior:Lights"},
+{ IddObjectType::OS_Exterior_FuelEquipment, "OS_Exterior_FuelEquipment", "OS:Exterior:FuelEquipment"},
+{ IddObjectType::OS_Exterior_WaterEquipment, "OS_Exterior_WaterEquipment", "OS:Exterior:WaterEquipment"},
 { IddObjectType::OS_Daylighting_Control, "OS_Daylighting_Control", "OS:Daylighting:Control"},
 { IddObjectType::OS_Glare_Sensor, "OS_Glare_Sensor", "OS:Glare:Sensor"},
 { IddObjectType::OS_IlluminanceMap, "OS_IlluminanceMap", "OS:IlluminanceMap"},
@@ -2875,6 +3091,7 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_AirLoopHVAC_UnitaryHeatPump_AirToAir, "OS_AirLoopHVAC_UnitaryHeatPump_AirToAir", "OS:AirLoopHVAC:UnitaryHeatPump:AirToAir"},
 { IddObjectType::OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass, "OS_AirLoopHVAC_UnitaryHeatCool_VAVChangeoverBypass", "OS:AirLoopHVAC:UnitaryHeatCool:VAVChangeoverBypass"},
 { IddObjectType::OS_AirLoopHVAC_UnitarySystem, "OS_AirLoopHVAC_UnitarySystem", "OS:AirLoopHVAC:UnitarySystem"},
+{ IddObjectType::OS_UnitarySystemPerformance_Multispeed, "OS_UnitarySystemPerformance_Multispeed", "OS:UnitarySystemPerformance:Multispeed"},
 { IddObjectType::OS_AirLoopHVAC_ZoneMixer, "OS_AirLoopHVAC_ZoneMixer", "OS:AirLoopHVAC:ZoneMixer"},
 { IddObjectType::OS_AirLoopHVAC_ZoneSplitter, "OS_AirLoopHVAC_ZoneSplitter", "OS:AirLoopHVAC:ZoneSplitter"},
 { IddObjectType::OS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat, "OS_AirTerminal_SingleDuct_VAV_HeatAndCool_NoReheat", "OS:AirTerminal:SingleDuct:VAV:HeatAndCool:NoReheat"},
@@ -2884,8 +3101,10 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_AirTerminal_SingleDuct_SeriesPIU_Reheat, "OS_AirTerminal_SingleDuct_SeriesPIU_Reheat", "OS:AirTerminal:SingleDuct:SeriesPIU:Reheat"},
 { IddObjectType::OS_AirTerminal_SingleDuct_ParallelPIU_Reheat, "OS_AirTerminal_SingleDuct_ParallelPIU_Reheat", "OS:AirTerminal:SingleDuct:ParallelPIU:Reheat"},
 { IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction, "OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeInduction", "OS:AirTerminal:SingleDuct:ConstantVolume:FourPipeInduction"},
+{ IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam, "OS_AirTerminal_SingleDuct_ConstantVolume_FourPipeBeam", "OS:AirTerminal:SingleDuct:ConstantVolume:FourPipeBeam"},
 { IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam, "OS_AirTerminal_SingleDuct_ConstantVolume_CooledBeam", "OS:AirTerminal:SingleDuct:ConstantVolume:CooledBeam"},
 { IddObjectType::OS_AirTerminal_SingleDuct_Uncontrolled, "OS_AirTerminal_SingleDuct_Uncontrolled", "OS:AirTerminal:SingleDuct:Uncontrolled"},
+{ IddObjectType::OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat, "OS_AirTerminal_SingleDuct_ConstantVolume_NoReheat", "OS:AirTerminal:SingleDuct:ConstantVolume:NoReheat"},
 { IddObjectType::OS_AirTerminal_SingleDuct_VAV_NoReheat, "OS_AirTerminal_SingleDuct_VAV_NoReheat", "OS:AirTerminal:SingleDuct:VAV:NoReheat"},
 { IddObjectType::OS_AirTerminal_SingleDuct_VAV_Reheat, "OS_AirTerminal_SingleDuct_VAV_Reheat", "OS:AirTerminal:SingleDuct:VAV:Reheat"},
 { IddObjectType::OS_AirTerminal_DualDuct_VAV_OutdoorAir, "OS_AirTerminal_DualDuct_VAV_OutdoorAir", "OS:AirTerminal:DualDuct:VAV:OutdoorAir"},
@@ -2893,9 +3112,15 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_AirTerminal_DualDuct_VAV, "OS_AirTerminal_DualDuct_VAV", "OS:AirTerminal:DualDuct:VAV"},
 { IddObjectType::OS_AvailabilityManagerAssignmentList, "OS_AvailabilityManagerAssignmentList", "OS:AvailabilityManagerAssignmentList"},
 { IddObjectType::OS_AvailabilityManager_Scheduled, "OS_AvailabilityManager_Scheduled", "OS:AvailabilityManager:Scheduled"},
+{ IddObjectType::OS_AvailabilityManager_ScheduledOn, "OS_AvailabilityManager_ScheduledOn", "OS:AvailabilityManager:ScheduledOn"},
+{ IddObjectType::OS_AvailabilityManager_ScheduledOff, "OS_AvailabilityManager_ScheduledOff", "OS:AvailabilityManager:ScheduledOff"},
 { IddObjectType::OS_AvailabilityManager_NightCycle, "OS_AvailabilityManager_NightCycle", "OS:AvailabilityManager:NightCycle"},
 { IddObjectType::OS_AvailabilityManager_OptimumStart, "OS_AvailabilityManager_OptimumStart", "OS:AvailabilityManager:OptimumStart"},
 { IddObjectType::OS_AvailabilityManager_DifferentialThermostat, "OS_AvailabilityManager_DifferentialThermostat", "OS:AvailabilityManager:DifferentialThermostat"},
+{ IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOff, "OS_AvailabilityManager_HighTemperatureTurnOff", "OS:AvailabilityManager:HighTemperatureTurnOff"},
+{ IddObjectType::OS_AvailabilityManager_HighTemperatureTurnOn, "OS_AvailabilityManager_HighTemperatureTurnOn", "OS:AvailabilityManager:HighTemperatureTurnOn"},
+{ IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOff, "OS_AvailabilityManager_LowTemperatureTurnOff", "OS:AvailabilityManager:LowTemperatureTurnOff"},
+{ IddObjectType::OS_AvailabilityManager_LowTemperatureTurnOn, "OS_AvailabilityManager_LowTemperatureTurnOn", "OS:AvailabilityManager:LowTemperatureTurnOn"},
 { IddObjectType::OS_AvailabilityManager_NightVentilation, "OS_AvailabilityManager_NightVentilation", "OS:AvailabilityManager:NightVentilation"},
 { IddObjectType::OS_AvailabilityManager_HybridVentilation, "OS_AvailabilityManager_HybridVentilation", "OS:AvailabilityManager:HybridVentilation"},
 { IddObjectType::OS_Boiler_HotWater, "OS_Boiler_HotWater", "OS:Boiler:HotWater"},
@@ -2918,6 +3143,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_GroundHeatExchanger_Vertical, "OS_GroundHeatExchanger_Vertical", "OS:GroundHeatExchanger:Vertical"},
 { IddObjectType::OS_GroundHeatExchanger_HorizontalTrench, "OS_GroundHeatExchanger_HorizontalTrench", "OS:GroundHeatExchanger:HorizontalTrench"},
 { IddObjectType::OS_Coil_Cooling_CooledBeam, "OS_Coil_Cooling_CooledBeam", "OS:Coil:Cooling:CooledBeam"},
+{ IddObjectType::OS_Coil_Cooling_FourPipeBeam, "OS_Coil_Cooling_FourPipeBeam", "OS:Coil:Cooling:FourPipeBeam"},
+{ IddObjectType::OS_Coil_Heating_FourPipeBeam, "OS_Coil_Heating_FourPipeBeam", "OS:Coil:Heating:FourPipeBeam"},
 { IddObjectType::OS_Coil_Cooling_DX_SingleSpeed, "OS_Coil_Cooling_DX_SingleSpeed", "OS:Coil:Cooling:DX:SingleSpeed"},
 { IddObjectType::OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode, "OS_Coil_Cooling_DX_TwoStageWithHumidityControlMode", "OS:Coil:Cooling:DX:TwoStageWithHumidityControlMode"},
 { IddObjectType::OS_CoilPerformance_DX_Cooling, "OS_CoilPerformance_DX_Cooling", "OS:CoilPerformance:DX:Cooling"},
@@ -3036,6 +3263,8 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_SetpointManager_SingleZone_OneStageCooling, "OS_SetpointManager_SingleZone_OneStageCooling", "OS:SetpointManager:SingleZone:OneStageCooling"},
 { IddObjectType::OS_SetpointManager_SingleZone_OneStageHeating, "OS_SetpointManager_SingleZone_OneStageHeating", "OS:SetpointManager:SingleZone:OneStageHeating"},
 { IddObjectType::OS_SetpointManager_SingleZone_Humidity_Maximum, "OS_SetpointManager_SingleZone_Humidity_Maximum", "OS:SetpointManager:SingleZone:Humidity:Maximum"},
+{ IddObjectType::OS_SetpointManager_SingleZone_Cooling, "OS_SetpointManager_SingleZone_Cooling", "OS:SetpointManager:SingleZone:Cooling"},
+{ IddObjectType::OS_SetpointManager_SingleZone_Heating, "OS_SetpointManager_SingleZone_Heating", "OS:SetpointManager:SingleZone:Heating"},
 { IddObjectType::OS_Sizing_Plant, "OS_Sizing_Plant", "OS:Sizing:Plant"},
 { IddObjectType::OS_Sizing_System, "OS_Sizing_System", "OS:Sizing:System"},
 { IddObjectType::OS_Sizing_Zone, "OS_Sizing_Zone", "OS:Sizing:Zone"},
@@ -3069,7 +3298,10 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_WaterHeater_Mixed, "OS_WaterHeater_Mixed", "OS:WaterHeater:Mixed"},
 { IddObjectType::OS_WaterHeater_HeatPump, "OS_WaterHeater_HeatPump", "OS:WaterHeater:HeatPump"},
 { IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump, "OS_Coil_WaterHeating_AirToWaterHeatPump", "OS:Coil:WaterHeating:AirToWaterHeatPump"},
+{ IddObjectType::OS_WaterHeater_HeatPump_WrappedCondenser, "OS_WaterHeater_HeatPump_WrappedCondenser", "OS:WaterHeater:HeatPump:WrappedCondenser"},
+{ IddObjectType::OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped, "OS_Coil_WaterHeating_AirToWaterHeatPump_Wrapped", "OS:Coil:WaterHeating:AirToWaterHeatPump:Wrapped"},
 { IddObjectType::OS_WaterHeater_Stratified, "OS_WaterHeater_Stratified", "OS:WaterHeater:Stratified"},
+{ IddObjectType::OS_WaterHeater_Sizing, "OS_WaterHeater_Sizing", "OS:WaterHeater:Sizing"},
 { IddObjectType::OS_WaterUse_Equipment, "OS_WaterUse_Equipment", "OS:WaterUse:Equipment"},
 { IddObjectType::OS_WaterUse_Equipment_Definition, "OS_WaterUse_Equipment_Definition", "OS:WaterUse:Equipment:Definition"},
 { IddObjectType::OS_WaterUse_Connections, "OS_WaterUse_Connections", "OS:WaterUse:Connections"},
@@ -3086,12 +3318,29 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_SolarCollector_IntegralCollectorStorage, "OS_SolarCollector_IntegralCollectorStorage", "OS:SolarCollector:IntegralCollectorStorage"},
 { IddObjectType::OS_SolarCollectorPerformance_PhotovoltaicThermal_Simple, "OS_SolarCollectorPerformance_PhotovoltaicThermal_Simple", "OS:SolarCollectorPerformance:PhotovoltaicThermal:Simple"},
 { IddObjectType::OS_SolarCollector_FlatPlate_PhotovoltaicThermal, "OS_SolarCollector_FlatPlate_PhotovoltaicThermal", "OS:SolarCollector:FlatPlate:PhotovoltaicThermal"},
+{ IddObjectType::OS_Generator_MicroTurbine, "OS_Generator_MicroTurbine", "OS:Generator:MicroTurbine"},
+{ IddObjectType::OS_Generator_MicroTurbine_HeatRecovery, "OS_Generator_MicroTurbine_HeatRecovery", "OS:Generator:MicroTurbine:HeatRecovery"},
 { IddObjectType::OS_Generator_Photovoltaic, "OS_Generator_Photovoltaic", "OS:Generator:Photovoltaic"},
 { IddObjectType::OS_PhotovoltaicPerformance_Simple, "OS_PhotovoltaicPerformance_Simple", "OS:PhotovoltaicPerformance:Simple"},
 { IddObjectType::OS_PhotovoltaicPerformance_EquivalentOneDiode, "OS_PhotovoltaicPerformance_EquivalentOneDiode", "OS:PhotovoltaicPerformance:EquivalentOne-Diode"},
+{ IddObjectType::OS_Generator_FuelCell, "OS_Generator_FuelCell", "OS:Generator:FuelCell"},
+{ IddObjectType::OS_Generator_FuelCell_PowerModule, "OS_Generator_FuelCell_PowerModule", "OS:Generator:FuelCell:PowerModule"},
+{ IddObjectType::OS_Generator_FuelCell_AirSupply, "OS_Generator_FuelCell_AirSupply", "OS:Generator:FuelCell:AirSupply"},
+{ IddObjectType::OS_Generator_FuelCell_WaterSupply, "OS_Generator_FuelCell_WaterSupply", "OS:Generator:FuelCell:WaterSupply"},
+{ IddObjectType::OS_Generator_FuelCell_AuxiliaryHeater, "OS_Generator_FuelCell_AuxiliaryHeater", "OS:Generator:FuelCell:AuxiliaryHeater"},
+{ IddObjectType::OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger, "OS_Generator_FuelCell_ExhaustGasToWaterHeatExchanger", "OS:Generator:FuelCell:ExhaustGasToWaterHeatExchanger"},
+{ IddObjectType::OS_Generator_FuelCell_ElectricalStorage, "OS_Generator_FuelCell_ElectricalStorage", "OS:Generator:FuelCell:ElectricalStorage"},
+{ IddObjectType::OS_Generator_FuelCell_Inverter, "OS_Generator_FuelCell_Inverter", "OS:Generator:FuelCell:Inverter"},
+{ IddObjectType::OS_Generator_FuelCell_StackCooler, "OS_Generator_FuelCell_StackCooler", "OS:Generator:FuelCell:StackCooler"},
+{ IddObjectType::OS_Generator_FuelSupply, "OS_Generator_FuelSupply", "OS:Generator:FuelSupply"},
+{ IddObjectType::OS_Generator_PVWatts, "OS_Generator_PVWatts", "OS:Generator:PVWatts"},
+{ IddObjectType::OS_ElectricLoadCenter_Inverter_PVWatts, "OS_ElectricLoadCenter_Inverter_PVWatts", "OS:ElectricLoadCenter:Inverter:PVWatts"},
 { IddObjectType::OS_ElectricLoadCenter_Inverter_Simple, "OS_ElectricLoadCenter_Inverter_Simple", "OS:ElectricLoadCenter:Inverter:Simple"},
 { IddObjectType::OS_ElectricLoadCenter_Inverter_LookUpTable, "OS_ElectricLoadCenter_Inverter_LookUpTable", "OS:ElectricLoadCenter:Inverter:LookUpTable"},
+{ IddObjectType::OS_ElectricLoadCenter_Storage_Simple, "OS_ElectricLoadCenter_Storage_Simple", "OS:ElectricLoadCenter:Storage:Simple"},
+{ IddObjectType::OS_ElectricLoadCenter_Transformer, "OS_ElectricLoadCenter_Transformer", "OS:ElectricLoadCenter:Transformer"},
 { IddObjectType::OS_ElectricLoadCenter_Distribution, "OS_ElectricLoadCenter_Distribution", "OS:ElectricLoadCenter:Distribution"},
+{ IddObjectType::OS_ElectricLoadCenter_Storage_Converter, "OS_ElectricLoadCenter_Storage_Converter", "OS:ElectricLoadCenter:Storage:Converter"},
 { IddObjectType::OS_ComponentCost_Adjustments, "OS_ComponentCost_Adjustments", "OS:ComponentCost:Adjustments"},
 { IddObjectType::OS_LifeCycleCost, "OS_LifeCycleCost", "OS:LifeCycleCost"},
 { IddObjectType::OS_CurrencyType, "OS_CurrencyType", "OS:CurrencyType"},
@@ -3099,8 +3348,61 @@ bool IddFactorySingleton::isInFile(IddObjectType objectType, IddFileType fileTyp
 { IddObjectType::OS_LifeCycleCost_UsePriceEscalation, "OS_LifeCycleCost_UsePriceEscalation", "OS:LifeCycleCost:UsePriceEscalation"},
 { IddObjectType::OS_UtilityBill, "OS_UtilityBill", "OS:UtilityBill"},
 { IddObjectType::OS_OutputControl_ReportingTolerances, "OS_OutputControl_ReportingTolerances", "OS:OutputControl:ReportingTolerances"},
-{ IddObjectType::OS_Meter, "OS_Meter", "OS:Meter"},
+{ IddObjectType::OS_Output_Meter, "OS_Output_Meter", "OS:Output:Meter"},
 { IddObjectType::OS_Output_Variable, "OS_Output_Variable", "OS:Output:Variable"},
+{ IddObjectType::OS_Meter_Custom, "OS_Meter_Custom", "OS:Meter:Custom"},
+{ IddObjectType::OS_Meter_CustomDecrement, "OS_Meter_CustomDecrement", "OS:Meter:CustomDecrement"},
+{ IddObjectType::OS_Output_EnergyManagementSystem, "OS_Output_EnergyManagementSystem", "OS:Output:EnergyManagementSystem"},
+{ IddObjectType::OS_EnergyManagementSystem_Sensor, "OS_EnergyManagementSystem_Sensor", "OS:EnergyManagementSystem:Sensor"},
+{ IddObjectType::OS_EnergyManagementSystem_Actuator, "OS_EnergyManagementSystem_Actuator", "OS:EnergyManagementSystem:Actuator"},
+{ IddObjectType::OS_EnergyManagementSystem_ProgramCallingManager, "OS_EnergyManagementSystem_ProgramCallingManager", "OS:EnergyManagementSystem:ProgramCallingManager"},
+{ IddObjectType::OS_EnergyManagementSystem_Program, "OS_EnergyManagementSystem_Program", "OS:EnergyManagementSystem:Program"},
+{ IddObjectType::OS_EnergyManagementSystem_Subroutine, "OS_EnergyManagementSystem_Subroutine", "OS:EnergyManagementSystem:Subroutine"},
+{ IddObjectType::OS_EnergyManagementSystem_GlobalVariable, "OS_EnergyManagementSystem_GlobalVariable", "OS:EnergyManagementSystem:GlobalVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_OutputVariable, "OS_EnergyManagementSystem_OutputVariable", "OS:EnergyManagementSystem:OutputVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_MeteredOutputVariable, "OS_EnergyManagementSystem_MeteredOutputVariable", "OS:EnergyManagementSystem:MeteredOutputVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_TrendVariable, "OS_EnergyManagementSystem_TrendVariable", "OS:EnergyManagementSystem:TrendVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_InternalVariable, "OS_EnergyManagementSystem_InternalVariable", "OS:EnergyManagementSystem:InternalVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_CurveOrTableIndexVariable, "OS_EnergyManagementSystem_CurveOrTableIndexVariable", "OS:EnergyManagementSystem:CurveOrTableIndexVariable"},
+{ IddObjectType::OS_EnergyManagementSystem_ConstructionIndexVariable, "OS_EnergyManagementSystem_ConstructionIndexVariable", "OS:EnergyManagementSystem:ConstructionIndexVariable"},
+{ IddObjectType::OS_AirflowNetworkSimulationControl, "OS_AirflowNetworkSimulationControl", "OS:AirflowNetworkSimulationControl"},
+{ IddObjectType::OS_AirflowNetworkZone, "OS_AirflowNetworkZone", "OS:AirflowNetworkZone"},
+{ IddObjectType::OS_AirflowNetworkSurface, "OS_AirflowNetworkSurface", "OS:AirflowNetworkSurface"},
+{ IddObjectType::OS_AirflowNetworkReferenceCrackConditions, "OS_AirflowNetworkReferenceCrackConditions", "OS:AirflowNetworkReferenceCrackConditions"},
+{ IddObjectType::OS_AirflowNetworkCrack, "OS_AirflowNetworkCrack", "OS:AirflowNetworkCrack"},
+{ IddObjectType::OS_AirflowNetworkEffectiveLeakageArea, "OS_AirflowNetworkEffectiveLeakageArea", "OS:AirflowNetworkEffectiveLeakageArea"},
+{ IddObjectType::OS_AirflowNetworkDetailedOpening, "OS_AirflowNetworkDetailedOpening", "OS:AirflowNetworkDetailedOpening"},
+{ IddObjectType::OS_AirflowNetworkSimpleOpening, "OS_AirflowNetworkSimpleOpening", "OS:AirflowNetworkSimpleOpening"},
+{ IddObjectType::OS_AirflowNetworkHorizontalOpening, "OS_AirflowNetworkHorizontalOpening", "OS:AirflowNetworkHorizontalOpening"},
+{ IddObjectType::OS_AirflowNetworkOutdoorAirflow, "OS_AirflowNetworkOutdoorAirflow", "OS:AirflowNetworkOutdoorAirflow"},
+{ IddObjectType::OS_AirflowNetworkZoneExhaustFan, "OS_AirflowNetworkZoneExhaustFan", "OS:AirflowNetworkZoneExhaustFan"},
+{ IddObjectType::OS_AirflowNetworkExternalNode, "OS_AirflowNetworkExternalNode", "OS:AirflowNetworkExternalNode"},
+{ IddObjectType::OS_AirflowNetworkPressureController, "OS_AirflowNetworkPressureController", "OS:AirflowNetworkPressureController"},
+{ IddObjectType::OS_AirflowNetworkDistributionNode, "OS_AirflowNetworkDistributionNode", "OS:AirflowNetworkDistributionNode"},
+{ IddObjectType::OS_AirflowNetworkLeak, "OS_AirflowNetworkLeak", "OS:AirflowNetworkLeak"},
+{ IddObjectType::OS_AirflowNetworkLeakageRatio, "OS_AirflowNetworkLeakageRatio", "OS:AirflowNetworkLeakageRatio"},
+{ IddObjectType::OS_AirflowNetworkDuct, "OS_AirflowNetworkDuct", "OS:AirflowNetworkDuct"},
+{ IddObjectType::OS_AirflowNetworkFan, "OS_AirflowNetworkFan", "OS:AirflowNetworkFan"},
+{ IddObjectType::OS_AirflowNetworkEquivalentDuct, "OS_AirflowNetworkEquivalentDuct", "OS:AirflowNetworkEquivalentDuct"},
+{ IddObjectType::OS_AirflowNetworkConstantPressureDrop, "OS_AirflowNetworkConstantPressureDrop", "OS:AirflowNetworkConstantPressureDrop"},
+{ IddObjectType::OS_AirflowNetworkReliefAirFlow, "OS_AirflowNetworkReliefAirFlow", "OS:AirflowNetworkReliefAirFlow"},
+{ IddObjectType::OS_AirflowNetworkDistributionLinkage, "OS_AirflowNetworkDistributionLinkage", "OS:AirflowNetworkDistributionLinkage"},
+{ IddObjectType::OS_AirflowNetworkDuctViewFactors, "OS_AirflowNetworkDuctViewFactors", "OS:AirflowNetworkDuctViewFactors"},
+{ IddObjectType::OS_AirflowNetworkOccupantVentilationControl, "OS_AirflowNetworkOccupantVentilationControl", "OS:AirflowNetworkOccupantVentilationControl"},
+{ IddObjectType::OS_ExternalInterface, "OS_ExternalInterface", "OS:ExternalInterface"},
+{ IddObjectType::OS_ExternalInterface_Schedule, "OS_ExternalInterface_Schedule", "OS:ExternalInterface:Schedule"},
+{ IddObjectType::OS_ExternalInterface_Variable, "OS_ExternalInterface_Variable", "OS:ExternalInterface:Variable"},
+{ IddObjectType::OS_ExternalInterface_Actuator, "OS_ExternalInterface_Actuator", "OS:ExternalInterface:Actuator"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport, "OS_ExternalInterface_FunctionalMockupUnitImport", "OS:ExternalInterface:FunctionalMockupUnitImport"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable, "OS_ExternalInterface_FunctionalMockupUnitImport_From_Variable", "OS:ExternalInterface:FunctionalMockupUnitImport:From:Variable"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule, "OS_ExternalInterface_FunctionalMockupUnitImport_To_Schedule", "OS:ExternalInterface:FunctionalMockupUnitImport:To:Schedule"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator, "OS_ExternalInterface_FunctionalMockupUnitImport_To_Actuator", "OS:ExternalInterface:FunctionalMockupUnitImport:To:Actuator"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable, "OS_ExternalInterface_FunctionalMockupUnitImport_To_Variable", "OS:ExternalInterface:FunctionalMockupUnitImport:To:Variable"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable, "OS_ExternalInterface_FunctionalMockupUnitExport_From_Variable", "OS:ExternalInterface:FunctionalMockupUnitExport:From:Variable"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule, "OS_ExternalInterface_FunctionalMockupUnitExport_To_Schedule", "OS:ExternalInterface:FunctionalMockupUnitExport:To:Schedule"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator, "OS_ExternalInterface_FunctionalMockupUnitExport_To_Actuator", "OS:ExternalInterface:FunctionalMockupUnitExport:To:Actuator"},
+{ IddObjectType::OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable, "OS_ExternalInterface_FunctionalMockupUnitExport_To_Variable", "OS:ExternalInterface:FunctionalMockupUnitExport:To:Variable"},
+{ IddObjectType::OS_PlantComponent_UserDefined, "OS_PlantComponent_UserDefined", "OS:PlantComponent:UserDefined"},
 { IddObjectType::CommentOnly, "CommentOnly", ""},
         { 0,0,0 }
       };

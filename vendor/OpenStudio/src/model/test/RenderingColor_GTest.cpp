@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 
@@ -164,14 +174,14 @@ TEST_F(ModelFixture, RenderingColor_Initializer2)
   Model model;
   RenderingColorWorkspaceWatcher watcher(model);
   EXPECT_FALSE(watcher.objectAdded());
-  
+
   IdfObject idfObject(IddObjectType::OS_Rendering_Color);
   model.addObject(idfObject);
   EXPECT_TRUE(watcher.objectAdded());
-  
+
   std::vector<RenderingColor> colors = model.getModelObjects<RenderingColor>();
   ASSERT_EQ(1u, colors.size());
-  
+
   RenderingColor color = colors[0];
   EXPECT_GE(color.renderingRedValue(), 0);
   EXPECT_LE(color.renderingRedValue(), 255);
@@ -179,4 +189,71 @@ TEST_F(ModelFixture, RenderingColor_Initializer2)
   EXPECT_LE(color.renderingGreenValue(), 255);
   EXPECT_GE(color.renderingBlueValue(), 0);
   EXPECT_LE(color.renderingBlueValue(), 255);
+}
+
+
+
+TEST_F(ModelFixture, RenderingColor_ColorString) {
+  Model model;
+  boost::optional<RenderingColor> test;
+
+  RenderingColor red(model);
+  red.setRenderingRedValue(255);
+  red.setRenderingGreenValue(0);
+  red.setRenderingBlueValue(0);
+  std::string redString = red.colorString();
+  EXPECT_EQ("#FF0000", redString);
+  test = RenderingColor::fromColorString(redString, model);
+  ASSERT_TRUE(test);
+  EXPECT_EQ(255, test->renderingRedValue());
+  EXPECT_EQ(0, test->renderingGreenValue());
+  EXPECT_EQ(0, test->renderingBlueValue());
+
+  RenderingColor green(model);
+  green.setRenderingRedValue(0);
+  green.setRenderingGreenValue(255);
+  green.setRenderingBlueValue(0);
+  std::string greenString = green.colorString();
+  EXPECT_EQ("#00FF00", greenString);
+  test = RenderingColor::fromColorString(greenString, model);
+  ASSERT_TRUE(test);
+  EXPECT_EQ(0, test->renderingRedValue());
+  EXPECT_EQ(255, test->renderingGreenValue());
+  EXPECT_EQ(0, test->renderingBlueValue());
+
+  RenderingColor blue(model);
+  blue.setRenderingRedValue(0);
+  blue.setRenderingGreenValue(0);
+  blue.setRenderingBlueValue(255);
+  std::string blueString = blue.colorString();
+  EXPECT_EQ("#0000FF", blueString);
+  test = RenderingColor::fromColorString(blueString, model);
+  ASSERT_TRUE(test);
+  EXPECT_EQ(0, test->renderingRedValue());
+  EXPECT_EQ(0, test->renderingGreenValue());
+  EXPECT_EQ(255, test->renderingBlueValue());
+
+  RenderingColor black(model);
+  black.setRenderingRedValue(0);
+  black.setRenderingGreenValue(0);
+  black.setRenderingBlueValue(0);
+  std::string blackString = black.colorString();
+  EXPECT_EQ("#000000", blackString);
+  test = RenderingColor::fromColorString(blackString, model);
+  ASSERT_TRUE(test);
+  EXPECT_EQ(0, test->renderingRedValue());
+  EXPECT_EQ(0, test->renderingGreenValue());
+  EXPECT_EQ(0, test->renderingBlueValue());
+
+  RenderingColor white(model);
+  white.setRenderingRedValue(255);
+  white.setRenderingGreenValue(255);
+  white.setRenderingBlueValue(255);
+  std::string whiteString = white.colorString();
+  EXPECT_EQ("#FFFFFF", whiteString);
+  test = RenderingColor::fromColorString(whiteString, model);
+  ASSERT_TRUE(test);
+  EXPECT_EQ(255, test->renderingRedValue());
+  EXPECT_EQ(255, test->renderingGreenValue());
+  EXPECT_EQ(255, test->renderingBlueValue());
 }

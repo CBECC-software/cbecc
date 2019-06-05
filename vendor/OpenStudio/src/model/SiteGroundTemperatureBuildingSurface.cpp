@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <vector>
 #include <string>
@@ -29,8 +39,8 @@
 
 #include <utilities/idd/OS_Site_GroundTemperature_BuildingSurface_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
-#include <utilities/core/Assert.hpp>
-#include <utilities/time/Date.hpp>
+#include "../utilities/core/Assert.hpp"
+#include "../utilities/time/Date.hpp"
 
 namespace openstudio {
 namespace model {
@@ -69,8 +79,6 @@ namespace detail {
   const std::vector<std::string>& SiteGroundTemperatureBuildingSurface_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -255,9 +263,10 @@ namespace detail {
     return monthly_temperatures;
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setJanuaryGroundTemperature(double januaryGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setJanuaryGroundTemperature(double januaryGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::JanuaryGroundTemperature, januaryGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetJanuaryGroundTemperature() {
@@ -265,9 +274,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setFebruaryGroundTemperature(double februaryGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setFebruaryGroundTemperature(double februaryGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::FebruaryGroundTemperature, februaryGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetFebruaryGroundTemperature() {
@@ -275,9 +285,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setMarchGroundTemperature(double marchGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setMarchGroundTemperature(double marchGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::MarchGroundTemperature, marchGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetMarchGroundTemperature() {
@@ -285,9 +296,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setAprilGroundTemperature(double aprilGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setAprilGroundTemperature(double aprilGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::AprilGroundTemperature, aprilGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetAprilGroundTemperature() {
@@ -295,9 +307,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setMayGroundTemperature(double mayGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setMayGroundTemperature(double mayGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::MayGroundTemperature, mayGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetMayGroundTemperature() {
@@ -305,9 +318,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setJuneGroundTemperature(double juneGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setJuneGroundTemperature(double juneGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::JuneGroundTemperature, juneGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetJuneGroundTemperature() {
@@ -315,9 +329,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setJulyGroundTemperature(double julyGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setJulyGroundTemperature(double julyGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::JulyGroundTemperature, julyGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetJulyGroundTemperature() {
@@ -325,9 +340,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setAugustGroundTemperature(double augustGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setAugustGroundTemperature(double augustGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::AugustGroundTemperature, augustGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetAugustGroundTemperature() {
@@ -335,9 +351,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setSeptemberGroundTemperature(double septemberGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setSeptemberGroundTemperature(double septemberGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::SeptemberGroundTemperature, septemberGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetSeptemberGroundTemperature() {
@@ -345,9 +362,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setOctoberGroundTemperature(double octoberGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setOctoberGroundTemperature(double octoberGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::OctoberGroundTemperature, octoberGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetOctoberGroundTemperature() {
@@ -355,9 +373,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setNovemberGroundTemperature(double novemberGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setNovemberGroundTemperature(double novemberGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::NovemberGroundTemperature, novemberGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetNovemberGroundTemperature() {
@@ -365,9 +384,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setDecemberGroundTemperature(double decemberGroundTemperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setDecemberGroundTemperature(double decemberGroundTemperature) {
     bool result = setDouble(OS_Site_GroundTemperature_BuildingSurfaceFields::DecemberGroundTemperature, decemberGroundTemperature);
     OS_ASSERT(result);
+    return result;
   }
 
   void SiteGroundTemperatureBuildingSurface_Impl::resetDecemberGroundTemperature() {
@@ -375,25 +395,25 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setTemperatureByMonth(int month, double temperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setTemperatureByMonth(int month, double temperature) {
     switch(month) {
-      case 1 : setJanuaryGroundTemperature(temperature); break;
-      case 2 : setFebruaryGroundTemperature(temperature); break;
-      case 3 : setMarchGroundTemperature(temperature); break;
-      case 4 : setAprilGroundTemperature(temperature); break;
-      case 5 : setMayGroundTemperature(temperature); break;
-      case 6 : setJuneGroundTemperature(temperature); break;
-      case 7 : setJulyGroundTemperature(temperature); break;
-      case 8 : setAugustGroundTemperature(temperature); break;
-      case 9 : setSeptemberGroundTemperature(temperature); break;
-      case 10 : setOctoberGroundTemperature(temperature); break;
-      case 11 : setNovemberGroundTemperature(temperature); break;
-      case 12 : setDecemberGroundTemperature(temperature); break;
-      default : LOG_AND_THROW("SiteGroundTemperature::getTemperatureByMonth: Invalid Month " + std::to_string(month)); break;
+      case 1 : return setJanuaryGroundTemperature(temperature); break;
+      case 2 : return setFebruaryGroundTemperature(temperature); break;
+      case 3 : return setMarchGroundTemperature(temperature); break;
+      case 4 : return setAprilGroundTemperature(temperature); break;
+      case 5 : return setMayGroundTemperature(temperature); break;
+      case 6 : return setJuneGroundTemperature(temperature); break;
+      case 7 : return setJulyGroundTemperature(temperature); break;
+      case 8 : return setAugustGroundTemperature(temperature); break;
+      case 9 : return setSeptemberGroundTemperature(temperature); break;
+      case 10 : return setOctoberGroundTemperature(temperature); break;
+      case 11 : return setNovemberGroundTemperature(temperature); break;
+      case 12 : return setDecemberGroundTemperature(temperature); break;
+      default : LOG_AND_THROW("SiteGroundTemperature::getTemperatureByMonth: Invalid Month " + std::to_string(month)); return false; break;
     }
   }
 
-  void SiteGroundTemperatureBuildingSurface_Impl::setTemperatureByMonth(const openstudio::MonthOfYear & month, double temperature) {
+  bool SiteGroundTemperatureBuildingSurface_Impl::setTemperatureByMonth(const openstudio::MonthOfYear & month, double temperature) {
     return setTemperatureByMonth(month.value(), temperature);
   }
 
@@ -559,108 +579,108 @@ std::vector<double> SiteGroundTemperatureBuildingSurface::getAllMonthlyTemperatu
   return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->getAllMonthlyTemperatures();
 }
 
-void SiteGroundTemperatureBuildingSurface::setJanuaryGroundTemperature(double januaryGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJanuaryGroundTemperature(januaryGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setJanuaryGroundTemperature(double januaryGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJanuaryGroundTemperature(januaryGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetJanuaryGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetJanuaryGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setFebruaryGroundTemperature(double februaryGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setFebruaryGroundTemperature(februaryGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setFebruaryGroundTemperature(double februaryGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setFebruaryGroundTemperature(februaryGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetFebruaryGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetFebruaryGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setMarchGroundTemperature(double marchGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setMarchGroundTemperature(marchGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setMarchGroundTemperature(double marchGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setMarchGroundTemperature(marchGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetMarchGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetMarchGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setAprilGroundTemperature(double aprilGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setAprilGroundTemperature(aprilGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setAprilGroundTemperature(double aprilGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setAprilGroundTemperature(aprilGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetAprilGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetAprilGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setMayGroundTemperature(double mayGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setMayGroundTemperature(mayGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setMayGroundTemperature(double mayGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setMayGroundTemperature(mayGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetMayGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetMayGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setJuneGroundTemperature(double juneGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJuneGroundTemperature(juneGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setJuneGroundTemperature(double juneGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJuneGroundTemperature(juneGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetJuneGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetJuneGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setJulyGroundTemperature(double julyGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJulyGroundTemperature(julyGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setJulyGroundTemperature(double julyGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setJulyGroundTemperature(julyGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetJulyGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetJulyGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setAugustGroundTemperature(double augustGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setAugustGroundTemperature(augustGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setAugustGroundTemperature(double augustGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setAugustGroundTemperature(augustGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetAugustGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetAugustGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setSeptemberGroundTemperature(double septemberGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setSeptemberGroundTemperature(septemberGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setSeptemberGroundTemperature(double septemberGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setSeptemberGroundTemperature(septemberGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetSeptemberGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetSeptemberGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setOctoberGroundTemperature(double octoberGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setOctoberGroundTemperature(octoberGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setOctoberGroundTemperature(double octoberGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setOctoberGroundTemperature(octoberGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetOctoberGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetOctoberGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setNovemberGroundTemperature(double novemberGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setNovemberGroundTemperature(novemberGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setNovemberGroundTemperature(double novemberGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setNovemberGroundTemperature(novemberGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetNovemberGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetNovemberGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setDecemberGroundTemperature(double decemberGroundTemperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setDecemberGroundTemperature(decemberGroundTemperature);
+bool SiteGroundTemperatureBuildingSurface::setDecemberGroundTemperature(double decemberGroundTemperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setDecemberGroundTemperature(decemberGroundTemperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetDecemberGroundTemperature() {
   getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->resetDecemberGroundTemperature();
 }
 
-void SiteGroundTemperatureBuildingSurface::setTemperatureByMonth(int month, double temperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setTemperatureByMonth(month, temperature);
+bool SiteGroundTemperatureBuildingSurface::setTemperatureByMonth(int month, double temperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setTemperatureByMonth(month, temperature);
 }
 
-void SiteGroundTemperatureBuildingSurface::setTemperatureByMonth(const openstudio::MonthOfYear & month, double temperature) {
-  getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setTemperatureByMonth(month, temperature);
+bool SiteGroundTemperatureBuildingSurface::setTemperatureByMonth(const openstudio::MonthOfYear & month, double temperature) {
+  return getImpl<detail::SiteGroundTemperatureBuildingSurface_Impl>()->setTemperatureByMonth(month, temperature);
 }
 
 void SiteGroundTemperatureBuildingSurface::resetTemperatureByMonth(int month) {
@@ -681,7 +701,7 @@ bool SiteGroundTemperatureBuildingSurface::setAllMonthlyTemperatures(const std::
 
 /// @cond
 SiteGroundTemperatureBuildingSurface::SiteGroundTemperatureBuildingSurface(std::shared_ptr<detail::SiteGroundTemperatureBuildingSurface_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 SiteGroundTemperatureBuildingSurface::SiteGroundTemperatureBuildingSurface(Model& model)
   : ModelObject(SiteGroundTemperatureBuildingSurface::iddObjectType(),model)

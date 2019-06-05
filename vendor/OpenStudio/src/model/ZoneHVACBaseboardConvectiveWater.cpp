@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ZoneHVACBaseboardConvectiveWater.hpp"
 #include "ZoneHVACBaseboardConvectiveWater_Impl.hpp"
@@ -78,7 +88,7 @@ ModelObject ZoneHVACBaseboardConvectiveWater_Impl::clone(Model model) const
 
     if( model == this->model() ) {
       if( auto plant = t_heatingCoil.plantLoop() ) {
-        plant->addDemandBranchForComponent(heatingCoilClone); 
+        plant->addDemandBranchForComponent(heatingCoilClone);
       }
     }
 
@@ -100,9 +110,17 @@ std::vector<IdfObject> ZoneHVACBaseboardConvectiveWater_Impl::remove()
 
   const std::vector<std::string>& ZoneHVACBaseboardConvectiveWater_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Baseboard Total Heating Rate",
+      "Baseboard Total Heating Energy",
+      "Baseboard Hot Water Energy",
+      "Baseboard Hot Water Mass Flow Rate",
+      "Baseboard Air Mass Flow Rate",
+      "Baseboard Air Inlet Temperature",
+      "Baseboard Air Outlet Temperature",
+      "Baseboard Water Inlet Temperature",
+      "Baseboard Water Outlet Temperature"
+    };
     return result;
   }
 
@@ -208,7 +226,7 @@ std::vector<IdfObject> ZoneHVACBaseboardConvectiveWater_Impl::remove()
     return false;
   }
 
-  boost::optional<ThermalZone> ZoneHVACBaseboardConvectiveWater_Impl::thermalZone()
+  boost::optional<ThermalZone> ZoneHVACBaseboardConvectiveWater_Impl::thermalZone() const
   {
     ModelObject thisObject = this->getObject<ModelObject>();
     std::vector<ThermalZone> thermalZones = this->model().getConcreteModelObjects<ThermalZone>();
@@ -258,6 +276,18 @@ std::vector<IdfObject> ZoneHVACBaseboardConvectiveWater_Impl::remove()
       thermalZone->removeEquipment(this->getObject<ZoneHVACComponent>());
     }
   }
+
+  std::vector<EMSActuatorNames> ZoneHVACBaseboardConvectiveWater_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{ { "ZoneBaseboard:OutdoorTemperatureControlled", "Power Level" } };
+    return actuators;
+  }
+
+  std::vector<std::string> ZoneHVACBaseboardConvectiveWater_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{ "Simple Zone Baseboard Capacity At Low Temperature",
+      "Simple Zone Baseboard Capacity At High Temperature" };
+    return types;
+  }
+
 } // detail
 
 ZoneHVACBaseboardConvectiveWater::ZoneHVACBaseboardConvectiveWater(const Model& model, Schedule& availabilitySchedule,StraightComponent& heatingCoilBaseboard)
@@ -296,7 +326,7 @@ bool ZoneHVACBaseboardConvectiveWater::setAvailabilitySchedule(Schedule& schedul
 bool ZoneHVACBaseboardConvectiveWater::setHeatingCoil(const StraightComponent& baseboardHeatingCoil) {
   return getImpl<detail::ZoneHVACBaseboardConvectiveWater_Impl>()->setHeatingCoil(baseboardHeatingCoil);
 }
-boost::optional<ThermalZone> ZoneHVACBaseboardConvectiveWater::thermalZone()
+boost::optional<ThermalZone> ZoneHVACBaseboardConvectiveWater::thermalZone() const
 {
   return getImpl<detail::ZoneHVACBaseboardConvectiveWater_Impl>()->thermalZone();
 }
@@ -312,7 +342,7 @@ void ZoneHVACBaseboardConvectiveWater::removeFromThermalZone()
 }
 /// @cond
 ZoneHVACBaseboardConvectiveWater::ZoneHVACBaseboardConvectiveWater(std::shared_ptr<detail::ZoneHVACBaseboardConvectiveWater_Impl> impl)
-  : ZoneHVACComponent(impl)
+  : ZoneHVACComponent(std::move(impl))
 {}
 /// @endcond
 

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "PeopleDefinition.hpp"
 #include "PeopleDefinition_Impl.hpp"
@@ -55,11 +65,11 @@ namespace detail {
     : SpaceLoadDefinition_Impl(other,model,keepHandle)
   {}
 
+  // TODO: remove
   const std::vector<std::string>& PeopleDefinition_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
+      // Not appropriate: output is listed in People instead
     return result;
   }
 
@@ -83,12 +93,12 @@ namespace detail {
 
   boost::optional<double> PeopleDefinition_Impl::peopleperSpaceFloorArea() const {
     OptionalDouble value = getDouble(OS_People_DefinitionFields::PeopleperSpaceFloorArea,true);
-    if (istringEqual("People/Area", this->numberofPeopleCalculationMethod())) {    
+    if (istringEqual("People/Area", this->numberofPeopleCalculationMethod())) {
       OS_ASSERT(value);
     }
     return value;
   }
-  
+
   boost::optional<double> PeopleDefinition_Impl::spaceFloorAreaperPerson() const {
     OptionalDouble value = getDouble(OS_People_DefinitionFields::SpaceFloorAreaperPerson,true);
     if (istringEqual("Area/Person", this->numberofPeopleCalculationMethod())) {
@@ -96,7 +106,7 @@ namespace detail {
     }
     return value;
   }
-  
+
   double PeopleDefinition_Impl::fractionRadiant() const {
     OptionalDouble value = getDouble(OS_People_DefinitionFields::FractionRadiant,true);
     OS_ASSERT(value);
@@ -175,12 +185,12 @@ namespace detail {
         result = setString(OS_People_DefinitionFields::PeopleperSpaceFloorArea, "");
         OS_ASSERT(result);
         result = setString(OS_People_DefinitionFields::SpaceFloorAreaperPerson, "");
-        OS_ASSERT(result);                
+        OS_ASSERT(result);
       }
     } else {
       if (istringEqual("People", this->numberofPeopleCalculationMethod())){
         result = setDouble(OS_People_DefinitionFields::NumberofPeople, 0.0);
-      }      
+      }
     }
     return result;
   }
@@ -195,8 +205,8 @@ namespace detail {
         result = setString(OS_People_DefinitionFields::NumberofPeople, "");
         OS_ASSERT(result);
         result = setString(OS_People_DefinitionFields::SpaceFloorAreaperPerson, "");
-        OS_ASSERT(result);                
-      }      
+        OS_ASSERT(result);
+      }
     } else {
       if (istringEqual("People/Area", this->numberofPeopleCalculationMethod())){
         result = setDouble(OS_People_DefinitionFields::PeopleperSpaceFloorArea, 0.0);
@@ -204,7 +214,7 @@ namespace detail {
     }
     return result;
   }
-  
+
   bool PeopleDefinition_Impl::setSpaceFloorAreaperPerson(boost::optional<double> spaceFloorAreaperPerson) {
     bool result(false);
     if (spaceFloorAreaperPerson) {
@@ -215,7 +225,7 @@ namespace detail {
         result = setString(OS_People_DefinitionFields::NumberofPeople, "");
         OS_ASSERT(result);
         result = setString(OS_People_DefinitionFields::PeopleperSpaceFloorArea, "");
-        OS_ASSERT(result);      
+        OS_ASSERT(result);
       }
     } else {
       if (istringEqual("Area/Person", this->numberofPeopleCalculationMethod())){
@@ -224,7 +234,7 @@ namespace detail {
     }
     return result;
   }
-  
+
   bool PeopleDefinition_Impl::setFractionRadiant(double fractionRadiant) {
     return setDouble(OS_People_DefinitionFields::FractionRadiant,fractionRadiant);
   }
@@ -252,7 +262,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void PeopleDefinition_Impl::setEnableASHRAE55ComfortWarnings(bool enableASHRAE55ComfortWarnings) {
+  bool PeopleDefinition_Impl::setEnableASHRAE55ComfortWarnings(bool enableASHRAE55ComfortWarnings) {
     bool result = false;
     if (enableASHRAE55ComfortWarnings) {
       result = setString(OS_People_DefinitionFields::EnableASHRAE55ComfortWarnings, "Yes");
@@ -260,6 +270,7 @@ namespace detail {
       result = setString(OS_People_DefinitionFields::EnableASHRAE55ComfortWarnings, "No");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void PeopleDefinition_Impl::resetEnableASHRAE55ComfortWarnings() {
@@ -391,7 +402,7 @@ namespace detail {
 
     return false;
   }
-  
+
   std::vector<std::string> PeopleDefinition_Impl::numberofPeopleCalculationMethodValues() const {
     return PeopleDefinition::numberofPeopleCalculationMethodValues();
   }
@@ -402,6 +413,16 @@ namespace detail {
 
   std::vector<std::string> PeopleDefinition_Impl::thermalComfortModelTypeValues() const {
     return PeopleDefinition::thermalComfortModelTypeValues();
+  }
+
+  std::vector<EMSActuatorNames> PeopleDefinition_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{ { "People", "Number of People" } };
+    return actuators;
+  }
+
+  std::vector<std::string> PeopleDefinition_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{ "People Count Design Level" };
+    return types;
   }
 
 } // detail
@@ -536,8 +557,8 @@ void PeopleDefinition::resetCarbonDioxideGenerationRate() {
   getImpl<detail::PeopleDefinition_Impl>()->resetCarbonDioxideGenerationRate();
 }
 
-void PeopleDefinition::setEnableASHRAE55ComfortWarnings(bool enableASHRAE55ComfortWarnings) {
-  getImpl<detail::PeopleDefinition_Impl>()->setEnableASHRAE55ComfortWarnings(enableASHRAE55ComfortWarnings);
+bool PeopleDefinition::setEnableASHRAE55ComfortWarnings(bool enableASHRAE55ComfortWarnings) {
+  return getImpl<detail::PeopleDefinition_Impl>()->setEnableASHRAE55ComfortWarnings(enableASHRAE55ComfortWarnings);
 }
 
 void PeopleDefinition::resetEnableASHRAE55ComfortWarnings() {
@@ -583,10 +604,9 @@ bool PeopleDefinition::setNumberOfPeopleCalculationMethod(const std::string& met
 
 /// @cond
 PeopleDefinition::PeopleDefinition(std::shared_ptr<detail::PeopleDefinition_Impl> impl)
-  : SpaceLoadDefinition(impl)
+  : SpaceLoadDefinition(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

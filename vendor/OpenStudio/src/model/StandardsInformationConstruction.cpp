@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "StandardsInformationConstruction.hpp"
 #include "StandardsInformationConstruction_Impl.hpp"
@@ -186,14 +196,14 @@ namespace detail {
 
     // make unique
     // DLM: have to sort before calling unique, unique only works on consecutive elements
-    auto it = std::unique(result.begin(), result.end(), IstringEqual()); 
-    result.resize( std::distance(result.begin(),it) ); 
+    auto it = std::unique(result.begin(), result.end(), IstringEqual());
+    result.resize( std::distance(result.begin(),it) );
 
     // add current to front
     if (standardsConstructionType){
       result.insert(result.begin(), *standardsConstructionType);
     }
-  
+
     return result;
   }
 
@@ -223,7 +233,7 @@ namespace detail {
       if (otherValue) { result = *otherValue; }
     }
     else { result = *choiceValue; }
-    return result; 
+    return result;
   }
 
   bool StandardsInformationConstruction_Impl::isPerturbableLayerTypeDefaulted() const {
@@ -310,7 +320,7 @@ namespace detail {
       return result;
     }
 
-    
+
     // todo: pull from standards JSON file, for now just hard code here
     if (istringEqual(*constructionStandard, "CEC Title24-2013")){
       //result.push_back("NA6");
@@ -399,7 +409,7 @@ namespace detail {
     if (value){
       result = openstudio::istringEqual(value.get(), "True");
     }
-    return result;  
+    return result;
   }
 
   boost::optional<ParentObject> StandardsInformationConstruction_Impl::parent() const {
@@ -422,8 +432,6 @@ namespace detail {
   const std::vector<std::string>& StandardsInformationConstruction_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -440,9 +448,10 @@ namespace detail {
     OS_ASSERT(ok);
   }
 
-  void StandardsInformationConstruction_Impl::setStandardsConstructionType(const std::string& type) {
+  bool StandardsInformationConstruction_Impl::setStandardsConstructionType(const std::string& type) {
     bool ok = setString(OS_StandardsInformation_ConstructionFields::StandardsConstructionType,type);
     OS_ASSERT(ok);
+    return ok;
   }
 
   void StandardsInformationConstruction_Impl::resetStandardsConstructionType() {
@@ -455,12 +464,12 @@ namespace detail {
 
     OptionalConstructionBase oConstructionBase = construction();
     if (!oConstructionBase) { return false; }
-    OptionalLayeredConstruction oLayeredConstruction = 
+    OptionalLayeredConstruction oLayeredConstruction =
         oConstructionBase->optionalCast<LayeredConstruction>();
     if (!oLayeredConstruction) { return false; }
 
     if (layerIndex >= oLayeredConstruction->numLayers()) { return false; }
-    
+
     ok = setUnsigned(OS_StandardsInformation_ConstructionFields::PerturbableLayer,layerIndex);
     OS_ASSERT(ok);
     return true;
@@ -471,13 +480,13 @@ namespace detail {
 
     OptionalConstructionBase oConstructionBase = construction();
     if (!oConstructionBase) { return false; }
-    OptionalLayeredConstruction oLayeredConstruction = 
+    OptionalLayeredConstruction oLayeredConstruction =
         oConstructionBase->optionalCast<LayeredConstruction>();
     if (!oLayeredConstruction) { return false; }
 
     UnsignedVector layerIndices = oLayeredConstruction->getLayerIndices(material);
     if (layerIndices.empty()) { return false; }
-    
+
     ok = setUnsigned(OS_StandardsInformation_ConstructionFields::PerturbableLayer,layerIndices[0]);
     OS_ASSERT(ok);
     return true;
@@ -490,17 +499,17 @@ namespace detail {
     OS_ASSERT(ok);
   }
 
-  void StandardsInformationConstruction_Impl::setPerturbableLayerType(const std::string& type) 
+  bool StandardsInformationConstruction_Impl::setPerturbableLayerType(const std::string& type)
   {
     bool ok(true);
 
     if (type.empty()) {
       // clear any existing values
       ok = setString(OS_StandardsInformation_ConstructionFields::PerturbableLayerType,"");
-      OS_ASSERT(ok); 
+      OS_ASSERT(ok);
       ok = setString(OS_StandardsInformation_ConstructionFields::OtherPerturbableLayerType,"");
       OS_ASSERT(ok);
-      return;
+      return ok;
     }
 
     ok = setString(OS_StandardsInformation_ConstructionFields::PerturbableLayerType,type);
@@ -514,19 +523,21 @@ namespace detail {
       ok = setString(OS_StandardsInformation_ConstructionFields::OtherPerturbableLayerType,"");
       OS_ASSERT(ok);
     }
+    return ok;
   }
 
-  void StandardsInformationConstruction_Impl::resetPerturbableLayerType() 
+  void StandardsInformationConstruction_Impl::resetPerturbableLayerType()
   {
     bool ok = setString(OS_StandardsInformation_ConstructionFields::PerturbableLayerType,"");
-    OS_ASSERT(ok); 
+    OS_ASSERT(ok);
     ok = setString(OS_StandardsInformation_ConstructionFields::OtherPerturbableLayerType,"");
     OS_ASSERT(ok);
   }
 
-  void StandardsInformationConstruction_Impl::setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType) {
+  bool StandardsInformationConstruction_Impl::setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType) {
     bool result = setString(OS_StandardsInformation_ConstructionFields::OtherPerturbableLayerType, otherPerturbableLayerType);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationConstruction_Impl::resetOtherPerturbableLayerType() {
@@ -534,9 +545,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationConstruction_Impl::setConstructionStandard(const std::string& constructionStandard) {
+  bool StandardsInformationConstruction_Impl::setConstructionStandard(const std::string& constructionStandard) {
     bool result = setString(OS_StandardsInformation_ConstructionFields::ConstructionStandard, constructionStandard);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationConstruction_Impl::resetConstructionStandard() {
@@ -544,9 +556,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationConstruction_Impl::setConstructionStandardSource(const std::string& constructionStandardSource) {
+  bool StandardsInformationConstruction_Impl::setConstructionStandardSource(const std::string& constructionStandardSource) {
     bool result= setString(OS_StandardsInformation_ConstructionFields::ConstructionStandardSource, constructionStandardSource);
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationConstruction_Impl::resetConstructionStandardSource() {
@@ -624,7 +637,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void StandardsInformationConstruction_Impl::setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating) {
+  bool StandardsInformationConstruction_Impl::setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating) {
     bool result;
     if (fenestrationLowEmissivityCoating) {
       result = setString(OS_StandardsInformation_ConstructionFields::FenestrationLowEmissivityCoating, "True");
@@ -632,6 +645,7 @@ namespace detail {
       result = setString(OS_StandardsInformation_ConstructionFields::FenestrationLowEmissivityCoating, "False");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void StandardsInformationConstruction_Impl::resetFenestrationLowEmissivityCoating() {
@@ -794,8 +808,8 @@ void StandardsInformationConstruction::resetIntendedSurfaceType() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetIntendedSurfaceType();
 }
 
-void StandardsInformationConstruction::setStandardsConstructionType(const std::string& type) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setStandardsConstructionType(type);
+bool StandardsInformationConstruction::setStandardsConstructionType(const std::string& type) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setStandardsConstructionType(type);
 }
 
 void StandardsInformationConstruction::resetStandardsConstructionType() {
@@ -814,32 +828,32 @@ void StandardsInformationConstruction::resetPerturbableLayer() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetPerturbableLayer();
 }
 
-void StandardsInformationConstruction::setPerturbableLayerType(const std::string& type) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setPerturbableLayerType(type);
+bool StandardsInformationConstruction::setPerturbableLayerType(const std::string& type) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setPerturbableLayerType(type);
 }
 
 void StandardsInformationConstruction::resetPerturbableLayerType() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetPerturbableLayerType();
 }
 
-void StandardsInformationConstruction::setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setOtherPerturbableLayerType(otherPerturbableLayerType);
+bool StandardsInformationConstruction::setOtherPerturbableLayerType(const std::string& otherPerturbableLayerType) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setOtherPerturbableLayerType(otherPerturbableLayerType);
 }
 
 void StandardsInformationConstruction::resetOtherPerturbableLayerType() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetOtherPerturbableLayerType();
 }
 
-void StandardsInformationConstruction::setConstructionStandard(const std::string& constructionStandard) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setConstructionStandard(constructionStandard);
+bool StandardsInformationConstruction::setConstructionStandard(const std::string& constructionStandard) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setConstructionStandard(constructionStandard);
 }
 
 void StandardsInformationConstruction::resetConstructionStandard() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetConstructionStandard();
 }
 
-void StandardsInformationConstruction::setConstructionStandardSource(const std::string& constructionStandardSource) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setConstructionStandardSource(constructionStandardSource);
+bool StandardsInformationConstruction::setConstructionStandardSource(const std::string& constructionStandardSource) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setConstructionStandardSource(constructionStandardSource);
 }
 
 void StandardsInformationConstruction::resetConstructionStandardSource() {
@@ -902,8 +916,13 @@ void StandardsInformationConstruction::resetFenestrationGasFill() {
   getImpl<detail::StandardsInformationConstruction_Impl>()->resetFenestrationGasFill();
 }
 
-void StandardsInformationConstruction::setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating) {
-  getImpl<detail::StandardsInformationConstruction_Impl>()->setFenestrationLowEmissivityCoating(fenestrationLowEmissivityCoating);
+bool StandardsInformationConstruction::setFenestrationLowEmissivityCoating(bool fenestrationLowEmissivityCoating) {
+  return getImpl<detail::StandardsInformationConstruction_Impl>()->setFenestrationLowEmissivityCoating(fenestrationLowEmissivityCoating);
+}
+
+void StandardsInformationConstruction::setFenestrationLowEmissivityCoatingNoFail(bool fenestrationLowEmissivityCoating) {
+  bool result = getImpl<detail::StandardsInformationConstruction_Impl>()->setFenestrationLowEmissivityCoating(fenestrationLowEmissivityCoating);
+  OS_ASSERT(result);
 }
 
 void StandardsInformationConstruction::resetFenestrationLowEmissivityCoating() {
@@ -913,10 +932,9 @@ void StandardsInformationConstruction::resetFenestrationLowEmissivityCoating() {
 /// @cond
 StandardsInformationConstruction::StandardsInformationConstruction(
     std::shared_ptr<detail::StandardsInformationConstruction_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

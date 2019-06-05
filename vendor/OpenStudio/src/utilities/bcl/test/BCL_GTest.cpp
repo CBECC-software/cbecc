@@ -1,39 +1,43 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "BCLFixture.hpp"
 
-#include "../BCLComponent.hpp"
-#include "../BCLMeasure.hpp"
 #include "../LocalBCL.hpp"
 #include "../RemoteBCL.hpp"
-#include "../../data/Attribute.hpp"
 #include "../../idd/IddFile.hpp"
 #include "../../idf/Workspace.hpp"
-#include "../../time/DateTime.hpp"
+#include "../../core/FilesystemHelpers.hpp"
 
-#include <QDateTime>
 #include <QDir>
-#include <QFileInfo>
 
-#include <time.h>
 
 using namespace openstudio;
 
@@ -239,7 +243,8 @@ TEST_F(BCLFixture, RemoteBCLTest2)
   for (const std::string& file : lastDownload->files()) {
     openstudio::path path = toPath(lastDownload->directory() + "/files/" + file);
     EXPECT_TRUE(QDir().exists(toQString(path)));
-    time_t time = QFileInfo(toQString(path)).lastModified().toTime_t();
+
+    const auto time = openstudio::filesystem::last_write_time_as_time_t(path);
     EXPECT_GT(time, startTime);
   }
 
@@ -252,7 +257,8 @@ TEST_F(BCLFixture, RemoteBCLTest2)
   for (const std::string& file : component->files()) {
     openstudio::path path = toPath(component->directory() + "/files/" + file);
     EXPECT_TRUE(QDir().exists(toQString(path)));
-    time_t time = QFileInfo(toQString(path)).lastModified().toTime_t();
+
+    const auto time = openstudio::filesystem::last_write_time_as_time_t(path);
     EXPECT_GT(time, startTime);
   }
 
@@ -272,8 +278,8 @@ TEST_F(BCLFixture, RemoteBCLTest2)
   EXPECT_EQ(1u, oscFiles.size());
   openstudio::path oscPath = toPath(oscFiles[0]);
   EXPECT_TRUE(QDir().exists(toQString(oscPath)));
-  // DLM: the real loading procedure would be to run this through the version translator first 
-  boost::optional<Workspace> workspace = Workspace::load(oscPath, IddFile::catchallIddFile()); 
+  // DLM: the real loading procedure would be to run this through the version translator first
+  boost::optional<Workspace> workspace = Workspace::load(oscPath, IddFile::catchallIddFile());
   // This will fail on Windows if the path is greater than MAX_PATH
   EXPECT_TRUE(workspace);
 
@@ -293,7 +299,7 @@ TEST_F(BCLFixture, RemoteBCLTest2)
     }
   }
   EXPECT_TRUE(found);
-  
+
 }
 
 TEST_F(BCLFixture, GetComponentByUID)

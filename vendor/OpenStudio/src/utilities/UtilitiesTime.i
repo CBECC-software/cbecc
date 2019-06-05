@@ -10,9 +10,8 @@
 #define UTILITIES_TEMPLATE_EXT
 
 %include <utilities/core/CommonInclude.i>
-%import <utilities/core/CommonImport.i> 
+%import <utilities/core/CommonImport.i>
 %import <utilities/UtilitiesCore.i>
-%import <utilities/UtilitiesEconomics.i>
 
 //Ignore common stream related functions
 //that will not be supported by SWIG
@@ -37,7 +36,7 @@
   #include <utilities/core/Application.hpp>
   #include <utilities/idf/IdfObject.hpp>
   #include <utilities/idf/WorkspaceObject.hpp>
- 
+
 %}
 
 

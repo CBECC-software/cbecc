@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_COILCOOLINGDXTWOSPEED_HPP
 #define MODEL_COILCOOLINGDXTWOSPEED_HPP
@@ -269,25 +279,31 @@ class MODEL_API CoilCoolingDXTwoSpeed : public StraightComponent {
   /** Sets the value of the RatedHighSpeedTotalCoolingCapacity field.
       If optional is false, field is set to autocalculate
   **/
-  void setRatedHighSpeedTotalCoolingCapacity( boost::optional<double> value );
+  bool setRatedHighSpeedTotalCoolingCapacity( boost::optional<double> value );
+
+  bool setRatedHighSpeedTotalCoolingCapacity( double value );
 
   /** Sets the value of the RatedHighSpeedSensibleHeatRatio field.
    *   If optional is false, field is set to autocalculate */
-  void setRatedHighSpeedSensibleHeatRatio( boost::optional<double> value );
+  bool setRatedHighSpeedSensibleHeatRatio( boost::optional<double> value );
+
+  bool setRatedHighSpeedSensibleHeatRatio( double value );
 
   /** Sets the value of the RatedHighSpeedCOP field. **/
-  void setRatedHighSpeedCOP( double value );
+  bool setRatedHighSpeedCOP( double value );
 
   /** Sets the value of the RatedHighSpeedAirFlowRate field.
    *  If optional is false, field is set to autocalculate */
-  void setRatedHighSpeedAirFlowRate( boost::optional<double> value );
+  bool setRatedHighSpeedAirFlowRate( boost::optional<double> value );
+
+  bool setRatedHighSpeedAirFlowRate( double value );
 
   /** Sets the Curve referred to by the
    *  TotalCoolingCapacityFunctionOfTemperatureCurveName field. **/
   bool setTotalCoolingCapacityFunctionOfTemperatureCurve( const Curve& curve );
 
   /** Sets the Curve referred to by the TotalCoolingCapacityFunctionOfFlowFractionCurnveName field. **/
-  bool setTotalCoolingCapacityFunctionOfFlowFractionCurve( const Curve& curve );  
+  bool setTotalCoolingCapacityFunctionOfFlowFractionCurve( const Curve& curve );
 
   /** Sets the Curve referred to by the EnergyInputRatioFunctionOfTemperatureCurveName field. **/
   bool setEnergyInputRatioFunctionOfTemperatureCurve( const Curve& curve );
@@ -300,19 +316,25 @@ class MODEL_API CoilCoolingDXTwoSpeed : public StraightComponent {
 
   /** Sets the value of the RatedLowSpeedTotalCoolingCapacity field.
    *  If optional is false, field is set to autocalculate */
-  void setRatedLowSpeedTotalCoolingCapacity( boost::optional<double> value );
+  bool setRatedLowSpeedTotalCoolingCapacity( boost::optional<double> value );
+
+  bool setRatedLowSpeedTotalCoolingCapacity( double value );
 
   /** Sets the value of the RatedLowSpeedSensibleHeatRatio field.
       If optional is false, field is set to autocalculate
   **/
-  void setRatedLowSpeedSensibleHeatRatio( boost::optional<double> value );
+  bool setRatedLowSpeedSensibleHeatRatio( boost::optional<double> value );
+
+  bool setRatedLowSpeedSensibleHeatRatio( double value );
 
   /** Sets the value of the RatedLowSpeedCOP field. **/
-  void setRatedLowSpeedCOP( double value );
+  bool setRatedLowSpeedCOP( double value );
 
   /** Sets the value of the RatedLowSpeedAirFlowRate field.
    *  If optional is false, field is set to autocalculate */
-  void setRatedLowSpeedAirFlowRate( boost::optional<double> value );
+  bool setRatedLowSpeedAirFlowRate( boost::optional<double> value );
+
+  bool setRatedLowSpeedAirFlowRate( double value );
 
   /** Sets the Curve referred to by the LowSpeedTotalCoolingCapacityFunctionOfTemperatureCurveName field. */
   bool setLowSpeedTotalCoolingCapacityFunctionOfTemperatureCurve( const Curve& curve );
@@ -320,33 +342,41 @@ class MODEL_API CoilCoolingDXTwoSpeed : public StraightComponent {
   /** Sets the Curve referred to by the LowSpeedEnergyInputRatioFunctionOfTemperatureCurveName field. */
   bool setLowSpeedEnergyInputRatioFunctionOfTemperatureCurve( const Curve& curve );
 
-  void setCondenserAirInletNodeName(const std::string&);
+  bool setCondenserAirInletNodeName(const std::string&);
 
   /** Sets the value of the CondenserType field.
    *  Options are AirCooled and EvaporativelyCooled. */
-  void setCondenserType( const std::string& value );
+  bool setCondenserType( const std::string& value );
 
   /** Sets the value of the HighSpeedEvaporativeCondenserEffectiveness field. */
-  void setHighSpeedEvaporativeCondenserEffectiveness( double value );
+  bool setHighSpeedEvaporativeCondenserEffectiveness( double value );
 
   /** Sets the value of the HighSpeedEvaporativeCondenserAirFlowRate field.
    *  if value==false then set field to "autosize" */
-  void setHighSpeedEvaporativeCondenserAirFlowRate( boost::optional<double> value );
+  bool setHighSpeedEvaporativeCondenserAirFlowRate( boost::optional<double> value );
+
+  bool setHighSpeedEvaporativeCondenserAirFlowRate( double value );
 
   /** Sets the value of the HighSpeedEvaporativeCondenserPumpRatedPowerConsumption field.
    *  if value==false then set field to "autosize" */
-  void setHighSpeedEvaporativeCondenserPumpRatedPowerConsumption( boost::optional<double> value );
+  bool setHighSpeedEvaporativeCondenserPumpRatedPowerConsumption( boost::optional<double> value );
+
+  bool setHighSpeedEvaporativeCondenserPumpRatedPowerConsumption( double value );
 
   /** Sets the value of the LowSpeedEvaporativeCondenserEffectiveness field. */
-  void setLowSpeedEvaporativeCondenserEffectiveness( double value );
+  bool setLowSpeedEvaporativeCondenserEffectiveness( double value );
 
   /** Sets the value of the LowSpeedEvaporativeCondenserAirFlowRate field.
    *  if value==false then set field to "autosize" */
-  void setLowSpeedEvaporativeCondenserAirFlowRate( boost::optional<double> value );
+  bool setLowSpeedEvaporativeCondenserAirFlowRate( boost::optional<double> value );
+
+  bool setLowSpeedEvaporativeCondenserAirFlowRate( double value );
 
   /** Sets the value of the LowSpeedEvaporativeCondenserPumpRatedPowerConsumption field.
    *  if value==false then set field to "autosize" */
-  void setLowSpeedEvaporativeCondenserPumpRatedPowerConsumption( boost::optional<double> value );
+  bool setLowSpeedEvaporativeCondenserPumpRatedPowerConsumption( boost::optional<double> value );
+
+  bool setLowSpeedEvaporativeCondenserPumpRatedPowerConsumption( double value );
 
   //supplyWaterStorageTankName
   //setSupplyWaterStorageTankName
@@ -355,15 +385,37 @@ class MODEL_API CoilCoolingDXTwoSpeed : public StraightComponent {
   //setCondensateCollectionWaterStorageTankName
 
   /** Sets the value of the BasinHeaterCapacity field. **/
-  void setBasinHeaterCapacity( double value );
+  bool setBasinHeaterCapacity( double value );
 
   /** Sets the value of the BasinHeaterSetpointTemperature field. **/
-  void setBasinHeaterSetpointTemperature( double value );
+  bool setBasinHeaterSetpointTemperature( double value );
 
   /** Sets the Schedule referred to by the BasinHeaterOperatingSchedule field. **/
   bool setBasinHeaterOperatingSchedule(Schedule& schedule);
 
   void resetBasinHeaterOperatingSchedule();
+
+  boost::optional<double> autosizedRatedHighSpeedTotalCoolingCapacity() const ;
+
+  boost::optional<double> autosizedRatedHighSpeedSensibleHeatRatio() const ;
+
+  boost::optional<double> autosizedRatedHighSpeedAirFlowRate() const ;
+
+  boost::optional<double> autosizedRatedLowSpeedTotalCoolingCapacity() const ;
+
+  boost::optional<double> autosizedRatedLowSpeedSensibleHeatRatio() const ;
+
+  boost::optional<double> autosizedRatedLowSpeedAirFlowRate() const ;
+
+  boost::optional<double> autosizedHighSpeedEvaporativeCondenserAirFlowRate() const ;
+
+  boost::optional<double> autosizedHighSpeedEvaporativeCondenserPumpRatedPowerConsumption() const ;
+
+  boost::optional<double> autosizedLowSpeedEvaporativeCondenserAirFlowRate() const ;
+
+  boost::optional<double> autosizedLowSpeedEvaporativeCondenserPumpRatedPowerConsumption() const ;
+
+
 
   //@}
  protected:

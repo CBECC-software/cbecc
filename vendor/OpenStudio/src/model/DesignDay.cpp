@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "DesignDay.hpp"
 #include "DesignDay_Impl.hpp"
@@ -60,8 +70,6 @@ namespace detail {
   const std::vector<std::string>& DesignDay_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -138,7 +146,7 @@ namespace detail {
   bool DesignDay_Impl::isSkyClearnessDefaulted() const {
     return isEmpty(OS_SizingPeriod_DesignDayFields::SkyClearness);
   }
- 
+
   bool DesignDay_Impl::rainIndicator() const {
     bool result(false);
     int i = getInt(OS_SizingPeriod_DesignDayFields::RainIndicator,true).get();
@@ -151,7 +159,7 @@ namespace detail {
   bool DesignDay_Impl::isRainIndicatorDefaulted() const {
     return isEmpty(OS_SizingPeriod_DesignDayFields::RainIndicator);
   }
-    
+
   bool DesignDay_Impl::snowIndicator() const {
     bool result(false);
     int i = getInt(OS_SizingPeriod_DesignDayFields::SnowIndicator,true).get();
@@ -164,7 +172,7 @@ namespace detail {
   bool DesignDay_Impl::isSnowIndicatorDefaulted() const {
     return isEmpty(OS_SizingPeriod_DesignDayFields::SnowIndicator);
   }
-  
+
   int DesignDay_Impl::dayOfMonth() const {
     boost::optional<int> value = getInt(OS_SizingPeriod_DesignDayFields::DayofMonth,true);
     OS_ASSERT(value);
@@ -207,7 +215,7 @@ namespace detail {
   bool DesignDay_Impl::isDaylightSavingTimeIndicatorDefaulted() const {
     return isEmpty(OS_SizingPeriod_DesignDayFields::DaylightSavingTimeIndicator);
   }
-    
+
   std::string DesignDay_Impl::humidityIndicatingType() const {
     boost::optional<std::string> value = getString(
         OS_SizingPeriod_DesignDayFields::HumidityIndicatingType,true);
@@ -233,7 +241,7 @@ namespace detail {
 
   bool DesignDay_Impl::isDryBulbTemperatureRangeModifierTypeDefaulted() const {
     return isEmpty(OS_SizingPeriod_DesignDayFields::DryBulbTemperatureRangeModifierType);
-  }  
+  }
 
   boost::optional<ScheduleDay> DesignDay_Impl::dryBulbTemperatureRangeModifierSchedule() const
   {
@@ -304,9 +312,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void DesignDay_Impl::setHumidityIndicatingConditionsAtMaximumDryBulb(double humidityIndicatingConditionsAtMaximumDryBulb) {
+  bool DesignDay_Impl::setHumidityIndicatingConditionsAtMaximumDryBulb(double humidityIndicatingConditionsAtMaximumDryBulb) {
     bool result = setDouble(OS_SizingPeriod_DesignDayFields::HumidityIndicatingConditionsatMaximumDryBulb, humidityIndicatingConditionsAtMaximumDryBulb);
     OS_ASSERT(result);
+    return result;
   }
 
   void DesignDay_Impl::resetHumidityIndicatingConditionsAtMaximumDryBulb() {
@@ -438,12 +447,12 @@ namespace detail {
     bool result = setString(OS_SizingPeriod_DesignDayFields::HumidityIndicatingType, "");
     OS_ASSERT(result);
   }
-  
+
   bool DesignDay_Impl::setHumidityIndicatingDaySchedule(const ScheduleDay& schedule) {
     return this->getObject<ModelObject>().setPointer(
         OS_SizingPeriod_DesignDayFields::HumidityIndicatingDayScheduleName,schedule.handle());
   }
-  
+
   void DesignDay_Impl::resetHumidityIndicatingDaySchedule() {
     this->setString(OS_SizingPeriod_DesignDayFields::HumidityIndicatingDayScheduleName,"");
   }
@@ -457,11 +466,11 @@ namespace detail {
     bool result = setString(OS_SizingPeriod_DesignDayFields::DryBulbTemperatureRangeModifierType, "");
     OS_ASSERT(result);
   }
-      
+
   bool DesignDay_Impl::setDryBulbTemperatureRangeModifierSchedule(const ScheduleDay& schedule) {
     return this->getObject<ModelObject>().setPointer(OS_SizingPeriod_DesignDayFields::DryBulbTemperatureRangeModifierScheduleName,schedule.handle());
   }
-  
+
   void DesignDay_Impl::resetDryBulbTemperatureRangeModifierSchedule() {
     this->setString(OS_SizingPeriod_DesignDayFields::DryBulbTemperatureRangeModifierScheduleName,"");
   }
@@ -475,19 +484,19 @@ namespace detail {
     bool result = setString(OS_SizingPeriod_DesignDayFields::SolarModelIndicator, "");
     OS_ASSERT(result);
   }
-  
+
   bool DesignDay_Impl::setBeamSolarDaySchedule(const ScheduleDay & schedule) {
     return this->setPointer(OS_SizingPeriod_DesignDayFields::BeamSolarDayScheduleName,schedule.handle());
   }
-  
+
   void DesignDay_Impl::resetBeamSolarDaySchedule() {
     this->setString(OS_SizingPeriod_DesignDayFields::BeamSolarDayScheduleName,"");
   }
-  
+
   bool DesignDay_Impl::setDiffuseSolarDaySchedule(const ScheduleDay & schedule) {
     return this->setPointer(OS_SizingPeriod_DesignDayFields::DiffuseSolarDayScheduleName,schedule.handle());
   }
-  
+
   void DesignDay_Impl::resetDiffuseSolarDaySchedule() {
     this->setString(OS_SizingPeriod_DesignDayFields::DiffuseSolarDayScheduleName,"");
   }
@@ -501,8 +510,8 @@ namespace detail {
     return result;
   }
 
-  boost::optional<ModelObject> 
-  DesignDay_Impl::dryBulbTemperatureRangeModifierScheduleAsModelObject() const 
+  boost::optional<ModelObject>
+  DesignDay_Impl::dryBulbTemperatureRangeModifierScheduleAsModelObject() const
   {
     OptionalModelObject result;
     OptionalScheduleDay schedule = dryBulbTemperatureRangeModifierSchedule();
@@ -614,7 +623,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void DesignDay_Impl::setDailyWetBulbTemperatureRange(boost::optional<double> dailyWetBulbTemperatureRange) {
+  bool DesignDay_Impl::setDailyWetBulbTemperatureRange(boost::optional<double> dailyWetBulbTemperatureRange) {
     bool result = false;
     if (dailyWetBulbTemperatureRange) {
       result = setDouble(OS_SizingPeriod_DesignDayFields::DailyWetBulbTemperatureRange, dailyWetBulbTemperatureRange.get());
@@ -622,6 +631,7 @@ namespace detail {
       result = setString(OS_SizingPeriod_DesignDayFields::DailyWetBulbTemperatureRange, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void DesignDay_Impl::resetDailyWetBulbTemperatureRange() {
@@ -652,7 +662,7 @@ DesignDay::DesignDay(const Model& model)
   OS_ASSERT(getImpl<detail::DesignDay_Impl>());
 
   setMaximumDryBulbTemperature(23.0);
-  setDailyDryBulbTemperatureRange(0.0);  
+  setDailyDryBulbTemperatureRange(0.0);
   setHumidityIndicatingConditionsAtMaximumDryBulb(23.0);
   setBarometricPressure(31000);
   setWindSpeed(0.0);
@@ -665,12 +675,12 @@ DesignDay::DesignDay(const Model& model)
   setDaylightSavingTimeIndicator(false);
   setHumidityIndicatingType("WetBulb");
   setDryBulbTemperatureRangeModifierType("DefaultMultipliers");
-  setSolarModelIndicator("AshraeClearSky");
+  setSolarModelIndicator("ASHRAEClearSky");
 }
 
 // constructor
 DesignDay::DesignDay(std::shared_ptr<detail::DesignDay_Impl> impl)
-  : SizingPeriod(impl)
+  : SizingPeriod(std::move(impl))
 {}
 
 IddObjectType DesignDay::iddObjectType() {
@@ -878,9 +888,9 @@ void DesignDay::resetDailyDryBulbTemperatureRange() {
   getImpl<detail::DesignDay_Impl>()->resetDailyDryBulbTemperatureRange();
 }
 
-void DesignDay::setHumidityIndicatingConditionsAtMaximumDryBulb(double humidityIndicatingConditionsAtMaximumDryBulb)
+bool DesignDay::setHumidityIndicatingConditionsAtMaximumDryBulb(double humidityIndicatingConditionsAtMaximumDryBulb)
 {
-  getImpl<detail::DesignDay_Impl>()->setHumidityIndicatingConditionsAtMaximumDryBulb(humidityIndicatingConditionsAtMaximumDryBulb);
+  return getImpl<detail::DesignDay_Impl>()->setHumidityIndicatingConditionsAtMaximumDryBulb(humidityIndicatingConditionsAtMaximumDryBulb);
 }
 
 void DesignDay::resetHumidityIndicatingConditionsAtMaximumDryBulb() {
@@ -1017,7 +1027,7 @@ void DesignDay::resetBeamSolarDaySchedule() {
 
 bool DesignDay::setDiffuseSolarDaySchedule(const ScheduleDay& schedule) {
   return getImpl<detail::DesignDay_Impl>()->setDiffuseSolarDaySchedule(schedule);
-} 
+}
 
 void DesignDay::resetDiffuseSolarDaySchedule() {
   getImpl<detail::DesignDay_Impl>()->resetDiffuseSolarDaySchedule();
@@ -1039,8 +1049,8 @@ void DesignDay::resetAshraeTaud() {
   getImpl<detail::DesignDay_Impl>()->resetAshraeTaud();
 }
 
-void DesignDay::setDailyWetBulbTemperatureRange(double dailyWetBulbTemperatureRange) {
-  getImpl<detail::DesignDay_Impl>()->setDailyWetBulbTemperatureRange(dailyWetBulbTemperatureRange);
+bool DesignDay::setDailyWetBulbTemperatureRange(double dailyWetBulbTemperatureRange) {
+  return getImpl<detail::DesignDay_Impl>()->setDailyWetBulbTemperatureRange(dailyWetBulbTemperatureRange);
 }
 
 void DesignDay::resetDailyWetBulbTemperatureRange() {

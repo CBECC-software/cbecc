@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
- *  All rights reserved.
- *  
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *  
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *  
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <iomanip>
 #include "DataError.hpp"
@@ -23,25 +33,23 @@
 
 #include "../idd/IddObject.hpp"
 
-#include "../core/Compare.hpp"
 #include "../core/Assert.hpp"
-#include "../core/Optional.hpp"
 
 namespace openstudio {
 
-DataError::DataError(unsigned fieldIndex, const IdfObject& object, DataErrorType errorType) 
-  : m_scope(Scope::Field), 
-    m_type(errorType), 
-    m_fieldIndex(fieldIndex), 
+DataError::DataError(unsigned fieldIndex, const IdfObject& object, DataErrorType errorType)
+  : m_scope(Scope::Field),
+    m_type(errorType),
+    m_fieldIndex(fieldIndex),
     m_objectHandle(object.handle()),
     m_objectType(object.iddObject().type())
 {
-  // construct field-level error  
+  // construct field-level error
   OptionalString oName = object.name();
   if (oName) { m_objectName = *oName; }
 }
 
-DataError::DataError(const IdfObject& object, DataErrorType errorType) 
+DataError::DataError(const IdfObject& object, DataErrorType errorType)
   : m_scope(Scope::Object),
     m_type(errorType),
     m_fieldIndex(0),
@@ -53,7 +61,7 @@ DataError::DataError(const IdfObject& object, DataErrorType errorType)
   if (oName) { m_objectName = *oName; }
 }
 
-DataError::DataError(DataErrorType errorType) 
+DataError::DataError(DataErrorType errorType)
   : m_scope(Scope::Collection),
     m_type(errorType),
     m_fieldIndex(0)
@@ -61,7 +69,7 @@ DataError::DataError(DataErrorType errorType)
   // construct collection-level error
 }
 
-DataError::DataError(DataErrorType errorType, IddObjectType objectType) 
+DataError::DataError(DataErrorType errorType, IddObjectType objectType)
   : m_scope(Scope::Collection),
     m_type(errorType),
     m_fieldIndex(0),
@@ -79,8 +87,8 @@ DataErrorType DataError::type() const {
 }
 
 unsigned DataError::fieldIdentifier() const {
-  if (scope() != Scope::Field) { 
-    LOG_AND_THROW("There is no field identifier for this DataError, which has scope " 
+  if (scope() != Scope::Field) {
+    LOG_AND_THROW("There is no field identifier for this DataError, which has scope "
                   << scope().valueDescription() << ".");
   }
   return m_fieldIndex;
@@ -113,10 +121,10 @@ bool DataError::operator!=(const DataError& otherError) const {
 
 bool DataErrorLess::operator()(const DataError& left, const DataError& right) const {
   // order first by error type, since listed in order of severity
-  if (left.type() != right.type()) { 
+  if (left.type() != right.type()) {
     return left.type() < right.type();
   }
-  // within type order by collection, then object, then field-level, since 
+  // within type order by collection, then object, then field-level, since
   // collection-level is generally the most severe (IddFile missing, for instance)
   if (left.scope() != right.scope()) {
     return left.scope() > right.scope();
@@ -127,7 +135,7 @@ bool DataErrorLess::operator()(const DataError& left, const DataError& right) co
       return istringLess(left.objectName(),right.objectName());
     }
   }
-  // if objectType exists, order by that next, since Idd Files are in a 
+  // if objectType exists, order by that next, since Idd Files are in a
   // semi-logical order
   if ((left.objectType() != boost::none) && (right.objectType() != boost::none)) {
     return left.objectType().get() < right.objectType().get();
@@ -150,7 +158,7 @@ bool DataErrorLess::operator()(const DataError& left, const DataError& right) co
 }
 
 std::ostream& operator<<(std::ostream& os,const DataError& error) {
-  
+
   os << std::setw(11) << std::left << error.scope().valueName() << "level data error of type ";
   os << std::setw(18) << std::left << error.type().valueName() << "." << std::endl;
 

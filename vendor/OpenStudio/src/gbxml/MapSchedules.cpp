@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ReverseTranslator.hpp"
 
@@ -40,7 +50,6 @@
 
 #include <utilities/idd/OS_ScheduleTypeLimits_FieldEnums.hxx>
 
-#include <QFile>
 #include <QDomDocument>
 #include <QDomElement>
 #include <QStringList>
@@ -51,7 +60,7 @@ namespace gbxml {
   openstudio::model::ScheduleTypeLimits getScheduleTypeLimits(const std::string& type, openstudio::model::Model& model)
   {
     boost::optional<openstudio::model::ScheduleTypeLimits> result = model.getModelObjectByName<openstudio::model::ScheduleTypeLimits>(type);
-    
+
     if (result){
       return *result;
     }
@@ -76,7 +85,10 @@ namespace gbxml {
     QString type = element.attribute("type");
 
     openstudio::model::ScheduleDay result(model);
-    result.setName(escapeName(id));
+    m_idToObjectMap.insert(std::make_pair(id, result));
+
+    QString name = element.firstChildElement("Name").toElement().text();
+    result.setName(escapeName(id, name));
 
     openstudio::model::ScheduleTypeLimits scheduleTypeLimits = getScheduleTypeLimits(type.toStdString(), model);
     result.setScheduleTypeLimits(scheduleTypeLimits);
@@ -98,10 +110,13 @@ namespace gbxml {
     QString type = element.attribute("type");
 
     openstudio::model::ScheduleWeek result(model);
-    result.setName(escapeName(id));
+    m_idToObjectMap.insert(std::make_pair(id, result));
+
+    QString name = element.firstChildElement("Name").toElement().text();
+    result.setName(escapeName(id, name));
 
     // don't need to translate type
-    
+
     QDomNodeList dayElements = element.elementsByTagName("Day");
     for (int i = 0; i < dayElements.count(); i++){
 
@@ -115,12 +130,12 @@ namespace gbxml {
         QString thisId = dayScheduleElement.attribute("id");
         if (thisId == dayScheduleIdRef){
 
-          boost::optional<openstudio::model::ModelObject> modelObject = translateScheduleDay(dayScheduleElement, doc, model);          
+          boost::optional<openstudio::model::ModelObject> modelObject = translateScheduleDay(dayScheduleElement, doc, model);
           if (modelObject){
-            
+
             boost::optional<openstudio::model::ScheduleDay> scheduleDay = modelObject->cast<openstudio::model::ScheduleDay>();
             if (scheduleDay){
-              
+
               if (dayType == "Weekday"){
                 result.setWeekdaySchedule(*scheduleDay);
               }else if (dayType == "Weekend"){
@@ -167,10 +182,12 @@ namespace gbxml {
   {
     QString id = element.attribute("id");
     QString type = element.attribute("type");
-    QString name = element.elementsByTagName("Name").at(0).toElement().text();
 
     openstudio::model::ScheduleYear result(model);
-    result.setName(escapeName(id));
+    m_idToObjectMap.insert(std::make_pair(id, result));
+
+    QString name = element.firstChildElement("Name").toElement().text();
+    result.setName(escapeName(id, name));
 
     openstudio::model::ScheduleTypeLimits scheduleTypeLimits = getScheduleTypeLimits(type.toStdString(), model);
     result.setScheduleTypeLimits(scheduleTypeLimits);
@@ -198,7 +215,7 @@ namespace gbxml {
       OS_ASSERT(yd.calendarYear());
       OS_ASSERT(yd.calendarYear().get() == endDateParts.at(0).toInt());
       openstudio::Date endDate = yd.makeDate(endDateParts.at(1).toInt(), endDateParts.at(2).toInt());
-      
+
       QString weekScheduleId = element.elementsByTagName("WeekScheduleId").at(0).toElement().attribute("weekScheduleIdRef");
 
       // this can be made more efficient using QXPath in QXmlPatterns later
@@ -208,9 +225,9 @@ namespace gbxml {
         QString thisId = scheduleWeekElement.attribute("id");
         if (thisId == weekScheduleId){
 
-          boost::optional<openstudio::model::ModelObject> modelObject = translateScheduleWeek(scheduleWeekElement, doc, model);          
+          boost::optional<openstudio::model::ModelObject> modelObject = translateScheduleWeek(scheduleWeekElement, doc, model);
           if (modelObject){
-            
+
             boost::optional<openstudio::model::ScheduleWeek> scheduleWeek = modelObject->cast<openstudio::model::ScheduleWeek>();
             if (scheduleWeek){
               result.addScheduleWeek(endDate, *scheduleWeek);

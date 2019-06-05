@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_BOILERSTEAM_IMPL_HPP
 #define MODEL_BOILERSTEAM_IMPL_HPP
@@ -34,56 +44,6 @@ namespace detail {
 
   /** BoilerSteam_Impl is a StraightComponent_Impl that is the implementation class for BoilerSteam.*/
   class MODEL_API BoilerSteam_Impl : public StraightComponent_Impl {
-    Q_OBJECT;
-
-    Q_PROPERTY(std::string fuelType READ fuelType WRITE setFuelType);
-    Q_PROPERTY(std::vector<std::string> fuelTypeValues READ fuelTypeValues);
-
-    Q_PROPERTY(boost::optional<double> maximumOperatingPressure READ maximumOperatingPressure WRITE setMaximumOperatingPressure RESET resetMaximumOperatingPressure);
-    Q_PROPERTY(openstudio::OSOptionalQuantity maximumOperatingPressure_SI READ maximumOperatingPressure_SI WRITE setMaximumOperatingPressure RESET resetMaximumOperatingPressure);
-    Q_PROPERTY(openstudio::OSOptionalQuantity maximumOperatingPressure_IP READ maximumOperatingPressure_IP WRITE setMaximumOperatingPressure RESET resetMaximumOperatingPressure);
-
-    Q_PROPERTY(boost::optional<double> theoreticalEfficiency READ theoreticalEfficiency WRITE setTheoreticalEfficiency RESET resetTheoreticalEfficiency);
-    Q_PROPERTY(openstudio::OSOptionalQuantity theoreticalEfficiency_SI READ theoreticalEfficiency_SI WRITE setTheoreticalEfficiency RESET resetTheoreticalEfficiency);
-    Q_PROPERTY(openstudio::OSOptionalQuantity theoreticalEfficiency_IP READ theoreticalEfficiency_IP WRITE setTheoreticalEfficiency RESET resetTheoreticalEfficiency);
-
-    Q_PROPERTY(boost::optional<double> designOutletSteamTemperature READ designOutletSteamTemperature WRITE setDesignOutletSteamTemperature RESET resetDesignOutletSteamTemperature);
-    Q_PROPERTY(openstudio::OSOptionalQuantity designOutletSteamTemperature_SI READ designOutletSteamTemperature_SI WRITE setDesignOutletSteamTemperature RESET resetDesignOutletSteamTemperature);
-    Q_PROPERTY(openstudio::OSOptionalQuantity designOutletSteamTemperature_IP READ designOutletSteamTemperature_IP WRITE setDesignOutletSteamTemperature RESET resetDesignOutletSteamTemperature);
-
-    Q_PROPERTY(boost::optional<double> nominalCapacity READ nominalCapacity WRITE setNominalCapacity RESET resetNominalCapacity);
-    Q_PROPERTY(openstudio::OSOptionalQuantity nominalCapacity_SI READ nominalCapacity_SI WRITE setNominalCapacity RESET resetNominalCapacity);
-    Q_PROPERTY(openstudio::OSOptionalQuantity nominalCapacity_IP READ nominalCapacity_IP WRITE setNominalCapacity RESET resetNominalCapacity);
-    Q_PROPERTY(bool isNominalCapacityAutosized READ isNominalCapacityAutosized);
-
-    Q_PROPERTY(boost::optional<double> minimumPartLoadRatio READ minimumPartLoadRatio WRITE setMinimumPartLoadRatio RESET resetMinimumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity minimumPartLoadRatio_SI READ minimumPartLoadRatio_SI WRITE setMinimumPartLoadRatio RESET resetMinimumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity minimumPartLoadRatio_IP READ minimumPartLoadRatio_IP WRITE setMinimumPartLoadRatio RESET resetMinimumPartLoadRatio);
-
-    Q_PROPERTY(boost::optional<double> maximumPartLoadRatio READ maximumPartLoadRatio WRITE setMaximumPartLoadRatio RESET resetMaximumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity maximumPartLoadRatio_SI READ maximumPartLoadRatio_SI WRITE setMaximumPartLoadRatio RESET resetMaximumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity maximumPartLoadRatio_IP READ maximumPartLoadRatio_IP WRITE setMaximumPartLoadRatio RESET resetMaximumPartLoadRatio);
-
-    Q_PROPERTY(boost::optional<double> optimumPartLoadRatio READ optimumPartLoadRatio WRITE setOptimumPartLoadRatio RESET resetOptimumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity optimumPartLoadRatio_SI READ optimumPartLoadRatio_SI WRITE setOptimumPartLoadRatio RESET resetOptimumPartLoadRatio);
-    Q_PROPERTY(openstudio::OSOptionalQuantity optimumPartLoadRatio_IP READ optimumPartLoadRatio_IP WRITE setOptimumPartLoadRatio RESET resetOptimumPartLoadRatio);
-
-    Q_PROPERTY(boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve READ coefficient1ofFuelUseFunctionofPartLoadRatioCurve WRITE setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient1ofFuelUseFunctionofPartLoadRatioCurve_SI READ coefficient1ofFuelUseFunctionofPartLoadRatioCurve_SI WRITE setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient1ofFuelUseFunctionofPartLoadRatioCurve_IP READ coefficient1ofFuelUseFunctionofPartLoadRatioCurve_IP WRITE setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve);
-
-    Q_PROPERTY(boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve READ coefficient2ofFuelUseFunctionofPartLoadRatioCurve WRITE setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient2ofFuelUseFunctionofPartLoadRatioCurve_SI READ coefficient2ofFuelUseFunctionofPartLoadRatioCurve_SI WRITE setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient2ofFuelUseFunctionofPartLoadRatioCurve_IP READ coefficient2ofFuelUseFunctionofPartLoadRatioCurve_IP WRITE setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve);
-
-    Q_PROPERTY(boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve READ coefficient3ofFuelUseFunctionofPartLoadRatioCurve WRITE setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient3ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient3ofFuelUseFunctionofPartLoadRatioCurve_SI READ coefficient3ofFuelUseFunctionofPartLoadRatioCurve_SI WRITE setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient3ofFuelUseFunctionofPartLoadRatioCurve);
-    Q_PROPERTY(openstudio::OSOptionalQuantity coefficient3ofFuelUseFunctionofPartLoadRatioCurve_IP READ coefficient3ofFuelUseFunctionofPartLoadRatioCurve_IP WRITE setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve RESET resetCoefficient3ofFuelUseFunctionofPartLoadRatioCurve);
-
-    Q_PROPERTY(double sizingFactor READ sizingFactor WRITE setSizingFactor RESET resetSizingFactor);
-    Q_PROPERTY(openstudio::Quantity sizingFactor_SI READ sizingFactor_SI WRITE setSizingFactor RESET resetSizingFactor);
-    Q_PROPERTY(openstudio::Quantity sizingFactor_IP READ sizingFactor_IP WRITE setSizingFactor RESET resetSizingFactor);
-    Q_PROPERTY(bool isSizingFactorDefaulted READ isSizingFactorDefaulted);
 
    public:
     /** @name Constructors and Destructors */
@@ -110,6 +70,16 @@ namespace detail {
     virtual const std::vector<std::string>& outputVariableNames() const override;
 
     virtual IddObjectType iddObjectType() const override;
+
+    virtual void autosize() override;
+
+    virtual void applySizingValues() override;
+
+    virtual unsigned inletPort() const override;
+
+    virtual unsigned outletPort() const override;
+
+    virtual bool addToNode(Node & node) override;
 
     //@}
     /** @name Getters */
@@ -165,13 +135,18 @@ namespace detail {
 
     bool isSizingFactorDefaulted() const;
 
+    boost::optional<double> autosizedNominalCapacity() const ;
+
+    std::string endUseSubcategory() const;
+
+
     //@}
     /** @name Setters */
     //@{
 
     bool setFuelType(std::string fuelType);
 
-    void setMaximumOperatingPressure(boost::optional<double> maximumOperatingPressure);
+    bool setMaximumOperatingPressure(boost::optional<double> maximumOperatingPressure);
 
     bool setMaximumOperatingPressure(const OSOptionalQuantity& maximumOperatingPressure);
 
@@ -183,13 +158,13 @@ namespace detail {
 
     void resetTheoreticalEfficiency();
 
-    void setDesignOutletSteamTemperature(boost::optional<double> designOutletSteamTemperature);
+    bool setDesignOutletSteamTemperature(boost::optional<double> designOutletSteamTemperature);
 
     bool setDesignOutletSteamTemperature(const OSOptionalQuantity& designOutletSteamTemperature);
 
     void resetDesignOutletSteamTemperature();
 
-    void setNominalCapacity(boost::optional<double> nominalCapacity);
+    bool setNominalCapacity(boost::optional<double> nominalCapacity);
 
     bool setNominalCapacity(const OSOptionalQuantity& nominalCapacity);
 
@@ -215,19 +190,19 @@ namespace detail {
 
     void resetOptimumPartLoadRatio();
 
-    void setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
+    bool setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
 
     bool setCoefficient1ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient1ofFuelUseFunctionofPartLoadRatioCurve);
 
     void resetCoefficient1ofFuelUseFunctionofPartLoadRatioCurve();
 
-    void setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
+    bool setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
 
     bool setCoefficient2ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient2ofFuelUseFunctionofPartLoadRatioCurve);
 
     void resetCoefficient2ofFuelUseFunctionofPartLoadRatioCurve();
 
-    void setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
+    bool setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(boost::optional<double> coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
 
     bool setCoefficient3ofFuelUseFunctionofPartLoadRatioCurve(const OSOptionalQuantity& coefficient3ofFuelUseFunctionofPartLoadRatioCurve);
 
@@ -239,15 +214,13 @@ namespace detail {
 
     void resetSizingFactor();
 
+    bool setEndUseSubcategory(const std::string & endUseSubcategory);
+
+
     //@}
     /** @name Other */
     //@{
 
-    unsigned inletPort() override;
-
-    unsigned outletPort() override;
-
-    bool addToNode(Node & node) override;
 
     //@}
    protected:
@@ -286,4 +259,3 @@ namespace detail {
 } // openstudio
 
 #endif // MODEL_BOILERSTEAM_IMPL_HPP
-

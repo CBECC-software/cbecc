@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include <gtest/gtest.h>
 #include "GeometryFixture.hpp"
@@ -28,7 +38,7 @@
 using namespace openstudio;
 
 void checkPlaneFromPointAndNormal(const Plane& plane, const Point3d& point, const Vector3d& normal)
-{ 
+{
   Vector3d reverseNormal = normal.reverseVector();
 
   EXPECT_DOUBLE_EQ(1.0, normal.dot(plane.outwardNormal()));
@@ -186,7 +196,7 @@ TEST_F(GeometryFixture, Plane_FromPoints2)
   points.push_back(Point3d(1,1,0));
   points.push_back(Point3d(1,0,0));
   points.push_back(Point3d(0,0,0));
-  
+
   Plane p1(points);
   Plane p2(Point3d(0,1,0), Vector3d(0,0,-1));
 
@@ -204,7 +214,7 @@ TEST_F(GeometryFixture, Plane_FromPoints3)
 
   Point3d point(5,0,2);
   Vector3d normal(1,0,0);
-  
+
   Plane p1(points);
   Plane p2(point, normal);
 
@@ -233,7 +243,7 @@ TEST_F(GeometryFixture, Plane_FromPoints4)
 
   Point3d point(0,-2,0);
   Vector3d normal(0,-1,0);
-  
+
   Plane p1(points);
   Plane p2(point, normal);
 
@@ -263,7 +273,7 @@ TEST_F(GeometryFixture, Plane_FromPoints4_Small)
 
   Point3d point(10,10,0);
   Vector3d normal(0,0,1);
-  
+
   Plane p1(points);
   Plane p2(point, normal);
 
@@ -295,7 +305,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_NotEqual)
   points2.push_back(Point3d(0,0,2));
   points2.push_back(Point3d(1,0,2));
   points2.push_back(Point3d(1,1,2));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -318,7 +328,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Reverse)
   points2.push_back(Point3d(0,0,2));
   points2.push_back(Point3d(1,0,2));
   points2.push_back(Point3d(1,1,2));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -341,7 +351,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Separated_X)
   points2.push_back(Point3d(20,0,0));
   points2.push_back(Point3d(20,1,0));
   points2.push_back(Point3d(20,1,1));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -367,7 +377,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Reverse_Separated_X)
   points2.push_back(Point3d(-20,1,0));
   points2.push_back(Point3d(-20,0,0));
   points2.push_back(Point3d(-20,0,1));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -392,7 +402,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Separated_Y)
   points2.push_back(Point3d(0,10,0));
   points2.push_back(Point3d(1,10,0));
   points2.push_back(Point3d(1,10,1));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -418,7 +428,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Reverse_Separated_Y)
   points2.push_back(Point3d(1,20,0));
   points2.push_back(Point3d(0,20,0));
   points2.push_back(Point3d(0,20,1));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -443,7 +453,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Separated_Z)
   points2.push_back(Point3d(0,0,-10));
   points2.push_back(Point3d(1,0,-10));
   points2.push_back(Point3d(1,1,-10));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 
@@ -469,7 +479,7 @@ TEST_F(GeometryFixture, Plane_FromPoints_Reverse_Separated_Z)
   points2.push_back(Point3d(1,0,-20));
   points2.push_back(Point3d(0,0,-20));
   points2.push_back(Point3d(0,1,-20));
-  
+
   Plane p1(points1);
   Plane p2(points2);
 

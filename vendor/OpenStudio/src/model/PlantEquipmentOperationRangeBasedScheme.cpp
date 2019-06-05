@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
- *  All rights reserved.
- *  
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *  
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *  
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "PlantEquipmentOperationRangeBasedScheme.hpp"
 #include "PlantEquipmentOperationRangeBasedScheme_Impl.hpp"
@@ -48,12 +58,12 @@ PlantEquipmentOperationRangeBasedScheme_Impl::PlantEquipmentOperationRangeBasedS
 
 PlantEquipmentOperationRangeBasedScheme_Impl::PlantEquipmentOperationRangeBasedScheme_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle)
   : PlantEquipmentOperationScheme_Impl(idfObject, model, keepHandle)
-{ 
+{
 }
 
 PlantEquipmentOperationRangeBasedScheme_Impl::PlantEquipmentOperationRangeBasedScheme_Impl(
-    const openstudio::detail::WorkspaceObject_Impl& other, 
-    Model_Impl* model, 
+    const openstudio::detail::WorkspaceObject_Impl& other,
+    Model_Impl* model,
     bool keepHandle)
   : PlantEquipmentOperationScheme_Impl(other,model,keepHandle)
 {
@@ -82,7 +92,7 @@ bool PlantEquipmentOperationRangeBasedScheme_Impl::addLoadRange(double upperLimi
       //auto equipmentCopy = equipment;
       //std::sort( equipmentCopy.begin(), equipmentCopy.end() );
       //equipmentCopy.erase( unique( equipmentCopy.begin(), equipmentCopy.end() ), equipmentCopy.end() );
-      
+
       // Remove duplicates primitively so that the order is preserved
       std::vector<HVACComponent> equipmentCopy;
       for( const auto & mo : equipment ) {
@@ -118,7 +128,7 @@ std::vector<HVACComponent> PlantEquipmentOperationRangeBasedScheme_Impl::removeL
       const auto & t_lowerLimit = eg->getDouble(LOADRANGEFIELDS_LOWERLIMIT);
       OS_ASSERT(t_lowerLimit);
       auto nextEg = (eg + 1);
-      OS_ASSERT(nextEg != t_extensibleGroups.end()); 
+      OS_ASSERT(nextEg != t_extensibleGroups.end());
       nextEg->setDouble(LOADRANGEFIELDS_LOWERLIMIT,t_lowerLimit.get());
 
       const auto & wo = eg->cast<WorkspaceExtensibleGroup>().getTarget(LOADRANGEFIELDS_RANGEEQUIPMENTLISTNAME);
@@ -139,7 +149,7 @@ std::vector<HVACComponent> PlantEquipmentOperationRangeBasedScheme_Impl::removeL
 std::vector<double> PlantEquipmentOperationRangeBasedScheme_Impl::loadRangeUpperLimits() const
 {
   std::vector<double> result;
-  
+
   for( const auto & eg : extensibleGroups() ) {
     const auto & value = eg.getDouble(LOADRANGEFIELDS_UPPERLIMIT);
     OS_ASSERT(value);
@@ -252,8 +262,8 @@ void PlantEquipmentOperationRangeBasedScheme_Impl::clearLoadRanges()
   eg.setDouble(LOADRANGEFIELDS_UPPERLIMIT,maximumUpperLimit());
 }
 
-PlantEquipmentOperationRangeBasedScheme_Impl::PlantEquipmentOperationRangeBasedScheme_Impl(const PlantEquipmentOperationRangeBasedScheme_Impl& other, 
-                                               Model_Impl* model, 
+PlantEquipmentOperationRangeBasedScheme_Impl::PlantEquipmentOperationRangeBasedScheme_Impl(const PlantEquipmentOperationRangeBasedScheme_Impl& other,
+                                               Model_Impl* model,
                                                bool keepHandles)
   : PlantEquipmentOperationScheme_Impl(other,model,keepHandles)
 {
@@ -312,7 +322,7 @@ ModelObject PlantEquipmentOperationRangeBasedScheme_Impl::clone(Model model) con
 
   clone.clearLoadRanges();
   for( const auto & limit : loadRangeUpperLimits() ) {
-    auto equip = equipment(limit); 
+    auto equip = equipment(limit);
     if( equal(limit,maximumUpperLimit()) ) {
       clone.replaceEquipment(limit,equip);
     } else {
@@ -331,10 +341,10 @@ PlantEquipmentOperationRangeBasedScheme::PlantEquipmentOperationRangeBasedScheme
   OS_ASSERT(getImpl<detail::PlantEquipmentOperationRangeBasedScheme_Impl>());
 
   clearLoadRanges();
-}     
+}
 
 PlantEquipmentOperationRangeBasedScheme::PlantEquipmentOperationRangeBasedScheme(std::shared_ptr<detail::PlantEquipmentOperationRangeBasedScheme_Impl> p)
-  : PlantEquipmentOperationScheme(p)
+  : PlantEquipmentOperationScheme(std::move(p))
 {}
 
 bool PlantEquipmentOperationRangeBasedScheme::addLoadRange(double upperLimit, const std::vector<HVACComponent> & equipment)

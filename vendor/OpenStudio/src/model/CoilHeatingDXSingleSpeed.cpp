@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilHeatingDXSingleSpeed.hpp"
 #include "CoilHeatingDXSingleSpeed_Impl.hpp"
@@ -33,6 +43,8 @@
 #include "CurveQuadratic_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir_Impl.hpp"
+#include "AirLoopHVACOutdoorAirSystem.hpp"
+#include "AirLoopHVACOutdoorAirSystem_Impl.hpp"
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass.hpp"
@@ -45,6 +57,8 @@
 #include "Node_Impl.hpp"
 #include "AirLoopHVAC.hpp"
 #include "AirLoopHVAC_Impl.hpp"
+#include "AirflowNetworkEquivalentDuct.hpp"
+#include "AirflowNetworkEquivalentDuct_Impl.hpp"
 #include <utilities/idd/IddFactory.hxx>
 
 #include <utilities/idd/OS_Coil_Heating_DX_SingleSpeed_FieldEnums.hxx>
@@ -78,9 +92,17 @@ namespace detail {
 
   const std::vector<std::string>& CoilHeatingDXSingleSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Heating Coil Total Heating Rate",
+      "Heating Coil Total Heating Energy",
+      "Heating Coil Electric Power",
+      "Heating Coil Electric Energy",
+      "Heating Coil Defrost Electric Power",
+      "Heating Coil Defrost Electric Energy",
+      "Heating Coil Crankcase Heater Electric Power",
+      "Heating Coil Crankcase Heater Electric Energy",
+      "Heating Coil Runtime Fraction"
+    };
     return result;
   }
 
@@ -344,12 +366,12 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  unsigned CoilHeatingDXSingleSpeed_Impl::inletPort()
+  unsigned CoilHeatingDXSingleSpeed_Impl::inletPort() const
   {
     return OS_Coil_Heating_DX_SingleSpeedFields::AirInletNodeName;
   }
 
-  unsigned CoilHeatingDXSingleSpeed_Impl::outletPort()
+  unsigned CoilHeatingDXSingleSpeed_Impl::outletPort() const
   {
     return OS_Coil_Heating_DX_SingleSpeedFields::AirOutletNodeName;
   }
@@ -705,6 +727,9 @@ namespace detail {
     result.push_back( energyInputRatioFunctionofFlowFractionCurve() );
     result.push_back( partLoadFractionCorrelationCurve() );
 
+    std::vector<AirflowNetworkEquivalentDuct> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    result.insert(result.end(), myAFNItems.begin(), myAFNItems.end());
+
     return result;
   }
 
@@ -734,13 +759,92 @@ namespace detail {
       }
     }
 
+    if ( auto oa = node.airLoopHVACOutdoorAirSystem() ) {
+      return StraightComponent_Impl::addToNode( node );
+    }
+
     return false;
+  }
+
+  double CoilHeatingDXSingleSpeed_Impl::ratedSupplyFanPowerPerVolumeFlowRate() const {
+    boost::optional<double> value = getDouble(OS_Coil_Heating_DX_SingleSpeedFields::RatedSupplyFanPowerPerVolumeFlowRate,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  bool CoilHeatingDXSingleSpeed_Impl::setRatedSupplyFanPowerPerVolumeFlowRate(double ratedSupplyFanPowerPerVolumeFlowRate) {
+    bool result = setDouble(OS_Coil_Heating_DX_SingleSpeedFields::RatedSupplyFanPowerPerVolumeFlowRate, ratedSupplyFanPowerPerVolumeFlowRate);
+    return result;
+  }
+
+  AirflowNetworkEquivalentDuct CoilHeatingDXSingleSpeed_Impl::getAirflowNetworkEquivalentDuct(double length, double diameter)
+  {
+    boost::optional<AirflowNetworkEquivalentDuct> opt = airflowNetworkEquivalentDuct();
+    if (opt) {
+      if (opt->airPathLength() != length){
+        opt->setAirPathLength(length);
+      }
+      if (opt->airPathHydraulicDiameter() != diameter){
+        opt->setAirPathHydraulicDiameter(diameter);
+      }
+    }
+    return AirflowNetworkEquivalentDuct(model(), length, diameter, handle());
+  }
+
+  boost::optional<AirflowNetworkEquivalentDuct> CoilHeatingDXSingleSpeed_Impl::airflowNetworkEquivalentDuct() const
+  {
+    std::vector<AirflowNetworkEquivalentDuct> myAFN = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    auto count = myAFN.size();
+    if (count == 1) {
+      return myAFN[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFN[0];
+    }
+    return boost::none;
+  }
+
+  boost::optional<double> CoilHeatingDXSingleSpeed_Impl::autosizedRatedTotalHeatingCapacity() const {
+    return getAutosizedValue("Design Size Gross Rated Heating Capacity", "W");
+  }
+
+  boost::optional<double> CoilHeatingDXSingleSpeed_Impl::autosizedRatedAirFlowRate() const {
+    return getAutosizedValue("Design Size Rated Air Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> CoilHeatingDXSingleSpeed_Impl::autosizedResistiveDefrostHeaterCapacity() const {
+    return getAutosizedValue("Design Size Resistive Defrost Heater Capacity", "W");
+  }
+
+  void CoilHeatingDXSingleSpeed_Impl::autosize() {
+    autosizeRatedTotalHeatingCapacity();
+    autosizeRatedAirFlowRate();
+    autosizeResistiveDefrostHeaterCapacity();
+  }
+
+  void CoilHeatingDXSingleSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedRatedTotalHeatingCapacity();
+    if (val) {
+      setRatedTotalHeatingCapacity(val.get());
+    }
+
+    val = autosizedRatedAirFlowRate();
+    if (val) {
+      setRatedAirFlowRate(val.get());
+    }
+
+    val = autosizedResistiveDefrostHeaterCapacity();
+    if (val) {
+      setResistiveDefrostHeaterCapacity(val.get());
+    }
+
   }
 
 } // detail
 
 CoilHeatingDXSingleSpeed::CoilHeatingDXSingleSpeed( const Model& model,
-                                                    Schedule & availabilitySchedule, 
+                                                    Schedule & availabilitySchedule,
                                                     Curve& totalHeatingCapacityFunctionofTemperatureCurve,
                                                     Curve& totalHeatingCapacityFunctionofFlowFractionCurve,
                                                     Curve& energyInputRatioFunctionofTemperatureCurve,
@@ -766,6 +870,8 @@ CoilHeatingDXSingleSpeed::CoilHeatingDXSingleSpeed( const Model& model,
   autosizeRatedTotalHeatingCapacity();
 
   autosizeRatedAirFlowRate();
+
+  setRatedSupplyFanPowerPerVolumeFlowRate(773.3);
 
   setRatedCOP(5.0);
 
@@ -837,6 +943,8 @@ CoilHeatingDXSingleSpeed::CoilHeatingDXSingleSpeed(const Model& model)
   autosizeRatedTotalHeatingCapacity();
 
   autosizeRatedAirFlowRate();
+
+  setRatedSupplyFanPowerPerVolumeFlowRate(773.3);
 
   setRatedCOP(5.0);
 
@@ -1120,13 +1228,42 @@ void CoilHeatingDXSingleSpeed::resetDefrostEnergyInputRatioFunctionofTemperature
   getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->setDefrostEnergyInputRatioFunctionofTemperatureCurve(boost::none);
 }
 
+double CoilHeatingDXSingleSpeed::ratedSupplyFanPowerPerVolumeFlowRate() const {
+  return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->ratedSupplyFanPowerPerVolumeFlowRate();
+}
+
+bool CoilHeatingDXSingleSpeed::setRatedSupplyFanPowerPerVolumeFlowRate(double ratedSupplyFanPowerPerVolumeFlowRate) {
+  return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->setRatedSupplyFanPowerPerVolumeFlowRate(ratedSupplyFanPowerPerVolumeFlowRate);
+}
+
+AirflowNetworkEquivalentDuct CoilHeatingDXSingleSpeed::getAirflowNetworkEquivalentDuct(double length, double diameter)
+{
+  return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->getAirflowNetworkEquivalentDuct(length, diameter);
+}
+
+boost::optional<AirflowNetworkEquivalentDuct> CoilHeatingDXSingleSpeed::airflowNetworkEquivalentDuct() const
+{
+  return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->airflowNetworkEquivalentDuct();
+}
 
 /// @cond
 CoilHeatingDXSingleSpeed::CoilHeatingDXSingleSpeed(std::shared_ptr<detail::CoilHeatingDXSingleSpeed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 
 /// @endcond
+
+  boost::optional<double> CoilHeatingDXSingleSpeed::autosizedRatedTotalHeatingCapacity() const {
+    return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->autosizedRatedTotalHeatingCapacity();
+  }
+
+  boost::optional<double> CoilHeatingDXSingleSpeed::autosizedRatedAirFlowRate() const {
+    return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->autosizedRatedAirFlowRate();
+  }
+
+  boost::optional<double> CoilHeatingDXSingleSpeed::autosizedResistiveDefrostHeaterCapacity() const {
+    return getImpl<detail::CoilHeatingDXSingleSpeed_Impl>()->autosizedResistiveDefrostHeaterCapacity();
+  }
 
 } // model
 

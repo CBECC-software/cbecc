@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
- *  All rights reserved.
- *  
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *  
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *  
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_IDD_IDDFIELDPROPERTIES_HPP
 #define UTILITIES_IDD_IDDFIELDPROPERTIES_HPP
@@ -29,9 +39,9 @@
 
 namespace openstudio {
 
-/** \class IddFieldType 
- *  \brief Enumeration of IDF field types as defined by the possible values for the IDD \\type 
- *  flag. See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro 
+/** \class IddFieldType
+ *  \brief Enumeration of IDF field types as defined by the possible values for the IDD \\type
+ *  flag. See the OPENSTUDIO_ENUM documentation in utilities/core/Enum.hpp. The actual macro
  *  call is:
  *  \code
 OPENSTUDIO_ENUM(IddFieldType,
@@ -60,7 +70,7 @@ OPENSTUDIO_ENUM(IddFieldType,
   ((HandleType)(handle))
 );
 
-/** IddFieldProperties describes the properties of an IddField object, as specified by 
+/** IddFieldProperties describes the properties of an IddField object, as specified by
  *  IDD markup. */
 struct UTILITIES_API IddFieldProperties{
  public:
@@ -77,7 +87,7 @@ struct UTILITIES_API IddFieldProperties{
   /** Negation of operator== */
   bool operator!=(const IddFieldProperties& other) const;
 
-  /** Field type (alpha, numeric, various flavors of alpha providing links to other objects 
+  /** Field type (alpha, numeric, various flavors of alpha providing links to other objects
    *  and files). */
   IddFieldType type;
 
@@ -102,7 +112,7 @@ struct UTILITIES_API IddFieldProperties{
   /** True if this field is the first in an extensible group. */
   bool beginExtensible;
 
-  /** The EnergyPlus-format unit string for this field. All data are assumed to be associated 
+  /** The EnergyPlus-format unit string for this field. All data are assumed to be associated
    *  with these (typically SI) units. */
   boost::optional<std::string> units;
 
@@ -129,15 +139,19 @@ struct UTILITIES_API IddFieldProperties{
   /// The default value as double.
   boost::optional<double> numericDefault;
 
-  /** This field points to an IdfObject that is registered with one of the reference lists named 
-   *  in this vector. The list names are defined by \\reference markup of name fields. There is 
+  /** This field points to an IdfObject that is registered with one of the reference lists named
+   *  in this vector. The list names are defined by \\reference markup of name fields. There is
    *  also an OpenStudio-specific universal reference list called 'AllObjects'. */
   std::vector<std::string> objectLists;
 
-  /** This field specifies that the containing IdfObject belongs to the following reference lists. 
-   *  This information can be used by other objects to point to (reference) this object using 
+  /** This field specifies that the containing IdfObject belongs to the following reference lists.
+   *  This information can be used by other objects to point to (reference) this object using
    *  \\object-list markup. */
   std::vector<std::string> references;
+
+  /** This field specifies that the containing IdfObject belongs to the following reference-class-name lists.
+  **/
+  std::vector<std::string> referenceClassNames;
 
   /** This field points to a name registered in another file (typically the RDD file). OpenStudio
    *  treats these fields as plain (unparsed) text. */

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "EnergyPlusAPI.hpp"
 #include "ReverseTranslator.hpp"
@@ -33,6 +43,7 @@
 #include "../utilities/plot/ProgressBar.hpp"
 
 #include <QThread>
+#include <boost/serialization/version.hpp>
 
 using namespace openstudio::model;
 
@@ -67,9 +78,11 @@ boost::optional<model::Model> ReverseTranslator::loadModel(const openstudio::pat
 
   m_logSink.setChannelRegex(boost::regex("openstudio\\.IdfFile"));
 
-  //load idf and convert to a workspace
+  // load idf
   boost::optional<openstudio::IdfFile> idfFile = IdfFile::load(path, IddFileType::EnergyPlus, progressBar);
 
+  // change channel after loading file
+  // DLM: is this right?  we miss messages from loading idf
   m_logSink.setChannelRegex(boost::regex("openstudio\\.energyplus\\.ReverseTranslator"));
 
   // energyplus idfs may not be draft level strictness, eventually need a fixer
@@ -81,10 +94,26 @@ boost::optional<model::Model> ReverseTranslator::loadModel(const openstudio::pat
 
     if (!idfFile->isValid(StrictnessLevel::Draft)){
 
-      LOG(Error, "Idf file at path ='" << toString(path) << "' is not valid to draft strictness");
+      LOG(Error, "Idf file at path ='" << toString(path) << "' is not valid to draft strictness.");
+      LOG(Error, "Check that IDF is of correct version and that all fields are valid against Energy+.idd.");
       LOG(Error, idfFile->validityReport(StrictnessLevel::Draft));
       return boost::none;
+    }
 
+    VersionString expectedVersion(IddFileAndFactoryWrapper(IddFileType::EnergyPlus).version());
+    boost::optional<IdfObject> versionObject = idfFile->versionObject();
+    if (!versionObject) {
+      LOG(Warn, "Idf file missing Version object, use IDFVersionUpdater to ensure that Idf file is at expected version = '" << expectedVersion.str() << "'");
+    } else {
+      boost::optional<std::string> vs = versionObject->getString(versionObject->numFields() - 1);
+      if (!vs){
+        LOG(Warn, "Idf file contains empty Version object, use IDFVersionUpdater to ensure that Idf file is at expected version = '" << expectedVersion.str() << "'");
+      } else{
+        VersionString fileVersion(*vs);
+        if ((expectedVersion.major() != fileVersion.major()) || (expectedVersion.minor() != fileVersion.minor())){
+          LOG(Warn, "Idf file Version = '" << fileVersion.str() << "' does not match expected version = '" << expectedVersion.str() << "'");
+        }
+      }
     }
 
     if (progressBar){
@@ -95,24 +124,30 @@ boost::optional<model::Model> ReverseTranslator::loadModel(const openstudio::pat
                         IddFileType(IddFileType::EnergyPlus));
 
     if (progressBar){
-      workspace.connectProgressBar(progressBar);
+      workspace.connectProgressBar(*progressBar);
     }
 
     workspace.addObjects(idfFile->objects());
 
     if (progressBar){
-      workspace.disconnectProgressBar(progressBar);
+      workspace.disconnectProgressBar(*progressBar);
     }
 
-    return this->translateWorkspace(workspace, progressBar);
+    return this->translateWorkspace(workspace, progressBar, false);
 
   }
 
   return boost::none;
 }
 
-Model ReverseTranslator::translateWorkspace(const Workspace & workspace, ProgressBar* progressBar )
+Model ReverseTranslator::translateWorkspace(const Workspace & workspace, ProgressBar* progressBar, bool clearLogSink )
 {
+  if (clearLogSink){
+    m_logSink.resetStringStream();
+  }
+
+  m_logSink.setChannelRegex(boost::regex("openstudio\\.energyplus\\.ReverseTranslator"));
+
   // check input
   if (workspace.iddFileType() != IddFileType::EnergyPlus){
     LOG(Error, "Cannot translate Workspace with IddFileType = '" << workspace.iddFileType().valueName() << "'");
@@ -128,11 +163,10 @@ Model ReverseTranslator::translateWorkspace(const Workspace & workspace, Progres
 
   m_untranslatedIdfObjects.clear();
 
-  m_logSink.resetStringStream();
-
   // if multiple runperiod objects in idf, remove them all
   vector<WorkspaceObject> runPeriods = m_workspace.getObjectsByType(IddObjectType::RunPeriod);
   if (runPeriods.size() > 1){
+    LOG(Warn, "Multiple RunPeriod objects detected, removing all RunPeriod objects.");
     for(auto & runPeriod : runPeriods)
     {
       runPeriod.remove();
@@ -295,9 +329,17 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
       modelObject = translateAirTerminalSingleDuctConstantVolumeReheat(workspaceObject );
       break;
     }
+
   case openstudio::IddObjectType::AirTerminal_SingleDuct_Uncontrolled :
     {
-      //modelObject = translateAirTerminalSingleDuctUncontrolled(workspaceObject );
+      // We map this to ATU:CV:NoReheat which is the new name
+      modelObject = translateAirTerminalSingleDuctConstantVolumeNoReheat(workspaceObject );
+      break;
+    }
+
+  case openstudio::IddObjectType::AirTerminal_SingleDuct_ConstantVolume_NoReheat :
+    {
+      modelObject = translateAirTerminalSingleDuctConstantVolumeNoReheat(workspaceObject );
       break;
     }
   case openstudio::IddObjectType::AirTerminal_SingleDuct_VAV_NoReheat :
@@ -332,7 +374,7 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
       modelObject = translateBuilding(workspaceObject );
       break;
     }
-  case openstudio::IddObjectType::Coil_Heating_Gas :
+  case openstudio::IddObjectType::Coil_Heating_Fuel :
     {
       //modelObject = translateCoilHeatingGas(workspaceObject );
       break;
@@ -471,9 +513,89 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     }
   case openstudio::IddObjectType::Exterior_Lights :
     {
-      //modelObject = translateExteriorLights(workspaceObject);
+      modelObject = translateExteriorLights(workspaceObject);
       break;
     }
+  case openstudio::IddObjectType::Exterior_FuelEquipment :
+    {
+      modelObject = translateExteriorFuelEquipment(workspaceObject);
+      break;
+    }
+  case openstudio::IddObjectType::Exterior_WaterEquipment :
+    {
+      modelObject = translateExteriorWaterEquipment(workspaceObject);
+      break;
+    }
+  case openstudio::IddObjectType::ElectricLoadCenter_Storage_Simple :
+    {
+      modelObject = translateElectricLoadCenterStorageSimple(workspaceObject);
+      break;
+    }
+  case openstudio::IddObjectType::ElectricLoadCenter_Storage_Converter :
+    {
+      modelObject = translateElectricLoadCenterStorageConverter(workspaceObject);
+      break;
+    }
+  case openstudio::IddObjectType::EnergyManagementSystem_Actuator:
+  {
+    modelObject = translateEnergyManagementSystemActuator(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_ConstructionIndexVariable:
+  {
+    modelObject = translateEnergyManagementSystemConstructionIndexVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_CurveOrTableIndexVariable:
+  {
+    modelObject = translateEnergyManagementSystemCurveOrTableIndexVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_GlobalVariable:
+  {
+    modelObject = translateEnergyManagementSystemGlobalVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_InternalVariable:
+  {
+    modelObject = translateEnergyManagementSystemInternalVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_MeteredOutputVariable:
+  {
+    modelObject = translateEnergyManagementSystemMeteredOutputVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_OutputVariable:
+  {
+    modelObject = translateEnergyManagementSystemOutputVariable(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_Program:
+  {
+    modelObject = translateEnergyManagementSystemProgram(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_ProgramCallingManager:
+  {
+    modelObject = translateEnergyManagementSystemProgramCallingManager(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_Sensor:
+  {
+    modelObject = translateEnergyManagementSystemSensor(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_Subroutine:
+  {
+    modelObject = translateEnergyManagementSystemSubroutine(workspaceObject);
+    break;
+  }
+  case openstudio::IddObjectType::EnergyManagementSystem_TrendVariable:
+  {
+    modelObject = translateEnergyManagementSystemTrendVariable(workspaceObject);
+    break;
+  }
   case openstudio::IddObjectType::EvaporativeCooler_Direct_ResearchSpecial :
     {
       //modelObject = translateEvaporativeCoolerDirectResearchSpecial(workspaceObject);
@@ -491,7 +613,12 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     }
   case openstudio::IddObjectType::FenestrationSurface_Detailed :
     {
-      modelObject = translateFenestrationSurfaceDetailed(workspaceObject );
+      modelObject = translateFenestrationSurfaceDetailed(workspaceObject);
+      break;
+    }
+  case openstudio::IddObjectType::Generator_MicroTurbine :
+    {
+      modelObject = translateGeneratorMicroTurbine(workspaceObject);
       break;
     }
   case openstudio::IddObjectType::GlobalGeometryRules :
@@ -505,7 +632,7 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
       modelObject = translateGasEquipment(workspaceObject );
       break;
     }
-  case openstudio::IddObjectType::GroundHeatExchanger_Vertical :
+  case openstudio::IddObjectType::GroundHeatExchanger_System :
     {
       //modelObject = translateGroundHeatExchangerVertical(workspaceObject );
       break;
@@ -551,11 +678,13 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     }
   case openstudio::IddObjectType::Meter_Custom :
     {
-      break; // no-op
+      modelObject = translateMeterCustom(workspaceObject);
+      break;
     }
   case openstudio::IddObjectType::Meter_CustomDecrement :
     {
-      break; // no-op
+      modelObject = translateMeterCustomDecrement(workspaceObject);
+      break;
     }
   case openstudio::IddObjectType::OtherEquipment :
     {
@@ -574,6 +703,11 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     {
       break; // no-op
     }
+  case openstudio::IddObjectType::Output_EnergyManagementSystem:
+  {
+    modelObject = translateOutputEnergyManagementSystem(workspaceObject);
+    break;
+  }
   case openstudio::IddObjectType::Output_IlluminanceMap :
     {
       modelObject = translateOutputIlluminanceMap(workspaceObject);
@@ -642,7 +776,7 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     }
   case openstudio::IddObjectType::RunPeriodControl_DaylightSavingTime :
     {
-      //modelObject = translateRunPeriodControlDaylightSavingTime(workspaceObject);
+      modelObject = translateRunPeriodControlDaylightSavingTime(workspaceObject);
       break;
     }
   case openstudio::IddObjectType::RunPeriodControl_SpecialDays :
@@ -664,6 +798,11 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
     {
       modelObject = translateScheduleDayHourly(workspaceObject);
       break;
+    }
+  case openstudio::IddObjectType::Schedule_File:
+    {
+    modelObject = translateScheduleFile(workspaceObject);
+    break;
     }
   case openstudio::IddObjectType::Schedule_Day_Interval :
     {
@@ -851,7 +990,7 @@ boost::optional<ModelObject> ReverseTranslator::translateAndMapWorkspaceObject(c
   case openstudio::IddObjectType::ZoneHVAC_EquipmentList :
     {
       //modelObject = translateZoneHVACEquipmentList(workspaceObject);
-      break; 
+      break;
     }
   case openstudio::IddObjectType::ZoneHVAC_IdealLoadsAirSystem :
     {

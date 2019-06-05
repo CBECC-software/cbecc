@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "ReverseTranslator.hpp"
 #include "../model/Model.hpp"
@@ -55,7 +65,6 @@
 #include "../model/PlantLoop_Impl.hpp"
 #include "../model/Timestep.hpp"
 #include "../model/Timestep_Impl.hpp"
-#include "../model/Meter.hpp"
 #include "../model/OutputVariable.hpp"
 #include "../model/SimulationControl.hpp"
 #include "../model/SimulationControl_Impl.hpp"
@@ -83,6 +92,8 @@
 #include "../model/Splitter_Impl.hpp"
 #include "../model/Mixer.hpp"
 #include "../model/Mixer_Impl.hpp"
+#include "../model/OutputMeter.hpp"
+#include "../model/OutputMeter_Impl.hpp"
 #include "../model/WaterToWaterComponent.hpp"
 #include "../model/WaterToWaterComponent_Impl.hpp"
 #include "../model/WaterToAirComponent.hpp"
@@ -108,6 +119,7 @@
 #include "../utilities/filetypes/EpwFile.hpp"
 #include "../utilities/plot/ProgressBar.hpp"
 #include "../utilities/core/Assert.hpp"
+#include "../utilities/core/FilesystemHelpers.hpp"
 #include "../utilities/units/QuantityConverter.hpp"
 #include "../utilities/units/IPUnit.hpp"
 #include "../utilities/units/SIUnit.hpp"
@@ -120,11 +132,9 @@
 #include "../utilities/units/UnitFactory.hpp"
 #include "../utilities/units/Unit.hpp"
 
-#include <QFile>
 #include <QDomDocument>
 #include <QDomElement>
 #include <QThread>
-#include <QFileInfo>
 
 namespace openstudio {
 namespace sdd {
@@ -152,7 +162,7 @@ namespace sdd {
   }
 
   boost::optional<openstudio::model::Model> ReverseTranslator::loadModel(const openstudio::path& path, ProgressBar* progressBar){
-    
+
     m_path = path;
 
     m_progressBar = progressBar;
@@ -163,12 +173,11 @@ namespace sdd {
 
     boost::optional<openstudio::model::Model> result;
 
-    if (boost::filesystem::exists(path)){
-
-      QFile file(toQString(path));
-      if (file.open(QFile::ReadOnly)){
+    if (openstudio::filesystem::exists(path)){
+      openstudio::filesystem::ifstream file(path, std::ios_base::binary);
+      if (file.is_open()){
         QDomDocument doc;
-        bool ok = doc.setContent(&file);
+        bool ok = doc.setContent(openstudio::filesystem::read_as_QByteArray(file));
         file.close();
 
         if (ok) {
@@ -300,7 +309,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Materials"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(materialElements.count()); 
+        m_progressBar->setMaximum(materialElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -323,7 +332,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Constructions"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(constructionElements.count()); 
+        m_progressBar->setMaximum(constructionElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -333,7 +342,7 @@ namespace sdd {
         if (!construction){
           LOG(Error, "Failed to translate 'ConsAssm' element " << i);
         }
-                
+
         if (m_progressBar){
           m_progressBar->setValue(m_progressBar->value() + 1);
         }
@@ -344,7 +353,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Door Constructions"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(doorConstructionElements.count()); 
+        m_progressBar->setMaximum(doorConstructionElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -365,7 +374,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Fenestration Constructions"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(fenestrationConstructionElements.count()); 
+        m_progressBar->setMaximum(fenestrationConstructionElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -440,7 +449,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Day Schedules"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(scheduleDayElements.count()); 
+        m_progressBar->setMaximum(scheduleDayElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -460,7 +469,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Week Schedules"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(scheduleWeekElements.count()); 
+        m_progressBar->setMaximum(scheduleWeekElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -480,7 +489,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Year Schedules"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(scheduleElements.count()); 
+        m_progressBar->setMaximum(scheduleElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -500,7 +509,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Holidays"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(holidayElements.count()); 
+        m_progressBar->setMaximum(holidayElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -556,7 +565,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Fluid Systems"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(fluidSysElements.count()); 
+        m_progressBar->setMaximum(fluidSysElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -631,7 +640,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Air Systems"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(airSystemElements.count()); 
+        m_progressBar->setMaximum(airSystemElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -653,7 +662,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating VRF Systems"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(vrfSystemElements.count()); 
+        m_progressBar->setMaximum(vrfSystemElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -675,7 +684,7 @@ namespace sdd {
       if (m_progressBar){
         m_progressBar->setWindowTitle(toString("Translating Thermal Zones"));
         m_progressBar->setMinimum(0);
-        m_progressBar->setMaximum(airSystemElements.count()); 
+        m_progressBar->setMaximum(airSystemElements.count());
         m_progressBar->setValue(0);
       }
 
@@ -696,7 +705,7 @@ namespace sdd {
       }
 
       // Give the nodes better names
-      // We do this here because the loops need to be completely assembled 
+      // We do this here because the loops need to be completely assembled
       // with their supply AND demand sides.  ie. After zones are attached.
       std::vector<model::PlantLoop> plantLoops = result->getModelObjects<model::PlantLoop>();
 
@@ -707,10 +716,10 @@ namespace sdd {
         std::string plantName = plantLoop->name().get();
         plantLoop->supplyInletNode().setName(plantName + " Supply Inlet Node");
         plantLoop->demandInletNode().setName(plantName + " Demand Inlet Node");
-        plantLoop->demandSplitter().setName(plantName + " Demand Splitter"); 
-        plantLoop->demandMixer().setName(plantName + " Demand Mixer"); 
-        plantLoop->supplySplitter().setName(plantName + " Supply Splitter"); 
-        plantLoop->supplyMixer().setName(plantName + " Supply Mixer"); 
+        plantLoop->demandSplitter().setName(plantName + " Demand Splitter");
+        plantLoop->demandMixer().setName(plantName + " Demand Mixer");
+        plantLoop->supplySplitter().setName(plantName + " Supply Splitter");
+        plantLoop->supplyMixer().setName(plantName + " Supply Mixer");
 
         std::vector<model::ModelObject> comps = plantLoop->components();
         for( auto it = comps.begin();
@@ -751,7 +760,7 @@ namespace sdd {
             else if( boost::optional<model::Splitter> comp = it->optionalCast<model::Splitter>() )
             {
               int branchI = 1;
-              std::vector<model::ModelObject> splitterOutletObjects = 
+              std::vector<model::ModelObject> splitterOutletObjects =
                 comp->outletModelObjects();
               for( auto it = splitterOutletObjects.begin();
                    it != splitterOutletObjects.end();
@@ -759,12 +768,12 @@ namespace sdd {
               {
                 if( it->optionalCast<model::Node>() )
                 {
-                  std::string branchOutuletName = 
+                  std::string branchOutuletName =
                     comp->name().get() + " Outlet Node " + boost::lexical_cast<std::string>(branchI);
                   it->setName(branchOutuletName);
                   ++branchI;
                 }
-              } 
+              }
             }
             else if( boost::optional<model::Mixer> comp = it->optionalCast<model::Mixer>() )
             {
@@ -786,8 +795,8 @@ namespace sdd {
         std::string systemName = airSystem->name().get();
         airSystem->supplyInletNode().setName(systemName + " Supply Side (Return Air) Inlet Node");
         airSystem->demandInletNode().setName(systemName + " Demand Side (Supply Air) Inlet Node");
-        airSystem->demandSplitter().setName(systemName + " Zone Splitter"); 
-        airSystem->demandMixer().setName(systemName + " Zone Mixer"); 
+        airSystem->demandSplitter().setName(systemName + " Zone Splitter");
+        airSystem->demandMixer().setName(systemName + " Zone Mixer");
 
         std::vector<model::ModelObject> comps = airSystem->components();
         for( auto it = comps.begin();
@@ -813,7 +822,7 @@ namespace sdd {
             else if( boost::optional<model::Splitter> comp = it->optionalCast<model::Splitter>() )
             {
               int branchI = 1;
-              std::vector<model::ModelObject> splitterOutletObjects = 
+              std::vector<model::ModelObject> splitterOutletObjects =
                 comp->outletModelObjects();
               for( auto it = splitterOutletObjects.begin();
                    it != splitterOutletObjects.end();
@@ -821,12 +830,12 @@ namespace sdd {
               {
                 if( it->optionalCast<model::Node>() )
                 {
-                  std::string branchOutuletName = 
+                  std::string branchOutuletName =
                     comp->name().get() + " Outlet Node " + boost::lexical_cast<std::string>(branchI);
                   it->setName(branchOutuletName);
                   ++branchI;
                 }
-              } 
+              }
             }
             else if( boost::optional<model::ThermalZone> comp = it->optionalCast<model::ThermalZone>() )
             {
@@ -931,7 +940,7 @@ namespace sdd {
         }
 
         // overall meter for this fuel type
-        model::Meter meter(*result);
+        model::OutputMeter meter(*result);
         meter.setFuelType(FuelType(fuelType));
         meter.setInstallLocationType(InstallLocationType::Facility);
         meter.setReportingFrequency("Hourly");
@@ -951,7 +960,7 @@ namespace sdd {
 
           // meter for this fuel type and end use
           // DLM: many of these will not be applicable and will cause E+ warnings
-          model::Meter meter(*result);
+          model::OutputMeter meter(*result);
           meter.setFuelType(FuelType(fuelType));
           meter.setEndUseType(EndUseType(endUseType));
           meter.setInstallLocationType(InstallLocationType::Facility);
@@ -961,49 +970,49 @@ namespace sdd {
 
       // request specific meters
       // ElectricEquipment - Receptacle, Process, Refrig
-      model::Meter meter(*result);
+      model::OutputMeter meter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Receptacle");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Process");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Refrig");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Internal Transport");
       meter.setInstallLocationType(InstallLocationType::Facility);
-      meter.setReportingFrequency("Hourly"); 
+      meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::ExteriorEquipment);
       meter.setSpecificEndUse("Receptacle");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::ExteriorEquipment);
       meter.setSpecificEndUse("Process");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::ExteriorEquipment);
       meter.setSpecificEndUse("Refrig");
@@ -1011,28 +1020,28 @@ namespace sdd {
       meter.setReportingFrequency("Hourly");
 
       // GasEquipment - Receptacle, Process
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Gas);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Receptacle");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Gas);
       meter.setEndUseType(EndUseType::InteriorEquipment);
       meter.setSpecificEndUse("Process");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Gas);
       meter.setEndUseType(EndUseType::ExteriorEquipment);
       meter.setSpecificEndUse("Receptacle");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Gas);
       meter.setEndUseType(EndUseType::ExteriorEquipment);
       meter.setSpecificEndUse("Process");
@@ -1040,29 +1049,29 @@ namespace sdd {
       meter.setReportingFrequency("Hourly");
 
       // Lights - ComplianceLtg, NonComplianceLtg
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorLights);
       meter.setSpecificEndUse("ComplianceLtg");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::InteriorLights);
       meter.setSpecificEndUse("NonComplianceLtg");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      // Exterior Lights - Reg Ltg, NonReg Ltg 
-      meter = model::Meter(*result);
+      // Exterior Lights - Reg Ltg, NonReg Ltg
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::ExteriorLights);
       meter.setSpecificEndUse("Reg Ltg");
       meter.setInstallLocationType(InstallLocationType::Facility);
       meter.setReportingFrequency("Hourly");
 
-      meter = model::Meter(*result);
+      meter = model::OutputMeter(*result);
       meter.setFuelType(FuelType::Electricity);
       meter.setEndUseType(EndUseType::ExteriorLights);
       meter.setSpecificEndUse("NonReg Ltg");
@@ -1080,7 +1089,7 @@ namespace sdd {
         subCategories.erase(last,subCategories.end());
 
         for( const auto & subcat : subCategories ) {
-          meter = model::Meter(*result);
+          meter = model::OutputMeter(*result);
           meter.setFuelType(FuelType::Electricity);
           meter.setEndUseType(EndUseType::Fans);
           meter.setSpecificEndUse(subcat);
@@ -1201,7 +1210,7 @@ namespace sdd {
 
       // SimVarsThrmlZn
 
-      QDomElement simVarsThrmlZnElement = projectElement.firstChildElement("SimVarsThrmlZn");      
+      QDomElement simVarsThrmlZnElement = projectElement.firstChildElement("SimVarsThrmlZn");
 
       if( simVarsThrmlZnElement.text().toInt() == 1 )
       {
@@ -1708,11 +1717,47 @@ namespace sdd {
         var = model::OutputVariable("Plant Supply Side Outlet Temperature",*result);
         var.setReportingFrequency(interval);
 
+        var = model::OutputVariable("Plant Supply Side Not Distributed Demand Rate",*result);
+        var.setReportingFrequency(interval);
+
+        var = model::OutputVariable("Plant Supply Side Unmet Demand Rate",*result);
+        var.setReportingFrequency(interval);
+
+        var = model::OutputVariable("Plant Common Pipe Mass Flow Rate",*result);
+        var.setReportingFrequency(interval);
+
+        var = model::OutputVariable("Plant Common Pipe Temperature",*result);
+        var.setReportingFrequency(interval);
+
+        var = model::OutputVariable("Plant Common Pipe Flow Direction Status",*result);
+        var.setReportingFrequency(interval);
+
         std::vector<model::PlantLoop> plants = result->getModelObjects<model::PlantLoop>();
         for( auto & plant : plants ) {
-          var = model::OutputVariable("System Node Mass Flow Rate",*result);
-          var.setReportingFrequency(interval);
-          var.setKeyValue(plant.demandOutletNode().name().get());
+          auto nodes = subsetCastVector<model::Node>(plant.supplyComponents());
+          for (auto & node : nodes) {
+            var = model::OutputVariable("System Node Temperature",*result);
+            var.setReportingFrequency(interval);
+            var.setKeyValue(node.name().get());
+          }
+
+          auto straightComponents = subsetCastVector<model::StraightComponent>(plant.supplyComponents());
+          for (auto & comp : straightComponents) {
+            if (! comp.optionalCast<model::Node>()) {
+              auto node = comp.inletModelObject()->cast<model::Node>();
+              var = model::OutputVariable("System Node Mass Flow Rate",*result);
+              var.setReportingFrequency(interval);
+              var.setKeyValue(node.name().get());
+            }
+          }
+
+          auto waterToWaterComponents = subsetCastVector<model::WaterToWaterComponent>(plant.supplyComponents());
+          for (auto & comp : waterToWaterComponents) {
+            auto node = comp.supplyInletModelObject()->cast<model::Node>();
+            var = model::OutputVariable("System Node Mass Flow Rate",*result);
+            var.setReportingFrequency(interval);
+            var.setKeyValue(node.name().get());
+          }
         }
       }
 
@@ -1817,10 +1862,20 @@ namespace sdd {
       }
 
       model::OutputControlReportingTolerances rt = result->getUniqueModelObject<model::OutputControlReportingTolerances>();
-      rt.setToleranceforTimeCoolingSetpointNotMet(0.56);
-      rt.setToleranceforTimeHeatingSetpointNotMet(0.56);
+
+      auto element = projectElement.firstChildElement("HtgUnmetLdHrTol");
+      auto value = element.text().toDouble(&ok);
+      if (ok) {
+        rt.setToleranceforTimeHeatingSetpointNotMet(value * 5.0 / 9.0);
+      }
+
+      element = projectElement.firstChildElement("ClgUnmetLdHrTol");
+      value = element.text().toDouble(&ok);
+      if (ok) {
+        rt.setToleranceforTimeCoolingSetpointNotMet(value * 5.0 / 9.0);
+      }
     }
-    
+
     return result;
   }
 
@@ -1882,7 +1937,7 @@ namespace sdd {
     model::SimulationControl simulationControl = model.getUniqueModelObject<model::SimulationControl>();
 
     simulationControl.setMaximumNumberofWarmupDays(50);
-    
+
     if( (runDesignDaysElement.text().toInt() == 1) || (hvacAutoSizingElement.text().toInt() == 1) || m_masterAutosize )
     {
       simulationControl.setRunSimulationforSizingPeriods(true);
@@ -1910,8 +1965,7 @@ namespace sdd {
       std::string runPeriodName = "Run Period";
       QDomElement annualWeatherFileElement = element.firstChildElement("AnnualWeatherFile");
       if (!annualWeatherFileElement.isNull()){
-        QFileInfo annualWeatherFile(annualWeatherFileElement.text());
-        runPeriodName = toString(annualWeatherFile.baseName());
+        runPeriodName = openstudio::toString(openstudio::toPath(annualWeatherFileElement.text()).stem());
       }
 
       model::RunPeriod runPeriod = model.getUniqueModelObject<model::RunPeriod>();
@@ -2100,7 +2154,7 @@ QDomElement ReverseTranslator::supplySegment(const QString & fluidSegmentName, c
       if( (typeElement.text().toLower() == "secondarysupply" ||
            typeElement.text().toLower() == "primarysupply" ) &&
            nameElement.text().toLower() == fluidSegmentName.toLower() ) {
-        return fluidSegmentElement; 
+        return fluidSegmentElement;
       }
     }
   }
@@ -2149,7 +2203,7 @@ boost::optional<model::PlantLoop> ReverseTranslator::serviceHotWaterLoopForSuppl
         {
           if( boost::optional<model::PlantLoop> loop = model.getModelObjectByName<model::PlantLoop>(fluidSysNameElement.text().toStdString()) )
           {
-            return loop; 
+            return loop;
           }
           else
           {
@@ -2182,8 +2236,8 @@ boost::optional<double> ReverseTranslator::unitToUnit(const double& val, const s
 
     //convert the IP quantity from IP to SI
     boost::optional<Quantity> siQuant = QuantityConverter::instance().convert(ipQuant, *secUnit);
-  
-    //if the conversion 
+
+    //if the conversion
     if (siQuant) {
       return siQuant->value();
     }

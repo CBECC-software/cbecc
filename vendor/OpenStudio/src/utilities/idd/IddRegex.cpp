@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
-*  All rights reserved.
-*  
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
-*  
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
-*  
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "IddRegex.hpp"
 
@@ -38,28 +48,28 @@ namespace iddRegex{
   /// matches[1], version identifier
   const boost::regex &version(){
     const static boost::regex result("^!IDD_Version ([0-9\\.]+)");
-    return result; 
+    return result;
   }
 
   /// Search for IDD build in line
   /// matches[1], build identifier
   const boost::regex &build(){
     const static boost::regex result("^!IDD_BUILD (\\S+)");
-    return result; 
+    return result;
   }
 
   /// Search for IDD header, each line must start with '!', no preceding whitespace
   /// matches[1], header
   const boost::regex &header(){
     const static boost::regex result("^(^!.*?^[^!])");
-    return result; 
+    return result;
   }
 
   /// Match comment only line
   /// matches[1], comment
   const boost::regex &commentOnlyLine(){
     const static boost::regex result("^[\\s\\t]*[!](.*)");
-    return result; 
+    return result;
   }
 
   /// Match content then comment
@@ -67,14 +77,14 @@ namespace iddRegex{
   /// matches[2], comment if any
   const boost::regex &contentAndCommentLine(){
     const static boost::regex result("^([^!]*)[!]?(.*)");
-    return result; 
+    return result;
   }
 
   /// Match group identifier
   /// matches[1], group name
   const boost::regex &group(){
     const static boost::regex result("^[\\\\][gG]roup(.*)");
-    return result; 
+    return result;
   }
 
   /// Match include-file identifier
@@ -206,7 +216,7 @@ namespace iddRegex{
     return result;
   }
 
-  /// Match a field name 
+  /// Match a field name
   /// matches[1], the field name
   const boost::regex &name(){
     const static boost::regex result("[\\\\][fF]ield([^\\\\^!]*)");
@@ -294,7 +304,7 @@ namespace iddRegex{
   }
 
   /// Match a field default property
-  /// matches[1], default value 
+  /// matches[1], default value
   const boost::regex &defaultProperty(){
     const static boost::regex result("^[dD]efault([^!]*)");
     return result;
@@ -315,14 +325,14 @@ namespace iddRegex{
   }
 
   /// Match a field key property
-  /// matches[1], key value 
+  /// matches[1], key value
   const boost::regex &keyProperty(){
     const static boost::regex result("^[kK]ey(.*)");
     return result;
   }
 
   /// Match a field object-list property
-  /// matches[1], object-list value 
+  /// matches[1], object-list value
   const boost::regex &objectListProperty(){
     const static boost::regex result("^[oO]bject-[lL]ist([^!]*)");
     return result;
@@ -334,9 +344,16 @@ namespace iddRegex{
   }
 
   /// Match a field reference property
-  /// matches[1], reference value 
+  /// matches[1], reference value
   const boost::regex &referenceProperty(){
     const static boost::regex result("^[rR]eference([^!]*)");
+    return result;
+  }
+
+  /// Match a field reference-class-name property
+  /// matches[1], reference-class-name value
+  const boost::regex & referenceClassNameProperty(){
+    const static boost::regex result("^[rR]eference-[cC]lass-[nN]ame([^!]*)");
     return result;
   }
 

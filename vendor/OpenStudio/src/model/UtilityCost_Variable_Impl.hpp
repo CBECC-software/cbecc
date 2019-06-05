@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_UTILITYCOST_VARIABLE_IMPL_HPP
 #define MODEL_UTILITYCOST_VARIABLE_IMPL_HPP
@@ -29,7 +39,7 @@ namespace model {
 namespace detail {
 
 class MODEL_API UtilityCost_Variable_Impl : public ParentObject_Impl{
-  
+
  public:
   // constructor
   UtilityCost_Variable_Impl(const IdfObject& idfObject, Model_Impl* model, bool keepHandle);
@@ -46,46 +56,46 @@ class MODEL_API UtilityCost_Variable_Impl : public ParentObject_Impl{
   virtual ~UtilityCost_Variable_Impl(){}
 
   boost::optional<double> januaryValue() const;
-  void setJanuaryValue(double num);
+  bool setJanuaryValue(double num);
 
   boost::optional<double> februaryValue() const;
-  void setFebruaryValue(double num);
+  bool setFebruaryValue(double num);
 
   boost::optional<double> marchValue() const;
-  void setMarchValue(double num);
+  bool setMarchValue(double num);
 
   boost::optional<double> aprilValue() const;
-  void setAprilValue(double num);
+  bool setAprilValue(double num);
 
   boost::optional<double> mayValue() const;
-  void setMayValue(double num);
+  bool setMayValue(double num);
 
   boost::optional<double> juneValue() const;
-  void setJuneValue(double num);
+  bool setJuneValue(double num);
 
   boost::optional<double> julyValue() const;
-  void setJulyValue(double num);
+  bool setJulyValue(double num);
 
   boost::optional<double> augustValue() const;
-  void setAugustValue(double num);
+  bool setAugustValue(double num);
 
   boost::optional<double> septemberValue() const;
-  void setSeptemberValue(double num);
+  bool setSeptemberValue(double num);
 
   boost::optional<double> octoberValue() const;
-  void setOctoberValue(double num);
+  bool setOctoberValue(double num);
 
   boost::optional<double> novemberValue() const;
-  void setNovemberValue(double num);
+  bool setNovemberValue(double num);
 
   boost::optional<double> decemberValue() const;
-  void setDecemberValue(double num);
+  bool setDecemberValue(double num);
 
   OptionalString tariffName() const;
-  void setTariffName(const std::string& str);
+  bool setTariffName(const std::string& str);
 
   OptionalString variableType() const;
-  void setVariableType(const std::string& str);
+  bool setVariableType(const std::string& str);
 
   // return the parent object in the hierarchy
   virtual boost::optional<ParentObject> parent() const override;

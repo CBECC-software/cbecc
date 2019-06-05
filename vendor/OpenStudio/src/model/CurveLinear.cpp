@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CurveLinear.hpp"
 #include "CurveLinear_Impl.hpp"
@@ -58,9 +68,10 @@ namespace detail {
 
   const std::vector<std::string>& CurveLinear_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Performance Curve Output Value",
+      "Performance Curve Input Variable 1 Value"
+    };
     return result;
   }
 
@@ -131,27 +142,31 @@ namespace detail {
     return isEmpty(OS_Curve_LinearFields::OutputUnitType);
   }
 
-  void CurveLinear_Impl::setCoefficient1Constant(double coefficient1Constant) {
+  bool CurveLinear_Impl::setCoefficient1Constant(double coefficient1Constant) {
     bool result = setDouble(OS_Curve_LinearFields::Coefficient1Constant, coefficient1Constant);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveLinear_Impl::setCoefficient2x(double coefficient2x) {
+  bool CurveLinear_Impl::setCoefficient2x(double coefficient2x) {
     bool result = setDouble(OS_Curve_LinearFields::Coefficient2x, coefficient2x);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveLinear_Impl::setMinimumValueofx(double minimumValueofx) {
+  bool CurveLinear_Impl::setMinimumValueofx(double minimumValueofx) {
     bool result = setDouble(OS_Curve_LinearFields::MinimumValueofx, minimumValueofx);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveLinear_Impl::setMaximumValueofx(double maximumValueofx) {
+  bool CurveLinear_Impl::setMaximumValueofx(double maximumValueofx) {
     bool result = setDouble(OS_Curve_LinearFields::MaximumValueofx, maximumValueofx);
     OS_ASSERT(result);
+    return result;
   }
 
-  void CurveLinear_Impl::setMinimumCurveOutput(boost::optional<double> minimumCurveOutput) {
+  bool CurveLinear_Impl::setMinimumCurveOutput(boost::optional<double> minimumCurveOutput) {
     bool result = false;
     if (minimumCurveOutput) {
       result = setDouble(OS_Curve_LinearFields::MinimumCurveOutput, minimumCurveOutput.get());
@@ -159,6 +174,7 @@ namespace detail {
       result = setString(OS_Curve_LinearFields::MinimumCurveOutput, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveLinear_Impl::resetMinimumCurveOutput() {
@@ -166,7 +182,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void CurveLinear_Impl::setMaximumCurveOutput(boost::optional<double> maximumCurveOutput) {
+  bool CurveLinear_Impl::setMaximumCurveOutput(boost::optional<double> maximumCurveOutput) {
     bool result = false;
     if (maximumCurveOutput) {
       result = setDouble(OS_Curve_LinearFields::MaximumCurveOutput, maximumCurveOutput.get());
@@ -174,6 +190,7 @@ namespace detail {
       result = setString(OS_Curve_LinearFields::MaximumCurveOutput, "");
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void CurveLinear_Impl::resetMaximumCurveOutput() {
@@ -268,32 +285,32 @@ bool CurveLinear::isOutputUnitTypeDefaulted() const {
   return getImpl<detail::CurveLinear_Impl>()->isOutputUnitTypeDefaulted();
 }
 
-void CurveLinear::setCoefficient1Constant(double coefficient1Constant) {
-  getImpl<detail::CurveLinear_Impl>()->setCoefficient1Constant(coefficient1Constant);
+bool CurveLinear::setCoefficient1Constant(double coefficient1Constant) {
+  return getImpl<detail::CurveLinear_Impl>()->setCoefficient1Constant(coefficient1Constant);
 }
 
-void CurveLinear::setCoefficient2x(double coefficient2x) {
-  getImpl<detail::CurveLinear_Impl>()->setCoefficient2x(coefficient2x);
+bool CurveLinear::setCoefficient2x(double coefficient2x) {
+  return getImpl<detail::CurveLinear_Impl>()->setCoefficient2x(coefficient2x);
 }
 
-void CurveLinear::setMinimumValueofx(double minimumValueofx) {
-  getImpl<detail::CurveLinear_Impl>()->setMinimumValueofx(minimumValueofx);
+bool CurveLinear::setMinimumValueofx(double minimumValueofx) {
+  return getImpl<detail::CurveLinear_Impl>()->setMinimumValueofx(minimumValueofx);
 }
 
-void CurveLinear::setMaximumValueofx(double maximumValueofx) {
-  getImpl<detail::CurveLinear_Impl>()->setMaximumValueofx(maximumValueofx);
+bool CurveLinear::setMaximumValueofx(double maximumValueofx) {
+  return getImpl<detail::CurveLinear_Impl>()->setMaximumValueofx(maximumValueofx);
 }
 
-void CurveLinear::setMinimumCurveOutput(double minimumCurveOutput) {
-  getImpl<detail::CurveLinear_Impl>()->setMinimumCurveOutput(minimumCurveOutput);
+bool CurveLinear::setMinimumCurveOutput(double minimumCurveOutput) {
+  return getImpl<detail::CurveLinear_Impl>()->setMinimumCurveOutput(minimumCurveOutput);
 }
 
 void CurveLinear::resetMinimumCurveOutput() {
   getImpl<detail::CurveLinear_Impl>()->resetMinimumCurveOutput();
 }
 
-void CurveLinear::setMaximumCurveOutput(double maximumCurveOutput) {
-  getImpl<detail::CurveLinear_Impl>()->setMaximumCurveOutput(maximumCurveOutput);
+bool CurveLinear::setMaximumCurveOutput(double maximumCurveOutput) {
+  return getImpl<detail::CurveLinear_Impl>()->setMaximumCurveOutput(maximumCurveOutput);
 }
 
 void CurveLinear::resetMaximumCurveOutput() {
@@ -318,10 +335,9 @@ void CurveLinear::resetOutputUnitType() {
 
 /// @cond
 CurveLinear::CurveLinear(std::shared_ptr<detail::CurveLinear_Impl> impl)
-  : Curve(impl)
+  : Curve(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

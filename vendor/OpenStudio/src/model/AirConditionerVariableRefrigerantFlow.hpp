@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_AIRCONDITIONERVARIABLEREFRIGERANTFLOW_HPP
 #define MODEL_AIRCONDITIONERVARIABLEREFRIGERANTFLOW_HPP
@@ -81,12 +91,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double minimumOutdoorTemperatureinCoolingMode() const;
 
-  void setMinimumOutdoorTemperatureinCoolingMode(double minimumOutdoorTemperatureinCoolingMode);
+  bool setMinimumOutdoorTemperatureinCoolingMode(double minimumOutdoorTemperatureinCoolingMode);
 
 
   double maximumOutdoorTemperatureinCoolingMode() const;
 
-  void setMaximumOutdoorTemperatureinCoolingMode(double maximumOutdoorTemperatureinCoolingMode);
+  bool setMaximumOutdoorTemperatureinCoolingMode(double maximumOutdoorTemperatureinCoolingMode);
 
 
   boost::optional<Curve> coolingCapacityRatioModifierFunctionofLowTemperatureCurve() const;
@@ -163,7 +173,7 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   bool isRatedTotalHeatingCapacityAutosized() const;
 
-  void setRatedTotalHeatingCapacity(double ratedTotalHeatingCapacity);
+  bool setRatedTotalHeatingCapacity(double ratedTotalHeatingCapacity);
 
   void autosizeRatedTotalHeatingCapacity();
 
@@ -175,17 +185,17 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double ratedHeatingCOP() const;
 
-  void setRatedHeatingCOP(double ratedHeatingCOP);
+  bool setRatedHeatingCOP(double ratedHeatingCOP);
 
 
   double minimumOutdoorTemperatureinHeatingMode() const;
 
-  void setMinimumOutdoorTemperatureinHeatingMode(double minimumOutdoorTemperatureinHeatingMode);
+  bool setMinimumOutdoorTemperatureinHeatingMode(double minimumOutdoorTemperatureinHeatingMode);
 
 
   double maximumOutdoorTemperatureinHeatingMode() const;
 
-  void setMaximumOutdoorTemperatureinHeatingMode(double maximumOutdoorTemperatureinHeatingMode);
+  bool setMaximumOutdoorTemperatureinHeatingMode(double maximumOutdoorTemperatureinHeatingMode);
 
 
   boost::optional<Curve> heatingCapacityRatioModifierFunctionofLowTemperatureCurve() const;
@@ -265,7 +275,7 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double minimumHeatPumpPartLoadRatio() const;
 
-  void setMinimumHeatPumpPartLoadRatio(double minimumHeatPumpPartLoadRatio);
+  bool setMinimumHeatPumpPartLoadRatio(double minimumHeatPumpPartLoadRatio);
 
 
   boost::optional<ThermalZone> zoneforMasterThermostatLocation() const;
@@ -289,17 +299,17 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   bool heatPumpWasteHeatRecovery() const;
 
-  void setHeatPumpWasteHeatRecovery(bool heatPumpWasteHeatRecovery);
+  bool setHeatPumpWasteHeatRecovery(bool heatPumpWasteHeatRecovery);
 
 
   double equivalentPipingLengthusedforPipingCorrectionFactorinCoolingMode() const;
 
-  void setEquivalentPipingLengthusedforPipingCorrectionFactorinCoolingMode(double equivalentPipingLengthusedforPipingCorrectionFactorinCoolingMode);
+  bool setEquivalentPipingLengthusedforPipingCorrectionFactorinCoolingMode(double equivalentPipingLengthusedforPipingCorrectionFactorinCoolingMode);
 
 
   double verticalHeightusedforPipingCorrectionFactor() const;
 
-  void setVerticalHeightusedforPipingCorrectionFactor(double verticalHeightusedforPipingCorrectionFactor);
+  bool setVerticalHeightusedforPipingCorrectionFactor(double verticalHeightusedforPipingCorrectionFactor);
 
 
   boost::optional<Curve> pipingCorrectionFactorforLengthinCoolingModeCurve() const;
@@ -311,12 +321,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double pipingCorrectionFactorforHeightinCoolingModeCoefficient() const;
 
-  void setPipingCorrectionFactorforHeightinCoolingModeCoefficient(double pipingCorrectionFactorforHeightinCoolingModeCoefficient);
+  bool setPipingCorrectionFactorforHeightinCoolingModeCoefficient(double pipingCorrectionFactorforHeightinCoolingModeCoefficient);
 
 
   double equivalentPipingLengthusedforPipingCorrectionFactorinHeatingMode() const;
 
-  void setEquivalentPipingLengthusedforPipingCorrectionFactorinHeatingMode(double equivalentPipingLengthusedforPipingCorrectionFactorinHeatingMode);
+  bool setEquivalentPipingLengthusedforPipingCorrectionFactorinHeatingMode(double equivalentPipingLengthusedforPipingCorrectionFactorinHeatingMode);
 
 
   boost::optional<Curve> pipingCorrectionFactorforLengthinHeatingModeCurve() const;
@@ -328,27 +338,27 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double pipingCorrectionFactorforHeightinHeatingModeCoefficient() const;
 
-  void setPipingCorrectionFactorforHeightinHeatingModeCoefficient(double pipingCorrectionFactorforHeightinHeatingModeCoefficient);
+  bool setPipingCorrectionFactorforHeightinHeatingModeCoefficient(double pipingCorrectionFactorforHeightinHeatingModeCoefficient);
 
 
   double crankcaseHeaterPowerperCompressor() const;
 
-  void setCrankcaseHeaterPowerperCompressor(double crankcaseHeaterPowerperCompressor);
+  bool setCrankcaseHeaterPowerperCompressor(double crankcaseHeaterPowerperCompressor);
 
 
   int numberofCompressors() const;
 
-  void setNumberofCompressors(int numberofCompressors);
+  bool setNumberofCompressors(int numberofCompressors);
 
 
   double ratioofCompressorSizetoTotalCompressorCapacity() const;
 
-  void setRatioofCompressorSizetoTotalCompressorCapacity(double ratioofCompressorSizetoTotalCompressorCapacity);
+  bool setRatioofCompressorSizetoTotalCompressorCapacity(double ratioofCompressorSizetoTotalCompressorCapacity);
 
 
   double maximumOutdoorDrybulbTemperatureforCrankcaseHeater() const;
 
-  void setMaximumOutdoorDrybulbTemperatureforCrankcaseHeater(double maximumOutdoorDrybulbTemperatureforCrankcaseHeater);
+  bool setMaximumOutdoorDrybulbTemperatureforCrankcaseHeater(double maximumOutdoorDrybulbTemperatureforCrankcaseHeater);
 
 
   std::string defrostStrategy() const;
@@ -384,14 +394,14 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double maximumOutdoorDrybulbTemperatureforDefrostOperation() const;
 
-  void setMaximumOutdoorDrybulbTemperatureforDefrostOperation(double maximumOutdoorDrybulbTemperatureforDefrostOperation);
+  bool setMaximumOutdoorDrybulbTemperatureforDefrostOperation(double maximumOutdoorDrybulbTemperatureforDefrostOperation);
 
 
   boost::optional<double> waterCondenserVolumeFlowRate() const;
 
   bool isWaterCondenserVolumeFlowRateAutosized() const;
 
-  void setWaterCondenserVolumeFlowRate(double waterCondenserVolumeFlowRate);
+  bool setWaterCondenserVolumeFlowRate(double waterCondenserVolumeFlowRate);
 
   void autosizeWaterCondenserVolumeFlowRate();
 
@@ -443,12 +453,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double minimumOutdoorTemperatureinHeatRecoveryMode() const;
 
-  void setMinimumOutdoorTemperatureinHeatRecoveryMode(double minimumOutdoorTemperatureinHeatRecoveryMode);
+  bool setMinimumOutdoorTemperatureinHeatRecoveryMode(double minimumOutdoorTemperatureinHeatRecoveryMode);
 
 
   double maximumOutdoorTemperatureinHeatRecoveryMode() const;
 
-  void setMaximumOutdoorTemperatureinHeatRecoveryMode(double maximumOutdoorTemperatureinHeatRecoveryMode);
+  bool setMaximumOutdoorTemperatureinHeatRecoveryMode(double maximumOutdoorTemperatureinHeatRecoveryMode);
 
 
   boost::optional<Curve> heatRecoveryCoolingCapacityModifierCurve() const;
@@ -460,12 +470,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double initialHeatRecoveryCoolingCapacityFraction() const;
 
-  void setInitialHeatRecoveryCoolingCapacityFraction(double initialHeatRecoveryCoolingCapacityFraction);
+  bool setInitialHeatRecoveryCoolingCapacityFraction(double initialHeatRecoveryCoolingCapacityFraction);
 
 
   double heatRecoveryCoolingCapacityTimeConstant() const;
 
-  void setHeatRecoveryCoolingCapacityTimeConstant(double heatRecoveryCoolingCapacityTimeConstant);
+  bool setHeatRecoveryCoolingCapacityTimeConstant(double heatRecoveryCoolingCapacityTimeConstant);
 
 
   boost::optional<Curve> heatRecoveryCoolingEnergyModifierCurve() const;
@@ -477,12 +487,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double initialHeatRecoveryCoolingEnergyFraction() const;
 
-  void setInitialHeatRecoveryCoolingEnergyFraction(double initialHeatRecoveryCoolingEnergyFraction);
+  bool setInitialHeatRecoveryCoolingEnergyFraction(double initialHeatRecoveryCoolingEnergyFraction);
 
 
   double heatRecoveryCoolingEnergyTimeConstant() const;
 
-  void setHeatRecoveryCoolingEnergyTimeConstant(double heatRecoveryCoolingEnergyTimeConstant);
+  bool setHeatRecoveryCoolingEnergyTimeConstant(double heatRecoveryCoolingEnergyTimeConstant);
 
 
   boost::optional<Curve> heatRecoveryHeatingCapacityModifierCurve() const;
@@ -494,12 +504,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double initialHeatRecoveryHeatingCapacityFraction() const;
 
-  void setInitialHeatRecoveryHeatingCapacityFraction(double initialHeatRecoveryHeatingCapacityFraction);
+  bool setInitialHeatRecoveryHeatingCapacityFraction(double initialHeatRecoveryHeatingCapacityFraction);
 
 
   double heatRecoveryHeatingCapacityTimeConstant() const;
 
-  void setHeatRecoveryHeatingCapacityTimeConstant(double heatRecoveryHeatingCapacityTimeConstant);
+  bool setHeatRecoveryHeatingCapacityTimeConstant(double heatRecoveryHeatingCapacityTimeConstant);
 
 
   boost::optional<Curve> heatRecoveryHeatingEnergyModifierCurve() const;
@@ -511,12 +521,12 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
 
   double initialHeatRecoveryHeatingEnergyFraction() const;
 
-  void setInitialHeatRecoveryHeatingEnergyFraction(double initialHeatRecoveryHeatingEnergyFraction);
+  bool setInitialHeatRecoveryHeatingEnergyFraction(double initialHeatRecoveryHeatingEnergyFraction);
 
 
   double heatRecoveryHeatingEnergyTimeConstant() const;
 
-  void setHeatRecoveryHeatingEnergyTimeConstant(double heatRecoveryHeatingEnergyTimeConstant);
+  bool setHeatRecoveryHeatingEnergyTimeConstant(double heatRecoveryHeatingEnergyTimeConstant);
 
 
   void addTerminal(ZoneHVACTerminalUnitVariableRefrigerantFlow & vrf);
@@ -526,6 +536,20 @@ class MODEL_API AirConditionerVariableRefrigerantFlow : public StraightComponent
   void removeAllTerminals();
 
   std::vector<ZoneHVACTerminalUnitVariableRefrigerantFlow> terminals() const;
+
+  boost::optional<double> autosizedRatedTotalCoolingCapacity() const ;
+
+  boost::optional<double> autosizedRatedTotalHeatingCapacity() const ;
+
+  boost::optional<double> autosizedResistiveDefrostHeaterCapacity() const ;
+
+  boost::optional<double> autosizedWaterCondenserVolumeFlowRate() const ;
+
+  boost::optional<double> autosizedEvaporativeCondenserAirFlowRate() const ;
+
+  boost::optional<double> autosizedEvaporativeCondenserPumpRatedPowerConsumption() const ;
+
+
 
  protected:
 
@@ -555,4 +579,3 @@ typedef std::vector<AirConditionerVariableRefrigerantFlow> AirConditionerVariabl
 } // openstudio
 
 #endif // MODEL_AIRCONDITIONERVARIABLEREFRIGERANTFLOW_HPP
-

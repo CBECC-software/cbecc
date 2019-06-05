@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilCoolingDXSingleSpeed.hpp"
 #include "CoilCoolingDXSingleSpeed_Impl.hpp"
@@ -46,12 +56,16 @@
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
 #include "Model.hpp"
+
+#include <utilities/idd/IddFactory.hxx>
 #include <utilities/idd/OS_Coil_Cooling_DX_SingleSpeed_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
 #include "../utilities/core/Compare.hpp"
 #include "../utilities/core/Assert.hpp"
 #include "../utilities/units/Quantity.hpp"
 #include "../utilities/units/OSOptionalQuantity.hpp"
+#include "AirflowNetworkEquivalentDuct.hpp"
+#include "AirflowNetworkEquivalentDuct_Impl.hpp"
 
 namespace openstudio {
 namespace model {
@@ -120,11 +134,46 @@ namespace detail{
   // Get all output variable names that could be associated with this object.
   const std::vector<std::string>& CoilCoolingDXSingleSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    // TODO: static for now
+    static std::vector<std::string> result{
+      "Cooling Coil Total Cooling Rate",
+      "Cooling Coil Total Cooling Energy",
+      "Cooling Coil Sensible Cooling Rate",
+      "Cooling Coil Sensible Cooling Energy",
+      "Cooling Coil Latent Cooling Rate",
+      "Cooling Coil Latent Cooling Energy",
+      "Cooling Coil Electric Power",
+      "Cooling Coil Electric Energy",
+      "Cooling Coil Runtime Fraction",
+
+      // condenserType = [AirCooled, EvaporativelyCooled]
+      // if (this->condenserType() == "EvaporativelyCooled") {
+        "Cooling Coil Condenser Inlet Temperature",
+        "Cooling Coil Evaporative Condenser Water Volume",
+        "Cooling Coil Evaporative Condenser Pump Electric Power",
+        "Cooling Coil Evaporative Condenser Pump Electric Energy",
+        "Cooling Coil Basin Heater Electric Power",
+        "Cooling Coil Basin Heater Electric Energy",
+        "Cooling Coil Evaporative Condenser Mains Supply Water Volume"
+      // }
+
+      // Storage tank isn't implemented
+      // if has storage tank:
+      // "Cooling Coil Condensate Volume Flow Rate",
+      // "Cooling Coil Condensate Volume",
+      //
+
+      // If not part of AirLoopHVAC:UnitaryHeatPump:AirToAir
+      // (if part of a heat pump, crankcase heater is reported only for the heating coil):
+      // if ( !this->containingHVACComponent().empty() ) {
+      // "Cooling Coil Crankcase Heater Electric Power",
+      // "Cooling Coil Crankcase Heater Electric Energy",
+      // }
+
+    };
     return result;
   }
+
 
   IddObjectType CoilCoolingDXSingleSpeed_Impl::iddObjectType() const {
     return CoilCoolingDXSingleSpeed::iddObjectType();
@@ -146,12 +195,12 @@ namespace detail{
     return result;
   }
 
-  unsigned CoilCoolingDXSingleSpeed_Impl::inletPort()
+  unsigned CoilCoolingDXSingleSpeed_Impl::inletPort() const
   {
     return OS_Coil_Cooling_DX_SingleSpeedFields::AirInletNodeName;
   }
 
-  unsigned CoilCoolingDXSingleSpeed_Impl::outletPort()
+  unsigned CoilCoolingDXSingleSpeed_Impl::outletPort() const
   {
     return OS_Coil_Cooling_DX_SingleSpeedFields::AirOutletNodeName;
   }
@@ -184,9 +233,14 @@ namespace detail{
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedCOP);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setRatedCOP( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setRatedCOP( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedCOP,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedCOP,value.get());;
+  }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setRatedCOP( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedCOP,value);;
   }
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::ratedEvaporatorFanPowerPerVolumeFlowRate()const
@@ -194,10 +248,16 @@ namespace detail{
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedEvaporatorFanPowerPerVolumeFlowRate);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setRatedEvaporatorFanPowerPerVolumeFlowRate( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setRatedEvaporatorFanPowerPerVolumeFlowRate( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedEvaporatorFanPowerPerVolumeFlowRate,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedEvaporatorFanPowerPerVolumeFlowRate,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setRatedEvaporatorFanPowerPerVolumeFlowRate( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatedEvaporatorFanPowerPerVolumeFlowRate,value);;
+  }
+
 
   Curve CoilCoolingDXSingleSpeed_Impl::totalCoolingCapacityFunctionOfTemperatureCurve()const
   {
@@ -206,19 +266,22 @@ namespace detail{
     return result.get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setTotalCoolingCapacityFunctionOfTemperatureCurve(const Curve& curve )
+  bool CoilCoolingDXSingleSpeed_Impl::setTotalCoolingCapacityFunctionOfTemperatureCurve(const Curve& curve )
   {
     if( model() != curve.model() )
     {
-      return;
+      LOG(Warn, "Cannot set curve that doesn't belong to the same model as " << briefDescription());
+      return false;
     }
 
     if( ! curve.optionalCast<CurveBiquadratic>() )
     {
-      return;
+      LOG(Warn, "Wrong curve type (Biquadratic expected) for " << briefDescription());
+      return false;
     }
-
-    OS_ASSERT(this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::TotalCoolingCapacityFunctionofTemperatureCurveName, curve.handle()));
+    bool result = this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::TotalCoolingCapacityFunctionofTemperatureCurveName, curve.handle());
+    OS_ASSERT(result);
+    return result;
   }
 
   Curve CoilCoolingDXSingleSpeed_Impl::totalCoolingCapacityFunctionOfFlowFractionCurve()const
@@ -228,11 +291,12 @@ namespace detail{
     return result.get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setTotalCoolingCapacityFunctionOfFlowFractionCurve(const Curve& curve )
+  bool CoilCoolingDXSingleSpeed_Impl::setTotalCoolingCapacityFunctionOfFlowFractionCurve(const Curve& curve )
   {
     if( model() != curve.model() )
     {
-      return;
+      LOG(Warn, "Cannot set curve that doesn't belong to the same model as " << briefDescription());
+      return false;
     }
 
     bool accepted = false;
@@ -248,10 +312,13 @@ namespace detail{
 
     if( ! accepted )
     {
-      return;
+      LOG(Warn, "Wrong curve type (Quadratic or Cubic expected) for " << briefDescription());
+      return false;
     }
 
-    OS_ASSERT(this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::TotalCoolingCapacityFunctionofFlowFractionCurveName, curve.handle()));
+    bool result = this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::TotalCoolingCapacityFunctionofFlowFractionCurveName, curve.handle());
+    OS_ASSERT(result);
+    return result;
   }
 
   Curve CoilCoolingDXSingleSpeed_Impl::energyInputRatioFunctionOfTemperatureCurve()const
@@ -261,19 +328,22 @@ namespace detail{
     return result.get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setEnergyInputRatioFunctionOfTemperatureCurve(const Curve& curve )
+  bool CoilCoolingDXSingleSpeed_Impl::setEnergyInputRatioFunctionOfTemperatureCurve(const Curve& curve )
   {
     if( model() != curve.model() )
     {
-      return;
+      LOG(Warn, "Cannot set curve that doesn't belong to the same model as " << briefDescription());
+      return false;
     }
 
     if( ! curve.optionalCast<Curve>() )
     {
-      return;
+      return false;
     }
 
-    OS_ASSERT(this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::EnergyInputRatioFunctionofTemperatureCurveName, curve.handle()));
+    bool result = this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::EnergyInputRatioFunctionofTemperatureCurveName, curve.handle());
+    OS_ASSERT(result);
+    return result;
   }
 
   Curve CoilCoolingDXSingleSpeed_Impl::energyInputRatioFunctionOfFlowFractionCurve()const
@@ -283,11 +353,12 @@ namespace detail{
     return result.get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setEnergyInputRatioFunctionOfFlowFractionCurve(const Curve& curve )
+  bool CoilCoolingDXSingleSpeed_Impl::setEnergyInputRatioFunctionOfFlowFractionCurve(const Curve& curve )
   {
     if( model() != curve.model() )
     {
-      return;
+      LOG(Warn, "Cannot set curve that doesn't belong to the same model as " << briefDescription());
+      return false;
     }
 
     bool accepted = false;
@@ -303,10 +374,13 @@ namespace detail{
 
     if( ! accepted )
     {
-      return;
+      LOG(Warn, "Wrong curve type (Quadratic or Cubic expected) for " << briefDescription());
+      return false;
     }
 
-    OS_ASSERT(this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::EnergyInputRatioFunctionofFlowFractionCurveName, curve.handle()));
+    bool result = this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::EnergyInputRatioFunctionofFlowFractionCurveName, curve.handle());
+    OS_ASSERT(result);
+    return result;
   }
 
   Curve CoilCoolingDXSingleSpeed_Impl::partLoadFractionCorrelationCurve() const
@@ -316,11 +390,12 @@ namespace detail{
     return result.get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setPartLoadFractionCorrelationCurve(const Curve& curve )
+  bool CoilCoolingDXSingleSpeed_Impl::setPartLoadFractionCorrelationCurve(const Curve& curve )
   {
     if( model() != curve.model() )
     {
-      return;
+      LOG(Warn, "Cannot set curve that doesn't belong to the same model as " << briefDescription());
+      return false;
     }
 
     bool accepted = false;
@@ -336,10 +411,13 @@ namespace detail{
 
     if( ! accepted )
     {
-      return;
+      LOG(Warn, "Wrong curve type (Quadratic or Cubic expected) for " << briefDescription());
+      return false;
     }
 
-    OS_ASSERT(this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::PartLoadFractionCorrelationCurveName, curve.handle()));
+    bool result = this->setPointer(OS_Coil_Cooling_DX_SingleSpeedFields::PartLoadFractionCorrelationCurveName, curve.handle());
+    OS_ASSERT(result);
+    return result;
   }
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::nominalTimeForCondensateRemovalToBegin() const
@@ -347,49 +425,73 @@ namespace detail{
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::NominalTimeforCondensateRemovaltoBegin);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setNominalTimeForCondensateRemovalToBegin( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setNominalTimeForCondensateRemovalToBegin( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::NominalTimeforCondensateRemovaltoBegin,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::NominalTimeforCondensateRemovaltoBegin,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setNominalTimeForCondensateRemovalToBegin( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::NominalTimeforCondensateRemovaltoBegin,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::ratioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatioofInitialMoistureEvaporationRateandSteadyStateLatentCapacity);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatioofInitialMoistureEvaporationRateandSteadyStateLatentCapacity,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatioofInitialMoistureEvaporationRateandSteadyStateLatentCapacity,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::RatioofInitialMoistureEvaporationRateandSteadyStateLatentCapacity,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::maximumCyclingRate()
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumCyclingRate);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setMaximumCyclingRate( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setMaximumCyclingRate( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumCyclingRate,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumCyclingRate,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setMaximumCyclingRate( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumCyclingRate,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::latentCapacityTimeConstant()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::LatentCapacityTimeConstant);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setLatentCapacityTimeConstant( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setLatentCapacityTimeConstant( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::LatentCapacityTimeConstant,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::LatentCapacityTimeConstant,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setLatentCapacityTimeConstant( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::LatentCapacityTimeConstant,value);;
+  }
+
 
   OptionalString CoilCoolingDXSingleSpeed_Impl::condenserAirInletNodeName()const
   {
     return getString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserAirInletNodeName);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setCondenserAirInletNodeName( const boost::optional<std::string>& value )
+  bool CoilCoolingDXSingleSpeed_Impl::setCondenserAirInletNodeName( const boost::optional<std::string>& value )
   {
-    setString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserAirInletNodeName,value.get());
+    return setString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserAirInletNodeName,value.get());
   }
 
   std::string CoilCoolingDXSingleSpeed_Impl::condenserType()const
@@ -397,9 +499,9 @@ namespace detail{
     return getString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserType).get();
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setCondenserType( const std::string& value )
+  bool CoilCoolingDXSingleSpeed_Impl::setCondenserType( const std::string& value )
   {
-    setString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserType,value);
+    return setString(OS_Coil_Cooling_DX_SingleSpeedFields::CondenserType,value);
   }
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::evaporativeCondenserEffectiveness()const
@@ -407,56 +509,88 @@ namespace detail{
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserEffectiveness);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserEffectiveness( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserEffectiveness( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields:: EvaporativeCondenserEffectiveness,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields:: EvaporativeCondenserEffectiveness,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserEffectiveness( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields:: EvaporativeCondenserEffectiveness,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::evaporativeCondenserAirFlowRate()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserAirFlowRate( OptionalDouble value )
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserAirFlowRate( OptionalDouble value )
   {
-    if(value)
-      setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate,*value);
-    else
-      setString(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate,"Autosize");
+    if(value) {
+      return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate,*value);
+    } else {
+      return setString(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate,"Autosize");
+    }
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserAirFlowRate( double value )
+  {
+   return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserAirFlowRate,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::evaporativeCondenserPumpRatedPowerConsumption()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserPumpRatedPowerConsumption( OptionalDouble value )
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserPumpRatedPowerConsumption( OptionalDouble value )
   {
-    if(value)
-      setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption,*value);
-    else
-      setString(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption,"Autosize");
+    if(value) {
+      return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption,*value);
+    } else {
+      return setString(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption,"Autosize");
+    }
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setEvaporativeCondenserPumpRatedPowerConsumption( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::EvaporativeCondenserPumpRatedPowerConsumption,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::crankcaseHeaterCapacity()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::CrankcaseHeaterCapacity);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setCrankcaseHeaterCapacity( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setCrankcaseHeaterCapacity( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::CrankcaseHeaterCapacity,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::CrankcaseHeaterCapacity,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setCrankcaseHeaterCapacity( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::CrankcaseHeaterCapacity,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::maximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation()const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumOutdoorDryBulbTemperatureforCrankcaseHeaterOperation);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumOutdoorDryBulbTemperatureforCrankcaseHeaterOperation,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumOutdoorDryBulbTemperatureforCrankcaseHeaterOperation,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::MaximumOutdoorDryBulbTemperatureforCrankcaseHeaterOperation,value);;
+  }
+
 
   //getSupplyWaterStorageTankName
   //setSupplyWaterStorageTankName
@@ -469,20 +603,32 @@ namespace detail{
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterCapacity);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setBasinHeaterCapacity( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setBasinHeaterCapacity( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterCapacity,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterCapacity,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setBasinHeaterCapacity( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterCapacity,value);;
+  }
+
 
   OptionalDouble CoilCoolingDXSingleSpeed_Impl::basinHeaterSetpointTemperature() const
   {
     return getDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterSetpointTemperature);
   }
 
-  void CoilCoolingDXSingleSpeed_Impl::setBasinHeaterSetpointTemperature( boost::optional<double> value )
+  bool CoilCoolingDXSingleSpeed_Impl::setBasinHeaterSetpointTemperature( boost::optional<double> value )
   {
-    setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterSetpointTemperature,value.get());
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterSetpointTemperature,value.get());;
   }
+
+  bool CoilCoolingDXSingleSpeed_Impl::setBasinHeaterSetpointTemperature( double value )
+  {
+    return setDouble(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterSetpointTemperature,value);;
+  }
+
 
   boost::optional<Schedule> CoilCoolingDXSingleSpeed_Impl::basinHeaterOperatingSchedule() const {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_Coil_Cooling_DX_SingleSpeedFields::BasinHeaterOperatingScheduleName);
@@ -813,6 +959,111 @@ namespace detail{
     return false;
   }
 
+  AirflowNetworkEquivalentDuct CoilCoolingDXSingleSpeed_Impl::getAirflowNetworkEquivalentDuct(double length, double diameter)
+  {
+    boost::optional<AirflowNetworkEquivalentDuct> opt = airflowNetworkEquivalentDuct();
+    if (opt) {
+      if (opt->airPathLength() != length) {
+        opt->setAirPathLength(length);
+      }
+      if (opt->airPathHydraulicDiameter() != diameter) {
+        opt->setAirPathHydraulicDiameter(diameter);
+      }
+    }
+    return AirflowNetworkEquivalentDuct(model(), length, diameter, handle());
+  }
+
+  boost::optional<AirflowNetworkEquivalentDuct> CoilCoolingDXSingleSpeed_Impl::airflowNetworkEquivalentDuct() const
+  {
+    std::vector<AirflowNetworkEquivalentDuct> myAFN = getObject<ModelObject>().getModelObjectSources<AirflowNetworkEquivalentDuct>(AirflowNetworkEquivalentDuct::iddObjectType());
+    auto count = myAFN.size();
+    if (count == 1) {
+      return myAFN[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFN[0];
+    }
+    return boost::none;
+  }
+
+  // Autosizing methods
+  void CoilCoolingDXSingleSpeed_Impl::autosize() {
+    autosizeRatedTotalCoolingCapacity();
+    autosizeRatedSensibleHeatRatio();
+    autosizeRatedAirFlowRate();
+    boost::optional<double> emptyVal;
+    setEvaporativeCondenserAirFlowRate(emptyVal);
+    setEvaporativeCondenserPumpRatedPowerConsumption(emptyVal);
+  }
+
+  void CoilCoolingDXSingleSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+
+    val = autosizedRatedAirFlowRate();
+    if (val) {
+      setRatedAirFlowRate(val.get());
+    }
+
+    val = autosizedRatedTotalCoolingCapacity();
+    if (val) {
+      setRatedTotalCoolingCapacity(val.get());
+    }
+
+    val = autosizedRatedSensibleHeatRatio();
+    if (val) {
+      setRatedSensibleHeatRatio(val.get());
+    }
+
+    val = autosizedEvaporativeCondenserAirFlowRate();
+    if (val) {
+      setEvaporativeCondenserAirFlowRate(val.get());
+    }
+
+    val = autosizedEvaporativeCondenserPumpRatedPowerConsumption();
+    if (val) {
+      setEvaporativeCondenserPumpRatedPowerConsumption(val.get());
+    }
+
+  }
+
+  boost::optional<double> CoilCoolingDXSingleSpeed_Impl::autosizedRatedAirFlowRate() const {
+    return getAutosizedValue("Design Size Rated Air Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> CoilCoolingDXSingleSpeed_Impl::autosizedRatedTotalCoolingCapacity() const {
+    return getAutosizedValue("Design Size Gross Rated Total Cooling Capacity", "W");
+  }
+
+  boost::optional<double> CoilCoolingDXSingleSpeed_Impl::autosizedRatedSensibleHeatRatio()  const {
+    return getAutosizedValue("Design Size Gross Rated Sensible Heat Ratio", "");
+  }
+
+  // E+ output has a bug where this field label is incorrect
+  boost::optional<double> CoilCoolingDXSingleSpeed_Impl::autosizedEvaporativeCondenserAirFlowRate() const {
+    return getAutosizedValue("Design Size Evaporative Condenser Effectiveness", "m3/s");
+  }
+
+  // E+ output has a bug where this field label is incorrect
+  boost::optional<double> CoilCoolingDXSingleSpeed_Impl::autosizedEvaporativeCondenserPumpRatedPowerConsumption()  const {
+    return getAutosizedValue("Design Size Evaporative Condenser Air Flow Rate", "W");
+  }
+
+  std::vector<EMSActuatorNames> CoilCoolingDXSingleSpeed_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Coil:Cooling:DX:SingleSpeed", "Autosized Rated Air Flow Rate"},
+                                            {"Coil:Cooling:DX:SingleSpeed","Autosized Rated Sensible Heat Ratio"},
+                                            {"Coil:Cooling:DX:SingleSpeed","Autosized Rated Total Cooling Capacity"},
+                                            {"Outdoor Air System Node","Drybulb Temperature"},
+                                            {"Outdoor Air System Node","Wetbulb Temperature"},
+                                            {"Outdoor Air System Node","Wind Speed"},
+                                            {"Outdoor Air System Node","Wind Direction"}};
+    return actuators;
+  }
+
+  std::vector<std::string> CoilCoolingDXSingleSpeed_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types;
+    return types;
+  }
+
 }// detail
 
 CoilCoolingDXSingleSpeed::CoilCoolingDXSingleSpeed(const Model& model)
@@ -932,7 +1183,7 @@ CoilCoolingDXSingleSpeed::CoilCoolingDXSingleSpeed(const Model& model,
 }
 
 CoilCoolingDXSingleSpeed::CoilCoolingDXSingleSpeed(std::shared_ptr<detail::CoilCoolingDXSingleSpeed_Impl> p)
-  : StraightComponent(p)
+  : StraightComponent(std::move(p))
 {}
 
 Schedule CoilCoolingDXSingleSpeed::availabilitySchedule()const
@@ -961,9 +1212,13 @@ OptionalDouble CoilCoolingDXSingleSpeed::getRatedCOP() const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->ratedCOP();
 }
-void CoilCoolingDXSingleSpeed::setRatedCOP( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setRatedCOP( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedCOP( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedCOP( value );
+}
+bool CoilCoolingDXSingleSpeed::setRatedCOP( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedCOP( value );
 }
 
 OptionalDouble CoilCoolingDXSingleSpeed::ratedEvaporatorFanPowerPerVolumeFlowRate()const
@@ -975,10 +1230,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getRatedEvaporatorFanPowerPerVolumeFlow
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->ratedEvaporatorFanPowerPerVolumeFlowRate();
 }
-void CoilCoolingDXSingleSpeed::setRatedEvaporatorFanPowerPerVolumeFlowRate( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setRatedEvaporatorFanPowerPerVolumeFlowRate( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedEvaporatorFanPowerPerVolumeFlowRate( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedEvaporatorFanPowerPerVolumeFlowRate( value );
 }
+bool CoilCoolingDXSingleSpeed::setRatedEvaporatorFanPowerPerVolumeFlowRate( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatedEvaporatorFanPowerPerVolumeFlowRate( value );
+}
+
 
 Curve CoilCoolingDXSingleSpeed::totalCoolingCapacityFunctionOfTemperatureCurve()const
 {
@@ -989,9 +1249,9 @@ Curve CoilCoolingDXSingleSpeed::getTotalCoolingCapacityFunctionOfTemperatureCurv
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->totalCoolingCapacityFunctionOfTemperatureCurve();
 }
-void CoilCoolingDXSingleSpeed::setTotalCoolingCapacityFunctionOfTemperatureCurve(const Curve& curve )
+bool CoilCoolingDXSingleSpeed::setTotalCoolingCapacityFunctionOfTemperatureCurve(const Curve& curve )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setTotalCoolingCapacityFunctionOfTemperatureCurve( curve );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setTotalCoolingCapacityFunctionOfTemperatureCurve( curve );
 }
 
 Curve CoilCoolingDXSingleSpeed::totalCoolingCapacityFunctionOfFlowFractionCurve()const
@@ -1003,9 +1263,9 @@ Curve CoilCoolingDXSingleSpeed::getTotalCoolingCapacityFunctionOfFlowFractionCur
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->totalCoolingCapacityFunctionOfFlowFractionCurve();
 }
-void CoilCoolingDXSingleSpeed::setTotalCoolingCapacityFunctionOfFlowFractionCurve(const Curve& curve )
+bool CoilCoolingDXSingleSpeed::setTotalCoolingCapacityFunctionOfFlowFractionCurve(const Curve& curve )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setTotalCoolingCapacityFunctionOfFlowFractionCurve( curve );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setTotalCoolingCapacityFunctionOfFlowFractionCurve( curve );
 }
 
 Curve CoilCoolingDXSingleSpeed::energyInputRatioFunctionOfTemperatureCurve()const
@@ -1017,9 +1277,9 @@ Curve CoilCoolingDXSingleSpeed::getEnergyInputRatioFunctionOfTemperatureCurve()c
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->energyInputRatioFunctionOfTemperatureCurve();
 }
-void CoilCoolingDXSingleSpeed::setEnergyInputRatioFunctionOfTemperatureCurve(const Curve& curve )
+bool CoilCoolingDXSingleSpeed::setEnergyInputRatioFunctionOfTemperatureCurve(const Curve& curve )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEnergyInputRatioFunctionOfTemperatureCurve( curve );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEnergyInputRatioFunctionOfTemperatureCurve( curve );
 }
 
 Curve CoilCoolingDXSingleSpeed::energyInputRatioFunctionOfFlowFractionCurve()const
@@ -1031,9 +1291,9 @@ Curve CoilCoolingDXSingleSpeed::getEnergyInputRatioFunctionOfFlowFractionCurve()
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->energyInputRatioFunctionOfFlowFractionCurve();
 }
-void CoilCoolingDXSingleSpeed::setEnergyInputRatioFunctionOfFlowFractionCurve(const Curve& curve )
+bool CoilCoolingDXSingleSpeed::setEnergyInputRatioFunctionOfFlowFractionCurve(const Curve& curve )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEnergyInputRatioFunctionOfFlowFractionCurve( curve );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEnergyInputRatioFunctionOfFlowFractionCurve( curve );
 }
 
 Curve CoilCoolingDXSingleSpeed::partLoadFractionCorrelationCurve()const
@@ -1045,9 +1305,9 @@ Curve CoilCoolingDXSingleSpeed::getPartLoadFractionCorrelationCurve()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->partLoadFractionCorrelationCurve();
 }
-void CoilCoolingDXSingleSpeed::setPartLoadFractionCorrelationCurve(const Curve& curve )
+bool CoilCoolingDXSingleSpeed::setPartLoadFractionCorrelationCurve(const Curve& curve )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setPartLoadFractionCorrelationCurve( curve );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setPartLoadFractionCorrelationCurve( curve );
 }
 
 OptionalDouble CoilCoolingDXSingleSpeed::nominalTimeForCondensateRemovalToBegin() const
@@ -1059,10 +1319,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getNominalTimeForCondensateRemovalToBeg
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->nominalTimeForCondensateRemovalToBegin();
 }
-void CoilCoolingDXSingleSpeed::setNominalTimeForCondensateRemovalToBegin( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setNominalTimeForCondensateRemovalToBegin( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setNominalTimeForCondensateRemovalToBegin( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setNominalTimeForCondensateRemovalToBegin( value );
 }
+bool CoilCoolingDXSingleSpeed::setNominalTimeForCondensateRemovalToBegin( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setNominalTimeForCondensateRemovalToBegin( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::ratioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity()const
 {
@@ -1073,10 +1338,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getRatioOfInitialMoistureEvaporationRat
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->ratioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity();
 }
-void CoilCoolingDXSingleSpeed::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( value );
 }
+bool CoilCoolingDXSingleSpeed::setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setRatioOfInitialMoistureEvaporationRateAndSteadyStateLatentCapacity( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::maximumCyclingRate()
 {
@@ -1087,10 +1357,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getMaximumCyclingRate()
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->maximumCyclingRate();
 }
-void CoilCoolingDXSingleSpeed::setMaximumCyclingRate( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setMaximumCyclingRate( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumCyclingRate( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumCyclingRate( value );
 }
+bool CoilCoolingDXSingleSpeed::setMaximumCyclingRate( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumCyclingRate( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::latentCapacityTimeConstant()const
 {
@@ -1101,10 +1376,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getLatentCapacityTimeConstant()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->latentCapacityTimeConstant();
 }
-void CoilCoolingDXSingleSpeed::setLatentCapacityTimeConstant( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setLatentCapacityTimeConstant( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setLatentCapacityTimeConstant( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setLatentCapacityTimeConstant( value );
 }
+bool CoilCoolingDXSingleSpeed::setLatentCapacityTimeConstant( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setLatentCapacityTimeConstant( value );
+}
+
 
 OptionalString CoilCoolingDXSingleSpeed::condenserAirInletNodeName()const
 {
@@ -1115,9 +1395,9 @@ OptionalString CoilCoolingDXSingleSpeed::getCondenserAirInletNodeName()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->condenserAirInletNodeName();
 }
-void CoilCoolingDXSingleSpeed::setCondenserAirInletNodeName( const boost::optional<std::string>& value )
+bool CoilCoolingDXSingleSpeed::setCondenserAirInletNodeName( const boost::optional<std::string>& value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCondenserAirInletNodeName( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCondenserAirInletNodeName( value );
 }
 
 std::string CoilCoolingDXSingleSpeed::condenserType()const
@@ -1129,9 +1409,9 @@ std::string CoilCoolingDXSingleSpeed::getCondenserType()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->condenserType();
 }
-void CoilCoolingDXSingleSpeed::setCondenserType( const std::string& value )
+bool CoilCoolingDXSingleSpeed::setCondenserType( const std::string& value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCondenserType( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCondenserType( value );
 }
 
 OptionalDouble CoilCoolingDXSingleSpeed::evaporativeCondenserEffectiveness()const
@@ -1143,10 +1423,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getEvaporativeCondenserEffectiveness()c
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->evaporativeCondenserEffectiveness();
 }
-void CoilCoolingDXSingleSpeed::setEvaporativeCondenserEffectiveness( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserEffectiveness( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserEffectiveness( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserEffectiveness( value );
 }
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserEffectiveness( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserEffectiveness( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::evaporativeCondenserAirFlowRate()const
 {
@@ -1157,10 +1442,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getEvaporativeCondenserAirFlowRate()con
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->evaporativeCondenserAirFlowRate();
 }
-void CoilCoolingDXSingleSpeed::setEvaporativeCondenserAirFlowRate( OptionalDouble value )
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserAirFlowRate( OptionalDouble value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserAirFlowRate( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserAirFlowRate( value );
 }
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserAirFlowRate( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserAirFlowRate( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::evaporativeCondenserPumpRatedPowerConsumption()const
 {
@@ -1171,10 +1461,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getEvaporativeCondenserPumpRatedPowerCo
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->evaporativeCondenserPumpRatedPowerConsumption();
 }
-void CoilCoolingDXSingleSpeed::setEvaporativeCondenserPumpRatedPowerConsumption( OptionalDouble value )
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserPumpRatedPowerConsumption( OptionalDouble value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserPumpRatedPowerConsumption( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserPumpRatedPowerConsumption( value );
 }
+bool CoilCoolingDXSingleSpeed::setEvaporativeCondenserPumpRatedPowerConsumption( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setEvaporativeCondenserPumpRatedPowerConsumption( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::crankcaseHeaterCapacity()const
 {
@@ -1185,10 +1480,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getCrankcaseHeaterCapacity()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->crankcaseHeaterCapacity();
 }
-void CoilCoolingDXSingleSpeed::setCrankcaseHeaterCapacity( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setCrankcaseHeaterCapacity( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCrankcaseHeaterCapacity( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCrankcaseHeaterCapacity( value );
 }
+bool CoilCoolingDXSingleSpeed::setCrankcaseHeaterCapacity( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setCrankcaseHeaterCapacity( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::maximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation()const
 {
@@ -1199,10 +1499,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getMaximumOutdoorDryBulbTemperatureForC
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->maximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation();
 }
-void CoilCoolingDXSingleSpeed::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( value );
 }
+bool CoilCoolingDXSingleSpeed::setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setMaximumOutdoorDryBulbTemperatureForCrankcaseHeaterOperation( value );
+}
+
 
 //getSupplyWaterStorageTankName
 //setSupplyWaterStorageTankName
@@ -1219,10 +1524,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getBasinHeaterCapacity()const
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->basinHeaterCapacity();
 }
-void CoilCoolingDXSingleSpeed::setBasinHeaterCapacity( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setBasinHeaterCapacity( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterCapacity( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterCapacity( value );
 }
+bool CoilCoolingDXSingleSpeed::setBasinHeaterCapacity( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterCapacity( value );
+}
+
 
 OptionalDouble CoilCoolingDXSingleSpeed::basinHeaterSetpointTemperature()const
 {
@@ -1233,10 +1543,15 @@ OptionalDouble CoilCoolingDXSingleSpeed::getBasinHeaterSetpointTemperature()cons
 {
   return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->basinHeaterSetpointTemperature();
 }
-void CoilCoolingDXSingleSpeed::setBasinHeaterSetpointTemperature( boost::optional<double> value )
+bool CoilCoolingDXSingleSpeed::setBasinHeaterSetpointTemperature( boost::optional<double> value )
 {
-  getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterSetpointTemperature( value );
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterSetpointTemperature( value );
 }
+bool CoilCoolingDXSingleSpeed::setBasinHeaterSetpointTemperature( double value )
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->setBasinHeaterSetpointTemperature( value );
+}
+
 
 OptionalSchedule CoilCoolingDXSingleSpeed::basinHeaterOperatingSchedule()const
 {
@@ -1261,6 +1576,11 @@ void CoilCoolingDXSingleSpeed::resetBasinHeaterOperatingSchedule() {
 IddObjectType CoilCoolingDXSingleSpeed::iddObjectType() {
   IddObjectType result(IddObjectType::OS_Coil_Cooling_DX_SingleSpeed);
   return result;
+}
+
+std::vector<std::string> CoilCoolingDXSingleSpeed::condenserTypeValues() const {
+  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                        OS_Coil_Cooling_DX_SingleSpeedFields::CondenserType);
 }
 
 boost::optional<double> CoilCoolingDXSingleSpeed::ratedTotalCoolingCapacity() const {
@@ -1333,6 +1653,38 @@ bool CoilCoolingDXSingleSpeed::setRatedAirFlowRate(const Quantity& ratedAirFlowR
 
 void CoilCoolingDXSingleSpeed::autosizeRatedAirFlowRate() {
   getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizeRatedAirFlowRate();
+}
+
+AirflowNetworkEquivalentDuct CoilCoolingDXSingleSpeed::getAirflowNetworkEquivalentDuct(double length, double diameter)
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->getAirflowNetworkEquivalentDuct(length, diameter);
+}
+
+boost::optional<AirflowNetworkEquivalentDuct> CoilCoolingDXSingleSpeed::airflowNetworkEquivalentDuct() const
+{
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->airflowNetworkEquivalentDuct();
+}
+
+// Autosizing methods
+
+boost::optional <double> CoilCoolingDXSingleSpeed::autosizedRatedAirFlowRate() const {
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizedRatedAirFlowRate();
+}
+
+boost::optional <double> CoilCoolingDXSingleSpeed::autosizedRatedTotalCoolingCapacity() const {
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizedRatedTotalCoolingCapacity();
+}
+
+boost::optional <double> CoilCoolingDXSingleSpeed::autosizedRatedSensibleHeatRatio() const {
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizedRatedSensibleHeatRatio();
+}
+
+boost::optional<double> CoilCoolingDXSingleSpeed::autosizedEvaporativeCondenserAirFlowRate() const {
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizedEvaporativeCondenserAirFlowRate();
+}
+
+boost::optional<double> CoilCoolingDXSingleSpeed::autosizedEvaporativeCondenserPumpRatedPowerConsumption()  const {
+  return getImpl<detail::CoilCoolingDXSingleSpeed_Impl>()->autosizedEvaporativeCondenserPumpRatedPowerConsumption();
 }
 
 } // model

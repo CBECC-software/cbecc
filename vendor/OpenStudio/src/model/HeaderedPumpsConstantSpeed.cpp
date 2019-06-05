@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "HeaderedPumpsConstantSpeed.hpp"
 #include "HeaderedPumpsConstantSpeed_Impl.hpp"
@@ -63,9 +73,25 @@ namespace detail {
 
   const std::vector<std::string>& HeaderedPumpsConstantSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Pump Electric Power",
+      "Pump Electric Energy",
+      "Pump Shaft Power",
+      "Pump Fluid Heat Gain Rate",
+      "Pump Fluid Heat Gain Energy",
+      "Pump Outlet Temperature",
+      "Pump Mass Flow Rate",
+      "Number of Pumps Operating",
+      // The Key is the Pump, not the zone, so it's right to report here
+      // EnergyPlus/Pumps.cc::GetPumpInput()
+      // TODO: Implement this check and make not static above once ModelObject return type has changed
+      //if (! p.zone().empty() ) {
+        "Pump Zone Total Heating Rate",
+        "Pump Zone Total Heating Energy",
+        "Pump Zone Convective Heating Rate",
+        "Pump Zone Radiative Heating Rate"
+      // }
+    };
     return result;
   }
 
@@ -174,9 +200,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void HeaderedPumpsConstantSpeed_Impl::setNumberofPumpsinBank(int numberofPumpsinBank) {
+  bool HeaderedPumpsConstantSpeed_Impl::setNumberofPumpsinBank(int numberofPumpsinBank) {
     bool result = setInt(OS_HeaderedPumps_ConstantSpeedFields::NumberofPumpsinBank, numberofPumpsinBank);
     OS_ASSERT(result);
+    return result;
   }
 
   bool HeaderedPumpsConstantSpeed_Impl::setFlowSequencingControlScheme(std::string flowSequencingControlScheme) {
@@ -184,17 +211,19 @@ namespace detail {
     return result;
   }
 
-  void HeaderedPumpsConstantSpeed_Impl::setRatedPumpHead(double ratedPumpHead) {
+  bool HeaderedPumpsConstantSpeed_Impl::setRatedPumpHead(double ratedPumpHead) {
     bool result = setDouble(OS_HeaderedPumps_ConstantSpeedFields::RatedPumpHead, ratedPumpHead);
     OS_ASSERT(result);
+    return result;
   }
 
-  void HeaderedPumpsConstantSpeed_Impl::setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption) {
+  bool HeaderedPumpsConstantSpeed_Impl::setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption) {
     bool result(false);
     if (ratedPowerConsumption) {
       result = setDouble(OS_HeaderedPumps_ConstantSpeedFields::RatedPowerConsumption, ratedPowerConsumption.get());
     }
     OS_ASSERT(result);
+    return result;
   }
 
   void HeaderedPumpsConstantSpeed_Impl::autosizeRatedPowerConsumption() {
@@ -252,11 +281,11 @@ namespace detail {
     return result;
   }
 
-  unsigned HeaderedPumpsConstantSpeed_Impl::inletPort() {
+  unsigned HeaderedPumpsConstantSpeed_Impl::inletPort() const {
     return OS_HeaderedPumps_ConstantSpeedFields::InletNodeName;
   }
 
-  unsigned HeaderedPumpsConstantSpeed_Impl::outletPort() {
+  unsigned HeaderedPumpsConstantSpeed_Impl::outletPort() const {
     return OS_HeaderedPumps_ConstantSpeedFields::OutletNodeName;
   }
 
@@ -267,6 +296,44 @@ namespace detail {
     }
 
     return false;
+  }
+
+  boost::optional<double> HeaderedPumpsConstantSpeed_Impl::autosizedTotalRatedFlowRate() const {
+    return getAutosizedValue("Design Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> HeaderedPumpsConstantSpeed_Impl::autosizedRatedPowerConsumption() const {
+    return getAutosizedValue("Design Power Consumption", "W");
+  }
+
+  void HeaderedPumpsConstantSpeed_Impl::autosize() {
+    autosizeTotalRatedFlowRate();
+    autosizeRatedPowerConsumption();
+  }
+
+  void HeaderedPumpsConstantSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedTotalRatedFlowRate();
+    if (val) {
+      setTotalRatedFlowRate(val.get());
+    }
+
+    val = autosizedRatedPowerConsumption();
+    if (val) {
+      setRatedPowerConsumption(val.get());
+    }
+
+  }
+
+  std::vector<EMSActuatorNames> HeaderedPumpsConstantSpeed_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Pump", "Pump Mass Flow Rate"},
+                                            {"Pump", "Pump Pressure Rise"}};
+    return actuators;
+  }
+
+  std::vector<std::string> HeaderedPumpsConstantSpeed_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Pump Maximum Mass Flow Rate"};
+    return types;
   }
 
 } // detail
@@ -281,7 +348,7 @@ HeaderedPumpsConstantSpeed::HeaderedPumpsConstantSpeed(const Model& model)
   setFlowSequencingControlScheme("Sequential");
   setRatedPumpHead(179352);
   autosizeRatedPowerConsumption();
-  setMotorEfficiency(0.9); 
+  setMotorEfficiency(0.9);
   setFractionofMotorInefficienciestoFluidStream(0.0);
   setPumpControlType("Continuous");
   setSkinLossRadiativeFraction(0.1);
@@ -361,20 +428,20 @@ void HeaderedPumpsConstantSpeed::autosizeTotalRatedFlowRate() {
   getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->autosizeTotalRatedFlowRate();
 }
 
-void HeaderedPumpsConstantSpeed::setNumberofPumpsinBank(int numberofPumpsinBank) {
-  getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setNumberofPumpsinBank(numberofPumpsinBank);
+bool HeaderedPumpsConstantSpeed::setNumberofPumpsinBank(int numberofPumpsinBank) {
+  return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setNumberofPumpsinBank(numberofPumpsinBank);
 }
 
 bool HeaderedPumpsConstantSpeed::setFlowSequencingControlScheme(std::string flowSequencingControlScheme) {
   return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setFlowSequencingControlScheme(flowSequencingControlScheme);
 }
 
-void HeaderedPumpsConstantSpeed::setRatedPumpHead(double ratedPumpHead) {
-  getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setRatedPumpHead(ratedPumpHead);
+bool HeaderedPumpsConstantSpeed::setRatedPumpHead(double ratedPumpHead) {
+  return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setRatedPumpHead(ratedPumpHead);
 }
 
-void HeaderedPumpsConstantSpeed::setRatedPowerConsumption(double ratedPowerConsumption) {
-  getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setRatedPowerConsumption(ratedPowerConsumption);
+bool HeaderedPumpsConstantSpeed::setRatedPowerConsumption(double ratedPowerConsumption) {
+  return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->setRatedPowerConsumption(ratedPowerConsumption);
 }
 
 void HeaderedPumpsConstantSpeed::autosizeRatedPowerConsumption() {
@@ -415,10 +482,17 @@ bool HeaderedPumpsConstantSpeed::setSkinLossRadiativeFraction(double skinLossRad
 
 /// @cond
 HeaderedPumpsConstantSpeed::HeaderedPumpsConstantSpeed(std::shared_ptr<detail::HeaderedPumpsConstantSpeed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> HeaderedPumpsConstantSpeed::autosizedTotalRatedFlowRate() const {
+    return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->autosizedTotalRatedFlowRate();
+  }
+
+  boost::optional<double> HeaderedPumpsConstantSpeed::autosizedRatedPowerConsumption() const {
+    return getImpl<detail::HeaderedPumpsConstantSpeed_Impl>()->autosizedRatedPowerConsumption();
+  }
+
 } // model
 } // openstudio
-

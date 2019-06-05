@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "CoilHeatingLowTempRadiantVarFlow.hpp"
 #include "CoilHeatingLowTempRadiantVarFlow_Impl.hpp"
@@ -68,25 +78,22 @@ namespace detail {
                                                                                bool keepHandle)
     : StraightComponent_Impl(other,model,keepHandle)
   {}
-  
+
   //ModelObject CoilHeatingLowTempRadiantVarFlow_Impl::clone(Model model) const
   //{
   //  CoilHeatingLowTempRadiantVarFlow newCoil = WaterToAirComponent_Impl::clone(model).optionalCast<CoilHeatingLowTempRadiantVarFlow>().get();
 
   //  return newCoil;
   //}
-  
+
   const std::vector<std::string>& CoilHeatingLowTempRadiantVarFlow_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty())
-    {
-    }
     return result;
   }
 
-  IddObjectType CoilHeatingLowTempRadiantVarFlow_Impl::iddObjectType() const 
-  { 
+  IddObjectType CoilHeatingLowTempRadiantVarFlow_Impl::iddObjectType() const
+  {
     return CoilHeatingLowTempRadiantVarFlow::iddObjectType();
   }
 
@@ -95,20 +102,20 @@ namespace detail {
     std::vector<ScheduleTypeKey> result;
     UnsignedVector fieldIndices = getSourceIndices(schedule.handle());
     UnsignedVector::const_iterator b(fieldIndices.begin()), e(fieldIndices.end());
-    
+
     if (std::find(b,e,OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlTemperatureScheduleName) != e)
     {
       result.push_back(ScheduleTypeKey("CoilHeatingLowTempRadiantVarFlow","Heating Control Temperature"));
     }
     return result;
   }
-  
-  unsigned CoilHeatingLowTempRadiantVarFlow_Impl::inletPort()
+
+  unsigned CoilHeatingLowTempRadiantVarFlow_Impl::inletPort() const
   {
     return OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingWaterInletNodeName;
   }
 
-  unsigned CoilHeatingLowTempRadiantVarFlow_Impl::outletPort()
+  unsigned CoilHeatingLowTempRadiantVarFlow_Impl::outletPort() const
   {
     return OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingWaterOutletNodeName;
   }
@@ -123,7 +130,7 @@ namespace detail {
     {
       if( boost::optional<HVACComponent> coil = zoneHVACLowTempRadiantVarFlow.heatingCoil() )
       {
-        if( coil->handle() == this->handle() )  
+        if( coil->handle() == this->handle() )
         {
           return zoneHVACLowTempRadiantVarFlow;
         }
@@ -132,52 +139,52 @@ namespace detail {
     return boost::none;
   }
 
-  boost::optional<double> CoilHeatingLowTempRadiantVarFlow_Impl::maximumHotWaterFlow() const 
+  boost::optional<double> CoilHeatingLowTempRadiantVarFlow_Impl::maximumHotWaterFlow() const
   {
     return getDouble(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow,true);
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::isMaximumHotWaterFlowDefaulted() const 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::isMaximumHotWaterFlowDefaulted() const
   {
     return isEmpty(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow);
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::isMaximumHotWaterFlowAutosized() const 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::isMaximumHotWaterFlowAutosized() const
   {
     bool result = false;
     boost::optional<std::string> value = getString(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow, true);
-    if (value) 
+    if (value)
     {
       result = openstudio::istringEqual(value.get(), "autosize");
     }
     return result;
   }
 
-  double CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlThrottlingRange() const 
+  double CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlThrottlingRange() const
   {
     boost::optional<double> value = getDouble(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlThrottlingRange,true);
     OS_ASSERT(value);
     return value.get();
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::isHeatingControlThrottlingRangeDefaulted() const 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::isHeatingControlThrottlingRangeDefaulted() const
   {
     return isEmpty(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlThrottlingRange);
   }
 
-  boost::optional<Schedule> CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlTemperatureSchedule() const 
+  boost::optional<Schedule> CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlTemperatureSchedule() const
   {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlTemperatureScheduleName);
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::setMaximumHotWaterFlow(boost::optional<double> maximumHotWaterFlow) 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::setMaximumHotWaterFlow(boost::optional<double> maximumHotWaterFlow)
   {
     bool result(false);
-    if (maximumHotWaterFlow) 
+    if (maximumHotWaterFlow)
     {
       result = setDouble(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow, maximumHotWaterFlow.get());
     }
-    else 
+    else
     {
       resetMaximumHotWaterFlow();
       result = true;
@@ -185,31 +192,31 @@ namespace detail {
     return result;
   }
 
-  void CoilHeatingLowTempRadiantVarFlow_Impl::resetMaximumHotWaterFlow() 
+  void CoilHeatingLowTempRadiantVarFlow_Impl::resetMaximumHotWaterFlow()
   {
     bool result = setString(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow, "");
     OS_ASSERT(result);
   }
 
-  void CoilHeatingLowTempRadiantVarFlow_Impl::autosizeMaximumHotWaterFlow() 
+  void CoilHeatingLowTempRadiantVarFlow_Impl::autosizeMaximumHotWaterFlow()
   {
     bool result = setString(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::MaximumHotWaterFlow, "autosize");
     OS_ASSERT(result);
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlThrottlingRange(double heatingControlThrottlingRange) 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlThrottlingRange(double heatingControlThrottlingRange)
   {
     bool result = setDouble(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlThrottlingRange, heatingControlThrottlingRange);
     return result;
   }
 
-  void CoilHeatingLowTempRadiantVarFlow_Impl::resetHeatingControlThrottlingRange() 
+  void CoilHeatingLowTempRadiantVarFlow_Impl::resetHeatingControlThrottlingRange()
   {
     bool result = setString(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlThrottlingRange, "");
     OS_ASSERT(result);
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlTemperatureSchedule(Schedule& schedule) 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlTemperatureSchedule(Schedule& schedule)
   {
     bool result = setSchedule(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlTemperatureScheduleName,
                               "CoilHeatingLowTempRadiantVarFlow",
@@ -218,39 +225,39 @@ namespace detail {
     return result;
   }
 
-  void CoilHeatingLowTempRadiantVarFlow_Impl::resetHeatingControlTemperatureSchedule() 
+  void CoilHeatingLowTempRadiantVarFlow_Impl::resetHeatingControlTemperatureSchedule()
   {
     bool result = setString(OS_Coil_Heating_LowTemperatureRadiant_VariableFlowFields::HeatingControlTemperatureScheduleName, "");
     OS_ASSERT(result);
   }
 
-  boost::optional<ModelObject> CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlTemperatureScheduleAsModelObject() const 
+  boost::optional<ModelObject> CoilHeatingLowTempRadiantVarFlow_Impl::heatingControlTemperatureScheduleAsModelObject() const
   {
     OptionalModelObject result;
     OptionalSchedule intermediate = heatingControlTemperatureSchedule();
-    if (intermediate) 
+    if (intermediate)
     {
       result = *intermediate;
     }
     return result;
   }
 
-  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlTemperatureScheduleAsModelObject(const boost::optional<ModelObject>& modelObject) 
+  bool CoilHeatingLowTempRadiantVarFlow_Impl::setHeatingControlTemperatureScheduleAsModelObject(const boost::optional<ModelObject>& modelObject)
   {
-    if (modelObject) 
+    if (modelObject)
     {
       OptionalSchedule intermediate = modelObject->optionalCast<Schedule>();
-      if (intermediate) 
+      if (intermediate)
       {
         Schedule schedule(*intermediate);
         return setHeatingControlTemperatureSchedule(schedule);
       }
-      else 
+      else
       {
         return false;
       }
     }
-    else 
+    else
     {
       resetHeatingControlTemperatureSchedule();
     }
@@ -270,6 +277,54 @@ namespace detail {
     return false;
   }
 
+  boost::optional<ZoneHVACLowTempRadiantVarFlow> CoilHeatingLowTempRadiantVarFlow_Impl::parentZoneHVAC() const {
+
+    boost::optional<ZoneHVACLowTempRadiantVarFlow> result;
+
+    // This coil performance object can only be found in a ZoneHVACLowTempRadiantVarFlow
+    // Check all ZoneHVACLowTempRadiantVarFlow in the model, seeing if this is inside of one of them.
+    boost::optional<ZoneHVACLowTempRadiantVarFlow> parentCoil;
+    auto zoneHVACs = this->model().getConcreteModelObjects<ZoneHVACLowTempRadiantVarFlow>();
+    for (const auto & zoneHVAC : zoneHVACs) {
+      if (zoneHVAC.heatingCoil().handle() == this->handle()) {
+        result = zoneHVAC;
+        break;
+      }
+
+    }
+
+    // Warn if this coil was not found inside a ZoneHVACLowTempRadiantVarFlow
+    if (!result) {
+      LOG(Warn, name().get() + " was not found inside a ZoneHVACLowTempRadiantVarFlow in the model, cannot retrieve the autosized value.");
+      return result;
+    }
+
+    return result;
+  }
+
+  boost::optional<double> CoilHeatingLowTempRadiantVarFlow_Impl::autosizedMaximumHotWaterFlow() const {
+    boost::optional<ZoneHVACLowTempRadiantVarFlow> zoneHVAC = parentZoneHVAC();
+    boost::optional<double> result;
+    if (!zoneHVAC) {
+      return result;
+    }
+
+    return zoneHVAC->getAutosizedValue("Design Size Maximum Hot Water Flow", "m3/s");
+  }
+
+  void CoilHeatingLowTempRadiantVarFlow_Impl::autosize() {
+    autosizeMaximumHotWaterFlow();
+  }
+
+  void CoilHeatingLowTempRadiantVarFlow_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedMaximumHotWaterFlow();
+    if (val) {
+      setMaximumHotWaterFlow(val.get());
+    }
+
+  }
+
 } // detail
 
 CoilHeatingLowTempRadiantVarFlow::CoilHeatingLowTempRadiantVarFlow(const Model& model,Schedule& heatingControlTemperature)
@@ -282,81 +337,89 @@ CoilHeatingLowTempRadiantVarFlow::CoilHeatingLowTempRadiantVarFlow(const Model& 
   OS_ASSERT(ok);
 }
 
-IddObjectType CoilHeatingLowTempRadiantVarFlow::iddObjectType() 
+IddObjectType CoilHeatingLowTempRadiantVarFlow::iddObjectType()
 {
   return IddObjectType(IddObjectType::OS_Coil_Heating_LowTemperatureRadiant_VariableFlow);
 }
 
-boost::optional<double> CoilHeatingLowTempRadiantVarFlow::maximumHotWaterFlow() const 
+boost::optional<double> CoilHeatingLowTempRadiantVarFlow::maximumHotWaterFlow() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->maximumHotWaterFlow();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::isMaximumHotWaterFlowDefaulted() const 
+bool CoilHeatingLowTempRadiantVarFlow::isMaximumHotWaterFlowDefaulted() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->isMaximumHotWaterFlowDefaulted();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::isMaximumHotWaterFlowAutosized() const 
+bool CoilHeatingLowTempRadiantVarFlow::isMaximumHotWaterFlowAutosized() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->isMaximumHotWaterFlowAutosized();
 }
 
-double CoilHeatingLowTempRadiantVarFlow::heatingControlThrottlingRange() const 
+double CoilHeatingLowTempRadiantVarFlow::heatingControlThrottlingRange() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->heatingControlThrottlingRange();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::isHeatingControlThrottlingRangeDefaulted() const 
+bool CoilHeatingLowTempRadiantVarFlow::isHeatingControlThrottlingRangeDefaulted() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->isHeatingControlThrottlingRangeDefaulted();
 }
 
-boost::optional<Schedule> CoilHeatingLowTempRadiantVarFlow::heatingControlTemperatureSchedule() const 
+boost::optional<Schedule> CoilHeatingLowTempRadiantVarFlow::heatingControlTemperatureSchedule() const
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->heatingControlTemperatureSchedule();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::setMaximumHotWaterFlow(double maximumHotWaterFlow) 
+bool CoilHeatingLowTempRadiantVarFlow::setMaximumHotWaterFlow(double maximumHotWaterFlow)
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->setMaximumHotWaterFlow(maximumHotWaterFlow);
 }
 
-void CoilHeatingLowTempRadiantVarFlow::resetMaximumHotWaterFlow() 
+void CoilHeatingLowTempRadiantVarFlow::resetMaximumHotWaterFlow()
 {
   getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->resetMaximumHotWaterFlow();
 }
 
-void CoilHeatingLowTempRadiantVarFlow::autosizeMaximumHotWaterFlow() 
+void CoilHeatingLowTempRadiantVarFlow::autosizeMaximumHotWaterFlow()
 {
   getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->autosizeMaximumHotWaterFlow();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::setHeatingControlThrottlingRange(double heatingControlThrottlingRange) 
+bool CoilHeatingLowTempRadiantVarFlow::setHeatingControlThrottlingRange(double heatingControlThrottlingRange)
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->setHeatingControlThrottlingRange(heatingControlThrottlingRange);
 }
 
-void CoilHeatingLowTempRadiantVarFlow::resetHeatingControlThrottlingRange() 
+void CoilHeatingLowTempRadiantVarFlow::resetHeatingControlThrottlingRange()
 {
   getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->resetHeatingControlThrottlingRange();
 }
 
-bool CoilHeatingLowTempRadiantVarFlow::setHeatingControlTemperatureSchedule(Schedule& schedule) 
+bool CoilHeatingLowTempRadiantVarFlow::setHeatingControlTemperatureSchedule(Schedule& schedule)
 {
   return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->setHeatingControlTemperatureSchedule(schedule);
 }
 
-void CoilHeatingLowTempRadiantVarFlow::resetHeatingControlTemperatureSchedule() 
+void CoilHeatingLowTempRadiantVarFlow::resetHeatingControlTemperatureSchedule()
 {
   getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->resetHeatingControlTemperatureSchedule();
 }
 
 /// @cond
 CoilHeatingLowTempRadiantVarFlow::CoilHeatingLowTempRadiantVarFlow(std::shared_ptr<detail::CoilHeatingLowTempRadiantVarFlow_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
+
+  boost::optional<double> CoilHeatingLowTempRadiantVarFlow::autosizedMaximumHotWaterFlow() const {
+    return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->autosizedMaximumHotWaterFlow();
+  }
+
+  boost::optional<ZoneHVACLowTempRadiantVarFlow> CoilHeatingLowTempRadiantVarFlow::parentZoneHVAC() const {
+    return getImpl<detail::CoilHeatingLowTempRadiantVarFlow_Impl>()->parentZoneHVAC();
+  }
 
 } // model
 } // openstudio

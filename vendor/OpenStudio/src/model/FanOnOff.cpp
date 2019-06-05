@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "FanOnOff.hpp"
 #include "FanOnOff_Impl.hpp"
@@ -47,12 +57,20 @@
 #include "ZoneHVACPackagedTerminalHeatPump_Impl.hpp"
 #include "ZoneHVACTerminalUnitVariableRefrigerantFlow.hpp"
 #include "ZoneHVACTerminalUnitVariableRefrigerantFlow_Impl.hpp"
+#include "ZoneHVACUnitHeater.hpp"
+#include "ZoneHVACUnitHeater_Impl.hpp"
+#include "ZoneHVACUnitVentilator.hpp"
+#include "ZoneHVACUnitVentilator_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir.hpp"
 #include "AirLoopHVACUnitaryHeatPumpAirToAir_Impl.hpp"
 #include "AirLoopHVACUnitarySystem.hpp"
 #include "AirLoopHVACUnitarySystem_Impl.hpp"
+#include "AirLoopHVACOutdoorAirSystem.hpp"
+#include "AirLoopHVACOutdoorAirSystem_Impl.hpp"
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass.hpp"
 #include "AirLoopHVACUnitaryHeatCoolVAVChangeoverBypass_Impl.hpp"
+#include "AirflowNetworkFan.hpp"
+#include "AirflowNetworkFan_Impl.hpp"
 #include <utilities/idd/OS_Fan_OnOff_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
 #include "../utilities/units/Unit.hpp"
@@ -87,11 +105,8 @@ namespace detail {
 
   const std::vector<std::string>& FanOnOff_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty())
-    {
-    }
-    return result;
+    static std::vector<std::string> results{"Fan Electric Power", "Fan Rise in Air Temperature", "Fan Heat Gain to Air", "Fan Electric Energy", "Fan Air Mass Flow Rate", "Fan Runtime Fraction"};
+    return results;
   }
 
   IddObjectType FanOnOff_Impl::iddObjectType() const
@@ -118,12 +133,12 @@ namespace detail {
 
   // Inlet and Outlet nodes
 
-  unsigned FanOnOff_Impl::inletPort()
+  unsigned FanOnOff_Impl::inletPort() const
   {
     return OS_Fan_OnOffFields::AirInletNodeName;
   }
 
-  unsigned FanOnOff_Impl::outletPort()
+  unsigned FanOnOff_Impl::outletPort() const
   {
     return OS_Fan_OnOffFields::AirOutletNodeName;
   }
@@ -166,16 +181,16 @@ namespace detail {
     return result;
   }
 
-  double FanOnOff_Impl::fanEfficiency() const
+  double FanOnOff_Impl::fanTotalEfficiency() const
   {
-    boost::optional<double> value = getDouble(OS_Fan_OnOffFields::FanEfficiency,true);
+    boost::optional<double> value = getDouble(OS_Fan_OnOffFields::FanTotalEfficiency,true);
     OS_ASSERT(value);
     return value.get();
   }
 
-  bool FanOnOff_Impl::isFanEfficiencyDefaulted() const
+  bool FanOnOff_Impl::isFanTotalEfficiencyDefaulted() const
   {
-    return isEmpty(OS_Fan_OnOffFields::FanEfficiency);
+    return isEmpty(OS_Fan_OnOffFields::FanTotalEfficiency);
   }
 
   double FanOnOff_Impl::pressureRise() const
@@ -230,22 +245,23 @@ namespace detail {
     return isEmpty(OS_Fan_OnOffFields::EndUseSubcategory);
   }
 
-  bool FanOnOff_Impl::setFanEfficiency(double fanEfficiency)
+  bool FanOnOff_Impl::setFanTotalEfficiency(double fanTotalEfficiency)
   {
-    bool result = setDouble(OS_Fan_OnOffFields::FanEfficiency, fanEfficiency);
+    bool result = setDouble(OS_Fan_OnOffFields::FanTotalEfficiency, fanTotalEfficiency);
     return result;
   }
 
-  void FanOnOff_Impl::resetFanEfficiency()
+  void FanOnOff_Impl::resetFanTotalEfficiency()
   {
-    bool result = setString(OS_Fan_OnOffFields::FanEfficiency, "");
+    bool result = setString(OS_Fan_OnOffFields::FanTotalEfficiency, "");
     OS_ASSERT(result);
   }
 
-  void FanOnOff_Impl::setPressureRise(double pressureRise)
+  bool FanOnOff_Impl::setPressureRise(double pressureRise)
   {
     bool result = setDouble(OS_Fan_OnOffFields::PressureRise, pressureRise);
     OS_ASSERT(result);
+    return result;
   }
 
   bool FanOnOff_Impl::setMaximumFlowRate(boost::optional<double> maximumFlowRate)
@@ -308,10 +324,11 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void FanOnOff_Impl::setEndUseSubcategory(std::string endUseSubcategory)
+  bool FanOnOff_Impl::setEndUseSubcategory(std::string endUseSubcategory)
   {
     bool result = setString(OS_Fan_OnOffFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void FanOnOff_Impl::resetEndUseSubcategory()
@@ -377,7 +394,9 @@ namespace detail {
   // It can only be contained within another HVAC Component, such as Unitary, ZoneHVAC, etc.
   bool FanOnOff_Impl::addToNode(Node & node)
   {
-    if( boost::optional<Loop> loop = node.loop() ) {
+    if( node.loop() ) {
+      return false;
+    } else if ( node.airLoopHVACOutdoorAirSystem() ) {
       return false;
     }
     else {
@@ -483,6 +502,18 @@ namespace detail {
           if (component.supplyAirFan().handle() == this->handle()) return elem;
           break;
         }
+      case openstudio::IddObjectType::OS_ZoneHVAC_UnitHeater :
+        {
+          ZoneHVACUnitHeater component = elem.cast<ZoneHVACUnitHeater>();
+          if (component.supplyAirFan().handle() == this->handle()) return elem;
+          break;
+        }
+      case openstudio::IddObjectType::OS_ZoneHVAC_UnitVentilator :
+        {
+          ZoneHVACUnitVentilator component = elem.cast<ZoneHVACUnitVentilator>();
+          if (component.supplyAirFan().handle() == this->handle()) return elem;
+          break;
+        }
       default:
         {
           break;
@@ -490,6 +521,60 @@ namespace detail {
       }
     }
     return boost::none;
+  }
+
+  AirflowNetworkFan FanOnOff_Impl::getAirflowNetworkFan()
+  {
+    auto opt = airflowNetworkFan();
+    if (opt) {
+      return opt.get();
+    }
+    return AirflowNetworkFan(model(), handle());
+  }
+
+  boost::optional<AirflowNetworkFan> FanOnOff_Impl::airflowNetworkFan() const
+  {
+    std::vector<AirflowNetworkFan> myAFNitems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkFan>(AirflowNetworkFan::iddObjectType());
+    auto count = myAFNitems.size();
+    if (count == 1) {
+      return myAFNitems[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork EquivalentDuct attached, returning first.");
+      return myAFNitems[0];
+    }
+    return boost::none;
+  }
+
+  boost::optional<double> FanOnOff_Impl::autosizedMaximumFlowRate() const {
+    return getAutosizedValue("Design Size Maximum Flow Rate", "m3/s");
+  }
+
+  void FanOnOff_Impl::autosize() {
+    autosizeMaximumFlowRate();
+  }
+
+  void FanOnOff_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedMaximumFlowRate();
+    if (val) {
+      setMaximumFlowRate(val.get());
+    }
+
+  }
+
+  std::vector<EMSActuatorNames> FanOnOff_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Fan", "Fan Air Mass Flow Rate"},
+                                            {"Fan", "Fan Pressure Rise"},
+                                            {"Fan", "Fan Total Efficiency"},
+                                            {"Fan", "Fan Autosized Air Flow Rate"}};
+    return actuators;
+  }
+
+  std::vector<std::string> FanOnOff_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Fan Maximum Mass Flow Rate",
+                                   "Fan Nominal Pressure Rise",
+                                   "Fan Nominal Total Efficiency"};
+    return types;
   }
 
 } // detail
@@ -502,7 +587,7 @@ FanOnOff::FanOnOff(const Model& model)
     auto availabilitySchedule = model.alwaysOnDiscreteSchedule();
     setAvailabilitySchedule(availabilitySchedule);
 
-    bool ok = setFanEfficiency(0.6);
+    bool ok = setFanTotalEfficiency(0.6);
     OS_ASSERT(ok);
     setPressureRise(300);
     autosizeMaximumFlowRate();
@@ -536,7 +621,7 @@ FanOnOff::FanOnOff(const Model& model, Schedule& availabilitySchedule)
 
     setAvailabilitySchedule(availabilitySchedule);
 
-    bool ok = setFanEfficiency(0.6);
+    bool ok = setFanTotalEfficiency(0.6);
     OS_ASSERT(ok);
     setPressureRise(300);
     autosizeMaximumFlowRate();
@@ -575,7 +660,7 @@ FanOnOff::FanOnOff(const Model& model,
 
     setAvailabilitySchedule(availabilitySchedule);
 
-    bool ok = setFanEfficiency(0.6);
+    bool ok = setFanTotalEfficiency(0.6);
     OS_ASSERT(ok);
     setPressureRise(300);
     autosizeMaximumFlowRate();
@@ -610,24 +695,44 @@ bool FanOnOff::setAvailabilitySchedule(Schedule& schedule)
 
 // Field Fan Efficiency
 
+double FanOnOff::fanTotalEfficiency() const
+{
+  return getImpl<detail::FanOnOff_Impl>()->fanTotalEfficiency();
+}
+
+bool FanOnOff::isFanTotalEfficiencyDefaulted() const
+{
+  return getImpl<detail::FanOnOff_Impl>()->isFanTotalEfficiencyDefaulted();
+}
+
+bool FanOnOff::setFanTotalEfficiency(double fanTotalEfficiency)
+{
+  return getImpl<detail::FanOnOff_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
+}
+
+void FanOnOff::resetFanTotalEfficiency()
+{
+  getImpl<detail::FanOnOff_Impl>()->resetFanTotalEfficiency();
+}
+
 double FanOnOff::fanEfficiency() const
 {
-  return getImpl<detail::FanOnOff_Impl>()->fanEfficiency();
+  return getImpl<detail::FanOnOff_Impl>()->fanTotalEfficiency();
 }
 
 bool FanOnOff::isFanEfficiencyDefaulted() const
 {
-  return getImpl<detail::FanOnOff_Impl>()->isFanEfficiencyDefaulted();
+  return getImpl<detail::FanOnOff_Impl>()->isFanTotalEfficiencyDefaulted();
 }
 
-bool FanOnOff::setFanEfficiency(double fanEfficiency)
+bool FanOnOff::setFanEfficiency(double fanTotalEfficiency)
 {
-  return getImpl<detail::FanOnOff_Impl>()->setFanEfficiency(fanEfficiency);
+  return getImpl<detail::FanOnOff_Impl>()->setFanTotalEfficiency(fanTotalEfficiency);
 }
 
 void FanOnOff::resetFanEfficiency()
 {
-  getImpl<detail::FanOnOff_Impl>()->resetFanEfficiency();
+  getImpl<detail::FanOnOff_Impl>()->resetFanTotalEfficiency();
 }
 
 // Field Pressure Rise
@@ -637,9 +742,9 @@ double FanOnOff::pressureRise() const
   return getImpl<detail::FanOnOff_Impl>()->pressureRise();
 }
 
-void FanOnOff::setPressureRise(double pressureRise)
+bool FanOnOff::setPressureRise(double pressureRise)
 {
-  getImpl<detail::FanOnOff_Impl>()->setPressureRise(pressureRise);
+  return getImpl<detail::FanOnOff_Impl>()->setPressureRise(pressureRise);
 }
 
 // Field Maximum Flow Rate
@@ -744,9 +849,9 @@ bool FanOnOff::isEndUseSubcategoryDefaulted() const
 
 // Field End-Use Subcategory
 
-void FanOnOff::setEndUseSubcategory(std::string endUseSubcategory)
+bool FanOnOff::setEndUseSubcategory(std::string endUseSubcategory)
 {
-  getImpl<detail::FanOnOff_Impl>()->setEndUseSubcategory(endUseSubcategory);
+  return getImpl<detail::FanOnOff_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void FanOnOff::resetEndUseSubcategory()
@@ -754,12 +859,25 @@ void FanOnOff::resetEndUseSubcategory()
   getImpl<detail::FanOnOff_Impl>()->resetEndUseSubcategory();
 }
 
+AirflowNetworkFan FanOnOff::getAirflowNetworkFan()
+{
+  return getImpl<detail::FanOnOff_Impl>()->getAirflowNetworkFan();
+}
+
+boost::optional<AirflowNetworkFan> FanOnOff::airflowNetworkFan() const
+{
+  return getImpl<detail::FanOnOff_Impl>()->airflowNetworkFan();
+}
+
 /// @cond
 FanOnOff::FanOnOff(std::shared_ptr<detail::FanOnOff_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> FanOnOff::autosizedMaximumFlowRate() const {
+    return getImpl<detail::FanOnOff_Impl>()->autosizedMaximumFlowRate();
+  }
+
 } // model
 } // openstudio
-

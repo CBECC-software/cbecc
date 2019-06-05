@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "RefrigerationTranscriticalSystem.hpp"
 #include "RefrigerationTranscriticalSystem_Impl.hpp"
@@ -73,9 +83,35 @@ namespace detail {
 
   const std::vector<std::string>& RefrigerationTranscriticalSystem_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Refrigeration Transcritical System Total High Pressure Compressor Electric Power",
+      "Refrigeration Transcritical System Total High Pressure Compressor Electric Energy",
+      "Refrigeration Transcritical System Low Pressure Compressor Electric Power",
+      "Refrigeration Transcritical System Low Pressure Compressor Electric Energy",
+      "Refrigeration Transcritical System Total Compressor Electric Energy",
+      "Refrigeration Transcritical System Average COP",
+      "Refrigeration Transcritical System Medium Temperature Cases and Walk Ins Heat Transfer Rate",
+      "Refrigeration Transcritical System Medium Temperature Cases and Walk Ins Heat Transfer Energy",
+      "Refrigeration Transcritical System Low Temperature Cases and Walk Ins Heat Transfer Rate",
+      "Refrigeration Transcritical System Low Temperature Cases and Walk Ins Heat Transfer Energy",
+      "Refrigeration Transcritical System Total Cases and Walk Ins Heat Transfer Energy",
+      "Refrigeration Transcritical System Medium Temperature Suction Pipe Heat Transfer Rate",
+      "Refrigeration Transcritical System Medium Temperature Suction Pipe Heat Transfer Energy",
+      "Refrigeration Transcritical System Low Temperature Suction Pipe Heat Transfer Rate",
+      "Refrigeration Transcritical System Low Temperature Suction Pipe Heat Transfer Energy",
+      "Refrigeration Transcritical System High Pressure Compressor Heat Transfer Rate",
+      "Refrigeration Transcritical System High Pressure Compressor Heat Transfer Energy",
+      "Refrigeration Transcritical System Low Pressure Compressor Heat Transfer Rate",
+      "Refrigeration Transcritical System Low Pressure Compressor Heat Transfer Energy",
+      "Refrigeration Transcritical System Net Rejected Heat Transfer Rate",
+      "Refrigeration Transcritical System Net Rejected Heat Transfer Energy",
+      "Refrigeration Transcritical System Estimated Refrigerant Inventory Mass",
+      "Refrigeration Transcritical System Refrigerant Mass Flow Rate",
+      "Refrigeration Transcritical System Medium Temperature Evaporating Temperature",
+      "Refrigeration Transcritical System Medium Temperature Suction Temperature",
+      "Refrigeration Transcritical System Low Temperature Evaporating Temperature",
+      "Refrigeration Transcritical System Low Temperature Suction Temperature"
+    };
     return result;
   }
 
@@ -182,14 +218,14 @@ namespace detail {
             modelObjectList->removeModelObject(elem);
           }
       }
-    }  
+    }
   }
 
   template <class T>
   void RefrigerationTranscriticalSystem_Impl::removeTemplate( const T & modelObject, boost::optional<ModelObjectList>& modelObjectList ) {
     if( modelObjectList ) {
       modelObjectList->removeModelObject(modelObject);
-    }  
+    }
   }
 
   template <class T>
@@ -447,9 +483,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationTranscriticalSystem_Impl::setReceiverPressure(double receiverPressure) {
+  bool RefrigerationTranscriticalSystem_Impl::setReceiverPressure(double receiverPressure) {
     bool result = setDouble(OS_Refrigeration_TranscriticalSystemFields::ReceiverPressure, receiverPressure);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationTranscriticalSystem_Impl::resetReceiverPressure() {
@@ -457,9 +494,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationTranscriticalSystem_Impl::setSubcoolerEffectiveness(double subcoolerEffectiveness) {
+  bool RefrigerationTranscriticalSystem_Impl::setSubcoolerEffectiveness(double subcoolerEffectiveness) {
     bool result = setDouble(OS_Refrigeration_TranscriticalSystemFields::SubcoolerEffectiveness, subcoolerEffectiveness);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationTranscriticalSystem_Impl::resetSubcoolerEffectiveness() {
@@ -472,9 +510,10 @@ namespace detail {
     return result;
   }
 
-  void RefrigerationTranscriticalSystem_Impl::setSumUASuctionPipingforMediumTemperatureLoads(double sumUASuctionPipingforMediumTemperatureLoads) {
+  bool RefrigerationTranscriticalSystem_Impl::setSumUASuctionPipingforMediumTemperatureLoads(double sumUASuctionPipingforMediumTemperatureLoads) {
     bool result = setDouble(OS_Refrigeration_TranscriticalSystemFields::SumUASuctionPipingforMediumTemperatureLoads, sumUASuctionPipingforMediumTemperatureLoads);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationTranscriticalSystem_Impl::resetSumUASuctionPipingforMediumTemperatureLoads() {
@@ -499,9 +538,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationTranscriticalSystem_Impl::setSumUASuctionPipingforLowTemperatureLoads(double sumUASuctionPipingforLowTemperatureLoads) {
+  bool RefrigerationTranscriticalSystem_Impl::setSumUASuctionPipingforLowTemperatureLoads(double sumUASuctionPipingforLowTemperatureLoads) {
     bool result = setDouble(OS_Refrigeration_TranscriticalSystemFields::SumUASuctionPipingforLowTemperatureLoads, sumUASuctionPipingforLowTemperatureLoads);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationTranscriticalSystem_Impl::resetSumUASuctionPipingforLowTemperatureLoads() {
@@ -526,9 +566,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void RefrigerationTranscriticalSystem_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
+  bool RefrigerationTranscriticalSystem_Impl::setEndUseSubcategory(std::string endUseSubcategory) {
     bool result = setString(OS_Refrigeration_TranscriticalSystemFields::EndUseSubcategory, endUseSubcategory);
     OS_ASSERT(result);
+    return result;
   }
 
   void RefrigerationTranscriticalSystem_Impl::resetEndUseSubcategory() {
@@ -741,16 +782,16 @@ bool RefrigerationTranscriticalSystem::setRefrigerationGasCooler(const Refrigera
   return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setRefrigerationGasCooler(refrigerationGasCoolerAirCooled);
 }
 
-void RefrigerationTranscriticalSystem::setReceiverPressure(double receiverPressure) {
-  getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setReceiverPressure(receiverPressure);
+bool RefrigerationTranscriticalSystem::setReceiverPressure(double receiverPressure) {
+  return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setReceiverPressure(receiverPressure);
 }
 
 void RefrigerationTranscriticalSystem::resetReceiverPressure() {
   getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->resetReceiverPressure();
 }
 
-void RefrigerationTranscriticalSystem::setSubcoolerEffectiveness(double subcoolerEffectiveness) {
-  getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSubcoolerEffectiveness(subcoolerEffectiveness);
+bool RefrigerationTranscriticalSystem::setSubcoolerEffectiveness(double subcoolerEffectiveness) {
+  return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSubcoolerEffectiveness(subcoolerEffectiveness);
 }
 
 void RefrigerationTranscriticalSystem::resetSubcoolerEffectiveness() {
@@ -761,8 +802,8 @@ bool RefrigerationTranscriticalSystem::setRefrigerationSystemWorkingFluidType(st
   return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setRefrigerationSystemWorkingFluidType(refrigerationSystemWorkingFluidType);
 }
 
-void RefrigerationTranscriticalSystem::setSumUASuctionPipingforMediumTemperatureLoads(double sumUASuctionPipingforMediumTemperatureLoads) {
-  getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSumUASuctionPipingforMediumTemperatureLoads(sumUASuctionPipingforMediumTemperatureLoads);
+bool RefrigerationTranscriticalSystem::setSumUASuctionPipingforMediumTemperatureLoads(double sumUASuctionPipingforMediumTemperatureLoads) {
+  return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSumUASuctionPipingforMediumTemperatureLoads(sumUASuctionPipingforMediumTemperatureLoads);
 }
 
 void RefrigerationTranscriticalSystem::resetSumUASuctionPipingforMediumTemperatureLoads() {
@@ -777,8 +818,8 @@ void RefrigerationTranscriticalSystem::resetMediumTemperatureSuctionPipingZone()
   getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->resetMediumTemperatureSuctionPipingZone();
 }
 
-void RefrigerationTranscriticalSystem::setSumUASuctionPipingforLowTemperatureLoads(double sumUASuctionPipingforLowTemperatureLoads) {
-  getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSumUASuctionPipingforLowTemperatureLoads(sumUASuctionPipingforLowTemperatureLoads);
+bool RefrigerationTranscriticalSystem::setSumUASuctionPipingforLowTemperatureLoads(double sumUASuctionPipingforLowTemperatureLoads) {
+  return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setSumUASuctionPipingforLowTemperatureLoads(sumUASuctionPipingforLowTemperatureLoads);
 }
 
 void RefrigerationTranscriticalSystem::resetSumUASuctionPipingforLowTemperatureLoads() {
@@ -793,8 +834,8 @@ void RefrigerationTranscriticalSystem::resetLowTemperatureSuctionPipingZone() {
   getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->resetLowTemperatureSuctionPipingZone();
 }
 
-void RefrigerationTranscriticalSystem::setEndUseSubcategory(std::string endUseSubcategory) {
-  getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setEndUseSubcategory(endUseSubcategory);
+bool RefrigerationTranscriticalSystem::setEndUseSubcategory(std::string endUseSubcategory) {
+  return getImpl<detail::RefrigerationTranscriticalSystem_Impl>()->setEndUseSubcategory(endUseSubcategory);
 }
 
 void RefrigerationTranscriticalSystem::resetEndUseSubcategory() {
@@ -803,10 +844,9 @@ void RefrigerationTranscriticalSystem::resetEndUseSubcategory() {
 
 /// @cond
 RefrigerationTranscriticalSystem::RefrigerationTranscriticalSystem(std::shared_ptr<detail::RefrigerationTranscriticalSystem_Impl> impl)
-  : ModelObject(impl)
+  : ModelObject(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

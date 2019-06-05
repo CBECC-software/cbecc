@@ -19,6 +19,7 @@
   #undef _csharp_module_name
   #define _csharp_module_name OpenStudioModelSimulation
 
+  // Conflicts with class name in utilities
   //%rename(ModelYearDescription) openstudio::model::YearDescription;
   %ignore openstudio::model::YearDescription;
 
@@ -27,6 +28,17 @@
   // might want to move both of those to geometry so they can import resources and site
 
 #endif
+
+namespace openstudio {
+namespace model {
+
+  // forward declarations
+  class Surface;
+  class SubSurface;
+  class InternalMass;
+  class Schedule;
+}
+}
 
 UNIQUEMODELOBJECT_TEMPLATES(SimulationControl);
 UNIQUEMODELOBJECT_TEMPLATES(LightingSimulationControl);
@@ -62,6 +74,7 @@ MODELOBJECT_TEMPLATES(SiteGroundTemperatureShallow);
 MODELOBJECT_TEMPLATES(SiteGroundTemperatureFCfactorMethod);
 MODELOBJECT_TEMPLATES(SiteWaterMainsTemperature);
 UNIQUEMODELOBJECT_TEMPLATES(YearDescription);
+MODELOBJECT_TEMPLATES(FoundationKivaSettings);
 
 SWIG_UNIQUEMODELOBJECT(SimulationControl);
 SWIG_UNIQUEMODELOBJECT(LightingSimulationControl);
@@ -97,5 +110,6 @@ SWIG_UNIQUEMODELOBJECT(SiteGroundTemperatureShallow);
 SWIG_UNIQUEMODELOBJECT(SiteGroundTemperatureFCfactorMethod);
 SWIG_UNIQUEMODELOBJECT(SiteWaterMainsTemperature);
 SWIG_UNIQUEMODELOBJECT(YearDescription);
+SWIG_UNIQUEMODELOBJECT(FoundationKivaSettings);
 
 #endif

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "PlantLoop.hpp"
 #include "PlantLoop_Impl.hpp"
@@ -51,10 +61,17 @@
 #include "ScheduleTypeRegistry.hpp"
 #include "Schedule.hpp"
 #include "Schedule_Impl.hpp"
+#include "AvailabilityManagerAssignmentList.hpp"
+#include "AvailabilityManagerAssignmentList_Impl.hpp"
+#include "AvailabilityManager.hpp"
+#include "AvailabilityManager_Impl.hpp"
+#include "SetpointManager.hpp"
+#include "SetpointManager_Impl.hpp"
 #include "../utilities/core/Assert.hpp"
 #include <utilities/idd/OS_PlantLoop_FieldEnums.hxx>
 #include <utilities/idd/IddEnums.hxx>
 #include <utilities/idd/IddFactory.hxx>
+#include <utilities/idd/OS_AvailabilityManagerAssignmentList_FieldEnums.hxx>
 
 namespace openstudio {
 
@@ -80,8 +97,38 @@ PlantLoop_Impl::PlantLoop_Impl(const PlantLoop_Impl& other,
                                    Model_Impl* model,
                                    bool keepHandle)
   : Loop_Impl(other,model,keepHandle)
-{
-}
+{}
+
+  const std::vector<std::string>& PlantLoop_Impl::outputVariableNames() const
+  {
+    static std::vector<std::string> result{
+      "Plant Supply Side Cooling Demand Rate",
+      "Plant Supply Side Heating Demand Rate",
+      "Plant Supply Side Inlet Mass Flow Rate",
+      "Plant Supply Side Inlet Temperature",
+      "Plant Supply Side Outlet Temperature",
+      "Plant Supply Side Not Distributed Demand Rate",
+      "Plant Supply Side Unmet Demand Rate",
+      "Plant Solver Sub Iteration Count",
+      "Plant Solver Half Loop Calls Count",
+      "Debug Plant Loop Bypass Fraction",
+      "Debug Plant Last Simulated Loop Side",
+      "Plant Common Pipe Mass Flow Rate",
+      "Plant Common Pipe Temperature",
+      "Plant Common Pipe Flow Direction Status",
+      "Plant Common Pipe Primary Mass Flow Rate",
+      "Plant Common Pipe Secondary Mass Flow Rate",
+      "Primary Side Common Pipe Flow Direction",
+      "Secondary Side Common Pipe Flow Direction",
+      "Plant Common Pipe Primary to Secondary Mass Flow Rate",
+      "Plant Common Pipe Secondary to Primary Mass Flow Rate",
+      "Plant System Cycle On Off Status",
+      "Plant Demand Side Loop Pressure Difference",
+      "Plant Supply Side Loop Pressure Difference",
+      "Plant Loop Pressure Difference"
+    };
+    return result;
+  }
 
 std::vector<openstudio::IdfObject> PlantLoop_Impl::remove()
 {
@@ -89,6 +136,8 @@ std::vector<openstudio::IdfObject> PlantLoop_Impl::remove()
 
   ModelObjectVector modelObjects;
   ModelObjectVector::iterator it;
+
+  availabilityManagerAssignmentList().remove();
 
   modelObjects = supplyComponents();
   for(it = modelObjects.begin();
@@ -152,7 +201,333 @@ IddObjectType PlantLoop_Impl::iddObjectType() const {
 
 ModelObject PlantLoop_Impl::clone(Model model) const
 {
-  return Loop_Impl::clone(model);
+  PlantLoop plantLoopClone = Loop_Impl::clone(model).cast<PlantLoop>();
+
+  plantLoopClone.setString(supplyInletPort(),"");
+  plantLoopClone.setString(supplyOutletPort(),"");
+  plantLoopClone.setString(demandInletPort(),"");
+  plantLoopClone.setString(demandOutletPort(),"");
+
+  // Sizing:Plant was already cloned because it is declared as a child
+  // And because it has the setParent method overriden, no need to do anything
+
+  {
+    // Perhaps call a clone(Loop loop) instead...
+    AvailabilityManagerAssignmentList avmListClone = availabilityManagerAssignmentList().clone(model).cast<AvailabilityManagerAssignmentList>();
+    avmListClone.setName(plantLoopClone.name().get() + " AvailabilityManagerAssigmentList");
+    plantLoopClone.setPointer(OS_PlantLoopFields::AvailabilityManagerListName, avmListClone.handle());
+  }
+
+  plantLoopClone.getImpl<detail::PlantLoop_Impl>()->createTopology();
+
+  // Declare vectors we'll use to store the nodes in order to check if we have the same number of nodes
+  // and since we store them in the same order, we'll be able to clone the SPMs too
+  std::vector<Node> nodes;
+  std::vector<Node> nodeClones;
+
+  /*
+   *==========================================
+   *       S U P P L Y    S I D E
+   *==========================================
+   */
+
+
+  auto outputMessagesAndAssert = [](const std::vector<Node>& nodes,
+                                    const std::vector<Node>& nodeClones,
+                                    bool isSupplySide, bool isInlet) {
+    // Before the assert, we give out useful debugging info, or a Trace
+    if( nodes.size() != nodeClones.size() ) {
+      LOG(Debug, "When cloning with (isSupplySide, isInlet) = (" << isSupplySide << ", " << isInlet << "),"
+              << "found a difference in number of nodes: nodes.size()=" << nodes.size() << ", nodeClones.size()=" << nodeClones.size()
+              << ".\n\nnodes:\n");
+      for( size_t i = 0; i < nodes.size(); ++i ) {
+        LOG(Debug, "i=" << i << ", node=" << nodes[i].name().get());
+      }
+
+      LOG(Debug, "\n\nnodeClones:\n");
+      for( size_t i = 0; i < nodeClones.size(); ++i ) {
+        LOG(Debug, "i=" << i << ", nodeClone=" << nodeClones[i].name().get());
+      }
+    } else {
+      LOG(Trace, "When cloning with (isSupplySide, isInlet) = (" << isSupplySide << ", " << isInlet << "),"
+              << "nodes.size()=" << nodes.size() << ", nodeClones.size()=" << nodeClones.size());
+
+      for( size_t i = 0; i < nodes.size(); ++i ) {
+        LOG(Trace, "i=" << i << "node=" << nodes[i].name().get() << ", nodeClone=" << nodeClones[i].name().get());
+      }
+    }
+
+    // Assert that we have the same number of nodes
+    OS_ASSERT( nodes.size() == nodeClones.size() );
+
+  };
+
+
+  // lambda function to deal with non branch components
+  // We capture this (=original plantLoop), model (the target model), the cloned plantLoop,
+  // the vectors we need to store nodes, and the lambda function to output messages and assert
+  auto handleNonBranchComps = [this, &model, &plantLoopClone,
+                              &nodes, &nodeClones,
+                              &outputMessagesAndAssert](bool isSupplySide, bool isInlet) {
+    std::vector<ModelObject> components;
+    boost::optional<Node> targetNode;
+    // Stores references to the inlet/outlet modelObjects (Node or Splitter or Mixer) so we can coun't the number of cloned Nodes later
+    // to ensure that we end up with the same number
+    boost::optional<HVACComponent> inletModelObjectClone;
+    boost::optional<HVACComponent> outletModelObjectClone;
+
+    // Initialize the right components and store reference to inlet/outlet objects in the cloned PlantLoop
+    if( isInlet ) {
+      if( isSupplySide ) {
+        components = this->supplyComponents(this->supplyInletNode(), this->supplySplitter());
+        targetNode = plantLoopClone.supplyInletNode();
+        inletModelObjectClone = targetNode;
+        outletModelObjectClone = plantLoopClone.supplySplitter();
+      } else {
+        components = this->demandComponents(this->demandInletNode(), this->demandSplitter());
+        targetNode = plantLoopClone.demandInletNode();
+        inletModelObjectClone = targetNode;
+        outletModelObjectClone = plantLoopClone.demandSplitter();
+      }
+
+      // We pop the splitter
+      components.pop_back();
+      // We are going to add them to the InletNode in reverse order so that they end up correctly ordered
+      // if components are ordered [A, B, C], and "o" is the inlet Node, that's what we'll do:
+      // Loop on [C, B, A]
+      // 0: o---C
+      // 1: o---B---C
+      // 2: o---A---B---C
+      std::reverse(components.begin(), components.end());
+
+    } else {
+      if( isSupplySide ) {
+        components = this->supplyComponents(this->supplyMixer(), this->supplyOutletNode());
+        targetNode = plantLoopClone.supplyOutletNode();
+        inletModelObjectClone = plantLoopClone.supplyMixer();
+        outletModelObjectClone = targetNode;
+      } else {
+        components = this->demandComponents(this->demandMixer(), this->demandOutletNode());
+        targetNode = plantLoopClone.demandOutletNode();
+        inletModelObjectClone = plantLoopClone.demandMixer();
+        outletModelObjectClone = targetNode;
+      }
+      // We erase the mixer
+      components.erase( components.begin() );
+      // We are going to add them to the outletNode, in the current order, so no need to reverse here
+      // if components are ordered [A, B, C], and "o" is the **outlet** Node, that's what we'll do:
+      // Loop on [A, B, C]
+      // 0: A---o
+      // 1: A---B---o
+      // 2: A---B---C---o
+
+    } // END OF Initialization
+
+
+    // We loop on the components of the original plant loop
+    for( std::vector<ModelObject>::iterator it = components.begin(); it != components.end(); ++it ) {
+      ModelObject comp = *it;
+      if( comp.iddObjectType() == Node::iddObjectType() ) {
+        // If a Node, we don't clone, we just push it to the nodes vector
+        nodes.push_back(comp.cast<Node>());
+      } else {
+        // We clone the component and add it to the targetNode we initialized above
+        auto compClone = comp.clone(model).cast<HVACComponent>();
+        compClone.addToNode(*targetNode);
+
+        // If it's a WaterToWaterComponent, we try to connect it to the other PlantLoop too
+        if( boost::optional<WaterToWaterComponent> hvacComp = comp.optionalCast<WaterToWaterComponent>() ) {
+          if( isSupplySide ){
+            // If it's supplySide, we check if the component is on a secondaryPlantLoop
+            if( boost::optional<PlantLoop> pl = hvacComp->secondaryPlantLoop() ) {
+              // Connect the clone to the secondary plantLoop too on the demand side
+              pl->addDemandBranchForComponent(compClone);
+            }
+          } else {
+            // If demand side, we try to put it on the supply side of the (primary) plantLoop
+            if( boost::optional<PlantLoop> pl = hvacComp->plantLoop() ) {
+              // Connect the clone to the plantLoop too
+              pl->addSupplyBranchForComponent(compClone);
+            }
+          }
+        }
+      }
+    }
+
+    // We get the added nodes in the cloned plant loop
+    std::vector<Node> nodeClonesHere = subsetCastVector<Node>(plantLoopClone.supplyComponents(*inletModelObjectClone, *outletModelObjectClone));
+    // Add the new cloned nodes to the vector
+    nodeClones.insert(nodeClones.end(), nodeClonesHere.begin(), nodeClonesHere.end());
+
+    // Output Messages and assert that we still have the same number of nodes between the original plantloop and the cloned one
+    outputMessagesAndAssert(nodes, nodeClones, isSupplySide, isInlet);
+
+  }; // END OF LAMBDA
+
+
+  // Ready to start!
+
+
+  /**
+   * Betwen the supply inlet node and the supply Splitter
+   */
+  // isSupplySide = true, isInlet = true;
+  handleNonBranchComps(true, true);
+
+  /**
+   * Betwen the supply Mixer node and the supply Outlet Node
+   */
+  handleNonBranchComps(true, false);
+
+  /**
+   * Betwen the Splitter and Mixer: branches
+   */
+
+  Splitter splitter = supplySplitter();
+  Mixer mixer = supplyMixer();
+
+  std::vector<ModelObject> splitterOutletObjects = splitter.outletModelObjects();
+  // std::vector< std::vector<model::ModelObject> > allBranchComponents;
+
+  // We'll use this vector to manually push the cloned nodes as we get them
+  std::vector<Node> nodeClonesHere;
+
+  // If there is actually something interesting between the splitter and the mixer...
+  if( ! (splitterOutletObjects.front() == mixer) ) {
+    // We loop on the splitter outlet objects, that gives us the first nodes on each branch there is
+    for( ModelObject& mo: splitterOutletObjects ) {
+
+      auto comp = mo.optionalCast<model::HVACComponent>();
+      OS_ASSERT(comp);
+
+      // We get the components that are on that branch (between the first node of the branch and the mixer)
+      std::vector<ModelObject> branchComponents = supplyComponents(comp.get(), mixer);
+      // Pop the last component (the mixer)
+      branchComponents.pop_back();
+
+      // allBranchComponents.push_back(branchComponents);
+
+      // Note JM 2018-12-17: There's one special case: the branch with the connector node
+      // We want to avoid looping on branchComponents otherwise we'll add the connector node to the nodes vector
+      // while the nodeClones will not, so it'll produce a diff
+      if (branchComponents.size() == 1 && branchComponents[0].optionalCast<Node>()) {
+        LOG(Trace, "On the Connector Node Branch, skipping it.");
+        continue;
+      }
+
+      // Reference to the lastOutletNode
+      boost::optional<Node> lastOutletNode;
+
+      // We loop on all the branch components
+      for( ModelObject& comp: branchComponents ) {
+        if( comp.iddObjectType() == Node::iddObjectType() ) {
+          // We don't clone the nodes, just push them the nodes vector
+          nodes.push_back(comp.cast<Node>());
+        } else {
+          // Otherwise, we clone it
+          auto compClone = comp.clone(model).cast<HVACComponent>();
+
+          if( !lastOutletNode ) {
+            // If lastOutletNode isn't initialized yet, means we deal with the first component
+            // so we add a supply branch for this component
+            plantLoopClone.addSupplyBranchForComponent(compClone);
+
+            // We are going to push the created inlet Node to the nodeClonesHere vector
+            boost::optional<Node> thisInletNode;
+            if( auto _c = compClone.optionalCast<StraightComponent>() ) {
+              thisInletNode = _c->inletModelObject().get().cast<Node>();
+            } else if( auto _c = compClone.optionalCast<WaterToAirComponent>() ) {
+              thisInletNode = _c->waterInletModelObject().get().cast<Node>();
+            } else if( auto _c = compClone.optionalCast<WaterToWaterComponent>() ) {
+              thisInletNode = _c->supplyInletModelObject().get().cast<Node>();
+            } else {
+              // Shouldn't get there
+              OS_ASSERT(false);
+            }
+            if( thisInletNode ) {
+              nodeClonesHere.push_back(*thisInletNode);
+            }
+
+          } else {
+            // Otherwise, we add the component to the lastOutletNode
+            compClone.addToNode(lastOutletNode.get());
+          }
+
+          // In both cases, we capture the last outlet node
+          // In order to push it to the vector of nodeClonesHere
+          // And if need be, be able to add the next component to it
+          if( auto _c = compClone.optionalCast<StraightComponent>() ) {
+            lastOutletNode = _c->outletModelObject().get().cast<Node>();
+          } else if( auto _c = compClone.optionalCast<WaterToAirComponent>() ) {
+            lastOutletNode = _c->waterOutletModelObject().get().cast<Node>();
+          } else if( auto _c = compClone.optionalCast<WaterToWaterComponent>() ) {
+            lastOutletNode = _c->supplyOutletModelObject().get().cast<Node>();
+          } else {
+            // Shouldn't get there
+            OS_ASSERT(false);
+          }
+          nodeClonesHere.push_back(*lastOutletNode);
+
+          // Connect to secondary PlantLoop as needed
+          if( boost::optional<WaterToWaterComponent> hvacComp = comp.optionalCast<WaterToWaterComponent>() ) {
+            if( boost::optional<PlantLoop> pl = hvacComp->secondaryPlantLoop() ) {
+              // Connect the clone to the secondary plantLoop too
+              pl->addDemandBranchForComponent(compClone);
+            }
+          }
+
+        }
+      } // End of loop on all branchComponents
+    } // End of loop splitterOutletModelObjects
+  }
+
+  // Add the new cloned nodes
+  nodeClones.insert(nodeClones.end(), nodeClonesHere.begin(), nodeClonesHere.end());
+  outputMessagesAndAssert(nodes, nodeClones, false, false);
+
+
+  /*
+   *==========================================
+   *       D E M A N D    S I D E
+   *==========================================
+   */
+  // Rationale: here we'll handle everything BUT the stuff that's on the demand branches
+
+    /**
+   * Betwen the demand inlet node and the supply Splitter
+   */
+
+  // isSupplySide = false, isInlet = true;
+  handleNonBranchComps(false, true);
+
+  /**
+   * Betwen the demand Mixer node and the demand Outlet Node
+   */
+  handleNonBranchComps(false, false);
+
+  /*
+   *==========================================
+   *     S E T P O I N T   M A N A G E R S
+   *==========================================
+   */
+  // Do another global check: check that number of nodes match
+  OS_ASSERT( subsetCastVector<Node>(supplyComponents()).size() == subsetCastVector<Node>(plantLoopClone.supplyComponents()).size() );
+  // Check that number of components match
+  OS_ASSERT( supplyComponents().size() == plantLoopClone.supplyComponents().size() );
+
+  // Clone any SPMs: At this point nodes and nodeClones store ALL the nodes we care about in the same order
+  for ( size_t i = 0; i < nodes.size(); ++i ) {
+    const auto node = nodes[i];
+    auto cloneNode = nodeClones[i];
+
+    auto spms = node.setpointManagers();
+    for ( const auto & spm : spms ) {
+      auto spmclone = spm.clone(model).cast<SetpointManager>();
+      spmclone.addToNode(cloneNode);
+    }
+  }
+
+  return plantLoopClone;
 }
 
 unsigned PlantLoop_Impl::supplyInletPort() const
@@ -223,13 +598,10 @@ bool PlantLoop_Impl::addSupplyBranchForComponent( HVACComponent component )
     {
       if( boost::optional<Node> node = mo->optionalCast<Node>() )
       {
-        if ( (node->outletModelObject().get() == mixer) &&       
-              (node->inletModelObject().get() == splitter) )       
+        if ( (node->outletModelObject().get() == mixer) &&
+              (node->inletModelObject().get() == splitter) )
         {
-          if( component.addToNode(node.get()) )
-          {
-            return true;
-          }
+          return component.addToNode(node.get());
         }
       }
     }
@@ -253,7 +625,7 @@ bool PlantLoop_Impl::addSupplyBranchForComponent( HVACComponent component )
   else
   {
     removeSupplyBranchWithComponent(node);
-  
+
     return false;
   }
 
@@ -266,7 +638,7 @@ bool PlantLoop_Impl::removeSupplyBranchWithComponent( HVACComponent component )
   {
     return false;
   }
-  
+
   return removeBranchWithComponent(component,supplySplitter(),supplyMixer(),true);
 }
 
@@ -288,8 +660,8 @@ bool PlantLoop_Impl::addDemandBranchForComponent( HVACComponent component, bool 
     {
       if( boost::optional<Node> node = mo->optionalCast<Node>() )
       {
-        if ( (node->outletModelObject().get() == mixer) &&       
-              (node->inletModelObject().get() == splitter) )       
+        if ( (node->outletModelObject().get() == mixer) &&
+              (node->inletModelObject().get() == splitter) )
         {
           if( auto waterToWater = component.optionalCast<WaterToWaterComponent>() ) {
             if( tertiary ) {
@@ -339,7 +711,7 @@ bool PlantLoop_Impl::addDemandBranchForComponent( HVACComponent component, bool 
     _model.disconnect(node,node.outletPort());
     _model.disconnect(node,node.inletPort());
     node.remove();
-  
+
     return false;
   }
 
@@ -430,7 +802,7 @@ bool PlantLoop_Impl::removeDemandBranchWithComponent( HVACComponent component )
   {
     return false;
   }
-  
+
   return removeBranchWithComponent(component,demandSplitter(),demandMixer(),false);
 }
 
@@ -448,24 +820,60 @@ bool PlantLoop_Impl::isDemandBranchEmpty()
   }
 }
 
-Mixer PlantLoop_Impl::supplyMixer()
+Mixer PlantLoop_Impl::supplyMixer() const
 {
+  auto result = getObject<ModelObject>().getModelObjectTarget<Mixer>(OS_PlantLoopFields::SupplyMixerName);
+  if (result) return result.get();
   return supplyComponents( IddObjectType::OS_Connector_Mixer ).front().cast<Mixer>();
 }
 
-Splitter PlantLoop_Impl::supplySplitter()
+bool PlantLoop_Impl::setSupplyMixer(Mixer const & mixer)
 {
+  auto result = setPointer(OS_PlantLoopFields::SupplyMixerName,mixer.handle());
+  OS_ASSERT(result);
+  return result;
+}
+
+Splitter PlantLoop_Impl::supplySplitter() const
+{
+  auto result = getObject<ModelObject>().getModelObjectTarget<Splitter>(OS_PlantLoopFields::SupplySplitterName);
+  if (result) return result.get();
   return supplyComponents( IddObjectType::OS_Connector_Splitter ).front().cast<Splitter>();
 }
 
-Mixer PlantLoop_Impl::demandMixer()
+bool PlantLoop_Impl::setSupplySplitter(Splitter const & splitter)
 {
-  return demandComponents( IddObjectType::OS_Connector_Mixer ).front().cast<ConnectorMixer>();
+  auto result = setPointer(OS_PlantLoopFields::SupplySplitterName,splitter.handle());
+  OS_ASSERT(result);
+  return result;
 }
 
-Splitter PlantLoop_Impl::demandSplitter()
+Mixer PlantLoop_Impl::demandMixer() const
 {
-  return demandComponents( IddObjectType::OS_Connector_Splitter ).front().cast<ConnectorSplitter>();
+  auto result = getObject<ModelObject>().getModelObjectTarget<Mixer>(OS_PlantLoopFields::DemandMixerName);
+  if (result) return result.get();
+  return demandComponents( IddObjectType::OS_Connector_Mixer ).front().cast<Mixer>();
+}
+
+bool PlantLoop_Impl::setDemandMixer(Mixer const & mixer)
+{
+  auto result = setPointer(OS_PlantLoopFields::DemandMixerName,mixer.handle());
+  OS_ASSERT(result);
+  return result;
+}
+
+Splitter PlantLoop_Impl::demandSplitter() const
+{
+  auto result = getObject<ModelObject>().getModelObjectTarget<Splitter>(OS_PlantLoopFields::DemandSplitterName);
+  if (result) return result.get();
+  return demandComponents( IddObjectType::OS_Connector_Splitter ).front().cast<Splitter>();
+}
+
+bool PlantLoop_Impl::setDemandSplitter(Splitter const & splitter)
+{
+  auto result = setPointer(OS_PlantLoopFields::DemandSplitterName,splitter.handle());
+  OS_ASSERT(result);
+  return result;
 }
 
 std::string PlantLoop_Impl::loadDistributionScheme()
@@ -490,9 +898,9 @@ double PlantLoop_Impl::maximumLoopTemperature()
   return getDouble(OS_PlantLoopFields::MaximumLoopTemperature,true).get();
 }
 
-void PlantLoop_Impl::setMaximumLoopTemperature( double value )
+bool PlantLoop_Impl::setMaximumLoopTemperature( double value )
 {
-  setDouble(OS_PlantLoopFields::MaximumLoopTemperature,value);
+  return setDouble(OS_PlantLoopFields::MaximumLoopTemperature,value);;
 }
 
 double PlantLoop_Impl::minimumLoopTemperature()
@@ -500,9 +908,9 @@ double PlantLoop_Impl::minimumLoopTemperature()
   return getDouble(OS_PlantLoopFields::MinimumLoopTemperature,true).get();
 }
 
-void PlantLoop_Impl::setMinimumLoopTemperature( double value )
+bool PlantLoop_Impl::setMinimumLoopTemperature( double value )
 {
-  setDouble(OS_PlantLoopFields::MinimumLoopTemperature,value);
+  return setDouble(OS_PlantLoopFields::MinimumLoopTemperature,value);;
 }
 
 boost::optional<double> PlantLoop_Impl::maximumLoopFlowRate()
@@ -510,9 +918,9 @@ boost::optional<double> PlantLoop_Impl::maximumLoopFlowRate()
   return getDouble(OS_PlantLoopFields::MaximumLoopFlowRate,true);
 }
 
-void PlantLoop_Impl::setMaximumLoopFlowRate( double value )
+bool PlantLoop_Impl::setMaximumLoopFlowRate( double value )
 {
-  setDouble(OS_PlantLoopFields::MaximumLoopFlowRate,value);
+  return setDouble(OS_PlantLoopFields::MaximumLoopFlowRate,value);;
 }
 
 bool PlantLoop_Impl::isMaximumLoopFlowRateAutosized()
@@ -535,9 +943,9 @@ boost::optional<double> PlantLoop_Impl::minimumLoopFlowRate()
   return getDouble(OS_PlantLoopFields::MinimumLoopFlowRate,true);
 }
 
-void PlantLoop_Impl::setMinimumLoopFlowRate( double value )
+bool PlantLoop_Impl::setMinimumLoopFlowRate( double value )
 {
-  setDouble(OS_PlantLoopFields::MinimumLoopFlowRate,value);
+  return setDouble(OS_PlantLoopFields::MinimumLoopFlowRate,value);;
 }
 
 bool PlantLoop_Impl::isMinimumLoopFlowRateAutosized()
@@ -560,9 +968,9 @@ boost::optional<double> PlantLoop_Impl::plantLoopVolume()
   return getDouble(OS_PlantLoopFields::PlantLoopVolume,true);
 }
 
-void PlantLoop_Impl::setPlantLoopVolume( double value )
+bool PlantLoop_Impl::setPlantLoopVolume( double value )
 {
-  setDouble(OS_PlantLoopFields::PlantLoopVolume,value);
+  return setDouble(OS_PlantLoopFields::PlantLoopVolume,value);;
 }
 
 bool PlantLoop_Impl::isPlantLoopVolumeAutocalculated()
@@ -585,9 +993,17 @@ std::string PlantLoop_Impl::fluidType()
   return getString(OS_PlantLoopFields::FluidType,true).get();
 }
 
-void PlantLoop_Impl::setFluidType( const std::string & value )
+bool PlantLoop_Impl::setFluidType( const std::string & value )
 {
-  setString(OS_PlantLoopFields::FluidType,value);
+  return setString(OS_PlantLoopFields::FluidType,value);
+}
+
+int PlantLoop_Impl::glycolConcentration() const {
+  return getInt(OS_PlantLoopFields::GlycolConcentration,true).get();
+}
+
+bool PlantLoop_Impl::setGlycolConcentration(int glycolConcentration) {
+  return setInt(OS_PlantLoopFields::GlycolConcentration, glycolConcentration);;
 }
 
 Node PlantLoop_Impl::loopTemperatureSetpointNode()
@@ -601,12 +1017,13 @@ Node PlantLoop_Impl::loopTemperatureSetpointNode()
   return node.get();
 }
 
-void PlantLoop_Impl::setLoopTemperatureSetpointNode( Node & node )
+bool PlantLoop_Impl::setLoopTemperatureSetpointNode( Node & node )
 {
   if( node.model() == this->model() )
   {
-    setPointer(OS_PlantLoopFields::LoopTemperatureSetpointNodeName,node.handle());
+    return setPointer(OS_PlantLoopFields::LoopTemperatureSetpointNodeName,node.handle());
   }
+  return false;
 }
 
 std::vector<ModelObject> PlantLoop_Impl::children() const
@@ -623,7 +1040,7 @@ SizingPlant PlantLoop_Impl::sizingPlant() const
   boost::optional<SizingPlant> sizingPlant;
 
   std::vector<SizingPlant> sizingObjects;
-  
+
   sizingObjects = model().getConcreteModelObjects<SizingPlant>();
 
   for( const auto & sizingObject : sizingObjects )
@@ -640,7 +1057,7 @@ SizingPlant PlantLoop_Impl::sizingPlant() const
   }
   else
   {
-    LOG_AND_THROW("PlantLoop missing SizingPlant object"); 
+    LOG_AND_THROW("PlantLoop missing SizingPlant object");
   }
 }
 
@@ -729,15 +1146,15 @@ void PlantLoop_Impl::resetCommonPipeSimulation()
                               schedule);
     return result;
   }
-  
+
   void PlantLoop_Impl::resetPlantEquipmentOperationHeatingLoadSchedule() {
     setString(OS_PlantLoopFields::PlantEquipmentOperationHeatingLoadSchedule, "");
   }
-  
+
   boost::optional<Schedule> PlantLoop_Impl::plantEquipmentOperationHeatingLoadSchedule() const {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_PlantLoopFields::PlantEquipmentOperationHeatingLoadSchedule);
   }
-  
+
   bool PlantLoop_Impl::setPlantEquipmentOperationCoolingLoadSchedule(Schedule & schedule) {
     bool result = setSchedule(OS_PlantLoopFields::PlantEquipmentOperationCoolingLoadSchedule,
                               "PlantLoop",
@@ -745,15 +1162,15 @@ void PlantLoop_Impl::resetCommonPipeSimulation()
                               schedule);
     return result;
   }
-  
+
   boost::optional<Schedule> PlantLoop_Impl::plantEquipmentOperationCoolingLoadSchedule() const {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_PlantLoopFields::PlantEquipmentOperationCoolingLoadSchedule);
   }
-  
+
   void PlantLoop_Impl::resetPlantEquipmentOperationCoolingLoadSchedule() {
     setString(OS_PlantLoopFields::PlantEquipmentOperationCoolingLoadSchedule, "");
   }
-  
+
   bool PlantLoop_Impl::setPrimaryPlantEquipmentOperationSchemeSchedule(Schedule & schedule) {
     bool result = setSchedule(OS_PlantLoopFields::PrimaryPlantEquipmentOperationSchemeSchedule,
                               "PlantLoop",
@@ -761,15 +1178,15 @@ void PlantLoop_Impl::resetCommonPipeSimulation()
                               schedule);
     return result;
   }
-  
+
   void PlantLoop_Impl::resetPrimaryPlantEquipmentOperationSchemeSchedule() {
     setString(OS_PlantLoopFields::PlantEquipmentOperationCoolingLoadSchedule, "");
   }
-  
+
   boost::optional<Schedule> PlantLoop_Impl::primaryPlantEquipmentOperationSchemeSchedule() const {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_PlantLoopFields::PrimaryPlantEquipmentOperationSchemeSchedule);
   }
-  
+
   bool PlantLoop_Impl::setComponentSetpointOperationSchemeSchedule(Schedule & schedule) {
     bool result = setSchedule(OS_PlantLoopFields::ComponentSetpointOperationSchemeSchedule,
                               "PlantLoop",
@@ -777,92 +1194,226 @@ void PlantLoop_Impl::resetCommonPipeSimulation()
                               schedule);
     return result;
   }
-  
+
   boost::optional<Schedule> PlantLoop_Impl::componentSetpointOperationSchemeSchedule() const {
     return getObject<ModelObject>().getModelObjectTarget<Schedule>(OS_PlantLoopFields::ComponentSetpointOperationSchemeSchedule);
   }
-  
+
   void PlantLoop_Impl::resetComponentSetpointOperationSchemeSchedule() {
     setString(OS_PlantLoopFields::ComponentSetpointOperationSchemeSchedule, "");
   }
+
+  boost::optional<double> PlantLoop_Impl::autosizedMaximumLoopFlowRate() const {
+    return getAutosizedValue("Maximum Loop Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> PlantLoop_Impl::autosizedPlantLoopVolume() const {
+    return getAutosizedValue("Plant Loop Volume", "m3");
+  }
+
+  void PlantLoop_Impl::autosize() {
+    autosizeMaximumLoopFlowRate();
+    autocalculatePlantLoopVolume();
+  }
+
+  void PlantLoop_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedMaximumLoopFlowRate();
+    if (val) {
+      setMaximumLoopFlowRate(val.get());
+    }
+
+    val = autosizedPlantLoopVolume();
+    if (val) {
+      setPlantLoopVolume(val.get());
+    }
+
+  }
+
+  // AVM section
+  AvailabilityManagerAssignmentList PlantLoop_Impl::availabilityManagerAssignmentList() const
+  {
+    boost::optional<AvailabilityManagerAssignmentList> avmList =  getObject<ModelObject>().getModelObjectTarget<AvailabilityManagerAssignmentList>(OS_PlantLoopFields::AvailabilityManagerListName);
+    if (avmList) {
+      return avmList.get();
+    } else {
+      LOG_AND_THROW(briefDescription() << "doesn't have an AvailabilityManagerAssignmentList assigned, which shouldn't happen");
+    }
+  }
+
+
+  bool PlantLoop_Impl::addAvailabilityManager(const AvailabilityManager & availabilityManager)
+  {
+    auto type = availabilityManager.iddObjectType();
+
+    // should be all types but NightCycle and NightVentilation (AirLoopHVAC);
+    // and not HybridVentilation (AirLoop, and special, stand-alone)
+    if( type == IddObjectType::OS_AvailabilityManager_NightCycle ||
+        type == IddObjectType::OS_AvailabilityManager_HybridVentilation ||
+        type == IddObjectType::OS_AvailabilityManager_NightVentilation ) {
+      LOG(Warn, "Wrong AVM Type for a PlantLoop: " << availabilityManager.briefDescription());
+      return false;
+    } else {
+      return availabilityManagerAssignmentList().addAvailabilityManager(availabilityManager);
+    }
+  }
+
+  bool PlantLoop_Impl::addAvailabilityManager(const AvailabilityManager & availabilityManager, unsigned priority)
+  {
+    return availabilityManagerAssignmentList().addAvailabilityManager(availabilityManager, priority);
+  }
+
+  std::vector<AvailabilityManager> PlantLoop_Impl::availabilityManagers() const
+  {
+    // TODO: add the AVM Scheduled
+    return availabilityManagerAssignmentList().availabilityManagers();
+  }
+
+  bool PlantLoop_Impl::setAvailabilityManagers(const std::vector<AvailabilityManager> & avms)
+  {
+    return availabilityManagerAssignmentList().setAvailabilityManagers(avms);
+  }
+
+    void PlantLoop_Impl::resetAvailabilityManagers()
+  {
+    // TODO: should this affect the AVM Scheduled?
+    availabilityManagerAssignmentList().resetAvailabilityManagers();
+  }
+
+
+  bool PlantLoop_Impl::setAvailabilityManagerPriority(const AvailabilityManager & availabilityManager, unsigned priority)
+  {
+    return availabilityManagerAssignmentList().setAvailabilityManagerPriority(availabilityManager, priority);
+  }
+
+  unsigned PlantLoop_Impl::availabilityManagerPriority(const AvailabilityManager & availabilityManager) const
+  {
+    return availabilityManagerAssignmentList().availabilityManagerPriority(availabilityManager);
+  }
+
+  bool PlantLoop_Impl::removeAvailabilityManager(const AvailabilityManager& avm) {
+    return availabilityManagerAssignmentList().removeAvailabilityManager(avm);
+  }
+
+  bool PlantLoop_Impl::removeAvailabilityManager(unsigned priority) {
+    return availabilityManagerAssignmentList().removeAvailabilityManager(priority);
+  }
+
+  std::vector<EMSActuatorNames> PlantLoop_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Plant Loop Overall", "On/Off Supervisory"},
+                                            {"Supply Side Half Loop", "On/Off Supervisory"},
+                                            {"Demand Side Half Loop", "On/Off Supervisory"},
+                                            {"Plant Equipment Operation", "Distributed Load Rate"}}; //gets plantequipOperationScheme
+    //DYNAMIC
+    //{"Supply Side Branch", "On/Off Supervisory"}
+    //{"Demand Side Branch", "On/Off Supervisory"}
+    //{"Plant Component *", "On/Off Supervisory"}
+    return actuators;
+  }
+
+  std::vector<std::string> PlantLoop_Impl::emsInternalVariableNames() const {
+    //"Component Remaining Current Demand Rate" is dynamic for the plantloop components
+    std::vector<std::string> types{"Supply Side Current Demand Rate"};
+    return types;
+  }
+
+  void PlantLoop_Impl::createTopology() {
+
+    auto m = model();
+    auto obj = getObject<model::PlantLoop>();
+
+    // supply side
+    Node supplyInletNode(m);
+    Node supplyOutletNode(m);
+    Node connectorNode(m);
+
+    ConnectorMixer supplyMixer(m);
+    setSupplyMixer(supplyMixer);
+    ConnectorSplitter supplySplitter(m);
+    setSupplySplitter(supplySplitter);
+
+    m.connect( obj, supplyInletPort(),
+                   supplyInletNode, supplyInletNode.inletPort() );
+
+    m.connect( supplyInletNode, supplyInletNode.outletPort(),
+                   supplySplitter, supplySplitter.inletPort() );
+
+    m.connect( supplySplitter, supplySplitter.nextOutletPort(),
+                   connectorNode, connectorNode.inletPort() );
+
+    m.connect( connectorNode, connectorNode.outletPort(),
+                   supplyMixer, supplyMixer.nextInletPort() );
+
+    m.connect( supplyMixer, supplyMixer.outletPort(),
+                   supplyOutletNode, supplyOutletNode.inletPort() );
+
+    m.connect( supplyOutletNode, supplyOutletNode.outletPort(),
+                   obj, supplyOutletPort() );
+
+    // demand side
+    Node demandInletNode(m);
+    Node demandOutletNode(m);
+    Node branchNode(m);
+    ConnectorMixer mixer(m);
+    setDemandMixer(mixer);
+    ConnectorSplitter splitter(m);
+    setDemandSplitter(splitter);
+
+    m.connect( obj, demandInletPort(),
+                   demandInletNode, demandInletNode.inletPort() );
+
+    m.connect( demandInletNode, demandInletNode.outletPort(),
+                   splitter, splitter.inletPort() );
+
+    m.connect( splitter, splitter.nextOutletPort(),
+                   branchNode, branchNode.inletPort() );
+
+    m.connect( branchNode, branchNode.outletPort(),
+                   mixer, mixer.nextInletPort() );
+
+    m.connect( mixer, mixer.outletPort(),
+                   demandOutletNode, demandOutletNode.inletPort() );
+
+    m.connect( demandOutletNode, demandOutletNode.outletPort(),
+                   obj, demandOutletPort() );
+
+    setLoopTemperatureSetpointNode(supplyOutletNode);
+
+  }
+
 
 } // detail
 
 PlantLoop::PlantLoop(Model& model)
   : Loop(PlantLoop::iddObjectType(),model)
 {
-  OS_ASSERT(getImpl<detail::PlantLoop_Impl>());
+  auto impl = getImpl<detail::PlantLoop_Impl>();
+  OS_ASSERT(impl);
+
+  // Create topology
+  impl->createTopology();
 
   SizingPlant sizingPlant(model,*this);
 
   autocalculatePlantLoopVolume();
   setLoadDistributionScheme("Optimal");
 
-  // supply side
-
-  Node supplyInletNode(model);
-  Node supplyOutletNode(model);
-  Node connectorNode(model);
-
-  ConnectorMixer supplyMixer(model);
-  ConnectorSplitter supplySplitter(model);
-
-  model.connect( *this, this->supplyInletPort(),
-                 supplyInletNode, supplyInletNode.inletPort() );
-
-  model.connect( supplyInletNode,supplyInletNode.outletPort(),
-                 supplySplitter,supplySplitter.inletPort() );
-
-  model.connect( supplySplitter,supplySplitter.nextOutletPort(),
-                 connectorNode,connectorNode.inletPort() );
-
-  model.connect( connectorNode,connectorNode.outletPort(),
-                 supplyMixer,supplyMixer.nextInletPort() );
-
-  model.connect( supplyMixer,supplyMixer.outletPort(),
-                 supplyOutletNode,supplyOutletNode.inletPort() );
-  
-  model.connect( supplyOutletNode, supplyOutletNode.outletPort(),
-                 *this, this->supplyOutletPort() );
-
-  // demand side
-
-  Node demandInletNode(model);
-  Node demandOutletNode(model);
-  Node branchNode(model);
-  ConnectorMixer mixer(model);
-  ConnectorSplitter splitter(model);
-
-  model.connect( *this, demandInletPort(),
-                 demandInletNode, demandInletNode.inletPort() );
-
-  model.connect( demandInletNode, demandInletNode.outletPort(),
-                 splitter, splitter.inletPort() );
-
-  model.connect( splitter, splitter.nextOutletPort(),
-                 branchNode, branchNode.inletPort() );
-
-  model.connect( branchNode, branchNode.outletPort(),
-                 mixer, mixer.nextInletPort() );
-
-  model.connect( mixer, mixer.outletPort(),
-                 demandOutletNode, demandOutletNode.inletPort() );
-
-  model.connect( demandOutletNode, demandOutletNode.outletPort(),
-                 *this, demandOutletPort() );
-
-  setLoopTemperatureSetpointNode(supplyOutletNode);
-
+  setGlycolConcentration(0);
   setString(OS_PlantLoopFields::DemandSideConnectorListName,"");
-  setString(OS_PlantLoopFields::AvailabilityManagerListName,"");
   setString(OS_PlantLoopFields::PlantLoopDemandCalculationScheme,"");
   setString(OS_PlantLoopFields::CommonPipeSimulation,"");
   setString(OS_PlantLoopFields::PressureSimulationType,"");
+
+  // AvailabilityManagerAssignmentList
+  AvailabilityManagerAssignmentList avmList(*this);
+  setPointer(OS_PlantLoopFields::AvailabilityManagerListName, avmList.handle());
 }
 
 PlantLoop::PlantLoop(std::shared_ptr<detail::PlantLoop_Impl> impl)
-  : Loop(impl)
+  : Loop(std::move(impl))
 {}
+
+
 
 std::vector<IdfObject> PlantLoop::remove()
 {
@@ -944,12 +1495,12 @@ bool PlantLoop::removeDemandBranchWithComponent( HVACComponent component )
   return getImpl<detail::PlantLoop_Impl>()->removeDemandBranchWithComponent( component );
 }
 
-Mixer PlantLoop::supplyMixer()
+Mixer PlantLoop::supplyMixer() const
 {
   return getImpl<detail::PlantLoop_Impl>()->supplyMixer();
 }
 
-Splitter PlantLoop::supplySplitter()
+Splitter PlantLoop::supplySplitter() const
 {
   return getImpl<detail::PlantLoop_Impl>()->supplySplitter();
 }
@@ -974,9 +1525,9 @@ double PlantLoop::maximumLoopTemperature()
   return getImpl<detail::PlantLoop_Impl>()->maximumLoopTemperature();
 }
 
-void PlantLoop::setMaximumLoopTemperature( double value )
+bool PlantLoop::setMaximumLoopTemperature( double value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setMaximumLoopTemperature( value );
+  return getImpl<detail::PlantLoop_Impl>()->setMaximumLoopTemperature( value );
 }
 
 double PlantLoop::minimumLoopTemperature()
@@ -984,9 +1535,9 @@ double PlantLoop::minimumLoopTemperature()
   return getImpl<detail::PlantLoop_Impl>()->minimumLoopTemperature();
 }
 
-void PlantLoop::setMinimumLoopTemperature( double value )
+bool PlantLoop::setMinimumLoopTemperature( double value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setMinimumLoopTemperature( value );
+  return getImpl<detail::PlantLoop_Impl>()->setMinimumLoopTemperature( value );
 }
 
 boost::optional<double> PlantLoop::maximumLoopFlowRate()
@@ -994,9 +1545,9 @@ boost::optional<double> PlantLoop::maximumLoopFlowRate()
   return getImpl<detail::PlantLoop_Impl>()->maximumLoopFlowRate();
 }
 
-void PlantLoop::setMaximumLoopFlowRate( double value )
+bool PlantLoop::setMaximumLoopFlowRate( double value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setMaximumLoopFlowRate( value );
+  return getImpl<detail::PlantLoop_Impl>()->setMaximumLoopFlowRate( value );
 }
 
 bool PlantLoop::isMaximumLoopFlowRateAutosized()
@@ -1014,9 +1565,9 @@ boost::optional<double> PlantLoop::minimumLoopFlowRate()
   return getImpl<detail::PlantLoop_Impl>()->minimumLoopFlowRate();
 }
 
-void PlantLoop::setMinimumLoopFlowRate( double value )
+bool PlantLoop::setMinimumLoopFlowRate( double value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setMinimumLoopFlowRate( value );
+  return getImpl<detail::PlantLoop_Impl>()->setMinimumLoopFlowRate( value );
 }
 
 bool PlantLoop::isMinimumLoopFlowRateAutosized()
@@ -1034,9 +1585,9 @@ boost::optional<double> PlantLoop::plantLoopVolume()
   return getImpl<detail::PlantLoop_Impl>()->plantLoopVolume();
 }
 
-void PlantLoop::setPlantLoopVolume( double value )
+bool PlantLoop::setPlantLoopVolume( double value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setPlantLoopVolume( value );
+  return getImpl<detail::PlantLoop_Impl>()->setPlantLoopVolume( value );
 }
 
 bool PlantLoop::isPlantLoopVolumeAutocalculated()
@@ -1054,9 +1605,23 @@ std::string PlantLoop::fluidType()
   return getImpl<detail::PlantLoop_Impl>()->fluidType();
 }
 
-void PlantLoop::setFluidType( const std::string & value )
+bool PlantLoop::setFluidType( const std::string & value )
 {
-  getImpl<detail::PlantLoop_Impl>()->setFluidType( value );
+  return getImpl<detail::PlantLoop_Impl>()->setFluidType( value );
+}
+
+std::vector<std::string> PlantLoop::fluidTypeValues() {
+  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                        OS_PlantLoopFields::FluidType);
+
+}
+
+int PlantLoop::glycolConcentration() const {
+  return getImpl<detail::PlantLoop_Impl>()->glycolConcentration();
+}
+
+bool PlantLoop::setGlycolConcentration(int glycolConcentration) {
+  return getImpl<detail::PlantLoop_Impl>()->setGlycolConcentration(glycolConcentration);
 }
 
 Node PlantLoop::loopTemperatureSetpointNode()
@@ -1064,9 +1629,9 @@ Node PlantLoop::loopTemperatureSetpointNode()
   return getImpl<detail::PlantLoop_Impl>()->loopTemperatureSetpointNode();
 }
 
-void PlantLoop::setLoopTemperatureSetpointNode( Node & node )
+bool PlantLoop::setLoopTemperatureSetpointNode( Node & node )
 {
-  getImpl<detail::PlantLoop_Impl>()->setLoopTemperatureSetpointNode( node );
+  return getImpl<detail::PlantLoop_Impl>()->setLoopTemperatureSetpointNode( node );
 }
 
 SizingPlant PlantLoop::sizingPlant() const
@@ -1188,6 +1753,86 @@ void PlantLoop::resetComponentSetpointOperationSchemeSchedule() {
   getImpl<detail::PlantLoop_Impl>()->resetComponentSetpointOperationSchemeSchedule();
 }
 
+boost::optional<double> PlantLoop::autosizedMaximumLoopFlowRate() const {
+  return getImpl<detail::PlantLoop_Impl>()->autosizedMaximumLoopFlowRate();
+}
+
+boost::optional<double> PlantLoop::autosizedPlantLoopVolume() const {
+  return getImpl<detail::PlantLoop_Impl>()->autosizedPlantLoopVolume();
+}
+
+/* Prefered way to interact with the Availability Managers */
+std::vector<AvailabilityManager> PlantLoop::availabilityManagers() const
+{
+  return getImpl<detail::PlantLoop_Impl>()->availabilityManagers();
+}
+
+bool PlantLoop::setAvailabilityManagers(const std::vector<AvailabilityManager> & avms)
+{
+  return getImpl<detail::PlantLoop_Impl>()->setAvailabilityManagers(avms);
+}
+
+void PlantLoop::resetAvailabilityManagers()
+{
+  return getImpl<detail::PlantLoop_Impl>()->resetAvailabilityManagers();
+}
+
+bool PlantLoop::addAvailabilityManager(const AvailabilityManager & availabilityManager)
+{
+  return getImpl<detail::PlantLoop_Impl>()->addAvailabilityManager(availabilityManager);
+}
+// End prefered way
+
+
+bool PlantLoop::addAvailabilityManager(const AvailabilityManager & availabilityManager, unsigned priority)
+{
+  return getImpl<detail::PlantLoop_Impl>()->addAvailabilityManager(availabilityManager, priority);
+}
+
+
+unsigned PlantLoop::availabilityManagerPriority(const AvailabilityManager & availabilityManager) const
+{
+  return getImpl<detail::PlantLoop_Impl>()->availabilityManagerPriority(availabilityManager);
+}
+
+bool PlantLoop::setAvailabilityManagerPriority(const AvailabilityManager & availabilityManager, unsigned priority)
+{
+  return getImpl<detail::PlantLoop_Impl>()->setAvailabilityManagerPriority(availabilityManager, priority);
+}
+
+bool PlantLoop::removeAvailabilityManager(const AvailabilityManager & availabilityManager)
+{
+  return getImpl<detail::PlantLoop_Impl>()->removeAvailabilityManager(availabilityManager);
+}
+
+bool PlantLoop::removeAvailabilityManager(const unsigned priority)
+{
+  return getImpl<detail::PlantLoop_Impl>()->removeAvailabilityManager(priority);
+}
+
+
+// TODO: START DEPRECATED SECTION
+
+  boost::optional<AvailabilityManager> PlantLoop::availabilityManager() const {
+    boost::optional<AvailabilityManager> avm;
+    std::vector<AvailabilityManager> avmVector = availabilityManagers();
+    if (avmVector.size() > 0) {
+      avm = avmVector[0];
+    }
+    return avm;
+  }
+
+  bool PlantLoop::setAvailabilityManager(const AvailabilityManager& availabilityManager) {
+    std::vector<AvailabilityManager> avmVector;
+    avmVector.push_back(availabilityManager);
+    return setAvailabilityManagers(avmVector);
+  }
+  void PlantLoop::resetAvailabilityManager() {
+    resetAvailabilityManagers();
+  }
+
+// END DEPRECATED
+
+
 } // model
 } // openstudio
-

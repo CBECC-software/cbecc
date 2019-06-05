@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "PumpConstantSpeed.hpp"
 #include "PumpConstantSpeed_Impl.hpp"
@@ -68,9 +78,24 @@ namespace detail {
 
   const std::vector<std::string>& PumpConstantSpeed_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Pump Electric Power",
+      "Pump Electric Energy",
+      "Pump Shaft Power",
+      "Pump Fluid Heat Gain Rate",
+      "Pump Fluid Heat Gain Energy",
+      "Pump Outlet Temperature",
+      "Pump Mass Flow Rate",
+      // The Key is the Pump, not the zone, so it's right to report here
+      // EnergyPlus/Pumps.cc::GetPumpInput()
+      // TODO: Implement this check and make not static above once ModelObject return type has changed
+      // if (! p.zone().empty() ) {
+        "Pump Zone Total Heating Rate",
+        "Pump Zone Total Heating Energy",
+        "Pump Zone Convective Heating Rate",
+        "Pump Zone Radiative Heating Rate"
+      // }
+    };
     return result;
   }
 
@@ -226,7 +251,7 @@ namespace detail {
     return getQuantityFromDouble(OS_Pump_ConstantSpeedFields::SkinLossRadiativeFraction, value, returnIP);
   }
 
-  void PumpConstantSpeed_Impl::setRatedFlowRate(boost::optional<double> ratedFlowRate) {
+  bool PumpConstantSpeed_Impl::setRatedFlowRate(boost::optional<double> ratedFlowRate) {
     bool result(false);
     if (ratedFlowRate) {
       result = setDouble(OS_Pump_ConstantSpeedFields::RatedFlowRate, ratedFlowRate.get());
@@ -236,6 +261,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool PumpConstantSpeed_Impl::setRatedFlowRate(const OSOptionalQuantity& ratedFlowRate) {
@@ -266,9 +292,10 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void PumpConstantSpeed_Impl::setRatedPumpHead(double ratedPumpHead) {
+  bool PumpConstantSpeed_Impl::setRatedPumpHead(double ratedPumpHead) {
     bool result = setDouble(OS_Pump_ConstantSpeedFields::RatedPumpHead, ratedPumpHead);
     OS_ASSERT(result);
+    return result;
   }
 
   bool PumpConstantSpeed_Impl::setRatedPumpHead(const Quantity& ratedPumpHead) {
@@ -285,7 +312,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void PumpConstantSpeed_Impl::setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption) {
+  bool PumpConstantSpeed_Impl::setRatedPowerConsumption(boost::optional<double> ratedPowerConsumption) {
     bool result(false);
     if (ratedPowerConsumption) {
       result = setDouble(OS_Pump_ConstantSpeedFields::RatedPowerConsumption, ratedPowerConsumption.get());
@@ -295,6 +322,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool PumpConstantSpeed_Impl::setRatedPowerConsumption(const OSOptionalQuantity& ratedPowerConsumption) {
@@ -403,7 +431,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void PumpConstantSpeed_Impl::setImpellerDiameter(boost::optional<double> impellerDiameter) {
+  bool PumpConstantSpeed_Impl::setImpellerDiameter(boost::optional<double> impellerDiameter) {
     bool result(false);
     if (impellerDiameter) {
       result = setDouble(OS_Pump_ConstantSpeedFields::ImpellerDiameter, impellerDiameter.get());
@@ -413,6 +441,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool PumpConstantSpeed_Impl::setImpellerDiameter(const OSOptionalQuantity& impellerDiameter) {
@@ -438,7 +467,7 @@ namespace detail {
     OS_ASSERT(result);
   }
 
-  void PumpConstantSpeed_Impl::setRotationalSpeed(boost::optional<double> rotationalSpeed) {
+  bool PumpConstantSpeed_Impl::setRotationalSpeed(boost::optional<double> rotationalSpeed) {
     bool result(false);
     if (rotationalSpeed) {
       result = setDouble(OS_Pump_ConstantSpeedFields::RotationalSpeed, rotationalSpeed.get());
@@ -448,6 +477,7 @@ namespace detail {
       result = true;
     }
     OS_ASSERT(result);
+    return result;
   }
 
   bool PumpConstantSpeed_Impl::setRotationalSpeed(const OSOptionalQuantity& rotationalSpeed) {
@@ -668,12 +698,12 @@ namespace detail {
     return true;
   }
 
-  unsigned PumpConstantSpeed_Impl::inletPort()
+  unsigned PumpConstantSpeed_Impl::inletPort() const
   {
     return OS_Pump_ConstantSpeedFields::InletNodeName;
   }
 
-  unsigned PumpConstantSpeed_Impl::outletPort()
+  unsigned PumpConstantSpeed_Impl::outletPort() const
   {
     return OS_Pump_ConstantSpeedFields::OutletNodeName;
   }
@@ -686,6 +716,73 @@ namespace detail {
     }
 
     return false;
+  }
+
+  boost::optional<double> PumpConstantSpeed_Impl::autosizedRatedFlowRate() const {
+    return getAutosizedValue("Design Flow Rate", "m3/s");
+  }
+
+  boost::optional<double> PumpConstantSpeed_Impl::autosizedRatedPowerConsumption() const {
+    return getAutosizedValue("Design Power Consumption", "W");
+  }
+
+  void PumpConstantSpeed_Impl::autosize() {
+    autosizeRatedFlowRate();
+    autosizeRatedPowerConsumption();
+  }
+
+  void PumpConstantSpeed_Impl::applySizingValues() {
+    boost::optional<double> val;
+    val = autosizedRatedFlowRate();
+    if (val) {
+      setRatedFlowRate(val.get());
+    }
+
+    val = autosizedRatedPowerConsumption();
+    if (val) {
+      setRatedPowerConsumption(val.get());
+    }
+  }
+
+  std::string PumpConstantSpeed_Impl::designPowerSizingMethod() const {
+    auto value = getString(OS_Pump_ConstantSpeedFields::DesignPowerSizingMethod,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  bool PumpConstantSpeed_Impl::setDesignPowerSizingMethod(const std::string & designPowerSizingMethod) {
+    return setString(OS_Pump_ConstantSpeedFields::DesignPowerSizingMethod,designPowerSizingMethod);
+  }
+
+  double PumpConstantSpeed_Impl::designElectricPowerPerUnitFlowRate() const {
+    auto value = getDouble(OS_Pump_ConstantSpeedFields::DesignElectricPowerperUnitFlowRate,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  bool PumpConstantSpeed_Impl::setDesignElectricPowerPerUnitFlowRate(double designElectricPowerPerUnitFlowRate) {
+    return setDouble(OS_Pump_ConstantSpeedFields::DesignElectricPowerperUnitFlowRate,designElectricPowerPerUnitFlowRate);
+  }
+
+  double PumpConstantSpeed_Impl::designShaftPowerPerUnitFlowRatePerUnitHead() const {
+    auto value = getDouble(OS_Pump_ConstantSpeedFields::DesignShaftPowerperUnitFlowRateperUnitHead,true);
+    OS_ASSERT(value);
+    return value.get();
+  }
+
+  bool PumpConstantSpeed_Impl::setDesignShaftPowerPerUnitFlowRatePerUnitHead(double designShaftPowerPerUnitFlowRatePerUnitHead) {
+    return setDouble(OS_Pump_ConstantSpeedFields::DesignShaftPowerperUnitFlowRateperUnitHead,designShaftPowerPerUnitFlowRatePerUnitHead);
+  }
+
+  std::vector<EMSActuatorNames> PumpConstantSpeed_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Pump", "Pump Mass Flow Rate"},
+                                            {"Pump", "Pump Pressure Rise"}};
+    return actuators;
+  }
+
+  std::vector<std::string> PumpConstantSpeed_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types{"Pump Maximum Mass Flow Rate"};
+    return types;
   }
 
 } // detail
@@ -701,6 +798,9 @@ PumpConstantSpeed::PumpConstantSpeed(const Model& model)
   setMotorEfficiency(0.9);
   setPumpControlType("Intermittent");
   setFractionofMotorInefficienciestoFluidStream(0.0);
+  setDesignPowerSizingMethod("PowerPerFlowPerPressure");
+  setDesignElectricPowerPerUnitFlowRate(348701.1);
+  setDesignShaftPowerPerUnitFlowRatePerUnitHead(1.282051282);
 
   setString(OS_Pump_ConstantSpeedFields::PumpFlowRateSchedule,"");
   setString(OS_Pump_ConstantSpeedFields::PumpCurve,"");
@@ -717,6 +817,11 @@ IddObjectType PumpConstantSpeed::iddObjectType() {
 std::vector<std::string> PumpConstantSpeed::pumpControlTypeValues() {
   return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
                         OS_Pump_ConstantSpeedFields::PumpControlType);
+}
+
+std::vector<std::string> PumpConstantSpeed::designPowerSizingMethodValues() {
+  return getIddKeyNames(IddFactory::instance().getObject(iddObjectType()).get(),
+                        OS_Pump_ConstantSpeedFields::DesignPowerSizingMethod);
 }
 
 boost::optional<double> PumpConstantSpeed::ratedFlowRate() const {
@@ -823,8 +928,8 @@ OSOptionalQuantity PumpConstantSpeed::getSkinLossRadiativeFraction(bool returnIP
   return getImpl<detail::PumpConstantSpeed_Impl>()->getSkinLossRadiativeFraction(returnIP);
 }
 
-void PumpConstantSpeed::setRatedFlowRate(double ratedFlowRate) {
-  getImpl<detail::PumpConstantSpeed_Impl>()->setRatedFlowRate(ratedFlowRate);
+bool PumpConstantSpeed::setRatedFlowRate(double ratedFlowRate) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setRatedFlowRate(ratedFlowRate);
 }
 
 bool PumpConstantSpeed::setRatedFlowRate(const Quantity& ratedFlowRate) {
@@ -839,8 +944,8 @@ void PumpConstantSpeed::autosizeRatedFlowRate() {
   getImpl<detail::PumpConstantSpeed_Impl>()->autosizeRatedFlowRate();
 }
 
-void PumpConstantSpeed::setRatedPumpHead(double ratedPumpHead) {
-  getImpl<detail::PumpConstantSpeed_Impl>()->setRatedPumpHead(ratedPumpHead);
+bool PumpConstantSpeed::setRatedPumpHead(double ratedPumpHead) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setRatedPumpHead(ratedPumpHead);
 }
 
 bool PumpConstantSpeed::setRatedPumpHead(const Quantity& ratedPumpHead) {
@@ -851,8 +956,8 @@ void PumpConstantSpeed::resetRatedPumpHead() {
   getImpl<detail::PumpConstantSpeed_Impl>()->resetRatedPumpHead();
 }
 
-void PumpConstantSpeed::setRatedPowerConsumption(double ratedPowerConsumption) {
-  getImpl<detail::PumpConstantSpeed_Impl>()->setRatedPowerConsumption(ratedPowerConsumption);
+bool PumpConstantSpeed::setRatedPowerConsumption(double ratedPowerConsumption) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setRatedPowerConsumption(ratedPowerConsumption);
 }
 
 bool PumpConstantSpeed::setRatedPowerConsumption(const Quantity& ratedPowerConsumption) {
@@ -915,8 +1020,8 @@ void PumpConstantSpeed::resetPumpCurve() {
   getImpl<detail::PumpConstantSpeed_Impl>()->resetPumpCurve();
 }
 
-void PumpConstantSpeed::setImpellerDiameter(double impellerDiameter) {
-  getImpl<detail::PumpConstantSpeed_Impl>()->setImpellerDiameter(impellerDiameter);
+bool PumpConstantSpeed::setImpellerDiameter(double impellerDiameter) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setImpellerDiameter(impellerDiameter);
 }
 
 bool PumpConstantSpeed::setImpellerDiameter(const Quantity& impellerDiameter) {
@@ -927,8 +1032,8 @@ void PumpConstantSpeed::resetImpellerDiameter() {
   getImpl<detail::PumpConstantSpeed_Impl>()->resetImpellerDiameter();
 }
 
-void PumpConstantSpeed::setRotationalSpeed(double rotationalSpeed) {
-  getImpl<detail::PumpConstantSpeed_Impl>()->setRotationalSpeed(rotationalSpeed);
+bool PumpConstantSpeed::setRotationalSpeed(double rotationalSpeed) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setRotationalSpeed(rotationalSpeed);
 }
 
 bool PumpConstantSpeed::setRotationalSpeed(const Quantity& rotationalSpeed) {
@@ -959,12 +1064,43 @@ void PumpConstantSpeed::resetSkinLossRadiativeFraction() {
   getImpl<detail::PumpConstantSpeed_Impl>()->resetSkinLossRadiativeFraction();
 }
 
+std::string PumpConstantSpeed::designPowerSizingMethod() const {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->designPowerSizingMethod();
+}
+
+bool PumpConstantSpeed::setDesignPowerSizingMethod(const std::string & designPowerSizingMethod) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setDesignPowerSizingMethod(designPowerSizingMethod);
+}
+
+double PumpConstantSpeed::designElectricPowerPerUnitFlowRate() const {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->designElectricPowerPerUnitFlowRate();
+}
+
+bool PumpConstantSpeed::setDesignElectricPowerPerUnitFlowRate(double designElectricPowerPerUnitFlowRate) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setDesignElectricPowerPerUnitFlowRate(designElectricPowerPerUnitFlowRate);
+}
+
+double PumpConstantSpeed::designShaftPowerPerUnitFlowRatePerUnitHead() const {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->designShaftPowerPerUnitFlowRatePerUnitHead();
+}
+
+bool PumpConstantSpeed::setDesignShaftPowerPerUnitFlowRatePerUnitHead(double designShaftPowerPerUnitFlowRatePerUnitHead) {
+  return getImpl<detail::PumpConstantSpeed_Impl>()->setDesignShaftPowerPerUnitFlowRatePerUnitHead(designShaftPowerPerUnitFlowRatePerUnitHead);
+}
+
 /// @cond
 PumpConstantSpeed::PumpConstantSpeed(std::shared_ptr<detail::PumpConstantSpeed_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
+  boost::optional<double> PumpConstantSpeed::autosizedRatedFlowRate() const {
+    return getImpl<detail::PumpConstantSpeed_Impl>()->autosizedRatedFlowRate();
+  }
+
+  boost::optional<double> PumpConstantSpeed::autosizedRatedPowerConsumption() const {
+    return getImpl<detail::PumpConstantSpeed_Impl>()->autosizedRatedPowerConsumption();
+  }
+
 } // model
 } // openstudio
-

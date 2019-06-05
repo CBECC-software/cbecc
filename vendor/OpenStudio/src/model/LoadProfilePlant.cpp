@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "LoadProfilePlant.hpp"
 #include "LoadProfilePlant_Impl.hpp"
@@ -31,8 +41,8 @@
 #include "PlantLoop.hpp"
 #include "PlantLoop_Impl.hpp"
 #include "../utilities/time/Time.hpp"
-#include "../../model/ScheduleTypeLimits.hpp"
-#include "../../model/ScheduleTypeRegistry.hpp"
+#include "ScheduleTypeLimits.hpp"
+#include "ScheduleTypeRegistry.hpp"
 
 #include <utilities/idd/IddEnums.hxx>
 #include <utilities/idd/OS_LoadProfile_Plant_FieldEnums.hxx>
@@ -70,9 +80,13 @@ namespace detail {
 
   const std::vector<std::string>& LoadProfilePlant_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      "Plant Load Profile Mass Flow Rate",
+      "Plant Load Profile Heat Transfer Rate",
+      "Plant Load Profile Heat Transfer Energy",
+      "Plant Load Profile Heating Energy",
+      "Plant Load Profile Cooling Energy"
+    };
     return result;
   }
 
@@ -97,12 +111,12 @@ namespace detail {
     return result;
   }
 
-  unsigned LoadProfilePlant_Impl::inletPort()
+  unsigned LoadProfilePlant_Impl::inletPort() const
   {
     return OS_LoadProfile_PlantFields::InletNodeName;
   }
 
-  unsigned LoadProfilePlant_Impl::outletPort()
+  unsigned LoadProfilePlant_Impl::outletPort() const
   {
     return OS_LoadProfile_PlantFields::OutletNodeName;
   }
@@ -137,9 +151,10 @@ namespace detail {
     return result;
   }
 
-  void LoadProfilePlant_Impl::setPeakFlowRate(double peakFlowRate) {
+  bool LoadProfilePlant_Impl::setPeakFlowRate(double peakFlowRate) {
     bool result = setDouble(OS_LoadProfile_PlantFields::PeakFlowRate, peakFlowRate);
     OS_ASSERT(result);
+    return result;
   }
 
   bool LoadProfilePlant_Impl::setFlowRateFractionSchedule(Schedule& schedule) {
@@ -168,6 +183,17 @@ namespace detail {
     return false;
   }
 
+  std::vector<EMSActuatorNames> LoadProfilePlant_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"Plant Load Profile", "Mass Flow Rate"},
+                                            {"Plant Load Profile", "Power"}};
+    return actuators;
+  }
+
+  std::vector<std::string> LoadProfilePlant_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types;
+    return types;
+  }
+
 } // detail
 
 LoadProfilePlant::LoadProfilePlant(const Model& model)
@@ -193,6 +219,16 @@ LoadProfilePlant::LoadProfilePlant(const Model& model)
   OS_ASSERT(ok);
 }
 
+LoadProfilePlant::LoadProfilePlant(const Model& model, Schedule& loadSchedule, Schedule& flowRateFractionSchedule)
+  : StraightComponent(LoadProfilePlant::iddObjectType(),model)
+{
+  OS_ASSERT(getImpl<detail::LoadProfilePlant_Impl>());
+
+  setLoadSchedule( loadSchedule );
+  setPeakFlowRate( 0.0 );
+  setFlowRateFractionSchedule( flowRateFractionSchedule );
+}
+
 IddObjectType LoadProfilePlant::iddObjectType() {
   return IddObjectType(IddObjectType::OS_LoadProfile_Plant);
 }
@@ -213,8 +249,8 @@ bool LoadProfilePlant::setLoadSchedule(Schedule& schedule) {
   return getImpl<detail::LoadProfilePlant_Impl>()->setLoadSchedule(schedule);
 }
 
-void LoadProfilePlant::setPeakFlowRate(double peakFlowRate) {
-  getImpl<detail::LoadProfilePlant_Impl>()->setPeakFlowRate(peakFlowRate);
+bool LoadProfilePlant::setPeakFlowRate(double peakFlowRate) {
+  return getImpl<detail::LoadProfilePlant_Impl>()->setPeakFlowRate(peakFlowRate);
 }
 
 bool LoadProfilePlant::setFlowRateFractionSchedule(Schedule& schedule) {
@@ -223,10 +259,9 @@ bool LoadProfilePlant::setFlowRateFractionSchedule(Schedule& schedule) {
 
 /// @cond
 LoadProfilePlant::LoadProfilePlant(std::shared_ptr<detail::LoadProfilePlant_Impl> impl)
-  : StraightComponent(impl)
+  : StraightComponent(std::move(impl))
 {}
 /// @endcond
 
 } // model
 } // openstudio
-

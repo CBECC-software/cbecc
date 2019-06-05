@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "Node.hpp"
 #include "Node_Impl.hpp"
@@ -33,6 +43,8 @@
 #include "SetpointManagerFollowOutdoorAirTemperature_Impl.hpp"
 #include "SetpointManagerWarmest.hpp"
 #include "SetpointManagerWarmest_Impl.hpp"
+#include "AirflowNetworkDistributionNode.hpp"
+#include "AirflowNetworkDistributionNode_Impl.hpp"
 #include "ThermalZone.hpp"
 #include "PortList.hpp"
 #include "PortList_Impl.hpp"
@@ -53,8 +65,8 @@ namespace detail{
     OS_ASSERT(idfObject.iddObject().type() == Node::iddObjectType());
   }
 
-  Node_Impl::Node_Impl(const openstudio::detail::WorkspaceObject_Impl& other, 
-                       Model_Impl* model, 
+  Node_Impl::Node_Impl(const openstudio::detail::WorkspaceObject_Impl& other,
+                       Model_Impl* model,
                        bool keepHandle)
     : StraightComponent_Impl(other,model,keepHandle)
   {
@@ -71,9 +83,53 @@ namespace detail{
   // Get all output variable names that could be associated with this object.
   const std::vector<std::string>& Node_Impl::outputVariableNames() const
   {
-    static std::vector<std::string> result;
-    if (result.empty()){
-    }
+    static std::vector<std::string> result{
+      // Common Variables
+      "System Node Temperature",
+      "System Node Last Timestep Temperature",
+      "System Node Mass Flow Rate",
+      "System Node Humidity Ratio",
+      "System Node Setpoint Temperature",
+      "System Node Setpoint High Temperature",
+      "System Node Setpoint Low Temperature",
+      "System Node Setpoint Humidity Ratio",
+      "System Node Setpoint Minimum Humidity Ratio",
+      "System Node Setpoint Maximum Humidity Ratio",
+      "System Node Relative Humidity",
+      "System Node Pressure",
+      "System Node Standard Density Volume Flow Rate",
+      "System Node Enthalpy",
+      "System Node Last Timestep Enthalpy",
+      "System Node Wetbulb Temperature",
+      "System Node Dewpoint Temperature",
+      "System Node Quality",
+      "System Node Height",
+      "System Node Specific Heat",
+
+
+      // The following node variable is also available for system nodes that are for “air”:
+      // TODO: implement check? If no, make result non static and remove the result.empty() check
+      "System Node Current Density Volume Flow Rate",
+      "System Node Current Density"
+
+      // The following node variables are “advanced” and normally used for debugging unusual cases:
+      //"System Node Minimum Temperature",
+      //"System Node Maximum Temperature",
+      //"System Node Minimum Limit Mass Flow Rate",
+      //"System Node Maximum Limit Mass Flow Rate",
+      //"System Node Minimum Available Mass Flow Rate",
+      //"System Node Maximum Available Mass Flow Rate",
+      //"System Node Requested Mass Flow Rate",
+      //"System Node Setpoint Mass Flow Rate",
+
+      // The following node variable reports node carbon dioxide concentration when carbon dioxide is simulated (ref. ZoneAirContaminantBalance):
+      // "System Node CO2 Concentration",
+
+      // The following node variable reports node generic contaminant concentration when generic contaminant is simulated (ref. ZoneAirContaminantBalance):
+      // "System Node Generic Air Contaminant Concentration"
+
+    };
+
     return result;
   }
 
@@ -81,12 +137,12 @@ namespace detail{
     return Node::iddObjectType();
   }
 
-  unsigned Node_Impl::inletPort()
+  unsigned Node_Impl::inletPort() const
   {
     return OS_NodeFields::InletPort;
   }
 
-  unsigned Node_Impl::outletPort()
+  unsigned Node_Impl::outletPort() const
   {
     return OS_NodeFields::OutletPort;
   }
@@ -289,6 +345,8 @@ namespace detail{
   std::vector<ModelObject> Node_Impl::children() const
   {
     std::vector<ModelObject> result = castVector<ModelObject>(this->setpointManagers());
+    std::vector<AirflowNetworkDistributionNode> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkDistributionNode>(AirflowNetworkDistributionNode::iddObjectType());
+    result.insert(result.end(), myAFNItems.begin(), myAFNItems.end());
     return result;
   }
 
@@ -296,12 +354,12 @@ namespace detail{
   {
     return false;
   }
-  
+
   ModelObject Node_Impl::clone(Model model) const
   {
     return StraightComponent_Impl::clone( model );
   }
-  
+
   bool Node_Impl::isRemovable() const
   {
     if( this->loop() )
@@ -360,6 +418,50 @@ namespace detail{
     return false;
   }
 
+  std::vector<EMSActuatorNames> Node_Impl::emsActuatorNames() const {
+    std::vector<EMSActuatorNames> actuators{{"System Node Setpoint", "Temperature Setpoint"},
+                                            {"System Node Setpoint", "Temperature Minimum Setpoint"},
+                                            {"System Node Setpoint", "Temperature Maximum Setpoint"},
+                                            {"System Node Setpoint", "Humidity Ratio Setpoint"},
+                                            {"System Node Setpoint", "Humidity Ratio Maximum Setpoint"},
+                                            {"System Node Setpoint", "Humidity Ratio Minimum Setpoint"},
+                                            {"System Node Setpoint", "Mass Flow Rate Setpoint"},
+                                            {"System Node Setpoint", "Mass Flow Rate Maximum Available Setpoint"},
+                                            {"System Node Setpoint", "Mass Flow Rate Minimum Available Setpoint"},
+                                            {"Outdoor Air System Node", "Drybulb Temperature"},
+                                            {"Outdoor Air System Node", "Wetbulb Temperature"},
+                                            {"Outdoor Air System Node", "Wind Speed"},
+                                            {"Outdoor Air System Node", "Wind Direction"}};
+    return actuators;
+  }
+
+  std::vector<std::string> Node_Impl::emsInternalVariableNames() const {
+    std::vector<std::string> types;
+    return types;
+  }
+  
+  AirflowNetworkDistributionNode Node_Impl::getAirflowNetworkDistributionNode()
+  {
+    boost::optional<AirflowNetworkDistributionNode> opt = airflowNetworkDistributionNode();
+    if (opt) {
+      return opt.get();
+    }
+    return AirflowNetworkDistributionNode(model(), handle());
+  }
+
+  boost::optional<AirflowNetworkDistributionNode> Node_Impl::airflowNetworkDistributionNode() const
+  {
+    std::vector<AirflowNetworkDistributionNode> myAFNItems = getObject<ModelObject>().getModelObjectSources<AirflowNetworkDistributionNode>(AirflowNetworkDistributionNode::iddObjectType());
+    auto count = myAFNItems.size();
+    if (count == 1) {
+      return myAFNItems[0];
+    } else if (count > 1) {
+      LOG(Warn, briefDescription() << " has more than one AirflowNetwork DistributionNode attached, returning first.");
+      return myAFNItems[0];
+    }
+    return boost::none;
+  }
+
 } // detail
 
 // create a new Node object in the model's workspace
@@ -370,7 +472,7 @@ Node::Node(const Model& model)
 }
 
 Node::Node(std::shared_ptr<detail::Node_Impl> p)
-  : StraightComponent(p)
+  : StraightComponent(std::move(p))
 {}
 
 std::vector<SetpointManager> Node::setpointManagers() const
@@ -491,6 +593,16 @@ ModelObject Node::clone(Model model) const
 IddObjectType Node::iddObjectType() {
   IddObjectType result(IddObjectType::OS_Node);
   return result;
+}
+
+AirflowNetworkDistributionNode Node::getAirflowNetworkDistributionNode()
+{
+  return getImpl<detail::Node_Impl>()->getAirflowNetworkDistributionNode();
+}
+
+boost::optional<AirflowNetworkDistributionNode> Node::airflowNetworkDistributionNode() const
+{
+  return getImpl<detail::Node_Impl>()->airflowNetworkDistributionNode();
 }
 
 } // model

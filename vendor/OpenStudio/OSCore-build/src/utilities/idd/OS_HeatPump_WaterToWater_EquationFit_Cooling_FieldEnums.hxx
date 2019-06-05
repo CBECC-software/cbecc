@@ -1,21 +1,31 @@
-/**********************************************************************
-*  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
-*  All rights reserved.
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
 *
-*  This library is free software; you can redistribute it and/or
-*  modify it under the terms of the GNU Lesser General Public
-*  License as published by the Free Software Foundation; either
-*  version 2.1 of the License, or (at your option) any later version.
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
 *
-*  This library is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*  Lesser General Public License for more details.
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
 *
-*  You should have received a copy of the GNU Lesser General Public
-*  License along with this library; if not, write to the Free Software
-*  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-**********************************************************************/
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef UTILITIES_IDD_OS_HEATPUMP_WATERTOWATER_EQUATIONFIT_COOLING_FIELDENUMS_HXX
 #define UTILITIES_IDD_OS_HEATPUMP_WATERTOWATER_EQUATIONFIT_COOLING_FIELDENUMS_HXX
@@ -41,7 +51,7 @@ class OS_HeatPump_WaterToWater_EquationFit_CoolingFields: public ::EnumBase<OS_H
  public: 
   enum domain 
   {
-Handle, Name, SourceSideInletNodeName, SourceSideOutletNodeName, LoadSideInletNodeName, LoadSideOutletNodeName, RatedLoadSideFlowRate, RatedSourceSideFlowRate, RatedCoolingCapacity, RatedCoolingPowerConsumption, CoolingCapacityCoefficient1, CoolingCapacityCoefficient2, CoolingCapacityCoefficient3, CoolingCapacityCoefficient4, CoolingCapacityCoefficient5, CoolingCompressorPowerCoefficient1, CoolingCompressorPowerCoefficient2, CoolingCompressorPowerCoefficient3, CoolingCompressorPowerCoefficient4, CoolingCompressorPowerCoefficient5,   };
+Handle, Name, SourceSideInletNodeName, SourceSideOutletNodeName, LoadSideInletNodeName, LoadSideOutletNodeName, ReferenceLoadSideFlowRate, ReferenceSourceSideFlowRate, ReferenceCoolingCapacity, ReferenceCoolingPowerConsumption, CoolingCapacityCoefficient1, CoolingCapacityCoefficient2, CoolingCapacityCoefficient3, CoolingCapacityCoefficient4, CoolingCapacityCoefficient5, CoolingCompressorPowerCoefficient1, CoolingCompressorPowerCoefficient2, CoolingCompressorPowerCoefficient3, CoolingCompressorPowerCoefficient4, CoolingCompressorPowerCoefficient5, ReferenceCoefficientofPerformance, SizingFactor, CompanionHeatingHeatPumpName,   };
   OS_HeatPump_WaterToWater_EquationFit_CoolingFields()
    : EnumBase<OS_HeatPump_WaterToWater_EquationFit_CoolingFields>(Handle) {} 
   OS_HeatPump_WaterToWater_EquationFit_CoolingFields(const std::string &t_name) 
@@ -69,10 +79,10 @@ Handle, Name, SourceSideInletNodeName, SourceSideOutletNodeName, LoadSideInletNo
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::SourceSideOutletNodeName, "SourceSideOutletNodeName", "Source Side Outlet Node Name"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::LoadSideInletNodeName, "LoadSideInletNodeName", "Load Side Inlet Node Name"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::LoadSideOutletNodeName, "LoadSideOutletNodeName", "Load Side Outlet Node Name"},
-{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::RatedLoadSideFlowRate, "RatedLoadSideFlowRate", "Rated Load Side Flow Rate"},
-{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::RatedSourceSideFlowRate, "RatedSourceSideFlowRate", "Rated Source Side Flow Rate"},
-{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::RatedCoolingCapacity, "RatedCoolingCapacity", "Rated Cooling Capacity"},
-{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::RatedCoolingPowerConsumption, "RatedCoolingPowerConsumption", "Rated Cooling Power Consumption"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::ReferenceLoadSideFlowRate, "ReferenceLoadSideFlowRate", "Reference Load Side Flow Rate"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::ReferenceSourceSideFlowRate, "ReferenceSourceSideFlowRate", "Reference Source Side Flow Rate"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::ReferenceCoolingCapacity, "ReferenceCoolingCapacity", "Reference Cooling Capacity"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::ReferenceCoolingPowerConsumption, "ReferenceCoolingPowerConsumption", "Reference Cooling Power Consumption"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCapacityCoefficient1, "CoolingCapacityCoefficient1", "Cooling Capacity Coefficient 1"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCapacityCoefficient2, "CoolingCapacityCoefficient2", "Cooling Capacity Coefficient 2"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCapacityCoefficient3, "CoolingCapacityCoefficient3", "Cooling Capacity Coefficient 3"},
@@ -83,6 +93,9 @@ Handle, Name, SourceSideInletNodeName, SourceSideOutletNodeName, LoadSideInletNo
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCompressorPowerCoefficient3, "CoolingCompressorPowerCoefficient3", "Cooling Compressor Power Coefficient 3"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCompressorPowerCoefficient4, "CoolingCompressorPowerCoefficient4", "Cooling Compressor Power Coefficient 4"},
 { OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CoolingCompressorPowerCoefficient5, "CoolingCompressorPowerCoefficient5", "Cooling Compressor Power Coefficient 5"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::ReferenceCoefficientofPerformance, "ReferenceCoefficientofPerformance", "Reference Coefficient of Performance"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::SizingFactor, "SizingFactor", "Sizing Factor"},
+{ OS_HeatPump_WaterToWater_EquationFit_CoolingFields::CompanionHeatingHeatPumpName, "CompanionHeatingHeatPumpName", "Companion Heating Heat Pump Name"},
         { 0,0,0 }
       };
       VecType v;

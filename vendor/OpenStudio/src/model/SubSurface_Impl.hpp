@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.
- *  All rights reserved.
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #ifndef MODEL_SUBSURFACE_IMPL_HPP
 #define MODEL_SUBSURFACE_IMPL_HPP
@@ -26,6 +36,8 @@
 namespace openstudio {
 namespace model {
 
+class AirflowNetworkComponent;
+class AirflowNetworkSurface;
 class Surface;
 class SubSurface;
 class ShadingSurface;
@@ -35,32 +47,17 @@ class DaylightingDeviceShelf;
 class WindowPropertyFrameAndDivider;
 class SurfacePropertyOtherSideCoefficients;
 class SurfacePropertyOtherSideConditionsModel;
+class SurfacePropertyConfectionCoefficients;
 
 namespace detail {
 
   /** SubSurface_Impl is a PlanarSurface_Impl that is the implementation class for SubSurface.*/
   class MODEL_API SubSurface_Impl : public PlanarSurface_Impl {
-    Q_OBJECT;
-    Q_PROPERTY(std::string subSurfaceType READ subSurfaceType WRITE setSubSurfaceType);
-    Q_PROPERTY(std::vector<std::string> subSurfaceTypeValues READ subSurfaceTypeValues);
-    Q_PROPERTY(boost::optional<double> viewFactortoGround READ viewFactortoGround WRITE setViewFactortoGround RESET resetViewFactortoGround);
-    Q_PROPERTY(bool isViewFactortoGroundDefaulted READ isViewFactortoGroundDefaulted);
-    Q_PROPERTY(bool isViewFactortoGroundAutocalculated READ isViewFactortoGroundAutocalculated);
-    Q_PROPERTY(double multiplier READ multiplier WRITE setMultiplier RESET resetMultiplier);
-    Q_PROPERTY(bool isMultiplierDefaulted READ isMultiplierDefaulted);
-    Q_PROPERTY(boost::optional<double> numberofVertices READ numberofVertices WRITE setNumberofVertices RESET resetNumberofVertices);
-    Q_PROPERTY(bool isNumberofVerticesDefaulted READ isNumberofVerticesDefaulted);
-    Q_PROPERTY(bool isNumberofVerticesAutocalculated READ isNumberofVerticesAutocalculated);
-
-    Q_PROPERTY(std::string outsideBoundaryCondition READ outsideBoundaryCondition);
-
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> surface READ surfaceAsModelObject WRITE setSurfaceAsModelObject);
-    Q_PROPERTY(boost::optional<openstudio::model::ModelObject> adjacentSubSurface READ adjacentSubSurfaceAsModelObject WRITE setAdjacentSubSurfaceAsModelObject RESET resetAdjacentSubSurface);
    public:
     /** @name Constructors and Destructors */
     //@{
 
-    SubSurface_Impl(const IdfObject& idfObject, 
+    SubSurface_Impl(const IdfObject& idfObject,
                     Model_Impl* model,
                     bool keepHandle);
 
@@ -88,8 +85,10 @@ namespace detail {
     /// remove self and all children objects recursively
     virtual std::vector<IdfObject> remove() override;
 
+    virtual ModelObject clone(Model model) const override;
+
     virtual const std::vector<std::string>& outputVariableNames() const override;
-    
+
     virtual IddObjectType iddObjectType() const override;
 
     /// should subtract this surface from parent's gross area for net area
@@ -204,7 +203,7 @@ namespace detail {
     /// get the surface
     boost::optional<Surface> surface() const;
 
-    /// set the surface 
+    /// set the surface
     bool setSurface(const Surface& surface);
 
     /// get the adjacent subsurface
@@ -214,8 +213,11 @@ namespace detail {
     /// which are adjacent
     bool setAdjacentSubSurface(SubSurface& subSurface);
 
-    /// reset the adjacent subsurface, will clear references on both this and adjacent sub surface 
+    /// reset the adjacent subsurface, will clear references on both this and adjacent sub surface
     void resetAdjacentSubSurface();
+
+    /** Returns the surface property convection coefficients */
+    boost::optional<SurfacePropertyConvectionCoefficients> surfacePropertyConvectionCoefficients() const;
 
     /** Returns the adjacent SurfaceSurfacePropertyOtherSideCoefficients, if it exists. */
     boost::optional<SurfacePropertyOtherSideCoefficients> surfacePropertyOtherSideCoefficients() const;
@@ -247,22 +249,26 @@ namespace detail {
     /** Add an overhang to the sub surface, only valid for fixed windows, operable windows, and glass doors. */
     boost::optional<ShadingSurface> addOverhang(double depth, double offset);
 
-    /** Add an overhang to the sub surface, only valid for fixed windows, operable windows, and glass doors. 
+    /** Add an overhang to the sub surface, only valid for fixed windows, operable windows, and glass doors.
      *  Offset is a fraction of the total window height, projection factor is based on height and offset. */
     boost::optional<ShadingSurface> addOverhangByProjectionFactor(double projectionFactor, double offsetFraction);
 
     /** Returns any shading surface groups associated with this sub surface. */
     std::vector<ShadingSurfaceGroup> shadingSurfaceGroups() const;
-  
+
     /** Returns true if this sub surface allows the addition of a daylighting light shelf. */
     bool allowDaylightingDeviceShelf() const;
 
     /** Get the daylighting light shelf associated with this sub surface if there is one. */
     boost::optional<DaylightingDeviceShelf> daylightingDeviceShelf() const;
 
-    /** Add a daylighting light shelf associated with this sub surface.  Only succeeds if this is a fixed window, 
+    /** Add a daylighting light shelf associated with this sub surface.  Only succeeds if this is a fixed window,
      * operable window, or glass door. Will return existing daylighting light shelf if there already is one. */
     boost::optional<DaylightingDeviceShelf> addDaylightingDeviceShelf() const;
+
+    AirflowNetworkSurface getAirflowNetworkSurface(const AirflowNetworkComponent &surfaceAirflowLeakage);
+
+    boost::optional<AirflowNetworkSurface> airflowNetworkSurface() const;
 
    protected:
 

@@ -1,21 +1,31 @@
-/**********************************************************************
- *  Copyright (c) 2008-2016, Alliance for Sustainable Energy.  
- *  All rights reserved.
- *  
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
- *  
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *  
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- **********************************************************************/
+/***********************************************************************************************************************
+*  OpenStudio(R), Copyright (c) 2008-2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+*  following conditions are met:
+*
+*  (1) Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+*  disclaimer.
+*
+*  (2) Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+*  disclaimer in the documentation and/or other materials provided with the distribution.
+*
+*  (3) Neither the name of the copyright holder nor the names of any contributors may be used to endorse or promote products
+*  derived from this software without specific prior written permission from the respective party.
+*
+*  (4) Other than as required in clauses (1) and (2), distributions in any form of modifications or other derivative works
+*  may not use the "OpenStudio" trademark, "OS", "os", or any other confusingly similar designation without specific prior
+*  written permission from Alliance for Sustainable Energy, LLC.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER(S) AND ANY CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+*  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+*  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER(S), ANY CONTRIBUTORS, THE UNITED STATES GOVERNMENT, OR THE UNITED
+*  STATES DEPARTMENT OF ENERGY, NOR ANY OF THEIR EMPLOYEES, BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+*  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+*  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+*  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+*  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+***********************************************************************************************************************/
 
 #include "SetpointManagerFollowOutdoorAirTemperature.hpp"
 #include "SetpointManagerFollowOutdoorAirTemperature_Impl.hpp"
@@ -51,7 +61,7 @@ namespace detail{
   }
 
   SetpointManagerFollowOutdoorAirTemperature_Impl::SetpointManagerFollowOutdoorAirTemperature_Impl(
-      const SetpointManagerFollowOutdoorAirTemperature_Impl& other, 
+      const SetpointManagerFollowOutdoorAirTemperature_Impl& other,
       Model_Impl* model,
       bool keepHandles)
     : SetpointManager_Impl(other,model,keepHandles)
@@ -63,8 +73,6 @@ namespace detail{
   const std::vector<std::string>& SetpointManagerFollowOutdoorAirTemperature_Impl::outputVariableNames() const
   {
     static std::vector<std::string> result;
-    if (result.empty()){
-    }
     return result;
   }
 
@@ -72,14 +80,9 @@ namespace detail{
     return SetpointManagerFollowOutdoorAirTemperature::iddObjectType();
   }
 
-  bool SetpointManagerFollowOutdoorAirTemperature_Impl::addToNode(Node & node) {
-    bool added = SetpointManager_Impl::addToNode( node );
-    if( added ) {
-      return added;
-    } else if( boost::optional<PlantLoop> plantLoop = node.plantLoop() ) {
-      return this->setSetpointNode(node);
-    }
-    return added;
+  /** This SPM is allowed on a PlantLoop */
+  bool SetpointManagerFollowOutdoorAirTemperature_Impl::isAllowedOnPlantLoop() const {
+    return true;
   }
 
   boost::optional<Node> SetpointManagerFollowOutdoorAirTemperature_Impl::setpointNode() const
@@ -123,16 +126,17 @@ namespace detail{
     }
   }
 
-  void SetpointManagerFollowOutdoorAirTemperature_Impl::setReferenceTemperatureType(const std::string & value)
+  bool SetpointManagerFollowOutdoorAirTemperature_Impl::setReferenceTemperatureType(const std::string & value)
   {
     if( istringEqual(value,"OutdoorAirWetBulb") )
     {
-      this->setString(OS_SetpointManager_FollowOutdoorAirTemperatureFields::ReferenceTemperatureType,"OutdoorAirWetBulb");
+      return this->setString(OS_SetpointManager_FollowOutdoorAirTemperatureFields::ReferenceTemperatureType,"OutdoorAirWetBulb");
     }
     else if( istringEqual(value,"OutdoorAirDryBulb") )
     {
-      this->setString(OS_SetpointManager_FollowOutdoorAirTemperatureFields::ReferenceTemperatureType,"OutdoorAirDryBulb");
+      return this->setString(OS_SetpointManager_FollowOutdoorAirTemperatureFields::ReferenceTemperatureType,"OutdoorAirDryBulb");
     }
+    return false;
   }
 
   std::string SetpointManagerFollowOutdoorAirTemperature_Impl::referenceTemperatureType() const
@@ -145,9 +149,9 @@ namespace detail{
     return getDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::OffsetTemperatureDifference).get();
   }
 
-  void SetpointManagerFollowOutdoorAirTemperature_Impl::setOffsetTemperatureDifference(double value)
+  bool SetpointManagerFollowOutdoorAirTemperature_Impl::setOffsetTemperatureDifference(double value)
   {
-    setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::OffsetTemperatureDifference,value);
+    return setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::OffsetTemperatureDifference,value);
   }
 
   double SetpointManagerFollowOutdoorAirTemperature_Impl::maximumSetpointTemperature() const
@@ -155,9 +159,9 @@ namespace detail{
     return getDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MaximumSetpointTemperature).get();
   }
 
-  void SetpointManagerFollowOutdoorAirTemperature_Impl::setMaximumSetpointTemperature(double value)
+  bool SetpointManagerFollowOutdoorAirTemperature_Impl::setMaximumSetpointTemperature(double value)
   {
-    setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MaximumSetpointTemperature,value);
+    return setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MaximumSetpointTemperature,value);
   }
 
   double SetpointManagerFollowOutdoorAirTemperature_Impl::minimumSetpointTemperature() const
@@ -165,15 +169,15 @@ namespace detail{
     return getDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MinimumSetpointTemperature).get();
   }
 
-  void SetpointManagerFollowOutdoorAirTemperature_Impl::setMinimumSetpointTemperature(double value)
+  bool SetpointManagerFollowOutdoorAirTemperature_Impl::setMinimumSetpointTemperature(double value)
   {
-    setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MinimumSetpointTemperature,value);
+    return setDouble(OS_SetpointManager_FollowOutdoorAirTemperatureFields::MinimumSetpointTemperature,value);
   }
 
 } // detail
-  
+
 SetpointManagerFollowOutdoorAirTemperature::SetpointManagerFollowOutdoorAirTemperature(const Model& model)
-  : SetpointManager(SetpointManagerFollowOutdoorAirTemperature::iddObjectType(),model) 
+  : SetpointManager(SetpointManagerFollowOutdoorAirTemperature::iddObjectType(),model)
 {
   OS_ASSERT(getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>());
 
@@ -185,7 +189,7 @@ SetpointManagerFollowOutdoorAirTemperature::SetpointManagerFollowOutdoorAirTempe
 }
 
 SetpointManagerFollowOutdoorAirTemperature::SetpointManagerFollowOutdoorAirTemperature(std::shared_ptr<detail::SetpointManagerFollowOutdoorAirTemperature_Impl> p)
-  : SetpointManager(p)
+  : SetpointManager(std::move(p))
 {
 }
 
@@ -213,9 +217,9 @@ std::string SetpointManagerFollowOutdoorAirTemperature::referenceTemperatureType
   return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->referenceTemperatureType();
 }
 
-void SetpointManagerFollowOutdoorAirTemperature::setReferenceTemperatureType(const std::string & value)
+bool SetpointManagerFollowOutdoorAirTemperature::setReferenceTemperatureType(const std::string & value)
 {
-  getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setReferenceTemperatureType(value);
+  return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setReferenceTemperatureType(value);
 }
 
 double SetpointManagerFollowOutdoorAirTemperature::offsetTemperatureDifference() const
@@ -223,9 +227,9 @@ double SetpointManagerFollowOutdoorAirTemperature::offsetTemperatureDifference()
   return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->offsetTemperatureDifference();
 }
 
-void SetpointManagerFollowOutdoorAirTemperature::setOffsetTemperatureDifference(double value)
+bool SetpointManagerFollowOutdoorAirTemperature::setOffsetTemperatureDifference(double value)
 {
-  getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setOffsetTemperatureDifference(value);
+  return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setOffsetTemperatureDifference(value);
 }
 
 double SetpointManagerFollowOutdoorAirTemperature::maximumSetpointTemperature() const
@@ -233,9 +237,9 @@ double SetpointManagerFollowOutdoorAirTemperature::maximumSetpointTemperature() 
   return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->maximumSetpointTemperature();
 }
 
-void SetpointManagerFollowOutdoorAirTemperature::setMaximumSetpointTemperature(double value)
+bool SetpointManagerFollowOutdoorAirTemperature::setMaximumSetpointTemperature(double value)
 {
-  getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setMaximumSetpointTemperature(value);
+  return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setMaximumSetpointTemperature(value);
 }
 
 double SetpointManagerFollowOutdoorAirTemperature::minimumSetpointTemperature() const
@@ -243,9 +247,9 @@ double SetpointManagerFollowOutdoorAirTemperature::minimumSetpointTemperature() 
   return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->minimumSetpointTemperature();
 }
 
-void SetpointManagerFollowOutdoorAirTemperature::setMinimumSetpointTemperature(double value)
+bool SetpointManagerFollowOutdoorAirTemperature::setMinimumSetpointTemperature(double value)
 {
-  getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setMinimumSetpointTemperature(value);
+  return getImpl<detail::SetpointManagerFollowOutdoorAirTemperature_Impl>()->setMinimumSetpointTemperature(value);
 }
 
 } // model
