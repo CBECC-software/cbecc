@@ -1,8 +1,8 @@
 // table.h - header file for CTable and CTableList class definitions
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -100,7 +100,7 @@ public:
 																				m_value = (double) iMsgID;		}
 	BEMTableCell( int iType, double fValue, const char* pszStr, int iCond=BEMC_Equal )
 																			{	set( iType, fValue, pszStr, iCond );		}
-//	~CBEMTableCell()													{	m_string.clear();		}
+//	~BEMTableCell()													{	}  // m_string.clear();		}
 
 	void init()															{	m_type = BEMTCT_Undefined;
 																				m_condition = BEMC_Equal;
@@ -216,12 +216,13 @@ public:
 								m_nParams = nParams;
 								m_nCols = nCols;			}
    ~BEMTable();
+   void clear();
 
 	QString	getName()								{	return m_name;	}
 //	void		setName( QString& str )				{	m_name = str;		}
 //	void		setName( const char* pszStr )		{	m_name = pszStr;		}
 
-	int		getColumnTitleCount()				{	return m_columnTitles.size();  }
+	int		getColumnTitleCount()				{	return (int) m_columnTitles.size();  }
 
 	int		getNParams()				{	return m_nParams;	}
 	int		getNCols()					{	return m_nCols;	}

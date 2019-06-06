@@ -146,6 +146,7 @@ class COSRunInfo
 		int			OSRunIdx()			{	return					m_iOSRunIdx;		}
 		int			CodeType()			{	return					m_iCodeType;		}
 		long			RptFuelUseAs()		{	return					m_lRptFuelUseAs;	}	// SAC 10/28/15
+		long			RunPeriodYear()	{	return					m_lRunPeriodYear;	}	// SAC 3/1/19
 		bool			SimOutVarsCSV()	{	return					m_bSimOutVarsCSV;	}	// SAC 4/12/16
 
 		int			NumQuickAnalysisPeriods()		{	return			(int) m_qaData.m_iNumQuickAnalysisPeriods;	}
@@ -180,6 +181,7 @@ class COSRunInfo
 		int		m_iBEMProcIdx;
 		int		m_iCodeType;
 		long		m_lRptFuelUseAs;		// SAC 10/28/15
+		long		m_lRunPeriodYear;		// SAC 3/1/19
 		bool		m_bSimOutVarsCSV;		// SAC 4/12/16
 };
 
@@ -192,7 +194,7 @@ extern int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo*
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
-															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0, bool bUseEPlusRunMgr=false );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 
 extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															QString& sErrMsg, const char* pszEPlusPath, const char* /*pszWthrPath*/, const char* pszSimProcessDir,
@@ -202,6 +204,7 @@ extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osR
                           							BOOL bDurationStats=FALSE, double* pdTranslationTime=NULL, double* pdSimulationTime=NULL,  // SAC 1/23/14
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
-															bool bIncludeOutputDiagnostics=false, int iProgressType=0 );	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															QStringList* psaEPlusProcDirsToBeRemoved=NULL );	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
 
 #endif  // _OPENSTUDIOINTERFACE_H

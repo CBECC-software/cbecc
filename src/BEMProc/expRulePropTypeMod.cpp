@@ -1,8 +1,8 @@
 // RulePropTypeMod.cpp - implementation of BEMPropTypeMod and BEMPropTypeModList classes
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -316,7 +316,7 @@ void RuleSet::addRulePropTypeMod( BEMPropTypeMod* pRulePropTypeMod )
 void RuleSet::addRulePropTypeMod( long lDBID, int iReportPrecision )
 {
    bool bFound = false;
-	int iCount = m_rulePropTypeMods.size();
+	int iCount = (int) m_rulePropTypeMods.size();
 	for (int i=0; (!bFound && i < iCount); i++)
 	{	if (m_rulePropTypeMods.at(i) && m_rulePropTypeMods.at(i)->m_dbid == lDBID)
 		{	m_rulePropTypeMods.at(i)->m_reportPrecision = iReportPrecision;
@@ -332,7 +332,7 @@ void RuleSet::addRulePropTypeMod( long lDBID, const char* pszPrevName )
 {
    bool bFound = false;
    QString sPrevName = pszPrevName;
-	int iCount = m_rulePropTypeMods.size();
+	int iCount = (int) m_rulePropTypeMods.size();
 	for (int i=0; (!bFound && i < iCount); i++)
 	{	if (m_rulePropTypeMods.at(i) && m_rulePropTypeMods.at(i)->m_dbid == lDBID)
 		{	if (!m_rulePropTypeMods.at(i)->m_previousNames.contains( sPrevName ))

@@ -784,7 +784,7 @@ int TrimBEMCondition( CString& str )    // returns index of condition present at
          iRetVal = iCond;
    }
 	if (iRetVal >= 0)
-	{	str = str.Right( str.GetLength() - strlen( pszConds[iRetVal] ) );
+	{	str = str.Right( str.GetLength() - (int) strlen( pszConds[iRetVal] ) );
 		str.TrimLeft();
 	}
    return iRetVal;
@@ -1237,11 +1237,11 @@ int CTextIO::ParseColumnarRecord( CStringArray& saFields, std::vector<int>& ia0C
 	saFields.RemoveAll();
    Advance();
 
-	if (pszTerminate && strlen(pszTerminate) > 0 && FoundInCurrentLine( pszTerminate, ia0ColBegins[0]+strlen(pszTerminate)+1 ))
+	if (pszTerminate && strlen(pszTerminate) > 0 && FoundInCurrentLine( pszTerminate, ia0ColBegins[0]+(int)strlen(pszTerminate)+1 ))
 	{	//return 0;
    }
 	else
-	{	int iNumFields = ia0ColBegins.size();
+	{	int iNumFields = (int) ia0ColBegins.size();
 		for (int i=0; i<iNumFields; i++)
 		{	CString string;
 			if ((int) strlen(m_buffer) > ia0ColBegins[i])

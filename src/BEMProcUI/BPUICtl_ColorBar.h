@@ -99,14 +99,14 @@ public:
 //   CPoint    GetViewportOrigin(CRect winRect, OLDRECT objRect);
    
 protected:
-   afx_msg LONG OnDisplayData(UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
 
    afx_msg void OnPaint();
 
    afx_msg void OnLButtonDown( UINT nFlags, CPoint point );
    afx_msg void OnLButtonUp(   UINT nFlags, CPoint point );
    afx_msg void OnMouseMove(   UINT nFlags, CPoint point );
-   afx_msg void OnTimer( UINT nIDEvent );
+   afx_msg void OnTimer( UINT_PTR nIDEvent );
    afx_msg void OnRButtonDown( UINT nFlags, CPoint point );  // SAC 12/9/02
 
 	virtual void PostNcDestroy();

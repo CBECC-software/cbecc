@@ -192,7 +192,7 @@ bool BEMObject::GetParentChildIndices( BEMObject* pChild, int& i0ChildIdx, int& 
 		i0ThisChildIdx++;
 		if (pObj && pObj == pChild)
 		{	i0ChildIdx    = i0ThisChildIdx;
-			iNumChildren = m_children.size();
+			iNumChildren = (int) m_children.size();
 			bRetVal = true;
 		}
 	}
@@ -284,7 +284,7 @@ bool BEMObject::CopyObject( BEMObject* pObj, int iBEMProcIdx /*=-1*/,
    //   DeleteProperties();
    //   // loop over all properties, creating new properties identical to object's ones
    //   m_properties.resize( pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
-      initProperties( pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
+      initProperties( (int) pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
       for (int iProp=0; (bRetVal && iProp < (int) pObj->m_properties.size()); iProp++)
       {
          BEMProperty* pProp = (BEMProperty*) &pObj->m_properties[iProp];
@@ -378,7 +378,7 @@ bool BEMObject::CopyObjectBetweenModels( BEMObject* pObj, int iThisBEMProcIdx, i
    //   DeleteProperties();
    //   // loop over all properties, creating new properties identical to object's ones
    //   m_properties.resize( pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
-      initProperties( pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
+      initProperties( (int) pObj->m_properties.size() );	// SAC 2/17/16 - size entire array once here
       for (int iProp=0; (bRetVal && iProp < (int) pObj->m_properties.size()); iProp++)
       {
          BEMProperty* pProp = (BEMProperty*) &pObj->m_properties[iProp];

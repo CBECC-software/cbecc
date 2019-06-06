@@ -34,14 +34,15 @@
 #include "stdafx.h"
 
 #include "OS_Wrap.h"
+#include "Windows.h"
 
 #pragma warning(disable : 4100 4127 4512)
 #include <model/Model.hpp>
 #include <model/WeatherFile.hpp>
 #include <model/Facility.hpp>
 #include <model/Facility_Impl.hpp>
-#include <model/Meter.hpp>
-#include <model/Meter_Impl.hpp>
+#include <model/OutputMeter.hpp>
+#include <model/OutputMeter_Impl.hpp>
 #include <model/RunPeriod.hpp>
 #include <model/RunPeriod_Impl.hpp>
 //#include <model/SimulationControl.hpp>
@@ -72,11 +73,11 @@
 #include <sdd/ReverseTranslator.hpp>
 #include <sdd/ForwardTranslator.hpp>
 
-#include <runmanager/lib/JobFactory.hpp>
-#include <runmanager/lib/RunManager.hpp>
-#include <runmanager/lib/Workflow.hpp>
-#include <runmanager/lib/ConfigOptions.hpp>
-//#include <runmanager/lib/RubyJobUtils.hpp>
+//#include <runmanager/lib/JobFactory.hpp>
+//#include <runmanager/lib/RunManager.hpp>
+//#include <runmanager/lib/Workflow.hpp>
+//#include <runmanager/lib/ConfigOptions.hpp>
+////#include <runmanager/lib/RubyJobUtils.hpp>
 
 //3-12 //#include <ruleset/UserScriptArgument.hpp>
 
@@ -312,21 +313,24 @@ std::string sMsg;
 sMsg = boost::str( boost::format("in OSWrapLib::EnergyPlusVersion() - checking EPlus version from: %s") % pszEPlusPath );
 //				co.findTools(false,false,false,false);
 
-				openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,
-																			openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path() );
-				iMajor = tools.getTool("energyplus").version.getMajor();
-				iMinor = tools.getTool("energyplus").version.getMinor();
+// SAC 2/19/19 - replacement??
+//				openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,
+//																			openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path() );
+//				iMajor = tools.getTool("energyplus").version.getMajor();
+//				iMinor = tools.getTool("energyplus").version.getMinor();
 		}	}
 		else
-		{	openstudio::runmanager::ConfigOptions co;
-//msgBox.setText("in OSWrapLib::EnergyPlusVersion() - About to call co.fastFindEnergyPlus()");		msgBox.exec();
-			co.fastFindEnergyPlus();
-//msgBox.setText("in OSWrapLib::EnergyPlusVersion() - Back from co.fastFindEnergyPlus()");		msgBox.exec();
-sMsg = "in OSWrapLib::EnergyPlusVersion() - checking EPlus version based on co.fastFindEnergyPlus()";
-
-			iMajor = co.getTools().getTool("energyplus").version.getMajor();
-//msgBox.setText("in OSWrapLib::EnergyPlusVersion() - Back from retrieving Major ver #");		msgBox.exec();
-			iMinor = co.getTools().getTool("energyplus").version.getMinor();
+		{
+// SAC 2/19/19 - replacement??
+//			openstudio::runmanager::ConfigOptions co;
+////msgBox.setText("in OSWrapLib::EnergyPlusVersion() - About to call co.fastFindEnergyPlus()");		msgBox.exec();
+//			co.fastFindEnergyPlus();
+////msgBox.setText("in OSWrapLib::EnergyPlusVersion() - Back from co.fastFindEnergyPlus()");		msgBox.exec();
+//sMsg = "in OSWrapLib::EnergyPlusVersion() - checking EPlus version based on co.fastFindEnergyPlus()";
+//
+//			iMajor = co.getTools().getTool("energyplus").version.getMajor();
+////msgBox.setText("in OSWrapLib::EnergyPlusVersion() - Back from retrieving Major ver #");		msgBox.exec();
+//			iMinor = co.getTools().getTool("energyplus").version.getMinor();
 		}
 
 		if (dRetVal == -1.0)
@@ -758,7 +762,7 @@ typedef struct
 bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, boost::optional<openstudio::model::Model> model, std::string sProcessingPath,
 										/*std::string sSDDXMLFile,*/ std::string sEPlusSubdir, const char* pszRunSubdir, char* pszSQLOutPathFile, int iMaxLenSQLOutPathFile,
 										double* pdResults, bool bStoreHourlyResults, bool bWriteHourlyDebugCSV, const char* pszIDFFile, bool bFirstRunOfGroup,
-										bool bLastRunOfGroup, QuickAnalysisRunPeriodInfo* pQSimRunPeriodInfo, double fResultMult, int iRptFuelUseAs, const char* pszEPlusPath )
+										bool bLastRunOfGroup, QuickAnalysisRunPeriodInfo* pQSimRunPeriodInfo, double fResultMult, int iRptFuelUseAs, const char* pszEPlusPath, double dEPlusVerNum )
 {	bool bRetVal = true;
 
 //         if (bSimulateModel && pOSWrap && iRunIdx >= 0 && iRunIdx < 2)
@@ -839,7 +843,10 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 				sEPlusOutputSQLPathFile += sEPlusSubdir;
 				sEPlusOutputSQLPathFile += "\\eplusout.sql";
 				openstudio::path pathEPlusOutputSQL = openstudio::toPath(sEPlusOutputSQLPathFile);
-				double dEPlusVer = (pOSWrap == NULL ? 0.0 : pOSWrap->EnergyPlusVersion( pszEPlusPath ));		OS_ASSERT( dEPlusVer > 0 );
+				double dEPlusVer = (dEPlusVerNum > 0 ? dEPlusVerNum : 0.0);		// SAC 3/1/19
+				if (dEPlusVer < 1 && pOSWrap)
+					dEPlusVer = pOSWrap->EnergyPlusVersion( pszEPlusPath );
+				OS_ASSERT( dEPlusVer > 0 );
 
 				if (!boost::filesystem::exists(pathEPlusOutputSQL))
 					lRetVal = (iRunIdx == 0 ? OSWrap_SimSDD_OSSimSQLOutNotFound : OSWrap_SimSDD_OSSimSQL2OutNotFound);  // did not find SQL output
@@ -982,8 +989,8 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 
 									std::string sFreq, sStatus, sEU, sFuel, sSpecEnduse;
 									//std::string sEU, sFuel, sFreq, sStatus;
-									openstudio::model::MeterVector meters = model->getModelObjects<openstudio::model::Meter>();
-									for(const openstudio::model::Meter& meter : meters)
+									openstudio::model::OutputMeterVector meters = model->getModelObjects<openstudio::model::OutputMeter>();
+									for(const openstudio::model::OutputMeter& meter : meters)
 									{
 										bool bSuccess = false;			sStatus = "unknown";
 										iEU = -1;	sEU.erase();		iFl = -1;	sFuel.erase();
@@ -1000,7 +1007,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										if (!euType)
 											sEU = "enduse uninitialized";
 										else
-										{	//std::string sEU = openstudio::model::Meter::EndUseType(*euType).valueName();
+										{	//std::string sEU = openstudio::model::OutputMeter::EndUseType(*euType).valueName();
 											     if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  0;  }  // sEU = "InteriorLights";          iEU =  6;  }
 											else if (*euType == openstudio::EndUseType::ExteriorLights         && sSpecEnduse.empty()                                                )   {  iEU =  1;  }  // sEU = "ExteriorLights";          iEU = 10;  }
 											else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.empty()                                                )   {  iEU =  2;  }  // sEU = "InteriorEquipment";       iEU =  7;  }
@@ -1036,7 +1043,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										if (!fType)
 											sFuel = "fuel uninitialized";
 										else
-										{	//std::string sFuel;  // = openstudio::model::Meter::FuelType(*fType).valueName();
+										{	//std::string sFuel;  // = openstudio::model::OutputMeter::FuelType(*fType).valueName();
 											     if (*fType == openstudio::FuelType::Electricity    )   {  iFl =  0;   sFuel = "Electricity";      }  
 											else if (*fType == openstudio::FuelType::Gas            )   {  iFl = (iRptFuelUseAs < 0 ? 1 : iRptFuelUseAs);   sFuel = "Gas";              }	// SAC 10/28/15 - iRptFuelUseAs
 											else if (*fType == openstudio::FuelType::Gasoline       )   {  iFl = (iRptFuelUseAs < 0 ? 2 : iRptFuelUseAs);   sFuel = "Gasoline";         }   
@@ -1061,7 +1068,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 											if (timeSeries)
 											{
 												openstudio::Vector values = timeSeries->values();
-												unsigned numValues = values.size();
+												unsigned numValues = (unsigned) values.size();
 												//ASSERT( numValues==0 || numValues==8760 );
 												if (numValues > 0 && (numValues + iYrHourOffset) <= 8760)		// numValues == 8760)
 												{
@@ -1360,7 +1367,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										{	boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sEnvPer, sHrly, sVarName, sObj );
 											if (timeSeries)
 											{	openstudio::Vector values = timeSeries->values();
-												unsigned numValues = values.size();
+												unsigned numValues = (unsigned) values.size();
 												for (unsigned i = 0; i < numValues; ++i)
 												{	if (values(i) > dPkVal)
 														dPkVal = values(i);
@@ -1390,7 +1397,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										{	boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sEnvPer, sHrly, sVarName, sObj );
 											if (timeSeries)
 											{	openstudio::Vector values = timeSeries->values();
-												unsigned numValues = values.size();
+												unsigned numValues = (unsigned) values.size();
 												for (unsigned i = 0; i < numValues; ++i)
 												{	if (values(i) > dPkVal)
 														dPkVal = values(i);
@@ -1420,7 +1427,7 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 										{	boost::optional<openstudio::TimeSeries> timeSeries = sqlFile.timeSeries( sEnvPer, sHrly, sVarName, sObj );
 											if (timeSeries)
 											{	openstudio::Vector values = timeSeries->values();
-												unsigned numValues = values.size();
+												unsigned numValues = (unsigned) values.size();
 												for (unsigned i = 0; i < numValues; ++i)
 												{	if (values(i) > dPkVal)
 														dPkVal = values(i);
@@ -1451,6 +1458,9 @@ bool ProcessSimulationResults( OSWrapLib* pOSWrap, long& lRetVal, int iRunIdx, b
 						}  // if pRunData is valid
 
 					}  // if facility is valid
+
+					sqlFile.close();		// SAC 4/28/19 - close file to ensure subsequent clean-up can delete it
+					//Sleep(500);				// SAC 4/29/19 - additional code to pause because close alone not releasing file in time in all cases
 				}
 //			}
 
@@ -1486,7 +1496,7 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 									   QuickAnalysisInfo* pQuickAnalysisInfo2 /*=NULL*/, int iProgressModel2 /*=0*/,	// SAC 11/6/14
 									// general data
 										OSWRAP_MSGCALLBACK* pMsgCallback /*=NULL*/, int iMsgCallbackType /*=0*/,
-										double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
+										double* pdTranslationTime /*=NULL*/, double* /*pdSimulationTime =NULL*/,  // SAC 1/23/14
 										char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/,  // SAC 1/30/14
 										bool bOutputDiagnostics /*=false*/, int iCodeType /*=0*/ )		// SAC 4/2/15
 {
@@ -1589,7 +1599,7 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 					try
 					{	model[iRun]->save(osmPath[iRun], true);
 
-						int iIDFBaseLastDot = inputPathString[iRun].rfind('.');
+						int iIDFBaseLastDot = (int) inputPathString[iRun].rfind('.');
 						std::string sIDFBasePath = (iIDFBaseLastDot > 0 ? inputPathString[iRun].substr( 0, iIDFBaseLastDot ) : sIDFBasePath = inputPathString[iRun] );
 
 
@@ -1911,111 +1921,112 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 
 			tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
 
-		// now have IDF -> proceed w/ workflow to simulate in E+
-			std::string rmDatabasePath = sProcessingPath + "runmanager.db";
-			openstudio::path rmDBPath = openstudio::toPath(rmDatabasePath);
-// ?? initialize UI ??
-			openstudio::runmanager::RunManager rm( rmDBPath, true /*t_new*/, true /*t_paused*/, false /*t_initializeui*/ ); // Create a RunManager with a new database file
-
-			openstudio::runmanager::ConfigOptions co;
-// removed when revising code to reference local EnergyPlus executable
-//			co.fastFindEnergyPlus();
-//	// check/debug
-//			openstudio::path epwdir = co.getDefaultEPWLocation();
-//			openstudio::path epdir = epwdir.parent_path();
-//			openstudio::path idfdir = co.getDefaultIDFLocation();
-//			boost::optional<int> iMjr = co.getTools().getTool("energyplus").version.getMajor();
-
-			openstudio::runmanager::Workflow wf;
-//			wf.add(co.getTools());   - must add job FIRST or get NULL ptr error
-			openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,   // energyPlusExePath().parent_path(), 
-																												openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path());
-																											//	t_energyplus, t_xmlpreproc, t_radiance,t_ruby,t_dakota);
-																	//inline openstudio::path energyPlusExePath()
-																	//  return openstudio::toPath("C:/EnergyPlusV7-0-0/EnergyPlus.exe");
-
-			wf.addJob(	openstudio::runmanager::JobType::EnergyPlus);
-			wf.add(tools);
-
-										if (pMsgCallback && !bAbort)
-											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Queing EnergyPlus jobs...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSim, (iProgressModel + iProgressModel2), 0 ) ) == -1);   // was:  3 /*action*/ ) == -1);
-
-			if (!bAbort)
-			{
-				openstudio::runmanager::Job jobs[24] = {	openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob() };
-				int iNumJobs=0;
-		// LOOP OVER ALL OF EPlus Sims (1-24)
-				for (int iESimIdx=0; (!bAbort && iESimIdx < iNumEPSims); iESimIdx++)
-					if (baSimulate[iESimIdx])
-					{
-						const char* pszIDFToSim = (iaRunIdx[iESimIdx]==0 ? pszIDFToSimulate : pszIDFToSimulate2);
-					// deal w/ PRE-DEFINED IDF files
-						if (pszIDFToSim && strlen( pszIDFToSim ) > 0 && boost::filesystem::exists(openstudio::toPath(pszIDFToSim)))
-						{	int iCITLastDot = sSDDXMLFile[iaRunIdx[iESimIdx]].rfind('.');
-							if (iCITLastDot > 0)
-							{	std::string sCopyIDFTo = sProcessingPath + sSDDXMLFile[iaRunIdx[iESimIdx]].substr( 0, iCITLastDot );
-								sCopyIDFTo += "-fxd.idf";
-								if (boost::filesystem::exists( sCopyIDFTo ))
-									boost::filesystem::remove(  sCopyIDFTo );
-								boost::filesystem::copy_file( pszIDFToSim, sCopyIDFTo );
-								if (boost::filesystem::exists( sCopyIDFTo ))
-								{	//bSimulatePredefinedIDF[0] = true;
-									idfPath[iESimIdx] = openstudio::toPath( sCopyIDFTo );
-//									osmPath[0] = openstudio::toPath( sCopyIDFTo );
-//									saEPlusSubdir[0] = "EnergyPlus";
-						}	}	}
-						// ?? OS_ASSERT( (!bHaveRun2 || bSimulatePredefinedIDF[0] == bSimulatePredefinedIDF[1]) );	// if this is not the case, then we may need to fiddle w/ the workflow/jobs...
-
-			//			openstudio::runmanager::Job job1 = wf.create( procPath/openstudio::toPath(pszRunSubdir) /*procPath*/, idfPath[0], wthrPathFile[0] /*"path/to/epws"*/ );
-			//			openstudio::runmanager::Job job2 = wf.create( procPath/openstudio::toPath( (bHaveRun2 ? pszRunSubdir2 : pszRunSubdir) ) /*procPath*/, (bHaveRun2 ? idfPath[1] : idfPath[0]),
-			//																												(bHaveRun2 ? wthrPathFile[1] : wthrPathFile[0]) /*"path/to/epws"*/ );
-			//			rm.enqueue(job1, true /*force? */ );
-			//			if (bHaveRun2)
-			//				rm.enqueue(job2, true /*force? */ );
-
-						jobs[iNumJobs] = wf.create( procPath/openstudio::toPath( saRunSubdir[iESimIdx] ) /*procPath*/, idfPath[iESimIdx], wthrPathFile[iaRunIdx[iESimIdx]] /*"path/to/epws"*/ );
-						rm.enqueue(jobs[iNumJobs], true /*force? */ );
-						iNumJobs++;
-					}
-
-// SAC 9/5/14 - experiment w/ tracking simulation status
-//	openstudio::runmanager::RunManagerWatcher rmWatch( rm );
-//	spRunMgrWatcher = &rmWatch;
-//	suuidRunMgrJobs[0] = job1.uuid();
-//	suuidRunMgrJobs[1] = (bHaveRun2 ? job2.uuid() : 0);
-//	suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
-
-				rm.setPaused(false);
-				rm.waitForFinished(); // Block until the runamanger has completed running all jobs
-
-// SAC 9/5/14 - experiment w/ tracking simulation status
-//	suuidRunMgrJobs[0] = suuidRunMgrJobs[1] = suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
-//	spRunMgrWatcher = NULL;
-
-//QMessageBox msgBox;
-//msgBox.setText("Back from performing simulation(s) (following waitForFinished())");		msgBox.exec();
-										if (pMsgCallback && !bAbort)
-											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Back from ModelToIdf & E+, storing results...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSimRes, (iProgressModel + iProgressModel2), 0 ) ) == -1);   // was:  4 /*action*/ ) == -1);
-
-				if (pdSimulationTime)  // SAC 1/23/14
-				{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
-					*pdSimulationTime = ((double) td.total_microseconds()) / 1000000.0;
-				}
-
-				for (int ij=0; ij < iNumJobs; ij++)
-				{	openstudio::runmanager::JobErrors treeErrors = jobs[ij].treeErrors(); // represents the state of the job tree
-					if (!treeErrors.succeeded())
-					{
-						// something went wrong, look at treeErrors.errors(), treeErrors.warnings(), job.allOutputFiles().getAllByFilename("stderr")
-						// for more info
-				}	}
-		}	}
-
+// SAC 2/19/19
+//		// now have IDF -> proceed w/ workflow to simulate in E+
+//			std::string rmDatabasePath = sProcessingPath + "runmanager.db";
+//			openstudio::path rmDBPath = openstudio::toPath(rmDatabasePath);
+//// ?? initialize UI ??
+//			openstudio::runmanager::RunManager rm( rmDBPath, true /*t_new*/, true /*t_paused*/, false /*t_initializeui*/ ); // Create a RunManager with a new database file
+//
+//			openstudio::runmanager::ConfigOptions co;
+//// removed when revising code to reference local EnergyPlus executable
+////			co.fastFindEnergyPlus();
+////	// check/debug
+////			openstudio::path epwdir = co.getDefaultEPWLocation();
+////			openstudio::path epdir = epwdir.parent_path();
+////			openstudio::path idfdir = co.getDefaultIDFLocation();
+////			boost::optional<int> iMjr = co.getTools().getTool("energyplus").version.getMajor();
+//
+//			openstudio::runmanager::Workflow wf;
+////			wf.add(co.getTools());   - must add job FIRST or get NULL ptr error
+//			openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,   // energyPlusExePath().parent_path(), 
+//																												openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path());
+//																											//	t_energyplus, t_xmlpreproc, t_radiance,t_ruby,t_dakota);
+//																	//inline openstudio::path energyPlusExePath()
+//																	//  return openstudio::toPath("C:/EnergyPlusV7-0-0/EnergyPlus.exe");
+//
+//			wf.addJob(	openstudio::runmanager::JobType::EnergyPlus);
+//			wf.add(tools);
+//
+//										if (pMsgCallback && !bAbort)
+//											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Queing EnergyPlus jobs...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSim, (iProgressModel + iProgressModel2), 0 ) ) == -1);   // was:  3 /*action*/ ) == -1);
+//
+//			if (!bAbort)
+//			{
+//				openstudio::runmanager::Job jobs[24] = {	openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob() };
+//				int iNumJobs=0;
+//		// LOOP OVER ALL OF EPlus Sims (1-24)
+//				for (int iESimIdx=0; (!bAbort && iESimIdx < iNumEPSims); iESimIdx++)
+//					if (baSimulate[iESimIdx])
+//					{
+//						const char* pszIDFToSim = (iaRunIdx[iESimIdx]==0 ? pszIDFToSimulate : pszIDFToSimulate2);
+//					// deal w/ PRE-DEFINED IDF files
+//						if (pszIDFToSim && strlen( pszIDFToSim ) > 0 && boost::filesystem::exists(openstudio::toPath(pszIDFToSim)))
+//						{	int iCITLastDot = sSDDXMLFile[iaRunIdx[iESimIdx]].rfind('.');
+//							if (iCITLastDot > 0)
+//							{	std::string sCopyIDFTo = sProcessingPath + sSDDXMLFile[iaRunIdx[iESimIdx]].substr( 0, iCITLastDot );
+//								sCopyIDFTo += "-fxd.idf";
+//								if (boost::filesystem::exists( sCopyIDFTo ))
+//									boost::filesystem::remove(  sCopyIDFTo );
+//								boost::filesystem::copy_file( pszIDFToSim, sCopyIDFTo );
+//								if (boost::filesystem::exists( sCopyIDFTo ))
+//								{	//bSimulatePredefinedIDF[0] = true;
+//									idfPath[iESimIdx] = openstudio::toPath( sCopyIDFTo );
+////									osmPath[0] = openstudio::toPath( sCopyIDFTo );
+////									saEPlusSubdir[0] = "EnergyPlus";
+//						}	}	}
+//						// ?? OS_ASSERT( (!bHaveRun2 || bSimulatePredefinedIDF[0] == bSimulatePredefinedIDF[1]) );	// if this is not the case, then we may need to fiddle w/ the workflow/jobs...
+//
+//			//			openstudio::runmanager::Job job1 = wf.create( procPath/openstudio::toPath(pszRunSubdir) /*procPath*/, idfPath[0], wthrPathFile[0] /*"path/to/epws"*/ );
+//			//			openstudio::runmanager::Job job2 = wf.create( procPath/openstudio::toPath( (bHaveRun2 ? pszRunSubdir2 : pszRunSubdir) ) /*procPath*/, (bHaveRun2 ? idfPath[1] : idfPath[0]),
+//			//																												(bHaveRun2 ? wthrPathFile[1] : wthrPathFile[0]) /*"path/to/epws"*/ );
+//			//			rm.enqueue(job1, true /*force? */ );
+//			//			if (bHaveRun2)
+//			//				rm.enqueue(job2, true /*force? */ );
+//
+//						jobs[iNumJobs] = wf.create( procPath/openstudio::toPath( saRunSubdir[iESimIdx] ) /*procPath*/, idfPath[iESimIdx], wthrPathFile[iaRunIdx[iESimIdx]] /*"path/to/epws"*/ );
+//						rm.enqueue(jobs[iNumJobs], true /*force? */ );
+//						iNumJobs++;
+//					}
+//
+//// SAC 9/5/14 - experiment w/ tracking simulation status
+////	openstudio::runmanager::RunManagerWatcher rmWatch( rm );
+////	spRunMgrWatcher = &rmWatch;
+////	suuidRunMgrJobs[0] = job1.uuid();
+////	suuidRunMgrJobs[1] = (bHaveRun2 ? job2.uuid() : 0);
+////	suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
+//
+//				rm.setPaused(false);
+//				rm.waitForFinished(); // Block until the runamanger has completed running all jobs
+//
+//// SAC 9/5/14 - experiment w/ tracking simulation status
+////	suuidRunMgrJobs[0] = suuidRunMgrJobs[1] = suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
+////	spRunMgrWatcher = NULL;
+//
+////QMessageBox msgBox;
+////msgBox.setText("Back from performing simulation(s) (following waitForFinished())");		msgBox.exec();
+//										if (pMsgCallback && !bAbort)
+//											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Back from ModelToIdf & E+, storing results...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSimRes, (iProgressModel + iProgressModel2), 0 ) ) == -1);   // was:  4 /*action*/ ) == -1);
+//
+//				if (pdSimulationTime)  // SAC 1/23/14
+//				{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
+//					*pdSimulationTime = ((double) td.total_microseconds()) / 1000000.0;
+//				}
+//
+//				for (int ij=0; ij < iNumJobs; ij++)
+//				{	openstudio::runmanager::JobErrors treeErrors = jobs[ij].treeErrors(); // represents the state of the job tree
+//					if (!treeErrors.succeeded())
+//					{
+//						// something went wrong, look at treeErrors.errors(), treeErrors.warnings(), job.allOutputFiles().getAllByFilename("stderr")
+//						// for more info
+//				}	}
+//			}
+		}
 
 
 //		int iNumEPSims = 0;
@@ -2096,7 +2107,7 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 														saRunSubdir[iESimIdx].c_str(), (iaRunIdx[iESimIdx]==0 ? pszSQLOutPathFile : pszSQLOutPathFile2), (iaRunIdx[iESimIdx]==0 ? iMaxLenSQLOutPathFile : iMaxLenSQLOutPathFile2),
 														(iaRunIdx[iESimIdx]==0 ? pdResults : pdResults2), (iaRunIdx[iESimIdx]==0 ? bStoreHourlyResults : bStoreHourlyResults2),
 														(iaRunIdx[iESimIdx]==0 ? bWriteHourlyDebugCSV : bWriteHourlyDebugCSV2), openstudio::toString(idfPath[iESimIdx]).c_str(),
-														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], faResultMult[iESimIdx], -1 /*iRptFuelUseAs*/, pszEPlusPath );			OS_ASSERT( bProcResultsOK );
+														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], faResultMult[iESimIdx], -1 /*iRptFuelUseAs*/, pszEPlusPath, -1 );			OS_ASSERT( bProcResultsOK );
 					}
 				}
 		}
@@ -2195,16 +2206,22 @@ long OSWrapLib::SimulateSDD(	const char* pszEPlusPath, const char* pszProcessing
 }
 
 
+
+
 #define  MultSim_MaxSims  10		// corresponding define in BEMCmpMgr/OpenStudioInterface.cpp
 static const char* pszRunNums[] = {	"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", NULL };
+static boost::optional<openstudio::model::Model> model[MultSim_MaxSims];
+static openstudio::path idfPath[24];
+static QuickAnalysisRunPeriodInfo* pqsRunPeriodInfo[24] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+static QuickAnalysisRunPeriodInfo qsRunPeriodInfo[OSW_MaxNumSims];
 
 // return values:  0 => SUCCESS
 //                >0 => user abort or error - refer to #defines listed in OS_Wrap.h
 long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszProcessingPath,
 								OSWrap_SimInfo** paSDDSimInfo, int iNumSDDSimInfo,
 								OSWRAP_MSGCALLBACK* pMsgCallback /*=NULL*/, int iMsgCallbackType /*=0*/, double* pdTranslationTime /*=NULL*/,
-								double* pdSimulationTime /*=NULL*/, char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/,
-								bool bOutputDiagnostics /*=false*/, int iCodeType /*=0*/ )		// SAC 7/19/15
+								double* /*pdSimulationTime =NULL*/, char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/,
+								bool bOutputDiagnostics /*=false*/, int iCodeType /*=0*/, bool bSimViaRunMgr /*=true*/ )		// SAC 7/19/15   // SAC 2/15/19
 {
 
 //				pszEPlusPath;
@@ -2307,24 +2324,30 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 	if (lRetVal == 0)
 	{
 		boost::posix_time::ptime	tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
-		boost::optional<openstudio::model::Model> model[MultSim_MaxSims];
+//		boost::optional<openstudio::model::Model> model[MultSim_MaxSims];
 
 		openstudio::path osmPath[MultSim_MaxSims];
 
 	// expanded arrays to handle QuickAnalysis runs
-		int iNumEPSims = 0, iNumSimsToExecute = 0;
-		openstudio::path idfPath[24];
-		int iaRunIdx[24]       = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		bool baFirstQSRun[24]  = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
-		bool baLastQSRun[24]   = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
+		m_iNumEPSims = 0; 
+		int iNumSimsToExecute = 0;
+//		openstudio::path idfPath[24];
+//		int iaRunIdx[24]       = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+//		bool baFirstQSRun[24]  = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
+//		bool baLastQSRun[24]   = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
 		//int iaYrHourOffset[24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		double faResultMult[24] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+//		double faResultMult[24] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 		bool baSimulate[24]    = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
-		std::string saRunSubdir[24];
-		std::string sEPlusSubdir = "EnergyPlus";		// std::string saEPlusSubdir[24];  // = { "EnergyPlus", "EnergyPlus" };
+//		std::string saRunSubdir[24];
+//		std::string sEPlusSubdir = "EnergyPlus";		// std::string saEPlusSubdir[24];  // = { "EnergyPlus", "EnergyPlus" };
+		for (iRun=0; iRun<24; iRun++)
+		{	pRunData[iRun]->iRunIdx = 0;
+			pRunData[iRun]->fResultMult = 1;
+			pqsRunPeriodInfo[iRun] = NULL;
+		}
 
-		QuickAnalysisRunPeriodInfo* pqsRunPeriodInfo[24] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-		QuickAnalysisRunPeriodInfo qsRunPeriodInfo[OSW_MaxNumSims];
+//		QuickAnalysisRunPeriodInfo* pqsRunPeriodInfo[24] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+//		QuickAnalysisRunPeriodInfo qsRunPeriodInfo[OSW_MaxNumSims];
 				for (int iQSRI=0; iQSRI < OSW_MaxNumSims; iQSRI++)
 					qsRunPeriodInfo[iQSRI].m_iNumQuickAnalysisPeriods = 0;
 
@@ -2364,7 +2387,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 					try
 					{	model[iRun]->save(osmPath[iRun], true);
 
-						int iIDFBaseLastDot = inputPathString[iRun].rfind('.');
+						int iIDFBaseLastDot = (int) inputPathString[iRun].rfind('.');
 						std::string sIDFBasePath = (iIDFBaseLastDot > 0 ? inputPathString[iRun].substr( 0, iIDFBaseLastDot ) : inputPathString[iRun] );
 
 										if (pMsgCallback)
@@ -2387,21 +2410,21 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 
 				//		EXPECT_EQ(0u, forwardTranslator.errors().size());
 				//		EXPECT_EQ(1u,workspace.getObjectsByType(IddObjectType::Version).size());
-						idfPath[     iNumEPSims] = openstudio::toPath( boost::str( boost::format("%s.idf") % sIDFBasePath ) );
-						saRunSubdir[ iNumEPSims] = paSDDSimInfo[iRun]->pszRunSubdir;
-						iaRunIdx[    iNumEPSims] = iRun;
-						baSimulate[ iNumEPSims] = (paSDDSimInfo[iRun]->bSimulateModel);
-						if (baSimulate[iNumEPSims])
+						idfPath[     m_iNumEPSims] = openstudio::toPath( boost::str( boost::format("%s.idf") % sIDFBasePath ) );
+						pRunData[m_iNumEPSims]->sRunSubdir = paSDDSimInfo[iRun]->pszRunSubdir;
+						pRunData[m_iNumEPSims]->iRunIdx = iRun;
+						baSimulate[ m_iNumEPSims] = (paSDDSimInfo[iRun]->bSimulateModel);
+						if (baSimulate[m_iNumEPSims])
 							iNumSimsToExecute++;
-						if (baSimulate[iNumEPSims])
-							openstudio::removeDirectory(procPath/openstudio::toPath( saRunSubdir[iNumEPSims] ));
-						pqsRunPeriodInfo[iNumEPSims] = &qsRunPeriodInfo[iRun];
+						if (baSimulate[m_iNumEPSims])
+							openstudio::removeDirectory(procPath/openstudio::toPath( pRunData[m_iNumEPSims]->sRunSubdir ));
+						pqsRunPeriodInfo[m_iNumEPSims] = &qsRunPeriodInfo[iRun];
 
 						bool bInstallQSimRunPeriod = (paSDDSimInfo[iRun]->bStoreHourlyResults && pQSim && pQSim->m_iNumQuickAnalysisPeriods > 0 &&
 																(paSDDSimInfo[iRun]->pszIDFToSimulate==NULL || strlen( paSDDSimInfo[iRun]->pszIDFToSimulate )<1) );
 						if (bInstallQSimRunPeriod)
 						{
-							faResultMult[iNumEPSims] = pQSim->m_fQuickAnalysisResultsMult;
+							pRunData[m_iNumEPSims]->fResultMult = pQSim->m_fQuickAnalysisResultsMult;
 
 			// REMOVE any existing Run Periods (should always be just one)
 							std::vector<openstudio::WorkspaceObject> runPeriods = workspace.getObjectsByType(openstudio::IddObjectType::RunPeriod);
@@ -2418,26 +2441,50 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 			// SET RUN PERIOD
 								boost::optional<openstudio::WorkspaceObject> runPeriod = workspace.addObject(openstudio::IdfObject(openstudio::IddObjectType::RunPeriod));
 								OS_ASSERT(runPeriod);
-								runPeriod->setString( 0, qsRunPeriodInfo[iRun].m_sRunPeriodName[iRP] );
-								runPeriod->setInt(    1, pQSim->m_iQuickAnalysisPeriodBeginMonth[iRP] );
-								runPeriod->setInt(    2, pQSim->m_iQuickAnalysisPeriodBeginDay[  iRP] );
-								runPeriod->setInt(    3, pQSim->m_iQuickAnalysisPeriodEndMonth[  iRP] );
-								runPeriod->setInt(    4, pQSim->m_iQuickAnalysisPeriodEndDay[    iRP] );
+								int iRPField=0;
+								runPeriod->setString( iRPField++, qsRunPeriodInfo[iRun].m_sRunPeriodName[iRP] );
+								runPeriod->setInt(    iRPField++, pQSim->m_iQuickAnalysisPeriodBeginMonth[iRP] );
+								runPeriod->setInt(    iRPField++, pQSim->m_iQuickAnalysisPeriodBeginDay[  iRP] );
+					runPeriod->setInt(    iRPField++, paSDDSimInfo[iRun]->lRunPeriodYear );		// EPlus 9.0.1 - Begin Year
+								runPeriod->setInt(    iRPField++, pQSim->m_iQuickAnalysisPeriodEndMonth[  iRP] );
+								runPeriod->setInt(    iRPField++, pQSim->m_iQuickAnalysisPeriodEndDay[    iRP] );
+					runPeriod->setInt(    iRPField++, paSDDSimInfo[iRun]->lRunPeriodYear );		// EPlus 9.0.1 - End Year
 								switch (pQSim->m_iQuickAnalysisPeriodBeginDOWk[iRP])
-								{	case  2 :	runPeriod->setString( 5, "Monday"    );	break;
-									case  3 :	runPeriod->setString( 5, "Tuesday"   );	break;
-									case  4 :	runPeriod->setString( 5, "Wednesday" );	break;
-									case  5 :	runPeriod->setString( 5, "Thursday"  );	break;
-									case  6 :	runPeriod->setString( 5, "Friday"    );	break;
-									case  7 :	runPeriod->setString( 5, "Saturday"  );	break;
-									default :	runPeriod->setString( 5, "Sunday"    );	break;
+								{	case  2 :	runPeriod->setString( iRPField++, "Monday"    );	break;
+									case  3 :	runPeriod->setString( iRPField++, "Tuesday"   );	break;
+									case  4 :	runPeriod->setString( iRPField++, "Wednesday" );	break;
+									case  5 :	runPeriod->setString( iRPField++, "Thursday"  );	break;
+									case  6 :	runPeriod->setString( iRPField++, "Friday"    );	break;
+									case  7 :	runPeriod->setString( iRPField++, "Saturday"  );	break;
+									default :	runPeriod->setString( iRPField++, "Sunday"    );	break;
 								}
-								runPeriod->setString(  6, "No"  );		// !- Use Weather File Holidays and Special Days
-								runPeriod->setString(  7, "No"  );		// !- Use Weather File Daylight Saving Period
-								runPeriod->setString(  8, "Yes" );		// !- Apply Weekend Holiday Rule
-								runPeriod->setString(  9, "Yes" );		// !- Use Weather File Rain Indicators
-								runPeriod->setString( 10, "Yes" );		// !- Use Weather File Snow Indicators
-								runPeriod->setInt(    11,  1    );		// !- Number of Times Runperiod to be Repeated
+								runPeriod->setString( iRPField++, "No"  );		// !- Use Weather File Holidays and Special Days
+								runPeriod->setString( iRPField++, "No"  );		// !- Use Weather File Daylight Saving Period
+								runPeriod->setString( iRPField++, "Yes" );		// !- Apply Weekend Holiday Rule
+								runPeriod->setString( iRPField++, "Yes" );		// !- Use Weather File Rain Indicators
+								runPeriod->setString( iRPField++, "Yes" );		// !- Use Weather File Snow Indicators
+					runPeriod->setString( iRPField++, "No"  );		// !- Treat Weather as Actual				// EPlus 9.0.1
+					//			runPeriod->setInt(    iRPField++,  1    );		// !- Number of Times Runperiod to be Repeated
+			// OLD EPlus
+			//					runPeriod->setInt(    1, pQSim->m_iQuickAnalysisPeriodBeginMonth[iRP] );
+			//					runPeriod->setInt(    2, pQSim->m_iQuickAnalysisPeriodBeginDay[  iRP] );
+			//					runPeriod->setInt(    3, pQSim->m_iQuickAnalysisPeriodEndMonth[  iRP] );
+			//					runPeriod->setInt(    4, pQSim->m_iQuickAnalysisPeriodEndDay[    iRP] );
+			//					switch (pQSim->m_iQuickAnalysisPeriodBeginDOWk[iRP])
+			//					{	case  2 :	runPeriod->setString( 5, "Monday"    );	break;
+			//						case  3 :	runPeriod->setString( 5, "Tuesday"   );	break;
+			//						case  4 :	runPeriod->setString( 5, "Wednesday" );	break;
+			//						case  5 :	runPeriod->setString( 5, "Thursday"  );	break;
+			//						case  6 :	runPeriod->setString( 5, "Friday"    );	break;
+			//						case  7 :	runPeriod->setString( 5, "Saturday"  );	break;
+			//						default :	runPeriod->setString( 5, "Sunday"    );	break;
+			//					}
+			//					runPeriod->setString(  6, "No"  );		// !- Use Weather File Holidays and Special Days
+			//					runPeriod->setString(  7, "No"  );		// !- Use Weather File Daylight Saving Period
+			//					runPeriod->setString(  8, "Yes" );		// !- Apply Weekend Holiday Rule
+			//					runPeriod->setString(  9, "Yes" );		// !- Use Weather File Rain Indicators
+			//					runPeriod->setString( 10, "Yes" );		// !- Use Weather File Snow Indicators
+			//					runPeriod->setInt(    11,  1    );		// !- Number of Times Runperiod to be Repeated
 						}	}
 
 // SAC 9/30/15 - from OpenStudio code - a work around for E+ v8.3 bug to ensure hourly results output for all defined Meters
@@ -2557,7 +2604,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 										}
 
 						try
-						{	workspace.save( idfPath[iNumEPSims], true /*overwrite*/ );
+						{	workspace.save( idfPath[m_iNumEPSims], true /*overwrite*/ );
 						}
 						catch (std::exception& e)
 						{	strErrMsg = boost::str( boost::format("openstudio::Workspace::save() failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
@@ -2569,7 +2616,7 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 							lRetVal = OSWrap_SimSDD_OSSaveIDFError + (iRun * 10);
 							paSDDSimInfo[iRun]->iSimReturnValue = OSWrap_SimSDD_OSSaveIDFError;
 						}
-						iNumEPSims++;
+						m_iNumEPSims++;
 					}
 					catch (std::exception& e)
 					{	strErrMsg = boost::str( boost::format("openstudio::model::Model::save() failed%sbecause '%s' on file:  %s" ) % sRunName % e.what() % inputPathString );
@@ -2603,141 +2650,188 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 			*pdTranslationTime = ((double) td.total_microseconds()) / 1000000.0;
 		}
 
-		if(iNumSimsToExecute > 0 && !bAbort && lRetVal < 1)
+		if (iNumSimsToExecute > 0 && !bAbort && lRetVal < 1 && bSimViaRunMgr)	// SAC 2/15/19
 		{
-			tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
+			lRetVal = OSWrap_SimSDD_InvalidSimData + (iRun * 10);		// SAC 2/19/19 - Invalid simulation input data
+// SAC 2/19/19 - sims via openstudio::runmanager no longer an option
+//			tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
+//
+//		// now have IDF -> proceed w/ workflow to simulate in E+
+//			std::string rmDatabasePath = sProcessingPath + "runmanager.db";
+//			openstudio::path rmDBPath = openstudio::toPath(rmDatabasePath);
+//// ?? initialize UI ??
+//			openstudio::runmanager::RunManager rm( rmDBPath, true /*t_new*/, true /*t_paused*/, false /*t_initializeui*/ ); // Create a RunManager with a new database file
+//
+//			openstudio::runmanager::ConfigOptions co;
+//
+//			openstudio::runmanager::Workflow wf;
+////			wf.add(co.getTools());   - must add job FIRST or get NULL ptr error
+//			openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,   // energyPlusExePath().parent_path(), 
+//																												openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path());
+//																											//	t_energyplus, t_xmlpreproc, t_radiance,t_ruby,t_dakota);
+//																	//inline openstudio::path energyPlusExePath()
+//																	//  return openstudio::toPath("C:/EnergyPlusV7-0-0/EnergyPlus.exe");
+//
+//			wf.addJob(	openstudio::runmanager::JobType::EnergyPlus);
+//			wf.add(tools);
+//
+//										if (pMsgCallback && !bAbort)
+//											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Queing EnergyPlus jobs...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSim, iProgressModelSum, 0 ) ) == -1);   // was:  3 /*action*/ ) == -1);
+//
+//			if (!bAbort)
+//			{
+//				openstudio::runmanager::Job jobs[24] = {	openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
+//																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob() };
+//				int iNumJobs=0;
+//		// LOOP OVER ALL OF EPlus Sims (1-24)
+//				for (int iESimIdx=0; (!bAbort && iESimIdx < m_iNumEPSims); iESimIdx++)
+//					if (baSimulate[iESimIdx])
+//					{
+//						const char* pszIDFToSim = paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pszIDFToSimulate;
+//					// deal w/ PRE-DEFINED IDF files
+//						if (pszIDFToSim && strlen( pszIDFToSim ) > 0 && boost::filesystem::exists(openstudio::toPath(pszIDFToSim)))
+//						{	int iCITLastDot = sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].rfind('.');
+//							if (iCITLastDot > 0)
+//							{	std::string sCopyIDFTo = sProcessingPath + sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].substr( 0, iCITLastDot );
+//								sCopyIDFTo += "-fxd.idf";
+//								if (boost::filesystem::exists( sCopyIDFTo ))
+//									boost::filesystem::remove(  sCopyIDFTo );
+//								boost::filesystem::copy_file( pszIDFToSim, sCopyIDFTo );
+//								if (boost::filesystem::exists( sCopyIDFTo ))
+//								{	//bSimulatePredefinedIDF[0] = true;
+//									idfPath[iESimIdx] = openstudio::toPath( sCopyIDFTo );
+////									osmPath[0] = openstudio::toPath( sCopyIDFTo );
+////									saEPlusSubdir[0] = "EnergyPlus";
+//						}	}	}
+//						// ?? OS_ASSERT( (!bHaveRun2 || bSimulatePredefinedIDF[0] == bSimulatePredefinedIDF[1]) );	// if this is not the case, then we may need to fiddle w/ the workflow/jobs...
+//
+//			//			openstudio::runmanager::Job job1 = wf.create( procPath/openstudio::toPath(pszRunSubdir) /*procPath*/, idfPath[0], wthrPathFile[0] /*"path/to/epws"*/ );
+//			//			openstudio::runmanager::Job job2 = wf.create( procPath/openstudio::toPath( (bHaveRun2 ? pszRunSubdir2 : pszRunSubdir) ) /*procPath*/, (bHaveRun2 ? idfPath[1] : idfPath[0]),
+//			//																												(bHaveRun2 ? wthrPathFile[1] : wthrPathFile[0]) /*"path/to/epws"*/ );
+//			//			rm.enqueue(job1, true /*force? */ );
+//			//			if (bHaveRun2)
+//			//				rm.enqueue(job2, true /*force? */ );
+//
+//						jobs[iNumJobs] = wf.create( procPath/openstudio::toPath( pRunData[iESimIdx]->sRunSubdir ) /*procPath*/, idfPath[iESimIdx], wthrPathFile[pRunData[iESimIdx]->iRunIdx] /*"path/to/epws"*/ );
+//						rm.enqueue(jobs[iNumJobs], true /*force? */ );
+//						iNumJobs++;
+//					}
+//
+//// SAC 9/5/14 - experiment w/ tracking simulation status
+////	openstudio::runmanager::RunManagerWatcher rmWatch( rm );
+////	spRunMgrWatcher = &rmWatch;
+////	suuidRunMgrJobs[0] = job1.uuid();
+////	suuidRunMgrJobs[1] = (bHaveRun2 ? job2.uuid() : 0);
+////	suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
+//
+//				rm.setPaused(false);
+//				rm.waitForFinished(); // Block until the runamanger has completed running all jobs
+//
+//// SAC 9/5/14 - experiment w/ tracking simulation status
+////	suuidRunMgrJobs[0] = suuidRunMgrJobs[1] = suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
+////	spRunMgrWatcher = NULL;
+//
+////QMessageBox msgBox;
+////msgBox.setText("Back from performing simulation(s) (following waitForFinished())");		msgBox.exec();
+//										if (pMsgCallback && !bAbort)
+//											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Back from ModelToIdf & E+, storing results...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSimRes, iProgressModelSum, 0 ) ) == -1);   // was:  4 /*action*/ ) == -1);
+//
+//				if (pdSimulationTime)  // SAC 1/23/14
+//				{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
+//					*pdSimulationTime = ((double) td.total_microseconds()) / 1000000.0;
+//				}
+//
+//				for (int ij=0; ij < iNumJobs; ij++)
+//				{	openstudio::runmanager::JobErrors treeErrors = jobs[ij].treeErrors(); // represents the state of the job tree
+//					if (!treeErrors.succeeded())
+//					{
+//						// something went wrong, look at treeErrors.errors(), treeErrors.warnings(), job.allOutputFiles().getAllByFilename("stderr")
+//						// for more info
+//				}	}
+//			}
+		}
+	}
 
-		// now have IDF -> proceed w/ workflow to simulate in E+
-			std::string rmDatabasePath = sProcessingPath + "runmanager.db";
-			openstudio::path rmDBPath = openstudio::toPath(rmDatabasePath);
-// ?? initialize UI ??
-			openstudio::runmanager::RunManager rm( rmDBPath, true /*t_new*/, true /*t_paused*/, false /*t_initializeui*/ ); // Create a RunManager with a new database file
-
-			openstudio::runmanager::ConfigOptions co;
-
-			openstudio::runmanager::Workflow wf;
-//			wf.add(co.getTools());   - must add job FIRST or get NULL ptr error
-			openstudio::runmanager::Tools tools = openstudio::runmanager::ConfigOptions::makeTools( epdir,   // energyPlusExePath().parent_path(), 
-																												openstudio::path(), openstudio::path(), openstudio::path(), openstudio::path());
-																											//	t_energyplus, t_xmlpreproc, t_radiance,t_ruby,t_dakota);
-																	//inline openstudio::path energyPlusExePath()
-																	//  return openstudio::toPath("C:/EnergyPlusV7-0-0/EnergyPlus.exe");
-
-			wf.addJob(	openstudio::runmanager::JobType::EnergyPlus);
-			wf.add(tools);
-
-										if (pMsgCallback && !bAbort)
-											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Queing EnergyPlus jobs...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSim, iProgressModelSum, 0 ) ) == -1);   // was:  3 /*action*/ ) == -1);
-
-			if (!bAbort)
-			{
-				openstudio::runmanager::Job jobs[24] = {	openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(),
-																		openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob(), openstudio::runmanager::JobFactory::createNullJob() };
-				int iNumJobs=0;
-		// LOOP OVER ALL OF EPlus Sims (1-24)
-				for (int iESimIdx=0; (!bAbort && iESimIdx < iNumEPSims); iESimIdx++)
-					if (baSimulate[iESimIdx])
-					{
-						const char* pszIDFToSim = paSDDSimInfo[iaRunIdx[iESimIdx]]->pszIDFToSimulate;
-					// deal w/ PRE-DEFINED IDF files
-						if (pszIDFToSim && strlen( pszIDFToSim ) > 0 && boost::filesystem::exists(openstudio::toPath(pszIDFToSim)))
-						{	int iCITLastDot = sSDDXMLFile[iaRunIdx[iESimIdx]].rfind('.');
-							if (iCITLastDot > 0)
-							{	std::string sCopyIDFTo = sProcessingPath + sSDDXMLFile[iaRunIdx[iESimIdx]].substr( 0, iCITLastDot );
-								sCopyIDFTo += "-fxd.idf";
-								if (boost::filesystem::exists( sCopyIDFTo ))
-									boost::filesystem::remove(  sCopyIDFTo );
-								boost::filesystem::copy_file( pszIDFToSim, sCopyIDFTo );
-								if (boost::filesystem::exists( sCopyIDFTo ))
-								{	//bSimulatePredefinedIDF[0] = true;
-									idfPath[iESimIdx] = openstudio::toPath( sCopyIDFTo );
-//									osmPath[0] = openstudio::toPath( sCopyIDFTo );
-//									saEPlusSubdir[0] = "EnergyPlus";
-						}	}	}
-						// ?? OS_ASSERT( (!bHaveRun2 || bSimulatePredefinedIDF[0] == bSimulatePredefinedIDF[1]) );	// if this is not the case, then we may need to fiddle w/ the workflow/jobs...
-
-			//			openstudio::runmanager::Job job1 = wf.create( procPath/openstudio::toPath(pszRunSubdir) /*procPath*/, idfPath[0], wthrPathFile[0] /*"path/to/epws"*/ );
-			//			openstudio::runmanager::Job job2 = wf.create( procPath/openstudio::toPath( (bHaveRun2 ? pszRunSubdir2 : pszRunSubdir) ) /*procPath*/, (bHaveRun2 ? idfPath[1] : idfPath[0]),
-			//																												(bHaveRun2 ? wthrPathFile[1] : wthrPathFile[0]) /*"path/to/epws"*/ );
-			//			rm.enqueue(job1, true /*force? */ );
-			//			if (bHaveRun2)
-			//				rm.enqueue(job2, true /*force? */ );
-
-						jobs[iNumJobs] = wf.create( procPath/openstudio::toPath( saRunSubdir[iESimIdx] ) /*procPath*/, idfPath[iESimIdx], wthrPathFile[iaRunIdx[iESimIdx]] /*"path/to/epws"*/ );
-						rm.enqueue(jobs[iNumJobs], true /*force? */ );
-						iNumJobs++;
-					}
-
-// SAC 9/5/14 - experiment w/ tracking simulation status
-//	openstudio::runmanager::RunManagerWatcher rmWatch( rm );
-//	spRunMgrWatcher = &rmWatch;
-//	suuidRunMgrJobs[0] = job1.uuid();
-//	suuidRunMgrJobs[1] = (bHaveRun2 ? job2.uuid() : 0);
-//	suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
-
-				rm.setPaused(false);
-				rm.waitForFinished(); // Block until the runamanger has completed running all jobs
-
-// SAC 9/5/14 - experiment w/ tracking simulation status
-//	suuidRunMgrJobs[0] = suuidRunMgrJobs[1] = suuidRunMgrJobs[2] = suuidRunMgrJobs[3] = suuidRunMgrJobs[4] = suuidRunMgrJobs[5] = 0;
-//	spRunMgrWatcher = NULL;
-
-//QMessageBox msgBox;
-//msgBox.setText("Back from performing simulation(s) (following waitForFinished())");		msgBox.exec();
-										if (pMsgCallback && !bAbort)
-											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - Back from ModelToIdf & E+, storing results...", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSimRes, iProgressModelSum, 0 ) ) == -1);   // was:  4 /*action*/ ) == -1);
-
-				if (pdSimulationTime)  // SAC 1/23/14
-				{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
-					*pdSimulationTime = ((double) td.total_microseconds()) / 1000000.0;
-				}
-
-				for (int ij=0; ij < iNumJobs; ij++)
-				{	openstudio::runmanager::JobErrors treeErrors = jobs[ij].treeErrors(); // represents the state of the job tree
-					if (!treeErrors.succeeded())
-					{
-						// something went wrong, look at treeErrors.errors(), treeErrors.warnings(), job.allOutputFiles().getAllByFilename("stderr")
-						// for more info
-				}	}
+	if (strErrMsg.size() > 0 && pszErrorMsg && iErrorMsgLen > 1)  // SAC 1/30/14
+	{	// check error string for paths specific to development machines, and blast that info to reduce size (and for privacy)
+		size_t iOSIdx = strErrMsg.find( "\\OpenStudio\\" );
+		size_t iPathBeginIdx = (iOSIdx == std::string::npos ? std::string::npos : strErrMsg.rfind( ":\\", iOSIdx-1 ));
+		if (iOSIdx != std::string::npos && iPathBeginIdx != std::string::npos)
+		{	while (--iPathBeginIdx >= 0 && strErrMsg.at( iPathBeginIdx ) != 39)
+			{ }
+			if (iPathBeginIdx > 0 && iPathBeginIdx < (iOSIdx-1))
+				strErrMsg.replace( iPathBeginIdx+1, iOSIdx-iPathBeginIdx-1, "..." );
+			else
+			{	OS_ASSERT( false );
 		}	}
+		strncpy_s( pszErrorMsg, iErrorMsgLen, strErrMsg.c_str(), _TRUNCATE );
+	}
 
+   return (bAbort ? OSWrap_SimSDD_UserAbortedAnalysis : lRetVal);
+}
+
+
+// return values:  0 => SUCCESS
+//                >0 => user abort or error - refer to #defines listed in OS_Wrap.h
+long OSWrapLib::ProcessResults_Multiple(	const char* pszEPlusPath, const char* pszProcessingPath,
+														OSWrap_SimInfo** paSDDSimInfo, int iNumSDDSimInfo,
+														OSWRAP_MSGCALLBACK* pMsgCallback /*=NULL*/, int iMsgCallbackType /*=0*/,
+														char* pszErrorMsg /*=NULL*/, int iErrorMsgLen /*=0*/, int iCodeType /*=0*/, double dEPlusVerNum /*=-1*/ )
+{
+	long lRetVal = 0;
+	bool bAbort = false;
+	int iRun = 0;
+
+	std::string sProcessingPath = pszProcessingPath;
+	std::string sEPlusSubdir = "EnergyPlus";		// std::string saEPlusSubdir[24];  // = { "EnergyPlus", "EnergyPlus" };
+	std::string strErrMsg;
+
+		bool baFirstQSRun[24]  = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
+		bool baLastQSRun[24]   = { true, true, true, true, true, true, true, true, true, true, true, true,   true, true, true, true, true, true, true, true, true, true, true, true };
+
+		int iProgressModelSum = 0;
+		for (iRun=0; (lRetVal == 0 && iRun < iNumSDDSimInfo); iRun++)
+		{	iProgressModelSum += paSDDSimInfo[iRun]->iProgressModel;
+		}
 
 	// PROCESS SIMULATION RESULTS
 		bool bProcResultsOK = false;
-		if(iNumSimsToExecute > 0 && !bAbort && lRetVal < 1 && pData[0])
+//		if(iNumSimsToExecute > 0 && !bAbort && lRetVal < 1 && pData[0])
+		if (pData[0])
 		{
-			for (int iESimIdx=0; (!bAbort && iESimIdx < iNumEPSims); iESimIdx++)
-				if (baSimulate[iESimIdx])
+			for (int iESimIdx=0; (!bAbort && iESimIdx < m_iNumEPSims); iESimIdx++)
+//				if (baSimulate[iESimIdx])
+				if (paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bSimulateModel)
 				{
 		// check for simulation warnings/errors
-				//	int iLastDot = sIDFPath.rfind('.');   // sSDDXMLFile[iaRunIdx[iESimIdx]].rfind('.');
-				//	int iLastSpc = sIDFPath.rfind(' ');   // sSDDXMLFile[iaRunIdx[iESimIdx]].rfind(' ');
+				//	int iLastDot = sIDFPath.rfind('.');   // sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].rfind('.');
+				//	int iLastSpc = sIDFPath.rfind(' ');   // sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].rfind(' ');
 
 								//	std::string sDbgMsg = boost::str( boost::format("%s / dot @ %d / space @ %d") % sSDDXMLFile % iLastDot % iLastSpc );
 								//	::MessageBox( NULL, sDbgMsg.c_str(), NULL, MB_ICONEXCLAMATION );
 
-								OS_ASSERT( iaRunIdx[iESimIdx] >= 0 && iaRunIdx[iESimIdx] < OSW_MaxNumSims );
+								OS_ASSERT( pRunData[iESimIdx]->iRunIdx >= 0 && pRunData[iESimIdx]->iRunIdx < OSW_MaxNumSims );
 						std::string sErrPathFile = boost::str( boost::format("%s%s\\%s\\eplusout.err") 
-																				% sProcessingPath % saRunSubdir[iESimIdx] % sEPlusSubdir );
+																				% sProcessingPath % pRunData[iESimIdx]->sRunSubdir % sEPlusSubdir );
 						openstudio::path errPathFile = openstudio::toPath( sErrPathFile );
 						openstudio::energyplus::ErrorFile errorFile( errPathFile );
-						pData[iaRunIdx[iESimIdx]]->sSimErrPathFile   = sErrPathFile;
-						pData[iaRunIdx[iESimIdx]]->saSimWarnings     = errorFile.warnings();
-						pData[iaRunIdx[iESimIdx]]->saSimSevereErrors = errorFile.severeErrors();
-						pData[iaRunIdx[iESimIdx]]->saSimFatalErrors  = errorFile.fatalErrors();
-						pData[iaRunIdx[iESimIdx]]->bSimCompleted              = errorFile.completed();
-						pData[iaRunIdx[iESimIdx]]->bSimCompletedSuccessfully  = errorFile.completedSuccessfully();
-		//		pData[iaRunIdx[iESimIdx]]->bSimCompleted              = true;
-		//		pData[iaRunIdx[iESimIdx]]->bSimCompletedSuccessfully  = true;
+						pData[pRunData[iESimIdx]->iRunIdx]->sSimErrPathFile   = sErrPathFile;
+						pData[pRunData[iESimIdx]->iRunIdx]->saSimWarnings     = errorFile.warnings();
+						pData[pRunData[iESimIdx]->iRunIdx]->saSimSevereErrors = errorFile.severeErrors();
+						pData[pRunData[iESimIdx]->iRunIdx]->saSimFatalErrors  = errorFile.fatalErrors();
+						pData[pRunData[iESimIdx]->iRunIdx]->bSimCompleted              = errorFile.completed();
+						pData[pRunData[iESimIdx]->iRunIdx]->bSimCompletedSuccessfully  = errorFile.completedSuccessfully();
+		//		pData[pRunData[iESimIdx]->iRunIdx]->bSimCompleted              = true;
+		//		pData[pRunData[iESimIdx]->iRunIdx]->bSimCompletedSuccessfully  = true;
    
 						std::string sTblOutputPathFile = boost::str( boost::format("%s%s\\%s\\eplustbl.htm") 
-																				% sProcessingPath % saRunSubdir[iESimIdx] % sEPlusSubdir );
-						pData[iaRunIdx[iESimIdx]]->sSimVersionID = ParseEnergyPlusTablesForVersionID( sTblOutputPathFile );
-		//		pData[iaRunIdx[iESimIdx]]->sSimVersionID = "Windows-32 8.1.0.009";
+																				% sProcessingPath % pRunData[iESimIdx]->sRunSubdir % sEPlusSubdir );
+						pData[pRunData[iESimIdx]->iRunIdx]->sSimVersionID = ParseEnergyPlusTablesForVersionID( sTblOutputPathFile );
+		//		pData[pRunData[iESimIdx]->iRunIdx]->sSimVersionID = "Windows-32 8.1.0.009";
    
 								//	sDbgMsg = boost::str( boost::format("ERR file: %s\n# Warnings:  %d\n# Severe Errors:  %d\n# Fatal Errors:  %d\nSim Completed:  %s\nSim Successful:  %s")
 								//									% sErrPathFile % pRunData->saSimWarnings.size() % pRunData->saSimSevereErrors.size() % pRunData->saSimFatalErrors.size()
@@ -2756,28 +2850,28 @@ long OSWrapLib::SimulateSDD_Multiple( const char* pszEPlusPath, const char* pszP
 								//  EXPECT_TRUE(errorFile .completed();
 								//  EXPECT_FALSE(errorFile.completedSuccessfully();
    
-						if (pData[iaRunIdx[iESimIdx]]->saSimFatalErrors.size() > 0)
-						{	lRetVal = OSWrap_SimSDD_SimFatalError + (iaRunIdx[iESimIdx] * 5);  // Fatal errors occurred in simulation
-							paSDDSimInfo[iaRunIdx[iESimIdx]]->iSimReturnValue = OSWrap_SimSDD_SimFatalError;
+						if (pData[pRunData[iESimIdx]->iRunIdx]->saSimFatalErrors.size() > 0)
+						{	lRetVal = OSWrap_SimSDD_SimFatalError + (pRunData[iESimIdx]->iRunIdx * 5);  // Fatal errors occurred in simulation
+							paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->iSimReturnValue = OSWrap_SimSDD_SimFatalError;
 						}
 						else if (!errorFile.completedSuccessfully())
-						{	lRetVal = OSWrap_SimSDD_SimIncomplete + (iaRunIdx[iESimIdx] * 5);  // Simulation did not complete successfully
-							paSDDSimInfo[iaRunIdx[iESimIdx]]->iSimReturnValue = OSWrap_SimSDD_SimIncomplete;
+						{	lRetVal = OSWrap_SimSDD_SimIncomplete + (pRunData[iESimIdx]->iRunIdx * 5);  // Simulation did not complete successfully
+							paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->iSimReturnValue = OSWrap_SimSDD_SimIncomplete;
 						}
 
 		         if (lRetVal < 1 && !bAbort)
 					{	//std::string sIDFFile = openstudio::toString(idfPath[iESimIdx]);
-						bProcResultsOK = ProcessSimulationResults( this, lRetVal, iaRunIdx[iESimIdx], model[iaRunIdx[iESimIdx]], sProcessingPath, /*sSDDXMLFile[iaRunIdx[iESimIdx]],*/ sEPlusSubdir,
-														saRunSubdir[iESimIdx].c_str(), paSDDSimInfo[iaRunIdx[iESimIdx]]->pszSQLOutPathFile, FILENAME_MAX,
-														paSDDSimInfo[iaRunIdx[iESimIdx]]->pdResults, paSDDSimInfo[iaRunIdx[iESimIdx]]->bStoreHourlyResults,
-														paSDDSimInfo[iaRunIdx[iESimIdx]]->bWriteHourlyDebugCSV, openstudio::toString(idfPath[iESimIdx]).c_str(),
-														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], faResultMult[iESimIdx],
-														paSDDSimInfo[iaRunIdx[iESimIdx]]->lRptFuelUseAs, pszEPlusPath );								OS_ASSERT( bProcResultsOK );
+						bProcResultsOK = ProcessSimulationResults( this, lRetVal, pRunData[iESimIdx]->iRunIdx, model[pRunData[iESimIdx]->iRunIdx], sProcessingPath, /*sSDDXMLFile[pRunData[iESimIdx]->iRunIdx],*/ sEPlusSubdir,
+														pRunData[iESimIdx]->sRunSubdir.c_str(), paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pszSQLOutPathFile, FILENAME_MAX,
+														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pdResults, paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bStoreHourlyResults,
+														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->bWriteHourlyDebugCSV, openstudio::toString(idfPath[iESimIdx]).c_str(),
+														baFirstQSRun[iESimIdx], baLastQSRun[iESimIdx], pqsRunPeriodInfo[iESimIdx], pRunData[iESimIdx]->fResultMult,
+														paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->lRptFuelUseAs, pszEPlusPath, dEPlusVerNum );								OS_ASSERT( bProcResultsOK );
 
 					}
 				}
 		}
-	}
+//	}
 
 										if (pMsgCallback && !bAbort)
 											bAbort = (pMsgCallback( iCodeType, 0 /*level*/, "    OSWrap - returning", OSW_NRP_ComplianceProgressID( iMsgCallbackType, OSW_NRP_Step_MSimRes, iProgressModelSum, 0 ) ) == -1);   // was:  5 /*action*/ ) == -1);
@@ -2842,8 +2936,8 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 	//												(947.817 / 100000000000) };
 		//	boost::optional<std::string> soSpecEnduse;  //, soSpecLocation;
 			std::string sSpecEnduse;  //, sSpecLocation;
-			openstudio::model::MeterVector meters = model->getModelObjects<openstudio::model::Meter>();
-			for(const openstudio::model::Meter& meter : meters)
+			openstudio::model::OutputMeterVector meters = model->getModelObjects<openstudio::model::OutputMeter>();
+			for(const openstudio::model::OutputMeter& meter : meters)
 			{
 				bool bSuccess = false;
 				sStatus = "unknown";
@@ -2860,7 +2954,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 				//std::string sEU = meter.endUseType();
 				boost::optional<openstudio::EndUseType> euType = meter.endUseType();
 				int iEU = -1;
-				//std::string sEU = openstudio::model::Meter::EndUseType(*euType).valueName();
+				//std::string sEU = openstudio::model::OutputMeter::EndUseType(*euType).valueName();
 				     if (*euType == openstudio::EndUseType::InteriorLights         && sSpecEnduse.empty()                                                )   {  sEU = "InteriorLights";             iEU =  0;  }  //  6;  }
 				else if (*euType == openstudio::EndUseType::ExteriorLights         && sSpecEnduse.empty()                                                )   {  sEU = "ExteriorLights";             iEU =  1;  }  // 10;  }
 				else if (*euType == openstudio::EndUseType::InteriorEquipment      && sSpecEnduse.empty()                                                )   {  sEU = "InteriorEquipment";          iEU =  2;  }  //  7;  }
@@ -2893,7 +2987,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 
 				boost::optional<openstudio::FuelType> fType = meter.fuelType();
 				int iFl = -1;
-				//std::string sFuel = openstudio::model::Meter::FuelType(*fType).valueName();
+				//std::string sFuel = openstudio::model::OutputMeter::FuelType(*fType).valueName();
 				     if (*fType == openstudio::FuelType::Electricity    )   {  sFuel = "Electricity";      iFl =  0;  } 
 				else if (*fType == openstudio::FuelType::Gas            )   {  sFuel = "Gas";              iFl =  1;  } 
 				else if (*fType == openstudio::FuelType::Gasoline       )   {  sFuel = "Gasoline";         iFl =  2;  }   
@@ -2920,7 +3014,7 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 					if (timeSeries)
 					{
 						openstudio::Vector values = timeSeries->values();
-						unsigned numValues = values.size();
+						unsigned numValues = (unsigned) values.size();
 						//ASSERT( numValues==0 || numValues==8760 );
 						//pData->daHourlyResults[0][0];  // Fuel / Enduse
 						if (numValues != 8760)
@@ -2990,8 +3084,6 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
 //      result += ":";
 //    }
 //    result += EndUseType(*endUseType).valueName();
-
-
 			}
 
    if (dbgFile)
@@ -2999,6 +3091,8 @@ long OSWrapLib::HourlyResultsRetrieval( const char* pszOSMPathFile, const char* 
       fclose( dbgFile );
    }
 
+			sqlFile.close();		// SAC 4/28/19 - close file to ensure subsequent clean-up can delete it
+			//Sleep(500);				// SAC 4/29/19 - additional code to pause because close alone not releasing file in time in all cases
 		}
 	}
 	return lRetVal;
@@ -3074,17 +3168,17 @@ std::vector<double>* OSWrapLib::GetHourlyResultArray( int iRunIdx, int iFuel, in
 // ----------------------------------------------------------------------
 int  OSWrapLib::GetNum_Warnings( int iRunIdx )
 {	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : pRunData->saSimWarnings.size());
+	return (pRunData == NULL ? -1 : (int) pRunData->saSimWarnings.size());
 }
 
 int  OSWrapLib::GetNum_SevereErrors( int iRunIdx )
 {	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : pRunData->saSimSevereErrors.size());
+	return (pRunData == NULL ? -1 : (int) pRunData->saSimSevereErrors.size());
 }
 
 int  OSWrapLib::GetNum_FatalErrors( int iRunIdx )
 {	OSWrapLibData* pRunData = ((iRunIdx >= 0 && iRunIdx < OSW_MaxNumSims) ? pData[iRunIdx] : NULL);		// was: (iRunIdx==0 ? pData : (iRunIdx==1 ? pData2 : NULL));
-	return (pRunData == NULL ? -1 : pRunData->saSimFatalErrors.size());
+	return (pRunData == NULL ? -1 : (int) pRunData->saSimFatalErrors.size());
 }
 
 std::string  OSWrapLib::GetMsg_Warning( int iRunIdx, int idx )

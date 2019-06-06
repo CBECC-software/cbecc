@@ -773,29 +773,29 @@ BOOL CComboBoxCtl::LoadStrings()
 }
 
 
-LONG CComboBoxCtl::OnGetDataStatus(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDataStatus(WPARAM, LPARAM)
 {
    return (long) BEMPX_GetDataStatus( m_lDBID );
 }
 
-LONG CComboBoxCtl::OnGetTextColor(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetTextColor(WPARAM, LPARAM)
 {
    return (long) (BEMPX_GetDataStatus( m_lDBID ) + NUM_RESERVED_TEXT_COLORS);
 }
 
 
-LONG CComboBoxCtl::OnGetDBID(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lDBID;
 }
 
-LONG CComboBoxCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return -1;
 }
 
 
-LONG CComboBoxCtl::OnDisplayData(UINT, LONG)
+LRESULT CComboBoxCtl::OnDisplayData(WPARAM, LPARAM)
 {
    // Moved LoadStrings() call here in order to ensure that the currently
    // displayed listbox strings are compatible with the dependency restrictions
@@ -920,7 +920,7 @@ BOOL CComboBoxCtl::UserSelectedNewRuleset()
    return sbNewRulesetSelected;
 }
 
-LONG CComboBoxCtl::OnUpdateData( UINT, LONG )
+LRESULT CComboBoxCtl::OnUpdateData( WPARAM, LPARAM )
 {
    int i1Class = BEMPX_GetClassID( m_lDBID );
    BEM_ObjType eObjType = BEMPX_GetCurrentObjectType( i1Class );

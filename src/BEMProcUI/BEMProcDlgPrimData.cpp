@@ -292,7 +292,7 @@ void CBEMProcDlgPrimData::OnPaint()
 }
 
 
-LONG CBEMProcDlgPrimData::DisplayMods( UINT, LONG )
+LRESULT CBEMProcDlgPrimData::DisplayMods( WPARAM, LPARAM )
 {
    CWnd *pChild = GetWindow( GW_CHILD );
    while ( pChild != NULL )

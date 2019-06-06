@@ -105,8 +105,8 @@ public:
 	// Member function to register a window class
 //16 	static BOOL RegisterMyClass();
 
-   afx_msg LONG OnDisplayData(UINT, LONG);
-   afx_msg LONG OnUpdateData( UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
+   afx_msg LRESULT OnUpdateData( WPARAM, LPARAM);
 
 	CWnd* SetFocus();
 
@@ -136,10 +136,10 @@ protected:
 
    void DoQuickMenu();
 
-   afx_msg long OnGetDataStatus(UINT, LONG);
-   afx_msg long OnGetTextColor(UINT, LONG);
-   afx_msg long OnGetDBID(UINT, LONG);
-   afx_msg long OnGetDBInstance(UINT, LONG);
+   afx_msg LRESULT OnGetDataStatus(WPARAM, LPARAM);
+   afx_msg LRESULT OnGetTextColor(WPARAM, LPARAM);
+   afx_msg LRESULT OnGetDBID(WPARAM, LPARAM);
+   afx_msg LRESULT OnGetDBInstance(WPARAM, LPARAM);
 
    DECLARE_MESSAGE_MAP()
 };

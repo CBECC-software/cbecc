@@ -120,7 +120,7 @@ public:
    CPoint    GetViewportOrigin(CRect winRect, OLDRECT objRect);
    
 protected:
-   afx_msg LONG OnDisplayData(UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
 
    afx_msg void OnPaint();
 

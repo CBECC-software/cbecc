@@ -40,10 +40,7 @@
 
 #include "..\BEMCmpMgr\BEMCmpMgr.h"
 #include "CUIGlobl.h"
-
-#ifdef UI_CANRES
 #include "BEMGridDialog.h"
-#endif
 
 // Quick Menu Flag IDs
 #define QMI_ITEMHELP    0x0001
@@ -145,9 +142,7 @@ public:
 protected:  // control bar embedded members
 	CStatusBar  m_wndStatusBar;
 	CToolBar    m_wndToolBar;
-#ifdef UI_CANRES
 	BEMGridDialog* gridDialog;		// SAC 3/9/18
-#endif
 
 // Generated message map functions
 protected:
@@ -536,20 +531,20 @@ protected:
 	afx_msg void OnToolbarRefreshDefaults();
 	afx_msg void OnUpdateToolbarRefreshDefaults(CCmdUI* pCmdUI);
 	afx_msg BOOL OnEditSwitchRuleset(UINT nID);
-   afx_msg LONG OnEvaluateProposedRules(UINT uiDefaultAction, LONG lDBID);		// SAC 4/12/18 - first arg was: uiDontSwitchToLog
-   afx_msg LONG OnDataModified(UINT wEval, LONG lDBID);
-   afx_msg LONG OnUpdateTree(UINT wParam, LONG lDBIDModified);
-   afx_msg LONG OnPopulateLibraryTree(UINT uiTreeMode, LONG);
-   afx_msg LONG OnPerformAnalysis(UINT, LONG);
-   afx_msg LONG OnQuickMenu( UINT, LONG lParam );
-   afx_msg LONG OnCheckCompat( UINT wParam, LONG lParam );
-   afx_msg LONG OnSetStatusMessage( UINT wParam, LONG lParam );
-   afx_msg LONG OnCreateBldgComponent( UINT wParam, LONG );
-   afx_msg LONG OnButtonPressed( UINT wParam, LONG lParam );
+   afx_msg LRESULT OnEvaluateProposedRules(WPARAM uiDefaultAction, LPARAM lDBID);		// SAC 4/12/18 - first arg was: uiDontSwitchToLog
+   afx_msg LRESULT OnDataModified(WPARAM wEval, LPARAM lDBID);
+   afx_msg LRESULT OnUpdateTree(WPARAM wParam, LPARAM lDBIDModified);
+   afx_msg LRESULT OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM);
+   afx_msg LRESULT OnPerformAnalysis(WPARAM, LPARAM);
+   afx_msg LRESULT OnQuickMenu( WPARAM, LPARAM lParam );
+   afx_msg LRESULT OnCheckCompat( WPARAM wParam, LPARAM lParam );
+   afx_msg LRESULT OnSetStatusMessage( WPARAM wParam, LPARAM lParam );
+   afx_msg LRESULT OnCreateBldgComponent( WPARAM wParam, LPARAM );
+   afx_msg LRESULT OnButtonPressed( WPARAM wParam, LPARAM lParam );
    afx_msg LRESULT OnLoadScreenData( WPARAM, LPARAM );
-   afx_msg LONG OnBEMGridOpen(  UINT wClass, LONG l1Occur);   // SAC 3/15/18
-   afx_msg LONG OnBEMGridClose( UINT wClass, LONG l1Occur);
-   afx_msg LONG OnBEMGridUpdate(UINT wClass, LONG l1Occur);
+   afx_msg LRESULT OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur);   // SAC 3/15/18
+   afx_msg LRESULT OnBEMGridClose( WPARAM wClass, LPARAM l1Occur);
+   afx_msg LRESULT OnBEMGridUpdate(WPARAM wClass, LPARAM l1Occur);
 
    BOOL DetailedFileOK( CString& sFileName, BOOL bProposed, BOOL bPromptUser );
    void UpdateViewOption(InterfaceMode eIntMode, CCmdUI* pCmdUI);

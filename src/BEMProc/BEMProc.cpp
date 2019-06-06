@@ -90,7 +90,7 @@ void BEMPX_SetUIActiveFlag( bool bActiveUI )
 bool BEMPX_SecureExecutable()
 {	char test[] = "Check String";
 	QString qsTest = test;
-	ExpCryptEncode( test, strlen( test ) );
+	ExpCryptEncode( test, (int) strlen( test ) );
 	return (qsTest.compare(test)!=0);
 }
 
@@ -5774,8 +5774,7 @@ BOOL BEMCompNameTypePropArray::Copy( BEMCompNameTypePropArray* pCNTPA )
    {
       DeleteContents();
 
-      int i;
-      int size = pCNTPA->m_items.size();
+      int i, size = (int) pCNTPA->m_items.size();
       for (i=0; (bRetVal && i<size); i++)
       {
          BEMCompNameTypeProp* pObj = new BEMCompNameTypeProp( pCNTPA->m_items[i] );         assert( pObj );
@@ -5785,7 +5784,7 @@ BOOL BEMCompNameTypePropArray::Copy( BEMCompNameTypePropArray* pCNTPA )
             bRetVal = FALSE;
       }
 
-      size = pCNTPA->m_rulelistNames.size();   // SAC 9/14/10
+      size = (int) pCNTPA->m_rulelistNames.size();   // SAC 9/14/10
       for (i=0; (bRetVal && i<size); i++)
          m_rulelistNames.push_back( pCNTPA->m_rulelistNames[i] );
    }

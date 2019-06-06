@@ -135,7 +135,7 @@ public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
 		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lStdMixedFuelRunReqd=0,
-		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1 );
+		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1, const char* pszCodeYear2Digit=NULL, std::vector<long>* plaRIBDIClsObjIndices=NULL );
 	~CSERunMgr();
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
@@ -143,9 +143,10 @@ public:
 	int SetupRun_Simple( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 						const char* pszRunAbbrev=NULL, const char* pszExtraCSECmdLineArgs=NULL,
 						const char* pszAppendToCSEFile=NULL, int iModelType=0 );
-	int SetupRunFinish( int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
-	int SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
-								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL, int iBEMProcIdx=-1 );
+	int SetupRunFinish(  int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy=NULL );
+	int SetupRun_NonRes( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
+								const char* pszRunID=NULL, const char* pszRunAbbrev=NULL, QString* psCSEVer=NULL,
+								int iBEMProcIdx=-1, bool bRemovePVBatt=false );
 	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
@@ -170,6 +171,7 @@ private:
 	QString m_sModelPathOnly;
 	QString m_sModelFileOnlyNoExt;
 	QString m_sProcessPath;
+	QString m_sCodeYear2Digit;
 	bool m_bFullComplianceAnalysis;
 	bool m_bInitHourlyResults;
 	long m_lAllOrientations;
@@ -194,6 +196,7 @@ private:
 	int m_iNumProgressRuns;		// SAC 5/5/17 - added to facilitate progress reporting on run subsets
 	std::vector<CSERun*> m_vCSERun;
 	std::vector<CSERun*> m_vCSEActiveRun;
+	std::vector<long>* m_plaRIBDIClsObjIndices;
 
 };		// class CSERunMgr
 

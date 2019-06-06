@@ -446,7 +446,7 @@ int Qt_URLFile::DownloadFile( const char* pszUrl, const char* pszPathFile, const
 	iRetVal = SaveFile();
 	if (pszDebugInfo && iDebugInfoLength > 0)		// SAC 11/30/15
 	{	if (m_pFileDownloader->ErrorString().length() > 0)
-		{	int iToAdd = iDebugInfoLength - 1 - strlen( pszDebugInfo );
+		{	int iToAdd = iDebugInfoLength - 1 - (int) strlen( pszDebugInfo );
 			QString sAdd = m_pFileDownloader->ErrorString();
 			if (bVerbose && (m_pFileDownloader->VerboseString().length() > 0 || m_sVerboseStr.length() > 0))
 				sAdd += '\n';
@@ -455,13 +455,13 @@ int Qt_URLFile::DownloadFile( const char* pszUrl, const char* pszPathFile, const
 			}
 		}
 		if (bVerbose && m_pFileDownloader->VerboseString().length() > 0)
-		{	int iToAdd = iDebugInfoLength - 1 - strlen( pszDebugInfo );
+		{	int iToAdd = iDebugInfoLength - 1 - (int) strlen( pszDebugInfo );
 			if (strcat_s( pszDebugInfo, iDebugInfoLength, m_pFileDownloader->VerboseString().left(iToAdd).toLocal8Bit() ) != 0)
 			{	assert( false );
 			}
 		}
 		if (m_sVerboseStr.length() > 0)
-		{	int iToAdd = iDebugInfoLength - 1 - strlen( pszDebugInfo );
+		{	int iToAdd = iDebugInfoLength - 1 - (int) strlen( pszDebugInfo );
 			if (strcat_s( pszDebugInfo, iDebugInfoLength, m_sVerboseStr.left(iToAdd).toLocal8Bit() ) != 0)
 			{	assert( false );
 			}

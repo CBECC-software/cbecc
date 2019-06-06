@@ -1248,7 +1248,7 @@ BOOL CExtendedComboBox::LoadStrings()
 }
 
 
-LONG CExtendedComboBox::OnGetDataStatus(UINT, LONG)
+LRESULT CExtendedComboBox::OnGetDataStatus(WPARAM, LPARAM)
 {
    return (long) BEMPX_GetDataStatus( m_lDBID, m_iDBInstance );
 }
@@ -1259,18 +1259,18 @@ LONG CExtendedComboBox::OnGetDataStatus(UINT, LONG)
 //}
 
 
-LONG CExtendedComboBox::OnGetDBID(UINT, LONG)
+LRESULT CExtendedComboBox::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lDBID;
 }
 
-LONG CExtendedComboBox::OnGetDBInstance(UINT, LONG)
+LRESULT CExtendedComboBox::OnGetDBInstance(WPARAM, LPARAM)
 {
    return m_iDBInstance;
 }
 
 
-LONG CExtendedComboBox::OnDisplayData(UINT, LONG)
+LRESULT CExtendedComboBox::OnDisplayData(WPARAM, LPARAM)
 {
 // SAC 10/13/07 - added logic to prevent calling BEMPX_GetCompIsEditable() w/ a bogus DBID
    m_bEditable = ((m_lDBID < BEM_COMP_MULT || BEMPX_GetCompIsEditable( m_lDBID )) && m_cEditableCondition.MissingOrTrue());
@@ -1403,7 +1403,7 @@ BOOL CExtendedComboBox::UserSelectedNewRuleset()
    return sbNewRulesetSelected;
 }
 
-LONG CExtendedComboBox::OnUpdateData( UINT, LONG )
+LRESULT CExtendedComboBox::OnUpdateData( WPARAM, LPARAM )
 {
    int iSetDataRetVal = -1;
    BOOL bEvalRules = TRUE;

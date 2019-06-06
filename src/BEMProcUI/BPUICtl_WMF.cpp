@@ -191,7 +191,7 @@ void CWMFCtl::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CWMFCtl OnDisplayData()
 
-LONG CWMFCtl::OnDisplayData(UINT, LONG)
+LRESULT CWMFCtl::OnDisplayData(WPARAM, LPARAM)
 {
    RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
    return 1;

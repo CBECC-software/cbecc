@@ -2691,8 +2691,15 @@ double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName
 		double fTotDaylitArea = fDLAreaByType[0] + fDLAreaByType[1] + fDLAreaByType[2];
 		if (BEMPX_GetFloat( ruleSet.getGeomIDs()->m_lDBID_Spc_FlrArea, fSpcFlrArea, 0, BEMP_Flt, iSpcObjIdx ) && fSpcFlrArea > 0.01 && fTotDaylitArea > 0.01)
 		{
+
+// debugging
+//BEMObject* pDbgObj2 = BEMPX_GetObjectByClass( ruleSet.getGeomIDs()->m_iOID_Spc, iError, iSpcObjIdx );
+//QString sDbg2 = QString( "Spc '%1' FlrArea = %2 / fTotDaylitArea = %3 (Toplit: %4, PrimSidelit: %5, SecSidelit: %6)" ).arg( pDbgObj2->getName(), QString::number(fSpcFlrArea), QString::number(fTotDaylitArea), QString::number(fDLAreaByType[0]), QString::number(fDLAreaByType[1]), QString::number(fDLAreaByType[2]) );
+//BEMPX_WriteLogFile( sDbg2 );
+
 	// ERROR - total calced daylit area larger than space (by a margin not likely to be attributable to decimal precision)
-			if (fTotDaylitArea > (fSpcFlrArea + 2))
+			// SAC 3/19/19 - revise error check to allow for daylit area sum to exceed fSpcFlrArea by as much as 1% (similar to other area check margins)
+			if (fTotDaylitArea > (fSpcFlrArea * 1.01))
 				fDayltAreaExceeds = fTotDaylitArea - fSpcFlrArea;
 			if (fTotDaylitArea > fSpcFlrArea)
 			{	// adjust daylit areas proportionally to fit into Space area
@@ -2741,9 +2748,10 @@ double CalcDaylighting( int iDayltMethod, int iSpcObjIdx, const char* pszSpcName
 			sDebug += "(data set directly to Spc:DaylitArea[2-4] by CalcDaylighting())";
 			sDebug += " -> ";
 			if (fDayltAreaExceeds > 0.1 && fSpcFlrArea > 0)
-				sDebug2 = QString( "Toplit: %1 (%2%) / PrimSidelit: %3 (%4%) / SecSidelit: %5 (%6%) / Overall: %7 (%8%) - ERROR: calced daylit areas exceeded Spc:FlrArea by %9" ).arg( QString::number(fDLAreaByType[0]),
-										QString::number((fDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[1]), QString::number((fDLAreaByType[1] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[2]),
-										QString::number((fDLAreaByType[2] * 100 / fSpcFlrArea), 'f', 0), QString::number(fTotDaylitArea  ), QString::number((fTotDaylitArea   * 100 / fSpcFlrArea), 'f', 0), QString::number(fDayltAreaExceeds, 'f', 1) );
+				// SAC 3/19/19 - modified error message to reference original (not adjusted) daylit areas (dDLArea.. vs. fDLArea...)
+				sDebug2 = QString( "Toplit: %1 (%2%) / PrimSidelit: %3 (%4%) / SecSidelit: %5 (%6%) / Overall: %7 (%8%) - ERROR: calced daylit areas exceeded Spc:FlrArea by %9" ).arg( QString::number(dDLAreaByType[0]),
+										QString::number((dDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0), QString::number(dDLAreaByType[1]), QString::number((dDLAreaByType[1] * 100 / fSpcFlrArea), 'f', 0), QString::number(dDLAreaByType[2]),
+										QString::number((dDLAreaByType[2] * 100 / fSpcFlrArea), 'f', 0), QString::number(fTotDaylitArea  ), QString::number((fTotDaylitArea   * 100 / fSpcFlrArea), 'f', 0), QString::number(fDayltAreaExceeds, 'f', 1) );
 			else if (fTotDaylitArea > 0.1 && fSpcFlrArea > 0)
 				sDebug2 = QString( "Toplit: %1 (%2%) / PrimSidelit: %3 (%4%) / SecSidelit: %5 (%6%) / Overall: %7 (%8%)" ).arg(   QString::number(fDLAreaByType[0]), QString::number((fDLAreaByType[0] * 100 / fSpcFlrArea), 'f', 0),
 									QString::number(fDLAreaByType[1]), QString::number((fDLAreaByType[1] * 100 / fSpcFlrArea), 'f', 0), QString::number(fDLAreaByType[2]), QString::number((fDLAreaByType[2] * 100 / fSpcFlrArea), 'f', 0),

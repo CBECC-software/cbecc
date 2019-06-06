@@ -75,7 +75,7 @@ public:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	//}}AFX_VIRTUAL
 
-   afx_msg LONG OnPopulateLibraryTree(UINT uiTreeMode, LONG lOnlyIfRequired);
+   afx_msg LRESULT OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM lOnlyIfRequired);
 
 // Implementation
 protected:

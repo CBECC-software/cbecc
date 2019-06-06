@@ -1,8 +1,8 @@
 /* yy.h - Declares the interface between the yacc and c/cpp
  */
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -70,9 +70,9 @@ extern void ExpAddObjectNode(void* object, int tokenType);
 extern void* ExpGetFuncTablePtrByOpType( int iOpType, int* pnArgs );  // SAC 7/13/12
 extern const char* ExpGetFuncTableNameByOpType( int iOpType );  // SAC 8/31/16
 extern void ExpAddFunctionNodeByOpType( int iOpType, int nArgs );  /* SAC 7/9/12 */
-extern void ExpAddFunctionNode(long function, int nArgs);
+extern void ExpAddFunctionNode(void* func, int nArgs);  // SAC 2/25/19 - was: long function, int nArgs);
 extern void ExpAddTableNode(long table, int nArgs);
-extern void ExpAddRefFuncNode(long function, int nArgs);
+extern void ExpAddRefFuncNode(void* func, int nArgs);  // SAC 2/25/19 - was: long function, int nArgs);
 extern void ExpAddAddrNode(void* object, int tokenType);
 extern void ExpAddBEMIndex(void* command, void* keyword, int tokenType);
 extern void ExpAddControlNode(int tokenType);

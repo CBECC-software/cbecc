@@ -1,8 +1,8 @@
 // TextIO.cpp - implementation of the TextioException and TextIO classes
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -823,7 +823,7 @@ int TrimBEMCondition( QString& str )    // returns index of condition present at
          iRetVal = iCond;
    }
 	if (iRetVal >= 0)
-	{	str = str.right( str.length() - strlen( pszConds[iRetVal] ) );
+	{	str = str.right( str.length() - (int) strlen( pszConds[iRetVal] ) );
 		str = str.trimmed();		// was: TrimLeft();
 	}
    return iRetVal;
@@ -1276,11 +1276,11 @@ int BEMTextIO::ParseColumnarRecord( QStringList& saFields, std::vector<int>& ia0
 	saFields.clear();
    Advance();
 
-	if (pszTerminate && strlen(pszTerminate) > 0 && FoundInCurrentLine( pszTerminate, ia0ColBegins[0]+strlen(pszTerminate)+1 ))
+	if (pszTerminate && strlen(pszTerminate) > 0 && FoundInCurrentLine( pszTerminate, ia0ColBegins[0]+(int)strlen(pszTerminate)+1 ))
 	{	//return 0;
    }
 	else
-	{	int iNumFields = ia0ColBegins.size();
+	{	int iNumFields = (int) ia0ColBegins.size();
 		for (int i=0; i<iNumFields; i++)
 		{	QString string;
 			if ((int) strlen(m_buffer) > ia0ColBegins[i])

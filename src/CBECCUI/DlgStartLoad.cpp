@@ -170,7 +170,7 @@ BOOL CDlgStartLoad::OnInitDialog()
 
       char pszCurDir[_MAX_PATH];   /* Get the current working directory: */
       _getcwd( pszCurDir, _MAX_PATH );
-      int iCurDirLen = strlen( pszCurDir );
+      int iCurDirLen = (int) strlen( pszCurDir );
 
       int iSize = epMRU->GetSize();
       int iCmbbIdx = 0;

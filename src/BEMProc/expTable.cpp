@@ -57,12 +57,16 @@
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
+BEMTable::~BEMTable()
+{	clear();
+}
+
 /////////////////////////////////////////////////////////////////////////////
 //
-// BEMTable Class Function:  ~BEMTable()
+// BEMTable Class Function:  clear()
 //
 // Purpose ------------------------------------------------------------------
-//   Destructor - deletes all the look-up table data
+//   deletes all locally allocated look-up table memory
 //   
 // Arguments ----------------------------------------------------------------
 //   None
@@ -74,18 +78,18 @@
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-BEMTable::~BEMTable()
+void BEMTable::clear()
 {
-	int i;
-	for (i = m_rowIndepCells.size()-1; i >= 0; i--)
-	{	assert( m_rowIndepCells.at(i) );
+	size_t i;
+	for (i = m_rowIndepCells.size()-1; (i >= 0 && m_rowIndepCells.size() > i); i--)
+	{	//assert( m_rowIndepCells.at(i) );
 		if (m_rowIndepCells.at(i))
 			delete [] m_rowIndepCells.at(i);
 	}
 	m_rowIndepCells.clear();
 
-	for (i = m_data.size()-1; i >= 0; i--)
-	{	assert( m_data.at(i) );
+	for (i = m_data.size()-1; (i >= 0 && m_data.size() > i); i--)
+	{	//assert( m_data.at(i) );
 		if (m_data.at(i))
 			delete [] m_data.at(i);
 	}
@@ -583,7 +587,7 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 						else
 						{
 							m_nParams = 0;
-							m_nCols   = m_columnTitles.size();
+							m_nCols   = (int) m_columnTitles.size();
 							int i=0;
 							//BOOL bRecordMayBeIndepCheckRow = TRUE;
 							BOOL bFirstDataRecordRead = FALSE;
@@ -824,7 +828,7 @@ bool BEMTable::ReadV2( BEMTextIO& file, QFile& errorFile )
 		else
 		{
 			m_nParams = 0;
-			m_nCols   = iaColBegins.size();
+			m_nCols   = (int) iaColBegins.size();
 			int i=0;
 			for (; i < m_nCols; i++)
 			{	if (i == (m_nCols-1))
@@ -1122,14 +1126,14 @@ void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
 
 	// reading of new column/row data
 	QString str;
-	int iNum, iCond, iCount = m_columnTitles.size();
+	int iNum, iCond, iCount = (int) m_columnTitles.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	str = m_columnTitles[iNum].c_str();
 	   file.WriteQString( str );
 	}
 
-	iCount = m_rowTitles.size();
+	iCount = (int) m_rowTitles.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	//iCond = m_iaRowConditions[iNum];
@@ -1150,26 +1154,26 @@ void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
 		}
    }
 
-	iCount = m_errorLabels.size();
+	iCount = (int) m_errorLabels.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	str = m_errorLabels[iNum].c_str();
 	   file.WriteQString( str );
 	}
-	iCount = m_errorMessages.size();
+	iCount = (int) m_errorMessages.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	str = m_errorMessages[iNum].c_str();
 	   file.WriteQString( str );
 	}
 
-	iCount = m_warningLabels.size();
+	iCount = (int) m_warningLabels.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	str = m_warningLabels[iNum].c_str();
 	   file.WriteQString( str );
 	}
-	iCount = m_warningMessages.size();
+	iCount = (int) m_warningMessages.size();
    file.Write( &iCount, sizeof( int ) );
    for ( iNum = 0; iNum < iCount; iNum++ )
 	{	str = m_warningMessages[iNum].c_str();
@@ -1195,7 +1199,7 @@ void BEMTable::Write( CryptoFile& file, QFile& /*errorFile*/ )
 
 int BEMTable::AddOrReturnLabelIndex( int iLabelType, const char* szLabel )
 {  int iRetVal = -1;
-	int iNumLbls = (iLabelType == BEMTCT_Error ? m_errorLabels.size() : m_warningLabels.size());
+	int iNumLbls = (int) (iLabelType == BEMTCT_Error ? m_errorLabels.size() : m_warningLabels.size());
 	string strLbl = szLabel;
 	for (int i=0; (iRetVal < 0 && i < iNumLbls); i++)
 	{	if (boost::iequals( (iLabelType == BEMTCT_Error ? m_errorLabels[i] : m_warningLabels[i]), strLbl ))
@@ -1204,11 +1208,11 @@ int BEMTable::AddOrReturnLabelIndex( int iLabelType, const char* szLabel )
 	if (iRetVal < 0)
 	{	if (iLabelType == BEMTCT_Error)
 		{	m_errorLabels.push_back( strLbl );
-			iRetVal = m_errorLabels.size()-1;
+			iRetVal = (int) m_errorLabels.size()-1;
 		}
 		else
 		{	m_warningLabels.push_back( strLbl );
-			iRetVal = m_warningLabels.size()-1;
+			iRetVal = (int) m_warningLabels.size()-1;
 		}
 	}
 	assert( iRetVal >= 0 );
@@ -1219,7 +1223,7 @@ bool BEMTable::SetMessage( int iLabelType, int i0MsgIdx, const char* szMessage )
 {	bool bRetVal = true;
 	string strMsg = szMessage;
 	switch (iLabelType)
-	{	case BEMTCT_Error   : {	int iNumLbls = m_errorMessages.size();
+	{	case BEMTCT_Error   : {	int iNumLbls = (int) m_errorMessages.size();
 										if (i0MsgIdx < iNumLbls)
 										{	if (m_errorMessages[i0MsgIdx].length() > 0)
 											{	assert( FALSE );
@@ -1233,7 +1237,7 @@ bool BEMTable::SetMessage( int iLabelType, int i0MsgIdx, const char* szMessage )
 											m_errorMessages.push_back( strMsg );
 										}
 									 }	break;
-		case BEMTCT_Warning : {	int iNumLbls = m_warningMessages.size();
+		case BEMTCT_Warning : {	int iNumLbls = (int) m_warningMessages.size();
 										if (i0MsgIdx < iNumLbls)
 										{	if (m_warningMessages[i0MsgIdx].length() > 0)
 											{	assert( FALSE );

@@ -1191,9 +1191,9 @@ BOOL CComboBoxCtl::LoadStrings()
 }
 
 
-LONG CComboBoxCtl::OnGetDataStatus(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDataStatus(WPARAM, LPARAM)
 {
-   return (long) BEMPX_GetDataStatus( m_lUseDBID, m_iUseDBInstance );
+   return (LRESULT) BEMPX_GetDataStatus( m_lUseDBID, m_iUseDBInstance );
 }
 
 //LONG CComboBoxCtl::OnGetTextColor(UINT, LONG)
@@ -1202,18 +1202,18 @@ LONG CComboBoxCtl::OnGetDataStatus(UINT, LONG)
 //}
 
 
-LONG CComboBoxCtl::OnGetDBID(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lUseDBID;
 }
 
-LONG CComboBoxCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CComboBoxCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return m_iUseDBInstance;
 }
 
 
-LONG CComboBoxCtl::OnDisplayData(UINT, LONG)
+LRESULT CComboBoxCtl::OnDisplayData(WPARAM, LPARAM)
 {
    ResolveUseDBValues();  // SAC 8/1/02 - reset UseDB* values upon each display in case referenced component has changed
 
@@ -1360,7 +1360,7 @@ BOOL CComboBoxCtl::UserSelectedNewRuleset()
    return sbNewRulesetSelected;
 }
 
-LONG CComboBoxCtl::OnUpdateData( UINT, LONG )
+LRESULT CComboBoxCtl::OnUpdateData( WPARAM, LPARAM )
 {
    int iSetDataRetVal = -1;
    BOOL bEvalRules = TRUE;

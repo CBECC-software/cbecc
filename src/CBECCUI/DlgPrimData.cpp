@@ -305,7 +305,7 @@ void CDlgPrimData::OnPaint()
 }
 
 
-LONG CDlgPrimData::DisplayMods( UINT, LONG )
+LRESULT CDlgPrimData::DisplayMods( WPARAM, LPARAM )
 {
    CWnd *pChild = GetWindow( GW_CHILD );
    while ( pChild != NULL )

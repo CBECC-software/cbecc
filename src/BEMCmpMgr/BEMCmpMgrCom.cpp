@@ -81,43 +81,38 @@ static int iNumDaysInMonth[12] = {  31,  28,  31,  30,  31,  30,  31,  31,  30, 
 																	//    BCM_NRP_Step_Init,  BCM_NRP_Step_Read,    BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,    BCM_NRP_Step_Store,  BCM_NRP_Step_Report,  BCM_NRP_Step_Done
 const char* pszCECNResProgressMsgs[]					= { " Initialization",  " Read Project",      " Model Prep:  ",    " Translation:  ",    " Simulation:  ",   " Sim Results:  ",       " Model Storage",    " Report Generation", " Completed",   NULL  };
 
-long			laCECNResProgressSteps[]					= {   BCM_NRP_Step_Init,  BCM_NRP_Step_Read,    BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_Store,  BCM_NRP_Step_Report,  0 };
-long			laCECNResProgressModels[]					= {                0,                  0,       BCM_NRP_Model_zp,    BCM_NRP_Model_zb,    BCM_NRP_Model_zp,     BCM_NRP_Model_zb,     BCM_NRP_Model_zp,   BCM_NRP_Model_zb,   BCM_NRP_Model_zp,      BCM_NRP_Model_zb,       BCM_NRP_Model_ap,    BCM_NRP_Model_ab,    BCM_NRP_Model_ap,     BCM_NRP_Model_ab,     BCM_NRP_Model_ap,   BCM_NRP_Model_ab,   BCM_NRP_Model_ap,      BCM_NRP_Model_ab,                   0,                   0,        0 };
-float       faCECNResProgressVals_SerlAllSims[]    = {                1,                  3,                   2,                    2,                  3,                     3,                  10,                  10,                 2,                     2,                       2,                   2,                   3,                    3,                   30,                 30,                 2,                     2,                      3,                  15,          };
-float       fCECNResProgressValSum_SerlAllSims     =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                 10 +                 10 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                  30 +                30 +                2 +                    2 +                     3 +                 15            ;
-float       faCECNResProgressVals_SerlZBAPABSims[] = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                  10,                 2,                     2,                       2,                   2,                   3,                    3,                   30,                 30,                 2,                     2,                      3,                  15,          };
-float       fCECNResProgressValSum_SerlZBAPABSims  =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                 10 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                  30 +                30 +                2 +                    2 +                     3 +                 15            ;
-float       faCECNResProgressVals_SerlZPAPSims[]   = {                1,                  3,                   2,                    2,                  3,                     0,                  10,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                   30,                  0,                 2,                     2,                      3,                  15,          };
-float       fCECNResProgressValSum_SerlZPAPSims    =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                 10 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                  30 +                 0 +                2 +                    2 +                     3 +                 15            ;
-float       faCECNResProgressVals_SerlAPSim[]      = {                1,                  3,                   2,                    2,                  3,                     0,                   1,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                   30,                  0,                 2,                     2,                      3,                  15,          };
-float       fCECNResProgressValSum_SerlAPSim       =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  1 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                  30 +                 0 +                2 +                    2 +                     3 +                 15            ;
-float       faCECNResProgressVals_ParlAllSims[]    = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                  12,                 2,                     2,                       2,                   2,                   3,                    3,                    1,                 35,                 2,                     2,                      5,                  15,          };
-float       fCECNResProgressValSum_ParlAllSims     =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                 12 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                   1 +                35 +                2 +                    2 +                     5 +                 15            ;
-float       faCECNResProgressVals_ParlZPAPSims[]   = {                1,                  3,                   2,                    2,                  3,                     0,                  10,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                   30,                  0,                 2,                     2,                      5,                  15,          };
-float       fCECNResProgressValSum_ParlZPAPSims    =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                 10 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                  30 +                 0 +                2 +                    2 +                     5 +                 15            ;
-float       faCECNResProgressVals_ParlAPSims[]     = {                1,                  3,                   2,                    2,                  3,                     0,                   1,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                   30,                  0,                 2,                     2,                      5,                  15,          };
-float       fCECNResProgressValSum_ParlAPSims      =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  1 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                  30 +                 0 +                2 +                    2 +                     5 +                 15            ;
+long			laCECNResProgressSteps[]					= {   BCM_NRP_Step_Init,  BCM_NRP_Step_Read,    BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_MPrep,  BCM_NRP_Step_MPrep,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MTrans,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSim,  BCM_NRP_Step_MSimRes,  BCM_NRP_Step_MSimRes,   BCM_NRP_Step_Store,  BCM_NRP_Step_Report,  0 };
+long			laCECNResProgressModels[]					= {                0,                  0,       BCM_NRP_Model_zp,    BCM_NRP_Model_zb,    BCM_NRP_Model_zp,     BCM_NRP_Model_zb,     BCM_NRP_Model_zp,   BCM_NRP_Model_zb,   BCM_NRP_Model_zp,      BCM_NRP_Model_zb,       BCM_NRP_Model_ap,    BCM_NRP_Model_ab,    BCM_NRP_Model_ap,     BCM_NRP_Model_ab,     BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ap,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ab,   BCM_NRP_Model_ap,      BCM_NRP_Model_ab,                   0,                   0,        0 };
+long			laCECNResProgressSimProg[]					= {                0,                  0,                   0,                    0,                  0,                     0,                   0,                   0,                 0,                     0,                       0,                   0,                   0,                    0,                    0,     BCM_NRP_Prog_Jan,   BCM_NRP_Prog_Feb,   BCM_NRP_Prog_Mar,   BCM_NRP_Prog_Apr,   BCM_NRP_Prog_May,   BCM_NRP_Prog_Jun,   BCM_NRP_Prog_Jul,   BCM_NRP_Prog_Aug,   BCM_NRP_Prog_Sep,   BCM_NRP_Prog_Oct,   BCM_NRP_Prog_Nov,   BCM_NRP_Prog_Dec,                0,     BCM_NRP_Prog_Jan,   BCM_NRP_Prog_Feb,   BCM_NRP_Prog_Mar,   BCM_NRP_Prog_Apr,   BCM_NRP_Prog_May,   BCM_NRP_Prog_Jun,   BCM_NRP_Prog_Jul,   BCM_NRP_Prog_Aug,   BCM_NRP_Prog_Sep,   BCM_NRP_Prog_Oct,   BCM_NRP_Prog_Nov,   BCM_NRP_Prog_Dec,               0,                     0,                      0,                   0,        0 };
+float       faCECNResProgressVals_SerlAllSims[]    = {                1,                  3,                   2,                    2,                  3,                     3,                  10,                  10,                 2,                     2,                       2,                   2,                   3,                    3,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                     2,                      3,                  15,          };
+float       fCECNResProgressValSum_SerlAllSims     =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                 10 +                 10 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                    2 +                     3 +                 15            ;
+float       faCECNResProgressVals_SerlZBAPABSims[] = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                  10,                 2,                     2,                       2,                   2,                   3,                    3,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                 2,                     2,                      3,                  15,          };
+float       fCECNResProgressValSum_SerlZBAPABSims  =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                 10 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                2 +                    2 +                     3 +                 15            ;
+float       faCECNResProgressVals_SerlZPAPSims[]   = {                1,                  3,                   2,                    2,                  3,                     0,                  10,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 2,                     2,                      3,                  15,          };
+float       fCECNResProgressValSum_SerlZPAPSims    =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                 10 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                2 +                    2 +                     3 +                 15            ;
+float       faCECNResProgressVals_SerlAPSim[]      = {                1,                  3,                   2,                    2,                  3,                     0,                   1,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 2,                     2,                      3,                  15,          };
+float       fCECNResProgressValSum_SerlAPSim       =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  1 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                2 +                    2 +                     3 +                 15            ;
+float       faCECNResProgressVals_ParlAllSims[]    = {                1,                  3,                   2,                    2,                  3,                     3,                   1,                  12,                 2,                     2,                       2,                   2,                   3,                    3,                    2,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  3,                  1,                  0,                  0,                  0,                  0,                  0,                  0,                  1,                  0,                  0,                  0,                  0,                  0,                 2,                     2,                      5,                  15,          };
+float       fCECNResProgressValSum_ParlAllSims     =                  1 +                 3 +                  2 +                   2 +                 3 +                    3 +                  1 +                 12 +                2 +                    2 +                      2 +                  2 +                  3 +                   3 +                   2 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 3 +                 1 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 1 +                 0 +                 0 +                 0 +                 0 +                 0 +                2 +                    2 +                     5 +                 15            ;
+float       faCECNResProgressVals_ParlZPAPSims[]   = {                1,                  3,                   2,                    2,                  3,                     0,                  10,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 2,                     2,                      5,                  15,          };
+float       fCECNResProgressValSum_ParlZPAPSims    =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                 10 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                2 +                    2 +                     5 +                 15            ;
+float       faCECNResProgressVals_ParlAPSims[]     = {                1,                  3,                   2,                    2,                  3,                     0,                   1,                   0,                 2,                     2,                       2,                   2,                   3,                    0,                    2,                  2,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  3,                  2,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 2,                     2,                      5,                  15,          };
+float       fCECNResProgressValSum_ParlAPSims      =                  1 +                 3 +                  2 +                   2 +                 3 +                    0 +                  1 +                  0 +                2 +                    2 +                      2 +                  2 +                  3 +                   0 +                   2 +                 2 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 3 +                 2 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                 0 +                2 +                    2 +                     5 +                 15            ;
+float       faCECNResCumulativeProgressSum[]       = {                0,                  0,                   0,                    0,                  0,                     0,                   0,                   0,                 0,                     0,                       0,                   0,                   0,                    0,                    0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                  0,                 0,                     0,                      0,                   0,        0, 0, 0 };
 
 //const char** pszCECNResProgressMsgs=NULL;
 float *faCECNResProgressVals=NULL, fCECNResProgressValSum=0;
 
-#define  NUM_CECNResProgressEntries  25
-float  faCECNResCumulativeProgressSum[NUM_CECNResProgressEntries];
+//#define  NUM_CECNResProgressEntries  25
+//float  faCECNResCumulativeProgressSum[NUM_CECNResProgressEntries];
 void SetCECNResCumulativeProgressSum()
-{	int idx = -1;			bool bDone = false;
-	while (++idx < NUM_CECNResProgressEntries)
-	{	if (bDone)
-			faCECNResCumulativeProgressSum[idx] = 0;
-		else
-		{	faCECNResCumulativeProgressSum[idx] = (idx < 1 ? 0 : faCECNResCumulativeProgressSum[idx-1] + faCECNResProgressVals[idx-1]);
-			if (laCECNResProgressSteps[idx] == 0)
-				bDone = true;
-		}
-	}
-	assert( bDone );
+{	int idx = 0;
+//	while (++idx < NUM_CECNResProgressEntries)
+	while (laCECNResProgressSteps[++idx] > 0)
+		faCECNResCumulativeProgressSum[idx] = faCECNResCumulativeProgressSum[idx-1] + faCECNResProgressVals[idx-1];
 }
 
-void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels )
+void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels, long lSimProg )
 {	sMsg = pszCECNResProgressMsgs[lNRPStep-1];
 	if (lNRPModels > 0)
 	{	int iNumModels = BCM_NRP_NumModels( lNRPModels );		int iModelsFound = 0;
@@ -147,12 +142,31 @@ void SetCECNResProgressMessage( QString& sMsg, long lNRPStep, long lNRPModels )
 		}
 		assert( iModelsFound == iNumModels );
 	}
+	if (lSimProg > 0)		// SAC 2/18/19 - added SimProg component to track monthly sim progress
+	{	switch (lSimProg)
+		{	case	BCM_NRP_Prog_Init		:	sMsg += " - Init";	break;
+			case	BCM_NRP_Prog_Warmup	:	sMsg += " - Warmup";	break;
+			case	BCM_NRP_Prog_Jan   	:	sMsg += " - Jan";		break;
+			case	BCM_NRP_Prog_Feb   	:	sMsg += " - Feb";		break;
+			case	BCM_NRP_Prog_Mar   	:	sMsg += " - Mar";		break;
+			case	BCM_NRP_Prog_Apr   	:	sMsg += " - Apr";		break;
+			case	BCM_NRP_Prog_May   	:	sMsg += " - May";		break;
+			case	BCM_NRP_Prog_Jun   	:	sMsg += " - Jun";		break;
+			case	BCM_NRP_Prog_Jul   	:	sMsg += " - Jul";		break;
+			case	BCM_NRP_Prog_Aug  	:	sMsg += " - Aug";		break;
+			case	BCM_NRP_Prog_Sep  	:	sMsg += " - Sep";		break;
+			case	BCM_NRP_Prog_Oct  	:	sMsg += " - Oct";		break;
+			case	BCM_NRP_Prog_Nov  	:	sMsg += " - Nov";		break;
+			case	BCM_NRP_Prog_Dec  	:	sMsg += " - Dec";		break;
+			case	BCM_NRP_Prog_Rpt		:	sMsg += " - Rptg";	break;
+	}	}
 }
 
 void SetCECNResProgressMessage( QString& sMsg, long lProgressID )
-{	long lNRPStep  = BCM_NRP_Step(  lProgressID );
-	long lNRPModel = BCM_NRP_Model( lProgressID );
-	SetCECNResProgressMessage( sMsg, lNRPStep, lNRPModel );
+{	long lNRPStep    = BCM_NRP_Step(  lProgressID );
+	long lNRPModel   = BCM_NRP_Model( lProgressID );
+	long lNRPSimProg = BCM_NRP_Prog(  lProgressID );	// SAC 2/18/19 - added SimProg component to track monthly sim progress
+	SetCECNResProgressMessage( sMsg, lNRPStep, lNRPModel, lNRPSimProg );
 }
 
 
@@ -310,15 +324,16 @@ void SetS901GProgressVal_Serial( bool bZP, bool bAP, bool bZB, bool bAB )
 
 /////////////////////////////////////////////////////////////////////////////
 
-static inline int GetCECNResProgressIndex( long lStep, long lModel )
+static inline int GetCECNResProgressIndex( long lStep, long lModel, long lSimProg )
 {	int iRetVal = -2;
 	for (int i=0; iRetVal < -1; i++)
 	{
 		if (laCECNResProgressSteps[i] == 0)
 			iRetVal = -1;
 		else if (laCECNResProgressSteps[i] == lStep)
-		{	if ( laCECNResProgressModels[i] == 0 ||
-				 (laCECNResProgressModels[i] & lModel))
+		{	if ( ( laCECNResProgressModels[i] == 0 ||
+				   (laCECNResProgressModels[i] & lModel)) &&
+				  ( laCECNResProgressSimProg[i] == lSimProg ) )
 				iRetVal = i;
 	}	}
 	return iRetVal;
@@ -349,9 +364,10 @@ int /*CALLBACK*/ CECNRes_ProgressIncrement( long lProgressID )
 	//			fValSumThusFar += faCECNResProgressVals[i];
 	//		int iProgValue = (int) ((100 * (si1ProgressRunNum-1) / siNumProgressRuns) + ((fValSumThusFar / fCECNResProgressValSum / siNumProgressRuns) * 98));
 	// SAC 5/26/15 - new progress tracking mechanism
-		long lNRPStep  = BCM_NRP_Step(  lProgressID );
-		long lNRPModel = BCM_NRP_Model( lProgressID );
-		int iNRPIdx = GetCECNResProgressIndex( lNRPStep, lNRPModel );				assert( iNRPIdx >= 0 );
+		long lNRPStep    = BCM_NRP_Step(  lProgressID );
+		long lNRPModel   = BCM_NRP_Model( lProgressID );
+		long lNRPSimProg = BCM_NRP_Prog(  lProgressID );	// SAC 2/18/19 - added SimProg component to track monthly sim progress
+		int iNRPIdx = GetCECNResProgressIndex( lNRPStep, lNRPModel, lNRPSimProg );				assert( iNRPIdx >= 0 );
 		if (iNRPIdx < 0)
 			iNRPIdx = 0;
 		int iProgValue = 0;
@@ -365,7 +381,13 @@ int /*CALLBACK*/ CECNRes_ProgressIncrement( long lProgressID )
 		{	sqt_progress->setValue( iProgValue );
 			//SetProgressMessage( pszCECNResProgressMsgs[lNRPStep-1] );		// i0CurRunStep] );
 			QString sProgMsg;
-			SetCECNResProgressMessage( sProgMsg, lNRPStep, lNRPModel );
+			SetCECNResProgressMessage( sProgMsg, lNRPStep, lNRPModel, lNRPSimProg );
+
+// testing
+//QString sLog = QString( "   CECNRes_ProgressIncrement():  lProgressID %1  iNRPIdx %2  iProgValue %3 (%4/%5)  sProgMsg %6" ).arg( QString::number(lProgressID), QString::number(iNRPIdx),
+//															QString::number(iProgValue), QString::number(faCECNResCumulativeProgressSum[iNRPIdx]), QString::number(fCECNResProgressValSum), sProgMsg );
+//BEMPX_WriteLogFile( sLog, NULL, FALSE, TRUE, FALSE );
+
 			SetProgressMessage( (const char*) sProgMsg.toLocal8Bit().constData(), (lNRPType == BCM_NRP_Type_Batch) );
 			sqt_progress->setLabelText( sqProgressMsg );
 			sqt_win->repaint();
@@ -529,7 +551,7 @@ int /*OSWRAP_MSGCALLBACK*/ OSWrapCallback( int iCodeType, int /*level*/, const c
 void ProcessNonResAnalysisAbort( int iCodeType, int iProgressStep, QString& sErrMsg, bool& bAbort, int& iRetVal, char* pszErrorMsg, int iErrorMsgLen )
 {	QString sMsg;		int iErrorID=0;
 	if (iCodeType == CT_T24N)
-		SetCECNResProgressMessage( sMsg, iProgressStep, 0 /*lNRPModel*/ );
+		SetCECNResProgressMessage( sMsg, iProgressStep, 0 /*lNRPModel*/, 0 /*lNRPSimProg*/ );
 	else
 		SetS901GProgressMessage( sMsg, iProgressStep, 0 /*lNRPModel*/ );
 	if (spAnalProgCallbackFunc != NULL && slAnalysisProgressCallbackRetVal > 0)
@@ -2003,6 +2025,10 @@ static QString sDbgFileName;
 //											70 : Error evaluating 'GenerateZEROCodeReport' rulelist
 //											71 : Error(s) encountered performing pre-analysis check of input model
 //											72	: Error in sizing small central residential HPWH system(s) using CSE
+//											73	: EnergyPlus IDF path/filename too long
+//											74 : Error copying EnergyPlus simulation input file to processing directory
+//											75 : Error copying EnergyPlus simulation weather file to processing directory
+//											76 : Error evaluating 'AnalysisPostProcessing' rulelist
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2118,6 +2144,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 #endif
 
 	int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );		// SAC 4/11/18
+
+	bool bUseEPlusRunMgr = (GetCSVOptionValue( "UseEPlusRunMgr", 1, saCSVOptions ) > 0);		// SAC 2/15/19
 
 	QString sProxyServerAddress, sProxyServerCredentials, sProxyServerType, sNetComLibrary;
 	GetCSVOptionString( "ProxyServerAddress"    , sProxyServerAddress    , saCSVOptions );
@@ -2393,10 +2421,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		pqt_win->setAttribute(Qt::WA_DeleteOnClose);
 	// TESTING
 		pqt_progress->setValue( 0 );
+		pqt_progress->setMinimumWidth(400);		// SAC 2/18/19
 		pqt_win->show();
 		sqt_progress = pqt_progress;
 		sqt_win = pqt_win;
-	
+
 	//	for (int iPD = 0; iPD < 100; iPD++)
 	//	{
 	//		sqt_progress->setValue(iPD);
@@ -3122,6 +3151,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bProposedOnly = false;		// SAC 9/6/13
 	BOOL bCompletedAnalysisSteps = FALSE;
 	long lQuickAnalysis = 0;		// SAC 11/8/14
+	long lNumPVArraysChk = 0;			// SAC 4/3/19
+	bool bEnablePVBattSim = false;	// SAC 4/3/19
 	QString sReadVarsESOexe, sReadVarsESOrvi;		// SAC 4/11/16
 	QString sExcptDsgnModelFile;	// SAC 12/19/14
 	QString sAnnualWeatherFile;
@@ -3130,6 +3161,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	GetDLLPath( sCACertPath );
 	if (sCACertPath[sCACertPath.length()-1] == '\\')
 		sCACertPath = sCACertPath.left( sCACertPath.length()-1 );
+	QStringList saEPlusProcDirsToBeRemoved;	// SAC 5/22/19
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())
 	{
 // SAC 4/23/13 - added code to evalaute rl_CHECKCODE & rl_CHECKSIM rulelists and report resulting errors
@@ -3258,6 +3290,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (lDBID_Proj_DefDwellUnitArea > 0)
 			BEMPX_GetInteger( lDBID_Proj_DefDwellUnitArea, lNumSpaceWithDefaultedDwellingUnitArea );
 
+	// SAC 4/3/19 - added flag to prevent PV-Batt simulation (unless project input allows)
+		lNumPVArraysChk  = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray" ) );
+		bEnablePVBattSim = (lNumPVArraysChk > 0);
+		if (bEnablePVBattSim)
+		{	long lPVBattSim, lDBID_Proj_PVBattSim = BEMPX_GetDatabaseID( "PVBattSim", iCID_Proj );		assert( lDBID_Proj_PVBattSim > 0 );
+			if (lDBID_Proj_PVBattSim > 0 && BEMPX_GetInteger( lDBID_Proj_PVBattSim, lPVBattSim ) && lPVBattSim == 0)
+				bEnablePVBattSim = false;
+		}
+
 // SAC 9/3/13 - moved up here (above CHECKCODE) from below so that weather file hash checks can occur via CHECKCODE
 		//sErrMsg.clear();
 		if (!bAbort && !BEMPX_AbortRuleEvaluation())
@@ -3345,7 +3386,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 // -----------------------------------------------------
 // NEW ERROR/WARNING CHECKING & REPORTING STUFF
 // -----------------------------------------------------
-			if (!bBypassPreAnalysisCheckRules)		// SAC 1/25/19 (tic #2924)
+		if (!bBypassPreAnalysisCheckRules)		// SAC 1/25/19 (tic #2924)
 			{
 				iPrevRuleErrs = BEMPX_GetRulesetErrorCount();
    								if (bVerbose)
@@ -3509,7 +3550,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandUFacChecks;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandUFacChecks", iCID_Proj ), lDisableMandUFacChecks ))		// SAC 2/7/17 - new cause for disabling report security
 						lDisableMandUFacChecks = 0;
-			#define  NumRptSecOff  16
+			#define  NumRptSecOff  18
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -3527,7 +3568,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													(!sCSEIncludeFileDBID.isEmpty()),			// user specification of CSE include file(s): %s", sCSEIncludeFileDBID );
 													(lNumSpaceWithDefaultedDwellingUnitArea > 0),  	// # dwelling unit areas have not been entered by the user
 													(lDisableMandUFacChecks > 0),  			// mandatory U-factor checks disabled by the user - SAC 2/7/17
-													(iNumFileOpenDefaultingRounds != 3)  };	// number of model defaulting rounds overridden by user - SAC 4/11/18 
+													(iNumFileOpenDefaultingRounds != 3),	// number of model defaulting rounds overridden by user - SAC 4/11/18 
+													(lNumPVArraysChk > 0 && bEnablePVBattSim) };		// model includes PV array(s) (and possibly battery) which are not yet allowed in permit analysis  - SAC 4/3/19
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
 					{	if (bRptSecOff[iRF])
 							iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -3570,6 +3612,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 //	case 12 :	sLogMsg.sprintf( "      presence of %d space(s) with defaulted residential dwelling unit areas (Spc:DwellUnitTypeArea[*])", lNumSpaceWithDefaultedDwellingUnitArea );
 									case 15 :	sLogMsg =        "      mandatory U-factor checks disabled";		break;	// SAC 2/7/17
 									case 16 :	sLogMsg.sprintf( "      number of model defaulting rounds overridden by user (%d entered, 3 required)", iNumFileOpenDefaultingRounds );		break;	// SAC 4/11/18
+									case 17 :	sLogMsg =        "      model includes PV array(s) which are not yet allowed in permit analysis";		break;	// SAC 4/3/19
 									default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
@@ -4535,7 +4578,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
-																				false /*bIncludeOutputDiagnostics*/, iProgressType );		// SAC 5/27/15
+																				false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr );		// SAC 5/27/15   // SAC 2/15/19
 
 							// moved some post-E+ processing into if (bSimRunsNow) statement
 								tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -4562,14 +4605,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									if (osSimInfo[iSR].bSimulateModel && bStoreHourlyResults)
 									{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
 										int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray"   ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
-										if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
+										if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || (iNumPVArrayObjs > 0 && bEnablePVBattSim))		// SAC 4/3/19
 										{
 								// CSE (DHW &/or PVArray/Battery) SIMULATION
 											BOOL bCSESimOK = TRUE;		QString sCSEErrMsg;
 												// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
 					// --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
-												QString sCSE_DHWUseMthd;
-												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );
+												QString sCSE_DHWUseMthd, sCSE_DHWUseIncFile;
+												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd"   , iCID_Proj ), sCSE_DHWUseMthd   , FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );
+												BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseIncFile", iCID_Proj ), sCSE_DHWUseIncFile, FALSE, 0, -1, -1, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx );	// SAC 2/20/19
+												if (sCSE_DHWUseIncFile.isEmpty())
+													sCSE_DHWUseIncFile = "DHWDU.txt";
 												if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
 												{	sErrMsg.sprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
 //														54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
@@ -4583,15 +4629,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												}
 												else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
 												{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
-													QString sDHWUseIncFile = "DHWDU.txt";	// SAC 1/24/19 - updated from DHWDUMF.txt to DHWDU.txt
-													QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
+													//QString sDHWUseIncFile = "DHWDU.txt";	// SAC 1/24/19 - updated from DHWDUMF.txt to DHWDU.txt
+													QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sCSE_DHWUseIncFile;
 													if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
 													{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
 //															55 : CSE (residential DHW simulation engine) use profile file not found
 														ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
 													}
 													else
-													{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
+													{	sDHWUseTo = sProcessingPath + sCSE_DHWUseIncFile;
 														if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
 														{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
 //																57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
@@ -4646,7 +4692,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
 									//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
 														iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
-																										osSimInfo[iSR].pszLongRunID, osSimInfo[iSR].pszRunID, &sCSEVersion, osSimInfo[iSR].iBEMProcIdx );
+																													osSimInfo[iSR].pszLongRunID, osSimInfo[iSR].pszRunID, &sCSEVersion,
+																													osSimInfo[iSR].iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim) );  // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects
 									//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 									//				}
 
@@ -4789,7 +4836,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
-																				false /*bIncludeOutputDiagnostics*/, iProgressType );
+																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved );	// SAC 5/22/19
 							}
 
 						// SAC 8/21/14 - added export of hourly results CSV
@@ -4976,6 +5023,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										{	int iCID_ThrmlZn = BEMPX_GetDBComponentID( "ThrmlZn" );																	assert( iCID_ThrmlZn > 0 );
 											long lDBID_ThrmlZn_ClgUMLHLimit = BEMPX_GetDatabaseID( "ClgUMLHLimit", iCID_ThrmlZn );							assert( iCID_ThrmlZn < 1 || lDBID_ThrmlZn_ClgUMLHLimit > 0 );
 											long lDBID_ThrmlZn_HtgUMLHLimit = BEMPX_GetDatabaseID( "HtgUMLHLimit", iCID_ThrmlZn );							assert( iCID_ThrmlZn < 1 || lDBID_ThrmlZn_HtgUMLHLimit > 0 );
+											long lDBID_ThrmlZn_BypassClgUMLHLimit = BEMPX_GetDatabaseID( "BypassClgUMLHLimit", iCID_ThrmlZn );		// SAC 5/12/19 - added to enable individual Zone Clg/Htg bypass of UMLH limits (tic #2680)
+											long lDBID_ThrmlZn_BypassHtgUMLHLimit = BEMPX_GetDatabaseID( "BypassHtgUMLHLimit", iCID_ThrmlZn );
 											QString cstrUMLHWarningMsg, cstrUMLHWarningDetails, cstrUMLHDlgCaption;
 											if (iCID_ThrmlZn > 0)
 											{	for (int iR=0; iR <= iSimRunIdx; iR++)
@@ -4993,9 +5042,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 #define  UMLH_ERR_MSG_BASELINE	225	// space for leading line:  Error: In XXXXXXXXXXXXX model, ### zone(s) exceed maximum cooling unmet load hours (####) and ### zone(s) exceed maximum heating unmet load hours (####)
 															// and trailing line:       (and ### other zones, as reported in project log file)
 															QString sReducedErrantZoneList;
+															long lConstantClgUMLHLimit = -1, lConstantHtgUMLHLimit = -1;  // SAC 5/21/19 - to report individual UMLH limit values in warning message
 															int iMaxErrantZoneListToAppend = 0, iNumZnsExcludedFromErrZoneList = 0;
 															if (iErrorMsgLen > 0 && pszErrorMsg && (iErrorMsgLen - strlen( pszErrorMsg )) > UMLH_ERR_MSG_BASELINE)
-																iMaxErrantZoneListToAppend = iErrorMsgLen - (strlen( pszErrorMsg ) + UMLH_ERR_MSG_BASELINE);
+																iMaxErrantZoneListToAppend = iErrorMsgLen - ((int) strlen( pszErrorMsg ) + UMLH_ERR_MSG_BASELINE);
 															long lDBID_ThrmlZn_ClgUnmetLdHrs = BEMPX_GetDatabaseID( "ClgUnmetLdHrs", iCID_ThrmlZn );			assert( lDBID_ThrmlZn_ClgUnmetLdHrs > 0 );
 															long lDBID_ThrmlZn_HtgUnmetLdHrs = BEMPX_GetDatabaseID( "HtgUnmetLdHrs", iCID_ThrmlZn );			assert( lDBID_ThrmlZn_HtgUnmetLdHrs > 0 );
 															long lDBID_ThrmlZn_Name          = BEMPX_GetDatabaseID( "Name"         , iCID_ThrmlZn );			assert( lDBID_ThrmlZn_Name          > 0 );
@@ -5009,28 +5059,50 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "MaxHtgUnmetLdHrs", iCID_Proj ), fMaxUnmetHtgLdHrs, 0, -1, 0, BEMO_User, osRunInfo[iR].BEMProcIdx() ))
 																		fMaxUnmetHtgLdHrs = -1;
 																}
+																long lBypassClgUMLHLimit=0, lBypassHtgUMLHLimit=0;		// SAC 5/12/19 (tic #2680)
+																if (lDBID_ThrmlZn_BypassClgUMLHLimit < 1 || !BEMPX_GetInteger( lDBID_ThrmlZn_BypassClgUMLHLimit, lBypassClgUMLHLimit, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ))
+																	lBypassClgUMLHLimit = 0;
+																if (lDBID_ThrmlZn_BypassHtgUMLHLimit < 1 || !BEMPX_GetInteger( lDBID_ThrmlZn_BypassHtgUMLHLimit, lBypassHtgUMLHLimit, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ))
+																	lBypassHtgUMLHLimit = 0;
 
-																if (fMaxUnmetClgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_ClgUnmetLdHrs, fNumZoneClgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) && fNumZoneClgUMLHs > 0)
+																if (fMaxUnmetClgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_ClgUnmetLdHrs, fNumZoneClgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) &&
+																	 fNumZoneClgUMLHs > 0 && lBypassClgUMLHLimit == 0)		// SAC 5/13/19 (tic #2680)
 																{	if (fNumZoneClgUMLHs > (fMaxZoneClgUMLHs + 0.1))
 																	{	iMaxZoneExceedClgUMLHsIdx = iZn;
 																		fMaxZoneClgUMLHs = fNumZoneClgUMLHs;
 																	}
 																	if (fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1))
-																		iNumZonesExceedClgUMLHs++;
+																	{	iNumZonesExceedClgUMLHs++;
+																		if (lConstantClgUMLHLimit == -1)  // SAC 5/21/19
+																			lConstantClgUMLHLimit = (long) (fMaxUnmetClgLdHrs + 0.1);
+																		else if (lConstantClgUMLHLimit > 0 && lConstantClgUMLHLimit != (long) (fMaxUnmetClgLdHrs + 0.1))
+																			lConstantClgUMLHLimit = -2;  // => no constant UMLH limit
+																	}
 																}
-																if (fMaxUnmetHtgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_HtgUnmetLdHrs, fNumZoneHtgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) && fNumZoneHtgUMLHs > 0)
+																if (fMaxUnmetHtgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_HtgUnmetLdHrs, fNumZoneHtgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) &&
+																	 fNumZoneHtgUMLHs > 0 && lBypassHtgUMLHLimit == 0)		// SAC 5/13/19 (tic #2680)
 																{	if (fNumZoneHtgUMLHs > (fMaxZoneHtgUMLHs + 0.1))
 																	{	iMaxZoneExceedHtgUMLHsIdx = iZn;
 																		fMaxZoneHtgUMLHs = fNumZoneHtgUMLHs;
 																	}
 																	if (fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1))
-																		iNumZonesExceedHtgUMLHs++;
+																	{	iNumZonesExceedHtgUMLHs++;
+																		if (lConstantHtgUMLHLimit == -1)  // SAC 5/21/19
+																			lConstantHtgUMLHLimit = (long) (fMaxUnmetHtgLdHrs + 0.1);
+																		else if (lConstantHtgUMLHLimit > 0 && lConstantHtgUMLHLimit != (long) (fMaxUnmetHtgLdHrs + 0.1))
+																			lConstantHtgUMLHLimit = -2;  // => no constant UMLH limit
+																	}
 																}
 
                      			                  // append record to string reporting zone UMLH issues - SAC 9/6/13
-																if ( (fMaxUnmetClgLdHrs > -0.5 && fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1)) ||
-																	  (fMaxUnmetHtgLdHrs > -0.5 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1)) )
-																{	BEMPX_GetString( lDBID_ThrmlZn_Name, sMaxZoneClgUMLHsName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iZn,
+																if ( (fMaxUnmetClgLdHrs > -0.5 && lBypassClgUMLHLimit == 0 && fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1)) ||
+																	  (fMaxUnmetHtgLdHrs > -0.5 && lBypassHtgUMLHLimit == 0 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1)) )
+																{	// SAC 5/13/19 - zero out UMLH values for which checks are to be Bypassed (tic #2680)
+																	if (lBypassClgUMLHLimit)
+																		fNumZoneClgUMLHs = 0;
+																	if (lBypassHtgUMLHLimit)
+																		fNumZoneHtgUMLHs = 0;
+																	BEMPX_GetString( lDBID_ThrmlZn_Name, sMaxZoneClgUMLHsName, FALSE /*bAddCommas*/, 0 /*iPrecision*/, -1 /*iDispDataType*/, iZn,
 																									BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() );		assert( !sMaxZoneClgUMLHsName.isEmpty() );
 																	sAppendToErrantZoneList.sprintf( "\n          clg: %.0f  htg: %.0f  '%s'", fNumZoneClgUMLHs, fNumZoneHtgUMLHs, sMaxZoneClgUMLHsName.toLocal8Bit().constData() );
 														// SAC 3/8/14 - added code to limit zones reported back to calling application so that error message doesn't exceed max length
@@ -5087,12 +5159,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneHtgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
                      		
 															if (iNumZonesExceedClgUMLHs > 0 || iNumZonesExceedHtgUMLHs > 0)
-															{	if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load hours and %d zone(s) exceed maximum heating unmet load hours", iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/ osRunInfo[iR].LongRunID().toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/ );
+															{	QString sClgHoursStr = "hours", sHtgHoursStr = "hours";		// SAC 5/21/19 - include max UMLH limits in warning message
+																if (lConstantClgUMLHLimit > 0)
+																	sClgHoursStr.sprintf( "hours of %d", lConstantClgUMLHLimit );
+																if (lConstantHtgUMLHLimit > 0)
+																	sHtgHoursStr.sprintf( "hours of %d", lConstantHtgUMLHLimit );
+																if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
+																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s", iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/
+																								osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																else if (iNumZonesExceedClgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load hours", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/ );
+																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
 																else  // if (iNumZonesExceedHtgUMLHs > 0)
-																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load hours", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/ );
+																	sErrMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
+
 																if (iMaxErrantZoneListToAppend > 0 && !sReducedErrantZoneList.isEmpty())	// SAC 3/8/14
 																	// repeat same message but w/ shortened list of zones
 																	sErrMsgShortenedToFit.sprintf( "%s%s\n          (and %d other zone(s), as reported in project log file)", sErrMsg.toLocal8Bit().constData(), sReducedErrantZoneList.toLocal8Bit().constData(), iNumZnsExcludedFromErrZoneList );
@@ -5106,35 +5185,34 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																if (!osRunInfo[iR].IsStdRun())  //bVerbose)	// SAC 3/10/15 - added verbose logging of each UMLH errant zone inside zone loop to catch variation in UMLH limits (by zone)
 																{	sUMLHTextFileMsg = cstrUMLHWarningDetails;		// qstrUMLHWarningDetails.toStdString().c_str();
 																	if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
-																	{
-																		//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours and %L3 zone(s) exceed maximum heating unmet load hours.<br><br></a>" )
+																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours and %L3 zone(s) exceed maximum heating unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedClgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) ).arg( iNumZonesExceedHtgUMLHs );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load hours and %d zone(s) exceed maximum heating unmet load hours.<br><br></a>",
-    																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load hours and %d zone(s) exceed maximum heating unmet load hours:\n", iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/ osRunInfo[iR].LongRunID().toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/ );
+																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.<br><br></a>",
+    																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs, sHtgHoursStr.toLocal8Bit().constData() );
+																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s:\n",
+																													iNumZonesExceedClgUMLHs, /*fMaxUnmetClgLdHrs,*/ osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																	}
 																	else if (iNumZonesExceedClgUMLHs > 0)
-																	{
-																		//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours.<br><br></a>" )
+																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum cooling unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedClgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load hours.<br><br></a>",
-    																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load hours:\n", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/ );
+																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.<br><br></a>",
+    																												iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData() );
+																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum cooling unmet load %s:\n", iNumZonesExceedClgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetClgLdHrs*/, sClgHoursStr.toLocal8Bit().constData() );
 																	}
 																	else  // if (iNumZonesExceedHtgUMLHs > 0)
-																	{
-																		//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum heating unmet load hours.<br><br></a>" )
+																	{	//qstrUMLHWarningMsg = QString( "<a>Warning:  %L1 zone(s) in %2 model exceed maximum heating unmet load hours.<br><br></a>" )
     																	//											.arg( iNumZonesExceedHtgUMLHs ).arg( ((const char*) osRunInfo[iR].LongRunID()) );
-																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum heating unmet load hours.<br><br></a>",
-    																												iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() );
-																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum heating unmet load hours:\n", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/ );
+																		cstrUMLHWarningMsg.sprintf( "<a>Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.<br><br></a>",
+    																												iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData(), sHtgHoursStr.toLocal8Bit().constData() );
+																		sLogMsg.sprintf( "%d zone(s) in %s model exceed maximum heating unmet load %s:\n", iNumZonesExceedHtgUMLHs, osRunInfo[iR].LongRunID().toLocal8Bit().constData() /*, fMaxUnmetHtgLdHrs*/, sHtgHoursStr.toLocal8Bit().constData() );
 																	}
 																	sUMLHTextFileMsg = sLogMsg + sUMLHTextFileMsg;
 																	//qstrUMLHWarningDetails.prepend( "Zones exceeding unmet load hour limits:\n" );
 																	//qstrUMLHWarningMsg.append( "<a>All thermal zones exceeding unmet load hour limits will be reported on PRF-1.<br></a>" );
 																	//qstrUMLHWarningMsg.append( "<a>In the future, projects with zones exceeding UMLH limits will not be useable for compliance.</a>" );
 																	cstrUMLHWarningDetails = "Zones exceeding unmet load hour limits:\n" + cstrUMLHWarningDetails;
-																	cstrUMLHWarningMsg += "<a>All thermal zones exceeding unmet load hour limits will be reported on PRF-1.<br></a>";
+																	// SAC 4/2/19 - wording updated to include: watermarked 'not for compliance' (tic #2680)
+																	cstrUMLHWarningMsg += "<a>All thermal zones exceeding unmet load hour limits will be reported on PRF-1, which will be watermarked 'not for compliance'.<br></a>";
 																	cstrUMLHWarningMsg += "<a>In the future, projects with zones exceeding UMLH limits will not be useable for compliance.</a>";
 
 																	QString sUMLHFAQLink;
@@ -5209,9 +5287,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 												// added copy of error message writing/processing from below to ensure error messages written to log for EVERY run resulting in errors
 														if (!sErrMsg.isEmpty())
 														{
-															BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+															// SAC 4/2/19 - moved log file writing code to inside !IsStdRun() check to prevent echoing std run UMLH to project log (tic #2680)
 															if (!osRunInfo[iR].IsStdRun())  // osRunInfo[iR].OSRunIdx() == 0 || osRunInfo[iR].OSRunIdx() == 2)
-															{	// throw error only if UMLH limits exceeded for * Proposed models  - SAC 1/31/15
+															{
+																BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+																// throw error only if UMLH limits exceeded for * Proposed models  - SAC 1/31/15
 																baSimPassesUMLHLimits[iR] = false;
 																bool bErrMsgAppendedToReturn = false;
 																if (!sErrMsgShortenedToFit.isEmpty())
@@ -5234,6 +5314,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											}	// if (iCID_ThrmlZn > 0)
 										}	// else  => perform UMLH checks
 							}	}	}
+
+						// evaluate 'AnalysisPostProcessing' rulelist - SAC 4/20/19
+							if (!bAbort && !BEMPX_AbortRuleEvaluation() && iSimRetVal==0 && (iRun+1) == iNumRuns &&
+								 BEMPX_RulelistExists( "AnalysisPostProcessing" ))
+							{
+				// debugging
+				//sLogMsg.sprintf( "Evaluating 'AnalysisPostProcessing' rulelist on model %d (iCurActiveBEMProcIdx %d).", BEMPX_GetActiveModel(), iCurActiveBEMProcIdx );
+				//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								int iPostProcRuleRetVal = LocalEvaluateRuleset( sErrMsg, 76, "AnalysisPostProcessing", bVerbose, pCompRuleDebugInfo );
+//											76 : Error evaluating 'AnalysisPostProcessing' rulelist
+								if (iPostProcRuleRetVal != 0 || BEMPX_AbortRuleEvaluation())
+									ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 76 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
+							}
 
 //							if (bStoreBEMDetails && !bThisOSSimSkipped)
 							if (bStoreBEMDetails && bSimRunsNow)
@@ -5554,6 +5647,23 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 	// end of: COMPLIANCE REPORT GENERATION   - SAC 9/14/13
 	// ----------
+
+	// SAC 5/22/19 - added code to remove E+ processing directories here, @ end of analysis to avoid deletion errors
+		int iNumEPlusProcDirs = (int) saEPlusProcDirsToBeRemoved.size();
+		if (iNumEPlusProcDirs > 0)
+		{	if (!sProcessingPath.isEmpty())
+			{	SetCurrentDirectory( sProcessingPath.toLocal8Bit().constData() );
+				//BEMPX_WriteLogFile( "   current directory set to processing path", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			}
+			for (int iEPDir=0; iEPDir<iNumEPlusProcDirs; iEPDir++)
+			{	std::string sEPlusDirToDel = saEPlusProcDirsToBeRemoved[iEPDir].toLocal8Bit().constData();
+				try
+				{	/*boost::uintmax_t uiNumDeleted =*/ boost::filesystem::remove_all( sEPlusDirToDel.c_str() );
+				}
+				catch (const boost::filesystem::filesystem_error& ex)
+				{	std::string sFailMsg = boost::str( boost::format( "    during simulation file clean-up, unable to remove directory:  %s  - %s" ) % sEPlusDirToDel.c_str() % ex.what() );
+					BEMPX_WriteLogFile( sFailMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}	}	}
 	}
 
 // SAC 1/24/14 - added code to address file pruning - iAnalysisStorage >= 3 => keep ALL files
@@ -5987,9 +6097,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 int path_len( std::string& str )
 {	int iPathLen = -1, iPathLen2 = -1;
 	if (str.rfind('\\') != std::string::npos)
-		iPathLen  = str.rfind('\\');
+		iPathLen  = (int) str.rfind('\\');
 	if (str.rfind('/' ) != std::string::npos)
-		iPathLen2 = str.rfind('/' );
+		iPathLen2 = (int) str.rfind('/' );
 	return std::max( iPathLen, iPathLen2 );
 }
 
@@ -6015,7 +6125,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 	if (iTempPathLen > 0)
 		sBatchPath = sBatchPathFile.substr( 0, iTempPathLen+1 );
 	std::string sProjPath = pszProjectPath;
-	int iLenOptionsCSVArg = (pszOptionsCSV ? strlen( pszOptionsCSV ) : 0);
+	int iLenOptionsCSVArg = (pszOptionsCSV ? (int) strlen( pszOptionsCSV ) : 0);
 
 	std::string sRulesetPathFile = pszRulesetPathFile;
 	std::string sRulesetPath;
@@ -6307,7 +6417,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 			QDateTime timeStartRun = QDateTime::currentDateTime();
 			sErrMsg.erase();
 			std::string sProjPathFile = saProjOutFN[iRun];
-			int iLastDotIdx   = sProjPathFile.rfind('.');			assert( iLastDotIdx   > 0 );
+			int iLastDotIdx   = (int) sProjPathFile.rfind('.');			assert( iLastDotIdx   > 0 );
 			int iLastSlashIdx = path_len( sProjPathFile );			assert( iLastSlashIdx > 0 );
 			std::string sProcessingPath = sProjPathFile.substr( 0, iLastDotIdx );
 			sProcessingPath += " - batch\\";
@@ -6440,8 +6550,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 				// COPY Sim SDD XML files to specified location
 					if (sErrMsg.size() < 1 && saCopySimXMLToPath[iRun].size() > 0)
-					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;										assert( iProjOutPathLen > 3 );
-						int iProjOutFileExtLen = sProjPathFile.length() - sProjPathFile.rfind('.');			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
+					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;												assert( iProjOutPathLen > 3 );
+						int iProjOutFileExtLen = (int) (sProjPathFile.length() - sProjPathFile.rfind('.'));			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
 						std::string sOutFileOnly = sProjPathFile.substr( iProjOutPathLen, (sProjPathFile.length()-iProjOutPathLen-iProjOutFileExtLen) );
 						std::string sSimSDDXMLSrcBase = sProcessingPath;
 						sSimSDDXMLSrcBase += sOutFileOnly;
@@ -6501,8 +6611,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 
 				// COPY CSE files to specified location
 					if (sErrMsg.size() < 1 && saCopyCSEToPath[iRun].size() > 0)
-					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;										assert( iProjOutPathLen > 3 );
-						int iProjOutFileExtLen = sProjPathFile.length() - sProjPathFile.rfind('.');			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
+					{	int iProjOutPathLen    = path_len( sProjPathFile ) + 1;												assert( iProjOutPathLen > 3 );
+						int iProjOutFileExtLen = (int) (sProjPathFile.length() - sProjPathFile.rfind('.'));			assert( iProjOutFileExtLen > 2 && iProjOutFileExtLen < 8 );
 						std::string sOutFileOnly = sProjPathFile.substr( iProjOutPathLen, (sProjPathFile.length()-iProjOutPathLen-iProjOutFileExtLen) );
 						std::string sCSESrcBase = sProcessingPath;
 						sCSESrcBase += sOutFileOnly;

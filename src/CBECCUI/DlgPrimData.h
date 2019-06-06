@@ -93,7 +93,7 @@ protected:
 	//{{AFX_MSG(CDlgPrimData)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
-   afx_msg LONG DisplayMods( UINT, LONG );
+   afx_msg LRESULT DisplayMods( WPARAM, LPARAM );
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

@@ -335,7 +335,7 @@ void CDlgCreate::OnPaint()
    	pDC->TextOut( FontX((CR8DLG_COMBO_L-5)), iTop, szRuleLib );
 }
 
-LONG CDlgCreate::DisplayMods( UINT, LONG )
+LRESULT CDlgCreate::DisplayMods( WPARAM, LPARAM )
 {
    if (m_pOption != NULL)
 	{	m_iCr8Option = (int) m_pOption->GetItemData( m_pOption->GetCurSel() );

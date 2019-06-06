@@ -346,7 +346,7 @@ void CEditCtl::OnSetFocus( CWnd* pOldWnd )
 /////////////////////////////////////////////////////////////////////////////
 // CEditCtl - Display & Update Data Stuff
 
-LONG CEditCtl::OnGetDataStatus(UINT, LONG)
+LRESULT CEditCtl::OnGetDataStatus(WPARAM, LPARAM)
 {
    return (long) BEMPX_GetDataStatus( m_lDBID );
 }
@@ -369,7 +369,7 @@ int CEditCtl::RangeCheckViolation( BOOL bSilent, CString* psMsg )
    return iRetVal;
 }
 
-LONG CEditCtl::OnGetTextColor(UINT, LONG)
+LRESULT CEditCtl::OnGetTextColor(WPARAM, LPARAM)
 {
    int iDataStatus = BEMPX_GetDataStatus( m_lDBID );
 
@@ -403,18 +403,18 @@ LONG CEditCtl::OnGetTextColor(UINT, LONG)
 }
 
 
-LONG CEditCtl::OnGetDBID(UINT, LONG)
+LRESULT CEditCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lDBID;
 }
 
-LONG CEditCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CEditCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return -1;
 }
 
 
-LONG CEditCtl::OnDisplayData(UINT, LONG)
+LRESULT CEditCtl::OnDisplayData(WPARAM, LPARAM)
 {
    int i1Class = BEMPX_GetClassID( m_lDBID );
    BEM_ObjType eObjType = BEMPX_GetCurrentObjectType( i1Class );
@@ -436,7 +436,7 @@ LONG CEditCtl::OnDisplayData(UINT, LONG)
 }
 
 
-LONG CEditCtl::OnUpdateData( UINT, LONG)
+LRESULT CEditCtl::OnUpdateData( WPARAM, LPARAM)
 {
    int iRangeViolation = 0;
    int i1Class = BEMPX_GetClassID( m_lDBID );

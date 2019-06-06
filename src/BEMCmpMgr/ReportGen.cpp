@@ -855,7 +855,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 			{	//	Here is where you read in the file chunk by chunk
 				// build up the postthis array
 				npost = 0;	// postthis index
-				nread=fread(buff, sizeof(char), ChunkSize, fp_xml);
+				nread = (long) fread(buff, sizeof(char), ChunkSize, fp_xml);
 				if (nread <=0) {
 					iRetVal = 7;
 				//	fprintf(stderr,"Oops: input file read %d bytes\n", nread);
@@ -867,7 +867,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 				npost += nread;	//; update index into postthis
 				// if we have more to read
 				while (iRetVal == 0 && npost < FileInSize) { // we have more to read	
-					nread=fread(buff, sizeof(char), ChunkSize, fp_xml);
+					nread = (long) fread(buff, sizeof(char), ChunkSize, fp_xml);
 					if (nread <= 0) {
 					//	fprintf(stderr,"input file read %d bytes - oops\n", nread);
 						iRetVal = 8;
@@ -985,6 +985,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 // ------------------------
 // --  Qt Communication  --
 // ------------------------
+							if (bVerbose)
 								BEMPX_WriteLogFile( "    Communicating w/ report generator using Qt", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					iRetVal = GenerateReportViaQt( FileOutName, sURL.toLocal8Bit().constData(), pszCACertPath, postthis, npost, pszProxyAddress, pszProxyCredentials,
 																pszProxyType, NULL /*pszErrorMsg*/, 0 /*iErrorMsgLen*/, bVerbose );
@@ -1004,7 +1005,7 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 				if (fp_Out==NULL) 
 					iRetVal = 19;		//	19 : Error opening output file following report generation
 				else
-				{	nread = fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
+				{	nread = (long) fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
 					if (nread < 20)
 						iRetVal = 20;		//	20 : Error reading data from output file following report generation
 			//		else					- SAC 7/14/17 - returned file is always XML

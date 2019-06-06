@@ -1,3 +1,34 @@
+/**********************************************************************
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
+ *  All rights reserved.
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions, the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  - Neither the name of the California Energy Commission nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *  DISCLAIMER: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ *  THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NON-INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL CALIFORNIA ENERGY COMMISSION,
+ *  WRIGHTSOFT CORPORATION, ITRON, INC. OR ANY OTHER AUTHOR OR COPYRIGHT HOLDER OF
+ *  THIS SOFTWARE (COLLECTIVELY, THE "AUTHORS") BE LIABLE FOR ANY DIRECT, INDIRECT,
+ *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+ *  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ *  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  EACH LICENSEE AND SUBLICENSEE OF THE
+ *  SOFTWARE AGREES NOT TO ASSERT ANY CLAIM AGAINST ANY OF THE AUTHORS RELATING TO
+ *  THIS SOFTWARE, WHETHER DUE TO PERFORMANCE ISSUES, TITLE OR INFRINGEMENT ISSUES,
+ *  STRICT LIABILITY OR OTHERWISE.
+ **********************************************************************/
+
 /*
 Copyright (C)  2004 Artem Khodush
 
@@ -522,7 +553,7 @@ DWORD WINAPI thread_buffer_t::reader_thread( LPVOID param )
                 // they want more data - read the file
                 DWORD read_size=0;
                 DWORD read_status=ERROR_SUCCESS;
-                if( !ReadFile( p->m_pipe, read_buffer, p->m_read_buffer_size, &read_size, 0 ) ) {
+                if( !ReadFile( p->m_pipe, read_buffer, (DWORD) p->m_read_buffer_size, &read_size, 0 ) ) {
                     read_status=GetLastError();
                     if( read_status!=ERROR_BROKEN_PIPE ) {
                         p->note_thread_error( "thread_buffer_t::reader_thread: ReadFile failed", read_status, "" );
@@ -680,7 +711,7 @@ DWORD WINAPI thread_buffer_t::writer_thread( LPVOID param )
             if( buffer.data!=0 ) {
                 // we have buffer - write it
                 DWORD written_size;
-                if( !WriteFile( p->m_pipe, buffer.data+buffer_offset, buffer.size-buffer_offset, &written_size, 0 ) ) {
+                if( !WriteFile( p->m_pipe, buffer.data+buffer_offset, (DWORD) (buffer.size-buffer_offset), &written_size, 0 ) ) {
                     p->note_thread_error( "thread_buffer_t::writer_thread: WriteFile failed", GetLastError(), "" );
                     break;
                 }

@@ -178,7 +178,8 @@ public:
                  BOOL bSupressAllMessageBoxes = FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 					  int iFileType = 0, bool bOnlyValidInputs = false,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14 - added bOnlyValidInputs arg
 					  int iPropertyCommentOption = 0, 		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
-					  std::vector<long>* plaClsObjIndices = NULL );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+					  std::vector<long>* plaClsObjIndices = NULL,		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+					  bool bReportInvalidEnums = true );		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
    ~CProjectFile();
 
 // SAC 4/27/03 - Modified function to return BOOL
@@ -303,6 +304,7 @@ private:
 	int m_iPropertyCommentOption;		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
 	int m_iChildIndent;					// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
 	std::vector<long>* m_plaClsObjIndices;		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+	bool m_bReportInvalidEnums;
 };
 
 
@@ -344,7 +346,8 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
                             BOOL bSupressAllMessageBoxes /*=FALSE*/,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
 									 int iFileType /*=0*/, bool bOnlyValidInputs /*=false*/,   // SAC 8/30/11 - added iFileType argument  // SAC 4/16/14
 									 int iPropertyCommentOption /*=0*/, 		// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
-									 std::vector<long>* plaClsObjIndices /*=NULL*/ )		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+									 std::vector<long>* plaClsObjIndices /*=NULL*/, 		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+									 bool bReportInvalidEnums /*=true*/ )
 {
    // set some member flags
    m_bIsUserInputMode = (iFileMode == BEMFM_INPUT)/*bIsInputMode*/;
@@ -369,6 +372,7 @@ CProjectFile::CProjectFile( const char* fileName, int iFileMode /*bool bIsInputM
 
 	m_iChildIndent = (m_iFileType == BEMFT_CSE ? 3 : 0);		// SAC 12/5/16 - Indents child objects this number of spaces in relation to its parent
 	m_plaClsObjIndices = plaClsObjIndices;
+	m_bReportInvalidEnums = bReportInvalidEnums;
 
    try
    {
@@ -2164,7 +2168,7 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
             m_file.WriteToken( sLine.toLocal8Bit().constData(), sLine.length() );
             m_file.NewLine();
          }
-  	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
+  	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
 	      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
 				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
 
@@ -2237,7 +2241,7 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
       }
       else 
       {	assert( FALSE );	
-			if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
+			if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
 				// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
 				ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
 		}
@@ -2378,7 +2382,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	{
    	   m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );
    	   //m_file.WriteToken( "   ", 3 );
-   	   m_file.WriteToken( szTreeState, strlen(szTreeState) );
+   	   m_file.WriteToken( szTreeState, (int) strlen(szTreeState) );
    	   m_file.WriteToken( " = ", 3 );
    	   QString sTemp;
    	   sTemp = QString( "%1" ).arg( QString::number(pObj->getTreeState()) );
@@ -2418,7 +2422,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	               if ( pProp->getDataStatus() == BEMS_NumTypes )
    	                  assert( FALSE );
    	               char* sStatus = szaPropertyStatusString[ (int)(pProp->getDataStatus()) ];
-   	               m_file.WriteToken( sStatus, strlen(sStatus) );
+   	               m_file.WriteToken( sStatus, (int) strlen(sStatus) );
    	               m_file.WriteToken( ": ", 2 );
    	            }
 
@@ -2459,7 +2463,7 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	            //if ( pProp->m_iCritDefIdx > 0 )
    	            //   WriteCritDefComment( BEMPX_GetCriticalDefaultCommentFromIndex( pProp->m_iCritDefIdx, iBEMProcIdx ) );
    	         }
-	   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1)
+	   	      else if (pProp->getType()->getPropType() == BEMP_Sym && sData.indexOf("(null)") == 1 && m_bReportInvalidEnums)		// SAC 5/20/19
    		      	// SAC 4/7/16 - report cases where an enum has no valid string based on current project data
 						ReportInvalidEnumerationWrite( pObj, pProp, iBEMProcIdx );
    	         else
@@ -3054,14 +3058,14 @@ void CProjectFile::WriteEndOfFileMarker( int iBEMProcIdx /*=-1*/ )
 
       // write end-of-file marker
 			m_file.NewLine();
-      	m_file.WriteToken( szCSE_Run, strlen( szCSE_Run ) );
+      	m_file.WriteToken( szCSE_Run, (int) strlen( szCSE_Run ) );
       	m_file.NewLine();
-      	m_file.WriteToken( szCSE_End, strlen( szCSE_End ) );
+      	m_file.WriteToken( szCSE_End, (int) strlen( szCSE_End ) );
       	m_file.NewLine();
 		}
 		else
 		{	m_file.NewLine();
-      	m_file.WriteToken( szEnd, strlen( szEnd ) );
+      	m_file.WriteToken( szEnd, (int) strlen( szEnd ) );
       	m_file.NewLine();
 		}
    }
@@ -3718,7 +3722,8 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 									int iBEMProcIdx /*=-1*/, long lModDate /*=-1*/, bool bOnlyValidInputs /*=false*/,    // SAC 3/18/13  // SAC 6/26/13
 									bool bAllowCreateDateReset /*=true*/,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
 									int iPropertyCommentOption /*=0*/, 			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
-									std::vector<long>* plaClsObjIndices /*=NULL*/ )		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+									std::vector<long>* plaClsObjIndices /*=NULL*/, 		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+								   bool bReportInvalidEnums /*=true*/ )		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
 {
 	bool bRetVal = true;
 
@@ -3793,7 +3798,7 @@ bool BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInput
 	{
    	CProjectFile* file = new CProjectFile( sFileName.toLocal8Bit().constData(), iFileMode /*bIsInputMode*/, 0, 0, BEMTextIO::store, bWriteAllProperties,  // SAC 1/15/03
    	                                       bSupressAllMessageBoxes, iFileType, bOnlyValidInputs, iPropertyCommentOption,   // SAC 4/27/03  // SAC 12/5/16
-															plaClsObjIndices );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+															plaClsObjIndices, bReportInvalidEnums );		// SAC 12/14/18 - writing of specific object type/index elements   // SAC 5/20/19 - bReportInvalidEnums
    	if ( file->IsOpen() )
    	   file->WriteProjectFile( iBEMProcIdx );
    	
@@ -4219,6 +4224,14 @@ bool MustWriteProperty_XML( BEMObject* pObj, BEMProperty* pProp, int iProp, int 
 		if (!bWritePropertiesDefinedByRuleset && pProp && pProp->getType() && pProp->getType()->getDefinedByRuleset())
 			return false;
 
+//		// SAC 5/7/19 - new logic to cause (potentially undefined) properties to get written to 
+//		if (iFileMode == BEMFM_INPUT && pProp && pProp->getType() && pProp->getType()->getPropTypeDetails(0) && pProp->getType()->getPropTypeDetails(0)->isPrimary())
+//		{
+//						QString sDbg = QString("   forcing write of primary property: %1").arg(pProp->getType()->getShortName());
+//					   BEMPX_WriteLogFile( sDbg );
+//			return true;
+//		}
+
 // SAC 4/16/14 - if storing input and m_bOnlyValidInputs = true, then check to confirm that there are valid input properties before writing file
 		if (iFileMode == BEMFM_INPUT && bOnlyValidInputs && pProp && pProp->getType() && pObj && pObj->getClass())
 		{	int iCompDT = BEMPX_GetCompDataType( BEMPX_GetDBID( pObj->getClass()->get1BEMClassIdx(), pProp->getType()->get1PropTypeIdx(), pProp->get1ArrayIdx() ) );			assert( iCompDT >= 0 );
@@ -4347,9 +4360,8 @@ void PropertyToString_XML( BEMObject* pObj, BEMProperty* pProp, QString& sData, 
 
 void WriteBracketPropertyArray_XML( QXmlStreamWriter& stream, BEMObject* pObj, BEMProperty* pProp, int& iProp, int iFileMode /*bool bIsInputMode*/, int iFileType,
 												bool bWriteAllProperties, int iBEMProcIdx, bool bUseReportPrecisionSettings /*=false*/ )
-{
-   // Write array as list of the format "PROP[n] = VALUE" with comments as required
-   QString sPropType = pProp->getType()->getShortName();
+{  // Write array as list of the format "PROP[n] = VALUE" with comments as required
+   //QString sPropType = pProp->getType()->getShortName();
    QString sData;
    //BOOL bDataAlreadyWritten = FALSE;
    int iCount = 1;
@@ -4364,14 +4376,17 @@ void WriteBracketPropertyArray_XML( QXmlStreamWriter& stream, BEMObject* pObj, B
 
          // if property string not zero length, then write it
          if (sData.length() > 0 && (bWriteAllProperties || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
-         {
+         {	QString sPropName = pProp->getType()->getShortName();
+				if (sPropName.indexOf("afterchildren_")==0)
+					sPropName = sPropName.right( sPropName.length()-14 );		// SAC 5/17/19 (res tic #1114)
+
 	         if (pProp->getType()->getXMLWriteArrayIndices())   // SAC 1/24/12 - reference new flag indiciating whether or not to write array indices to XML output
 				{	QString sIndex = QString( "%1" ).arg( QString::number(iCount-1) );
-		   		stream.writeStartElement( QString(pProp->getType()->getShortName()) );
+		   		stream.writeStartElement( sPropName );
 		   		stream.writeAttribute( "index",	QString(sIndex) );
 				}
 				else
-		   		stream.writeStartElement( QString(pProp->getType()->getShortName()) );
+		   		stream.writeStartElement( sPropName );
 	   		stream.writeCharacters( QString(sData) );
 	   		stream.writeEndElement();
          }
@@ -4486,6 +4501,14 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
                WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
          }
       }
+		// SAC 5/8/19 - new logic to cause properties to get written to XML output even if undefined
+		else if (iFileMode == BEMFM_INPUT && pProp && pProp->getType() && pProp->getType()->getPropTypeDetails(0) && pProp->getType()->getPropTypeDetails(0)->isPrimary())
+		{		//		QString sDbg = QString("   forcing write of primary property: %1").arg(pProp->getType()->getShortName());
+				//	   BEMPX_WriteLogFile( sDbg );
+			QString sPropName = pProp->getType()->getShortName();
+			XMLPropertyNameReplacements( sPropName );
+			stream.writeEmptyElement( QString(sPropName) );
+		}
       else if (pProp == NULL)
       {
          assert( FALSE );
@@ -5653,12 +5676,12 @@ bool ReadXMLComponent( const char* fileName, QXmlStreamReader& stream, QString s
 	}
 
 // debugging
-if (bRetVal)
-{	assert( pBEMObject );
-	QString sLogMsg = QString( "   done reading %1 '%2' on line %3, column %4" ).arg( pBEMObject->getClass()->getShortName(), pBEMObject->getName(),
-													QString::number(stream.lineNumber()), QString::number(stream.columnNumber()) );
-   BEMPX_WriteLogFile( sLogMsg );
-}
+//if (bRetVal)
+//{	assert( pBEMObject );
+//	QString sLogMsg = QString( "   done reading %1 '%2' on line %3, column %4" ).arg( pBEMObject->getClass()->getShortName(), pBEMObject->getName(),
+//													QString::number(stream.lineNumber()), QString::number(stream.columnNumber()) );
+//   BEMPX_WriteLogFile( sLogMsg );
+//}
 
 	return bRetVal;
 }

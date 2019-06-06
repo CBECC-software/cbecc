@@ -554,7 +554,7 @@ void CEditCtl::OnSetFocus( CWnd* pOldWnd )
 /////////////////////////////////////////////////////////////////////////////
 // CEditCtl - Display & Update Data Stuff
 
-LONG CEditCtl::OnGetDataStatus(UINT, LONG)
+LRESULT CEditCtl::OnGetDataStatus(WPARAM, LPARAM)
 {
    return (long) BEMPX_GetDataStatus( m_lUseDBID, m_iUseDBInstance );
 }
@@ -611,18 +611,18 @@ int CEditCtl::RangeCheckViolation( BOOL bSilent, CString* psMsg )
 //}
 
 
-LONG CEditCtl::OnGetDBID(UINT, LONG)
+LRESULT CEditCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lUseDBID;
 }
 
-LONG CEditCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CEditCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return m_iUseDBInstance;
 }
 
 
-LONG CEditCtl::OnDisplayData(UINT, LONG)
+LRESULT CEditCtl::OnDisplayData(WPARAM, LPARAM)
 {
    ResolveUseDBValues();  // SAC 8/4/02 - reset UseDB* values upon each display in case referenced component has changed
 
@@ -653,7 +653,7 @@ LONG CEditCtl::OnDisplayData(UINT, LONG)
 static char BASED_CODE szErrZeroLengthName[] = "Component names must contain at least one character.";
 static char BASED_CODE szErrNameNotUnique[]  = "This name is already in use, enter a unique name for this component.";
 
-LONG CEditCtl::OnUpdateData( UINT, LONG)
+LRESULT CEditCtl::OnUpdateData( WPARAM, LPARAM)
 {
    int iRangeViolation = 0;
    int i1Class = BEMPX_GetClassID( m_lUseDBID );

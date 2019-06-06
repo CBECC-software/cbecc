@@ -231,12 +231,12 @@ void CDateTimeCtl::OnDropDown(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 /////////////////////////////////////////////////////////////////////////////
 // CDateTimeCtl - Display & Update Data Stuff
 
-LONG CDateTimeCtl::OnGetDBID(UINT, LONG)
+LRESULT CDateTimeCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lDBID;
 }
 
-LONG CDateTimeCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CDateTimeCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return m_iDBInstance;
 }
@@ -306,7 +306,7 @@ void CDateTimeCtl::SetValidRange()
 }
 
 
-LONG CDateTimeCtl::OnDisplayData(UINT, LONG)
+LRESULT CDateTimeCtl::OnDisplayData(WPARAM, LPARAM)
 {
    m_bEditable = (BEMPX_GetCompIsEditable( m_lDBID ) && m_cEditableCondition.MissingOrTrue());
 
@@ -336,7 +336,7 @@ LONG CDateTimeCtl::OnDisplayData(UINT, LONG)
 }
 
 
-LONG CDateTimeCtl::OnUpdateData( UINT, LONG )
+LRESULT CDateTimeCtl::OnUpdateData( WPARAM, LPARAM )
 {
    if (!m_bAllowEdits)
    {

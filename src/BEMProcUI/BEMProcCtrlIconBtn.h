@@ -83,7 +83,7 @@ public:
 					int iIconID, long lActionID, WORD wSecNavID, CBEMCondition* pEditableCondition, BOOL bDrawFlatFocus,
 					BOOL bTabbedDlgShift, BOOL calledNew, BOOL scaleToSysFont, BOOL scaleToScreenRes );
 
-   afx_msg LONG OnDisplayData(UINT, LONG);  // SAC 3/2/06
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);  // SAC 3/2/06
 
 	// Generated message map functions
 protected:

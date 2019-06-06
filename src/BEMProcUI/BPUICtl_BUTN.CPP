@@ -361,7 +361,7 @@ void CButtonCtl::SetInitialState()
 }
 
 
-LONG CButtonCtl::OnDisplayData(UINT, LONG)
+LRESULT CButtonCtl::OnDisplayData(WPARAM, LPARAM)
 {
    ResolveUseDBValues();  // SAC 8/4/02 - reset UseDB* values upon each display in case referenced component has changed
 
@@ -754,12 +754,12 @@ void CButtonCtl::OnSetFocus( CWnd* pOldWnd )
 /////////////////////////////////////////////////////////////////////////////
 // CButtonCtl - Display & Update Data Stuff
 
-LONG CButtonCtl::OnGetDBID(UINT, LONG)
+LRESULT CButtonCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lUseDBID;
 }
 
-LONG CButtonCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CButtonCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return m_iUseDBInstance;
 }

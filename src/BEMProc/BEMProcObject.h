@@ -241,7 +241,7 @@ public:
 
 	int	getType()								{	return m_type;					}
 	void	setType( int iT )						{	m_type = iT;		return;	}
-	int	getNumClasses()						{	return m_classes.size();	}
+	int	getNumClasses()						{	return (int) m_classes.size();	}
 	void	resizeClasses( int iSize )			{	m_classes.resize( iSize );	}
 	// SAC 9/26/16 - m_propTypes vector to BEMPropertyType*
 	int	getNumPropertyTypes()				{	return m_numPropTypes;  }		// was: m_propTypes.size();	}

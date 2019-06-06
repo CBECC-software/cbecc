@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2018, California Energy Commission
- *  Copyright (c) 2018, SAC Software Solutions, LLC
+ *  Copyright (c) 2012-2019, California Energy Commission
+ *  Copyright (c) 2018-2019, SAC Software Solutions, LLC
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -53,6 +53,7 @@ class CMainFrame;
 class BEMGridColumn;
 class BEMGridMod;
 class BEMGridComboBox;
+class BEMGridDialog;
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -64,23 +65,28 @@ class BEMGridComboBox;
 //#define  GDO_Dflt_OnDialogClose      4
 //#define  GDO_Dflt_Never              5
 
+#define   MAX_GRID_DELETE_BTNS   500		// SAC 4/17/19
+
 class BEMGrid : public QTableWidget
 {
 	Q_OBJECT
 // Construction
 public:
-	BEMGrid(QWidget *parent, CMainFrame* pMainFrm=NULL, QPixmap* pIcon=NULL, QFont* pFont=NULL);
+	BEMGrid(QWidget *parent, CMainFrame* pMainFrm=NULL, QPixmap* pIcon=NULL, QFont* pFont=NULL, BEMGridDialog* pGridDlg=NULL);
 	~BEMGrid();
+	void deleteDelBtns();
+	void bemGridClear();
 
 // Data
-	void initGrid( int iClass, int iTopic=0, int iNumCtrls=0, int iFirstCtrlIdx=0, int iSelObjectIdx=-1 );
-
+	void initGrid( int iClass, int iTopic=0, int iNumCtrls=0, int iFirstCtrlIdx=0, int iSelObjectIdx=-1,
+						int iParentClassID=-1, int iParentObjIdx=-1 );
 	bool addColumn( QString sTitle, QString sToolTipMsg,
 						long dbid, int propType, int width, int height, long decPrec,
 						void* bemEditableCondition, void* bemDisplayCondition );
 	void clearColumnData();
 	void itemDisplayData(QTableWidgetItem *item, BEMGridColumn* pGC=NULL);
 	int  getBEMObjectIndex( int row );
+	int  ColsAtEnd()  {  return colsAtEnd;  }
 
 	BEMGridMod* addMod( int iRow, int iCol, QString qsData, BEMGridColumn* pGC=NULL, int iOccur=-1 );
 	void clearModData();
@@ -94,7 +100,7 @@ public:
 	QString GetPropertyString( BEMGridColumn* pGC, bool& bEditableCell, bool& bDisplayCell,
 										int& iStatus, int& iError, int iOccur );
 	void ClearComboboxCell();
-	void CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData, bool bEditableCell,
+	void CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData, bool bDisplayCell, bool bEditableCell,
 														int iStatus, int row, int col, int iObjIdx );
 	void SwitchCellToCombobox_IfAppropriate( int row, int col );
 	void SwitchRowTitles( bool bInclNames );
@@ -122,14 +128,18 @@ private slots:
 	void horzScrollValueChanged();
 	void cmbxIndexChanged(int index);
 	void cmbxIndexChanged(const QString &text);
+	void clickedCreate();
+	void clickedDelete();
 
 protected:
+	int  RefreshGridCells(bool bFirstDisplay, int iSelObjectIdx);
 	void SwitchCellToCombobox(int row, int col, QString signal);
 	void keyPressEvent(QKeyEvent *event);  // to enable clipboard copy/paste
 
 	bool ObjectTypeIsCompatible( BEMGridColumn* pGC, int i1ClassID, int iObjIdx, int iCurObjIdx );
 	void LoadComboBoxObjectNames( QComboBox* qcmbx, BEMGridColumn* pGC, int i1ClassID, int iObjIdx );
 	void LoadComboBoxStrings(     QComboBox* qcmbx, BEMGridColumn* pGC, int iObjIdx );
+	void SetupDeleteButton(int ir);
 
 // Implementation
 protected:
@@ -138,17 +148,26 @@ protected:
 	int idClass;
 	int idTopic;
 	int idxSelObject;
+	int parentClassID;
+	int parentObjIdx;
 	std::vector<BEMGridColumn*> colData;
 	std::vector<BEMGridMod*> modData;
 	int numBEMModsSinceRefresh;
+	int colsAtEnd;
 
 	QPixmap pxmIcon;
 	QFont font;
 
 	CMainFrame* mainFrm;
+	BEMGridDialog* gridDlg;
 
 //	QColor* colGray;
 	QBrush* brushGray;
+	QBrush* brushSilver;
+	QBrush* brushDelBtn;
+	QPushButton *btnCreate;
+	QPushButton *btnDelete[MAX_GRID_DELETE_BTNS];
+	int createButtonRow;
 
 	int cmbxRow;
 	int cmbxCol;
@@ -216,6 +235,16 @@ public:
 	long    getDecPrec()			{	return lDecPrec;  }
 	void*   getConditionEditable() 	{  return pBEMEditableCondition;  }
 	void*   getConditionDisplay() 	{  return pBEMDisplayCondition;   }
+
+	void setTitle( QString s )			{	qsTitle = s;  return;   }
+	void setToolTipMsg( QString s )	{	qsToolTipMsg = s;  return;  }
+	void setDBID( long l )				{	lDBID = l;  return;     }
+	void setPropertyType( int i )		{	iPropType = i;  return; }
+	void setWidth( int i )				{	iWidth = i;  return;    }
+	void setHeight( int i )				{	iHeight = i;  return;   }
+	void setDecPrec( long l )			{	lDecPrec = l;  return;  }
+	void setConditionEditable( void* pC ) 	{  pBEMEditableCondition = pC;  return;  }
+	void setConditionDisplay( void* pC ) 	{  pBEMDisplayCondition = pC;  return;   }
 
 // Implementation
 protected:
@@ -357,11 +386,15 @@ class BEMGridDialog : public QDialog
 	Q_OBJECT
 // Construction
 public:
-	BEMGridDialog(CMainFrame* pMainFrm=NULL, int iBEMClass = -1, int iOccur = -1, QWidget *parent = 0);
+	BEMGridDialog(CMainFrame* pMainFrm=NULL, int iBEMClass = -1, int iOccur = -1,
+					  int iSingleClassID = -1, int iSingleTabID = -1, int iParentClassID = -1,
+					  int iParentObjIdx = -1, long lDlgMsgDBID = -1, QWidget *parent = 0);
 
 // Dialog Data
 	int getObjectType();
 	int getTopic();
+
+	void updateDialogMessage();
 
 //	bool defaultModelEachMod()			{	return (modelDefaultingOption == GDO_Dflt_FollowingEachMod);  }
 //	bool defaultModelTopicRefresh()	{	return (modelDefaultingOption <= GDO_Dflt_EachTopicRefresh);  }
@@ -393,9 +426,15 @@ private:
 //	int bemClass;
 	int gridBEMClass;
 	int gridTopic;
+	int singleClassID;
+	int singleTabID;
+	int parentClassID;
+	int parentObjIdx;
+	long dlgMsgDBID;
 
 //	QLabel *lblObjectType;
 //	QLabel *lblTopic;
+	QLabel *lblDialogMessage;
 	QComboBox *cbObjectType;
 	QComboBox *cbTopic;
 	QPushButton *btnMenu;

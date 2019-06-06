@@ -1073,7 +1073,7 @@ void CASymDepLst::Write( CryptoFile& file )
       file.Write( &m_fDepValue[i], sizeof( double ) );
    }
 
-   int iCount = m_olSymbols.size();
+   int iCount = (int) m_olSymbols.size();
    file.Write( &iCount, sizeof( int ) );
 
 	for (i=0; i < iCount; i++)
@@ -1161,12 +1161,12 @@ void CASymLst::Read( CryptoFile& file )
 
 void CASymLst::Write( CryptoFile& file )
 {
-   int i, iCount = m_aDBIDs.size();
+   int i, iCount = (int) m_aDBIDs.size();
    file.Write( &iCount, sizeof( int ) );
    for (i=0; i < iCount; i++)
       file.Write( &m_aDBIDs[i], sizeof( long ) );
 
-   iCount = m_aSymDepLists.size();
+   iCount = (int) m_aSymDepLists.size();
    file.Write( &iCount, sizeof( int ) );
 
 	for (i=0; i < (int) m_aSymDepLists.size(); i++)
@@ -2550,7 +2550,7 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
 			   }
 			lPropTypeModBytes = file.m_lByteCount;
 
-			iRd = m_ruleToolTips.size();		// SAC 5/11/14
+			iRd = (int) m_ruleToolTips.size();		// SAC 5/11/14
 			file.Write( &iRd, sizeof( int ) );
 			for (i=0; i<iRd; i++)
 			{	bool bWriteTTs = m_ruleToolTips[i]->Write( file );		assert( bWriteTTs );
@@ -2558,7 +2558,7 @@ bool RuleSet::writeCompiledRuleset( LPCSTR fileName, QFile& errorFile )
 			lToolTipBytes = file.m_lByteCount;
 
 			//m_transformations.Write( file );		// SAC 6/21/12
-			iRd = m_transformations.size();
+			iRd = (int) m_transformations.size();
 			file.Write( &iRd, sizeof( int ) );
 			for (i=0; i<iRd; i++)
 			{	bool bWriteTrans = m_transformations[i]->Write( file );		assert( bWriteTrans );

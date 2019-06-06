@@ -116,7 +116,9 @@ CSERunMgr::CSERunMgr(
 	long lStdMixedFuelRunReqd,
 	long lPrelimPropRunReqd,
 	long lPropFlexRunReqd,
-	int iNumRuns) :
+	int iNumRuns,
+	const char* pszCodeYear2Digit,
+	std::vector<long>* plaRIBDIClsObjIndices) :
 
 	m_sCSEexe( sCSEexe),
 	m_sCSEWthr( sCSEWthr),
@@ -143,8 +145,10 @@ CSERunMgr::CSERunMgr(
 	m_lPrelimPropRunReqd(lPrelimPropRunReqd),
 	m_lPropFlexRunReqd(lPropFlexRunReqd),
 	m_iNumOpenGLErrors(0),
-	m_iNumProgressRuns(-1)
+	m_iNumProgressRuns(-1),
+	m_sCodeYear2Digit(pszCodeYear2Digit)
 {
+	m_plaRIBDIClsObjIndices = plaRIBDIClsObjIndices;
 	if (iNumRuns > 0)
 		m_iNumRuns = iNumRuns;
 	else
@@ -1545,7 +1549,13 @@ int CSERunMgr::SetupRunFinish(
 					{	QString sDbgFileName = sLpCSEFile.left( sLpCSEFile.length()-3 );
 						sDbgFileName += "ibd-Detail";
 						BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
-					}
+						if (!m_sCodeYear2Digit.isEmpty())
+						{	sDbgFileName = QString( "%1ribd%2i" ).arg( sLpCSEFile.left( sLpCSEFile.length()-3 ) ).arg( m_sCodeYear2Digit );	// SAC 5/17/19 - added export of 'input' version of each analysis model
+			      		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_INPUT, false /*bUseLogFileName*/, false /*bWriteAllProperties*/,
+            								FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
+            								true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, false /*bOnlyValidInputs*/,
+												true /*bAllowCreateDateReset*/, 0 /*iPropertyCommentOption*/, m_plaRIBDIClsObjIndices, false /*bReportInvalidEnums*/ );	// SAC 5/20/19
+					}	}
 				}
 				BEMPX_RefreshLogFile();	// SAC 5/19/14
 			}	// end of iFLp loop
@@ -1695,7 +1705,8 @@ int CSERunMgr::SetupRunFinish(
 }		// CSERunMgr::SetupRunFinish
 
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
-											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/ )
+											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/,
+											bool bRemovePVBatt /*=false*/ )
 {
 	int iRetVal = 0;
 #ifdef OSWRAPPER
@@ -1795,6 +1806,21 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 //			iRetVal = LocalEvaluateRuleset(	sErrorMsg, BEMAnal_CECRes_EvalPostPropError, "PostProposedInput", m_bVerbose, m_pCompRuleDebugInfo );		// setup for Proposed run
 //		if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
 //			iRetVal = BEMAnal_CECRes_RuleProcAbort;
+
+		if (bRemovePVBatt)		// SAC 4/3/19 - added code to remove all 
+		{	const char* pszClassesToDel[] = { "Batt", "PVArray", NULL };
+			int iCTD=-1;
+			while (pszClassesToDel[++iCTD] != NULL)
+			{	int iCTDClassID = BEMPX_GetDBComponentID( pszClassesToDel[iCTD] );		assert( iCTDClassID > 0 );
+				if (iCTDClassID > 0)
+				{	int iCTDError, iNumObjs = BEMPX_GetNumObjects( iCTDClassID );
+					for (int iCTDO=iNumObjs-1; iCTDO >= 0; iCTDO--)
+					{
+						BEMObject* pCTDObj = BEMPX_GetObjectByClass( iCTDClassID, iCTDError, iCTDO );		assert( pCTDObj );
+						if (pCTDObj)
+							BEMPX_DeleteObject( pCTDObj );
+			}	}	}
+		}
 
 		if (iRetVal == 0)
 			iRetVal = LocalEvaluateRuleset( sErrorMsg, 63, "CSE_SimulationPrep", m_bVerbose, m_pCompRuleDebugInfo );
@@ -2388,7 +2414,7 @@ bool CSERunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirstEx
 			is.clear();
 		if (!sOut.empty())
 		{	sOut = " " + sOut;
-			if (CSE_ProcessMessage( 0, sOut.c_str(), iRun, this) == CSE_ABORT)
+			if (CSE_ProcessMessage( 0, sOut.c_str(), (int) iRun, this) == CSE_ABORT)
 				pES->kill(255);
 			else if (sOut.find("OpenGL") != std::string::npos)
 				IncNumOpenGLErrors();

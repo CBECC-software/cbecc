@@ -814,8 +814,8 @@ int RuleSet::LabelIndex( QString& sLabel, BOOL bCaseSensitive /*=FALSE*/ )		// S
 
 int RuleSet::NumRulesetPropertiesForObject( int iObjTypeID )
 {	int iRetVal = 0;
-   int iSize = m_rulesetProperties.size();
-   for (int j=0; j<iSize; j++)
+   size_t iSize = m_rulesetProperties.size();
+   for (size_t j=0; j<iSize; j++)
    {  RuleSetProperty* pRP = m_rulesetProperties[j];       assert( pRP );
       if (pRP && pRP->getObjTypeID() == iObjTypeID)
 			iRetVal++;
@@ -826,7 +826,7 @@ int RuleSet::NumRulesetPropertiesForObject( int iObjTypeID )
 
 BOOL RuleSet::PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass /*=-1*/ )
 {	sErrantRuleProps.clear();
-	int iSize = m_rulesetProperties.size();  // SAC 7/6/12
+	int iSize = (int) m_rulesetProperties.size();  // SAC 7/6/12
 
 	if (iSize > 0)		// SAC 9/26/16 - m_propTypes vector to BEMPropertyType* -- resize array ONCE, then subsequent insertions shift existing array but don't resize it
 	{	assert( eActiveBEMProcIdx < 1 );
@@ -852,11 +852,11 @@ BOOL RuleSet::PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultIn
 			else if (iDefaultInputClass >= 0)
 			{
 				BEMPropertyDataType* pDT = NULL;		// was: CDataType* pDT = ruleSet.m_dataTypes.GetDataType( pRP->m_dbid );
-			   int iSize = m_dataTypes.size();
-			   for (int j=0; (pDT== NULL && j<iSize); j++)
-			   {  /*BEMPropertyDataType* pDTTmp = m_dataTypes[j];*/       assert( m_dataTypes[j] );
-			      if (m_dataTypes[j] && m_dataTypes[j]->getDBID() == pRP->getDBID())
-						pDT = m_dataTypes[j];
+			   int iSize2 = (int) m_dataTypes.size();					// SAC 2/20/19 - fixed bug during mods for x64 where iSize & j ints were re-declared inside loop of original iSize & j
+			   for (int j2=0; (pDT== NULL && j2<iSize2); j2++)
+			   {  /*BEMPropertyDataType* pDTTmp = m_dataTypes[j];*/       assert( m_dataTypes[j2] );
+			      if (m_dataTypes[j2] && m_dataTypes[j2]->getDBID() == pRP->getDBID())
+						pDT = m_dataTypes[j2];
 			   }
 				if (pDT == NULL)
 				{	pDT = new BEMPropertyDataType( pRP->getDBID(), iDefaultInputClass, (iDefaultInputClass==BEMPropertyDataType::Compulsory) /*bPrimary*/ );				assert( pDT );
@@ -1360,7 +1360,7 @@ bool RuleSetTransformation::Write( CryptoFile& file )
    file.WriteQString( m_rulelistName );
    file.Write( &m_BEMProcIdxToCopy, sizeof( int ) );
 
-   iSize = m_objClassesOrDBIDsToExclude.size();		// SAC 3/19/14
+   iSize = (int) m_objClassesOrDBIDsToExclude.size();		// SAC 3/19/14
    file.Write( &iSize, sizeof( int ) );
 	for (int i=0; i<iSize; i++)
 	{	long lEx = m_objClassesOrDBIDsToExclude[i];
@@ -2490,7 +2490,7 @@ void RuleListList::NewList( LPCSTR name, bool bSetAllData, bool bAllowMultipleEv
    RuleList* newList = new RuleList( name, bSetAllData, bAllowMultipleEvaluations, bTagAllDataAsUserDefined,
                                        iLineNumber, pszFileName, bPerformSetBEMDataResets );			assert( newList );	// create new rulelist
 	m_rules.push_back( newList );
-   m_currentList = m_rules.size()-1;  // set current rulelistlist position
+   m_currentList = (int) m_rules.size()-1;  // set current rulelistlist position
 }
 
 
@@ -2522,7 +2522,7 @@ void RuleListList::RemoveAll()
 }
 
 void RuleListList::RemoveTrailing( int iNumListsToDelete )
-{	int iLastIdx = (iNumListsToDelete < (int) m_rules.size() ? m_rules.size()-iNumListsToDelete : 0 );
+{	int iLastIdx = (iNumListsToDelete < (int) m_rules.size() ? (int) m_rules.size()-iNumListsToDelete : 0 );
 	for (int i = (int) m_rules.size()-1; i >= iLastIdx; i--)
 	{	assert( m_rules.at(i) );
 		if (m_rules.at(i))

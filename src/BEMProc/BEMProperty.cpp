@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -458,8 +458,9 @@ void ClearRuleLibObjArrays()
 BEMObject* GetCorrespondingRuleLibObjectImportedThisRound( BEMObject* pLibObj )
 {
 	if (pLibObj && pLibObj->getClass() && !pLibObj->getName().isEmpty())
-		for (int iPO=spaRuleLibObjsImported.size()-1; iPO >= 0; iPO--)
-		{	if (	spaRuleLibObjsImported[iPO] && spaRuleLibObjsImported[iPO]->getClass() &&
+		if (spaRuleLibObjsImported.size() > 0)
+		for (size_t iPO=spaRuleLibObjsImported.size(); iPO > 0; )
+		{	if (	spaRuleLibObjsImported[--iPO] && spaRuleLibObjsImported[iPO]->getClass() &&
 					spaRuleLibObjsImported[iPO]->getClass()->get1BEMClassIdx() == pLibObj->getClass()->get1BEMClassIdx() &&
 					spaRuleLibObjsImported[iPO]->getName() == pLibObj->getName() )
 				return spaImportedRuleLibObjs[iPO];
@@ -469,8 +470,9 @@ BEMObject* GetCorrespondingRuleLibObjectImportedThisRound( BEMObject* pLibObj )
 BEMObject* GetImportedRuleLibObjectParent( BEMObject* pNewObj )
 {
 	if (pNewObj && pNewObj->getClass())
-		for (int iPO=spaImportedRuleLibObjs.size()-1; iPO >= 0; iPO--)
-		{	if (spaImportedRuleLibObjs[iPO] && spaImportedRuleLibObjs[iPO]->getClass() && spaImportedRuleLibObjs[iPO]->getClass()->get1BEMClassIdx() > 0 && 
+		if (spaImportedRuleLibObjs.size() > 0)
+		for (size_t iPO=spaImportedRuleLibObjs.size(); iPO > 0; )
+		{	if (spaImportedRuleLibObjs[--iPO] && spaImportedRuleLibObjs[iPO]->getClass() && spaImportedRuleLibObjs[iPO]->getClass()->get1BEMClassIdx() > 0 && 
 					pNewObj->getClass()->ClassInParentList( spaImportedRuleLibObjs[iPO]->getClass()->get1BEMClassIdx() ))
 				return spaImportedRuleLibObjs[iPO];
 		}

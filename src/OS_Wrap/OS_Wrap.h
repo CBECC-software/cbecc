@@ -133,6 +133,7 @@ typedef struct
 	bool bStoreHourlyResults;
 	bool bWriteHourlyDebugCSV;
 	long lRptFuelUseAs;		// SAC 10/28/15
+	long lRunPeriodYear;				// SAC 3/1/19
 	QuickAnalysisInfo* pQuickAnalysisInfo;
 	int iProgressModel;
 	int iSimReturnValue;
@@ -354,6 +355,13 @@ namespace OS_Wrap {
 						double			daHourlyResultsSum[OSWrap_NumEPlusFuels][OSWrap_NumEPlusEnduses];  // Fuel / Enduse
    };
 
+	struct OSWrapRunData
+	{
+		int  iRunIdx;
+		double fResultMult;
+		std::string  sRunSubdir;
+   };
+
 
   class __declspec(dllexport) OSWrapLib {
 
@@ -363,13 +371,22 @@ namespace OS_Wrap {
       OSWrapLib() //: pData[0](new OSWrapLibData) {
                   //      if (pData[0])
 						//			pData[0]->bHourlyResultsCurrent = false;
-							{	for (int i=0; i<OSW_MaxNumSims; i++)
+							{	int i=0;
+								for (; i<OSW_MaxNumSims; i++)
 								{	pData[i] = new OSWrapLibData();
                         	if (pData[i])
 										pData[i]->bHourlyResultsCurrent = false;
+								}
+								for (i=0; i<24; i++)
+								{	pRunData[i] = new OSWrapRunData();
+                        	if (pRunData[i])
+										pRunData[i]->iRunIdx = 0;
 							}	}
-      ~OSWrapLib() { for (int i=0; i<OSW_MaxNumSims; i++)
+      ~OSWrapLib() { int i=0;
+							for (; i<OSW_MaxNumSims; i++)
       						delete pData[i];
+							for (i=0; i<24; i++)
+      						delete pRunData[i];
 							}
       //~OSWrapLib() { this->!OSWrapLib(); }
       //!OSWrapLib() { //Cleanup...();
@@ -477,7 +494,12 @@ namespace OS_Wrap {
 								OSWrap_SimInfo** paSDDSimInfo, int iNumSDDSimInfo,
 								OSWRAP_MSGCALLBACK* pMsgCallback=NULL, int iMsgCallbackType=0, double* pdTranslationTime=NULL,
 								double* pdSimulationTime=NULL, char* pszErrorMsg=NULL, int iErrorMsgLen=0,
-								bool bOutputDiagnostics=false, int iCodeType=0 );		// SAC 7/19/15   // SAC 8/20/15
+								bool bOutputDiagnostics=false, int iCodeType=0, bool bSimViaRunMgr=true );		// SAC 7/19/15   // SAC 8/20/15   // SAC 2/15/19
+
+		long ProcessResults_Multiple( const char* pszEPlusPath, const char* pszProcessingPath,
+												OSWrap_SimInfo** paSDDSimInfo, int iNumSDDSimInfo,
+												OSWRAP_MSGCALLBACK* pMsgCallback=NULL, int iMsgCallbackType=0,
+												char* pszErrorMsg=NULL, int iErrorMsgLen=0, int iCodeType=0, double dEPlusVerNum=-1 );
 
 // TESTING/DEBUGGING
 		long HourlyResultsRetrieval( const char* pszOSMPathFile, const char* pszSQLPathFile );
@@ -485,6 +507,9 @@ namespace OS_Wrap {
 	private:
       OSWrapLibData* pData[OSW_MaxNumSims];
       //OSWrapLibData* pData2;
+
+		int m_iNumEPSims;		// SAC 2/13/19 - added to split sim prep & launch from results retrieval
+		OSWrapRunData* pRunData[24];
 
 
 //	public struct OSWrapLibData

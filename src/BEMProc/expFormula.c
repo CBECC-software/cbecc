@@ -2294,7 +2294,7 @@ static void BinaryFunc( ExpStack* stack, int op, int nArgs, void* pData, ExpErro
 						}
 						strN = strstr( str1, str2 );
 						free( node1->pValue );
-						node1->fValue = (strN ? strN - str1 + 1 : 0);
+						node1->fValue = (double) (strN ? strN - str1 + 1 : 0);
 					}
 					node1->type = EXP_Value;
 					break;

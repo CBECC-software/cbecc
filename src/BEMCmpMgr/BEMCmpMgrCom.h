@@ -191,6 +191,8 @@ long BEMCMPMGR_API __cdecl CMX_TranslateToSDD( const char* pszInputPathFile, con
 //	E:	1-based index of run being performed
 //	F:	Total number of batch runs to be performed
 
+extern int /*CALLBACK*/ CECNRes_ProgressIncrement( long lProgressID );
+extern int /*CALLBACK*/ S901G_ProgressIncrement( long lProgressID );
 
 #ifdef __cplusplus
 }

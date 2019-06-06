@@ -70,7 +70,11 @@ extern "C" {
 
 #include "expFormula.h"
 
+#ifdef _WIN64
+#define MAXEXPLEN 36864   /* SAC 2/25/19 - increased by 50% for 64-bit */
+#else
 #define MAXEXPLEN 24576   /* SAC 4/21/17 - increased by 50% due to ExpNode mods | SAC 9/23/99 - Doubled MAXEXPLEN to make up for float -> double node conversion */
+#endif
 
 #ifdef __cplusplus
 }
@@ -221,7 +225,7 @@ public:
    void  addRule( Rule* pRule )	{	m_rules.push_back( pRule );  }
    Rule* getRule( QString& name );
    Rule* getRule( int idx )		{	return m_rules.at(idx);  }
-   int   getRuleCount()				{	return m_rules.size();   }
+   int   getRuleCount()				{	return (int) m_rules.size();   }
 
 	QString	getName()								{	return m_name;	}
 //	void		setName( QString& str )				{	m_name = str;		}
@@ -733,7 +737,7 @@ public:
    																												i1RuleFileIdx, iRuleLineNum );  return;  }
 	void deleteTrailingRuleLists( int iNumListsToDelete=1 )	{	m_ruleListList.RemoveTrailing( iNumListsToDelete );  return;  }
 
-	int							getNumTransformations()				{ return m_transformations.size();  }
+	int							getNumTransformations()				{ return (int) m_transformations.size();  }
 	RuleSetTransformation*	getTransformation( int idx )		{ return m_transformations.at(idx);  }
 	void	addTransformation( RuleSetTransformation* pT )		{ m_transformations.push_back(pT);  return;  }
 

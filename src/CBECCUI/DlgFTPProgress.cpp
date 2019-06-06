@@ -515,7 +515,7 @@ LRESULT CDlgFTPProgress::OnDisplayStatus(WPARAM, LPARAM lParam)
 
 
 /////////////////////////////////////////////////////////////////////////////
-LONG CDlgFTPProgress::OnInitDownload(UINT, LONG)
+LRESULT CDlgFTPProgress::OnInitDownload(WPARAM, LPARAM)
 {
    // set progress bar range to 0 - m_iMaxProgressRange
    m_pcProgress.SetRange( 0, m_iMaxProgressRange );

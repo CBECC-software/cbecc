@@ -1702,6 +1702,14 @@ static CString ssaRulesetFileString[ MAX_RULESETS_IN_DIRECTORY ];
 static int siCheckedRulesetIdx = -1;
 static CString ssCurrentRuleFile;
 
+int RulesetFilenameToIndex( const char* pszRulesetFN )	// SAC 4/10/19 - added to facilitate resetting of Proj:Ruleset when switching rulesets
+{	for (int i=0; i<eiNumRulesetsAvailable; i++)
+	{	if (ssaRulesetFileString[i].CompareNoCase( pszRulesetFN )==0)
+			return i;
+	}
+	return -1;
+}
+
 // Based on MFC function: CRecentFileList::UpdateMenu()
 void UpdateRulesetMenu(CCmdUI* pCmdUI)
 {
@@ -2671,7 +2679,7 @@ long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 850;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;
+	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 890;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd = 810;    iTabCtrlHt = 520;   }	// SAC 12/28/17
 	else if (iBDBClass == eiBDBCID_DwellUnitType)		{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
 	else if (iBDBClass == eiBDBCID_DwellUnit)				{  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }

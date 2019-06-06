@@ -152,8 +152,8 @@ public:
    // SAC 2/1/00 - New CM_SCREEN mode stuff
    void LoadScreenStrings();
 
-   afx_msg LONG OnDisplayData(UINT, LONG);
-   afx_msg LONG OnUpdateData( UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
+   afx_msg LRESULT OnUpdateData( WPARAM, LPARAM);
    afx_msg void OnKillFocus( CWnd* pNewWnd );
    afx_msg void OnSetFocus(  CWnd* pOldWnd );
 
@@ -178,10 +178,10 @@ protected:
 
 	afx_msg void OnSelchange();
 
-   afx_msg long OnGetDataStatus(UINT, LONG);
+   afx_msg LRESULT OnGetDataStatus(WPARAM, LPARAM);
 //   afx_msg long OnGetTextColor(UINT, LONG);
-   afx_msg long OnGetDBID(UINT, LONG);
-   afx_msg long OnGetDBInstance(UINT, LONG);
+   afx_msg LRESULT OnGetDBID(WPARAM, LPARAM);
+   afx_msg LRESULT OnGetDBInstance(WPARAM, LPARAM);
 
    // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
    afx_msg BOOL OnHelpInfo(HELPINFO* pHelpInfo);

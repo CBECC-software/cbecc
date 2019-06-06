@@ -132,7 +132,7 @@ void CBEMProcCtrlCheckListBox::PostNcDestroy()
 }
 
 
-LONG CBEMProcCtrlCheckListBox::OnDisplayData(UINT, LONG)
+LRESULT CBEMProcCtrlCheckListBox::OnDisplayData(WPARAM, LPARAM)
 {
    if (!m_bUpdatingList  &&  !m_bSettingHighlight  &&  m_iDBClass > 0)
    {

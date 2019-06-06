@@ -226,7 +226,7 @@ void CreateAndChangeDirectory( const char* pszDirName, BOOL bRemoveDir /*=FALSE*
 		}
       if (bDriveOK && strlen( dir ) > 0)
       {
-         int nChars = strlen( dir );
+         int nChars = (int) strlen( dir );
          if ( (nChars > 1) && (dir[ nChars-1 ] == '\\' || dir[ nChars-1 ] == '/') )
          {  nChars--;
          	dir[ nChars ] = '\0';
@@ -334,7 +334,7 @@ BOOL OKToWriteOrDeleteFile( const char* pszFileName, QString sUserMsg, bool bSil
 int ParseCSVRecord( const char* pszParseStr, QVector<QString>* psaCSVFields )
 {
 	int iRetVal = 0;
-	int iParseLen = strlen( pszParseStr );			assert( iParseLen > 0 );
+	int iParseLen = (int) strlen( pszParseStr );			assert( iParseLen > 0 );
 	if (iParseLen > 0 && psaCSVFields)
 	{	QString string;
 		psaCSVFields->clear();
@@ -622,10 +622,14 @@ QProgressDialog* sqt_progress = NULL;
 Qt_URLFile	surlFile;		// SAC 9/18/14
 #endif
 
-static QString sqsProgressMsgStart      = "Performing Analysis:                              \n\n                ";
-static QString sqsProgressMsgEndNoErr   = "...          \n\n                  ";
-static QString sqsProgressMsgEndErrors1 =   "...          \n                     (";
-static QString sqsProgressMsgEndErrors2 = " errors encountered)\n                 ";
+//static QString sqsProgressMsgStart      = "Performing Analysis:                              \n\n                ";
+//static QString sqsProgressMsgEndNoErr   = "...          \n\n                  ";
+//static QString sqsProgressMsgEndErrors1 =   "...          \n                     (";
+//static QString sqsProgressMsgEndErrors2 = " errors encountered)\n                 ";
+static QString sqsProgressMsgStart      = "Performing Analysis\n\n";
+static QString sqsProgressMsgEndNoErr   = "...\n\n";
+static QString sqsProgressMsgEndErrors1 =   "...\n(";
+static QString sqsProgressMsgEndErrors2 = " errors encountered)\n";
 QString sqProgressRunName;
 QString sqProgressMsg;
 void SetProgressMessage( QString str, bool bBatchMode )
@@ -636,7 +640,8 @@ void SetProgressMessage( QString str, bool bBatchMode )
 			//BEMPX_WriteLogFile( QString( "              SetProgressMessage():  bBatchMode %1 / si1ProgressRunNum = %2 / siNumProgressRuns = %3" ).arg( (bBatchMode ? "true" : "false"), QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	QString qsProgMsgStart;		// SAC 5/28/15 - unique batch processing message
 	if (bBatchMode && si1ProgressRunNum > 0 && siNumProgressRuns >= si1ProgressRunNum)
-		qsProgMsgStart = QString("Batch Run %1 of %2:                              \n\n                ").arg( QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) );
+//		qsProgMsgStart = QString("Batch Run %1 of %2:                              \n\n                ").arg( QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) );
+		qsProgMsgStart = QString("Batch Run %1 of %2\n\n").arg( QString::number(si1ProgressRunNum), QString::number(siNumProgressRuns) );
 	else
 		qsProgMsgStart = sqsProgressMsgStart;
 
@@ -1311,8 +1316,8 @@ int CM_CopyAnalysisResultsObjects_CECNonRes( QString& sErrMsg, const char* pszRu
 bool AppendMessage( char* pszMsg, int iMsgLen, const char* pszMsgToAppend )
 {	bool bRetVal = false;
 	if (pszMsg && iMsgLen > 0 && (int) strlen(pszMsg) < iMsgLen && pszMsgToAppend)
-	{	int iExistStrLen = strlen(pszMsg);
-		int iLenToAppend = strlen( pszMsgToAppend );
+	{	int iExistStrLen = (int) strlen(pszMsg);
+		int iLenToAppend = (int) strlen( pszMsgToAppend );
 		if (iExistStrLen > 0)
 			iLenToAppend += 2;
 		if ((iExistStrLen + iLenToAppend) < iMsgLen)
@@ -1329,8 +1334,8 @@ bool AppendMessage( char* pszMsg, int iMsgLen, const char* pszMsgToAppend )
 }
 
 void PrependPathIfNecessary( std::string& sFileName, std::string& sPath )
-{	int iColonPos = sFileName.find(':');
-	int iSlashPos = sFileName.find('\\');
+{	int iColonPos = (int) sFileName.find(':');
+	int iSlashPos = (int) sFileName.find('\\');
 	if ((iColonPos > 0 && iColonPos < 3) || iSlashPos == 0)
 	{	// do nothing - path already specified
 	}
@@ -1667,14 +1672,24 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 															if (bVerbose)
 																qsVerbose = "\nCheckSiteAccessViaQt() - ";
 
-	bool bQAppInit = (sq_app == NULL);
-	if (bQAppInit)
+	bool bQtAppInitHere = false;	// SAC 4/10/19 - updated with version from GenerateReportViaQt() so that an already running QApp can be checked for and used
+	if (sq_app == NULL)
 	{	assert( sq_app == NULL && sqt_win == NULL && sqt_progress == NULL );
-		int argc = 0;
-		sq_app = new QApplication( argc, NULL );
+		QCoreApplication* pQCA = QCoreApplication::instance();
+		if (pQCA)
+			sq_app = (QApplication*) pQCA;
+		else
+		{	int argc = 0;
+			sq_app = new QApplication( argc, NULL );
+			bQtAppInitHere = true;
+		}
 		if (sq_app)
-			ssEXEPath = sq_app->applicationDirPath();
-	}
+		{	ssEXEPath = sq_app->applicationDirPath();
+			ssEXEPath = QDir::cleanPath(ssEXEPath);
+			if (ssEXEPath[ssEXEPath.length()-1] != '/' &&
+				 ssEXEPath[ssEXEPath.length()-1] != '\\')
+				ssEXEPath += '/';  // ensure trailing slash
+	}	}
 
 //																		QMessageBox msgBox;
 //																		msgBox.setWindowTitle( "CheckSiteAccessViaQt()" );
@@ -1766,7 +1781,7 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 		{ }	//	iRetVal = 19;		//	19 : Error opening output file following report generation
 		else
 		{	char buff[32];
-			int nread = fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
+			int nread = (int) fread( buff, sizeof(char), 20, fp_Out );  // first 20 chars of file should do it...
 			if (nread < 4)
 			{ }	//	iRetVal = 20;		//	20 : Error reading data from output file following report generation
 			else
@@ -1800,11 +1815,11 @@ int CheckSiteAccessViaQt(	const char* pszSite, const char* pszCACertPath, const 
 //	AfxMessageBox( sDbgMsg );
 															if (bVerbose)
 															{	qsVerbose += QString("returning %L1").arg(iRetVal);
-																int iToAdd = iErrorMsgLen - 1 - strlen( pszErrorMsg );
+																int iToAdd = iErrorMsgLen - 1 - (int) strlen( pszErrorMsg );
 																strcat_s( pszErrorMsg, iErrorMsgLen, qsVerbose.left(iToAdd).toLocal8Bit() );
 															}
 
-	if (bQAppInit)
+	if (bQtAppInitHere)
 	{	delete sq_app;
 		sq_app = NULL;
 	}

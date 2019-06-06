@@ -65,7 +65,7 @@ public:
 	BOOL Create( CWnd* pParentWnd, CBEMPUIControl* pControl,
 						BOOL bTabbedDlgShift=FALSE, BOOL bScale=FALSE );
 
-   afx_msg LONG OnDisplayData(UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

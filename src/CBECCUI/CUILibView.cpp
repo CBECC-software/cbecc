@@ -205,7 +205,7 @@ void CCUILibView::OnSize(UINT nType, int cx, int cy)
 }
 
 
-afx_msg LONG CCUILibView::OnPopulateLibraryTree(UINT uiTreeMode, LONG lOnlyIfRequired)
+afx_msg LRESULT CCUILibView::OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM lOnlyIfRequired)
 {
    // populate tree
    m_BDBTree.PopulateBDBTree( (int) uiTreeMode, (lOnlyIfRequired > 0) );

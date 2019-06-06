@@ -152,13 +152,21 @@ int main(int argc, char *argv[])
 //	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2016.bin" );
 //	bemCmplr.SetRuleLog(      "../Res/Rules/src/Rules/Rules Log.out" );
 
+//// to compile rules relative to SVN exe->rule source locations
+//	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
+//	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
+//	bemCmplr.SetBEMBaseBin(   "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
+//	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
+//	bemCmplr.SetRuleBin(      "Data/Rulesets/CA Res 2016.bin" );
+//	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
+
 // to compile rules relative to SVN exe->rule source locations
-	bemCmplr.SetBEMBaseText(  "../RulesetDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../RulesetDev/Rulesets/CA Res/CAR16 BEMEnums.txt" );
-	bemCmplr.SetBEMBaseBin(   "Data/Rulesets/CA Res 2016/CAR16 BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016.txt" );
-	bemCmplr.SetRuleBin(      "Data/Rulesets/CA Res 2016.bin" );
-	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
+	bemCmplr.SetBEMBaseText(  "../../RuleDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../../RuleDev/Rulesets/CA Res/CAR19 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2019/CAR19 BEMBase.bin" );
+	bemCmplr.SetRuleText(     "../../RuleDev/Rulesets/CA Res/Rules/Rules-2019.txt" );
+	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2019.bin" );
+	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA Res/Rules/Rules-2019 dbg Log.out" );
 #else		// CBECC-Com
 // to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
 	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );

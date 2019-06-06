@@ -116,7 +116,7 @@ long CMX_EncodeBase64( const unsigned char *input, long length, char* output, lo
 	//	output[bptr->length] = 0;
 
 		if (bSecure)
-			CM_CharSwap( output, bptr->length );
+			CM_CharSwap( output, (int) bptr->length );
 	}
 //	char *buff = (char *)malloc(bptr->length);
 //	memcpy(buff,bptr->data,bptr->length-1);
@@ -171,7 +171,7 @@ long EncodeBase64FromFile( const char* inFileName, QString& encStr )
 			if (iRetVal == 0)
 			{	//	Here is where you read in the file chunk by chunk - build up the postthis array
 				npost = 0;	// postthis index
-				nread=fread(buff, sizeof(char), ChunkSize, fp_in);
+				nread = (long) fread(buff, sizeof(char), ChunkSize, fp_in);
 				if (nread <=0)
 				{	iRetVal = -5;
 				//	fprintf(stderr,"Oops: input file read %d bytes\n", nread);
@@ -183,7 +183,7 @@ long EncodeBase64FromFile( const char* inFileName, QString& encStr )
 				npost += nread;	//; update index into postthis
 				// if we have more to read
 				while (iRetVal == 0 && npost < FileInSize) // we have more to read	
-				{	nread=fread(buff, sizeof(char), ChunkSize, fp_in);
+				{	nread = (long) fread(buff, sizeof(char), ChunkSize, fp_in);
 					if (nread <= 0)
 						iRetVal = -6;
 					else
@@ -243,7 +243,7 @@ size_t calcDecodeLength(const char* b64input)
 int CMX_DecodeBase64( char* outData, const char* inData2, bool bSecure )
 {	int iRetVal = 0;
 
-	int inLen = strlen(inData2);
+	int inLen = (int) strlen(inData2);
 	char* inData = (char*) malloc( inLen+1 );
 	memcpy( inData, inData2, inLen );		inData[inLen]=0;
 	if (bSecure)
@@ -257,7 +257,7 @@ int CMX_DecodeBase64( char* outData, const char* inData2, bool bSecure )
 //	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);  - moved down
 	bmem = BIO_push(b64, bmem);
 	BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL); // do not use newlines to flush buffer
-	long n = BIO_read(bmem, outData, strlen(inData));  //length);
+	long n = BIO_read(bmem, outData, (int) strlen(inData));  //length);
 	if (n > 0 && n <= (int) length)
 		iRetVal = n;
 	else
@@ -295,7 +295,7 @@ int CMX_DecodeBase64( char* outData, const char* inData2, bool bSecure )
 }
 
 bool DecodeBase64ToFile( const char* outFileName, const char* inData )
-{	int length = strlen(inData);
+{	int length = (int) strlen(inData);
 	char *outData = (char*) malloc(length+1);
 
 //	int iDecodeRetVal = (length > 0 && DecodeBase64( res, inData ));
@@ -329,7 +329,7 @@ bool DecodeBase64ToFile( const char* outFileName, const char* inData )
 
 bool DecodeBase64_ORIGINAL_VERSION( const char* outFileName, const char* data )
 {	bool bRetVal = true;
-	int length = strlen(data);
+	int length = (int) strlen(data);
 	char *res = (char*) malloc(length+1);
 	BIO *bmem = BIO_new_mem_buf( (void*)data, length );
 	BIO *b64 = BIO_new(BIO_f_base64());

@@ -240,7 +240,7 @@ void CBEMProcCtrlIconBtn::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 }
 
 
-LONG CBEMProcCtrlIconBtn::OnDisplayData(UINT, LONG)
+LRESULT CBEMProcCtrlIconBtn::OnDisplayData(WPARAM, LPARAM)
 {
    BOOL bLastEditable = m_bEditable;
    m_bEditable = m_cEditableCondition.MissingOrTrue();

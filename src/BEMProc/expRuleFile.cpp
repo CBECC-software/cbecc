@@ -602,7 +602,7 @@ void RemoveComments( QString& str )
 		iaCommentEnd.push_back( iSize-1 );  // iSize-2 );
 	}	assert( iaCommentBegin.size() == iaCommentEnd.size() );
 			
-	for (i=(iaCommentBegin.size()-1); i>=0; i--)
+	for (i=((int) iaCommentBegin.size()-1); i>=0; i--)
 		if (iaCommentEnd[i] > iaCommentBegin[i])
 		{	if (iaCommentBegin[i] > 0 && iaCommentEnd[i] < str.length())
 				str = str.left( iaCommentBegin[i] ) + str.right( str.length() - iaCommentEnd[i] - 1 );

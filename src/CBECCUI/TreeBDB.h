@@ -267,7 +267,7 @@ protected:
 	afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
 	afx_msg void OnViewFootprint();
 	//}}AFX_MSG
-   afx_msg LONG OnEditTreeItem(UINT, LONG);
+   afx_msg LRESULT OnEditTreeItem(WPARAM, LPARAM);
 
    // These are forwarded from the nested drop site
    virtual DROPEFFECT OnDragEnter( CWnd* pWnd, COleDataObject* pDataObject, DWORD dwKeyState, CPoint point );

@@ -83,12 +83,12 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	//}}AFX_VIRTUAL
 
-   afx_msg LONG OnUpdateTree(UINT, LONG lDBIDModified);
-   afx_msg LONG OnDisplayData(UINT uiBDBClass, LONG lOnlyIfRequired);
+   afx_msg LRESULT OnUpdateTree(WPARAM, LPARAM lDBIDModified);
+   afx_msg LRESULT OnDisplayData(WPARAM uiBDBClass, LPARAM lOnlyIfRequired);
 
    int GetTabID( int iTabIdx=-1 );
 
-   afx_msg LONG OnUpdateTabs( UINT, LONG );
+   afx_msg LRESULT OnUpdateTabs( WPARAM, LPARAM );
 
 // Implementation
 protected:

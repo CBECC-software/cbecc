@@ -167,7 +167,7 @@ public:
 
 	// for command hit testing (used for automatic tooltips)
 // TO DO
-	virtual int OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
+	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
 
 // Implementation
 protected:
@@ -189,7 +189,7 @@ protected:
 // TO DO
    BOOL OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult );
 
-   afx_msg LONG DisplayMods( UINT, LONG );
+   afx_msg LRESULT DisplayMods( WPARAM, LPARAM );
    BOOL EditControlValuesInRange( int iUserAction );
    BOOL OKToExit();
 // RW 11/26/02 - Added reference parameters to determine if any errors or warnings were discovered via the rules based checking
@@ -219,12 +219,12 @@ protected:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-   afx_msg LONG OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID );
+   afx_msg LRESULT OnQMRestoreDefault( WPARAM uiDBInstP1, LPARAM lDBID );
 
-   afx_msg LONG OnDataModified( UINT wEval, LONG lDBID );
+   afx_msg LRESULT OnDataModified( WPARAM wEval, LPARAM lDBID );
 
    // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
-   afx_msg LONG OnSetContextHelpID( WPARAM wHelpID, LPARAM );
+   afx_msg LRESULT OnSetContextHelpID( WPARAM wHelpID, LPARAM );
    afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 };
 

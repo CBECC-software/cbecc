@@ -181,7 +181,7 @@ BOOL CBEMProcCtrlList::OnHelpInfo(HELPINFO* pHelpInfo)
 }
 
 
-LONG CBEMProcCtrlList::OnDisplayData(UINT, LONG)
+LRESULT CBEMProcCtrlList::OnDisplayData(WPARAM, LPARAM)
 {
    if (!m_bUpdatingList  &&  !m_bSettingHighlight  &&  m_iDBClass > 0)
    {

@@ -46,6 +46,7 @@
 #include <io.h>
 #include <sys/stat.h>
 #include "memLkRpt.h"
+#include "EPlusRunMgr.h"
 
 using namespace OS_Wrap;
 
@@ -349,6 +350,12 @@ void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char*
 	if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "RptFuelUseAs", iCID_Proj ), lRFUA, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lRFUA >= 0)
 		m_lRptFuelUseAs = lRFUA;
 
+	long lRPYr;		// SAC 3/1/19
+	if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "RunPeriodYear", iCID_Proj ), lRPYr, 0, -1, 0, BEMO_User, iBEMProcIdx ) && lRPYr > 0)
+		m_lRunPeriodYear = lRPYr;
+	else
+		m_lRunPeriodYear = -1;
+
 	long lDoQuickAnalysis=0;
 	bool bQuickAnalysisDataOK=false;
 	if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "QuickAnalysis"            , iCID_Proj ), lDoQuickAnalysis                    , 0, -1, 0, BEMO_User, iBEMProcIdx ) && lDoQuickAnalysis > 0 &&
@@ -508,7 +515,10 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 					sWarnMsg = boost::str( boost::format( "Warning:  SimOutVarsToCSV action bypassed due to error copying '%s' to '%s'" ) % sRVErviFrom % sRVErviTo );
 				}
 				else
-				{	QString sSimOutVarsFreq;
+				{
+					boost::posix_time::ptime tmCSVStartTime = boost::posix_time::microsec_clock::local_time();	// SAC 5/22/19
+
+					QString sSimOutVarsFreq;
 					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SimVarsInterval" ), sSimOutVarsFreq, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
 					if (!sSimOutVarsFreq.isEmpty() && (sSimOutVarsFreq.compare("Monthly", Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Timestep" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("Daily", Qt::CaseInsensitive)==0
 															  || sSimOutVarsFreq.compare("Hourly" , Qt::CaseInsensitive)==0 || sSimOutVarsFreq.compare("RunPeriod", Qt::CaseInsensitive)==0))
@@ -528,6 +538,14 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 					}
 					catch(exec_stream_t::error_t &e)
 					{	sWarnMsg = boost::str( boost::format( "Warning:  Execution of ReadVarsESO reported error: %s" ) % e.what() );
+					}
+
+					if (bVerbose)
+					{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmCSVStartTime;	// SAC 5/22/19
+						double dCSVTime = ((double) td.total_microseconds()) / 1000000.0;
+						QString sCSVTimeMsg;
+						sCSVTimeMsg.sprintf( "     SimOutVarsToCSV Processing time:  %.3f sec", dCSVTime );
+						BEMPX_WriteLogFile( sCSVTimeMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					}
 			}	}
 
@@ -595,7 +613,9 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 }
 
 
-BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir, BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath )
+BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir,
+													BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath,
+													QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/ )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
 {
 	BOOL bRetVal = TRUE;
 	QString sLogMsg, sTemp;
@@ -1773,7 +1793,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			sEPlusProcDir  = boost::str( boost::format( "%sEnergyPlus\\" ) % sRootProcDir.c_str() );
 			sSDDFileRoot = osRunInfo.SDDFile().toLocal8Bit().constData();
 			boost::uintmax_t uiNumDeleted;
-			unsigned uiLastDot = sSDDFileRoot.rfind('.');
+			unsigned uiLastDot = (int) sSDDFileRoot.rfind('.');
 			if (uiLastDot != std::string::npos)
 				sSDDFileRoot = sSDDFileRoot.substr( 0, uiLastDot );
 			// data defining which files get copied where      - for iSimulationStorage =  1  2  3  4  5  6  7
@@ -1799,6 +1819,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 												{	"sqlite.err",     " - sqlite.err",   0, true,  { 0, 0, 0, 0, 0, 0, 1 } },
 												{	"stdout",         " - stdout",       0, true,  { 0, 0, 0, 0, 0, 0, 1 } },
 												{	"in.epw",         "",                0, true,  { 0, 0, 0, 0, 0, 0, 0 } },  // no copy, just include to ensure writable
+												{	"in.idf",         "",                0, false, { 0, 0, 0, 0, 0, 0, 0 } },  // no copy, just include to ensure writable  - SAC 2/18/19
 												{	"",               "",                0, true,  { 0, 0, 0, 0, 0, 0, 0 } } };
 			int iFC = -1;
 			while (fcInfo[++iFC].sCopyFrom.size() > 1)
@@ -1833,13 +1854,16 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 	//			sEPlusDirToDel = boost::str( boost::format( "%sEnergyPlus" ) % sRootProcDir.c_str() );
 	//		else
 	//			sEPlusDirToDel = boost::str( boost::format( "%sModelToIdf" ) % sRootProcDir.c_str() );
-			try
-			{	uiNumDeleted = boost::filesystem::remove_all( sEPlusDirToDel.c_str() );
-			}
-			catch (const boost::filesystem::filesystem_error& ex)
-			{	sFailMsg = boost::str( boost::format( "    during simulation file clean-up, unable to remove directory:  %s  - %s" ) % sEPlusDirToDel.c_str() % ex.what() );
-				BEMPX_WriteLogFile( sFailMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-			}
+			if (psaEPlusProcDirsToBeRemoved)		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
+				psaEPlusProcDirsToBeRemoved->push_back( QString(sEPlusDirToDel.c_str()) );
+			else
+			{	try
+				{	uiNumDeleted = boost::filesystem::remove_all( sEPlusDirToDel.c_str() );
+				}
+				catch (const boost::filesystem::filesystem_error& ex)
+				{	sFailMsg = boost::str( boost::format( "    during simulation file clean-up, unable to remove directory:  %s  - %s" ) % sEPlusDirToDel.c_str() % ex.what() );
+					BEMPX_WriteLogFile( sFailMsg.c_str(), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			}	}
 		}
 
 	return bRetVal;
@@ -2057,7 +2081,7 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
-															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, bool bUseEPlusRunMgr /*=false*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
 {
 
 //typedef struct
@@ -2152,6 +2176,7 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 			oswSimInfo[iRun].bStoreHourlyResults	= osRunInfo[iRun].StoreHourlyResults();
 			oswSimInfo[iRun].bWriteHourlyDebugCSV	= true;
 			oswSimInfo[iRun].lRptFuelUseAs			= osRunInfo[iRun].RptFuelUseAs();		// SAC 10/28/15
+			oswSimInfo[iRun].lRunPeriodYear			= osRunInfo[iRun].RunPeriodYear();		// SAC 3/1/19
 			oswSimInfo[iRun].pQuickAnalysisInfo		= &osRunInfo[iRun].m_qaData;
 			oswSimInfo[iRun].iProgressModel			= pSimInfo[iRun]->iProgressModel;
 			oswSimInfo[iRun].iSimReturnValue			= 0;
@@ -2166,21 +2191,122 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 	long lSimRetVal = osWrap.SimulateSDD_Multiple( pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
 														(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pdTranslationTime, pdSimulationTime,  // SAC 1/23/14		// SAC 5/27/15
 																							// OSWRAP_MSGCALLBACK OSWrapCallback( int level, const char* msg, int action )
-														pszSimSDDErrorMsg, 1024, bIncludeOutputDiagnostics, iCodeType );
-
+														pszSimSDDErrorMsg, 1024, bIncludeOutputDiagnostics, iCodeType, !bUseEPlusRunMgr );
 								if (bVerbose)
 								{	sLogMsg = QString( "  PerfSim_E+ - Back from SDD simulation (returned %1)" ).arg( QString::number(lSimRetVal) );
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 								}
 
+
+//		// Info related to models needing to be simulated
+//		sLogMsg = QString( "  SimulateSDD_Multiple() - pszEPlusPath:  %1"     ).arg( pszEPlusPath );				BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//		sLogMsg = QString( "  SimulateSDD_Multiple() - pszSimProcessDir:  %1" ).arg( pszSimProcessDir );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//		sLogMsg = QString( "  SimulateSDD_Multiple() - %1 sim infos:" ).arg( QString::number(iNumSimInfo) );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//		for (int iSI=0; iSI < iNumSimInfo; iSI++)
+//		{	sLogMsg = QString( "                            %1: SDDXMLFile:  %2%3" ).arg( QString::number(iSI+1), pszSimProcessDir, oswSimInfo[iSI].pszSDDXMLFileName );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//			sLogMsg = QString( "                               pszRunSubdir:  %1" ).arg( oswSimInfo[iSI].pszRunSubdir );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//			sLogMsg = QString( "                               SimulateModel: %1" ).arg( QString::number(oswSimInfo[iSI].bSimulateModel ? 1 : 0) );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+////			sLogMsg = QString( "                               iRunIdx:  %1  / SimulateModel: %2" ).arg( QString::number(oswSimInfo[iSI].iRunIdx), QString::number(oswSimInfo[iSI].bSimulateModel ? 1 : 0) );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//			sLogMsg = QString( "                               pszWeatherPathFile:  %1" ).arg( oswSimInfo[iSI].pszWeatherPathFile );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//			sLogMsg = QString( "                               pszSQLOutPathFile:  %1" ).arg( oswSimInfo[iSI].pszSQLOutPathFile );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//			if (oswSimInfo[iSI].pQuickAnalysisInfo && oswSimInfo[iSI].pQuickAnalysisInfo->m_iNumQuickAnalysisPeriods > 0)
+//			{
+//				sLogMsg = QString( "                                  NumQuickAnalysisPeriods:  %1" ).arg( QString::number(oswSimInfo[iSI].pQuickAnalysisInfo->m_iNumQuickAnalysisPeriods) );		BEMPX_WriteLogFile( sLogMsg, NULL, FALSE, TRUE, FALSE );
+//		}	}
+////BEMMessageBox( "Sim Info posted to log file" );
+
+
+	double dEPlusVerNum=-1;
+	if (bUseEPlusRunMgr && lSimRetVal == 0)
+	{
+		boost::posix_time::ptime	tmStartTime = boost::posix_time::microsec_clock::local_time();  // SAC 1/23/14
+
+		EPlusRunMgr epRunMgr( pszEPlusPath, pszSimProcessDir, iCodeType, iProgressType, bVerbose /*bVerbose*/, true /*bSilent*/ );
+		int iRunIdx = 0;		QString sSetupRunErrMsg;
+		for (int iSI=0; (lSimRetVal == 0 && iSI < iNumSimInfo); iSI++)
+		{	if (oswSimInfo[iSI].pszRunSubdir && oswSimInfo[iSI].pszWeatherPathFile && oswSimInfo[iSI].bSimulateModel)
+			{	QString qsIDFPathFile;
+				if (oswSimInfo[iSI].pszIDFToSimulate && strlen( oswSimInfo[iSI].pszIDFToSimulate ) > 0)
+				{	if (FileExists( oswSimInfo[iSI].pszIDFToSimulate ))
+						qsIDFPathFile = oswSimInfo[iSI].pszIDFToSimulate;
+					else
+						lSimRetVal = 49;		// IDF path/filename specified by Proj:UseExcptDsgnModel not found
+			//			const char* pszIDFToSim = paSDDSimInfo[pRunData[iESimIdx]->iRunIdx]->pszIDFToSimulate;
+			//		// deal w/ PRE-DEFINED IDF files
+			//			if (pszIDFToSim && strlen( pszIDFToSim ) > 0 && boost::filesystem::exists(openstudio::toPath(pszIDFToSim)))
+			//			{	int iCITLastDot = sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].rfind('.');
+			//				if (iCITLastDot > 0)
+			//				{	std::string sCopyIDFTo = sProcessingPath + sSDDXMLFile[pRunData[iESimIdx]->iRunIdx].substr( 0, iCITLastDot );
+			//					sCopyIDFTo += "-fxd.idf";
+			//					if (boost::filesystem::exists( sCopyIDFTo ))
+			//						boost::filesystem::remove(  sCopyIDFTo );
+			//					boost::filesystem::copy_file( pszIDFToSim, sCopyIDFTo );
+			//					if (boost::filesystem::exists( sCopyIDFTo ))
+			//					{	//bSimulatePredefinedIDF[0] = true;
+			//						idfPath[iESimIdx] = openstudio::toPath( sCopyIDFTo );
+			//			}	}	}
+				}
+				else
+				{	qsIDFPathFile = QString( "%1%2" ).arg( pszSimProcessDir, oswSimInfo[iSI].pszSDDXMLFileName );
+					qsIDFPathFile = qsIDFPathFile.left( qsIDFPathFile.length()-3 );
+					qsIDFPathFile += "idf";
+				}
+
+				if (lSimRetVal == 0)
+				{	int iRunOK = epRunMgr.SetupRun( iRunIdx++, oswSimInfo[iSI].pszRunSubdir, qsIDFPathFile,
+																oswSimInfo[iSI].pszWeatherPathFile, oswSimInfo[iSI].bStoreHourlyResults,
+																oswSimInfo[iSI].iProgressModel, sSetupRunErrMsg );
+					if (iRunOK != 0)
+					{
+						lSimRetVal = iRunOK;		// additional error reporting here??
+		}	}	}	}
+
+		if (lSimRetVal == 0 && iRunIdx > 0)
+		{
+												//		bool bSaveFreezeProg = sbFreezeProgress;
+												//		sbFreezeProgress = true;
+//BEMMessageBox( "About to E+ via EPlusRunMgr" );
+			epRunMgr.DoRuns();
+//BEMMessageBox( "Back from E+ via EPlusRunMgr" );
+												//		sbFreezeProgress = bSaveFreezeProg;
+
+			if (pdSimulationTime)
+			{	boost::posix_time::time_duration td = boost::posix_time::microsec_clock::local_time() - tmStartTime;
+				*pdSimulationTime = ((double) td.total_microseconds()) / 1000000.0;
+			}
+
+			// SAC 2/14/19 - split sim prep (above) from results retrieval (below) to allow for E+ sim management outside OpenStudio
+			if (lSimRetVal == 0)
+			{
+				if (pszEPlusVerStr && iEPlusVerStrLen > 0)		// SAC 3/1/19
+				{	QString sEPVerStr = epRunMgr.GetVersionInfo();
+					if (!sEPVerStr.isEmpty())
+					{	strncpy_s( pszEPlusVerStr, iEPlusVerStrLen, sEPVerStr.toLocal8Bit().constData(), iEPlusVerStrLen-1 );
+						pszEPlusVerStr[iEPlusVerStrLen-1] = '\0';
+				}	}
+				dEPlusVerNum = epRunMgr.GetVersionNum();
+		//		lSimRetVal = osWrap.ProcessResults_Multiple(	pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
+		//										(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pszSimSDDErrorMsg, 1024, iCodeType, epRunMgr.GetVersionNum() );
+			}
+
+//	void DeleteRuns();
+
+
+	}	}
+
+	//else if (lSimRetVal == 0)
+	if (lSimRetVal == 0)
+				lSimRetVal = osWrap.ProcessResults_Multiple(	pszEPlusPath, pszSimProcessDir, poswSimInfo, iNumSimInfo,
+												(OSWRAP_MSGCALLBACK*) OSWrapCallback, iProgressType, pszSimSDDErrorMsg, 1024, iCodeType, dEPlusVerNum );
+
 	if (dEPlusVer)
 		*dEPlusVer = osWrap.EnergyPlusVersion( pszEPlusPath );  // SAC 5/16/14
 #pragma warning(disable:4996)
-	if (pszEPlusVerStr && iEPlusVerStrLen > 0)
-	{	std::string sVerStr = osWrap.Get_SimVersionID(0);
-		strncpy( pszEPlusVerStr, sVerStr.c_str(), iEPlusVerStrLen-1 );
-		pszEPlusVerStr[iEPlusVerStrLen-1] = '\0';
-	}
+//	if (pszEPlusVerStr && iEPlusVerStrLen > 0)
+//	{	std::string sVerStr = osWrap.Get_SimVersionID(0);
+//		strncpy( pszEPlusVerStr, sVerStr.c_str(), iEPlusVerStrLen-1 );
+//		pszEPlusVerStr[iEPlusVerStrLen-1] = '\0';
+//	}
 	if (pszOpenStudioVerStr && iOpenStudioVerStrLen > 0)	// SAC 8/22/14
 	{	std::string sVerStr = osWrap.GetOpenStudioVersion( true /*long/verbose version*/ );
 		strncpy( pszOpenStudioVerStr, sVerStr.c_str(), iOpenStudioVerStrLen-1 );
@@ -2279,6 +2405,8 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 	{	if (osRunInfo[iRun].StoreHourlyResults())
 			RetrieveSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
 	}
+//	BEMPX_WriteLogFile( "  pausing 5 secs to allow E+cleanup", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//	Sleep(5000);				// SAC 5/22/19 - additional pause to ensure directory clean-up successful
 
 								if (bVerbose && iRetVal != OSI_SimEPlus_UserAbortedAnalysis)
 									BEMPX_WriteLogFile( "  PerfSim_E+ - returning", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -2296,7 +2424,8 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
                           							BOOL /*bDurationStats=FALSE*/, double* pdTranslationTime /*=NULL*/, double* pdSimulationTime /*=NULL*/,  // SAC 1/23/14
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
-															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/ )	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
+															QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/ )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
 {
 	int iRetVal = 0;
 	QString sTempErr;
@@ -2321,7 +2450,8 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 				iRetVal = iResCopyRetVal;
 		}	}
 		if (iResCopyRetVal == 0)
-			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath );	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath, 	// SAC 4/17/14 - moved ALL results processing to subordinate routine
+														psaEPlusProcDirsToBeRemoved );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
 	}
 
 	return iRetVal;

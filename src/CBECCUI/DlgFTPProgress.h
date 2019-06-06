@@ -95,7 +95,7 @@ protected:
 	virtual void OnCancel();
 	//}}AFX_MSG
 
-   afx_msg long OnInitDownload(UINT, LONG);
+   afx_msg LRESULT OnInitDownload(WPARAM, LPARAM);
 
 	DECLARE_MESSAGE_MAP()
 

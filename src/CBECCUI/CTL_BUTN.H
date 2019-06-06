@@ -146,8 +146,8 @@ protected:
 
     virtual void PostNcDestroy();
 
-   afx_msg long OnGetDBID(UINT, LONG);
-   afx_msg long OnGetDBInstance(UINT, LONG);
+   afx_msg LRESULT OnGetDBID(WPARAM, LPARAM);
+   afx_msg LRESULT OnGetDBInstance(WPARAM, LPARAM);
 
    DECLARE_MESSAGE_MAP()
 };

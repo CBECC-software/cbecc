@@ -224,7 +224,7 @@ void CColorBarCtl::Dump(CDumpContext& dc) const
 /////////////////////////////////////////////////////////////////////////////
 // CColorBarCtl OnDisplayData()
 
-LONG CColorBarCtl::OnDisplayData(UINT, LONG)
+LRESULT CColorBarCtl::OnDisplayData(WPARAM, LPARAM)
 {
    RedrawWindow(NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
    return 1;
@@ -449,7 +449,7 @@ void CColorBarCtl::PostProcessMouseMods()
 }
 
 
-void CColorBarCtl::OnTimer(UINT nIDEvent)
+void CColorBarCtl::OnTimer(UINT_PTR nIDEvent)
 {
    if (nIDEvent == 1)
    {

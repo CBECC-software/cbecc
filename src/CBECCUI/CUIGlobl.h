@@ -376,6 +376,7 @@ extern BOOL LoadDataModel(	const char* psBEMProcFileName = NULL, int iBEMType = 
 
 extern int eiNumRulesetsAvailable;
 
+extern int RulesetFilenameToIndex( const char* pszRulesetFN );	// SAC 4/10/19
 extern void UpdateRulesetMenu( CCmdUI* pCmdUI );
 extern BOOL MenuRulesetSelectionAllowed( int idx, CString& sRuleSwitchDisallowedMsg );
 extern BOOL MenuRulesetSelection( CWnd* pWnd, int idx, CString& sRulesetFileString );

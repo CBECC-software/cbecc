@@ -2244,7 +2244,7 @@ void ResolveEscapeSequences( QString& str )  // SAC 7/30/02
 double PolygonArea_OrderDependent( vector<double>& faX, vector<double>& faY, vector<double>& faZ )  //, double Nx, double Ny, double Nz )
 {
 	int  i, j, k;		 // loop indices
-	int n = faX.size();				assert( n > 2 );
+	int n = (int) faX.size();				assert( n > 2 );
 
 // calculate normal vector HERE
 	double Nx, Ny, Nz;		Nx = Ny = Nz = 0;
@@ -2261,7 +2261,7 @@ double PolygonArea_OrderDependent( vector<double>& faX, vector<double>& faY, vec
 		faY.push_back( faY[0] );
 		faZ.push_back( faZ[0] );
 	}
-	n = faX.size() - 1;
+	n = (int) faX.size() - 1;
 
 // original area calc code...
 	double area = 0;
@@ -11311,10 +11311,10 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 
 										vector<long> laSCSysRptCnt;
 										vector<string> saSCSysRptName;
-										int iEqpLoopCnt = saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? saClUnitName.size() : 0);
+										int iEqpLoopCnt = (int) saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? (int) saClUnitName.size() : 0);
 										for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iEqpLoopCnt); iEqp++)
 										{	int iHtgIdx = (iEqp < (int) saHtUnitName.size() ? iEqp : -1);
-											int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - saHtUnitName.size() : iHtgIdx);
+											int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - (int) saHtUnitName.size() : iHtgIdx);
 											if (iClgIdx >= 0 && (int) saClUnitName.size() < (iClgIdx+1))	// SAC 12/23/15 - prevent accessing saClUnitName when not available (for no-cooling systems)
 												iClgIdx = -1;
 											long lCount = 0;
@@ -11410,14 +11410,14 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 													iNumObjsCreated++;
 												else if (iRptObjRetVal > 10)
 													sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving/creating SCSysRpt object #%1 for DwellUnitType '%2'" ).arg( QString::number( iEqp+1 ), sDUName );
-												int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? saSCSysRptName.size() : -1;
+												int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? (int) saSCSysRptName.size() : -1;
 												if (iSCSysIdx < 0)
 												{	for (int iSR=0; (iSCSysIdx < 0 && iSR < (int) saSCSysRptName.size()); iSR++)
 													{	if (sSCSysRptName == saSCSysRptName[iSR])
 															iSCSysIdx = iSR;
 													}
 													if (iSCSysIdx < 0)
-														iSCSysIdx = saSCSysRptName.size();
+														iSCSysIdx = (int) saSCSysRptName.size();
 												}																							assert( iSCSysIdx >= 0 );
 												if (iSCSysIdx < (int) saSCSysRptName.size())
 													laSCSysRptCnt[iSCSysIdx] = laSCSysRptCnt[iSCSysIdx] + lCount;		// SCSysRpt already referenced in array, so just increment count
@@ -11433,7 +11433,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 										}	// end of loop over possible SCSysRpt obejcts (found or created)
 
 							// now STORE array of SCSysRpt objects and counts back to the DwellUnitType
-										int iNumSCSysRpts = (saSCSysRptName.size() <= 10 ? saSCSysRptName.size() : 10);				assert( saSCSysRptName.size() <= 10 ); // if > 10, need to increase size of DwellUnitType:SCSysRpt* properties
+										int iNumSCSysRpts = (saSCSysRptName.size() <= 10 ? (int) saSCSysRptName.size() : 10);				assert( saSCSysRptName.size() <= 10 ); // if > 10, need to increase size of DwellUnitType:SCSysRpt* properties
 										for (int iSR=0; (sErrMsg.isEmpty() && iSR < iNumSCSysRpts); iSR++)
 										{	QString sSCSysName = saSCSysRptName[iSR].c_str();
 											long lSCSysCnt = laSCSysRptCnt[iSR];
@@ -11590,10 +11590,10 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 
 								vector<long> laSCSysRptCnt;
 								vector<string> saSCSysRptName;
-								int iEqpLoopCnt = saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? saClUnitName.size() : 0);
+								int iEqpLoopCnt = (int) saHtUnitName.size() + (lEqpCountsMustAlign == 0 ? (int) saClUnitName.size() : 0);
 								for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iEqpLoopCnt); iEqp++)
 								{	int iHtgIdx = (iEqp < (int) saHtUnitName.size() ? iEqp : -1);
-									int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - saHtUnitName.size() : iHtgIdx);
+									int iClgIdx = (lEqpCountsMustAlign == 0 ? iEqp - (int) saHtUnitName.size() : iHtgIdx);
 									if (iClgIdx >= 0 && (int) saClUnitName.size() < (iClgIdx+1))	// SAC 12/23/15 - prevent accessing saClUnitName when not available (for no-cooling systems)
 										iClgIdx = -1;
 									long lCount = 0;
@@ -11681,14 +11681,14 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 										iNumObjsCreated++;
 									else if (iRptObjRetVal > 10)
 										sErrMsg = QString( "CreateSCSysRptObjects Error encountered retrieving/creating SCSysRpt object #%1 for HVACSys '%2'" ).arg( QString::number( iEqp+1 ), sSysName );
-									int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? saSCSysRptName.size() : -1;
+									int iSCSysIdx = (saSCSysRptName.size() < 1 || iRptObjRetVal == 1) ? (int) saSCSysRptName.size() : -1;
 									if (iSCSysIdx < 0)
 									{	for (int iSR=0; (iSCSysIdx < 0 && iSR < (int) saSCSysRptName.size()); iSR++)
 										{	if (sSCSysRptName == saSCSysRptName[iSR])
 												iSCSysIdx = iSR;
 										}
 										if (iSCSysIdx < 0)
-											iSCSysIdx = saSCSysRptName.size();
+											iSCSysIdx = (int) saSCSysRptName.size();
 									}																							assert( iSCSysIdx >= 0 );
 									if (iSCSysIdx < (int) saSCSysRptName.size())
 										laSCSysRptCnt[iSCSysIdx] = laSCSysRptCnt[iSCSysIdx] + lCount;		// SCSysRpt already referenced in array, so just increment count
@@ -11699,7 +11699,7 @@ int CreateSCSysRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* err
 								}	// end of loop over possible SCSysRpt obejcts (found or created)
 
 					// now STORE array of SCSysRpt objects and counts back to the HVACSys
-								int iNumSCSysRpts = (saSCSysRptName.size() <= 20 ? saSCSysRptName.size() : 20);				assert( saSCSysRptName.size() <= 20 ); // if > 20, need to increase size of HVACSys:SCSysRpt* properties
+								int iNumSCSysRpts = (saSCSysRptName.size() <= 20 ? (int) saSCSysRptName.size() : 20);				assert( saSCSysRptName.size() <= 20 ); // if > 20, need to increase size of HVACSys:SCSysRpt* properties
 								for (int iSR=0; (sErrMsg.isEmpty() && iSR < iNumSCSysRpts); iSR++)
 								{	QString sSCSysName = saSCSysRptName[iSR].c_str();
 									long lSCSysCnt = laSCSysRptCnt[iSR];
@@ -11886,7 +11886,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 													//					laDHWHtrCntIdx.push_back( iCnt+1 );
 													//					saDHWHtrName.push_back(   (const char*) sEqpName );
 													//		}		}
-														int iNumDHWRptObjsToCreate = laDHWHtrTypIdx.size();
+														int iNumDHWRptObjsToCreate = (int) laDHWHtrTypIdx.size();
 													// CREATE DHWSysRpt objects
 														for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iNumDHWRptObjsToCreate); iEqp++)
 														{	sDHWSysRptName = QString( "%1 %2/%3 | %4 %5/%6 | Eqp %7/%8" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ), sSysName, QString::number( iDUT_DHWIdx+1 ), QString::number( lDUT_NumDHWSysTypes ), QString::number( iEqp+1 ), QString::number( iNumDHWRptObjsToCreate ) );
@@ -11970,7 +11970,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 						//					laDHWHtrCntIdx.push_back( iCnt+1 );
 						//					saDHWHtrName.push_back(   (const char*) sEqpName );
 						//		}		}
-							int iNumDHWRptObjsToCreate = laDHWHtrTypIdx.size();
+							int iNumDHWRptObjsToCreate = (int) laDHWHtrTypIdx.size();
 
 						// CREATE DHWSysRpt objects
 							for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iNumDHWRptObjsToCreate); iEqp++)
@@ -12159,6 +12159,7 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 		//	long lDBID_Proj_UnitInputValid     = GetPropertyDBID_LogError( "Proj", "UnitInputValid",     iCID_Proj, iNumErrors, sTmp );		// BEMP_Int, 16,  1,  0, "",   0,  0,             3008, "boolean (0/1) indicating valid inputs for each dwelling unit type" 
 			long lDBID_Proj_UnitName           = GetPropertyDBID_LogError( "Proj", "UnitName",           iCID_Proj, iNumErrors, sTmp );		// BEMP_Str, 16,  1,  0, "",   0,  0,             1025, "Dwelling unit name" 
 		//	long lDBID_Proj_UnitCount          = GetPropertyDBID_LogError( "Proj", "UnitCount",          iCID_Proj, iNumErrors, sTmp );		// BEMP_Int, 16,  1,  0, "",   0,  0,             1025, "Dwelling unit count" 
+			long lDBID_Proj_SFamADUIAQUI       = GetPropertyDBID_LogError( "Proj", "SFamADUIAQUI",       iCID_Proj, iNumErrors, sTmp );		// BEMP_Int, 1   - SAC 4/23/19
 
 		//	long lDBID_IAQVentRpt_IAQVentName     = GetPropertyDBID_LogError( "IAQVentRpt", "IAQVentName",     iCID_IAQVentRpt, iNumErrors, sTmp );	// BEMP_Str,  1,  0,  0, "",   0,  0,             1003, "name of IAQVentRpt instance with unique IAQFan properties by dwelling unit"   
 			long lDBID_IAQVentRpt_DwellingUnitIdx = GetPropertyDBID_LogError( "IAQVentRpt", "DwellingUnitIdx", iCID_IAQVentRpt, iNumErrors, sTmp );	// BEMP_Int,  1,  0,  0, "",   0,  0,             1003, "1-based index of dwelling unit served by IAQVent System (or 0 for single family homes)"   
@@ -12175,7 +12176,8 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 					sErrMsg = QString( "Error initializing CreateIAQRptObjects database ID %1" ).arg( sTmp );
 			}
 			else
-			{	long lUnitIAQOption, lUnitIAQNumFanRefs, lUnitIAQFanCnt, lMaxDUnitLp = 1, lUnitInputValid, lUnitCount;		QString sDUnitName, sIAQVentRptName;
+	// SAC 4/23/19 - revisions to output SFam ADU IAQ fan info (tic #1010)
+			{	long lUnitIAQOption, lUnitIAQNumFanRefs, lUnitIAQFanCnt, lMaxDUnitLp = 2, lUnitInputValid, lUnitCount, lSFamADUIAQUI;		QString sDUnitName, sIAQVentRptName;
 				BEMObject *pIAQFanObj, *pIAQVentRptObj;
 		//		if (lIsMultiFamily > 0)
 		//			BEMPX_GetInteger( lDBID_Proj_UnitTypesToDisplay, lMaxDUnitLp );
@@ -12184,6 +12186,8 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 		//			if (lIsMultiFamily > 0)
 		//				bProcessThisDUnit = (BEMPX_GetInteger( lDBID_Proj_UnitInputValid+iDUnit, lUnitInputValid ) && lUnitInputValid > 0 &&
 		//											BEMPX_GetInteger( lDBID_Proj_UnitCount     +iDUnit, lUnitCount      ) && lUnitCount > 0 );
+					if (iDUnit==1 && (!BEMPX_GetInteger( lDBID_Proj_SFamADUIAQUI, lSFamADUIAQUI ) || lSFamADUIAQUI < 1))	// SAC 4/23/19
+						bProcessThisDUnit = false;
 					if (bProcessThisDUnit)
 					{	long lDwellingUnitIdx = iDUnit;	// + (lIsMultiFamily > 0 ? 1 : 0);
 						BEMPX_GetString(  lDBID_Proj_UnitName     +iDUnit, sTmp );
@@ -12191,6 +12195,8 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 												// Proj:UnitIAQOption ->	1,	"Default Minimum IAQ Fan"   //   2,	"Specify Individual IAQ Fans"   //   3,	"CFI (Central Fan Integrated) IAQ"
 						if (lUnitIAQOption == 1 || lUnitIAQOption == 2)
 						{	sDUnitName = "SFam";
+							if (iDUnit == 1)
+								sDUnitName += " ADU";
 		//					if (lIsMultiFamily == 0)
 		//						sDUnitName = "SFam";
 		//					else if (!sTmp.isEmpty())

@@ -572,6 +572,11 @@ BOOL CComplianceUIDoc::OpenTheFile( CPathName sInputFile, BOOL bWriteToLog, BOOL
 		if (bContinue)
 		{	bRulesetBeingSwitched = true;
 			sRulesetFNToSet = sRulesetFN;
+			if (lRulesetSymVal < 0)		// SAC 4/10/19 - code to set valid (new) Proj:Ruleset symbol value based on rulesets present on user's machine
+			{	int iRulesetSymValChk = RulesetFilenameToIndex( sRulesetFN );
+				if (iRulesetSymValChk >= 0)
+					lRulesetSymVal = iRulesetSymValChk;
+			}
 			sLogMsg.Format( "   Project switched to compliance ruleset:  %s", sRulesetFN );
 	}	}
 	else if (!bContinue)

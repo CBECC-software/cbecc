@@ -102,10 +102,10 @@ int ComputeSHA256_File_Raw( const char* pszPathFile, unsigned char* hash /*pResu
 			char* buffer = (char*) malloc(bufSize);
 			int bytesRead = 0;
 			if (!buffer) return -1;
-			bytesRead = fread(buffer, 1, bufSize, file);
+			bytesRead = (int) fread(buffer, 1, bufSize, file);
 			while (bytesRead > 0)
 			{	SHA256_Update(&sha256, buffer, bytesRead);
-				bytesRead = fread(buffer, 1, bufSize, file);
+				bytesRead = (int) fread(buffer, 1, bufSize, file);
 			}
 			SHA256_Final(hash, &sha256);
 

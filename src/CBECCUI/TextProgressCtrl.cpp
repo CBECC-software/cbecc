@@ -177,7 +177,7 @@ LRESULT CTextProgressCtrl::OnGetText(WPARAM cchTextMax, LPARAM lParam)
     if (!_tcsncpy(szText, m_strText, cchTextMax))
         return 0;
     else
-        return std::min(cchTextMax, (UINT) m_strText.GetLength());
+        return std::min(cchTextMax, (WPARAM) m_strText.GetLength());
 }
 
 BOOL CTextProgressCtrl::OnEraseBkgnd(CDC* /*pDC*/)

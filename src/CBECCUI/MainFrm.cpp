@@ -562,9 +562,7 @@ CMainFrame::CMainFrame()
    m_bDoingSummaryReport = FALSE;  // SAC 6/19/13
    m_bPerformingAnalysis = FALSE;	// SAC 4/1/15
    m_bDoingCustomRuleEval = FALSE;	// SAC 1/28/18
-#ifdef UI_CANRES
 	gridDialog = NULL;
-#endif
 }
 
 CMainFrame::~CMainFrame()
@@ -904,7 +902,7 @@ void CMainFrame::OnPaint()
 /////////////////////////////////////////////////////////////////////////////
 // Message-Initiated Status Bar Message Updating
 
-LONG CMainFrame::OnSetStatusMessage( UINT /*wParam*/, LONG /*lParam*/ )
+LRESULT CMainFrame::OnSetStatusMessage( WPARAM /*wParam*/, LPARAM /*lParam*/ )
 {
 // SAC 10/29/15 - status bar no longer used to display property info
 //   CString* pStr = (CString*) wParam;
@@ -1001,7 +999,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd,UINT uMsg, LPARAM /*lParam*/, L
 
 static int siSubordTabbedDlgsDisplayed = 0;	// SAC 10/29/14 - added to prevent too many subordinate tabbed dialogs from being displayed at a time - max ~2 (?)
 
-LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
+LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 {
    long lRetVal = 1;
    if (wParam > 0 && lParam)
@@ -1506,26 +1504,92 @@ LONG CMainFrame::OnButtonPressed( UINT wParam, LONG lParam )
 									ebIncludeLongCompParamStrInToolTip );
          dlgProj.DoModal();
 		}
-      else if (wAction == 3036)		// SAC 12/5/18 - screen to enter DHWSys Compact Distribution straight-line heater-fixture distances (tic #975)
-		{	int iDlgHt = 355, iDlgWd = 520;	// expanded Ht from 320 to 355 to allow for user specification of Compactness Factor
-			CString sDialogCaption;
-			GetDialogCaption( eiBDBCID_DHWSys, sDialogCaption );
-         CSACDlg dlgProj( pDlg, eiBDBCID_DHWSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
-                           esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
-									iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
-                           0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
-									0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
-									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
-                           FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
-                           // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
-                           FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
-									ebIncludeLongCompParamStrInToolTip );
-         dlgProj.DoModal();
+	// SAC 4/7/19 - removed as no longer used - Compact Distrib distance checkboxes and values moved to main DHWSys screen
+   //	else if (wAction == 3036)		// SAC 12/5/18 - screen to enter DHWSys Compact Distribution straight-line heater-fixture distances (tic #975)
+	//	{	int iDlgHt = 355, iDlgWd = 520;	// expanded Ht from 320 to 355 to allow for user specification of Compactness Factor
+	//		CString sDialogCaption;
+	//		GetDialogCaption( eiBDBCID_DHWSys, sDialogCaption );
+   //      CSACDlg dlgProj( pDlg, eiBDBCID_DHWSys, 0 /* lDBID_ScreenIdx */, (long) wAction /* lDBID_ScreenID */, 0, 0, 0,
+   //                        esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, sDialogCaption /*pszDialogCaption*/,
+	//								iDlgHt /*Ht*/, iDlgWd /*Wd*/, 10 /*iBaseMarg*/,
+   //                        0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
+	//								0 /*lDBID_CtrlDBIDOffset*/, "&Done" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
+	//								0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
+   //                        FALSE /*bUsePageIDForCtrlTopicHelp*/, 100000 /*iHelpIDOffset*/, 0 /*lDBID_DialogHeight*/,
+   //                        // SAC 10/27/02 - Added new argument to trigger use of new graphical Help/Prev/Next/Done buttons
+   //                        FALSE /*bBypassChecksOnCancel*/, FALSE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 90 /*iFinishBtnWd*/,
+	//								ebIncludeLongCompParamStrInToolTip );
+   //      dlgProj.DoModal();
+	//	}
+		else if (wAction == 3036)		// SAC 4/7/19 - reused 3036 value to serve as dialog to collect HVACDist DuctSeg child data
+		{
+			//BEMMessageBox( "Duct design" );
+			int iHVACDistObjIdx = BEMPX_GetActiveObjectIndex( eiBDBCID_HVACDist );
+			int iDuctSegCID = BEMPX_GetDBComponentID( "DuctSeg" );			ASSERT( iDuctSegCID > 0 );
+			if (iDuctSegCID > 0 && eiBDBCID_HVACDist > 0 && iHVACDistObjIdx >= 0)
+			{	if (!QAppInitialized())
+					AfxMessageBox( "Error encountered initializing QT Application." );
+				else
+				{
+
+				// if active HVACDist doesn't have at least one child DuctSeg, then create one BEFORE opening grid
+					int iNumDuctSegKids = BEMPX_GetNumChildren( eiBDBCID_HVACDist, iHVACDistObjIdx, BEMO_User, iDuctSegCID );
+					if (iNumDuctSegKids < 1)
+					{	CWaitCursor wait;
+						int iError;
+						BEMObject* pParentObj = BEMPX_GetObjectByClass( eiBDBCID_HVACDist, iError, iHVACDistObjIdx );			ASSERT( pParentObj );
+						if (pParentObj)
+						{	BEMObject* pNewObj = BEMPX_CreateObject( iDuctSegCID, "seg" /*NULL:LPCSTR lpszName*/, pParentObj );
+															//	BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE,
+															//	bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE,
+															//	int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
+							if (pNewObj)
+							   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   									NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+   									0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+						}
+					}
+
+					CWnd* pFocusWnd=NULL;
+					if (pDlg)
+					{	pFocusWnd = pDlg->GetFocus();
+						pDlg->EnableWindow( FALSE );
+					}
+
+				//	QString qsDlgMsg;
+				//	VERIFY( BEMPX_GetString( BEMPX_GetDatabaseID( "Name", eiBDBCID_HVACDist ), qsDlgMsg, FALSE, 0, -1, iHVACDistObjIdx ) && !qsDlgMsg.isEmpty() );
+				//	if (qsDlgMsg.isEmpty())
+				//		qsDlgMsg = "<unknown>";
+				//	qsDlgMsg = "  Describe each duct segment of HVACDist '" + qsDlgMsg;
+				//	qsDlgMsg += "':";
+
+					long lRunScope=0;
+					BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope );
+					bool bIsEAARun = (lRunScope == 2);
+
+					long lDuctDesignDlgMsgDBID = BEMPX_GetDatabaseID( "DuctDesignDlgMsg", eiBDBCID_HVACDist );
+					BEMGridDialog gridDuctSeg( this, iDuctSegCID, -1, iDuctSegCID, (bIsEAARun ? 3037 : 3036), 
+														eiBDBCID_HVACDist, iHVACDistObjIdx, lDuctDesignDlgMsgDBID );
+					gridDuctSeg.setModal(true);
+					gridDuctSeg.exec();
+				//	gridDuctSeg.open();
+
+					if (pDlg)
+					{	pDlg->EnableWindow( TRUE );
+						if (pFocusWnd)
+					      pFocusWnd->SetFocus();
+						else
+					      pDlg->SetFocus();
+					}
+
+//			BEMMessageBox( "Duct design" );
+
+			}	}
 		}
 
 #elif UI_CANRES
       else if (wAction >= 190 && wAction <= 195)
-      {	int iDlgHt = 710, iDlgWd = 600;  // Present dialog to collect Spc ResSpcDHWFeatures data
+      {	int iDlgHt = 740, iDlgWd = 600;  // Present dialog to collect Spc ResSpcDHWFeatures data
       	int iDlgClassID = eiBDBCID_ResSpcDHWFeatures;
 			int iResSpcDHWFtrsRef0Array = wAction - 190;
 			BEMObject* pRSDF = NULL;
@@ -1761,7 +1825,7 @@ static int siQuickCr8Class   = 0;
 static long  slQuickObjTypeDBID  = 0;
 static long  slQuickObjTypeValue = 0;
 
-LONG CMainFrame::OnQuickMenu( UINT, LONG lParam )
+LRESULT CMainFrame::OnQuickMenu( WPARAM, LPARAM lParam )
 {
    QuickMenuInfo* pQMInfo = (QuickMenuInfo*) lParam;
    if (pQMInfo && pQMInfo->m_lDBID > 0)
@@ -2040,7 +2104,7 @@ void CMainFrame::OnQuickDelete()
 
 /////////////////////////////////////////////////////////////////////////////
 
-LONG CMainFrame::OnCheckCompat( UINT wParam, LONG lParam )
+LRESULT CMainFrame::OnCheckCompat( WPARAM wParam, LPARAM lParam )
 {	LONG lRetVal = 1;
 	if (wParam == 0)	// check to see if it is OK to create new component of type lParam = 1-based class index
 	{
@@ -2634,7 +2698,7 @@ void CMainFrame::OnFileSaveAs()
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers - Ruleset Evaluation & Analysis
 
-afx_msg LONG CMainFrame::OnDataModified(UINT /*wEval*/, LONG lDBID)
+afx_msg LRESULT CMainFrame::OnDataModified(WPARAM /*wEval*/, LPARAM lDBID)
 {	return DataModified( lDBID );
 }
 
@@ -2725,7 +2789,7 @@ long CMainFrame::DataModified(long lDBID, int iObjIdx /*=-1*/)
    return lRetVal;
 }
 
-afx_msg LONG CMainFrame::OnUpdateTree(UINT wParam, LONG lDBIDModified)
+afx_msg LRESULT CMainFrame::OnUpdateTree(WPARAM wParam, LPARAM lDBIDModified)
 {
    CView* pView = (CView*)m_wndSplitter.GetPane(0,0);
    if (pView != NULL)            // update main view's tree control(s)
@@ -2733,7 +2797,7 @@ afx_msg LONG CMainFrame::OnUpdateTree(UINT wParam, LONG lDBIDModified)
    return 1;
 }
 
-afx_msg LONG CMainFrame::OnPopulateLibraryTree(UINT uiTreeMode, LONG)
+afx_msg LRESULT CMainFrame::OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM)
 {
    CView* pLibView = (CView*)m_wndSplitter.GetPane(1,0);
    if (pLibView != NULL)            // update main view's tree control(s)
@@ -2889,6 +2953,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "SimOutputVariablesToCSV_ab"  ,  "SimOutputVariablesToCSV_ab"  ,    0   },  // SAC 4/11/16
                                                 {  "SimOutputVariablesToCSV_zp"  ,  "SimOutputVariablesToCSV_zp"  ,    0   },  // SAC 4/11/16
                                                 {  "SimOutputVariablesToCSV_zb"  ,  "SimOutputVariablesToCSV_zb"  ,    0   },  // SAC 4/11/16
+                                                {  "UseEPlusRunMgr"              ,  "UseEPlusRunMgr"              ,    1   },  // SAC 2/15/19
 																{  NULL, NULL, -1  }  };
 
 		int iAnalOptIdx = -1;
@@ -3192,10 +3257,11 @@ static void InitBatchRunsFromINI()
 	long lAdditionalInputs = ReadProgInt( "options", "Batch_AdditionalInputs", 0 );
 	if (lAdditionalInputs > 0)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), BEMP_Int, (void*) &lAdditionalInputs );
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,  lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	// SAC 4/21/19 - added WeatherFileKey
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,  lAdditionalInputs ,   lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3233,10 +3299,11 @@ static void WriteBatchRunDataToINI()
 //	int   	 iaBRPropType[] = {       BEMP_Int   ,       BEMP_Int      ,     BEMP_Str    ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
 //	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
 //	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,  iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	// SAC 4/21/19 - added WeatherFileKey
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,  iAdditionalInputs ,   iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3251,15 +3318,21 @@ static void WriteBatchRunDataToINI()
 				}
 				else
 				{	QString qsTemp = BEMPX_GetStringAndStatus( lDBID, iStatus, iSpecVal, iErr );
+					if (iStatus < 7 && qsTemp.isEmpty())
+					{	// REMOVE INI option if there is a corresponding string stored in INI already (which we should delete)
+						CString sINIStr = ReadProgString( "options", sINIOpt, NULL, FALSE );
+						if (!sINIStr.IsEmpty())
+							iStatus = 7;	// revise status to cause this option to be processed (even though it is blank, since user blanked it out)
+					}
 					if (iStatus > 6)
 					{	// trim ProjDir from value if matches
 						if (iaProcessPropStr[iPropIdx] > 0 && qsTemp.length() > esProjectsPath.GetLength())
 						{	QString qsUpTemp = qsTemp.toUpper();
 							CString sProjUp = esProjectsPath;		sProjUp.MakeUpper();
 							if (qsUpTemp.indexOf( ((const char*) sProjUp) ) == 0)
-								qsTemp = qsTemp.left( qsTemp.length()-esProjectsPath.GetLength() );
+								qsTemp = qsTemp.right( qsTemp.length()-esProjectsPath.GetLength() );		// SAC 4/23/19 - fixed bug where left, as opposed to right, portion of path stored to INI
 						}
-						WriteProgString( "options", sINIOpt, qsTemp.toLatin1().constData() );
+						WriteProgString( "options", sINIOpt, (qsTemp.length() > 0 ? qsTemp.toLatin1().constData() : NULL) );
 		}	}	}	}
 }
 
@@ -3470,7 +3543,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			// new method to enable simplified batch UI via BatchRuns object
 			BatchUIDefaulting();
 	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
-			int iTabCtrlWd = 610, iTabCtrlHt = 560;
+			int iTabCtrlWd = 610, iTabCtrlHt = 590;	// SAC 4/21/19 - Ht 560->590 to add WeatherFileKey
 			CWnd* pWnd = GetFocus();
 			//CWnd* pWnd = GetTopLevelParent();
          CSACDlg dlgBatchRun( pWnd /*this*/, iCID_BatchRuns, 0 /* lDBID_ScreenIdx */, 5010 /*iDlgID*/, 0, 0, 0,
@@ -3536,6 +3609,17 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			if (iFSADP > 0)
 			{	sTemp.Format( "FileSaveAllDefinedProperties,%d,", iFSADP );					sOptionsCSVString += sTemp;
 			}
+			int iC02DR = ReadProgInt( "options", "EnableCO2DesignRatings", 0 );		// SAC 2/1/19 - added EnableCO2DesignRatings to feed into batch processing
+			if (iC02DR > 0)
+			{	sTemp.Format( "EnableCO2DesignRatings,%d,", iC02DR );							sOptionsCSVString += sTemp;
+			}
+		// SAC 4/21/19 - added WeatherFileKey
+			CString sWeatherFileKey;
+			if (BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:WeatherFileKey" ), sWeatherFileKey ) && !sWeatherFileKey.IsEmpty())
+			{	sTemp.Format( "WeatherFileKey,\"%s\",", sWeatherFileKey );					sOptionsCSVString += sTemp;
+			}
+		// SAC 5/27/19 - added BypassMessageBoxes
+				sOptionsCSVString += "BypassMessageBoxes,1,";
 
 			const char* pszAnalOpts = NULL;
 			if (!sOptionsCSVString.IsEmpty())
@@ -3850,7 +3934,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 	   	   else
 				{	CString sBatchAnalOpts;
 					if (qsAnalOptsINI.length() > 0)
-						VERIFY( PopulateAnalysisOptionsString( sBatchAnalOpts, false /*bBatchMode*/, qsAnalOptsINI.toLatin1().constData() ) );		// SAC 1/29/14
+						VERIFY( PopulateAnalysisOptionsString( sBatchAnalOpts, true /*bBatchMode*/, qsAnalOptsINI.toLatin1().constData() ) );		// SAC 1/29/14  // SAC 2/1/19 - switched BatchMode argument from false->true (seemed wrong)
 
 					CString str, str2;
 					defsFile.WriteString( "; Fmt Ver,Summary Results File\n" );
@@ -5225,7 +5309,7 @@ static int StringInArray( CStringArray& saStrs, CString& sStr )
 
 const char* pszDefaultAction[] = { "0", "DataMod", "OpenDialog", "CloseDialog", "InitAnalysis", "5", "6", "7" };	// SAC 4/15/18
 
-afx_msg LONG CMainFrame::OnEvaluateProposedRules(UINT uiDefaultAction, LONG lDBID)
+afx_msg LRESULT CMainFrame::OnEvaluateProposedRules(WPARAM uiDefaultAction, LPARAM lDBID)
 {
 	int iEvalOnlyClass = 0;		// SAC 4/12/18 - added variables and logic to choose when and what gets defaulted based on new EvalProposed arguments
 	int iEvalOnlyObjIdx = -1;
@@ -5422,7 +5506,7 @@ static char BASED_CODE szPerfWthr2[]  = "' Not Found.";
 #define  CSV_RESULTSLENGTH  3200
 static char pszCSVResultSummary[ CSV_RESULTSLENGTH ];
 
-afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
+afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 {
    LONG lRetVal = 1;  // default to 'failure'
 
@@ -5600,9 +5684,11 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
 		{
-			long lEnergyCodeYear, lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers & data for run containing CO2 design ratings vs. not
-			BOOL bHaveCDRs = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"    ), lEnergyCodeYear       ) && lEnergyCodeYear >= 2019 &&
-									BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0);
+			long lEnergyCodeYear;
+			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), lEnergyCodeYear );
+// SAC 2/5/19 - removed unique CSV results headers & format specific to C02 emissions (C02 design ratings out and emissions reported in all (2019+) runs) (tic #1053)
+//			long lCalcCO2DesignRatings;		// SAC 1/30/18 - alternate headers & data for run containing CO2 design ratings vs. not
+//			BOOL bHaveCDRs = (lEnergyCodeYear >= 2019 && BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcCO2DesignRatings" ), lCalcCO2DesignRatings ) && lCalcCO2DesignRatings > 0);
 			const char* pszOrientation[] = {  NULL,  "N", "E", "S", "W", NULL };
 			int iAllOrientationsResultsCSV = ReadProgInt( "options", "AllOrientationsResultsCSV", 1 /*default*/ );
 			int iMaxCSVOrient = (lAllOrientations > 0 && (iAllOrientationsResultsCSV > 0) ? 4 : 0);
@@ -5614,9 +5700,10 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 				// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - rec lengths now 1944,3776 & 2904 chars
 				// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF - rec lengths now 2024, 3870 & 3045 chars
 				// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
-				CString sDfltResFN = (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+				// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
+				CString sDfltResFN = "AnalysisResults-v20.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						19 /*iResFormatVer*/, sOriginalFileName );
+																						20 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
 					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3072];
@@ -5769,12 +5856,20 @@ afx_msg LONG CMainFrame::OnPerformAnalysis(UINT, LONG)
 			{	bSimResultsDisplayed = TRUE;
 				if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary object is ALWAYS the active obejct as dialog presented
 					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
-		      int iMaxTabs = (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
+		      int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
 				CString sDialogCaption;
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+
+				int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
+				long lRunScope=0, lIsAddAlone=0;
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
+					 ( lRunScope == 2 ||    // add or alter
+					  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
+					iResultsScreenUIMode = 1;
+
 				CWnd* pWnd = GetFocus();
-				CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+				CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*uiMode*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 				                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 				                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
@@ -6533,12 +6628,20 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary obejct is ALWAYS the active obejct as dialog presented
 			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 
-      int iMaxTabs = (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
+      int iMaxTabs = 99;  // SAC 4/11/19 - enable C02 Details acces regardless of INI option - was:  (ReadProgInt( "options", "EnableCO2DesignRatings", 0 /*default*/ ) > 0) ? 99 : 4;		// SAC 1/27/18
 		CString sDialogCaption;
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
+
+		int iResultsScreenUIMode = 0;		// SAC 4/11/19 - reduced results display for EAA (and non-EDR) analysis (tic #1082)
+		long lRunScope=0, lIsAddAlone=0;
+		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:RunScope" ), lRunScope ) &&
+			 ( lRunScope == 2 ||    // add or alter
+			  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
+			iResultsScreenUIMode = 1;
+
 		CWnd* pWnd = GetFocus();
-		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
+		CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
@@ -7330,7 +7433,7 @@ void CMainFrame::OnToolsReport_BuildingSummary_T24()		// SAC 6/19/13
 }
 
 
-LONG CMainFrame::OnCreateBldgComponent( UINT wParam, LONG )
+LRESULT CMainFrame::OnCreateBldgComponent( WPARAM wParam, LPARAM )
 {
    CreateComponentInfo* pCI = (CreateComponentInfo*) wParam;
    if (pCI && pCI->m_i1BEMClass > 0)
@@ -9097,9 +9200,8 @@ void CMainFrame::OnToolsApplyCustomRules() 	// SAC 1/28/18 - ability to import &
 
 ////////////////////////////////////////////////////////////////////////////////
 
-afx_msg LONG CMainFrame::OnBEMGridOpen(  UINT wClass, LONG l1Occur)   // SAC 3/15/18
+afx_msg LRESULT CMainFrame::OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur)   // SAC 3/15/18
 {
-#ifdef UI_CANRES
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
@@ -9116,24 +9218,19 @@ afx_msg LONG CMainFrame::OnBEMGridOpen(  UINT wClass, LONG l1Occur)   // SAC 3/1
 		gridDialog = new BEMGridDialog( this, (wClass > 0 ? (int) wClass : -1), l1Occur-1 );
 		gridDialog->exec();
 	}
-#else
-	wClass;	l1Occur;
-#endif
 	return 1;
 }
 
-afx_msg LONG CMainFrame::OnBEMGridClose( UINT /*wClass*/, LONG /*l1Occur*/)
+afx_msg LRESULT CMainFrame::OnBEMGridClose( WPARAM /*wClass*/, LPARAM /*l1Occur*/)
 {
-#ifdef UI_CANRES
 	if (gridDialog)  // && !m_bShuttingDown)
 	{	delete gridDialog;
 		gridDialog = NULL;
    }
-#endif
 	return 1;
 }
 
-afx_msg LONG CMainFrame::OnBEMGridUpdate(UINT /*wClass*/, LONG /*l1Occur*/)
+afx_msg LRESULT CMainFrame::OnBEMGridUpdate(WPARAM /*wClass*/, LPARAM /*l1Occur*/)
 {
 	return 1;
 }
@@ -9152,15 +9249,10 @@ void CMainFrame::OnUpdateShowModelGrid(CCmdUI* pCmdUI)
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
 #endif
-#ifdef UI_CANRES
    CDocument* pDoc = NULL;
 	if (ReadProgInt( "options", "EnableGrid", iEnableGridDflt ) > 0)
 		pDoc = GetActiveDocument();
    pCmdUI->Enable( (eInterfaceMode == IM_INPUT && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) );
-#else
-	iEnableGridDflt;
-   pCmdUI->Enable( FALSE );
-#endif
 }
 
 void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid testing
@@ -9174,7 +9266,6 @@ void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid test
 		AfxMessageBox( "A valid building model (project) must be loaded before accessing the model grid." );
 	else if (!QAppInitialized())
 		AfxMessageBox( "Error encountered initializing QT Application." );
-#ifdef UI_CANRES
 	else if (ReadProgInt( "options", "EnableGrid", iEnableGridDflt ) < 1)	// SAC 6/21/18
 		AfxMessageBox( "Model Grid not available." );
 	else
@@ -9199,12 +9290,6 @@ void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid test
 //		//{	delete gridDialog;
 //		//	gridDialog = NULL;
 //   }	//}
-#else
-	else
-	{	iEnableGridDflt;
-		AfxMessageBox( "Error Model Grid access restricted to CBECC-Com." );
-	}
-#endif
 }
 
 

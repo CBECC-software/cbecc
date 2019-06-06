@@ -209,7 +209,7 @@ class  BEMSymDependencySet;
 #define BEM_MODEL_MULT 1000000000   // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from
 #define BEM_COMP_MULT     1000000
 #define BEM_PARAM_MULT       1000
-#define BEM_MAX_COMP_ID       214	// SAC 5/11/16
+#define BEM_MAX_COMP_ID       300  // SAC 4/13/19 - was:  214	// SAC 5/11/16
 #define BEMPX_GetModelID(    lDBID )  (int)  (lDBID / BEM_MODEL_MULT)
 #define BEMPX_GetClassID(    lDBID )  (int)  ((lDBID - ((lDBID / BEM_MODEL_MULT) * BEM_MODEL_MULT)) / BEM_COMP_MULT )
 #define BEMPX_GetPropertyID( lDBID )  (int)  ((lDBID - ((lDBID / BEM_COMP_MULT ) * BEM_COMP_MULT )) / BEM_PARAM_MULT)
@@ -305,7 +305,8 @@ bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFile
 																			 int iBEMProcIdx=-1, long lModDate=-1, bool bOnlyValidInputs=false,  // SAC 3/18/13  // SAC 6/26/13  // SAC 4/16/14
 																			 bool bAllowCreateDateReset=true,		// SAC 1/12/15 - added bAllowCreateDateReset to prevent resetting this flag when storing detailed version of input file
 																			 int iPropertyCommentOption=0, 			// SAC 12/5/16 - added to enable files to include comments: 0-none / 1-units & long name / 
-																			 std::vector<long>* plaClsObjIndices=NULL );		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+																			 std::vector<long>* plaClsObjIndices=NULL,		// SAC 12/14/18 - added to facilitate writing of specific object type/index elements to CSE input files (initially for HPWH sizing runs - HPWHSIZE)
+																			 bool bReportInvalidEnums=true );		// SAC 5/20/19 - prevent logging errors associated w/ invalid enums (for writing of .ribd##i inputs during analysis)
 
 BEMObject*       __cdecl BEMPX_ReadProjectComponent(  const char* fileName, int i1BEMClass, int iBEMProcIdx=-1 );
 bool BEMPROC_API __cdecl BEMPX_WriteProjectComponent( const char* fileName, BEMObject *pObj, int iBEMProcIdx=-1, bool bWriteAllProperties=false,

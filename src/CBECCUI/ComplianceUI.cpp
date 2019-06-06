@@ -471,7 +471,7 @@ int CComplianceUIApp::ExitInstance()
 	// shuts down both BEMProc & BEMCmpMgr libraries
 	CMX_ExitBEMProcAndCmpMgrDLLs();
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 	setFilterDebugHook();
 #endif
 
@@ -542,7 +542,7 @@ void CComplianceUIApp::OnFileNew()
 
 /////////////////////////////////////////////////////////////////////////////
 
-static DWORD CALLBACK EditStreamCallBack( DWORD dwCookie, LPBYTE pbBuff, LONG cb,
+static DWORD CALLBACK EditStreamCallBack( DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb,
                                           LONG *pcb )
 {
    CString *pstr = (CString *)dwCookie;

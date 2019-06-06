@@ -56,7 +56,7 @@ static char THIS_FILE[] = __FILE__;
 bool CMX_SecureExecutable()
 {	char test[] = "Check String";
 	QString qsTest = test;
-	CM_CryptEncode( test, strlen( test ) );
+	CM_CryptEncode( test, (int) strlen( test ) );
 	return (qsTest.compare(test)!=0);
 }
 

@@ -980,7 +980,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 	{
 		SIZE size;
 		::GetTextExtentPoint32(hdc, m_szButtonText[button_index], 
-			_tcslen(m_szButtonText[button_index]), &size);
+			(int) _tcslen(m_szButtonText[button_index]), &size);
 
 		_ASSERTE(size.cx != 0);
 
@@ -1231,7 +1231,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 				break;
 
 			SIZE size;
-			::GetTextExtentPoint32(hdc, cp, _tcslen(cp), &size);	//+++1.7
+			::GetTextExtentPoint32(hdc, cp, (int) _tcslen(cp), &size);	//+++1.7
 
 			int w = size.cx + 20;
 			w = (w > button_width) ? w : button_width;
@@ -1439,7 +1439,7 @@ CXDialogTemplate::CXDialogTemplate(HWND hWnd,
 				break;
 
 			SIZE size;
-			::GetTextExtentPoint32(hdc, cp, _tcslen(cp), &size);	//+++1.7
+			::GetTextExtentPoint32(hdc, cp, (int) _tcslen(cp), &size);	//+++1.7
 
 			int w = size.cx + 20;
 

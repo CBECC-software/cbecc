@@ -428,7 +428,7 @@ static int* siapLibFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCI
 
 #ifdef UI_PROGYEAR2019	// SAC 1/24/19 - shifted PV & Battery objects from Envelope to Mechanical tabs
 static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
-static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
+static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
@@ -2934,7 +2934,7 @@ void CTreeBDB::OnNMReturn(NMHDR* /*pNMHDR*/, LRESULT* pResult)
 	*pResult = 0;
 }
 
-LONG CTreeBDB::OnEditTreeItem(UINT, LONG)
+LRESULT CTreeBDB::OnEditTreeItem(WPARAM, LPARAM)
 {
    OnQuickEdit();
    return 1;

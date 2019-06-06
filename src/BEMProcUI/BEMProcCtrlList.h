@@ -89,7 +89,7 @@ public:
 	virtual void PostNcDestroy();
 	//}}AFX_VIRTUAL
 
-   afx_msg LONG OnDisplayData(UINT, LONG);
+   afx_msg LRESULT OnDisplayData(WPARAM, LPARAM);
 
 // Implementation
 public:

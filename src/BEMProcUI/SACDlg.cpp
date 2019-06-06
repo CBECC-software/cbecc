@@ -789,7 +789,7 @@ void CSACDlg::ActivateButtons()
 }
 
 
-LONG CSACDlg::OnDataModified( UINT wEval, LONG lDBID )
+LRESULT CSACDlg::OnDataModified( WPARAM wEval, LPARAM lDBID )
 {
    if (wEval == 1)
       // execute compliance rulelist #1
@@ -866,7 +866,7 @@ void CSACDlg::EvaluateRules(UINT uiList, long lDBID /*=0*/, int iDefaultAction /
 }
 
 
-LONG CSACDlg::OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID )
+LRESULT CSACDlg::OnQMRestoreDefault( WPARAM uiDBInstP1, LPARAM lDBID )
 {
    int iError;
    int iDBInst = uiDBInstP1 - 1;
@@ -1289,7 +1289,7 @@ BOOL ControlIsActive( CBEMPUIPage* pPage, UINT uiCtrlID )
    return TRUE;  // default
 }
 
-LONG CSACDlg::DisplayMods( UINT, LONG )
+LRESULT CSACDlg::DisplayMods( WPARAM, LPARAM )
 {
    CWaitCursor wait;
 
@@ -1420,7 +1420,7 @@ BOOL CSACDlg::OnToolTipNotify( UINT /*id*/, NMHDR* pNMHDR, LRESULT* /*pResult*/ 
    return(FALSE);
 }
 
-int CSACDlg::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
+INT_PTR CSACDlg::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 {
 	// find child window which hits the point
 	// (don't use WindowFromPoint, because it ignores disabled windows)

@@ -113,7 +113,7 @@ static int siNumTabs = 2;
 static char* pszTabLabels[] = { "  Envelope  ", "  Mechanical  " };
 #endif
 
-LONG CMainView::OnUpdateTabs( UINT, LONG )
+LRESULT CMainView::OnUpdateTabs( WPARAM, LPARAM )
 {
    int iRetVal = 0;
    if (m_bTabInitialized)
@@ -311,13 +311,13 @@ void CMainView::OnSize(UINT nType, int cx, int cy)
    }
 }
 
-LONG CMainView::OnUpdateTree(UINT, LONG lDBIDModified)
+LRESULT CMainView::OnUpdateTree(WPARAM, LPARAM lDBIDModified)
 {
    m_BDBTree.CheckAndUpdateTree( lDBIDModified );
    return 1;
 }
 
-LONG CMainView::OnDisplayData(UINT uiBDBClass, LONG lOnlyIfRequired)
+LRESULT CMainView::OnDisplayData(WPARAM uiBDBClass, LPARAM lOnlyIfRequired)
 {
    if (m_bTabInitialized)
    {

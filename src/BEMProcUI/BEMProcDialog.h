@@ -147,14 +147,14 @@ public:
 	//}}AFX_VIRTUAL
 
 	// for command hit testing (used for automatic tooltips)
-	virtual int OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
+	virtual INT_PTR OnToolHitTest(CPoint point, TOOLINFO* pTI) const;
 
 // Implementation
 protected:
 
    BOOL OnToolTipNotify( UINT id, NMHDR* pNMHDR, LRESULT* pResult );
 
-   afx_msg LONG DisplayMods( UINT, LONG );
+   afx_msg LRESULT DisplayMods( WPARAM, LPARAM );
 
    BOOL RuleBasedErrorCheck();  // SAC 6/17/01
 
@@ -168,11 +168,11 @@ protected:
 	afx_msg void OnCancel();
 	//}}AFX_MSG
 
-   afx_msg LONG OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID );
-   afx_msg LONG OnDataModified( UINT wEval, LONG lDBID );
+   afx_msg LRESULT OnQMRestoreDefault( WPARAM uiDBInstP1, LPARAM lDBID );
+   afx_msg LRESULT OnDataModified( WPARAM wEval, LPARAM lDBID );
 
    // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
-   afx_msg LONG OnSetContextHelpID( WPARAM wHelpID, LPARAM );
+   afx_msg LRESULT OnSetContextHelpID( WPARAM wHelpID, LPARAM );
 	afx_msg LRESULT OnCommandHelp(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()

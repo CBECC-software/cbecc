@@ -429,14 +429,14 @@ bool BEMClass::RemoveObject( BEM_ObjType eObjType, int iObjIdx )
 //
 /////////////////////////////////////////////////////////////////////////////
 int BEMClass::ObjectCount( BEM_ObjType eObjType )
-{  int iRetVal = -1;
+{  size_t iRetVal = -1;
    switch ( eObjType )
    {
       case BEMO_User    :  iRetVal = m_bdObjects.size();   break;
       case BEMO_RuleLib :  iRetVal = m_rlObjects.size();   break;
       case BEMO_UserLib :  iRetVal = m_ulObjects.size();   break;
    }  
-   return iRetVal;
+   return (int) iRetVal;
 }
 
 BEMObject* BEMClass::GetObject( BEM_ObjType eObjType, int iObjIdx )

@@ -466,7 +466,7 @@ BOOL CSACBEMProcDialog::ToggleControlIfNecessary( void* pVoidCtrl, BOOL bEraseLa
 }
 
 
-LONG CSACBEMProcDialog::OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID )
+LRESULT CSACBEMProcDialog::OnQMRestoreDefault( WPARAM uiDBInstP1, LPARAM lDBID )
 {
    if (!m_bAllowEdits)
    {
@@ -494,7 +494,7 @@ LONG CSACBEMProcDialog::OnQMRestoreDefault( UINT uiDBInstP1, LONG lDBID )
 // DEBUGGING
 
 
-LONG CSACBEMProcDialog::OnDataModified( UINT wEval, LONG lDBID )
+LRESULT CSACBEMProcDialog::OnDataModified( WPARAM wEval, LPARAM lDBID )
 {
 // DEBUGGING
 //   siNumDataModCalls++;
@@ -519,7 +519,7 @@ LONG CSACBEMProcDialog::OnDataModified( UINT wEval, LONG lDBID )
 }
 
 
-LONG CSACBEMProcDialog::DisplayMods( UINT, LONG )
+LRESULT CSACBEMProcDialog::DisplayMods( WPARAM, LPARAM )
 {
    // Loop over all controls, toggling them on or off based on current BEMProc data
    if (m_pTDPage)
@@ -1058,7 +1058,7 @@ BOOL CSACBEMProcDialog::OnToolTipNotify( UINT /*id*/, NMHDR* pNMHDR, LRESULT* /*
    return(FALSE);
 }
 
-int CSACBEMProcDialog::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
+INT_PTR CSACBEMProcDialog::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 {
 	// find child window which hits the point
 	// (don't use WindowFromPoint, because it ignores disabled windows)
@@ -1098,7 +1098,6 @@ int CSACBEMProcDialog::OnToolHitTest(CPoint point, TOOLINFO* pTI) const
 }
 
 
-
 // SAC 1/29/99 - added for F1 and Shift-F1 (arrow) context help functionality
 LRESULT CSACBEMProcDialog::OnSetContextHelpID( WPARAM wHelpID, LPARAM )
 {
@@ -1134,7 +1133,6 @@ LRESULT CSACBEMProcDialog::OnCommandHelp( WPARAM, LPARAM /*lParam*/ )
    }
    return FALSE;
 }
-
 
 
 BOOL CSACBEMProcDialog::RuleBasedErrorCheck()

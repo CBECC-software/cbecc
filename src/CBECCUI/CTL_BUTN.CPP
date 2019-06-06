@@ -474,12 +474,12 @@ void CButtonCtl::OnSetFocus( CWnd* pOldWnd )
 /////////////////////////////////////////////////////////////////////////////
 // CButtonCtl - Display & Update Data Stuff
 
-LONG CButtonCtl::OnGetDBID(UINT, LONG)
+LRESULT CButtonCtl::OnGetDBID(WPARAM, LPARAM)
 {
    return m_lDBID;
 }
 
-LONG CButtonCtl::OnGetDBInstance(UINT, LONG)
+LRESULT CButtonCtl::OnGetDBInstance(WPARAM, LPARAM)
 {
    return -1;
 }

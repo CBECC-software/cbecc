@@ -1,8 +1,8 @@
 // BEMGridDialog.cpp : implementation file
 //
 /**********************************************************************
- *  Copyright (c) 2012-2018, California Energy Commission
- *  Copyright (c) 2018, SAC Software Solutions, LLC
+ *  Copyright (c) 2012-2019, California Energy Commission
+ *  Copyright (c) 2018-2019, SAC Software Solutions, LLC
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -245,7 +245,8 @@ BEMGridMod::BEMGridMod( int iRow, int iCol, BEMGridColumn* pGC, QString qsData, 
 		else
 		{	switch (pGC->getPropertyType())
 			{	case  BEMP_Sym  :	{	int iNumSyms;
-											BEMSymDependencySet* pSymDepSet = BEMPX_GetSymbolListPointer( iNumSyms, lDBID );			ASSERT( pSymDepSet );
+											// SAC 4/11/19 - added iOccur to BEMPX_GetSymbolListPointer() to ensure retrieval of symbol list reflects data of selected object!
+											BEMSymDependencySet* pSymDepSet = BEMPX_GetSymbolListPointer( iNumSyms, lDBID, iOccur );			ASSERT( pSymDepSet );
 											if (pSymDepSet)
 											{	long lSymVal = pSymDepSet->GetSymbolValue( (const char*) sNewData.toLatin1().constData() );
 												if (lSymVal == -999)
@@ -569,13 +570,14 @@ static const char* pszStyleSheet =
 "}";
 
 
-BEMGrid::BEMGrid(QWidget *parent, CMainFrame* pMainFrm, QPixmap* pIcon, QFont* pFont)
+BEMGrid::BEMGrid(QWidget *parent, CMainFrame* pMainFrm, QPixmap* pIcon, QFont* pFont, BEMGridDialog* pGridDlg)
 	: QTableWidget(parent)
 {
 	beingInitialized = false;
 	idClass = -1;
 	idTopic = -1;
 	idxSelObject = -1;
+	colsAtEnd = 0;
 	if (pIcon)
 		pxmIcon = *pIcon;
 	if (pFont)
@@ -585,11 +587,16 @@ BEMGrid::BEMGrid(QWidget *parent, CMainFrame* pMainFrm, QPixmap* pIcon, QFont* p
 		font.setPointSize( 9 );
 	}
 	mainFrm = pMainFrm;
+	gridDlg = pGridDlg;
 	confirmMsgBox = NULL;
 
 //	colGray   = new QColor( 128, 128, 128 );
 //	brushGray = new QBrush( *colGray );
 	brushGray = new QBrush( Qt::gray );
+	QColor silver( 224, 224, 224 ); 
+	brushSilver = new QBrush( silver );
+	QColor palevioletred( 219, 112, 147 );   // palevioletred	#db7093
+	brushDelBtn = new QBrush( palevioletred );
 
 	rowHeadersInclNames = false;
 	cmbxRow = cmbxCol = -1;
@@ -611,6 +618,13 @@ BEMGrid::BEMGrid(QWidget *parent, CMainFrame* pMainFrm, QPixmap* pIcon, QFont* p
 	connect( horizontalScrollBar(), SIGNAL(valueChanged(int)),
 				this, SLOT(horzScrollValueChanged()));
 
+	btnCreate = new QPushButton();		// SAC 4/9/19
+	btnCreate->setText("+");
+	connect(btnCreate, SIGNAL(clicked()), this, SLOT(clickedCreate()));
+	createButtonRow = -1;
+
+	for (int i=0; i<MAX_GRID_DELETE_BTNS; i++)
+		btnDelete[i]=NULL;
 
 //    //![assignModel]
 //    m_view->setModel(m_model);
@@ -619,20 +633,37 @@ BEMGrid::BEMGrid(QWidget *parent, CMainFrame* pMainFrm, QPixmap* pIcon, QFont* p
 //    m_view->setSelectionModel(new QItemSelectionModel(m_model, m_model));
 //    QObject::connect(m_view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::selectionChanged);
 
-
-
 }
 
 BEMGrid::~BEMGrid()
 {	clearColumnData();
 	clearModData();
 	delete brushGray;
+	delete brushSilver;
+	delete brushDelBtn;
+	if (btnCreate)
+		delete btnCreate;
+	//deleteDelBtns();
 	if (cmbxRow >= 0 && cmbxCol >= 0 && cmbx)
 		delete cmbx;
 	if (confirmMsgBox)
 		delete confirmMsgBox;
 }
 
+void BEMGrid::deleteDelBtns()
+{
+	for (int i=0; i<MAX_GRID_DELETE_BTNS; i++)
+	{	if (btnDelete[i])
+		{	delete btnDelete[i];
+			btnDelete[i]=NULL;
+	}	}
+}
+
+void BEMGrid::bemGridClear()
+{	clear();
+	for (int i=0; i<MAX_GRID_DELETE_BTNS; i++)
+		btnDelete[i]=NULL;
+}
 
 void BEMGrid::setDefaultOptionInp(  long data )
 {	elDefaultOptionInp  = data;
@@ -677,7 +708,7 @@ bool BEMGrid::addColumn( QString sTitle, QString sToolTipMsg,
 }
 
 void BEMGrid::clearColumnData()
-{	for (int i=colData.size()-1; i>=0; i--)
+{	for (int i=(int) colData.size()-1; i>=0; i--)
 	{	BEMGridColumn* pGridCol = colData[i];
 		if (pGridCol)
 			delete pGridCol;
@@ -704,7 +735,7 @@ BEMGridMod* BEMGrid::addMod( int iRow, int iCol, QString qsData, BEMGridColumn* 
 }
 
 void BEMGrid::clearModData()
-{	for (int i=modData.size()-1; i>=0; i--)
+{	for (int i=(int) modData.size()-1; i>=0; i--)
 	{	BEMGridMod* pMod = modData[i];
 		if (pMod)
 			delete pMod;
@@ -881,6 +912,9 @@ int BEMGrid::applyMods()
 
 		// send a message to the main view's tree control via CMainFrame in case the tree requires updating
 	//	mainFrm->SendMessage( WM_UPDATETREE, 0, m_lDBID );
+
+		if (parentClassID > 0)	// for now, only refresh grid display if in parent/child display mode (for Res-DuctSeg...) - SAC 4/9/19
+			RefreshGridCells( false /*bFirstDisplay*/, -1 /*iSelObjectIdx*/ );
 	}
 
 	return iNumModsApplied;
@@ -906,13 +940,17 @@ QString BEMGrid::GetPropertyString( BEMGridColumn* pGC, bool& bEditableCell, boo
 	return qsData;
 }
 
-void BEMGrid::CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData, bool bEditableCell, int iStatus, int row, int col, int iObjIdx )
+void BEMGrid::CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData, bool bDisplayCell, bool bEditableCell, int iStatus, int row, int col, int iObjIdx )
 {
 	if (pGC)
 	{
 		QTableWidgetItem* qtwi = new QTableWidgetItem( qsData, QTableWidgetItem::Type );		ASSERT( qtwi );
 		if (pGC->getPropertyType() == BEMP_Flt || pGC->getPropertyType() == BEMP_Int)
 			qtwi->setTextAlignment( Qt::AlignRight|Qt::AlignVCenter );
+		if (!bDisplayCell)	// SAC 4/17/19
+		{	qtwi->setBackground( *brushSilver );
+			qtwi->setFlags( (qtwi->flags() ^ Qt::ItemIsEditable) );
+		}
 		if (!bEditableCell)
 		{	qtwi->setForeground( *brushGray );
 			qtwi->setFlags( (qtwi->flags() ^ Qt::ItemIsEditable) );
@@ -922,7 +960,8 @@ void BEMGrid::CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData
 		if (pGC->getToolTipMsg().length() > 0)
 			qtwi->setData( Qt::ToolTipRole, QVariant( pGC->getToolTipMsg() ) );
 	//	qtwi->setProperty( "objIdx", QVariant(ir) );
-		qtwi->setData( Qt::UserRole, iObjIdx );  // row );
+		if (bDisplayCell)	// SAC 4/17/19
+			qtwi->setData( Qt::UserRole, iObjIdx );  // row );
 		bool bSaveBeingInitialized = beingInitialized;
 		beingInitialized = true;	// ensure beingInitialized true to prevent this call from SETTING data (or status) to BEMBase
 		setItem( row, col, qtwi );
@@ -934,7 +973,8 @@ void BEMGrid::CreateAndAssignTableWidgetItem( BEMGridColumn* pGC, QString qsData
 #define  NUM_AUTO_COLUMNS  15
 #define  MIN_COLUMN_WIDTH  85
 
-void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int iFirstCtrlIdx /*=0*/, int iSelObjectIdx /*=-1*/ )
+void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int iFirstCtrlIdx /*=0*/, int iSelObjectIdx /*=-1*/,
+								int iParentClassID /*=-1*/, int iParentObjIdx /*=-1*/ )
 {	ASSERT( iClass > 0 );
 //	qslColTitles.clear();
 //	lvColDBIDs.clear();
@@ -943,17 +983,24 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 	clearColumnData();
 	clearModData();
 
-	clear();
+	bemGridClear();	//clear();
 	setSortingEnabled(0);	// start out w/ sorting DISABLED
 //QScrollBar *bar = ui->scrollArea->horizontalScrollBar();
 //bar->setValue(bar->maximum()/2);
 //bar->update();
 //ui->scrollArea->update();
 
+	parentClassID = iParentClassID;	// SAC 4/8/19
+	parentObjIdx  = iParentObjIdx;
+	createButtonRow = -1;
+
 	rowHeadersInclNames = false;
 	beingInitialized = true;
 	int iSelObjRow = -1;
+	colsAtEnd = 1;
 	int iError, iNumObjs = BEMPX_GetNumObjects( iClass );  //, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+	if (iNumObjs > 0 && parentClassID > 0)		// revise iNumObjs to reflect only 
+		iNumObjs = (int) BEMPX_GetNumChildren( parentClassID, parentObjIdx, BEMO_User /*eParObjType*/, iClass );
 	BEMClass* pClass = BEMPX_GetClass( iClass, iError );
 	int iNumPTs = BEMPX_GetNumPropertyTypes( iClass );
 	if (iNumObjs > 0 && pClass && iNumPTs > 0)
@@ -966,7 +1013,7 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 		addColumn( "Name", QString( "name of %1 object" ).arg( pClass->getLongName() ),
 						BEMPX_GetDBID( iClass, 0, BEM_PARAM0_NAME ), BEMP_Str, 200 /*width*/, 25 /*height*/, 0 /*decPrec*/, NULL, NULL );
 		qslColTitles.push_back( "Name" );
-		if (pClass->getParentType(0) >= 0)
+		if (parentClassID < 1 && pClass->getParentType(0) >= 0)		// prevent Name & Parent from being added when in "parent" mode
 		{	addColumn( "Parent", QString( "parent object" ),
 							BEMPX_GetDBID( iClass, 0, BEM_PARAM0_PARENT ), BEMP_Str, 200 /*width*/, 25 /*height*/, 0 /*decPrec*/, NULL, NULL );
 			qslColTitles.push_back( "Parent" );
@@ -1005,7 +1052,23 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 						addColumn( sTitle, sToolTipMsg, dbid, pPropType->getPropType(), width, height, decPrec,
 										bemEditableCondition, bemDisplayCondition );
 						qslColTitles.push_back( sTitle );
-		}	}	}	}
+					}
+					else if ((colData.size() > 0 && colData[0]->getDBID() == dbid) ||
+								(colData.size() > 1 && parentClassID < 1 && colData[1]->getDBID() == dbid))	// SAC 4/18/19
+					{	// adopt label, tooltip, etc. from Name/Parent UI controls
+						int iNPIdx = (colData[0]->getDBID() == dbid ? 0 : 1);
+						if (sTitle.length() > 1)
+						{	if (sTitle[sTitle.length()-1] == ':')
+								sTitle = sTitle.left( sTitle.length()-1 );
+							colData[iNPIdx]->setTitle( sTitle );
+						}
+						if (sToolTipMsg.length() > 1)
+							colData[iNPIdx]->setToolTipMsg( sToolTipMsg );
+						colData[iNPIdx]->setWidth( width );
+						colData[iNPIdx]->setConditionEditable( bemEditableCondition );
+						colData[iNPIdx]->setConditionDisplay( bemDisplayCondition );
+					}
+		}	}	}
 		else
 		{	for (int pt=1; (pt <= iNumPTs && colData.size() <= NUM_AUTO_COLUMNS); pt++)
 			{	BEMPropertyType* pPropType = BEMPX_GetPropertyType( iClass, pt );
@@ -1039,15 +1102,19 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 				}	}
 		}	}
 		qslColTitles.push_back( "#" );
+		if (parentClassID > 0)
+		{	qslColTitles.push_back( "Del" );
+			colsAtEnd++;
+		}
 
 //QStringList qslRowTitles;
 
-		if (colData.size() > 1)
+		if ((int) colData.size() > 1)
 		{	if (iSelObjectIdx < 0)
 				iSelObjectIdx = BEMPX_GetObjectIndex( pClass );
 
 			setColumnCount( (int) qslColTitles.size() );
-			setRowCount( iNumObjs );
+			setRowCount( iNumObjs + (parentClassID > 0 ? 1 : 0) );	// SAC 4/9/19 - added one additional row to facilitate new object creation
 
 			setHorizontalHeaderLabels( qslColTitles );
 
@@ -1058,7 +1125,7 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 		// making column labels clickable for sorting - SAC 4/24/18
 			setSortingEnabled(1);
 			horizontalHeader()->setSectionsClickable(1);
-			sortByColumn( columnCount()-1, Qt::AscendingOrder );	// SAC 4/26/18
+			sortByColumn( columnCount()-colsAtEnd, Qt::AscendingOrder );	// SAC 4/26/18
 
 //I would try QTableWidgetItem::setTextAlignment with Qt::TextWordWrap (merge it with alignment flags if you need).
 
@@ -1066,48 +1133,48 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 	//		verticalHeader()->setSectionResizeMode( QHeaderView::Interactive );
 	//		horizontalHeader()->setSectionResizeMode( QHeaderView::Interactive );
 
-			int ir=-1, ic;
+			int ic;
 			for (ic=0; ic<(int) colData.size(); ic++)
 			{	BEMGridColumn* pGC = colData[ic];					ASSERT( pGC );
 				if (pGC)
 					setColumnWidth( ic, std::max( pGC->getWidth(), 80 ) );
 			}
-			setColumnWidth( qslColTitles.size()-1, 40 );  // '#' (index) column
+			setColumnWidth( qslColTitles.size()-colsAtEnd, 40 );  // '#' (index) column
+			if (parentClassID > 0)
+				setColumnWidth( qslColTitles.size()-1, 40 );  // 'Del' column
 
-			int iStatus, iError;
-			int iObjIdxDigits = (iNumObjs > 99999 ? 6 : (iNumObjs > 9999 ? 5 : (iNumObjs > 999 ? 4 : (iNumObjs > 99 ? 3 : (iNumObjs > 9 ? 2 : 1)))));
-			for (int iObjIdx=0; iObjIdx < iNumObjs; iObjIdx++)
+			iSelObjRow = RefreshGridCells( true /*bFirstDisplay*/, iSelObjectIdx );		// SAC 4/9/19 - separated out code to refresh cells following object creation and edits
+
+			if (parentClassID > 0 && colData.size() > 0)		// when in parent mode add single cell below leftmost column to facilitate - SAC 4/9/19
 			{
-				bool bAddObject = true;
+				BEMGridColumn* pGC = colData[0];					ASSERT( pGC && pGC->getDBID() > 0 );
+	//			QTableWidgetItem* pTWI = item( ir, ic );			ASSERT( pTWI );
+				if (pGC && pGC->getDBID() > 0)
+				{
+//					bool bEditableCell, bDisplayCell;
+					BEMClass* pBEMClass = BEMPX_GetClass( iClass, iError );			ASSERT( pBEMClass );
+				//	QString qsData = QString( "create new %1" ).arg( pBEMClass->getShortName() );
+					QString qsData = QString( "  + %1   " ).arg( pBEMClass->getShortName() );
 
-// TO DO - add code to determine if THIS object meets criteria for inclusion in grid
-
-				if (bAddObject)
-				{	ir++;
-					if (iSelObjectIdx == iObjIdx)
-						iSelObjRow = ir;
-
-					for (ic=0; ic < (int) colData.size(); ic++)
-					{	BEMGridColumn* pGC = colData[ic];					ASSERT( pGC && pGC->getDBID() > 0 );
-			//			QTableWidgetItem* pTWI = item( ir, ic );			ASSERT( pTWI );
-						if (pGC && pGC->getDBID() > 0)
-						{
-							bool bEditableCell, bDisplayCell;
-							QString qsData = GetPropertyString( pGC, bEditableCell, bDisplayCell, iStatus, iError, iObjIdx );
-
-//if (ic==0)
-//	qslRowTitles.push_back( QString( "%1 - %2" ).arg( QString::number(ir+1), qsData ) );
-
-								CreateAndAssignTableWidgetItem( pGC, qsData, bEditableCell, iStatus, ir, ic, iObjIdx );
-
-					}	}
-					// '#' (index) column
-					//QTableWidgetItem* qtwi = new QTableWidgetItem( QString("%1").arg(QString::number(ir+1)), QTableWidgetItem::Type );		ASSERT( qtwi );
-					QTableWidgetItem* qtwi = new QTableWidgetItem( QString("%1").arg( iObjIdx+1, iObjIdxDigits, 10, QChar('0') ), QTableWidgetItem::Type );		ASSERT( qtwi );
-					qtwi->setTextAlignment( Qt::AlignCenter );
-					qtwi->setForeground( *brushGray );
-					qtwi->setFlags( (qtwi->flags() ^ Qt::ItemIsEditable) );
-					setItem( ir, (int) colData.size(), qtwi );
+//					CreateAndAssignTableWidgetItem( pGC, qsData, true /*bEditableCell*/, 1 /*iStatus*/, ir+1, 0 /*ic*/, BEMPX_GetNumObjects( iClass ) /*iObjIdx*/ );
+					QWidget* pWidget = new QWidget();
+					//QPushButton* btn_edit = new QPushButton();
+					//btn_edit->setText("Edit");
+					btnCreate->setText(qsData);
+					QHBoxLayout* pLayout = new QHBoxLayout(pWidget);
+					pLayout->addWidget(btnCreate);
+					pLayout->setAlignment(Qt::AlignCenter);
+					pLayout->setContentsMargins(0, 0, 0, 0);
+					pWidget->setLayout(pLayout);
+					//pWidget->setStyleSheet("background-color: #808080; " 
+					pWidget->setStyleSheet("background-color: #C0C0C0; " 
+													"font-size: 10pt");
+					bool bSaveBeingInitialized = beingInitialized;
+					beingInitialized = true;	// ensure beingInitialized true to prevent this call from SETTING data (or status) to BEMBase
+					int ir = rowCount()-1;
+					setCellWidget( ir /*row*/, 0 /*col*/, pWidget);
+					beingInitialized = bSaveBeingInitialized;
+					createButtonRow = ir;
 			}	}
 		}
 
@@ -1200,10 +1267,260 @@ void BEMGrid::initGrid( int iClass, int iTopic /*=0*/, int iNumCtrls /*=0*/, int
 }
 
 
+void BEMGrid::SetupDeleteButton(int ir)
+{
+						btnDelete[ir] = new QPushButton();		// SAC 4/17/19
+						btnDelete[ir]->setText(" X ");
+						connect(btnDelete[ir], SIGNAL(clicked()), this, SLOT(clickedDelete()));
+						assert( btnDelete[ir] );
+						if (btnDelete[ir])
+						{	QWidget* pWidget = new QWidget();
+							//btnDelete[ir]->setText(qsData);
+							QHBoxLayout* pLayout = new QHBoxLayout(pWidget);
+							pLayout->addWidget(btnDelete[ir]);
+							pLayout->setAlignment(Qt::AlignCenter);
+							pLayout->setContentsMargins(0, 0, 0, 0);
+							pWidget->setLayout(pLayout);
+							//pWidget->setStyleSheet("background-color: #808080; " 
+							pWidget->setStyleSheet("background-color: #db7093; " 		// palevioletred	#db7093  RGB( 219, 112, 147 )
+															"font-size: 10pt");
+							bool bSaveBeingInitialized = beingInitialized;
+							beingInitialized = true;	// ensure beingInitialized true to prevent this call from SETTING data (or status) to BEMBase
+							//int ir = rowCount()-1;
+							setCellWidget( ir /*row*/, (int) colData.size()+1 /*col*/, pWidget);
+							beingInitialized = bSaveBeingInitialized;
+						}
+}
+
+int BEMGrid::RefreshGridCells(bool bFirstDisplay, int iSelObjectIdx)
+{	int iSelObjRow = -1;
+
+			int iStatus, iError, iNumObjs = BEMPX_GetNumObjects( idClass );  //, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+			int iTotNumObjs = iNumObjs;
+			if (iNumObjs > 0 && parentClassID > 0)		// revise iNumObjs to reflect only 
+				iNumObjs = (int) BEMPX_GetNumChildren( parentClassID, parentObjIdx, BEMO_User /*eParObjType*/, idClass );
+			int ic, ir=-1;
+			BEM_ObjType eChildObjType;
+			int iObjIdxDigits = (iTotNumObjs > 99999 ? 6 : (iTotNumObjs > 9999 ? 5 : (iTotNumObjs > 999 ? 4 : (iTotNumObjs > 99 ? 3 : (iTotNumObjs > 9 ? 2 : 1)))));
+			for (int iObjNum=0; iObjNum < iNumObjs; iObjNum++)
+			{
+				int iObjIdx = iObjNum;
+				if (parentClassID > 0)		// get index of child object
+					iObjIdx = BEMPX_GetChildObjectIndex( parentClassID, idClass, iError, eChildObjType, iObjNum+1, parentObjIdx );
+
+				bool bAddObject = true;
+
+// TO DO - add code to determine if THIS object meets criteria for inclusion in grid
+
+				if (bAddObject)
+				{	ir++;
+					if (iSelObjectIdx == iObjIdx)
+						iSelObjRow = ir;
+
+					for (ic=0; ic < (int) colData.size(); ic++)
+					{	BEMGridColumn* pGC = colData[ic];					ASSERT( pGC && pGC->getDBID() > 0 );
+			//			QTableWidgetItem* pTWI = item( ir, ic );			ASSERT( pTWI );
+						if (pGC && pGC->getDBID() > 0)
+						{
+							bool bEditableCell, bDisplayCell;
+							QString qsData = GetPropertyString( pGC, bEditableCell, bDisplayCell, iStatus, iError, iObjIdx );
+
+//if (ic==0)
+//	qslRowTitles.push_back( QString( "%1 - %2" ).arg( QString::number(ir+1), qsData ) );
+
+							bool bRemoveExistingCell = false;
+							bool bCreateCell = true;
+							if (!bFirstDisplay)
+							{	QTableWidgetItem* pItem = item( ir, ic );
+								if (pItem)
+								{	QString qsCurData = pItem->text();
+									if (qsData != qsCurData)
+										bRemoveExistingCell = true;
+									else
+										bCreateCell = false;
+							}	}
+							if (bRemoveExistingCell)
+								removeCellWidget( ir, ic );
+							if (bCreateCell)
+								CreateAndAssignTableWidgetItem( pGC, qsData, bDisplayCell, bEditableCell, iStatus, ir, ic, iObjIdx );
+
+					}	}
+					// '#' (index) column
+					//QTableWidgetItem* qtwi = new QTableWidgetItem( QString("%1").arg(QString::number(ir+1)), QTableWidgetItem::Type );		ASSERT( qtwi );
+					QTableWidgetItem* qtwi = new QTableWidgetItem( QString("%1").arg( iObjIdx+1, iObjIdxDigits, 10, QChar('0') ), QTableWidgetItem::Type );		ASSERT( qtwi );
+					qtwi->setTextAlignment( Qt::AlignCenter );
+					qtwi->setForeground( *brushGray );
+					qtwi->setFlags( (qtwi->flags() ^ Qt::ItemIsEditable) );
+					setItem( ir, (int) colData.size(), qtwi );
+
+					if (bFirstDisplay && parentClassID > 0 && ir < MAX_GRID_DELETE_BTNS)
+						SetupDeleteButton(ir);
+			}	}
+
+	if (gridDlg)
+		gridDlg->updateDialogMessage();
+
+	return iSelObjRow;
+}
+
+
+void BEMGrid::clickedCreate()
+{
+//	BEMMessageBox( "Clicked Create!" );
+	BEMObject* pParentObj = NULL;
+	int iError;
+	if (parentClassID > 0 && parentObjIdx >= 0)
+		pParentObj = BEMPX_GetObjectByClass( parentClassID, iError, parentObjIdx );
+
+	QString sDefName;
+	if (idClass == BEMPX_GetDBComponentID( "DuctSeg" ))	// to customize shortened names for Res DuctSeg objects
+	{	sDefName = "seg";
+		BEMPX_GetDefaultComponentName( idClass, sDefName );  //, int iBEMProcIdx=-1, int iFirstIndex=-1, const char* pszCompPfx1=NULL, const char* pszCompPfx2=NULL, const char* pszCompPfx3=NULL );
+	}
+	BEMObject* pNewObj = BEMPX_CreateObject( idClass, (sDefName.isEmpty() ? NULL : sDefName.toLatin1().constData()) /*LPCSTR lpszName*/, pParentObj );
+															//	BEM_ObjType objType = BEMO_User, bool bDefaultParent = TRUE,
+															//	bool bAutoCreate = TRUE, int iBEMProcIdx=-1, BOOL bIgnoreMaxDefinable=FALSE,
+															//	int i0ChildIdx =-1 );  // SAC 5/29/14 - added i0ChildIdx in place of BOOL bMakeFirstChild = FALSE );
+	if (pNewObj)
+	{
+
+		QApplication::setOverrideCursor(Qt::WaitCursor);
+		QApplication::processEvents();
+
+		if (mainFrm)  // && iNumModsApplied > 0 && iDfltFollowingMods > DefaultOption_Nothing)
+			//mainFrm->SendMessage( WM_EVALPROPOSED /*, (!bWriteToLog)*/ );
+		   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   									NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+   									0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );		// SAC 4/3/18 - added to enable targeted model defaulting
+
+		bool bSaveBeingInitialized = beingInitialized;
+		beingInitialized = true;	// ensure beingInitialized true to prevent this call from SETTING data (or status) to BEMBase
+		int iInitRowCount = rowCount();
+		setRowCount( iInitRowCount+1 );
+
+		// move object creation button down one row to bottom
+		if (createButtonRow >= 0)
+		{	// blast previous create button cell
+			removeCellWidget( createButtonRow, 0 );  // what happens to the original QPushButton...?
+			// recreate create button cell in following row
+			createButtonRow++;
+					BEMClass* pBEMClass = BEMPX_GetClass( idClass, iError );			ASSERT( pBEMClass );
+					QWidget* pWidget = new QWidget();
+					//QPushButton* btn_edit = new QPushButton();
+					//btn_edit->setText("Edit");
+					btnCreate->setText( QString( "  + %1   " ).arg( pBEMClass->getShortName() ) );
+					QHBoxLayout* pLayout = new QHBoxLayout(pWidget);
+					pLayout->addWidget(btnCreate);
+					pLayout->setAlignment(Qt::AlignCenter);
+					pLayout->setContentsMargins(0, 0, 0, 0);
+					pWidget->setLayout(pLayout);
+					//pWidget->setStyleSheet("background-color: #808080; " 
+					pWidget->setStyleSheet("background-color: #C0C0C0; " 
+													"font-size: 10pt");
+					setCellWidget( createButtonRow /*row*/, 0 /*col*/, pWidget);
+		}
+
+		if (parentClassID > 0 && iInitRowCount-1 < MAX_GRID_DELETE_BTNS)
+		{	assert( btnDelete[iInitRowCount-1] == NULL );
+			SetupDeleteButton( iInitRowCount-1 );
+		}
+
+		int iNewObjIdx = BEMPX_GetObjectIndex( pNewObj->getClass(), pNewObj );
+		int iSelObjRow = RefreshGridCells( false /*bFirstDisplay*/, iNewObjIdx );
+		if (iSelObjRow >= 0)
+		{
+			QModelIndex index = model()->index( iSelObjRow, 0 );
+			scrollTo(index, QAbstractItemView::PositionAtCenter);
+		}
+		else
+			verticalScrollBar()->setValue( verticalScrollBar()->minimum() );
+
+		beingInitialized = bSaveBeingInitialized;
+
+		QApplication::restoreOverrideCursor();
+		QApplication::processEvents();
+	}
+}
+
+
+void BEMGrid::clickedDelete()
+{
+//	int row = currentRow();
+	QWidget *pW = qobject_cast<QWidget*>(sender()->parent());
+	if(pW)
+	{
+		int row = indexAt(pW->pos()).row();
+		int iBEMObjIdx = getBEMObjectIndex( row );
+		if (iBEMObjIdx >= 0)
+		{	int iError, iSpecialVal, iTotNumObjs = BEMPX_GetNumObjects( idClass );  //, BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+			BEMClass* pClass = BEMPX_GetClass( idClass, iError );
+			QTableWidgetItem *pTWI = item( row, 0 );
+			QString sData = (pTWI ? pTWI->text() : "");
+			if (sData.isEmpty())
+				sData = BEMPX_GetString( BEMPX_GetDBID( idClass, 0, BEM_PARAM0_NAME ), iSpecialVal, iError, iBEMObjIdx );
+		   BEMObject* pObjToDel = NULL;
+			if (pClass && !sData.isEmpty())
+		   	pObjToDel = pClass->GetObject( BEMO_User, iBEMObjIdx );
+			if (pObjToDel)
+			{
+				QString sDelMsg = QString( "Are you sure you wish to delete %1 '%2'?" ).arg( pClass->getLongName(), sData );
+				QString sDelTitle = QString( "Delete %1?" ).arg( pClass->getLongName() );
+				if (BEMMessageBox( sDelMsg, sDelTitle, 3 /*error*/, (QMessageBox::Yes | QMessageBox::No), QMessageBox::No ) == QMessageBox::Yes)
+				{
+			//		BEMMessageBox( "Delete Object!" );
+					BEMPX_DeleteObject( pObjToDel );  //, int iBEMProcIdx=-1 );
+					removeRow(row);
+
+					// decrement objIdx value in second to last column for each objIdx > one deleted
+					int iRowCnt = rowCount()-1;  // ignore Create button row
+					int iObjIdxDigits = (iTotNumObjs > 99999 ? 6 : (iTotNumObjs > 9999 ? 5 : (iTotNumObjs > 999 ? 4 : (iTotNumObjs > 99 ? 3 : (iTotNumObjs > 9 ? 2 : 1)))));
+					for (int iObjIdxRow=0; iObjIdxRow<iRowCnt; iObjIdxRow++)
+					{	QTableWidgetItem *pTWI = item( iObjIdxRow, columnCount()-colsAtEnd );		ASSERT( pTWI );
+						QString sObjIdxVal = (pTWI ? pTWI->text() : "");						ASSERT( !sObjIdxVal.isEmpty() );
+						if (!sObjIdxVal.isEmpty())
+						{	int iDecObjIdx = sObjIdxVal.toInt() - 1;									ASSERT( iDecObjIdx != iBEMObjIdx );
+							if (iDecObjIdx > iBEMObjIdx)
+							{	// decrement this value
+								sObjIdxVal = QString("%1").arg( iDecObjIdx, iObjIdxDigits, 10, QChar('0') );
+								pTWI->setText( sObjIdxVal );
+					}	}	}
+
+					// shift delete button ptr array since one @ deleted row has already been deleted via removeRow()
+					int iShiftDelBtn = row+1;
+					while (iShiftDelBtn < MAX_GRID_DELETE_BTNS && btnDelete[iShiftDelBtn])
+					{	btnDelete[iShiftDelBtn-1] = btnDelete[iShiftDelBtn++];
+					}
+					btnDelete[iShiftDelBtn-1] = NULL;
+					createButtonRow--;
+
+					if (row >= 0)
+					{	QApplication::setOverrideCursor(Qt::WaitCursor);
+						QApplication::processEvents();
+						if (mainFrm)  // && iNumModsApplied > 0 && iDfltFollowingMods > DefaultOption_Nothing)
+						   CMX_EvaluateRuleset( esDataModRulelist, FALSE /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, ebVerboseInputLogging,
+   													NULL, NULL, NULL, epInpRuleDebugInfo, NULL /*QStringList* psaWarningMsgs*/,
+   													0 /*iEvalOnlyClass*/, -1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/ );	
+						if (gridDlg)
+							gridDlg->updateDialogMessage();
+						QApplication::restoreOverrideCursor();
+						QApplication::processEvents();
+					}
+			}	}
+			else
+				BEMMessageBox( "Object deletion error 3." );
+		}
+		else
+			BEMMessageBox( "Object deletion error 2." );
+	}
+	else
+		BEMMessageBox( "Object deletion error 1." );
+}
+
+
 int BEMGrid::getBEMObjectIndex( int row )
 {	int iRetVal = -1;
-	if (row >= 0 && rowCount() > row && columnCount() > 1)
-	{	QTableWidgetItem *pTWI = item( row, columnCount()-1 );		ASSERT( pTWI );	// SAC 4/25/18
+	if (row >= 0 && rowCount() > row && columnCount() > colsAtEnd)
+	{	QTableWidgetItem *pTWI = item( row, columnCount()-colsAtEnd );		ASSERT( pTWI );	// SAC 4/25/18
 		QString sData = (pTWI ? pTWI->text() : "");						ASSERT( !sData.isEmpty() );
 		if (!sData.isEmpty())
 			iRetVal = sData.toInt() - 1;
@@ -1224,6 +1541,8 @@ void BEMGrid::horzScrollValueChanged()
 void BEMGrid::SwitchRowTitles( bool bInclNames )
 {
 	int numRows = rowCount();
+	if (createButtonRow >= 0)		// SAC 4/9/19 - prevent shifting row title for create button row...
+		numRows--;
 	if (numRows > 0 && bInclNames != rowHeadersInclNames)
 	{
 		QStringList qslRowTitles;
@@ -1247,16 +1566,13 @@ void BEMGrid::ClearComboboxCell()
 		removeCellWidget( cmbxRow, cmbxCol );  // should alo delete the combobox
 		if (cmbxCol < (int) colData.size())
 		{
-			bool bEditableCell=false;		int iStatus=0, iError;
+			bool bEditableCell=false, bDisplayCell=false;		int iStatus=0, iError;
 			QString qsData;
 			BEMGridColumn* pGC = colData[cmbxCol];					ASSERT( pGC && pGC->getDBID() > 0 );
 			int iObjIdx = getBEMObjectIndex( cmbxRow );			ASSERT( iObjIdx>=0 );	// SAC 4/25/18
 			if (pGC && pGC->getDBID() > 0)
-			{
-				bool bDisplayCell;
 				qsData = GetPropertyString( pGC, bEditableCell, bDisplayCell, iStatus, iError, iObjIdx );
-			}
-			CreateAndAssignTableWidgetItem( pGC, qsData, bEditableCell, iStatus, cmbxRow, cmbxCol, iObjIdx );
+			CreateAndAssignTableWidgetItem( pGC, qsData, bDisplayCell, bEditableCell, iStatus, cmbxRow, cmbxCol, iObjIdx );
 		}
 		cmbxRow = -1;
 		cmbxCol = -1;
@@ -1270,6 +1586,9 @@ void BEMGrid::SwitchCellToCombobox_IfAppropriate( int row, int col )
 	// user has shifted focus AWAY from any current combobox cell, so start by removing that
 	if (cmbxRow >= 0 && cmbxCol >= 0 && cmbx)
 		ClearComboboxCell();
+
+	if (row == createButtonRow)
+		return;  // SAC 4/9/19 - no reason to switch anything to Cmbb in row containing object create button
 
 	if (row >= 0 && col >= 0 && col < (int) colData.size())
 	{
@@ -1632,13 +1951,18 @@ void BEMGrid::itemDisplayData(QTableWidgetItem *item, BEMGridColumn* pGC /*=NULL
 					qsData = BEMPX_GetStringAndStatus( pGC->getDBID(), iStatus, iSpecialVal, iError, iObjIdx /*iOccur*/, BEMO_User,
 																	-1 /*iBEMProcIdx*/, TRUE /*bAddCommas*/, iPrec );  //, const char* pszDefault=NULL, long lDBID2=0 );
 	beingInitialized = true;
-				if (!bEditableCell)
+				if (!bDisplayCell)	// SAC 4/17/19
+				{	item->setBackground( *brushSilver );
+					item->setFlags( (item->flags() ^ Qt::ItemIsEditable) );
+				}
+				else if (!bEditableCell)
 				{	item->setForeground( *brushGray );
 					item->setFlags( (item->flags() ^ Qt::ItemIsEditable) );
 				}
 				else if (iStatus >= 0)
 					item->setForeground( *BEMTextQBrush( iStatus + NUM_RESERVED_TEXT_COLORS ) );	// SAC 5/3/18
-				item->setText( qsData );
+				if (bDisplayCell)	// SAC 4/17/19
+					item->setText( qsData );
 	beingInitialized = false;
 		}	}
 	}
@@ -1650,7 +1974,7 @@ void BEMGrid::itemChangedLocal(QTableWidgetItem *item)
 	{
 		int iCol = item->column();
 		if (iCol < 0 || iCol >= (int) colData.size())
-		{	ASSERT( FALSE );
+		{	//ASSERT( FALSE );   - can happen during/following refresh @ end of applyMods()
 			return;
 		}
 //		int iError, iSetDataRetVal = -1;
@@ -2044,7 +2368,7 @@ bool BEMGrid::pasteSelectionFromClipboard()
 //		int rowsPastBottom = initRow + numRows - rowCount();
 //		int colsPastRight  = initCol + numCols - columnCount();
 		int rowsPastBottom = minRow + numTxtRows - rowCount();
-		int colsPastRight  = minCol + numTxtCols - columnCount();
+		int colsPastRight  = minCol + numTxtCols - columnCount() - colsAtEnd;
 		if (rowsPastBottom > 0 || colsPastRight > 0)
 		{	if (rowsPastBottom > 0 && colsPastRight > 0)
 				sErrMsg = QString( "Pasting clipboard contents would extend %1 row(s) past the bottom of the grid and %2 column(s) past the right edge." ).arg(
@@ -2338,12 +2662,20 @@ void BEMGridOptionsDialog::updateDefaultClosingDialog()
 /////////////////////////////////////////////////////////////////////////////
 
 
-BEMGridDialog::BEMGridDialog(CMainFrame* pMainFrm, int iBEMClass, int iOccur, QWidget *parent)
+BEMGridDialog::BEMGridDialog(CMainFrame* pMainFrm, int iBEMClass, int /*iOccur*/,
+									  int iSingleClassID, int iSingleTabID, int iParentClassID,
+					  				  int iParentObjIdx, long lDlgMsgDBID, QWidget *parent)
 	: QDialog(parent)
 {
 //	bemClass = iBEMClass;
 	gridBEMClass = -1;
 	gridTopic = 0;
+	singleClassID = iSingleClassID;	// SAC 4/8/19 - new members to enable single object (child) editing (Res tic #874)
+	singleTabID   = iSingleTabID;
+	parentClassID = iParentClassID;
+	parentObjIdx  = iParentObjIdx;
+	dlgMsgDBID = lDlgMsgDBID;
+
 	mainFrm = pMainFrm;
 	refreshingTopicList = false;
 
@@ -2370,31 +2702,53 @@ BEMGridDialog::BEMGridDialog(CMainFrame* pMainFrm, int iBEMClass, int iOccur, QW
 	setWindowIcon( QIcon( pxmIcon ) );
 	::DestroyIcon( hIcon );
 
-//	lblObjectType = new QLabel(tr("Object Type:"));
-//	lblTopic = new QLabel(tr("   Topic:"));
-	cbObjectType = createComboBox();
-	cbTopic = createComboBox();
+	lblDialogMessage = new QLabel(tr("  Dialog message"));
+	if (singleClassID > 0)
+	{	//if (dlgMsgDBID > 0)
+		//	updateDialogMessage();
+	}
+	else
+	{
+//		lblObjectType = new QLabel(tr("Object Type:"));
+//		lblTopic = new QLabel(tr("   Topic:"));
+		cbObjectType = createComboBox();
+		cbTopic = createComboBox();
+	}
 	btnMenu = createIconButton(IDI_MENU);
 	grid = createBEMGrid();
 
-//	lblObjectType->setFont( font );
-//	lblTopic->setFont( font );
-	cbObjectType->setFont( font );
-	cbTopic->setFont( font );
+	if (singleClassID > 0)
+		lblDialogMessage->setFont( font );
+	else
+	{
+//		lblObjectType->setFont( font );
+//		lblTopic->setFont( font );
+		cbObjectType->setFont( font );
+		cbTopic->setFont( font );
+	}
 	grid->setFont( font );
 
-	initObjectTypeList( iBEMClass );
-
 	QGridLayout *mainLayout = new QGridLayout;
-//	mainLayout->addWidget(lblObjectType, 0, 0);
-//	mainLayout->addWidget(cbObjectType, 0, 1);
-//	mainLayout->addWidget(lblTopic, 0, 2);
-//	mainLayout->addWidget(cbTopic, 0, 3);
-	mainLayout->addWidget(cbObjectType, 0, 0);
-	mainLayout->addWidget(cbTopic, 0, 1);
-	mainLayout->addWidget(btnMenu, 0, 2);
-	mainLayout->addWidget(grid, 1, 0, 3, 3);
-	mainLayout->setColumnStretch(2, 0);
+	if (singleClassID > 0)
+	{
+		mainLayout->addWidget(lblDialogMessage, 0, 0);
+		mainLayout->addWidget(btnMenu, 0, 1);
+		mainLayout->addWidget(grid, 1, 0, 2, 2);
+		mainLayout->setColumnStretch(1, 0);
+	}
+	else
+	{
+		initObjectTypeList( iBEMClass );
+//		mainLayout->addWidget(lblObjectType, 0, 0);
+//		mainLayout->addWidget(cbObjectType, 0, 1);
+//		mainLayout->addWidget(lblTopic, 0, 2);
+//		mainLayout->addWidget(cbTopic, 0, 3);
+		mainLayout->addWidget(cbObjectType, 0, 0);
+		mainLayout->addWidget(cbTopic, 0, 1);
+		mainLayout->addWidget(btnMenu, 0, 2);
+		mainLayout->addWidget(grid, 1, 0, 3, 3);
+		mainLayout->setColumnStretch(2, 0);
+	}
 	setLayout(mainLayout);
 
 	CString sProgName;
@@ -2411,13 +2765,28 @@ BEMGridDialog::BEMGridDialog(CMainFrame* pMainFrm, int iBEMClass, int iOccur, QW
 //	gridTopic    = getTopic();
 //	grid->initGrid( gridBEMClass, gridTopic, iOccur /*iSelObjectIdx1*/ );
 
-	connect( cbObjectType, SIGNAL(currentIndexChanged(int)),
-				this, SLOT(updateObjectType()) );
-	connect( cbTopic, SIGNAL(currentIndexChanged(int)),
-				this, SLOT(updateTopic()) );
+	if (singleClassID <= 0)
+	{	connect( cbObjectType, SIGNAL(currentIndexChanged(int)),
+					this, SLOT(updateObjectType()) );
+		connect( cbTopic, SIGNAL(currentIndexChanged(int)),
+					this, SLOT(updateTopic()) );
 
-	initTopicList( 0 );
+		initTopicList( 0 );
+	}
 	updateTopic();
+	if (dlgMsgDBID > 0)
+		updateDialogMessage();
+}
+
+void BEMGridDialog::updateDialogMessage()
+{
+	if (dlgMsgDBID > 0)
+	{	QString sDlgLabel;
+		if (BEMPX_GetString( dlgMsgDBID, sDlgLabel, TRUE, 0, -1, parentObjIdx ) && !sDlgLabel.isEmpty())
+		{	lblDialogMessage->setText( sDlgLabel );
+//			lblDialogMessage->repaint();
+//			QApplication::processEvents();
+	}	}
 }
 
 void BEMGridDialog::closeEvent(QCloseEvent *e)
@@ -2447,14 +2816,41 @@ void BEMGridDialog::updateObjectType()
 void BEMGridDialog::updateTopic()
 {
 	if (!refreshingTopicList)
-	{	gridTopic = getTopic();
-		if (gridTopic > 0)
+	{	if (singleClassID > 0)
 		{
-			int iTIdx = cbTopic->currentIndex();
-			if (iTIdx >= 0 && iTIdx < (int) topicNumControls.size())
-			{	grid->clear();
-				grid->initGrid( gridBEMClass, gridTopic, topicNumControls[iTIdx], topicFirstCtrlIdx[iTIdx], -1 /*iSelObjectIdx1*/ );
-	}	}	}
+			int iNumControls=0, iFirstCtrlIdx=0;
+			bool bFoundPage = false;
+			int iNumTabs    = BEMPUIX_GetNumConsecutiveDialogTabIDs( singleClassID, 0 /*iUIMode*/ );
+			int iFirstTabID = BEMPUIX_GetFirstDialogTabID( singleClassID, 0 /*iUIMode*/ );
+			if (iNumTabs > 0 && iFirstTabID)
+			{	QString qsCaption;
+				int iPageID, iModules, iLastCtrlIdx;
+				for (int i=0; (!bFoundPage && i < iNumTabs); i++)
+					if (BEMPUIX_GetUIPageData( singleClassID, i, 0 /*iUIMode*/, !ebDisplayAllUIControls,
+														qsCaption, iPageID, iModules, iNumControls, iFirstCtrlIdx, iLastCtrlIdx ))
+					{	if (iPageID == singleTabID)
+						{	bFoundPage = true;
+							//QVariant itemData = iPageID;
+							//cbTopic->addItem( qsCaption.trimmed(), itemData );
+							//topicNumControls.push_back(  iNumControls  );
+							//topicFirstCtrlIdx.push_back( iFirstCtrlIdx );
+					}	}
+			}										ASSERT( bFoundPage );
+			if (bFoundPage)
+			{	gridBEMClass = singleClassID;
+				grid->bemGridClear();	//clear();
+				grid->initGrid( gridBEMClass, 1 /*gridTopic*/, iNumControls, iFirstCtrlIdx, -1 /*iSelObjectIdx1*/,
+									 parentClassID, parentObjIdx );
+		}	}
+		else
+		{	gridTopic = getTopic();
+			if (gridTopic > 0)
+			{
+				int iTIdx = cbTopic->currentIndex();
+				if (iTIdx >= 0 && iTIdx < (int) topicNumControls.size())
+				{	grid->bemGridClear();	//clear();
+					grid->initGrid( gridBEMClass, gridTopic, topicNumControls[iTIdx], topicFirstCtrlIdx[iTIdx], -1 /*iSelObjectIdx1*/ );
+	}	}	}	}
 }
 
 
@@ -2491,7 +2887,11 @@ QPushButton *BEMGridDialog::createIconButton(int iconID)  //, const char *member
 	actionRestoreOrder->setEnabled(false);
 	menuOptions->addAction(actionRestoreOrder);
 	actionOptions = new QAction(tr("Options..."), this);
+#ifdef UI_CANRES
 	actionOptions->setEnabled(true);
+#else
+	actionOptions->setEnabled(false);
+#endif
 	menuOptions->addAction(actionOptions);
 	button->setMenu(menuOptions);
 
@@ -2531,7 +2931,7 @@ void BEMGridDialog::triggeredOption(QAction *action)
 	else if (grid && action == actionPaste)
 		grid->pasteSelectionFromClipboard();
 	else if (grid && action == actionRestoreOrder)
-		grid->sortByColumn( grid->columnCount()-1, Qt::AscendingOrder );
+		grid->sortByColumn( grid->columnCount()-grid->ColsAtEnd(), Qt::AscendingOrder );
 	else if (grid && action == actionOptions)
 	{	BEMGridOptionsDialog *optsDialog = new BEMGridOptionsDialog( grid, this );
 		optsDialog->exec();
@@ -2543,7 +2943,7 @@ void BEMGridDialog::triggeredOption(QAction *action)
 
 BEMGrid *BEMGridDialog::createBEMGrid()
 {
-	BEMGrid *bemGrid = new BEMGrid(this, mainFrm, &pxmIcon, &font);
+	BEMGrid *bemGrid = new BEMGrid(this, mainFrm, &pxmIcon, &font, this);
 	return bemGrid;
 }
 

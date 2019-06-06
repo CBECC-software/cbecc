@@ -135,14 +135,14 @@ void CBEMProcCtrlRTF::PostNcDestroy()
 // }
 
 
-static DWORD CALLBACK MyStreamInCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
+static DWORD CALLBACK MyStreamInCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 {
    CFile* pFile = (CFile*) dwCookie;
    *pcb = pFile->Read(pbBuff, cb);
    return 0;
 }
 
-LONG CBEMProcCtrlRTF::OnDisplayData(UINT, LONG)
+LRESULT CBEMProcCtrlRTF::OnDisplayData(WPARAM, LPARAM)
 {
 //   if (!m_bUpdatingList  &&  !m_bSettingHighlight  &&  m_iDBClass > 0)
 //   {
