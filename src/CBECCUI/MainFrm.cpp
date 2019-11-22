@@ -1060,9 +1060,15 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				VERIFY( GetDialogTabDimensions( i1ClassToEdit, iTabCtrlWd, iTabCtrlHt ) );
 				CString sDialogCaption;
 				GetDialogCaption( i1ClassToEdit, sDialogCaption );
+							int iMaxTabs = 0;
+							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1ClassToEdit ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+								iMaxTabs = lNumUIDialogTabs;
+							else
+								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( i1ClassToEdit, 0 /*iUIMode*/ );
 				siSubordTabbedDlgsDisplayed++;
             CSACBEMProcDialog td( i1ClassToEdit, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
-                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( i1ClassToEdit, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
                               (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -2062,11 +2068,17 @@ void CMainFrame::OnQuickEdit()
 		VERIFY( GetDialogTabDimensions( siQuickCr8Class, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 		CString sDialogCaption;
 		GetDialogCaption( siQuickCr8Class, sDialogCaption );   // SAC 1/8/12
+							int iMaxTabs = 0;
+							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", siQuickCr8Class ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+								iMaxTabs = lNumUIDialogTabs;
+							else
+								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( siQuickCr8Class, 0 /*iUIMode*/ );		// SAC 9/18/19 - added BEMPUIX_GetNumConsecutiveDialogTabIDs()
       CWnd* pWnd = GetFocus();
 //      CBEMDialog td( siQuickCr8Class, pWnd );
       CSACBEMProcDialog td( siQuickCr8Class, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
-                        0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, 99 /*iMaxTabs*/,
+                        0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
                         (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -2954,6 +2966,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "SimOutputVariablesToCSV_zp"  ,  "SimOutputVariablesToCSV_zp"  ,    0   },  // SAC 4/11/16
                                                 {  "SimOutputVariablesToCSV_zb"  ,  "SimOutputVariablesToCSV_zb"  ,    0   },  // SAC 4/11/16
                                                 {  "UseEPlusRunMgr"              ,  "UseEPlusRunMgr"              ,    1   },  // SAC 2/15/19
+                                                {  "ReportStandardUMLHs"         ,  "ReportStandardUMLHs"         ,    0   },  // SAC 11/11/19
+                                                {  "ReportAllUMLHZones"          ,  "ReportAllUMLHZones"          ,    0   },  // SAC 11/11/19
 																{  NULL, NULL, -1  }  };
 
 		int iAnalOptIdx = -1;
@@ -3042,6 +3056,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			lEnergyCodeYr = 2016;
 			#elif  UI_PROGYEAR2019
 			lEnergyCodeYr = 2019;
+			#elif  UI_PROGYEAR2022
+			lEnergyCodeYr = 2022;
 			#else
 			lEnergyCodeYr = 0;  // ???
 			#endif
@@ -3070,6 +3086,8 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString +=			"BypassCSE,1,";
 		if (ReadProgInt( sOptsSec,	"BypassDHW", 0 /*default*/ ) > 0)
 			sOptionsCSVString +=			"BypassDHW,1,";
+		if (ReadProgInt( sOptsSec,	"EnableHPAutosize", 0 /*default*/ ) > 0)		// SAC 6/21/19
+			sOptionsCSVString +=			"EnableHPAutosize,1,";
       if (ReadProgInt( sOptsSec,   "ExportHourlyResults_All",   0 /*default*/ ) > 0)		// SAC 9/5/13
          sOptionsCSVString +=       "ExportHourlyResults_All,1,";
       if (ReadProgInt( sOptsSec,   "ExportHourlyResults_u",   0 /*default*/ ) > 0)		// SAC 8/5/13
@@ -3108,6 +3126,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableResearchMode,%d,", iEnableResearchMode );
 			sOptionsCSVString += sOptTemp;
 		}
+      int lSimulateCentralDHWBranches = ReadProgInt( sOptsSec, "SimulateCentralDHWBranches", 1 /*default*/ );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
+		if (lSimulateCentralDHWBranches == 0)
+		{	sOptTemp.Format( "SimulateCentralDHWBranches,%d,", lSimulateCentralDHWBranches );
+			sOptionsCSVString += sOptTemp;
+		}
       int iAllowNegativeDesignRatings = ReadProgInt( sOptsSec, "AllowNegativeDesignRatings", 0 /*default*/ );		// SAC 1/11/18
 		if (iAllowNegativeDesignRatings > 0)
 		{	sOptTemp.Format( "AllowNegativeDesignRatings,%d,", iAllowNegativeDesignRatings );
@@ -3116,6 +3139,11 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
       int iEnableCO2DesignRatings = ReadProgInt( sOptsSec, "EnableCO2DesignRatings", 0 /*default*/ );		// SAC 1/27/18
 		if (iEnableCO2DesignRatings > 0)
 		{	sOptTemp.Format( "EnableCO2DesignRatings,%d,", iEnableCO2DesignRatings );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iEnableRHERS = ReadProgInt( sOptsSec, "EnableRHERS", 0 /*default*/ );	// SAC 10/19/19
+		if (iEnableRHERS > 0)
+		{	sOptTemp.Format( "EnableRHERS,%d,", iEnableRHERS );
 			sOptionsCSVString += sOptTemp;
 		}
       int iWriteCF1RXML = ReadProgInt( sOptsSec, "WriteCF1RXML", (lEnergyCodeYr > 2018 ? 1 : 0) /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML   - SAC 10/29/18 - added default of 1 for 2019+
@@ -4375,8 +4403,14 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 							VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );
 							CString sDialogCaption;
 							GetDialogCaption( iBDBClass, sDialogCaption );   // SAC 1/8/12
+							int iMaxTabs = 0;
+							long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+							if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", iBDBClass ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+								iMaxTabs = lNumUIDialogTabs;
+							else
+								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ );
 			            CSACBEMProcDialog td( iBDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
-			                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ ) /*iMaxTabs*/,
+			                              0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,
 			                              (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 													NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 													NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -5701,13 +5735,14 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF - rec lengths now 2024, 3870 & 3045 chars
 				// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
 				// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
-				CString sDfltResFN = "AnalysisResults-v20.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+				// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
+				CString sDfltResFN = "AnalysisResults-v21.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						20 /*iResFormatVer*/, sOriginalFileName );
+																						21 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
-					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3072];
-					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 2048, pszCSVColLabel2, 4096, pszCSVColLabel3, 3072 ) == 0 );	// SAC 5/10/15
+					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3328];
+					VERIFY( CMX_PopulateResultsHeader_Res( pszCSVColLabel1, 2048, pszCSVColLabel2, 4096, pszCSVColLabel3, 3328 ) == 0 );	// SAC 5/10/15
 					const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 					CString sCSVResultSummary = pszCSVResultSummary;
 					// WRITE result summary to PROJECT and GENERIC DATA CSV result logs - ALONG WITH COLUMN TITLES (if log doesn't previously exist)
@@ -5867,6 +5902,10 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 					 ( lRunScope == 2 ||    // add or alter
 					  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
 					iResultsScreenUIMode = 1;
+
+				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+					iMaxTabs = lNumUIDialogTabs;
 
 				CWnd* pWnd = GetFocus();
 				CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*uiMode*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
@@ -6063,25 +6102,44 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 		//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
 			QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 
-			char pszCSVColLabel1[512], pszCSVColLabel2[1024], pszCSVColLabel3[2304];	// SAC 7/20/18 - inc #3 2048->2304 due to truncation
-			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 512, pszCSVColLabel2, 1024, pszCSVColLabel3, 2304, iCodeType ) == 0 );	// SAC 12/3/14
+			char pszCSVColLabel1[640], pszCSVColLabel2[1280], pszCSVColLabel3[3072];	// SAC 7/20/18 - inc #3 2048->2304 due to truncation   // SAC 6/28/19 - 560 / 968 / 2706 chars   // SAC 11/4/19 - 616 / 1068 / 3019 chars
+			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 640, pszCSVColLabel2, 1280, pszCSVColLabel3, 3072, iCodeType ) == 0 );	// SAC 12/3/14
 			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
+			bool bWroteToLogCSV = false;
 			if (!sCSVLogFN.IsEmpty())
 			{	sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
 				             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
 								 "(once the file is closed), or \n'Cancel' to abort the %s.", "CSV results log", sCSVLogFN, "writing of results to the file" );
 				if (OKToWriteOrDeleteFile( sCSVLogFN, sMsg, (!BEMPX_GetUIActiveFlag()) ))
-					VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+				{	VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
 															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
-			}
+					bWroteToLogCSV = true;
+			}	}
 
 			// SAC 10/10/16 - updated default T24N CSVResultsLog filename adding '-v2' for new CSV format that includes electric demand results
 			// SAC 2/7/17 - updated default T24N CSVResultsLog filename adding '-v3' for new CSV format that includes process motors results
 			// SAC 2/19/17 - updated default T24N CSVResultsLog filename adding '-v4' for new CSV format that includes total & cond flr areas, unregulated TDV results plus TDV by fuel type (for 2019.0.1 release)
 			// SAC 7/20/18 - updated default T24N CSVResultsLog filename adding '-v5' for new CSV format that includes PV & Battery enduses (for A2030 & 2019.0.3 releases)
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v5.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v5.csv" : "AnalysisResults-v5.csv"));
+			// SAC 6/28/19 - updated default T24N CSVResultsLog filename adding '-v6' for new CSV format that includes 2022 Source & SrcPrime energy use columns out to the right
+			// SAC 9/24/19 - updated default T24N CSVResultsLog filename adding '-v7' for new CSV format that EXcludes 2022 SrcPrime energy use columns
+			// SAC 11/04/19 - updated default T24N CSVResultsLog filename adding '-v8' for new CSV format that includes ResultsSet (EUseSummary) name and C02 results
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v8.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v8.csv" : "AnalysisResults-v8.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
+
+			// export CSV results for subsequent results sets (when multiple EUseSummary objects present)
+			int iCSVRetVal = 0;
+			long lNumResultsSets=0;
+			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:NumResultsSets" ), lNumResultsSets );		// SAC 11/04/19
+			// check for consistency between lNumResultsSets & number of EUseSummary objects??
+			for (int iResSet = 1; (iResSet < lNumResultsSets && iCSVRetVal < 1); iResSet++)
+			{	iCSVRetVal = CMX_PopulateCSVResultSummary_NonRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, sCurrentFileName, sWthrPath, iResSet );		// SAC 11/04/19
+				if (iCSVRetVal < 1)
+				{	VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
+					if (bWroteToLogCSV)
+						VERIFY( BEMPX_WriteLogFile( pszCSVResultSummary, NULL, false /*bBlankFile*/, FALSE /*bSupressAllMessageBoxes*/,
+															false /*bAllowCopyOfPreviousLog*/, szaCSVColLabels /*ppCSVColumnLabels*/ ) );
+			}	}
 		}
 
 	// Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
@@ -6156,12 +6214,19 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 				if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)	// SAC 9/13/13 - added to ensure first (worst case) EUseSummary obejct is ALWAYS the active obejct as dialog presented
 					BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 
+				int iMaxTabs = 0;
+				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1SelClassIdx ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+					iMaxTabs = lNumUIDialogTabs;
+				else
+					iMaxTabs = 99;
+
 				CString sDialogCaption;
 				GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 				int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
       		CWnd* pWnd = GetFocus();
       		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-      		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
+      		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
       		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 										NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 										NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -6640,6 +6705,10 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 			  (lRunScope == 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:IsAddAlone" ), lIsAddAlone ) && lIsAddAlone > 0)) )   // addition alone
 			iResultsScreenUIMode = 1;
 
+		long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+		if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+			iMaxTabs = lNumUIDialogTabs;
+
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, iResultsScreenUIMode /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
 		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
@@ -6672,12 +6741,19 @@ void CMainFrame::OnToolsReviewResults()		// SAC 6/26/13
 		if (BEMPX_GetNumObjects( eiBDBCID_EUseSummary ) > 1)
 			BEMPX_SetActiveObjectIndex( eiBDBCID_EUseSummary, 0 );
 
+				int iMaxTabs = 0;
+				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+					iMaxTabs = lNumUIDialogTabs;
+				else
+					iMaxTabs = 99;
+
 		CString sDialogCaption;
 		GetDialogCaption( eiBDBCID_EUseSummary, sDialogCaption );
 		int iEUSTabCtrlWd, iEUSTabCtrlHt;		VERIFY( GetDialogTabDimensions( eiBDBCID_EUseSummary, iEUSTabCtrlWd, iEUSTabCtrlHt ) );	/// SAC 12/28/17
 		CWnd* pWnd = GetFocus();
 		CSACBEMProcDialog td( eiBDBCID_EUseSummary, 0 /*eiCurrentTab*/, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
-		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, 99 /*iMaxTabs*/,
+		                  0 /*iDlgMode*/, iEUSTabCtrlWd, iEUSTabCtrlHt, iMaxTabs,
 		                  (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "Done",
 								NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 								NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -6915,6 +6991,8 @@ void CMainFrame::OnToolsCAHPReport()		// SAC 10/8/14
 #ifdef UI_CARES
 	CString sNoRptIDMsg, sCAHPResultProperty;
 #ifdef UI_PROGYEAR2019
+	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
+#elif UI_PROGYEAR2022
 	AfxMessageBox( "CAHP report generation only available in 2013/16 Title-24 mode." );
 #elif  UI_PROGYEAR2016
 	sNoRptIDMsg = "CAHP report generation not available when CAHP program not selected.\nCAHP options must be specified in Project > Analysis -and- CAHP dialog tabs and analysis performed before this report can be generated.";
@@ -7515,7 +7593,7 @@ void CMainFrame::CreateBuildingComponent( int i1BDBClass, long lAssignmentDBID, 
 //         CBEMDialog td( i1BDBClass, pParentWnd );
          CSACBEMProcDialog td( i1BDBClass, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pParentWnd,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
-                           0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, 99 /*iMaxTabs*/,
+                           0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, BEMPUIX_GetNumConsecutiveDialogTabIDs( i1BDBClass, 0 /*iUIMode*/ ) /*iMaxTabs*/,		// SAC 9/18/19 - added BEMPUIX_GetNumConsecutiveDialogTabIDs()
                            (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 									NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 									NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -7875,10 +7953,16 @@ void CMainFrame::OnEditComponent()
 			VERIFY( GetDialogTabDimensions( i1SelClassIdx, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
 			CString sDialogCaption;
 			GetDialogCaption( i1SelClassIdx, sDialogCaption );   // SAC 1/8/12
+				int iMaxTabs = 0;
+				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1SelClassIdx ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+					iMaxTabs = lNumUIDialogTabs;
+				else
+					iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( i1SelClassIdx, 0 /*iUIMode*/ );
 //         CBEMDialog td( i1SelClassIdx, this );
          CSACBEMProcDialog td( i1SelClassIdx, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
-                           0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, 99 /*iMaxTabs*/,
+                           0 /*iDlgMode*/, iTabCtrlWd, iTabCtrlHt, iMaxTabs,		// SAC 9/18/19 - added BEMPUIX_GetNumConsecutiveDialogTabIDs()
                            (sDialogCaption.IsEmpty() ? NULL : (const char*) sDialogCaption) /*pszCaptionText*/, "OK",
 									NULL /*dwaNonEditableDBIDs*/, 0 /*iNumNonEditableDBIDs*/, NULL /*pszExitingRulelist*/,
 									NULL /*pszDataModRulelist*/, FALSE /*bPostHelpMessageToParent*/,
@@ -8516,6 +8600,8 @@ void CMainFrame::OnHelpMandatoryRequirementsForAssemblies()
 			sDefPDF = "Documents\\2016 Mandatory Requirements for Assemblies.pdf";
 #elif  UI_PROGYEAR2019
 			sDefPDF = "Documents\\2019 Mandatory Requirements for Assemblies.pdf";
+#elif  UI_PROGYEAR2022
+			sDefPDF = "Documents\\2022 Mandatory Requirements for Assemblies.pdf";
 #else
 			sDefPDF = "Documents\\Mandatory Requirements for Assemblies.pdf";
 #endif
@@ -9205,6 +9291,8 @@ afx_msg LRESULT CMainFrame::OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur)   // 
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
+#elif UI_PROGYEAR2022	// SAC 6/19/19
+	iEnableGridDflt = 1;
 #endif
 	if (ReadProgInt( "options", "EnableGrid", iEnableGridDflt ) < 1)
 		AfxMessageBox( "Model Grid not available." );
@@ -9248,6 +9336,8 @@ void CMainFrame::OnUpdateShowModelGrid(CCmdUI* pCmdUI)
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
 	iEnableGridDflt = 1;
+#elif UI_PROGYEAR2022	// SAC 6/19/19
+	iEnableGridDflt = 1;
 #endif
    CDocument* pDoc = NULL;
 	if (ReadProgInt( "options", "EnableGrid", iEnableGridDflt ) > 0)
@@ -9259,6 +9349,8 @@ void CMainFrame::OnToolsShowModelGrid() 	// SAC 3/8/18 - initial model grid test
 {
 	int iEnableGridDflt = 0;
 #ifdef UI_PROGYEAR2019	// SAC 8/8/18 - enable grid access by default for 2019 executables
+	iEnableGridDflt = 1;
+#elif UI_PROGYEAR2022	// SAC 6/19/19
 	iEnableGridDflt = 1;
 #endif
    CDocument* pDoc = GetActiveDocument();

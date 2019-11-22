@@ -44,6 +44,9 @@ typedef struct
    int         iSumIntoCompliance;
 	double      daEnduseTotal[3];
 	double      daTDVTotal[3];
+	double      daSrcTotal[3];			// SAC 6/27/19 - 2022
+	double      daSrcPrmTotal[3];		// SAC 6/27/19 - 2022
+	double      daC02Total[3];			// SAC 9/11/19 - (tic #3106)
 	double      daTDSTotal[3];		// SAC 8/26/18 - A2030
 	double      daSupply[3];		// SAC 9/7/18 - A2030 [Elec,TDV,TDS]
 	double      dElecDemand;		// SAC 10/8/16
@@ -205,6 +208,6 @@ extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osR
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
 															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
-															QStringList* psaEPlusProcDirsToBeRemoved=NULL );	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
+															QStringList* psaEPlusProcDirsToBeRemoved=NULL, bool bReportAllUMLHZones=false );	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 
 #endif  // _OPENSTUDIOINTERFACE_H

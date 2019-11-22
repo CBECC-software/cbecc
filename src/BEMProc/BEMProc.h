@@ -205,6 +205,65 @@ class  BEMObject;
 class  BEMProperty;
 class  BEMSymDependencySet;
 
+/////////////////////////////////////////////////////////////////////////////
+// classes to facilitate rulelist evaluation debugging
+class BEMPROC_API BEMCompNameTypeProp
+{
+public:
+   BEMCompNameTypeProp() { m_compType = 0;  m_propertyType = 0;  m_array = 0; };
+   BEMCompNameTypeProp( BEMCompNameTypeProp* pCNTP );
+   ~BEMCompNameTypeProp();
+
+public:
+   BOOL Matches( int iBEMClass, long lDBID, BEMObject* pObj );
+
+	QString getCompName()					{	return m_compName;  }
+	void setCompName( QString sCN )		{	m_compName = sCN;  return;  }
+
+	void setCompType( int iCT )			{	m_compType = iCT;  return;  }
+
+	void setPropertyType( int iPT )		{	m_propertyType = iPT;  return;  }
+
+	int  getArray()							{	return m_array;  }
+	void setArray( int iA )					{	m_array = iA;  return;  }
+
+private:
+   QString m_compName;
+   int     m_compType;
+   int     m_propertyType;
+   int     m_array;
+};
+
+class BEMPROC_API BEMCompNameTypePropArray
+{
+public:
+   BEMCompNameTypePropArray() {  };
+   ~BEMCompNameTypePropArray();
+
+   void DeleteContents();
+
+public:
+   BOOL ReadData( const char* pszBEMCompNameTypePropListFile, int& iVerboseFlag, int& iLogRuleListEval );
+   BOOL Copy( BEMCompNameTypePropArray* pCNTPA );
+   BOOL MatchExists( long lDBID, int iOccur=-1, int iBEMProcIdx=-1 );
+   BOOL RulelistMatchExists( const char* pszRulelistName );   // SAC 9/14/10
+
+	int  getCompNameTypePropCount()								{	return (int) m_items.size();  }
+	BEMCompNameTypeProp* getCompNameTypeProp( int idx )	{	return m_items.at(idx);  }
+
+private:
+   std::vector<BEMCompNameTypeProp*> m_items;
+
+   QStringList m_rulelistNames;   // SAC 9/14/10 - added new member to facilitate echoing of each rule in a specified list of rulelists
+
+   QString	m_dataFileName;  // SAC 8/5/10 - members to track whether or not data from specified file has already been read in
+	UINT		m_fileTime;
+	qint64	m_fileSize;
+
+   int m_verboseFlag;       // SAC 8/5/10 - used for rulelist verbose (debugging) output...
+   int m_logRuleListEval;
+};
+
 
 #define BEM_MODEL_MULT 1000000000   // added MODEL multiplier to facilitate longlong DBID (MDBID) values to identify which model to set/retrieve data to/from
 #define BEM_COMP_MULT     1000000
@@ -442,7 +501,8 @@ BEMProperty*     __cdecl BEMPX_GetProperty(		long lDBID, int& iError, int iOccur
 																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
 
 bool BEMPROC_API __cdecl BEMPX_DefaultProperty(	long lDBID, int& iError, int iOccur=-1,
-																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1,
+																BEMCompNameTypePropArray* pTargetedDebugInfo=NULL );	// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 
 int  BEMPROC_API __cdecl BEMPX_SetDataStatus( long lDBID, int iOccur=-1, BEM_PropertyStatus eStatus=BEMS_UserDefined,
 																BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
@@ -496,11 +556,13 @@ int  BEMPROC_API __cdecl BEMPX_SetBEMData(   long lDBID, int iDataType, void* pD
                                                      BEM_ObjType eObjType=BEMO_User, BOOL bPerformResets=TRUE, int iBEMProcIdx=-1,
 																	  int iImportUniqueRuleLibObjOption=2,  // SAC 3/10/13	// SAC 4/25/14
 																	  const char* pszImportRuleLibParentName=NULL,   // SAC 3/17/13 - name of parent of rule lib object to import
-																	  char* pszErrMsg=NULL, int iErrMsgLen=0 );  // SAC 4/10/13 - error message return
+																	  char* pszErrMsg=NULL, int iErrMsgLen=0,  // SAC 4/10/13 - error message return
+																	  BEMCompNameTypePropArray* pTargetedDebugInfo=NULL );	// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 
 int  BEMPROC_API __cdecl BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur=-1,
                                                            BEM_PropertyStatus eStatus=BEMS_UserDefined,
-                                                           BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1 );
+                                                           BEM_ObjType eObjType=BEMO_User, int iBEMProcIdx=-1,
+                                                           BEMCompNameTypePropArray* pTargetedDebugInfo=NULL );	// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 
 // tracking for BEM data mods since last full model defaulting - SAC 4/11/18
 void BEMPROC_API     __cdecl BEMPX_InitModsSinceModelDefaulted();
@@ -709,66 +771,6 @@ public:
    int       m_iSeverity;    // severity of error (ERR_SEVERITY_*)
    int       m_iErrorCode;   // error code (ERR_CODE_*)
    QString   m_sMessage;     // error message
-};
-
-
-/////////////////////////////////////////////////////////////////////////////
-// classes to facilitate rulelist evaluation debugging
-class BEMPROC_API BEMCompNameTypeProp
-{
-public:
-   BEMCompNameTypeProp() { m_compType = 0;  m_propertyType = 0;  m_array = 0; };
-   BEMCompNameTypeProp( BEMCompNameTypeProp* pCNTP );
-   ~BEMCompNameTypeProp();
-
-public:
-   BOOL Matches( int iBEMClass, long lDBID, BEMObject* pObj );
-
-	QString getCompName()					{	return m_compName;  }
-	void setCompName( QString sCN )		{	m_compName = sCN;  return;  }
-
-	void setCompType( int iCT )			{	m_compType = iCT;  return;  }
-
-	void setPropertyType( int iPT )		{	m_propertyType = iPT;  return;  }
-
-	int  getArray()							{	return m_array;  }
-	void setArray( int iA )					{	m_array = iA;  return;  }
-
-private:
-   QString m_compName;
-   int     m_compType;
-   int     m_propertyType;
-   int     m_array;
-};
-
-class BEMPROC_API BEMCompNameTypePropArray
-{
-public:
-   BEMCompNameTypePropArray() {  };
-   ~BEMCompNameTypePropArray();
-
-   void DeleteContents();
-
-public:
-   BOOL ReadData( const char* pszBEMCompNameTypePropListFile, int& iVerboseFlag, int& iLogRuleListEval );
-   BOOL Copy( BEMCompNameTypePropArray* pCNTPA );
-   BOOL MatchExists( long lDBID, int iOccur=-1, int iBEMProcIdx=-1 );
-   BOOL RulelistMatchExists( const char* pszRulelistName );   // SAC 9/14/10
-
-	int  getCompNameTypePropCount()								{	return (int) m_items.size();  }
-	BEMCompNameTypeProp* getCompNameTypeProp( int idx )	{	return m_items.at(idx);  }
-
-private:
-   std::vector<BEMCompNameTypeProp*> m_items;
-
-   QStringList m_rulelistNames;   // SAC 9/14/10 - added new member to facilitate echoing of each rule in a specified list of rulelists
-
-   QString	m_dataFileName;  // SAC 8/5/10 - members to track whether or not data from specified file has already been read in
-	UINT		m_fileTime;
-	qint64	m_fileSize;
-
-   int m_verboseFlag;       // SAC 8/5/10 - used for rulelist verbose (debugging) output...
-   int m_logRuleListEval;
 };
 
 

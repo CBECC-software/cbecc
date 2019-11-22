@@ -1,8 +1,8 @@
 // expTextIO.h - header file for BEMTextException and BEMTextIO class definitions
 //
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -77,7 +77,7 @@ extern void TrimRight( QString& str, QString sRemove=QString("") );
 
 // Maximum length of data lines used by textio module.  Additional 
 // characters after maximum length are ignored.
-const int TextioMaxLine = 2047;   // SAC 10/20/05 - increased from 1024 -> 2047  -  SAC 8/14/03 - upped limit from 512 to 1024   // 132;
+const int TextioMaxLine = 4095;   // SAC 11/11/19 - increased from 2047 -> 4095  // SAC 10/20/05 - increased from 1024 -> 2047  -  SAC 8/14/03 - upped limit from 512 to 1024   // 132;
 
 const UINT DefIntLen   = 8;
 const UINT DefFloatLen = 9;
@@ -200,7 +200,7 @@ public:
    // Test for end of line condition
    bool AtEOL();
 
-   QString ReadString( BOOL bReadPastEOL=FALSE );
+   QString ReadString( BOOL bReadPastEOL=FALSE, BOOL bAllowMidQuote=FALSE, BOOL bMayBeArray=FALSE );
    QString ReadToNextToken( QStringList& saTokens, BOOL bReadPastEOL=TRUE );
    QString ReadToken( BOOL bAllowLeadingDigit=FALSE, BOOL bSkipLeadingDelimeters=FALSE, BOOL bAllowMidHyphen=FALSE, BOOL bAllowNewLineRead=TRUE );		// SAC 9/11/14 - added bAllowNewLineRead arg
    QString ReadLine( BOOL bAdvanceFirst = TRUE );

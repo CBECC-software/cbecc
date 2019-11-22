@@ -388,6 +388,10 @@ extern BOOL CodeYearRulesetAvailable( CString sCodeYear );
 extern std::vector<std::string> saReportRulelistNames;
 extern std::vector<std::string> saReportRulelistSelections;
 
+// ruleset code year  - SAC 6/12/19
+extern long elRulesetCodeYear;
+extern void SetRulesetCodeYear();
+
 /////////////////////////////////////////////////////////////////////////////
 // Global Data and Routine to enable targeted rule evaluation logging when evaluating input/defaulting rules	- SAC 11/22/14
 extern void* epInpRuleDebugInfo;
@@ -684,6 +688,7 @@ extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to
 extern int eiBDBCID_DwellUnitType;	// SAC 6/18/14
 extern int eiBDBCID_DwellUnit;
 extern int eiBDBCID_Zone;
+extern int eiBDBCID_OtherZone;	// SAC 9/3/19 - MFamProto
 extern int eiBDBCID_Garage;
 extern int eiBDBCID_Attic;
 extern int eiBDBCID_CrawlSpace;
@@ -720,6 +725,7 @@ extern int eiBDBCID_ClVentFan;
 extern int eiBDBCID_DHWSys;
 extern int eiBDBCID_DWHRSys;	// SAC 12/23/18  // SAC 1/5/19 - renamed (was DWHX)
 extern int eiBDBCID_DHWHeater;
+extern int eiBDBCID_DHWLoopTankHeater;	// SAC 11/14/19
 extern int eiBDBCID_SCSysRpt;
 extern int eiBDBCID_DHWSysRpt;
 extern int eiBDBCID_IAQVentRpt;
@@ -816,6 +822,7 @@ extern long elDBID_DHWSys_DHWHeater3;
 extern long elDBID_DHWSys_DHWHeater4;
 extern long elDBID_DHWSys_DHWHeater5;
 extern long elDBID_DHWSys_DHWHeater6;
+extern long elDBID_DHWSys_LoopHeater;	// SAC 11/19/19
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
 

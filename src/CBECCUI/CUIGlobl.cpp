@@ -126,6 +126,8 @@ CString esProgramName = "CBECC-Com";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd16", "cpbd16", "cbbd16" };
 	#elif  UI_PROGYEAR2019
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd19", "cpbd19", "cbbd19" };
+	#elif  UI_PROGYEAR2022
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd22", "cpbd22", "cbbd22" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "cibd", "cpbd", "cbbd" };
 	#endif
@@ -137,6 +139,8 @@ CString esProgramName = "CBECC-Res";    // SAC 9/2/14
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd16", "rpbd16", "rbbd16" };
 	#elif  UI_PROGYEAR2019
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd19", "rpbd19", "rbbd19" };
+	#elif  UI_PROGYEAR2022
+	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd22", "rpbd22", "rbbd22" };
 	#else
 	const char* pszCUIFileExt[ NUM_INTERFACE_MODES ] = { "ribd", "rpbd", "rbbd" };
 	#endif
@@ -639,6 +643,9 @@ void GetProgramPath()
  #elif  UI_PROGYEAR2019
 	esOverviewPDF   = esProgramPath + "CBECC-Com19_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com19_UserManual.pdf";			// SAC 4/26/17
+ #elif  UI_PROGYEAR2022
+	esOverviewPDF   = esProgramPath + "CBECC-Com22_QuickStartGuide.pdf";
+	esUserManualPDF = esProgramPath + "CBECC-Com22_UserManual.pdf";			// SAC 6/19/19
  #else
  	esOverviewPDF   = esProgramPath + "CBECC-Com_QuickStartGuide.pdf";
 	esUserManualPDF = esProgramPath + "CBECC-Com_UserManual.pdf";			// SAC 7/8/13
@@ -960,6 +967,31 @@ BOOL GetProgramVersion(CString& sProgVer, BOOL bPrependName, BOOL bLongVer)
 			sProgVer.Format( "%d.%d.%d%s", major, iMiddleNum, iMinorNum, sAlphBeta );
 #elif  UI_PROGYEAR2019
 		//CString sCodeYr = "2019";
+	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
+	// SAC 11/27/18 - altered to allow 2-digit iMinorNum (by increasing iMiddleNum multiplier *10)
+		int iMiddleNum = (int) floor( minor / 1000.0 );
+		int iMinorNum = (int) floor( minor / 10.0 ) - (iMiddleNum * 100);
+		int iAlphBeta = minor % 10;
+		CString sAlphBeta;
+		switch (iAlphBeta)
+		{	case  0 :	break;
+			case  1 :	sAlphBeta = " Alpha";		break;
+			case  2 :	sAlphBeta = " Alpha 2";		break;
+			case  3 :	sAlphBeta = " Alpha 3";		break;
+			case  4 :	sAlphBeta = " Beta";			break;
+			case  5 :	sAlphBeta = " Beta 2";		break;
+			case  6 :	sAlphBeta = " RV";			break;	// SAC 12/22/17
+			case  7 :	sAlphBeta = " RC";			break;
+			case  8 :	sAlphBeta = " SP1";			break;
+			case  9 :	sAlphBeta = " SP2";			break;
+			default :	sAlphBeta = " ????" ;		break;
+		}
+		if (bLongVer)
+			sProgVer.Format( "%d.%d.%d%s (%d)", major, iMiddleNum, iMinorNum, sAlphBeta, build );
+		else
+			sProgVer.Format( "%d.%d.%d%s", major, iMiddleNum, iMinorNum, sAlphBeta );
+#elif  UI_PROGYEAR2022
+		//CString sCodeYr = "2022";
 	// SAC 10/29/15 - implemented new numbering scheme - defined in CEC LF e-mail 10/2/15
 	// SAC 11/27/18 - altered to allow 2-digit iMinorNum (by increasing iMiddleNum multiplier *10)
 		int iMiddleNum = (int) floor( minor / 1000.0 );
@@ -1678,6 +1710,21 @@ static BOOL RefreshRulesetReportList()
 		} 
 
 	return bRetVal;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// ruleset code year  - SAC 6/12/19
+long elRulesetCodeYear = 0;
+void SetRulesetCodeYear()
+{
+#ifdef UI_CANRES
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), elRulesetCodeYear );
+#elif UI_CARES
+	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum" ), elRulesetCodeYear );
+#else
+	elRulesetCodeYear = 0;
+#endif
 }
 
 
@@ -2532,6 +2579,7 @@ void GetObjectConversionInfo( int iBEMClassFrom, int iBEMClassTo, int& iDlgID, i
 int eiBDBCID_DwellUnitType = 0;	// SAC 6/18/14
 int eiBDBCID_DwellUnit     = 0;
 int eiBDBCID_Zone       = 0;
+int eiBDBCID_OtherZone  = 0;	// SAC 9/3/19 - MFamProto
 int eiBDBCID_Garage     = 0;
 int eiBDBCID_Attic      = 0;
 int eiBDBCID_CrawlSpace = 0;
@@ -2568,6 +2616,7 @@ int eiBDBCID_ClVentFan  = 0;
 int eiBDBCID_DHWSys     = 0;
 int eiBDBCID_DWHRSys       = 0;	// SAC 12/23/18
 int eiBDBCID_DHWHeater  = 0;
+int eiBDBCID_DHWLoopTankHeater  = 0;
 int eiBDBCID_SCSysRpt   = 0;
 int eiBDBCID_DHWSysRpt  = 0;
 int eiBDBCID_IAQVentRpt = 0;
@@ -2664,6 +2713,7 @@ long elDBID_DHWSys_DHWHeater3 = 0;
 long elDBID_DHWSys_DHWHeater4 = 0;
 long elDBID_DHWSys_DHWHeater5 = 0;
 long elDBID_DHWSys_DHWHeater6 = 0;
+long elDBID_DHWSys_LoopHeater	= 0;	// SAC 11/19/19
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
@@ -2679,11 +2729,15 @@ long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 890;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890
-	else if (iBDBClass == eiBDBCID_EUseSummary)			{  iTabCtrlWd = 810;    iTabCtrlHt = 520;   }	// SAC 12/28/17
+	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960
+	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2022)
+																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 520;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results
+																			else
+																			{	iTabCtrlWd =  810;    iTabCtrlHt = 520;		}  }	// SAC 12/28/17
 	else if (iBDBClass == eiBDBCID_DwellUnitType)		{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
 	else if (iBDBClass == eiBDBCID_DwellUnit)				{  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
 	else if (iBDBClass == eiBDBCID_Zone)      			{  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
+	else if (iBDBClass == eiBDBCID_OtherZone)   			{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }	// SAC 9/3/19 - MFamProto
 	else if (iBDBClass == eiBDBCID_ExtWall)      		{  iTabCtrlWd = 500;    iTabCtrlHt = 480;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 420;   }
 	else if (iBDBClass == eiBDBCID_InteriorFloor)  		{  iTabCtrlWd = 500;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_InteriorCeiling)		{  iTabCtrlWd = 500;    iTabCtrlHt = 510;   }
@@ -2704,6 +2758,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 610;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
+	else if (iBDBClass == eiBDBCID_DHWLoopTankHeater)	{  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
 	else if (iBDBClass == eiBDBCID_SCSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_DHWSysRpt)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_IAQVentRpt)			{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
@@ -3051,6 +3106,7 @@ void InitBEMDBIDs()
    eiBDBCID_DwellUnitType = BEMPX_GetDBComponentID( "DwellUnitType" );	// SAC 6/18/14
    eiBDBCID_DwellUnit     = BEMPX_GetDBComponentID( "DwellUnit" );
    eiBDBCID_Zone       = BEMPX_GetDBComponentID( "Zone" );
+   eiBDBCID_OtherZone  = BEMPX_GetDBComponentID( "OtherZone" );	// SAC 9/3/19 - MFamProto
    eiBDBCID_Garage     = BEMPX_GetDBComponentID( "Garage" );
    eiBDBCID_Attic      = BEMPX_GetDBComponentID( "Attic" );
    eiBDBCID_CrawlSpace = BEMPX_GetDBComponentID( "CrawlSpace" );
@@ -3087,6 +3143,7 @@ void InitBEMDBIDs()
 	eiBDBCID_DHWSys     = BEMPX_GetDBComponentID( "DHWSys" );
 	eiBDBCID_DWHRSys    = BEMPX_GetDBComponentID( "DWHRSys" );			// SAC 12/23/18
 	eiBDBCID_DHWHeater  = BEMPX_GetDBComponentID( "DHWHeater" );
+	eiBDBCID_DHWLoopTankHeater  = BEMPX_GetDBComponentID( "DHWLoopTankHeater" );	// SAC 11/14/19
 	eiBDBCID_SCSysRpt   = BEMPX_GetDBComponentID( "SCSysRpt" );
 	eiBDBCID_DHWSysRpt  = BEMPX_GetDBComponentID( "DHWSysRpt" );
 	eiBDBCID_IAQVentRpt = BEMPX_GetDBComponentID( "IAQVentRpt" );
@@ -3196,6 +3253,7 @@ void InitBEMDBIDs()
 	elDBID_DHWSys_DHWHeater4	= elDBID_DHWSys_DHWHeater3 + 1;
 	elDBID_DHWSys_DHWHeater5	= elDBID_DHWSys_DHWHeater4 + 1;
 	elDBID_DHWSys_DHWHeater6	= elDBID_DHWSys_DHWHeater5 + 1;
+	elDBID_DHWSys_LoopHeater	= BEMPX_GetDatabaseID( "LoopHeater", eiBDBCID_DHWSys );
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 

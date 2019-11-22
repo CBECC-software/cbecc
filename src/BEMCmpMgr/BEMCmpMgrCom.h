@@ -79,6 +79,9 @@ int  BEMCMPMGR_API __cdecl CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBase
 int  BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_NonRes(		char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len, int iCodeType=0 );	// SAC 12/3/14
 int  BEMCMPMGR_API __cdecl CMX_PopulateResultsHeader_CECNonRes(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len );	// SAC 5/16/14
 
+int  BEMCMPMGR_API __cdecl CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStringLength, const char* pszProjectPathFileName=NULL,
+																						const char* pszSimWeatherPath=NULL, int iEUseSummaryIdx=0 );	// SAC 11/04/19
+
 //		Return Values:		0 =>	SUCCESS
 //							 > 0 =>	Error Code
 int  BEMCMPMGR_API __cdecl CMX_ExportCSVHourlyResults_CECNonRes( const char* pszHourlyResultsPathFile, const char* pszModelPathFile, const char* pszModelName, char* pszErrMsgBuffer=NULL,

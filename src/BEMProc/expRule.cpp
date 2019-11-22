@@ -549,7 +549,9 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
 //				(node.type == EXP_String && IsReserved_UNDEFINED( node.fValue ) && boost::iequals( (char*) node.pValue, "UNDEFINED" )))  // SAC 1/9/14 - revised to better process UNDEFINED data
    {  // => UNDEFINED => re-default (blast) value
       // SAC 9/18/01 - Revised to ignore return value of BEMPX_DefaultProperty() which only returns true is a user-defined default is installed
-      BEMPX_DefaultProperty( pEval->lLocDBID, iError, pEval->iLocObjIdx, pEval->eLocObjType );
+      BEMPX_DefaultProperty( pEval->lLocDBID, iError, pEval->iLocObjIdx, pEval->eLocObjType, -1 /*iBEMProcIdx*/,
+      								pEval->pTargetedDebugInfo );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
+
       if (iError == 0)
       {  bRetVal = true;
          // SAC 9/25/02 - added code to implement verbose debug output
@@ -625,7 +627,9 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
       if (iSpecialVal > 0)
       {  // => set special vs. normal value to database
          iSetRet = BEMPX_SetBEMSpecialValue( pEval->lLocDBID, iSpecialVal, pEval->iLocObjIdx,
-                                             pEval->eLocStatus, pEval->eLocObjType );					assert( iSetRet >= 0 );  // perhaps add error message logging here(?)
+                                             pEval->eLocStatus, pEval->eLocObjType, -1 /*iBEMProcIdx*/,
+                                             pEval->pTargetedDebugInfo );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
+                                             assert( iSetRet >= 0 );  // perhaps add error message logging here(?)
       }
       else if (pData == NULL)
       {  // if pData == NULL then an error occurred somewhere during the evaluation process
@@ -690,7 +694,8 @@ static char pszSetBEMData_ErrMsg[ SetBEMData_ErrMsgLen ];  // SAC 4/10/13 - erro
                                   pEval->eLocObjType, bPerformSetBEMDataResets, -1 /*iBEMProcIdx*/,   // SAC 9/18/05 - added bPerformSetBEMDataResets argument
 											 pEval->iImportUniqueRuleLibObjOption,   // SAC 3/10/13 - added to cause rule library imports to create new objects with each RuleLib evaluation (as opposed to importing only once and providing multiple references to the single imported object)	// SAC 4/25/14 - revised arg
 											 pEval->sImportRuleLibParentName.toLocal8Bit().constData(),   // SAC 3/17/13 - name of parent of rule lib object to import
-											 pszSetBEMData_ErrMsg, SetBEMData_ErrMsgLen );  // SAC 4/10/13 - error message return
+											 pszSetBEMData_ErrMsg, SetBEMData_ErrMsgLen,   // SAC 4/10/13 - error message return
+											 pEval->pTargetedDebugInfo );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 
          // SAC 4/11/99 - (see previous 4/11/99 comment)
          //if (iAssignClassIdx > 0 && BEMPX_GetNumObjects( iAssignClassIdx ) > iNumAssignComps)
@@ -1629,6 +1634,8 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_CompIdx      :  // SAC 11/14/16 - moved here since "ComponentIndex" can now include an object reference property argument
       case BF_AddCSERptCol :  // SAC 11/14/16 - added "AddCSEReportCol" w/ second argument that may be object cseReportCol reference property
       case BF_GlobRefSymStr : // SAC 4/4/18
+		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
          {
             int iCompType = 0;  // SAC 1/4/01 - added to facilitate parsing of new BF_CountNoRefs func
             if (crntFunc == BF_CountNoRefs)
@@ -1661,12 +1668,13 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
             if (iRefCompID > 0 && bTransformIDOK)  // lMDBID >= 1000000 )
             {
 					// SAC 1/3/02 - Added code to prevent multiple indirections for certain Sum, Min, Max & Count functions
-               if ( crntFunc == BF_SumRevRef   || crntFunc == BF_MaxRevRef   || crntFunc == BF_MinRevRef   ||
-                    crntFunc == BF_CountRefs   || crntFunc == BF_CountUPRefs || crntFunc == BF_CountNoRefs ||
-                    crntFunc == BF_MaxRevRefC  || crntFunc == BF_MaxAllComp  || crntFunc == BF_MaxRevRefA  ||   // SAC 11/10/04
-                    crntFunc == BF_BitMatchCmp || crntFunc == BF_BitMatchCnt || crntFunc == BF_SumToArray  ||   // SAC 4/2/02  // SAC 7/20/06
-                    crntFunc == BF_SumRevRefEx || crntFunc == BF_CompArray   ||   // SAC 8/1/06  // SAC 3/7/11
-                    crntFunc == BF_ListRevRef  || crntFunc == BF_ListRevRefIf )   // SAC 1/26/15
+               if ( crntFunc == BF_SumRevRef   || crntFunc == BF_MaxRevRef    || crntFunc == BF_MinRevRef   ||
+                    crntFunc == BF_CountRefs   || crntFunc == BF_CountUPRefs  || crntFunc == BF_CountNoRefs ||
+                    crntFunc == BF_MaxRevRefC  || crntFunc == BF_MaxAllComp   || crntFunc == BF_MaxRevRefA  ||   // SAC 11/10/04
+                    crntFunc == BF_BitMatchCmp || crntFunc == BF_BitMatchCnt  || crntFunc == BF_SumToArray  ||   // SAC 4/2/02  // SAC 7/20/06
+                    crntFunc == BF_SumRevRefEx || crntFunc == BF_CompArray    ||   // SAC 8/1/06  // SAC 3/7/11
+                    crntFunc == BF_ListRevRef  || crntFunc == BF_ListRevRefIf ||   // SAC 1/26/15
+                    crntFunc == BF_UListRevRef || crntFunc == BF_UListRevRefIf )   // SAC 8/22/19
                   lMDBID = 0;
                else
                {	int iError=0;
@@ -1743,7 +1751,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_IfValidAnd :  // arguments can be Local*/Parent*/Global* arguments
       case BF_ValidOr    :  // arguments can be Local*/Parent*/Global* arguments
 		case BF_SymString  :  // arguments can be Local*/Parent*/Global* arguments
-      case BF_HrlyResMltNEM :  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <SaleHrlyMultiplier>, <"OtherSaleEnduseOne">, ... )
+      case BF_HrlyResMltNEM :  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <SaleHrlyMultiplier>, <"OtherSaleEnduseOne">, ... )
 		case BF_Par2SymStr    :  // SAC 4/10/14
 		case BF_Par3SymStr    :  // SAC 4/10/14
 		case BF_LocRefSymStr  :  // SAC 4/10/14
@@ -1751,6 +1759,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 		case BF_ParRefSymStr  :  // SAC 4/10/14
 		case BF_Par2RefSymStr :  // SAC 4/10/14
 		case BF_Par3RefSymStr :  // SAC 4/10/14
+		case BF_SchDayHrsStr  :  // SAC 10/6/19
          {	bool bDoneParsingLocPar = false;
 						/* SAC 1/30/15 - logic to ensure all arguments evaluate via *Valid() functions for certain functions */
 						if (crntFunc == BF_IfValidAnd)
@@ -2030,7 +2039,9 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          break;
 
       case BF_ParCompType :      // SAC 2/16/10 - added
-         // No arguments for ParentComponentType(), so we should never get here.
+      case BF_Par2CompType :     // SAC 9/5/19 - added
+      case BF_Par3CompType :     // SAC 9/5/19 - added
+         // No arguments for Parent*ComponentType(), so we should never get here.
          break;
 
       case BF_CompType :      // SAC 8/20/12 - added
@@ -2065,8 +2076,8 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          break;
 
       case BF_HrlyResSum :   // SAC 5/15/12 - HourlyResultSum( <"RunName">, <"MeterName">, <"EnduseOne">, ... )
-      case BF_HrlyResMult :  // SAC 5/15/12 - ApplyHourlyResultMultipliers( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
-      case BF_HrlyResMltNeg :  // SAC 10/4/17 - ApplyHourlyResultMultipliers_Neg( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
+      case BF_HrlyResMult :  // SAC 5/15/12 - ApplyHourlyResultMultipliers( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
+      case BF_HrlyResMltNeg :  // SAC 10/4/17 - ApplyHourlyResultMultipliers_Neg( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
       case BF_CopyHrlyRes :  // SAC 10/5/17 - CopyHourlyResults( <"SrcRunName">, <"SrcMeterName">, <"SrcEnduse">, <"DestRunName">, <"DestMeterName">, <"DestEnduseOne"> )
          // no arguments needing parsing - should never get here.
          break;
@@ -2870,6 +2881,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_MinChildC  :  // SAC 10/18/14
 		case BF_ListRevRef   :  // SAC 1/26/15 - ListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		case BF_ListRevRefIf :  // SAC 1/26/15 - ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		case BF_UListRevRef   :  // SAC 8/22/19 - UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		case BF_UListRevRefIf :  // SAC 8/22/19 - UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
                             BEMProcSumChildrenAllOrRevRef( op, nArgs, stack, pEval, error );
                             break;
 
@@ -3414,7 +3427,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												else
 												{	// add as new child of Local object
 					   							if (BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PolyLp:Parent" ), BEMP_Str,
-																					(void*) sParentName.toLocal8Bit().constData(), BEMO_User, iPolyLpObjIdx ) < 0)
+																					(void*) sParentName.toLocal8Bit().constData(), BEMO_User, iPolyLpObjIdx, BEMS_UserDefined,
+																					BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
 														sErrMsg = QString( "CreatePolyLpChild() error setting parent/child relationship (parent class: %1, index: %2, PolyLp index: %3)." ).arg(
 																				QString::number( BEMPX_GetClassID( pEval->lLocDBID ) ), QString::number( pEval->iLocObjIdx ), QString::number( iPolyLpObjIdx ) );
 											}	}
@@ -4644,12 +4658,26 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            break;  }
 
 
-      case BF_ParCompType : {    // SAC 2/16/10 - added ParentComponentType() function - no arguments, simply return component type string of parent component (or "none" if no parent exists)
+      case BF_ParCompType :      // SAC 2/16/10 - added ParentComponentType() function - no arguments, simply return component type string of parent component (or "none" if no parent exists)
+      case BF_Par2CompType :     // SAC 9/5/19 - same as ParentComponentType() but returns GrandParent component type string
+      case BF_Par3CompType : {   // SAC 9/5/19 - same as ParentComponentType() but returns GreatGrandParent component type string
                            QString sParCompType = "none";
                            int iError;
                            BEMObject* pPrimObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( pEval->lPrimDBID ), iError, pEval->iPrimObjIdx, pEval->ePrimObjType );
                            if (pPrimObj && pPrimObj->getParent() && pPrimObj->getParent()->getClass())
-                              sParCompType = pPrimObj->getParent()->getClass()->getShortName();
+                           {  if (op == BF_ParCompType)
+                           		sParCompType = pPrimObj->getParent()->getClass()->getShortName();
+                           	else		// SAC 9/5/19 - added logic for Grand & GreatGrand parent retrieval
+                           	{	BEMObject* pParObj = pPrimObj->getParent();
+		                           if (pParObj && pParObj->getParent() && pParObj->getParent()->getClass())
+		                           {	if (op == BF_Par2CompType)
+		                           		sParCompType = pParObj->getParent()->getClass()->getShortName();
+		                           	else
+		                           	{	BEMObject* pPar2Obj = pParObj->getParent();
+				                           if (pPar2Obj && pPar2Obj->getParent() && pPar2Obj->getParent()->getClass())
+		      		                     {	if (op == BF_Par3CompType)
+		            		               		sParCompType = pPar2Obj->getParent()->getClass()->getShortName();
+                           }	}	}	}	}
 
                            ExpNode* pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                            pNode->type = EXP_String;
@@ -5165,16 +5193,16 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpxStackPush( stack, pNode );
                            break; }
 
-      case BF_HrlyResMult :   // SAC 5/15/12 - ApplyHourlyResultMultipliers( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
+      case BF_HrlyResMult :   // SAC 5/15/12 - ApplyHourlyResultMultipliers( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
       								// SAC 9/22/17 - inserted new arguments 4,5,6 (SecHrlyTblName, SecHrlyTblCol# & SecHrlyMult) to enable GHG adders to TDV data for emissions-based analysis
       								// SAC 10/4/17 - modified routine to allow <"HrlyMultTableName"> of "none" to cause a single float stored in #TableDepColumn to be applied to the hourly results
-      case BF_HrlyResMltNeg :  // SAC 10/4/17 - ApplyHourlyResultMultipliers_Neg( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
+      case BF_HrlyResMltNeg :  // SAC 10/4/17 - ApplyHourlyResultMultipliers_Neg( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"EnduseOne">, ... )
       								 //					(same as BF_HrlyResMult but storing & applying multipliers only to negative values in Meter-Enduse array)
                         {  ExpNode* pNode = NULL;
 									BOOL bArgsOK = FALSE;
 									double dResult = -99999.0;
-                           if (nArgs < 9 || nArgs > 16)
-                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers() arguments (must be 9-16, all strings except #3, 5 & 6 integer table column indices (3,5) & conversion factor(6))" );
+                           if (nArgs < 10 || nArgs > 17)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers() arguments (must be 10-17, all strings except #3, 4, 6 & 7 integer table column indices (3,6), hourly result multiplier (4) & conversion factor (7))" );
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (arg > 1)  // don't delete last argument - used to store return value
@@ -5187,23 +5215,25 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            }
                            else
                            {	// valid # of arguments
-										QString sArgs[16];
+										QString sArgs[17];
 										int iTableColumn = -1, iSecTblCol = -1;
-										double dConstHrlyMult = -999, dSecTblMult = 1.0;
+										double dConstHrlyMult = -999, dSecTblMult = 1.0, dHrlyMult = 1.0;		// SAC 8/26/19 - added dHrlyMult
 										bArgsOK = TRUE;
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (pNode && arg == 3 && pNode->type == EXP_Value)
 												dConstHrlyMult = pNode->fValue;
-                                 else if (pNode && arg == 5 && pNode->type == EXP_Value)
-												iSecTblCol   = (int) pNode->fValue;
+                                 else if (pNode && arg == 4 && pNode->type == EXP_Value)	// SAC 8/26/19
+												dHrlyMult = pNode->fValue;
                                  else if (pNode && arg == 6 && pNode->type == EXP_Value)
+												iSecTblCol   = (int) pNode->fValue;
+                                 else if (pNode && arg == 7 && pNode->type == EXP_Value)
 												dSecTblMult  =       pNode->fValue;
-											else if (pNode && arg != 3 && arg != 5 && arg != 6 && pNode->type == EXP_String)
+											else if (pNode && arg != 3 && arg != 4 && arg != 6 && arg != 7 && pNode->type == EXP_String)
 												sArgs[arg-1] = (char*) pNode->pValue;
 											else
                            	   {	bArgsOK = FALSE;
-												ExpSetErr( error, EXP_RuleProc, QString( "Invalid ApplyHourlyResultMultipliers() function argument #%1 type (str, str, int, str, int, float, str, str, str<, str, str...>)." ).arg( QString::number(arg) ) );
+												ExpSetErr( error, EXP_RuleProc, QString( "Invalid ApplyHourlyResultMultipliers() function argument #%1 type (str, str, int, float, str, int, float, str, str, str<, str, str...>)." ).arg( QString::number(arg) ) );
                                  }
                                  if (arg > 1)  // don't delete last argument - used to store return value
                                     ExpxNodeDelete( pNode );
@@ -5224,8 +5254,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 												bHrlyMultTableOK = false;
 											// copy of this table population stuff also exported via routine in Table.cpp
 												pTable = ruleSet.getTablePtr( sArgs[1].toLocal8Bit().constData() );
-												bHaveSecTbl = (sArgs[3].length() > 0 && sArgs[3].compare( "none", Qt::CaseInsensitive ) != 0);
-												pSecTable = (!bHaveSecTbl ? NULL : ruleSet.getTablePtr( sArgs[3].toLocal8Bit().constData() ));
+												bHaveSecTbl = (sArgs[4].length() > 0 && sArgs[4].compare( "none", Qt::CaseInsensitive ) != 0);
+												pSecTable = (!bHaveSecTbl ? NULL : ruleSet.getTablePtr( sArgs[4].toLocal8Bit().constData() ));
 												if (pTable == NULL)
 													ExpSetErr( error, EXP_RuleProc, "Table referenced by ApplyHourlyResultMultipliers() function argument not found." );
 												else if (iTableColumn > pTable->getNCols())
@@ -5241,10 +5271,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											{	double dHrlyRes[8760];
 												char szErrMsg[80];
 												szErrMsg[0] = '\0';
-												dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dHrlyRes,  sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(),
-																					sArgs[8].toLocal8Bit().constData(), sArgs[9].toLocal8Bit().constData(), sArgs[10].toLocal8Bit().constData(),
-																					sArgs[11].toLocal8Bit().constData(), sArgs[12].toLocal8Bit().constData(), sArgs[13].toLocal8Bit().constData(),
-																					sArgs[14].toLocal8Bit().constData(), sArgs[15].toLocal8Bit().constData() );
+												dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dHrlyRes,  sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData(),
+																					sArgs[9].toLocal8Bit().constData(), sArgs[10].toLocal8Bit().constData(), sArgs[11].toLocal8Bit().constData(),
+																					sArgs[12].toLocal8Bit().constData(), sArgs[13].toLocal8Bit().constData(), sArgs[14].toLocal8Bit().constData(),
+																					sArgs[15].toLocal8Bit().constData(), sArgs[16].toLocal8Bit().constData() );
 												if (szErrMsg[0] != '\0')
 													ExpSetErr( error, EXP_RuleProc, szErrMsg );
 												else if (WithinMargin( dResult, -99999.0, 0.1 ))
@@ -5256,12 +5286,12 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													{	if (op == BF_HrlyResMltNeg && dHrlyRes[iHr] >= 0)
 															dHrlyRes[iHr] = 0;		// SAC 10/4/17 - don't apply multiplier and zero out Meter-Enduse array values that are not < 0 for ApplyHourlyResultMultipliers_Neg() function
 														else if (bHrlyMultIsConst)
-															dHrlyRes[iHr] *= dConstHrlyMult;  // APPLY single (constant) multiplier
+															dHrlyRes[iHr] *= (dConstHrlyMult * dHrlyMult);  // APPLY single (constant) multiplier
 														else if (pTable->GrabRecord( iHr+1, iTableColumn, &dTblVal ))  //, BOOL bVerboseOutput=FALSE );  // SAC 5/15/12
 														{	if (bHaveSecTbl && pSecTable->GrabRecord( iHr+1, iSecTblCol, &dSecTblVal ))
-																dHrlyRes[iHr] *= (dTblVal + (dSecTblVal*dSecTblMult));  // APPLY hourly multiplier factors (w/ adder)
+																dHrlyRes[iHr] *= ((dTblVal + (dSecTblVal*dSecTblMult)) * dHrlyMult);  // APPLY hourly multiplier factors (w/ adder)
 															else
-																dHrlyRes[iHr] *= dTblVal;  // APPLY hourly multiplier factors
+																dHrlyRes[iHr] *= (dTblVal * dHrlyMult);  // APPLY hourly multiplier factors
 															dHrlySum += dHrlyRes[iHr];
 														}
 														else
@@ -5275,7 +5305,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 													{	if (sArgs[0].compare("none", Qt::CaseInsensitive) == 0)
 															dResult = dHrlySum;	// only return sum of multiplied array - don't add array into an hourly enduse
 														else
-															dResult = BEMPX_AddHourlyResultArray( dHrlyRes, sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(),
+															dResult = BEMPX_AddHourlyResultArray( dHrlyRes, sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData(),
 																															sArgs[0].toLocal8Bit().constData() );
 														if (WithinMargin( dResult, -99999.0, 0.1 ))
 															ExpSetErr( error, EXP_RuleProc, "Error adding hourly result array within ApplyHourlyResultMultipliers*() function." );
@@ -5358,8 +5388,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            ExpNode* pNode = NULL;
 									BOOL bArgsOK = FALSE;
 									double dResult = -99999.0;
-                           if (nArgs < 11 || nArgs > 19)
-                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 11-19, all strings except #s3 & 5 integer table column indices, #6 TDV adder multiplier, #11 NEM constant & #12 sale enduse multiplier)" );
+                           if (nArgs < 12 || nArgs > 20)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of ApplyHourlyResultMultipliers_NEM() arguments (must be 12-20, all strings except #s3 & 6 integer table column indices, #4 hrly result multiplier, #7 TDV adder multiplier, #12 NEM constant & #13 sale enduse multiplier)" );
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (arg > 1)  // don't delete last argument - used to store return value
@@ -5372,23 +5402,25 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            }
                            else
                            {	// valid # of arguments
-										QString sArgs[19];
+										QString sArgs[20];
 										int iTableColumn = -1, iSecTblCol = -1;
-										double dNEMconst = 0.0, dHrlyMult=1.0, dSecTblMult = 1.0;
+										double dNEMconst = 0.0, dSaleOthrHrlyMult=1.0, dSecTblMult = 1.0, dHrlyMult = 1.0;		// SAC 8/26/19 - added dHrlyMult
 										bArgsOK = TRUE;
                               for ( int arg = nArgs; arg > 0; arg-- )
                               {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
                                  if (pNode && arg == 3 && pNode->type == EXP_Value)
 												iTableColumn = (int) pNode->fValue;
-                                 else if (pNode && arg == 5 && pNode->type == EXP_Value)
-												iSecTblCol   = (int) pNode->fValue;
+                                 else if (pNode && arg == 4 && pNode->type == EXP_Value)
+												dHrlyMult    =       pNode->fValue;
                                  else if (pNode && arg == 6 && pNode->type == EXP_Value)
+												iSecTblCol   = (int) pNode->fValue;
+                                 else if (pNode && arg == 7 && pNode->type == EXP_Value)
 												dSecTblMult  =       pNode->fValue;
-                                 else if (pNode && arg == 11 && pNode->type == EXP_Value)
-												dNEMconst = pNode->fValue;
                                  else if (pNode && arg == 12 && pNode->type == EXP_Value)
-												dHrlyMult = pNode->fValue;
-											else if (pNode && arg != 3 && arg != 5 && arg != 6 && arg != 11 && arg != 12 && pNode->type == EXP_String)
+												dNEMconst = pNode->fValue;
+                                 else if (pNode && arg == 13 && pNode->type == EXP_Value)
+												dSaleOthrHrlyMult = pNode->fValue;
+											else if (pNode && arg != 3 && arg != 4 && arg != 6 && arg != 7 && arg != 12 && arg != 13 && pNode->type == EXP_String)
 												sArgs[arg-1] = (char*) pNode->pValue;
 											else
                            	   {	bArgsOK = FALSE;
@@ -5419,22 +5451,22 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											{	double dTotHrlyRes[8760], dSaleHrlyRes[8760], dOthrHrlyRes[8760];
 												char szErrMsg[80];
 												szErrMsg[0] = '\0';
-												double dTot  = BEMPX_GetHourlyResultArray( szErrMsg, 80, dTotHrlyRes,  sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(), sArgs[9].toLocal8Bit().constData() );
+												double dTot  = BEMPX_GetHourlyResultArray( szErrMsg, 80, dTotHrlyRes,  sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData(), sArgs[10].toLocal8Bit().constData() );
 												if (szErrMsg[0] != '\0')
 													ExpSetErr( error, EXP_RuleProc, szErrMsg );
 												else if (WithinMargin( dTot, -99999.0, 0.1 ))
 													ExpSetErr( error, EXP_RuleProc, "Error encountered retrieving total enduse hourly results to be referenced by ApplyHourlyResultMultipliers_NEM() function." );
 												else
-												{	double dSale = BEMPX_GetHourlyResultArray( szErrMsg, 80, dSaleHrlyRes, sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData() );
+												{	double dSale = BEMPX_GetHourlyResultArray( szErrMsg, 80, dSaleHrlyRes, sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData(), sArgs[9].toLocal8Bit().constData() );
 													if (szErrMsg[0] != '\0')
 														ExpSetErr( error, EXP_RuleProc, szErrMsg );
 													else if (WithinMargin( dSale, -99999.0, 0.1 ))
 														ExpSetErr( error, EXP_RuleProc, "Error encountered retrieving sale enduse hourly results to be referenced by ApplyHourlyResultMultipliers_NEM() function." );
 													else
-													{	dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dOthrHrlyRes,  sArgs[6].toLocal8Bit().constData(),  sArgs[7].toLocal8Bit().constData() , sArgs[12].toLocal8Bit().constData() ,
-																							sArgs[13].toLocal8Bit().constData(), sArgs[14].toLocal8Bit().constData(), sArgs[15].toLocal8Bit().constData(), sArgs[16].toLocal8Bit().constData(),
-																							sArgs[17].toLocal8Bit().constData(), sArgs[18].toLocal8Bit().constData() );
-														if (szErrMsg[0] != '\0' && sArgs[12].length() > 0)
+													{	dResult = BEMPX_GetHourlyResultArray( szErrMsg, 80, dOthrHrlyRes,  sArgs[7].toLocal8Bit().constData(),  sArgs[8].toLocal8Bit().constData() , sArgs[13].toLocal8Bit().constData() ,
+																							sArgs[14].toLocal8Bit().constData(), sArgs[15].toLocal8Bit().constData(), sArgs[16].toLocal8Bit().constData(), sArgs[17].toLocal8Bit().constData(),
+																							sArgs[18].toLocal8Bit().constData(), sArgs[19].toLocal8Bit().constData() );
+														if (szErrMsg[0] != '\0' && sArgs[13].length() > 0)
 															ExpSetErr( error, EXP_RuleProc, szErrMsg );
 														else
 														{	int iHr;
@@ -5443,12 +5475,19 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 																for (iHr=0; iHr<8760; iHr++)
 																	dOthrHrlyRes[iHr] = 0.0;
 															}
-														// apply <SaleHrlyMultiplier> if not = 1.0 - SAC 4/7/17
+														// apply hourly result mult to ALL result arrays - SAC 8/26/19
 															if (dHrlyMult != 1.0)
 															{	for (iHr=0; iHr<8760; iHr++)
-																{	dTotHrlyRes[ iHr] -= (dSaleHrlyRes[iHr] + dOthrHrlyRes[iHr]);	// remove effect of original sale enduses
-																	dSaleHrlyRes[iHr] *= dHrlyMult;											// apply multiplier to sale enduse series
+																{	dTotHrlyRes[ iHr] *= dHrlyMult;
+																	dSaleHrlyRes[iHr] *= dHrlyMult;
 																	dOthrHrlyRes[iHr] *= dHrlyMult;
+															}	}
+														// apply <SaleHrlyMultiplier> if not = 1.0 - SAC 4/7/17
+															if (dSaleOthrHrlyMult != 1.0)
+															{	for (iHr=0; iHr<8760; iHr++)
+																{	dTotHrlyRes[ iHr] -= (dSaleHrlyRes[iHr] + dOthrHrlyRes[iHr]);	// remove effect of original sale enduses
+																	dSaleHrlyRes[iHr] *= dSaleOthrHrlyMult;											// apply multiplier to sale enduse series
+																	dOthrHrlyRes[iHr] *= dSaleOthrHrlyMult;
 																	dTotHrlyRes[ iHr] += (dSaleHrlyRes[iHr] + dOthrHrlyRes[iHr]);	// add back effect of multiplied sale enduses
 															}	}
 															double dTblVal, dSecTblVal, dHrlySum=0.0, dSell;
@@ -5478,7 +5517,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 															{	if (sArgs[0].compare("none", Qt::CaseInsensitive) == 0)
 																	dResult = dHrlySum;	// only return sum of multiplied array - don't add array into an hourly enduse
 																else
-																	dResult = BEMPX_AddHourlyResultArray( dSaleHrlyRes, sArgs[6].toLocal8Bit().constData(), sArgs[7].toLocal8Bit().constData(),
+																	dResult = BEMPX_AddHourlyResultArray( dSaleHrlyRes, sArgs[7].toLocal8Bit().constData(), sArgs[8].toLocal8Bit().constData(),
 																																		 sArgs[0].toLocal8Bit().constData() );
 																if (WithinMargin( dResult, -99999.0, 0.1 ))
 																	ExpSetErr( error, EXP_RuleProc, "Error adding hourly result array within ApplyHourlyResultMultipliers_NEM() function." );
@@ -5558,6 +5597,82 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                            {	pNode->type = EXP_String;
                               pNode->pValue = malloc( sSumSchName.length() + 1 );
                               strcpy( (char*) pNode->pValue, (const char*) sSumSchName.toLocal8Bit().constData() );
+                           }
+                           // Push result argument node back onto the stack to serve as return value
+                           ExpxStackPush( stack, pNode );
+                           break; }
+
+		case BF_SchDayHrsStr  :  // SAC 10/6/19 - SchDayHoursString( DaySchRef ) - return array of 24 DaySch hourly values (MFamProto)
+                        {  ExpNode* pNode = NULL;
+									QString sHrArray;
+                           if (nArgs != 1)
+                           {  ExpSetErr( error, EXP_RuleProc, "Invalid number of SchDayHoursString() arguments (must be 1: DaySchRef)" );
+										if (nArgs < 1)
+											pNode = new ExpNode;
+										else
+                              {	for ( int arg = nArgs; arg > 0; arg-- )
+	                              {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
+   	                              if (arg > 1)  // don't delete last argument - used to store return value
+      	                              ExpxNodeDelete( pNode );
+         	                        else if (pNode && pNode->type == EXP_String)
+            	                     {  free( pNode->pValue );
+               	                     pNode->pValue = NULL;
+                           }	}	}	}
+                        	else
+                        	{	BOOL bArgsOK = TRUE;
+                              QString sSchDayName;
+                           	// valid # of arguments
+										int arg;
+                              for (arg = nArgs; (bArgsOK && arg > 0); arg--)
+                              {  pNode = ExpxStackPop( stack );  // Pop and delete all nodes off stack
+											if (arg == 1 && pNode->type == EXP_String)
+												sSchDayName = (char*) pNode->pValue;
+											else
+                           	   {	bArgsOK = FALSE;
+                           	   	switch (arg)
+                           	   	{	case  1 :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #1: expecting string (SchDay object name)." ) );
+                           	   		default :  ExpSetErr( error, EXP_RuleProc, QString( "Invalid SchDayHoursString() function argument #%1" ).arg( QString::number(arg) ) );
+     	                           }	}
+     	                           if (arg > 1)
+     	                              ExpxNodeDelete( pNode );
+        	                        else if (pNode && pNode->type == EXP_String)
+           	                     {  free( pNode->pValue );
+              	                     pNode->pValue = NULL;
+										}	}
+										if (bArgsOK && !sSchDayName.isEmpty())
+										{	int iError;
+											int iSchDayClass = BEMPX_GetDBComponentID( "SchDay" );		assert( iSchDayClass > 0 );
+											BEMObject* pSchDayObj = BEMPX_GetObjectByNameQ( iSchDayClass, iError, sSchDayName );
+											if (pSchDayObj)
+											{	int iSchDayObjIdx = BEMPX_GetObjectIndex( pSchDayObj->getClass(), pSchDayObj );
+												if (iSchDayObjIdx >= 0)
+												{	double daVals[24];
+													int iNumVals = BEMPX_GetFloatArray( BEMPX_GetDatabaseID( "Hr", iSchDayClass ), daVals, 24 /*iMaxValues*/, 0.0 /*dDefault*/, BEMP_Flt, iSchDayObjIdx );  //, int iObjType=BEMO_User, int iBEMProcIdx=-1 );
+													if (iNumVals == 24)
+														sHrArray = QString( "%1,%2,%3,%4,%5,%6,%7,%8,%9,%10,%11,%12,%13,%14,%15,%16,%17,%18,%19,%20,%21,%22,%23,%24" ).arg( QString::number(daVals[0]) ).arg( QString::number(daVals[1]) ).arg(
+																			QString::number(daVals[2]) ).arg( QString::number(daVals[3]) ).arg( QString::number(daVals[4]) ).arg( QString::number(daVals[5]) ).arg( QString::number(daVals[6]) ).arg( QString::number(daVals[7]) ).arg(
+																			QString::number(daVals[8]) ).arg( QString::number(daVals[9]) ).arg( QString::number(daVals[10]) ).arg( QString::number(daVals[11]) ).arg( QString::number(daVals[12]) ).arg( QString::number(daVals[13]) ).arg(
+																			QString::number(daVals[14]) ).arg( QString::number(daVals[15]) ).arg( QString::number(daVals[16]) ).arg( QString::number(daVals[17]) ).arg( QString::number(daVals[18]) ).arg( QString::number(daVals[19]) ).arg(
+																			QString::number(daVals[20]) ).arg( QString::number(daVals[21]) ).arg( QString::number(daVals[22]) ).arg( QString::number(daVals[23]) );
+													else
+														bArgsOK = FALSE;
+												}
+												else
+													bArgsOK = FALSE;
+											}
+											else
+												bArgsOK = FALSE;
+//											sHrArray = QString( "SchDay '%1' values" ).arg( sSchDayName );
+									}	}
+
+									if (sHrArray.isEmpty())
+									{  pNode->type = EXP_Invalid;
+	                           pNode->fValue = 0;
+									}
+									else
+                           {	pNode->type = EXP_String;
+                              pNode->pValue = malloc( sHrArray.length() + 1 );
+                              strcpy( (char*) pNode->pValue, (const char*) sHrArray.toLocal8Bit().constData() );
                            }
                            // Push result argument node back onto the stack to serve as return value
                            ExpxStackPush( stack, pNode );
@@ -6071,8 +6186,8 @@ int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStr
 	{	// only connection between Zone and Attic can be via CeilingBelowAttic or IntWall objects - and both must be children of the Zone
 		int iZnClsID    = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
 		int iAtticClsID = BEMPX_GetDBComponentID( "Attic" );						assert( iAtticClsID > 0 );
-		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
-			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentAttics' option for rule where primary object type not 'Zone'." );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ) && iZnClsID != BEMPX_GetDBComponentID( "OtherZone" ))		// SAC 10/4/19 - allow for OtherZone objects (MFamProto)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentAttics' option for rule where primary object type not 'Zone' or 'OtherZone'." );
 		else if (lDBID_RptColRef < BEM_COMP_MULT)
 			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentAttics' option due to invalid attic reference database ID (2nd argument)." );
 		else if (BEMPX_GetNumObjects( iAtticClsID ) < 1)
@@ -6139,8 +6254,8 @@ int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStr
 	{	// connections between Zone and Garage can be via IntWall, InteriorFloor & InteriorCeiling objects - and most can be children of EITHER the Zone or Garage
 		int iZnClsID = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
 		int iGarageClsID = BEMPX_GetDBComponentID( "Garage" );				assert( iGarageClsID > 0 );
-		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
-			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentGarages' option for rule where primary object type not 'Zone'." );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ) && iZnClsID != BEMPX_GetDBComponentID( "OtherZone" ))		// SAC 10/4/19 - allow for OtherZone objects (MFamProto)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentGarages' option for rule where primary object type not 'Zone' or 'OtherZone'." );
 		else if (lDBID_RptColRef < BEM_COMP_MULT)
 			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentGarages' option due to invalid garage reference database ID (2nd argument)." );
 		else if (BEMPX_GetNumObjects( iGarageClsID ) < 1)
@@ -6217,8 +6332,8 @@ int AddCSEReportColumn( int nArgs, ExpStack* stack, QString& sErrMsg, ExpEvalStr
 	{	// only connection between Zone and CrawlSpace can be via FloorOverCrawl objects - and they must be children of the Zone
 		int iZnClsID    = BEMPX_GetClassID( pEval->lPrimDBID );					assert( iZnClsID > 0 );  
 		int iCrlSpcClsID = BEMPX_GetDBComponentID( "CrawlSpace" );						assert( iCrlSpcClsID > 0 );
-		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ))
-			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentCrlSpcs' option for rule where primary object type not 'Zone'." );
+		if (iZnClsID != BEMPX_GetDBComponentID( "Zone" ) && iZnClsID != BEMPX_GetDBComponentID( "OtherZone" ))		// SAC 10/4/19 - allow for OtherZone objects (MFamProto)
+			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentCrlSpcs' option for rule where primary object type not 'Zone' or 'OtherZone'." );
 		else if (lDBID_RptColRef < BEM_COMP_MULT)
 			sErrMsg = QString( "Cannot process AddCSEReportCol() 'AdjacentCrlSpcs' option due to invalid crawl space reference database ID (2nd argument)." );
 		else if (BEMPX_GetNumObjects( iCrlSpcClsID ) < 1)
@@ -6477,16 +6592,19 @@ void AssignOrCreateComp( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruct* 
 					{	if (!baArgUndef[iArg])
 							switch( iaPropType[iArg] )
 							{	case  BEMP_Int :	lData = (long) faArgs[iArg];
-														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Int, (void*) &lData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Int, (void*) &lData, BEMO_User, iNumObjs, BEMS_UserDefined,
+																					 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
 															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set int to new object (DBID '%s'/%ld, value %ld)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % lData );
 														break;
 								case  BEMP_Flt :	fData = faArgs[iArg];
-														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Flt, (void*) &fData, BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_Flt, (void*) &fData, BEMO_User, iNumObjs, BEMS_UserDefined,
+																					 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
 															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set float to new object (DBID '%s'/%ld, value %g)" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % fData );
 														break;
 								case  BEMP_Str :	sData = saArgs[iArg].c_str();
 														if (BEMPX_SetBEMData( laDBID[iArg], BEMP_QStr, (void*) &sData,  // BEMP_Str, (void*) sData.toLocal8Bit().constData(), 
-																							BEMO_User, iNumObjs /*BEM_PropertyStatus eStatus=BEMS_UserDefined,*/ ) < 0)
+																					 BEMO_User, iNumObjs, BEMS_UserDefined,
+																					 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
 															sErrMsg = boost::str( boost::format( "AssignOrCreateComp() Error:  Unable to set string to new object (DBID '%s'/%ld, string '%s')" ) % saDBIDs[iArg].c_str() % laDBID[iArg] % sData.toLocal8Bit().constData() );
 														break;
 					}		}
@@ -7067,14 +7185,17 @@ bool StoreChildObjectPtrs( BEMObject* pParentObj, int iGen, vector<BEMObject*>& 
       // SAC 2/15/13 - SumChildrenIf( ChildComp:ParamDBID, <Condition> ), where <Condition> is typically something like "ChildComp:ParamDBID = "Option""
 		// SAC 1/26/15 - BF_ListRevRef   : ListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 		// SAC 1/26/15 - BF_ListRevRefIf : ListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		// SAC 8/22/19 - BF_UListRevRef   : UniqueListRevRef(   RevRefObj:Prop,              "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
+		// SAC 8/22/19 - BF_UListRevRefIf : UniqueListRevRefIf( RevRefObj:Prop, <Condition>, "fmt str 1", "fmt str 2-(N-1)", "fmt str last", <1 or more arguments to echo> )
 static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )
 {
    BOOL bRevRefFunc = (	op == BF_SumRevRef || op == BF_MaxRevRef || op == BF_MinRevRef || op == BF_MaxRevRefC || op == BF_MaxRevRefA || op == BF_SumRevRefEx ||  // SAC 1/3/02  // SAC 11/10/04  // SAC 8/1/06
-   							op == BF_ListRevRef || op == BF_ListRevRefIf );		// SAC 1/26/15
+   							op == BF_ListRevRef || op == BF_ListRevRefIf || op == BF_UListRevRef || op == BF_UListRevRefIf );		// SAC 1/26/15   // SAC 8/22/19
    bool bGetMax     = (op == BF_MaxChild || op == BF_MaxAll || op == BF_MaxRevRef || op == BF_MaxRevRefC || op == BF_MaxAllComp || op == BF_MaxRevRefA || op == BF_MaxChildC);  // SAC 1/25/02  // SAC 11/10/04  // SAC 10/18/14
    bool bGetMin     = (op == BF_MinChild || op == BF_MinAll || op == BF_MinRevRef || op == BF_MinChildC);  // SAC 10/18/14
    bool bGetCount   = (op == BF_CountRefs || op == BF_CountUPRefs || op == BF_CountOccur);  // SAC 1/3-4/02  // SAC 5/4/06
-   bool bStoreArgsForProcessing = (op == BF_ListRevRef || op == BF_ListRevRefIf);  // SAC 1/26/15
+   bool bStoreArgsForProcessing = (op == BF_ListRevRef || op == BF_ListRevRefIf || op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 1/26/15   // SAC 8/22/19
+	bool bStoreUniqueList = (op == BF_UListRevRef || op == BF_UListRevRefIf);  // SAC 8/22/19
    int i0FirstFormatStrArgIdx = -1;	// SAC 1/26/15
    bool bReturnArrayIdx = (op == BF_MaxRevRefA);   // SAC 11/10/04
 	int iOnlyChildGen = -1;  // used to restrict *Children*() routines to a FIXED, SINGLE generation, as opposed to traversing all possible generations (SAC 5/29/15)
@@ -7083,7 +7204,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
    double fResult = 0.0;
    QString sResult;
    int iMinMaxArrIdx = -1;   // SAC 11/10/04 - for BF_MaxRevRefA
-	BOOL bArgumentConditionExpected = (op == BF_SumAcrsIf || op == BF_SumChldIf || op == BF_ListRevRefIf);  // SAC 3/5/13  // SAC 1/26/15
+	BOOL bArgumentConditionExpected = (op == BF_SumAcrsIf || op == BF_SumChldIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf);  // SAC 3/5/13  // SAC 1/26/15  // SAC 8/22/19
 	BOOL bCondArgsNext = (op == BF_SumAcrsIf || op == BF_SumChldIf);		// SAC 1/26/15 - prevent arg parsing to expect condition args @ end of BF_ListRevRefIf - these will FOLLOW a series of 3 char strings and be in arg #s 2-4
 	BOOL bArgCondParsed=FALSE, bArgCondLeftParsed=FALSE, bArgCondRightParsed=FALSE;
 	QString sArgCond[2];
@@ -7200,11 +7321,11 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 				plParams[ arg-1 ] = (long) lMDBID;
 		}
 
-				assert( iNumConsecStringArgs < 3 || (op != BF_ListRevRef || arg == 2) || (op != BF_ListRevRefIf || arg == 3 || arg == 5) );		// check for unexpected format argument indexes...
-		if (iNumConsecStringArgs > 2 && ( i0FirstFormatStrArgIdx < 1 || (op == BF_ListRevRef   && arg < 3) ||
-																							 (op == BF_ListRevRefIf && arg < 6) ) )
+				assert( iNumConsecStringArgs < 3 || ((op != BF_ListRevRef && op != BF_UListRevRef) || arg == 2) || ((op != BF_ListRevRefIf && op != BF_UListRevRefIf) || arg == 3 || arg == 5) );		// check for unexpected format argument indexes...
+		if (iNumConsecStringArgs > 2 && ( i0FirstFormatStrArgIdx < 1 || ((op == BF_ListRevRef   || op == BF_UListRevRef  ) && arg < 3) ||
+																							 ((op == BF_ListRevRefIf || op == BF_UListRevRefIf) && arg < 6) ) )
 		{	i0FirstFormatStrArgIdx = arg-1;
-			if (op == BF_ListRevRefIf && arg < 4)
+			if ((op == BF_ListRevRefIf || op == BF_UListRevRefIf) && arg < 4)
 			{	// modify condition settings to reflect "!= 0" condition
 				bArgCondRightParsed = TRUE;
 				bArgCondParsed = TRUE;
@@ -7221,6 +7342,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       	ExpxNodeDelete( pThisNode );
    }
 
+//	QString sDbgLog;
 	BOOL bReturnUNDEFINED = FALSE;  // SAC 4/19/13
    if (!bAbort)
    {
@@ -7313,6 +7435,14 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
          ExpSetErr( error, EXP_RuleProc, "Invalid BEMProcSumChildrenAllOrRevRef() Operation Code" );
       }
 
+//if (bStoreUniqueList)
+//{	if (pPrimObj)
+//		sDbgLog = QString( "storing unique list for %1 '%2':" ).arg( pPrimObj->getClass()->getShortName(), pPrimObj->getName() );
+//	else
+//		sDbgLog = QString( "storing unique list for (unknown object):" );
+//	BEMPX_WriteLogFile( sDbgLog );
+//}
+
 		// SAC 8/1/06 - added code to handle fourth & fifth arguments to SumRevRefEx()
       int iExtendedFlag = 0;
       long lExtDBID = 0;
@@ -7400,6 +7530,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       vector<int> iaParentObjIdxs;  // SAC 1/4/02
       vector<int> ivObjIdxs;	// SAC 1/26/15
       int iMinMaxObjIdx = -1;
+      QVector<QString> qvsUniqueStrings;	// SAC 8/22/19
+      QVector<double>  qvdUniqueValues;
       for (iObj=0; (!bAbort) && (iObj<iNumObjs); iObj++)
       {
 			// SAC 1/3/02 - Added code to limit array looping via new third argument to *RevRef & second argument of CountRefs
@@ -7540,7 +7672,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 									{	pValProp = BEMPX_GetProperty( lArgCondDBID[iLR], iValErr, 0 /*iObjIdx*/, eObjType, i0Model /*0 iBEMProcIdx*/ );
 										iValObjIdx = 0 /*iObjIdx*/;		eValObjType = eObjType;
 									}
-									else if (op == BF_SumAcrsIf || op == BF_ListRevRefIf)
+									else if (op == BF_SumAcrsIf || op == BF_ListRevRefIf || op == BF_UListRevRefIf)
 									{	if (iArgCond1Class[iLR] == BEMPX_GetClassID( plParams[ 0 ] ))
 										{	pValProp = BEMPX_GetProperty( lArgCondDBID[iLR], iValErr, iObjIdx, eObjType, i0Model /*0 iBEMProcIdx*/ );
 											iValObjIdx = iObjIdx;		eValObjType = eObjType;
@@ -7552,7 +7684,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 										else
 										{	//assert( FALSE );  // only local & primary conditional data retrieval for now ... ??
 											bErrorPosted = TRUE;
-											sErrMsg = QString( "Condition look-ups restricted to local/looping and primary objects (%1)" ).arg( (op == BF_SumAcrsIf ? "SumAcrossIf" : (op == BF_ListRevRefIf ? "ListRevRef" : "???")) );
+											sErrMsg = QString( "Condition look-ups restricted to local/looping and primary objects (%1)" ).arg( (op == BF_SumAcrsIf ? "SumAcrossIf" : (op == BF_ListRevRefIf ? "ListRevRefIf" : (op == BF_UListRevRefIf ? "UniqueListRevRefIf" : "???"))) );
 	                              ExpSetErr( error, EXP_RuleProc, sErrMsg );
 										}
 									}
@@ -7701,7 +7833,45 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
                   if (bSumThisOne)   // SAC 8/1/06
 	               {
 		               if (bStoreArgsForProcessing)	// SAC 1/26/15 - store index of each object to echo via ListRevRef* function
-						      ivObjIdxs.push_back( iObjIdx );
+							{	if (!bStoreUniqueList)
+									ivObjIdxs.push_back( iObjIdx );
+								else
+								{	// if we ARE storing only a unique list, then ensure data uniqueness BEFORE adding iObjIdx to ivObjIdxs - SAC 8/22/19
+									ExpNode tempNode;
+									ExpNode_init( &tempNode );
+									long lDBID, iThisModel = i0Model;
+									lMDBID = (long long) plParams[ nArgs-1 ]+iArr;
+									GetBEMProcDataToNode( &tempNode, lMDBID, iObjIdx, eObjType, error, ruleSet.IsDataModel()/*bGetSymStr*/, pEval, TRUE /*bReturnInvalidWhenUndefined*/ );
+
+//if (tempNode.type == EXP_Invalid)
+//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > invalid BEM data" ).arg( QString::number( iObjIdx ) );
+//else if (tempNode.type == EXP_Value)
+//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > value %2" ).arg( QString::number( iObjIdx ), QString::number( tempNode.fValue ) );
+//else if (tempNode.type == EXP_String)
+//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > string '%2'" ).arg( QString::number( iObjIdx ), (char*) tempNode.pValue );
+//else
+//	sDbgLog = QString( "   checking for uniqueness > iObjIdx %1 > unknown node status" ).arg( QString::number( iObjIdx ) );
+//BEMPX_WriteLogFile( sDbgLog );
+
+									if (tempNode.type == EXP_Invalid)
+									{	// simply skip past ivalid data (?)
+									}
+									else if (tempNode.type == EXP_Value && qvdUniqueValues.indexOf( tempNode.fValue ) < 0)
+									{	qvdUniqueValues.append( tempNode.fValue );
+										ivObjIdxs.push_back( iObjIdx );
+									}
+									else if (tempNode.type == EXP_String && qvsUniqueStrings.indexOf( QString( (char*) tempNode.pValue ) ) < 0)
+									{	qvsUniqueStrings.append( QString( (char*) tempNode.pValue ) );
+										ivObjIdxs.push_back( iObjIdx );
+//sDbgLog = QString( "      unique > qvsUniqueStrings size %1 '%2' > ivObjIdxs size %3" ).arg( QString::number( qvsUniqueStrings.size() ), qvsUniqueStrings.at( qvsUniqueStrings.size()-1 ), QString::number( ivObjIdxs.size() ) );
+//BEMPX_WriteLogFile( sDbgLog );
+									}
+									else
+									{	// not unique
+//sDbgLog = QString( "      NOT unique" );
+//BEMPX_WriteLogFile( sDbgLog );
+									}
+							}	}
 		               else
                      {
                //      	void* pData = (void*) BEMPX_GetDataAndStatus( plParams[ nArgs-1 ]+iArr, iDataStatus, iDataType, iSpecialVal, iError, iObjIdx, eObjType, FALSE, i0Model );
@@ -8460,12 +8630,14 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
                if (pPropType && (pPropType->getPropType() == BEMP_Int || pPropType->getPropType() == BEMP_Sym))
                {
                   long lBEMPVal = (long) fBEMPVal;
-                  if (BEMPX_SetBEMData( lArrayDBID, BEMP_Int, (void*) &lBEMPVal, (BEM_ObjType) iObjType, iOccur, pEval->eLocStatus ) < 0)
+                  if (BEMPX_SetBEMData( lArrayDBID, BEMP_Int, (void*) &lBEMPVal, (BEM_ObjType) iObjType, iOccur, pEval->eLocStatus,
+                  							 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
                      bAbort = TRUE;
                }
                else if (pPropType && pPropType->getPropType() == BEMP_Flt)
                {
-                  if (BEMPX_SetBEMData( lArrayDBID, BEMP_Flt, (void*) &fBEMPVal, (BEM_ObjType) iObjType, iOccur, pEval->eLocStatus ) < 0)
+                  if (BEMPX_SetBEMData( lArrayDBID, BEMP_Flt, (void*) &fBEMPVal, (BEM_ObjType) iObjType, iOccur, pEval->eLocStatus,
+                  							 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)		// SAC 9/25/19
                      bAbort = TRUE;
                }
                else
@@ -8619,7 +8791,8 @@ static void BEMProc_EnsureStringUniqueness( int /*op*/, int nArgs, ExpStack* sta
                   fResult += 1;
                   // assert( iStatus == BEMS_UserDefined );  // what to do if non-unique data NOT user-defined ???
                   BEMPX_SetBEMData( lDBID + iArr, BEMP_QStr, (void*) &sStr,  // BEMP_Str, (void*) sStr.toLocal8Bit().constData(), 
-                  								pEval->ePrimObjType, iObj, (BEM_PropertyStatus) iStatus );
+                  								pEval->ePrimObjType, iObj, (BEM_PropertyStatus) iStatus,
+                                          BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo );	// SAC 9/25/19
                }
             }
          }
@@ -11791,6 +11964,7 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
       long lDBID_DHWSysRpt_DHWHeaterCnt  = GetPropertyDBID_LogError( "DHWSysRpt", "DHWHeaterCnt",  iCID_DHWSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,               
       long lDBID_DHWSysRpt_DHWSysRef     = GetPropertyDBID_LogError( "DHWSysRpt", "DHWSysRef",     iCID_DHWSysRpt, iNumErrors, sTmp );  // 
       long lDBID_DHWSysRpt_DHWSysIdx     = GetPropertyDBID_LogError( "DHWSysRpt", "DHWSysIdx",     iCID_DHWSysRpt, iNumErrors, sTmp );  // SAC 10/14/14
+      long lDBID_DHWSysRpt_DwellUnitRptName =   BEMPX_GetDatabaseID( "DHWSysRpt:DwellUnitRptName" );    // SAC 11/7/19 (Res tic #1167)
 
 		long lDBID_DU_Name             = GetPropertyDBID_LogError( "DwellUnit", "Name",             iCID_DwellUnit, iNumErrors, sTmp );
 		long lDBID_DU_DwellUnitTypeRef = GetPropertyDBID_LogError( "DwellUnit", "DwellUnitTypeRef", iCID_DwellUnit, iNumErrors, sTmp );
@@ -11889,7 +12063,19 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 														int iNumDHWRptObjsToCreate = (int) laDHWHtrTypIdx.size();
 													// CREATE DHWSysRpt objects
 														for (iEqp=0; (sErrMsg.isEmpty() && iEqp < iNumDHWRptObjsToCreate); iEqp++)
-														{	sDHWSysRptName = QString( "%1 %2/%3 | %4 %5/%6 | Eqp %7/%8" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ), sSysName, QString::number( iDUT_DHWIdx+1 ), QString::number( lDUT_NumDHWSysTypes ), QString::number( iEqp+1 ), QString::number( iNumDHWRptObjsToCreate ) );
+														{	//sDHWSysRptName = QString( "%1 %2/%3 | %4 %5/%6 | Eqp %7/%8" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ), sSysName, QString::number( iDUT_DHWIdx+1 ), QString::number( lDUT_NumDHWSysTypes ), QString::number( iEqp+1 ), QString::number( iNumDHWRptObjsToCreate ) );
+															// SAC 10/23/19 - revisions to minimize/simplify DHWSysRpt names (Res tic #1159)
+															if (lDUCount > 1)
+																sDHWSysRptName = QString( "%1 %2/%3" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ) );
+															else
+																sDHWSysRptName = sDUName;
+															if (lDUT_NumDHWSysTypes > 1)
+																sDHWSysRptName += QString( " | %1 %2/%3" ).arg( sSysName, QString::number( iDUT_DHWIdx+1 ), QString::number( lDUT_NumDHWSysTypes ) );
+															else
+																sDHWSysRptName += QString( " | %1" ).arg( sSysName );
+															if (iNumDHWRptObjsToCreate > 1)
+																sDHWSysRptName += QString( " | Eqp %1/%2" ).arg( QString::number( iEqp+1 ), QString::number( iNumDHWRptObjsToCreate ) );
+
 															pDHWSysRptObj = BEMPX_CreateObject( iCID_DHWSysRpt, sDHWSysRptName.toLocal8Bit().constData(), pDUObj, BEMO_User, FALSE );
 															if (pDHWSysRptObj == NULL || pDHWSysRptObj->getClass() == NULL)
 																sErrMsg = QString( "CreateDHWRptObjects Error:  Unable to create DHWSysRpt object #%1 '%2'" ).arg( QString::number( iNumObjsCreated+1 ), sDHWSysRptName );
@@ -11906,7 +12092,12 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterIdx, BEMP_Int, (void*)             &laDHWHtrTypIdx[iEqp]         , BEMO_User, iDRIdx ) < 0 ||
 																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterCnt, BEMP_Int, (void*)             &laDHWHtrCntIdx[iEqp]         , BEMO_User, iDRIdx ) < 0 )
 																			sErrMsg = QString( "CreateDHWRptObjects Error:  Unable to set %1 equip data of DHWSysRpt object '%2'" ).arg( "DHW", sDHWSysRptName );
-																	}
+
+																		if (sErrMsg.isEmpty() && lDBID_DHWSysRpt_DwellUnitRptName > 0)		// SAC 11/7/19 (Res tic #1167)
+																		{	// NOTE: the following DHWSysRpt:DwellUnitRptName must be consistent w/ DwellUnitRpt:Name defined in CreateDwellUnitRptObjects() - SAC 11/7/19 (Res tic #1167)
+																			QString qsDURName = QString( "%1-(%2/%3)" ).arg( sDUName, QString::number( iDUCntIdx ), QString::number( lDUCount ) );
+																			BEMPX_SetBEMData( lDBID_DHWSysRpt_DwellUnitRptName, BEMP_Str, (void*) qsDURName.toLocal8Bit().constData(), BEMO_User, iDRIdx );
+																	}	}
 																	if (sErrMsg.isEmpty())
 																		iNumObjsCreated++;
 														}	}	}
@@ -12628,7 +12819,8 @@ int CreateDwellUnitRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpEr
 						sErrMsg = QString( "Error encountered retrieving pointer to object DwellUnit #%1 '%2'" ).arg( QString::number( iDUIdx+1 ), sDUName );
 					else
 						for (int iCnt=1; (sErrMsg.isEmpty() && iCnt <= lDUCount); iCnt++)
-						{	QString sDURName = QString( "%1-(%2/%3)" ).arg( sDUName, QString::number( iCnt ), QString::number( lDUCount ) );
+						{	// NOTE: the following DwellUnitRpt:Name must be consistent w/ DHWSysRpt:DwellUnitRptName defined in CreateDHWRptObjects() - SAC 11/7/19 (Res tic #1167)
+							QString sDURName = QString( "%1-(%2/%3)" ).arg( sDUName, QString::number( iCnt ), QString::number( lDUCount ) );
 							BEMObject* pDURObj = BEMPX_CreateObject( iCID_DwellUnitRpt, sDURName.toLocal8Bit().constData(), pDUObj );					assert( pDURObj );
 							if (pDURObj == NULL)
 								sErrMsg = QString( "Error encountered creating DwellUnitRpt child #%1 of DwellUnit #%2 '%3'" ).arg( QString::number( iCnt ), QString::number( iDUIdx+1 ), sDUName );

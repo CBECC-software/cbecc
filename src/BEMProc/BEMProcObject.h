@@ -310,7 +310,7 @@ extern int CountObjectAssignments( BEMObject* pObj, bool bCheckMaxRefs, bool bSt
 
 //extern BEMSymbolList* InitSymbolList( LPCSTR lpszDepVar, int iSource=BEMS_ProgDefault );
 extern BEMSymbolList* GetSymbolList( long lDBID, BOOL* pbSymListArrayDependent=NULL );	// SAC 1/31/01 - Added pbSymListArrayDependent argument to pass back info on whether or not symbol list is array-index-dependent
-extern QString GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx=-1 );
+extern QString GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx=-1, BOOL bOnlyFromCurrentSymDepSet=TRUE );  // SAC 6/8/19
 
 /////////////////////////////////////////////////////////////////////////////
 

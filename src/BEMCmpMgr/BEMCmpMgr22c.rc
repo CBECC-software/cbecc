@@ -8,14 +8,9 @@
 
 #include "winver.h"
 
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
 VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       16,3,0,1103
-  PRODUCTVERSION    16,3,0,1103
+  FILEVERSION       22,0,1,1103
+  PRODUCTVERSION    22,0,1,1103
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -31,14 +26,14 @@ BEGIN
         BLOCK "040904B0"
 		BEGIN 
 			VALUE "CompanyName",     "California Energy Commission\0"
-			VALUE "FileDescription", "OpenStudio Wrapper DLL\0"
-			VALUE "FileVersion",     "2016.3.0 (1103)\0"
-			VALUE "InternalName",    "OSWrap16\0"
-			VALUE "LegalCopyright",  "Copyright (C) 2012-2018, California Energy Commission. All rights reserved.\0"
+			VALUE "FileDescription", "BEM Compliance Manager (Title-24 Com)\0"
+			VALUE "FileVersion",     "2022.0.1 (1103)\0"
+			VALUE "InternalName",    "BEMCmpMgr22c\0"
+			VALUE "LegalCopyright",  "Copyright (C) 2012-2019, California Energy Commission. All rights reserved.\0"
 			VALUE "LegalTrademarks", "\0"
-			VALUE "OriginalFilename","OSWrap16.dll\0"
-			VALUE "ProductName",     "OS Wrapper DLL\0"
-			VALUE "ProductVersion",  "2016.3.0\0"
+			VALUE "OriginalFilename","BEMCmpMgr22c.dll\0"
+			VALUE "ProductName",     "BEM Compliance Manager DLL (T-24 Com)\0"
+			VALUE "ProductVersion",  "2022.0.1\0"
 			VALUE "SpecialBuild",    "build 1103\0"
 		END
 	END

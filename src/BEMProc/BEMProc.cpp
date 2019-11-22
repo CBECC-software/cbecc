@@ -2855,14 +2855,16 @@ BEMProperty* BEMPX_GetProperty( long lDBID, int& iError, int iOccur, BEM_ObjType
 //   
 /////////////////////////////////////////////////////////////////////////////
 static void PostDataModReset( BEMProperty* pProp, long lDBID, BEM_PropertyStatus eStatus, int i1Class,
-                              int iOccur, BEM_ObjType eObjType, BOOL bDataModified, BOOL bPerformResets, int iBEMProcIdx /*=-1*/ )
+                              int iOccur, BEM_ObjType eObjType, BOOL bDataModified, BOOL bPerformResets, int iBEMProcIdx /*=-1*/,
+   									BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
    int iError;
 
    // reinitialize all data in this property's ResetData list if this modification is a user input
    if (pProp && eStatus == BEMS_UserDefined && bPerformResets)
       pProp->ReinitResetData( lDBID, (iOccur >= 0 ? iOccur :
-                                      BEMPX_GetObjectIndex( BEMPX_GetClass( i1Class, iError, iBEMProcIdx ) )) );
+                                      BEMPX_GetObjectIndex( BEMPX_GetClass( i1Class, iError, iBEMProcIdx ) )),
+      								TRUE /*bResetUserDefinedData*/, pTargetedDebugInfo );		// SAC 9/25/19
 
    // re-default object w/ UserDefined default flag FALSE so that only hard-coded defaulting will occur
    BEMObject* pObj = BEMPX_GetObjectByClass( i1Class, iError, iOccur, eObjType, iBEMProcIdx );
@@ -2895,7 +2897,8 @@ static void PostDataModReset( BEMProperty* pProp, long lDBID, BEM_PropertyStatus
 //   
 /////////////////////////////////////////////////////////////////////////////
 bool BEMPX_DefaultProperty(	long lDBID, int& iError, int iOccur,
-										BEM_ObjType eObjType, int iBEMProcIdx /*=-1*/ )
+										BEM_ObjType eObjType, int iBEMProcIdx /*=-1*/,
+   									BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
    bool bRetVal = FALSE;
    // get class index from lDBID
@@ -2915,7 +2918,8 @@ bool BEMPX_DefaultProperty(	long lDBID, int& iError, int iOccur,
          	bRetVal = pProp->Default( lDBID, iOccur, pObj->getObjectType(), FALSE /*bReinitializing*/, iBEMProcIdx );	// SAC 4/28/14 - added iBEMProcIdx to args passed
 
          	// cause ruleset Resets to occur
-         	PostDataModReset( pProp, lDBID, BEMS_UserDefined, i1Class, iOccur, eObjType, TRUE, TRUE, iBEMProcIdx );
+         	PostDataModReset( pProp, lDBID, BEMS_UserDefined, i1Class, iOccur, eObjType, 
+   									TRUE, TRUE, iBEMProcIdx, pTargetedDebugInfo /*=NULL*/ );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 			}
 			else
 			{	assert( false );
@@ -3669,7 +3673,8 @@ int BEMPX_SetBEMData( long lDBID, int iDataType, void* pData, BEM_ObjType eObjFr
                      int iOccur, BEM_PropertyStatus eStatus, BEM_ObjType eObjType, BOOL bPerformResets, int iBEMProcIdx /*=-1*/,
 						   int iImportUniqueRuleLibObjOption /*=2*/,  // SAC 3/10/13	// SAC 4/25/14
 							const char* pszImportRuleLibParentName /*=NULL*/,  // SAC 3/17/13 - name of parent of rule lib object to import
-							char* pszErrMsg /*=NULL*/, int iErrMsgLen /*=0*/ )  // SAC 4/10/13 - error message return
+							char* pszErrMsg /*=NULL*/, int iErrMsgLen /*=0*/,  // SAC 4/10/13 - error message return
+							BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
    int iRetVal = 0;
    BEMProcObject* pBEMProc = getBEMProcPointer( iBEMProcIdx );
@@ -3957,7 +3962,8 @@ int BEMPX_SetBEMData( long lDBID, int iDataType, void* pData, BEM_ObjType eObjFr
    }
 
    if (iRetVal >= 0)
-      PostDataModReset( pProp, lDBID, eStatus, i1Class, iOccur, eObjType, bDataModified, bPerformResets, iBEMProcIdx );
+      PostDataModReset( pProp, lDBID, eStatus, i1Class, iOccur, eObjType, bDataModified,
+      						bPerformResets, iBEMProcIdx, pTargetedDebugInfo );		// SAC 9/25/19
 
    return iRetVal;
 }
@@ -3986,7 +3992,8 @@ int BEMPX_SetBEMData( long lDBID, int iDataType, void* pData, BEM_ObjType eObjFr
 //   
 /////////////////////////////////////////////////////////////////////////////
 int BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur,
-                             BEM_PropertyStatus eStatus, BEM_ObjType eObjType, int iBEMProcIdx /*=-1*/ )
+                              BEM_PropertyStatus eStatus, BEM_ObjType eObjType, int iBEMProcIdx /*=-1*/,
+   									BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
    int iRetVal = 0;
 //   int iError;
@@ -4028,7 +4035,8 @@ int BEMPX_SetBEMSpecialValue( long lDBID, int iSpecialVal, int iOccur,
 
    if (iRetVal >= 0)
    {
-      PostDataModReset( pProp, lDBID, eStatus, BEMPX_GetClassID( lDBID ), iOccur, eObjType, bDataModified, TRUE, iBEMProcIdx );
+      PostDataModReset( pProp, lDBID, eStatus, BEMPX_GetClassID( lDBID ), iOccur, eObjType, bDataModified, TRUE, iBEMProcIdx,
+   							pTargetedDebugInfo /*=NULL*/ );		// SAC 9/25/19
 //      // reinitialize all data in this property's ResetData list if this modification is a user input
 //      if (pProp && eStatus == BEMS_UserDefined)
 //         pProp->ReinitResetData( lDBID );

@@ -99,25 +99,25 @@ using namespace OS_Wrap;
 
 // SAC 10/13/15 - switched 'Process Ltg' to 'Other Ltg'
 													                                                                                                                // SumInto
-EndUseMap esEUMap_CECNonRes[] =           // enduses...                                                                                                   Compliance   daEnduseTotal    daTDVTotal       daTDSTotal       daSupply         EDem
-{	{  "Space Heating"      ,  "Spc Heat"  ,  OSEU_Heating,           OSEU_HtgCoils,         OSEU_Baseboard,    OSEU_HtRecov_Htg,    OSEU_Boilers,  -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Space Cooling"      ,  "Spc Cool"  ,  OSEU_Cooling,           OSEU_ClgCoils,         OSEU_HtRecov_Clg,        -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Indoor Fans"        ,  "Indr Fans" ,  OSEU_Fans,                    -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Heat Rejection"     ,  "Heat Rej"  ,  OSEU_HtReject,                -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Pumps & Misc."      ,  "Pump&Misc" ,  OSEU_Pumps,             OSEU_HtRecov,          OSEU_Humid,              -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-//	{  "Domestic HW"        ,  "Dom HW"    ,  OSEU_WaterSystems,            -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Domestic Hot Water" ,  "Dom HW"    ,  OSEU_WaterSystems,            -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-//	{  "Lighting"           ,  "Lighting"  ,  OSEU_IntLights_Reg,           -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Indoor Lighting"    ,  "Lighting"  ,  OSEU_IntLights_Comp,          -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "COMPLIANCE TOTAL"   ,  "Comp Tot"  ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Receptacle"         ,  "Recept"    ,  OSEU_IntEquip_Recept,         -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Process"            ,  "Process"   ,  OSEU_IntEquip_Process,  OSEU_IntEquip_Refrig,  OSEU_Refrig,       OSEU_IntEquip_IntTrans,   -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 8/19/14 - added OSEU_IntEquip_IntTrans to capture elevator/escalator energy use
-	{  "Other Ltg"          ,  "Othr Ltg"  ,  OSEU_IntLights_NonComp,       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  "Process Motors"     ,  "Proc Mtrs" ,  OSEU_Fans_ProcMtrs,           -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 2/1/17 - added Process Motors to capture parking garage exhaust fans (tic #2033)  // SAC 8/14/17 - switched OSEU_Fans_PrkgGar to OSEU_Fans_ProcMtrs
-	{  "Photovoltaics"      ,  "PV"        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 7/14/18
-	{  "Battery"            ,  "Battery"   ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 7/14/18
-	{  "TOTAL"              ,  "TOTAL"     ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
-	{  NULL                 ,  NULL        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   }  };
+EndUseMap esEUMap_CECNonRes[] =           // enduses...                                                                                                   Compliance   daEnduseTotal    daTDVTotal       daSrcTotal       daSrcPrmTotal    daC02Total       daTDSTotal       daSupply         EDem
+{	{  "Space Heating"      ,  "Spc Heat"  ,  OSEU_Heating,           OSEU_HtgCoils,         OSEU_Baseboard,    OSEU_HtRecov_Htg,    OSEU_Boilers,  -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Space Cooling"      ,  "Spc Cool"  ,  OSEU_Cooling,           OSEU_ClgCoils,         OSEU_HtRecov_Clg,        -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Indoor Fans"        ,  "Indr Fans" ,  OSEU_Fans,                    -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Heat Rejection"     ,  "Heat Rej"  ,  OSEU_HtReject,                -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Pumps & Misc."      ,  "Pump&Misc" ,  OSEU_Pumps,             OSEU_HtRecov,          OSEU_Humid,              -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+//	{  "Domestic HW"        ,  "Dom HW"    ,  OSEU_WaterSystems,            -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Domestic Hot Water" ,  "Dom HW"    ,  OSEU_WaterSystems,            -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+//	{  "Lighting"           ,  "Lighting"  ,  OSEU_IntLights_Reg,           -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Indoor Lighting"    ,  "Lighting"  ,  OSEU_IntLights_Comp,          -1,                    -1,                -1,                 -1,       -1,        1,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Compliance Total"   ,  "Comp Tot"  ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 11/5/19 - to camel case to allow screen display
+	{  "Receptacle"         ,  "Recept"    ,  OSEU_IntEquip_Recept,         -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Process"            ,  "Process"   ,  OSEU_IntEquip_Process,  OSEU_IntEquip_Refrig,  OSEU_Refrig,       OSEU_IntEquip_IntTrans,   -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 8/19/14 - added OSEU_IntEquip_IntTrans to capture elevator/escalator energy use
+	{  "Other Ltg"          ,  "Othr Ltg"  ,  OSEU_IntLights_NonComp,       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  "Process Motors"     ,  "Proc Mtrs" ,  OSEU_Fans_ProcMtrs,           -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 2/1/17 - added Process Motors to capture parking garage exhaust fans (tic #2033)  // SAC 8/14/17 - switched OSEU_Fans_PrkgGar to OSEU_Fans_ProcMtrs
+	{  "Photovoltaics"      ,  "PV"        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 7/14/18
+	{  "Battery"            ,  "Battery"   ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },		// SAC 7/14/18
+	{  "TOTAL"              ,  "TOTAL"     ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   },
+	{  NULL                 ,  NULL        ,      -1,                       -1,                    -1,                -1,                 -1,       -1,        0,       0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0, 0.0, 0.0,   0.0   }  };
                                                                                                 // FINAL enduse index must be '-1' for each record
 
 const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((Electricity)(Electricity))
@@ -133,6 +133,13 @@ static double dHrlyResTot[8760];
 static void InitHrlyRes( double* pRes )
 {	for (int hr=0; hr<8760; hr++)
 		pRes[hr] = 0.0;
+}
+
+static double SumHrlyRes( double* pRes )
+{	double dRes=0.0;
+	for (int hr=0; hr<8760; hr++)
+		dRes += pRes[hr];
+	return dRes;
 }
 
 
@@ -401,14 +408,17 @@ void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char*
 
 static inline double RoundVal( double dVal, int iDecPrec )
 {	double dRetVal = 0.0;
+	double dDelta = (dVal < 0 ? -0.5 : 0.5);	// SAC 9/14/19 (tic #3106)
 	switch (iDecPrec)
-	{	case -3 :	dRetVal = (double) ((int) ((dVal / 1000.0) + 0.5)) * 1000.0;		break;
-		case -2 :	dRetVal = (double) ((int) ((dVal /  100.0) + 0.5)) *  100.0;		break;
-		case -1 :	dRetVal = (double) ((int) ((dVal /   10.0) + 0.5)) *   10.0;		break;
-		case  0 :	dRetVal = (double) ((int) ((dVal         ) + 0.5))         ;		break;
-		case  1 :	dRetVal = (double) ((int) ((dVal *   10.0) + 0.5)) /   10.0;		break;
-		case  2 :	dRetVal = (double) ((int) ((dVal *  100.0) + 0.5)) /  100.0;		break;
-		case  3 :	dRetVal = (double) ((int) ((dVal * 1000.0) + 0.5)) / 1000.0;		break;
+	{	case -3 :	dRetVal = (double) ((int) ((dVal /   1000.0) + dDelta)) *   1000.0;		break;
+		case -2 :	dRetVal = (double) ((int) ((dVal /    100.0) + dDelta)) *    100.0;		break;
+		case -1 :	dRetVal = (double) ((int) ((dVal /     10.0) + dDelta)) *     10.0;		break;
+		case  0 :	dRetVal = (double) ((int) ((dVal           ) + dDelta))           ;		break;
+		case  1 :	dRetVal = (double) ((int) ((dVal *     10.0) + dDelta)) /     10.0;		break;
+		case  2 :	dRetVal = (double) ((int) ((dVal *    100.0) + dDelta)) /    100.0;		break;
+		case  3 :	dRetVal = (double) ((int) ((dVal *   1000.0) + dDelta)) /   1000.0;		break;
+		case  4 :	dRetVal = (double) ((int) ((dVal *  10000.0) + dDelta)) /  10000.0;		break;
+		case  5 :	dRetVal = (double) ((int) ((dVal * 100000.0) + dDelta)) / 100000.0;		break;
 		default :	assert( FALSE );		break;
 	}
 	return dRetVal;
@@ -441,6 +451,9 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 					else
 						esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] = 0.0;
 					esEUMap_CECNonRes[iEUIdx].daTDVTotal[   iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daSrcTotal[   iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daC02Total[   iFl] = 0.0;
 					esEUMap_CECNonRes[iEUIdx].daTDSTotal[   iFl] = 0.0;
 					if (iFl==0)  // SAC 10/8/16
 					{	esEUMap_CECNonRes[iEUIdx].dElecDemand = 0.0;
@@ -615,7 +628,7 @@ BOOL RetrieveSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& i
 
 BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, int& iRetVal, const char* pszSimProcessDir,
 													BOOL bVerbose, int iSimulationStorage, const char* pszEPlusPath,
-													QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/ )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
+													QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 {
 	BOOL bRetVal = TRUE;
 	QString sLogMsg, sTemp;
@@ -631,9 +644,25 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 		long lDBID_EUseSummary_ZoneUMLHsLoaded  = BEMPX_GetDatabaseID( "ZoneUMLHsLoaded", iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHsLoaded > 0 );
 		long lDBID_EUseSummary_ZoneUMLHs        = BEMPX_GetDatabaseID( "ZoneUMLHs"      , iCID_EUseSummary );		assert( lDBID_EUseSummary_ZoneUMLHs > 0 );
 
-		QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
-		if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
-			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:HrlyElecDemMultTableAndColumnName" ), sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+		long lEngyCodeYearNum;		// SAC 9/23/19 - added to facilitate changes in TDV/SrcEngy table look-up column #s
+		BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum"), lEngyCodeYearNum, 2019, -1, -1, BEMO_User, osRunInfo.BEMProcIdx());			assert( lEngyCodeYearNum > 0 );
+
+		QString sC02EmissionsResultsUnit;	// SAC 9/11/19 - added C02 emissions calcs (tic #3106)
+		double fC02EmissionsElecConvFac = 0, fC02EmissionsNatGasConvFac = 0, fC02EmissionsOtherConvFac = 0, fC02EmissionsResultsMult = 0;	// SAC 9/12/19 - added *ConvFacs (tic #3106)
+		long lC02EmissionsResultsDecPrec = 0;
+		BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsElecConvFac"   ), fC02EmissionsElecConvFac   , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+		BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsNatGasConvFac" ), fC02EmissionsNatGasConvFac , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+		BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsOtherConvFac"  ), fC02EmissionsOtherConvFac  , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+		BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:C02EmissionsResultsUnit"   ), sC02EmissionsResultsUnit   , FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+		BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsResultsMult"   ), fC02EmissionsResultsMult   , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+		BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:C02EmissionsResultsDecPrec"), lC02EmissionsResultsDecPrec, 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+		int iC02EmisTotalRnd = lC02EmissionsResultsDecPrec;
+		if (     fC02EmissionsResultsMult > 999)		iC02EmisTotalRnd -= 3;
+		else if (fC02EmissionsResultsMult > 99)		iC02EmisTotalRnd -= 2;
+		else if (fC02EmissionsResultsMult > 9)			iC02EmisTotalRnd -= 1;
+		else if (fC02EmissionsResultsMult < 0.01)		iC02EmisTotalRnd += 3;
+		else if (fC02EmissionsResultsMult < 0.1)		iC02EmisTotalRnd += 2;
+		else if (fC02EmissionsResultsMult < 1)			iC02EmisTotalRnd += 1;
 
 		int iFl;
 		QString saTDSTableName[3];   long laTDSColumnNum[3];   double daTDSMult[3];   int iTDSType[3] = {0,0,0};		// SAC 8/26/18 - A2030
@@ -656,8 +685,40 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 				iOrientNum = atoi( sRunID.toLocal8Bit().constData() );
 		}	}
 
+		long lNumResultsSets;		// SAC 11/3/19 - enable multiple results sets (2022)
+		BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:NumResultsSets"), lNumResultsSets, 1, -1, -1, BEMO_User, osRunInfo.BEMProcIdx());			assert( (lNumResultsSets > 0 && lNumResultsSets < 11) );
+
 		if (osRunInfo.StoreHourlyResults() && iRetVal == 0)
-		{							if (bVerbose)
+		{
+			for (int iResSet=0; iResSet < lNumResultsSets; iResSet++)		// SAC 11/3/19
+			{		//  "NumResultsSets",          BEMP_Int,  1,  0,  0,  NInp,  "",             "NumberResultsSets",                 ""  ; number of SETS of results (first implemented for 2022 testing to include 6 sets of TDV & C02 multiplier tables & results) - SAC 11/03/19
+					//  "TDVMultTableName",        BEMP_Str, 10,  1,  0,  NInp,  "",             "TDVMultiplierTableName",            "" 
+					//  "ElecDemMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "ElectricDemandMultiplierTableName", "" 
+					//  "C02EmissionsElecTable",   BEMP_Str, 10,  1,  0,  NInp,  "",             "C02EmissionsElecricTable",          "" 
+					//  "C02EmissionsNatGasMult",  BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "C02EmissionsNaturalGasMultiplier",  "" 
+					//  "C02EmissionsOtherMult",   BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "C02EmissionsOtherMultiplier",       "" 
+					//  "SrcEngyMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "SourceEnergyMultiplierTableName",   "" 
+			QString sResultSetName;		// SAC 11/3/19
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
+			QString sTDVMultTableName;		// SAC 11/3/19
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+iResSet, sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
+			QString sHrlyElecDemMultTblCol;	// SAC 10/8/16 - enable specification of hourly elec demand mult table:column via ruleset var
+			if (osRunInfo.m_qaData.m_iNumQuickAnalysisPeriods < 1)	// SAC 10/11/16 - prevent demand calcs/storage when performing QuickAnalysis
+				BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ElecDemMultTableName" )+iResSet, sHrlyElecDemMultTblCol, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
+			QString sC02EmissionsElecTableName;
+			double fC02EmissionsNatGasMult = 0, fC02EmissionsOtherMult = 0;
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:C02EmissionsElecTable"  )+iResSet, sC02EmissionsElecTableName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+			BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsNatGasMult" )+iResSet, fC02EmissionsNatGasMult    , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+			BEMPX_GetFloat(  BEMPX_GetDatabaseID( "Proj:C02EmissionsOtherMult"  )+iResSet, fC02EmissionsOtherMult     , 0, -1, -1, BEMO_User, osRunInfo.BEMProcIdx() );
+
+			QString sSrcEnergyTableName;  //, sSrcEnergyPrmTableName;	// SAC 6/27/19 - enable calc and storage of Source Energy results (for 2022 research)
+			BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SrcEngyMultTableName"   )+iResSet, sSrcEnergyTableName   , FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+		// 	BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:SrcEngyPrimeMultTableName" ), sSrcEnergyPrmTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+
+									if (bVerbose)
 										BEMPX_WriteLogFile( "  PerfSim_E+ - Summing hourly simulation results, TDV calcs, etc.", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 			int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
 			int iEUIdx, /*hr,*/ iError;
@@ -672,6 +733,9 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					else
 						esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] = 0.0;
 					esEUMap_CECNonRes[iEUIdx].daTDVTotal[   iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daSrcTotal[   iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl] = 0.0;
+					esEUMap_CECNonRes[iEUIdx].daC02Total[   iFl] = 0.0;
 					esEUMap_CECNonRes[iEUIdx].daTDSTotal[   iFl] = 0.0;
 					if (iFl==0)  // SAC 10/8/16
 					{	esEUMap_CECNonRes[iEUIdx].dElecDemand = 0.0;
@@ -747,13 +811,26 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 				// NOW grab the hourly TDV Factors (from ruleset table), apply them to the hourly results and sum the totals into annual TDV results (by fuel and enduse) 
 					if (osRunInfo.CodeType() == CT_T24N && iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total)		// added check to perform TDV only on CT_T24N runs
 					{	assert( fTotBldgFlrArea > 0 );
-						int iTableCol = ((lCliZnNum-1) * 3) + iFl + 2;
+						int iTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + iFl + 2) : ((iFl * 16) + lCliZnNum + 1) );		// SAC 9/23/19 - iTableCol dependence on lEngyCodeYearNum
 	// TO DO - move table name OUT of source code
-						double dTDVSum = 0.0;
+						double dTDVSum = 0.0, dSrcSum = 0.0, dSrcPrmSum = 0.0, dC02Sum = 0.0;
 						if (esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0)  // SAC 7/15/18 - '>0' -> '!=0' to allow for negative (PV/Batt) enduses
+						{
 			//				dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes, "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
-							dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
+							dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
 //BEMPX_WriteLogFile( QString( "         iTableCol %1 - dTDVSum %2" ).arg( QString::number( iTableCol ), QString::number( dTDVSum ) ) );
+							if (sSrcEnergyTableName.length() > 1)
+								dSrcSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sSrcEnergyTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+						//	if (!sSrcEnergyPrmTableName.isEmpty())
+						//		dSrcPrmSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sSrcEnergyPrmTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) );
+
+							// SAC 9/11/19 - C02 emissions (tonne) (tic #3106)
+							if (iFl==0 && sC02EmissionsElecTableName.length() > 1 && fC02EmissionsElecConvFac > 0.0)
+								dC02Sum = fC02EmissionsElecConvFac /*MWh-tonne/kWh-ton*/ * /*kWh * ton/MWh*/ BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sC02EmissionsElecTableName.toLocal8Bit().constData(), lCliZnNum+1, (bVerbose != FALSE) );
+							else if ( (iFl==1 && fC02EmissionsNatGasMult > 0.0 && fC02EmissionsNatGasConvFac > 0.0) ||
+										 (iFl==2 && fC02EmissionsOtherMult  > 0.0 && fC02EmissionsOtherConvFac  > 0.0) )
+								dC02Sum = (iFl==1 ? fC02EmissionsNatGasConvFac : fC02EmissionsOtherConvFac) /*MBtu-tonne/therm-ton*/ * /*therm * ton/MBtu*/ (iFl==1 ? fC02EmissionsNatGasMult : fC02EmissionsOtherMult) * SumHrlyRes( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes) );
+						}
 				//		if (dTDVSum < 0)
 				//		{	// ERROR
 				//			assert( FALSE );
@@ -764,6 +841,27 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 							if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
 								esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daTDVTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
+
+							if (sSrcEnergyTableName.length() > 1)		// SAC 6/27/19 - 2022
+							{		esEUMap_CECNonRes[iEUIdx].daSrcTotal[iFl] = dSrcSum / fTotBldgFlrArea;
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daSrcTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daSrcTotal[iFl];
+								if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daSrcTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daSrcTotal[iFl];
+							}
+						// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/27/19 - 2022
+						// 	{		esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl] = dSrcPrmSum / fTotBldgFlrArea;
+						// 			esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daSrcPrmTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl];
+						// 		if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+						// 			esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daSrcPrmTotal[iFl] += esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl];
+						// 	}
+
+							// SAC 9/11/19 - C02 emissions (tonne) (tic #3106)
+							if (dC02Sum != 0.0)
+							{		esEUMap_CECNonRes[iEUIdx].daC02Total[iFl] = dC02Sum;   // store as tonne, not tonne/sqft (/ fTotBldgFlrArea)
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_Total  ].daC02Total[iFl] += RoundVal( esEUMap_CECNonRes[iEUIdx].daC02Total[iFl], iC02EmisTotalRnd );
+								if (esEUMap_CECNonRes[iEUIdx].iSumIntoCompliance)
+									esEUMap_CECNonRes[IDX_T24_NRES_EU_CompTot].daC02Total[iFl] += RoundVal( esEUMap_CECNonRes[iEUIdx].daC02Total[iFl], iC02EmisTotalRnd );
+							}
 						}
 //BEMPX_WriteLogFile( QString( "         dTDVSum %1 - fTotBldgFlrArea %2 - esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] %3" ).arg( QString::number( dTDVSum ), QString::number( fTotBldgFlrArea ), QString::number( esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl] ) ) );
 
@@ -800,7 +898,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									daHrlyElecSup[hr] = 0.0;
 							}
 							esEUMap_CECNonRes[iEUIdx].daSupply[1] = (esEUMap_CECNonRes[iEUIdx].daSupply[0] >= 0.0 ? 0.0 :
-										BEMPX_ApplyHourlyMultipliersFromTable( &daHrlyElecSup[0], "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) ) / fTotBldgFlrArea);
+										BEMPX_ApplyHourlyMultipliersFromTable( &daHrlyElecSup[0], sTDVMultTableName.toLocal8Bit().constData(), iTableCol, (bVerbose != FALSE) ) / fTotBldgFlrArea);
 
 							if (bSetTDSResults)
 							{	esEUMap_CECNonRes[iEUIdx].daSupply[2] = 0.0;
@@ -827,7 +925,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 						}
 
 					// SAC 10/8/16 - elec demand calc
-						if (iFl==0 && !sHrlyElecDemMultTblCol.isEmpty() && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
+						if (iFl==0 && sHrlyElecDemMultTblCol.length() > 1 && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
 						{
 							double dEDem = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), sHrlyElecDemMultTblCol.toLocal8Bit().constData(), -1, (bVerbose != FALSE) );
 							if (dEDem != 0.0)
@@ -867,7 +965,22 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							if (osRunInfo.CodeType() == CT_T24N)		// added check to perform TDV only on CT_T24N runs
 							{	fEnergy = esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];
 								sPropName = QString( "%1%2TDV" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								if (sSrcEnergyTableName.length() > 1)		// SAC 6/27/19 - 2022
+								{	fEnergy = esEUMap_CECNonRes[iEUIdx].daSrcTotal[iFl];
+									sPropName = QString( "%1%2Src" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
+							// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/27/19 - 2022
+							// 	{	fEnergy = esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl];
+							// 		sPropName = QString( "%1%2SrcPrm" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
+							// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							// 	}
+								if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/11/19 - C02 emissions (tonne) (tic #3106)
+								{	fEnergy = esEUMap_CECNonRes[iEUIdx].daC02Total[iFl];
+									sPropName = QString( "%1%2C02" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fEnergy, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
 							}
 							if (bSetTDSResults)		// SAC 8/26/18 - A2030
 							{	fEnergy = esEUMap_CECNonRes[iEUIdx].daTDSTotal[iFl];
@@ -892,7 +1005,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							}
 
 						// SAC 10/8/16 - post elec demand to database
-							if (iFl==0 && !sHrlyElecDemMultTblCol.isEmpty() && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
+							if (iFl==0 && sHrlyElecDemMultTblCol.length() > 1 && esEUMap_CECNonRes[iEUIdx].daEnduseTotal[iFl] != 0.0)
 							{	double dEDem = esEUMap_CECNonRes[iEUIdx].dElecDemand;
 								if (iOrientNum < 1)
 									sPropName = QString( "%1ElecDemand" ).arg( sEUPropNameBase );
@@ -908,15 +1021,17 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			// now go BACK through enduses storing total kBTU/ft2-yr sums
 			QString sPassFail;
 			double dRndTDVTotMargin=0.0, dRndTDVCompTotMargin=0.0, dRndStdTDVTot = 0.0, dRndStdTDVCompTot=0.0;
+			double dRndSrcTotMargin=0.0, dRndSrcCompTotMargin=0.0, dRndStdSrcTot = 0.0, dRndStdSrcCompTot=0.0;
+			double dRndSrcPrmTotMargin=0.0, dRndSrcPrmCompTotMargin=0.0, dRndStdSrcPrmTot = 0.0, dRndStdSrcPrmCompTot=0.0;
 			if (fTotBldgFlrArea > 0 && iCID_EnergyUse > 0)
 			{	iEUIdx = -1;
-				double fRndCompMarginTot = 0;
-				double dRndPropTDVTot = 0.0;
+				double fRndTDVCompMarginTot = 0, fRndSrcCompMarginTot = 0, fRndSrcPrmCompMarginTot = 0;
+				double dRndPropTDVTot = 0.0, dRndPropSrcTot = 0.0, dRndPropSrcPrmTot = 0.0;
 				while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
 				{	BEMObject* pEUObj = BEMPX_GetObjectByName( iCID_EnergyUse, iError, esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User, osRunInfo.BEMProcIdx() );		assert( pEUObj );
 					int iEUObjIdx = (pEUObj == NULL ? -1 : BEMPX_GetObjectIndex( pEUObj->getClass(), pEUObj, osRunInfo.BEMProcIdx() ));					assert( iEUObjIdx >= 0 );
 					if (iEUObjIdx >= 0)
-					{	double fEUTot = 0, fVal, fTDVTot = 0, fTDSTot = 0;
+					{	double fEUTot = 0, fVal, fTDVTot = 0, fTDSTot = 0, fSrcTot = 0, fSrcPrmTot = 0, fC02Tot = 0;
 						for (iFl=0; iFl < OSF_NumFuels; iFl++)
 						{
 							if (iOrientNum < 1)
@@ -933,7 +1048,14 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									fEUTot += (fVal * 100.0   / fTotBldgFlrArea);				// therms -> kBtu/SF
 							}
 							if (osRunInfo.CodeType() == CT_T24N)		// added check to perform TDV only on CT_T24N runs
-								fTDVTot += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];  // no unit conversion needed for TDV
+							{	fTDVTot += esEUMap_CECNonRes[iEUIdx].daTDVTotal[iFl];  // no unit conversion needed for TDV
+								if (sSrcEnergyTableName.length() > 1)		// SAC 6/27/19 - 2022
+									fSrcTot += esEUMap_CECNonRes[iEUIdx].daSrcTotal[iFl];
+							// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/27/19 - 2022
+							// 		fSrcPrmTot += esEUMap_CECNonRes[iEUIdx].daSrcPrmTotal[iFl];
+								if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+									fC02Tot += RoundVal( esEUMap_CECNonRes[iEUIdx].daC02Total[iFl], iC02EmisTotalRnd );
+							}
 							if (bSetTDSResults)		// SAC 8/26/18 - A2030
 								fTDSTot += esEUMap_CECNonRes[iEUIdx].daTDSTotal[iFl];  // no unit conversion needed for TDS
 						}
@@ -949,15 +1071,15 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 							sPropName = QString( "%1TDV" ).arg( sEUPropNameBase );
 							sPropName.replace( "Prop", "Proposed" );    // unfortunate inconsistency in property naming...
 							sPropName.replace( "Std" , "Standard" );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fTDVTot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fTDVTot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							if (osRunInfo.IsStdRun())
 							{	double fPropTDV = 0;
-								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "ProposedTDV", iCID_EnergyUse ), fPropTDV, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "ProposedTDV", iCID_EnergyUse )+iResSet, fPropTDV, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
 								{	assert( FALSE );
 								}
 								else
-								{	double fCompMarginReal = fTDVTot - fPropTDV;																				fCompMarginReal;
-									double fPctImproveReal = ((fTDVTot > 0 ? (fTDVTot - fPropTDV) / fTDVTot : 0) * 100.0);			fPctImproveReal;
+								{	double fCompMarginReal = fTDVTot - fPropTDV;
+									double fPctImproveReal = ((fTDVTot > 0 ? (fTDVTot - fPropTDV) / fTDVTot : 0) * 100.0);
 								// SAC 5/8/14 - revise margin results to be consistent w/ rounded values   // SAC 6/8/16 - switched TDV rounding from 1 to 2 decimal places (tic #1735)
 									double dStTDV = RoundVal( fTDVTot , 2 );
 									double dPrTDV = RoundVal( fPropTDV, 2 );
@@ -978,22 +1100,123 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									double fCompMargin = (dStTDV - dPrTDV);
 									double fPctImprove = (dStTDV > 0 ? ((dStTDV - dPrTDV) * 100.0 / dStTDV) : 0.0);
 									if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total)
-									{	fRndCompMarginTot += fCompMargin;
+									{	fRndTDVCompMarginTot += fCompMargin;
 				//						dRndStdTDVTot     += dStTDV;
 									}
 									else
-									{	fCompMargin = fRndCompMarginTot;
+									{	fCompMargin = fRndTDVCompMarginTot;
 										fPctImprove = (dRndStdTDVTot > 0 ? (fCompMargin * 100.0 / dRndStdTDVTot) : 0.0);
 									}
 
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse ), BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveTDV", iCID_EnergyUse ), BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse )+iResSet, BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveTDV", iCID_EnergyUse )+iResSet, BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 									if (iEUIdx == IDX_T24_NRES_EU_CompTot)
 									{	sPassFail = (fCompMargin > -0.001 /*>=0*/ ? "PASS" : "FAIL");
 	
 											sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
 											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 									}
+								}
+						}	}
+
+						if (osRunInfo.CodeType() == CT_T24N && sSrcEnergyTableName.length() > 1)		// SAC 6/27/19 - 2022
+						{
+							sPropName = QString( "%1Src" ).arg( sEUPropNameBase );
+							sPropName.replace( "Prop", "Proposed" );    // unfortunate inconsistency in property naming...
+							sPropName.replace( "Std" , "Standard" );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fSrcTot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (osRunInfo.IsStdRun())
+							{	double fPropSrc = 0;
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "ProposedSrc", iCID_EnergyUse )+iResSet, fPropSrc, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+								{	assert( FALSE );
+								}
+								else
+								{	double fCompMarginReal = fSrcTot - fPropSrc;
+									double fPctImproveReal = ((fSrcTot > 0 ? (fSrcTot - fPropSrc) / fSrcTot : 0) * 100.0);
+									double dStSrc = RoundVal( fSrcTot , 2 );
+									double dPrSrc = RoundVal( fPropSrc, 2 );
+									if (iEUIdx == IDX_T24_NRES_EU_CompTot || iEUIdx == IDX_T24_NRES_EU_Total)
+									{	dStSrc = dRndStdSrcTot;
+										dPrSrc = dRndPropSrcTot;
+										if (iEUIdx == IDX_T24_NRES_EU_CompTot)
+										{	dRndSrcCompTotMargin = dRndStdSrcTot - dRndPropSrcTot;
+											dRndStdSrcCompTot    = dRndStdSrcTot;
+										}
+										else
+											dRndSrcTotMargin     = dRndStdSrcTot - dRndPropSrcTot;
+									}
+									else
+									{	dRndStdSrcTot  += dStSrc;
+										dRndPropSrcTot += dPrSrc;
+									}
+									double fCompMargin = (dStSrc - dPrSrc);
+									double fPctImprove = (dStSrc > 0 ? ((dStSrc - dPrSrc) * 100.0 / dStSrc) : 0.0);
+									if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total)
+									{	fRndSrcCompMarginTot += fCompMargin;
+									}
+									else
+									{	fCompMargin = fRndSrcCompMarginTot;
+										fPctImprove = (dRndStdSrcTot > 0 ? (fCompMargin * 100.0 / dRndStdSrcTot) : 0.0);
+									}
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginSrc", iCID_EnergyUse )+iResSet, BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveSrc", iCID_EnergyUse )+iResSet, BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
+						}	}
+					// 	if (osRunInfo.CodeType() == CT_T24N && !sSrcEnergyPrmTableName.isEmpty())		// SAC 6/27/19 - 2022
+					// 	{
+					// 		sPropName = QString( "%1SrcPrm" ).arg( sEUPropNameBase );
+					// 		sPropName.replace( "Prop", "Proposed" );    // unfortunate inconsistency in property naming...
+					// 		sPropName.replace( "Std" , "Standard" );
+					// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), BEMP_Flt, &fSrcPrmTot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					// 		if (osRunInfo.IsStdRun())
+					// 		{	double fPropSrcPrm = 0;
+					// 			if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "ProposedSrcPrm", iCID_EnergyUse ), fPropSrcPrm, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+					// 			{	assert( FALSE );
+					// 			}
+					// 			else
+					// 			{	double fCompMarginReal = fSrcPrmTot - fPropSrcPrm;
+					// 				double fPctImproveReal = ((fSrcPrmTot > 0 ? (fSrcPrmTot - fPropSrcPrm) / fSrcPrmTot : 0) * 100.0);
+					// 				double dStSrcPrm = RoundVal( fSrcPrmTot , 2 );
+					// 				double dPrSrcPrm = RoundVal( fPropSrcPrm, 2 );
+					// 				if (iEUIdx == IDX_T24_NRES_EU_CompTot || iEUIdx == IDX_T24_NRES_EU_Total)
+					// 				{	dStSrcPrm = dRndStdSrcPrmTot;
+					// 					dPrSrcPrm = dRndPropSrcPrmTot;
+					// 					if (iEUIdx == IDX_T24_NRES_EU_CompTot)
+					// 					{	dRndSrcPrmCompTotMargin = dRndStdSrcPrmTot - dRndPropSrcPrmTot;
+					// 						dRndStdSrcPrmCompTot    = dRndStdSrcPrmTot;
+					// 					}
+					// 					else
+					// 						dRndSrcPrmTotMargin     = dRndStdSrcPrmTot - dRndPropSrcPrmTot;
+					// 				}
+					// 				else
+					// 				{	dRndStdSrcPrmTot  += dStSrcPrm;
+					// 					dRndPropSrcPrmTot += dPrSrcPrm;
+					// 				}
+					// 				double fCompMargin = (dStSrcPrm - dPrSrcPrm);
+					// 				double fPctImprove = (dStSrcPrm > 0 ? ((dStSrcPrm - dPrSrcPrm) * 100.0 / dStSrcPrm) : 0.0);
+					// 				if (iEUIdx != IDX_T24_NRES_EU_CompTot && iEUIdx != IDX_T24_NRES_EU_Total)
+					// 				{	fRndSrcPrmCompMarginTot += fCompMargin;
+					// 				}
+					// 				else
+					// 				{	fCompMargin = fRndSrcPrmCompMarginTot;
+					// 					fPctImprove = (dRndStdSrcPrmTot > 0 ? (fCompMargin * 100.0 / dRndStdSrcPrmTot) : 0.0);
+					// 				}
+					// 				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginSrcPrm", iCID_EnergyUse ), BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					// 				BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveSrcPrm", iCID_EnergyUse ), BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					// 			}
+					// 	}	}
+						if (osRunInfo.CodeType() == CT_T24N && sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+						{
+							sPropName = QString( "%1TotalC02" ).arg( sEUPropNameBase );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, BEMP_Flt, &fC02Tot, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (osRunInfo.IsStdRun())
+							{	double fPropC02 = 0;
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "PropTotalC02", iCID_EnergyUse )+iResSet, fPropC02, 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+								{	assert( FALSE );
+								}
+								else
+								{	double fMargin = fC02Tot - fPropC02;
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "MarginC02", iCID_EnergyUse )+iResSet, BEMP_Flt, &fMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								}
 						}	}
 
@@ -1129,16 +1352,16 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 									{	assert( FALSE );
 									}
 									else
-									{	double fCompMarginReal = fTotalCost - fPropCost;																					fCompMarginReal;
-										double fPctImproveReal = ((fTotalCost > 0 ? (fTotalCost - fPropCost) / fTotalCost : 0) * 100.0);		fPctImproveReal;
+									{	double fCompMarginReal = fTotalCost - fPropCost;
+										double fPctImproveReal = ((fTotalCost > 0 ? (fTotalCost - fPropCost) / fTotalCost : 0) * 100.0);
 									
 										double dStCost = RoundVal( fTotalCost, 0 );		// ensure margin results consistent w/ rounded values (dollars)
 										double dPrCost = RoundVal( fPropCost , 0 );
 										double fCompMargin = (dStCost - dPrCost);
 										double fPctImprove = (dStCost > 0 ? ((dStCost - dPrCost) * 100.0 / dStCost) : 0.0);
 
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse ), BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveTDV", iCID_EnergyUse ), BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse )+iResSet, BEMP_Flt, &fCompMargin, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctImproveTDV", iCID_EnergyUse )+iResSet, BEMP_Flt, &fPctImprove, BEMO_User, iEUObjIdx, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 										sPassFail = (fCompMargin > -0.001 /*>=0*/ ? "PASS" : "FAIL");
 	
 												sLogMsg = QString( "  PerfSim_E+ - Final Result: %1  -- compliance margin: %2 (%3%)" ).arg( sPassFail, QString::number(fCompMargin), QString::number(fPctImprove, 'f', 2) );
@@ -1264,17 +1487,17 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			if (iCID_EUseSummary > 0 && fTotBldgFlrArea > 0)
 			{						if (bVerbose)
 										BEMPX_WriteLogFile( "  PerfSim_E+ - Posting results to BEMBase", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) < 1)
-				{	BEMPX_CreateObject( iCID_EUseSummary, NULL /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo.BEMProcIdx() );		long l0 = 0;
-					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded                                 , BEMP_Int, &l0, BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded + (osRunInfo.IsStdRun() ? 1 : 0), BEMP_Int, &l0, BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) <= iResSet)
+				{	BEMPX_CreateObject( iCID_EUseSummary, sResultSetName.toLocal8Bit().constData() /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo.BEMProcIdx() );		long l0 = 0;
+					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded                                 , BEMP_Int, &l0, BEMO_User, iResSet, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded + (osRunInfo.IsStdRun() ? 1 : 0), BEMP_Int, &l0, BEMO_User, iResSet, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 				}
-				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) > 0)
+				if (BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) > iResSet)
 				{
 						if (!sPassFail.isEmpty())
 						{	if (osRunInfo.NumQuickAnalysisPeriods() > 0)		// SAC 11/11/14 - if performing QuickAnalysis, do NOT store final PASS/FAIL string to database
 								sPassFail = " ";
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PassFail", iCID_EUseSummary ), BEMP_QStr, (void*) &sPassFail, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PassFail", iCID_EUseSummary ), BEMP_QStr, (void*) &sPassFail, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
 							// SAC 6/8/16 - store new PctSav* values & labels (tic #1735)
 							double fRndTDVTotPctSav     = (dRndStdTDVTot     > 0 ? (dRndTDVTotMargin     * 100.0 / dRndStdTDVTot    ) : 0);
@@ -1286,11 +1509,44 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									sRndTDVTotPctSav = QString::number(fRndTDVTotPctSav, 'f', 1);
 								if (fRndTDVCompTotPctSav <= -0.0001 || fRndTDVCompTotPctSav >= 0.0001)
 									sRndTDVCompTotPctSav = QString::number(fRndTDVCompTotPctSav, 'f', 1);
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsTDV",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVTotPctSav    , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpTDV", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVCompTotPctSav, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsTDV",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpTDV", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							}
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavTDVLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVTotPctSav    , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpTDVLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVCompTotPctSav, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavTDVLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpTDVLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndTDVCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+							{	double fRndSrcTotPctSav     = (dRndStdSrcTot     > 0 ? (dRndSrcTotMargin     * 100.0 / dRndStdSrcTot    ) : 0);
+								double fRndSrcCompTotPctSav = (dRndStdSrcCompTot > 0 ? (dRndSrcCompTotMargin * 100.0 / dRndStdSrcCompTot) : 0);
+								QString sRndSrcTotPctSav     = "-";
+								QString sRndSrcCompTotPctSav = "-";
+								if (osRunInfo.NumQuickAnalysisPeriods() < 1)
+								{	if (fRndSrcTotPctSav <= -0.0001 || fRndSrcTotPctSav >= 0.0001)
+										sRndSrcTotPctSav = QString::number(fRndSrcTotPctSav, 'f', 1);
+									if (fRndSrcCompTotPctSav <= -0.0001 || fRndSrcCompTotPctSav >= 0.0001)
+										sRndSrcCompTotPctSav = QString::number(fRndSrcCompTotPctSav, 'f', 1);
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsSrc",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndSrcTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpSrc", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndSrcCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavSrcLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndSrcTotPctSav    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpSrcLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndSrcCompTotPctSav, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
+						// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+						// 	{	double fRndSrcPrmTotPctSav     = (dRndStdSrcPrmTot     > 0 ? (dRndSrcPrmTotMargin     * 100.0 / dRndStdSrcPrmTot    ) : 0);
+						// 		double fRndSrcPrmCompTotPctSav = (dRndStdSrcPrmCompTot > 0 ? (dRndSrcPrmCompTotMargin * 100.0 / dRndStdSrcPrmCompTot) : 0);
+						// 		QString sRndSrcPrmTotPctSav     = "-";
+						// 		QString sRndSrcPrmCompTotPctSav = "-";
+						// 		if (osRunInfo.NumQuickAnalysisPeriods() < 1)
+						// 		{	if (fRndSrcPrmTotPctSav <= -0.0001 || fRndSrcPrmTotPctSav >= 0.0001)
+						// 				sRndSrcPrmTotPctSav = QString::number(fRndSrcPrmTotPctSav, 'f', 1);
+						// 			if (fRndSrcPrmCompTotPctSav <= -0.0001 || fRndSrcPrmCompTotPctSav >= 0.0001)
+						// 				sRndSrcPrmCompTotPctSav = QString::number(fRndSrcPrmCompTotPctSav, 'f', 1);
+						// 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsSrcPrm",    iCID_EUseSummary ), BEMP_Flt, (void*) &fRndSrcPrmTotPctSav    , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 			BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavingsCmpSrcPrm", iCID_EUseSummary ), BEMP_Flt, (void*) &fRndSrcPrmCompTotPctSav, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		}
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavSrcPrmLbl"   , iCID_EUseSummary ), BEMP_QStr, (void*) &sRndSrcPrmTotPctSav    , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "PctSavCmpSrcPrmLbl", iCID_EUseSummary ), BEMP_QStr, (void*) &sRndSrcPrmCompTotPctSav, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 	}
 						}
 	
 				// GENERATION & STORAGE OF SIMULATION STATUS MESSAGE
@@ -1320,7 +1576,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 							sLogMsg += ")";
 					//	QString sTempDbgMsg;		sTempDbgMsg = QString( "Setting EUseSummary:SimSummary[%1] (%2) -> %3" ).arg( QString::number(iSimIdx+1), QString::number(BEMPX_GetDatabaseID( "SimSummary", iCID_EUseSummary ) + iSimIdx), sLogMsg );
 					//	BEMMessageBox( sTempDbgMsg );
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SimSummary", iCID_EUseSummary ) + iSimIdx, BEMP_QStr, (void*) &sLogMsg, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "SimSummary", iCID_EUseSummary ) + iSimIdx, BEMP_QStr, (void*) &sLogMsg, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 													if (bVerbose)
 													{	sLogMsg = "  PerfSim_E+ - " + sLogMsg;
 														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -1344,93 +1600,170 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 	
 					if (!osRunInfo.IsStdRun())
 					{
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[2]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[3]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[4]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[2]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[3]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[4]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[11]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+					// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[14]", iCID_EUseSummary ), BEMP_Str, "Proposed"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[17]", iCID_EUseSummary ), BEMP_Str, "Prop Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[18]", iCID_EUseSummary ), BEMP_Str, "Prop Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[19]", iCID_EUseSummary ), BEMP_Str, "Prop Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						}
 	
-						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[1]", iCID_EUseSummary ), BEMP_Str, "End Use"      , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[1]", iCID_EUseSummary ), BEMP_Str, "End Use"      , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 						if (osRunInfo.CodeType() == CT_T24N)		// for CT_T24N runs
-						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[2]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[3]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[2]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[3]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 					// SAC 11/17/14 - modified label to include TDV in title following Design and switch units from kTDV/.. to kBtu/..
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[4]", iCID_EUseSummary ), BEMP_Str, "Design TDV"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[4]", iCID_EUseSummary ), BEMP_Str, "Design TDV"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[11]", iCID_EUseSummary ), BEMP_Str, "Source Energy", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[14]", iCID_EUseSummary ), BEMP_Str, "Src 2 Energy" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+							{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[17]", iCID_EUseSummary ), BEMP_Str, "Electric C02" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[18]", iCID_EUseSummary ), BEMP_Str, "Fuel C02"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[19]", iCID_EUseSummary ), BEMP_Str, "Total C02"    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
 	
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[2]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[3]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[4]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[2]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[3]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[4]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[11]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[14]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+							{	QString sC02EmisResLabel;
+								if (!sC02EmissionsResultsUnit.isEmpty())
+									sC02EmisResLabel = QString( "Emis. (%1)" ).arg( sC02EmissionsResultsUnit );
+								else
+									sC02EmisResLabel = "Emis. (tonne)";
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[17]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[18]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[19]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
 						}
 						else if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
-						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[2]", iCID_EUseSummary ), BEMP_Str, "Electricity"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[3]", iCID_EUseSummary ), BEMP_Str, "Natural Gas"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[2]", iCID_EUseSummary ), BEMP_Str, "Electricity"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[3]", iCID_EUseSummary ), BEMP_Str, "Natural Gas"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							QString sOtherFuelLabel;
 							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:EnergyCostOtherFuelLabel" ), sOtherFuelLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() ) || sOtherFuelLabel.length() < 3 ||
 									!sOtherFuelLabel.compare("Natural Gas", Qt::CaseInsensitive))		// SAC 10/28/15 - prevent double reporting of 'Natural Gas'
 								sOtherFuelLabel = "Other Fuel";
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[4]", iCID_EUseSummary ), BEMP_QStr, (void*) &sOtherFuelLabel, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[4]", iCID_EUseSummary ), BEMP_QStr, (void*) &sOtherFuelLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[2]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[3]", iCID_EUseSummary ), BEMP_Str, "Site (therms)", BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[4]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[2]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[3]", iCID_EUseSummary ), BEMP_Str, "Site (therms)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[4]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
 						}
 		
 						iEUIdx = -1;
 						while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
 						{
 							sPropName = QString( "Enduse%1[1]" ).arg( QString::number(iEUIdx+1) );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_Str, esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_Str, esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 						}
 					}
 					else
 					{
 						if (osRunInfo.CodeType() == CT_T24N)		// for CT_T24N runs
-						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[5]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[6]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[7]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[5]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[6]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[7]", iCID_EUseSummary ), BEMP_Str, "Standard"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[5]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[6]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[7]", iCID_EUseSummary ), BEMP_Str, "Design TDV"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[5]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[6]", iCID_EUseSummary ), BEMP_Str, "Design"       , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[7]", iCID_EUseSummary ), BEMP_Str, "Design TDV"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 	
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[5]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[6]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[7]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[5]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[6]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[7]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[8]", iCID_EUseSummary ), BEMP_Str, "Compliance"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, "TDV Margin"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[8]", iCID_EUseSummary ), BEMP_Str, "Compliance"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, "TDV Margin"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+							if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+							{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[12]", iCID_EUseSummary ), BEMP_Str, "Standard"      , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[12]", iCID_EUseSummary ), BEMP_Str, "Source Energy" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[12]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[13]", iCID_EUseSummary ), BEMP_Str, "Compliance"    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[13]", iCID_EUseSummary ), BEMP_Str, "Src Margin"    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[13]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
+						// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+						// 	{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[15]", iCID_EUseSummary ), BEMP_Str, "Standard"      , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[15]", iCID_EUseSummary ), BEMP_Str, "Src 2 Energy"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[15]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[16]", iCID_EUseSummary ), BEMP_Str, "Compliance"    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[16]", iCID_EUseSummary ), BEMP_Str, "Src 2 Margin"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[16]", iCID_EUseSummary ), BEMP_Str, "(kBtu/ft²-yr)" , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						// 	}
+							if (sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+							{	QString sC02EmisResLabel, sC02EmisMargResLabel;
+								if (!sC02EmissionsResultsUnit.isEmpty())
+								{	sC02EmisResLabel = QString( "Emis. (%1)" ).arg( sC02EmissionsResultsUnit );
+									sC02EmisMargResLabel = QString( "Margin (%1)" ).arg( sC02EmissionsResultsUnit );
+								}
+								else
+								{	sC02EmisResLabel = "Emis. (tonne)";
+									sC02EmisMargResLabel = "Margin (tonne)";
+								}
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[20]", iCID_EUseSummary ), BEMP_Str, "Std Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[21]", iCID_EUseSummary ), BEMP_Str, "Std Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[22]", iCID_EUseSummary ), BEMP_Str, "Std Design"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[20]", iCID_EUseSummary ), BEMP_Str, "Electric C02", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[21]", iCID_EUseSummary ), BEMP_Str, "Fuel C02"    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[22]", iCID_EUseSummary ), BEMP_Str, "Total C02"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[20]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[21]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[22]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[23]", iCID_EUseSummary ), BEMP_Str, "C02"         , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[23]", iCID_EUseSummary ), BEMP_Str, "Emissions"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[23]", iCID_EUseSummary ), BEMP_QStr, (void*) &sC02EmisMargResLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							}
 						}
 						else if (osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC)		// for CT_S901G runs 
-						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[5]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[6]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[7]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						{	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[5]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[6]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[7]", iCID_EUseSummary ), BEMP_Str, "Baseline"     , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[5]", iCID_EUseSummary ), BEMP_Str, "Electricity"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[6]", iCID_EUseSummary ), BEMP_Str, "Natural Gas"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[5]", iCID_EUseSummary ), BEMP_Str, "Electricity"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[6]", iCID_EUseSummary ), BEMP_Str, "Natural Gas"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							QString sOtherFuelLabel;
 							if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:EnergyCostOtherFuelLabel" ), sOtherFuelLabel, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() ) || sOtherFuelLabel.length() < 3 ||
 									!sOtherFuelLabel.compare("Natural Gas", Qt::CaseInsensitive))		// SAC 10/28/15 - prevent double reporting of 'Natural Gas'
 								sOtherFuelLabel = "Other Fuel";
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[7]", iCID_EUseSummary ), BEMP_QStr, (void*) &sOtherFuelLabel, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[7]", iCID_EUseSummary ), BEMP_QStr, (void*) &sOtherFuelLabel, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 	
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[5]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[6]", iCID_EUseSummary ), BEMP_Str, "Site (therms)", BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[7]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[5]", iCID_EUseSummary ), BEMP_Str, "Site (MWh)"   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[6]", iCID_EUseSummary ), BEMP_Str, "Site (therms)", BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[7]", iCID_EUseSummary ), BEMP_Str, "Site (MBtu)"  , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );	// SAC 10/28/15 - therms -> MBtu
 
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[8]", iCID_EUseSummary ), BEMP_Str, "Energy"       , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, "Cost"         , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, "Summary"      , BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title1[8]", iCID_EUseSummary ), BEMP_Str, "Energy"       , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title2[8]", iCID_EUseSummary ), BEMP_Str, "Cost"         , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Title3[8]", iCID_EUseSummary ), BEMP_Str, "Summary"      , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 						}
 					}
 	
 			// includes TDV & comp margin retrieval & setting (if present in data model)
 					QString sPropName2, sResultVal;
-					double dRndResSum[3] = { 0.0,0.0,0.0 };
+					double dRndResSum[5] = { 0.0,0.0,0.0,0.0,0.0 };
 					iEUIdx = -1;
 					while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
 					{	BEMObject* pEUObj = BEMPX_GetObjectByName( iCID_EnergyUse, iError, esEUMap_CECNonRes[iEUIdx].sEnduseName, BEMO_User, osRunInfo.BEMProcIdx() );		assert( pEUObj );
 						int iEUObjIdx = (pEUObj == NULL ? -1 : BEMPX_GetObjectIndex( pEUObj->getClass(), pEUObj, osRunInfo.BEMProcIdx() ));					assert( iEUObjIdx >= 0 );
 						if (iEUObjIdx >= 0)
-						{	double fVal[4] = {0,0,0,0};
+						{	double fVal[8] = {0,0,0,0,0,0,0,0};
 							for (iFl=0; iFl < OSF_NumFuels; iFl++)
 							{
 								sPropName = QString( "%1%2Energy" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
@@ -1440,21 +1773,34 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 							if (osRunInfo.CodeType() == CT_T24N)		// for CT_T24N runs ONLY
 							{	fVal[1] += fVal[2];   fVal[2] = 0;	  // sum NatGas & Other fuel together into fVal[1] and zero out fVal[2]
 								sPropName = QString( "%1TDV" ).arg( (!osRunInfo.IsStdRun() ? "Proposed" : "Standard") );
-								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), fVal[2], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, fVal[2], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
 									fVal[2] = 0;
+								if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+								{	sPropName = QString( "%1Src" ).arg( (!osRunInfo.IsStdRun() ? "Proposed" : "Standard") );
+									if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, fVal[3], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+										fVal[3] = 0;
+								}
+							// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+							// 	{	sPropName = QString( "%1SrcPrm" ).arg( (!osRunInfo.IsStdRun() ? "Proposed" : "Standard") );
+							// 		if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, fVal[4], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+							// 			fVal[4] = 0;
+							// 	}
 							}
 							//int iStartCol = (iEUIdx==IDX_T24_NRES_EU_CompTot ? 2 : 0);
 							double dCol1Div = (osRunInfo.CodeType() == CT_T24N ? 10.0 :  1.0);		// SAC 10/28/15 - T24N fuel use therms -> MBtu
 							double dCol2Div = (osRunInfo.CodeType() == CT_T24N ?  1.0 : 10.0);		// SAC 10/28/15 - S901G other fuel use therms -> MBtu
-							for (int iCol=0; iCol<3; iCol++)
+						// 	int iNumCols = (osRunInfo.CodeType() != CT_T24N ? 3 : (!sSrcEnergyPrmTableName.isEmpty() ? 5 : (sSrcEnergyTableName.length() > 1 ? 4 : 3)));		// SAC 6/28/19 - 2022
+							int iNumCols = (osRunInfo.CodeType() != CT_T24N ? 3 : (sSrcEnergyTableName.length() > 1 ? 4 : 3));		// SAC 6/28/19 - 2022
+							for (int iCol=0; iCol<iNumCols; iCol++)
 							{
-								sPropName = QString( "Enduse%1[%2]" ).arg( QString::number(iEUIdx+1), QString::number(iCol+(osRunInfo.IsStdRun() ? 5 : 2)) );
+								int iEnduseID = (iCol < 3 ? iCol+(osRunInfo.IsStdRun() ? 5 : 2) : (iCol*3)+(osRunInfo.IsStdRun() ? 3 : 2));
+								sPropName = QString( "Enduse%1[%2]" ).arg( QString::number(iEUIdx+1), QString::number(iEnduseID) );
 								double dValToDisplay = fVal[iCol] /	(iCol==0 ? 1000.0 : (iCol==1 ? dCol1Div : (iCol==2 ? dCol2Div : 1.0))  );  // (iCol==1 ? 1.0 : 1000.0 );  // (iCol==2 ? 1 : 1000);
 								//	double dMinValToDisplay = 				(iCol==1 ? 0.5    : 0.05 );
 								int iDecPrec;
 								if (osRunInfo.CodeType() == CT_T24N)		// for CT_T24N runs ONLY
 									//iDecPrec = 		1;		// SAC 10/28/15 - ALL results now #.# since converting fuel use from therms to MBtu - was:  (iCol==1 ? 0      : 1    );
-									iDecPrec = 		(iCol==2 ? 2 : 1 );		// SAC 6/8/16 - T24 TDV results now reported w/ 2 decimal places (tic #1735)
+									iDecPrec = 		(iCol>=2 ? 2 : 1 );		// SAC 6/8/16 - T24 TDV results now reported w/ 2 decimal places (tic #1735)
 								else
 									iDecPrec = 		(iCol==1 ? 0 : 1 );		// SAC 10/28/15 - S901G Other fuel use therms -> MBtu  was: (iCol==0 ? 1 : 0 );
 					// SAC 5/8/14 - revise display of sums to reflect
@@ -1477,7 +1823,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									sResultVal = "--";
 								else
 									sResultVal = BEMPX_FloatToString( dValToDisplay, iDecPrec /*nRtOfDec*/, TRUE /*bAddCommas*/ );
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							}
 
 							// SAC 10/9/16 - store demand results
@@ -1490,7 +1836,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									sResultVal = "--";
 								else
 									sResultVal = BEMPX_FloatToString( dEDem, 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								if (iEUIdx == IDX_T24_NRES_EU_Total && osRunInfo.IsStdRun())
 								{	// calculate and store kW difference
 									sPropName = QString( "PropElecDemand" );
@@ -1504,26 +1850,49 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									//else
 									//	sResultVal = BEMPX_FloatToString( dEDem, 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 									//BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_Flt, (void*) &dEDem, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_Flt, (void*) &dEDem, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								}
 	
 						// lastly, populate Compliance Margin column
-							if (osRunInfo.CodeType() == CT_T24N && osRunInfo.IsStdRun() && iEUIdx <= IDX_T24_NRES_EU_CompTot)
-							{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse ), fVal[3], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
-									fVal[3] = 0;
+							// SAC 8/14/19 - removed logic preventing storage of Enduse%1[8] (% compliance margin) for non-compliance enduses (Com tic #3074)
+							//if (osRunInfo.CodeType() == CT_T24N && osRunInfo.IsStdRun() && iEUIdx <= IDX_T24_NRES_EU_CompTot)
+							if (osRunInfo.CodeType() == CT_T24N && osRunInfo.IsStdRun())
+							{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "CompMarginTDV", iCID_EnergyUse )+iResSet, fVal[5], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+									fVal[5] = 0;
 								sPropName = QString( "Enduse%1[8]" ).arg( QString::number(iEUIdx+1) );
-								//	if (fVal[3] >= 0.05 || fVal[3] <= -0.05)
-	                     //	{	sResultVal = BEMPX_FloatToString( fVal[3], 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+								//	if (fVal[5] >= 0.05 || fVal[5] <= -0.05)
+	                     //	{	sResultVal = BEMPX_FloatToString( fVal[5], 1 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 								//		BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								//	}
 								//	else
 								//		BEMPX_DefaultProperty( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), iError, -1, BEMO_User, osRunInfo.BEMProcIdx() );
 					// SAC 5/8/14 - switched display to '--' for TRUE zeroes or values for anything else (that may even display as a zero)
-								if (WithinMargin( fVal[3], 0.0, 0.0049 ))		// SAC 6/8/16 - increase margin around 0 that will display as '--' from 0.0001 to 0.0049
+								if (WithinMargin( fVal[5], 0.0, 0.0049 ))		// SAC 6/8/16 - increase margin around 0 that will display as '--' from 0.0001 to 0.0049
 									sResultVal = "--";
 	                     else
-									sResultVal = BEMPX_FloatToString( fVal[3], 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );		// SAC 6/8/16 - 1 -> 2 decimal places (tic #1735)
-								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									sResultVal = BEMPX_FloatToString( fVal[5], 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );		// SAC 6/8/16 - 1 -> 2 decimal places (tic #1735)
+								BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+
+								if (sSrcEnergyTableName.length() > 1)		// SAC 6/28/19 - 2022
+								{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "CompMarginSrc", iCID_EnergyUse )+iResSet, fVal[6], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+										fVal[6] = 0;
+									sPropName = QString( "Enduse%1[13]" ).arg( QString::number(iEUIdx+1) );
+									if (WithinMargin( fVal[6], 0.0, 0.0049 ))		// SAC 6/8/16 - increase margin around 0 that will display as '--' from 0.0001 to 0.0049
+										sResultVal = "--";
+	         	            else
+										sResultVal = BEMPX_FloatToString( fVal[6], 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
+							// 	if (!sSrcEnergyPrmTableName.isEmpty())		// SAC 6/28/19 - 2022
+							// 	{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "CompMarginSrcPrm", iCID_EnergyUse )+iResSet, fVal[7], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+							// 			fVal[7] = 0;
+							// 		sPropName = QString( "Enduse%1[16]" ).arg( QString::number(iEUIdx+1) );
+							// 		if (WithinMargin( fVal[7], 0.0, 0.0049 ))		// SAC 6/8/16 - increase margin around 0 that will display as '--' from 0.0001 to 0.0049
+							// 			sResultVal = "--";
+	         	      //       else
+							// 			sResultVal = BEMPX_FloatToString( fVal[7], 2 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+							// 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+							// 	}
 							}
 							else if ((osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC) && osRunInfo.IsStdRun() && iEUIdx == IDX_T24_NRES_EU_Total)
 							{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "PropTotalCost", iCID_EnergyUse ), fVal[1], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
@@ -1532,28 +1901,57 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 									fVal[2] = 0;
 								if (fVal[1] < 0.1 || fVal[2] < 0.1)
 								{	sResultVal = "--";
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse1[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse2[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse1[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse2[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								}
 								else
-								{	fVal[3] = (int( fVal[2] + 0.5 ) - int( fVal[1] + 0.5 ));
+								{	fVal[5] = (int( fVal[2] + 0.5 ) - int( fVal[1] + 0.5 ));
 									sResultVal = BEMPX_FloatToString( fVal[1], 0 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 									sResultVal = "$ " + sResultVal;
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse1[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse1[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 									sResultVal = BEMPX_FloatToString( fVal[2], 0 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 									sResultVal = "$ " + sResultVal;
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse2[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
-									sResultVal = BEMPX_FloatToString( fVal[3], 0 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse2[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									sResultVal = BEMPX_FloatToString( fVal[5], 0 /*nRtOfDec*/, TRUE /*bAddCommas*/ );
 									sResultVal = "$ " + sResultVal;
-									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[8]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}
+							}
+
+							if (osRunInfo.CodeType() == CT_T24N && sC02EmissionsElecTableName.length() > 1)		// SAC 9/12/19 - C02 emissions (tonne) (tic #3106)
+							{	double fC02[4] = {0,0,0,0};
+								assert( OSF_NumFuels < 5 );
+								for (iFl=0; iFl < OSF_NumFuels; iFl++)
+								{	sPropName = QString( "%1%2C02" ).arg( sEUPropNameBase, pszaFuelPropName[iFl] );
+									if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, fC02[iFl], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+										fC02[iFl] = 0;
+								}
+								fC02[1] += fC02[2];   fC02[2] = 0;	  // sum NatGas & Other fuel together into fC02[1] and zero out fC02[2]
+								sPropName = QString( "%1TotalC02" ).arg( sEUPropNameBase );
+								if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse )+iResSet, fC02[2], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+									fC02[2] = 0;
+								fC02[0] *= fC02EmissionsResultsMult;		fC02[1] *= fC02EmissionsResultsMult;		fC02[2] *= fC02EmissionsResultsMult;
+								for (int iCol=0; iCol<3; iCol++)
+								{	if (fC02[iCol] != 0.0)
+									{	int iEnduseID = iCol + (osRunInfo.IsStdRun() ? 20 : 17);
+										sPropName = QString( "Enduse%1[%2]" ).arg( QString::number(iEUIdx+1), QString::number(iEnduseID) );
+										sResultVal = BEMPX_FloatToString( fC02[iCol], lC02EmissionsResultsDecPrec /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+								}	}
+								if (osRunInfo.IsStdRun())	// Margin column
+								{	if (!BEMPX_GetFloat( BEMPX_GetDatabaseID( "MarginC02", iCID_EnergyUse )+iResSet, fC02[0], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() ))
+										fC02[0] = 0;
+									sPropName = QString( "Enduse%1[23]" ).arg( QString::number(iEUIdx+1) );
+									sResultVal = BEMPX_FloatToString( fC02[0], lC02EmissionsResultsDecPrec /*nRtOfDec*/, TRUE /*bAddCommas*/ );
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								}
 							}
 
 						// special processing for S901G - store energy COSTS in the IDX_T24_NRES_EU_CompTot bucket (Enduse8[2-7])
 							if ((osRunInfo.CodeType() == CT_S901G || osRunInfo.CodeType() == CT_ECBC) && iEUIdx == IDX_T24_NRES_EU_Total)
 							{	sResultVal = "Energy Costs";
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[1]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Enduse8[1]", iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 								sPropName = QString( "%1ElecCost" ).arg( sEUPropNameBase );
 										BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), fVal[1], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() );
 										if (fVal[1] < 0.01)
@@ -1563,7 +1961,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 											sResultVal = "$ " + sResultVal;
 										}
 										sPropName = QString( "Enduse8[%1]" ).arg( QString::number(osRunInfo.IsStdRun() ? 5 : 2) );
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
 								sPropName = QString( "%1NatGasCost" ).arg( sEUPropNameBase );
 										BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), fVal[1], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() );
@@ -1574,7 +1972,7 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 											sResultVal = "$ " + sResultVal;
 										}
 										sPropName = QString( "Enduse8[%1]" ).arg( QString::number(osRunInfo.IsStdRun() ? 6 : 3) );
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 
 								sPropName = QString( "%1OtherCost" ).arg( sEUPropNameBase );
 										BEMPX_GetFloat( BEMPX_GetDatabaseID( sPropName, iCID_EnergyUse ), fVal[1], 0, BEMP_Flt, iEUObjIdx, BEMO_User, osRunInfo.BEMProcIdx() );
@@ -1585,12 +1983,14 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 											sResultVal = "$ " + sResultVal;
 										}
 										sPropName = QString( "Enduse8[%1]" ).arg( QString::number(osRunInfo.IsStdRun() ? 7 : 4) );
-										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+										BEMPX_SetBEMData( BEMPX_GetDatabaseID( sPropName, iCID_EUseSummary ), BEMP_QStr, (void*) &sResultVal, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 							}
 						}	// end of  if (iEUObjIdx >= 0)
 					}	// end of  while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
 				}
 			}	// end of  if (iCID_EUseSummary > 0 && fTotBldgFlrArea > 0)
+
+			}	// end of:  for (int iResSet=0; iResSet < lNumResultsSets; iResSet++) - loop over multiple results sets - SAC 11/3/19
 		}	// end of  if (osRunInfo.StoreHourlyResults())
 
 	
@@ -1633,7 +2033,8 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 					if (!bMaxUMLHLenMet)		// SAC 12/17/13 - prevent ZoneUMLH string from exceeding TextIO string length max - which in turn causes errors on File-Open
 					{	if (!sZoneUMLHSummary.isEmpty())	// SAC 5/31/14 - revised newline writing to prevent trailing \r\n @ end of string
 							sZoneUMLHSummary += "\r\n";
-						if ((sZoneUMLHSummary.length() + 120) < TextioMaxLine)	// SAC 5/31/14 - increased 100->200 as max TextIO string len still being exceeded
+						if ((sZoneUMLHSummary.length() + 120) < TextioMaxLine)	// SAC 5/31/14 - increased 100->120 as max TextIO string len still being exceeded
+						//if ((sZoneUMLHSummary.length() + 120) < TextioMaxLine || bReportAllUMLHZones)	// SAC 5/31/14 - increased 100->120 as max TextIO string len still being exceeded   // SAC 11/11/19
 							sTemp = QString("clg: %1  htg: %2  '%3'" ).arg( QString::number(faZnResults[0], 'f', 0), QString::number(faZnResults[1], 'f', 0), 
 															(osRunInfo.NumResultObjects( ROT_Zone )==osRunInfo.NumObjects( ROT_Zone ) ? osRunInfo.ObjectName( ROT_Zone, iZn ) : "unknown") );
 						else
@@ -2425,7 +2826,7 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 															int iSimulationStorage /*=-1*/, double* dEPlusVer /*=NULL*/, char* pszEPlusVerStr /*=NULL*/, int iEPlusVerStrLen /*=0*/,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr /*=NULL*/, int iOpenStudioVerStrLen /*=0*/, int iCodeType /*=CT_T24N*/,
 															bool bIncludeOutputDiagnostics /*=false*/, int iProgressType /*=0*/, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
-															QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/ )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
+															QStringList* psaEPlusProcDirsToBeRemoved /*=NULL*/, bool bReportAllUMLHZones /*=false*/ )		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 {
 	int iRetVal = 0;
 	QString sTempErr;
@@ -2451,7 +2852,7 @@ int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunInfo,
 		}	}
 		if (iResCopyRetVal == 0)
 			ProcessNonresSimulationResults( osWrap, osRunInfo[iRun], iRetVal, pszSimProcessDir, bVerbose, iSimulationStorage, pszEPlusPath, 	// SAC 4/17/14 - moved ALL results processing to subordinate routine
-														psaEPlusProcDirsToBeRemoved );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors
+														psaEPlusProcDirsToBeRemoved, bReportAllUMLHZones );		// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
 	}
 
 	return iRetVal;

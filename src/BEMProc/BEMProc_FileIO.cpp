@@ -209,7 +209,7 @@ public:
    bool StatusRequiresWrite( BEMProperty* pProp, bool bWritePrimaryDefaultData=false );		// SAC 6/10/15 - CBECC issue 1061
    bool MustWriteProperty(   BEMObject* pObj, BEMProperty* pProp, int iProp, bool bWritePrimaryDefaultData=false );  // SAC 1/22/02 - final argument POSITION pos -> int iProp		// SAC 6/10/15 - CBECC issue 1061
    bool UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int iProp );  // SAC 1/22/02 - final argument POSITION pos -> int iProp
-   void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx );
+   void PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet=TRUE );		// SAC 6/8/19
    void WriteProperties( BEMObject* pObj, int iBEMProcIdx=-1, bool bWritePrimaryDefaultData=false,		// SAC 6/8/15 - CBECC issue 1061
    								bool bSkipWritingComponentName=false, int iIndentSpcs=0 );	// SAC 3/23/16 - added to enable re-write of "ALTER"ed objects (related to SpecificProperty tracking/writing)
    void WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pProp, int& iProp, int iBEMProcIdx, bool bWritePrimaryDefaultData=false, int iIndentSpcs=0 );  // SAC 1/22/02 - final argument POSITION& pos -> int& iProp	// SAC 6/10/15 - CBECC issue 1061
@@ -721,7 +721,7 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
          if (m_file.NextCharacterOnLine() != '\"')
 				BEMPX_GetDefaultComponentName( i1Class, sObjName, iBEMProcIdx );
 			else
-         	sObjName = m_file.ReadString();
+         	sObjName = m_file.ReadString( FALSE /*bReadPastEOL*/, TRUE /*bAllowMidQuote*/ );		// SAC 8/14/19 - mods to allow for mid-string quotes (Com tic #2986)
 
          int iError;
          int iObjIdx = -1;
@@ -849,7 +849,9 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
                      if ( m_file.GetChr() != '=' )
                         m_file.ThrowFormatException(); // missing '='
 
-                     QString strParent = m_file.ReadString( TRUE );  // SAC 6/17/01 - added argument to ALLOW reading beyond carriage return
+                     //QString strParent = m_file.ReadString( TRUE );  // SAC 6/17/01 - added argument to ALLOW reading beyond carriage return
+                     // SAC 8/14/19 - revised to DIS-allow reading beyond carriage return and ALLOW mid-name quotes (Com tic #2986)
+                     QString strParent = m_file.ReadString( FALSE /*bReadPastEOL*/, TRUE /*bAllowMidQuote*/ );
 
                      // post the parent name to BEMProc
                      lDBID = (i1CurClass * BEM_COMP_MULT) + BEM_PARAM0_PARENT;
@@ -1142,7 +1144,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 	                                                   sErrantData = sTemp;
 	                                             }
 	                                             break;  }
-	                           case BEMP_Obj : {  QString sTemp = m_file.ReadString();
+	                           case BEMP_Obj : { // SAC 8/14/19 - mods to allow for mid-string quotes (Com tic #2986)   // SAC 8/15/19 - further mods to fix bug in retrieving array of object references (Com tic #2986) 
+	                           						QString sTemp = m_file.ReadString( FALSE /*bReadPastEOL*/, TRUE /*bAllowMidQuote*/, (nValues > 1) /*bMayBeArray*/ );
 	                                             // iError;
 	                                             if (bPostData && ePropStat != BEMS_Undefined)  // SAC 10/19/01 - added reference to bPostData
 	                                             {
@@ -1282,6 +1285,8 @@ BEMObject* CProjectFile::ReadComponent( int& iDBIDSetFailureIdx, bool bCreateObj
 			; // we're done, no problem
 		else
 		{	QString msg = QString( "Error reading component from file because '%1'" ).arg( te.what() );
+			if (te.m_line > 0 && te.m_column > 0)
+				msg += QString( ", line %1, column %2" ).arg( QString::number(te.m_line), QString::number(te.m_column) );	// SAC 10/31/19
 			if (BEMPX_WriteLogFile( msg, NULL, FALSE, m_bSupressAllMessageBoxes ) && !m_bSupressAllMessageBoxes)
 				BEMMessageBox( msg, NULL, 3 /*error*/ );
 			throw std::runtime_error(boost::str(boost::format("Error reading component from file because '%1") %
@@ -2014,7 +2019,7 @@ void FloatToString_NoExpNotation( QString& string, double fNum )
 }
 
 static char szNone[] = "- none -";
-void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx )
+void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QString& sData, int iBEMProcIdx, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )
 {
    // get the data type of this property
    int iDataType = pProp->getType()->getPropType();
@@ -2041,7 +2046,7 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
       else // if (iDataType == BEMP_Sym)
       {  // symbol => convert integer value to symbol string and enclose in double quotes
 	// SAC 9/23/16 - kludge to replcate MFC behavior where blank symbol strings are written to project file as "(null)"
-      	QString qsSym = GetSymbolStringFromPtrs( pProp->getInt(), pObj, pProp, iBEMProcIdx );
+      	QString qsSym = GetSymbolStringFromPtrs( pProp->getInt(), pObj, pProp, iBEMProcIdx, bOnlyFromCurrentSymDepSet );
       	if (qsSym.isEmpty())
       		qsSym = "(null)";
 
@@ -2143,6 +2148,9 @@ void CProjectFile::WriteBracketPropertyArray( BEMObject* pObj, BEMProperty* pPro
       {
          // convert property value to string
          PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+			if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
+				 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
+	         PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
 
          // if property string not zero length, then write it
          if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
@@ -2220,6 +2228,9 @@ void CProjectFile::WriteParenPropertyArray( BEMObject* pObj, BEMProperty* pProp,
       QString sData;
       // convert this property's value to a string
       PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+		if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
+			 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
+         PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
 
       // if property string not zero length, then write it
       if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// SAC 4/7/16
@@ -2407,6 +2418,10 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	      {
    	         QString sData;
    	         PropertyToString( pObj, pProp, sData, iBEMProcIdx );
+					if (sData.length() > 0 && m_bIsUserInputMode && pProp->getType()->getPropType() == BEMP_Sym &&
+						 sData.indexOf("(null)") == 1 && !m_bReportInvalidEnums)	// SAC 6/8/19
+	         		PropertyToString( pObj, pProp, sData, iBEMProcIdx, FALSE /*bOnlyFromCurrentSymDepSet*/ );		// find enumeration string outside current SymDepList
+
    	         if (sData.length() > 0 && (!m_bIsUserInputMode || pProp->getType()->getPropType() != BEMP_Sym || sData.indexOf("(null)") != 1))	// prevent writing enums = "(null)"
    	         {
    	   			m_file.WriteToken( sIndent.toLocal8Bit().constData(), sIndent.length() );

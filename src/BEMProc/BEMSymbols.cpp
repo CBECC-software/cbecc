@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -93,7 +93,7 @@ BEMSymbolList* GetSymbolList( long lDBID, BOOL* pbSymListArrayDependent /*=NULL*
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-QString GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx /*=-1*/ )
+QString GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pProp, int iBEMProcIdx /*=-1*/, BOOL bOnlyFromCurrentSymDepSet /*=TRUE*/ )
 {	QString sRet;
    if (pObj && pProp)
    {
@@ -110,7 +110,7 @@ QString GetSymbolStringFromPtrs( long iSymVal, BEMObject* pObj, BEMProperty* pPr
       int iOccur = BEMPX_GetObjectIndex( pObj->getClass(), pObj, iBEMProcIdx );
 
       if (lDBID > 0 && iOccur >= 0)
-      	sRet = BEMPX_GetSymbolString( iSymVal, lDBID, iOccur, pObj->getObjectType(), iBEMProcIdx );
+      	sRet = BEMPX_GetSymbolString( iSymVal, lDBID, iOccur, pObj->getObjectType(), iBEMProcIdx, bOnlyFromCurrentSymDepSet );
    }
    return sRet;
 }

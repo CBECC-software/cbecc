@@ -66,6 +66,13 @@ const char* pszRunAbbrev_pfxE = "pfx-E";
 const char* pszRunAbbrev_pfxS = "pfx-S";
 const char* pszRunAbbrev_pfxW = "pfx-W";
 const char* pszRunAbbrev_dr   = "dr";   
+const char* pszRunAbbrev_hrtd = "hrtd";	// HERS Rated	- SAC 11/7/19
+const char* pszRunAbbrev_href = "href";	// HERS Reference
+const char* pszRunAbbrev_hirt = "hirtd";	// HERS Idx Adjustment Rated
+const char* pszRunAbbrev_hirf = "hiref";	// HERS Idx Adjustment Reference
+
+bool RunIsHERS( int iRunID )	{  return (iRunID == CRM_HERSRtd || iRunID == CRM_HERSIdxRtd ||
+													  iRunID == CRM_HERSRef || iRunID == CRM_HERSIdxRef);  }
 
 
 int StringInArray( QVector<QString>& saStrs, QString& sStr )
@@ -271,7 +278,7 @@ int CSERunMgr::SetupRun(
 	}
 	else if (iRunType >= CRM_PropFlex && iRunType <= CRM_WPropFlex)
 		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_ProposedFlexibility", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 8/3/17
-	else if (iRunType >= CRM_StdDesign || iRunType == CRM_StdMixedFuel)	// SAC 3/27/15 - was:  bIsStdDesign)
+	else if ((iRunType >= CRM_StdDesign || iRunType == CRM_StdMixedFuel) && !RunIsHERS(iRunType))	// SAC 3/27/15 - was:  bIsStdDesign)	// SAC 11/7/19 - !HERS
 	{	// SAC 3/27/15 - SET 
 		if (iRunType == CRM_DesignRating)
       	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:StdDesignBase" ), BEMP_Int, (void*) &m_lDesignRatingRunID );
@@ -289,6 +296,8 @@ int CSERunMgr::SetupRun(
 		if (iRetVal == 0 && iRunType == CRM_StdMixedFuel)	//  SAC 1/16/18 - setup for StdMixedFuel run
 			iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupSMFError, "SetupRun_StandardMixedFuel", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 4/5/17
 	}
+	else if (RunIsHERS(iRunType))		// SAC 11/7/19 - HERS
+		iRetVal = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalSetupPFlxError, "SetupRun_HERS", m_bVerbose, m_pCompRuleDebugInfo );	// SAC 11/7/19
 	if (iRetVal == 0 && BEMPX_AbortRuleEvaluation())
 		iRetVal = BEMAnal_CECRes_RuleProcAbort;
 
@@ -562,12 +571,18 @@ int CSERunMgr::SetupRun(
 					iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
 				}
 				else
-				{	double daTDVElec[8760], daTDVFuel[8760], daTDVSecElec[8760], daTDVSecFuel[8760];		long lCZ=0, lGas=0;
+				{	// SAC 6/10/19 - variable TDV table name (starting in 2022 research)
+					QString sTDVTableName;
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVTableName" ), sTDVTableName );
+					if (sTDVTableName.isEmpty())
+						sTDVTableName = "TDVTable";
+
+					double daTDVElec[8760], daTDVFuel[8760], daTDVSecElec[8760], daTDVSecFuel[8760];		long lCZ=0, lGas=0;
 					bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
 					if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lCZ  ) || lCZ  < 1 || lCZ > 16 ||
 							!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"     ), lGas ) || lGas < 1 || lGas > 2 ||
-							BEMPX_GetTableColumn( &daTDVElec[0], 8760, "TDVTable", ((lCZ-1) * 3) + 1       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
-							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, "TDVTable", ((lCZ-1) * 3) + 1 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+							BEMPX_GetTableColumn( &daTDVElec[0], 8760, sTDVTableName.toLocal8Bit().constData(), ((lCZ-1) * 3) + 1       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
+							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, sTDVTableName.toLocal8Bit().constData(), ((lCZ-1) * 3) + 1 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( false );
 						sErrorMsg = QString( "ERROR:  Unable to retrieve TDV data for CZ %1, Gas Type %2 (required for CSE simulation)" ).arg( QString::number(lCZ), QString::number(lGas) );
 						iRetVal = BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
@@ -1582,9 +1597,15 @@ int CSERunMgr::SetupRunFinish(
 			else
 			{			
 		// then need to write CSV of selected TDV series
+				// SAC 6/10/19 - variable TDV table name (starting in 2022 research)
+				QString sTDVTableName;
+				BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVTableName" ), sTDVTableName );
+				if (sTDVTableName.isEmpty())
+					sTDVTableName = "TDVTable";
+
 				double daTDVData[8760], daTDVSecData[8760];		long lClimateZone=0;		bool bHaveSecTDV=false;
 				if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:ClimateZone" ), lClimateZone ) ||
-						BEMPX_GetTableColumn( &daTDVData[0], 8760, "TDVTable", ((lClimateZone-1) * 3) + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+						BEMPX_GetTableColumn( &daTDVData[0], 8760, sTDVTableName.toLocal8Bit().constData(), ((lClimateZone-1) * 3) + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 				{	assert( false );
 // how to handle error retrieving climate zone or TDV data ??
 				}
@@ -1709,6 +1730,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 											bool bRemovePVBatt /*=false*/ )
 {
 	int iRetVal = 0;
+	QString sLogMsg;
 #ifdef OSWRAPPER
 	int iPrevBEMProcIdx = -1;	// SAC 7/23/18
 	if (iBEMProcIdx >= 0)
@@ -1717,7 +1739,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 	}
 	CSERun* pCSERun = new CSERun;
 	m_vCSERun.push_back( pCSERun);
-	QString sMsg, sLogMsg;
+	QString sMsg;
 	m_iNumRuns = 1;		// SAC 5/24/16 - not running parallel DHW simulations for non-res (for now)
 	BOOL bLastRun = (iRunIdx == (m_iNumRuns-1));						assert( bLastRun );	// remove if/when we do parallel runs in -Com...
 	BOOL bIsStdDesign = (iRunType == CRM_StdDesign);
@@ -1732,7 +1754,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 	if (m_bStoreBEMProcDetails)
 	{	QString sDbgFileName;
-		sDbgFileName = QString( "%1.ibd-b4Evals" ).arg( sProjFileAlone );
+		sDbgFileName = QString( "%1%2.ibd-b4Evals" ).arg( m_sProcessPath, sProjFileAlone );		// SAC 9/27/19 - added path so not written to prior E+ processing dir
 		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
 	}
 
@@ -2037,10 +2059,23 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				{	double daTDVElec[8760], daTDVFuel[8760];  //, daTDVSecElec[8760], daTDVSecFuel[8760];
 					long lCZ=0, lGas=0;
 					bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
+					BOOL bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
+					if (bGasTypeOK && lGas > 2)
+					{	// SAC 9/27/19 - switch GasType from 'None' to either NatGas or Propane based on whether NatGas available
+						long lNatGasAvail=1;
+						if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
+							lGas = (lNatGasAvail ? 1 : 2);
+					}
+
+					QString sTDVMultTableName;		// SAC 11/5/19
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" ), sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					if (sTDVMultTableName.isEmpty())
+						sTDVMultTableName = "TDVbyCZandFuel";
+
 					if (	!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum" ), lCZ  ) || lCZ  < 1 || lCZ > 16 ||
-							!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas ) || lGas < 1 || lGas > 2 ||
-							BEMPX_GetTableColumn( &daTDVElec[0], 8760, "TDVbyCZandFuel", ((lCZ-1) * 3) + 2       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
-							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, "TDVbyCZandFuel", ((lCZ-1) * 3) + 2 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 )
+							!bGasTypeOK || lGas < 1 || lGas > 2 ||
+							BEMPX_GetTableColumn( &daTDVElec[0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCZ-1) * 3) + 2       , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
+							BEMPX_GetTableColumn( &daTDVFuel[0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCZ-1) * 3) + 2 + lGas, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 )
 					{	assert( false );
 						sErrorMsg = QString( "ERROR:  Unable to retrieve Electric TDV data for CZ %1 (required for CSE simulation)" ).arg( QString::number(lCZ) );
 						iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
@@ -2338,6 +2373,11 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 #else
 			iRunIdx;  iRunType;  sErrorMsg;  bAllowReportIncludeFile;  pszRunID;  pszRunAbbrev;  psCSEVer;  iBEMProcIdx;
 #endif
+
+	if (m_bStoreBEMProcDetails && iRetVal > 0 && !sErrorMsg.isEmpty())
+	{		sLogMsg = QString( "   CSERunMgr::SetupRun_NonRes() unsuccessful:  returning %1 -> %2" ).arg( QString::number( iRetVal ), sErrorMsg );
+			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	}
 
 	return iRetVal;
 }

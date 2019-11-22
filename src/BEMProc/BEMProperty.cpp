@@ -39,6 +39,91 @@
 #include "memLkRpt.h"
 
 
+// SAC 8/7/10 - implementation of targeted debug output
+static const char* pszaDataStatus[] = {	"Undef",		// BEMS_Undefined,  
+														"PDef" ,		// BEMS_ProgDefault,
+														"RDef" ,		// BEMS_RuleDefault,
+														"RLib" ,		// BEMS_RuleLibrary,
+														"RVal" ,		// BEMS_RuleDefined,
+														"UDef" ,		// BEMS_UserDefault,
+														"Ulib" ,		// BEMS_UserLibrary,
+														"UVal" ,		// BEMS_UserDefined,
+														"SRes" ,		// BEMS_SimResult,  
+														"UNKn" };	// BEMS_NumTypes,  
+static inline const char* GetDataStatusAbbrev( int iDataStatus )
+{	return ((iDataStatus >= BEMS_Undefined && iDataStatus < BEMS_NumTypes) ? pszaDataStatus[iDataStatus] : pszaDataStatus[BEMS_NumTypes]);
+}
+void ReportTargetedDebugInfo( /*ExpEvalStruct* pEval, int iDataType,*/ long lDBID, int iObjIdx, /*BEM_ObjType eObjType,*/ QString sCallingFunc, int iBEMProcModel )
+{
+	int iDataType = BEMPX_GetDataType( lDBID );
+	BEM_ObjType eObjType = BEMPX_GetCurrentObjectType( BEMPX_GetClassID( lDBID ), iObjIdx, iBEMProcModel );
+   assert( lDBID > 0 && iDataType > 0 );
+   if (lDBID > 0 && iDataType > 0)
+   {
+		int iDataStatus, iSpecialVal, iError;		long lData=0;		double dData=0;		QString sData;		BEMObject* pObj=NULL;
+		if (iDataType == BEMP_Sym || iDataType == BEMP_Int)
+		{	lData = BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
+			if (iDataStatus > 0 && iDataType == BEMP_Sym)
+				sData = BEMPX_GetSymbolString( lData, lDBID, iObjIdx, eObjType );
+		}
+		else if (iDataType == BEMP_Flt)
+			dData = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
+		else if (iDataType == BEMP_Str)
+			sData = BEMPX_GetStringAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
+		else if (iDataType == BEMP_Obj)
+			pObj  = BEMPX_GetObjectAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iObjIdx, eObjType, iBEMProcModel );
+
+      QString sRetrievedData;
+		if (iDataStatus == BEMS_Undefined)
+         sRetrievedData = "UNDEFINED";
+      else if (iDataType == BEMP_Sym)
+         sRetrievedData = QString( "%1 (%2) (sym) (%3)" ).arg( sData, QString::number(lData), GetDataStatusAbbrev(iDataStatus) );
+      else if (iDataType == BEMP_Int)
+         sRetrievedData = QString(      "%1 (int) (%2)" ).arg( QString::number(lData), GetDataStatusAbbrev(iDataStatus) );
+      else if (iDataType == BEMP_Flt)
+         sRetrievedData = QString(       "%1 (flt) (%2)" ).arg( QString::number(dData), GetDataStatusAbbrev(iDataStatus) );
+      else if (iDataType == BEMP_Str)
+         sRetrievedData = QString(     "'%1' (str) (%2)" ).arg( sData, GetDataStatusAbbrev(iDataStatus) );
+      else if (iDataType == BEMP_Obj)
+      {	if (pObj)
+				sRetrievedData = QString( "'%1' %2 (obj) (%3)" ).arg( pObj->getName(), pObj->getClass()->getShortName(), GetDataStatusAbbrev(iDataStatus) );
+			else
+				sRetrievedData = QString( "'NONE' (obj) (%1)" ).arg( GetDataStatusAbbrev(iDataStatus) );
+      }
+
+      QString sDebug, sDebug2;
+      //if (!pEval->bRuleIDLogged)
+      //   sDebug = QString( "      %1  '" ).arg( pEval->pRuleBeingEvaled->getID() );
+      //else
+         sDebug  = "                   '";
+
+      pObj = BEMPX_GetObjectByClass( BEMPX_GetClassID( lDBID ), iError, iObjIdx, eObjType );
+      if (pObj) // && !pObj->getName().isEmpty())
+         sDebug += pObj->getName();
+      else
+         sDebug += "<unknown>";
+      sDebug += "' ";
+      BEMPX_DBIDToDBCompParamString( lDBID, sDebug2 );
+      sDebug += sDebug2;
+      sDebug += " -> ";
+      sDebug += sRetrievedData;
+
+      //if (!pEval->bRuleIDLogged)
+      //{  sDebug2 = QString( "     (rulelist: '%1')" ).arg( pEval->sRuleListName );
+      //   sDebug += sDebug2;
+      //   pEval->bRuleIDLogged = TRUE;
+      //}
+
+      if (!sCallingFunc.isEmpty())
+      {  sDebug2 = QString( "   (via %1)" ).arg( sCallingFunc );
+         sDebug += sDebug2;
+      }
+
+      BEMPX_WriteLogFile( sDebug );
+   }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // BEMProperty
 /////////////////////////////////////////////////////////////////////////////
@@ -61,7 +146,8 @@ static inline int longVectorIdx( std::vector<long>& laVals, long lVal )
 }
 
 
-void BEMProperty::ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lDBID, int iOccur /*=-1*/, BOOL bResetUserDefinedData /*=TRUE*/ ) 
+void BEMProperty::ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lDBID, int iOccur /*=-1*/, BOOL bResetUserDefinedData /*=TRUE*/,
+   													BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
    if (m_type && m_1ArrayIdx >= 1 && lDBID > 0)
    {
@@ -96,8 +182,11 @@ void BEMProperty::ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lD
                   // Reinitialize (default) this property
                   pProp->Default( lDBID+i2, iOccur, BEMO_User, TRUE );
 
+	 	  		      if (pTargetedDebugInfo && pTargetedDebugInfo->MatchExists( lDBID+i2, iOccur ))
+            			ReportTargetedDebugInfo( lDBID+i2, iOccur, "ReinitResetData()", -1 /*iBEMProcIdx*/ );
+
                   // Reinitialize those properties which are in it's ResetData list
-                  pProp->ReinitLocalResetData( laResetDBIDs, lDBID+i2, iOccur, bResetUserDefinedData );
+                  pProp->ReinitLocalResetData( laResetDBIDs, lDBID+i2, iOccur, bResetUserDefinedData, pTargetedDebugInfo );
                }
             }
          }
@@ -105,11 +194,12 @@ void BEMProperty::ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lD
    }
 }
 
-void BEMProperty::ReinitResetData( long lDBID, int iOccur /*=-1*/, BOOL bResetUserDefinedData /*=TRUE*/ )
+void BEMProperty::ReinitResetData( long lDBID, int iOccur /*=-1*/, BOOL bResetUserDefinedData /*=TRUE*/,
+   											BEMCompNameTypePropArray* pTargetedDebugInfo /*=NULL*/ )		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
 {
 	std::vector<long> laResetDBIDs;
    laResetDBIDs.push_back( lDBID );
-   ReinitLocalResetData( laResetDBIDs, lDBID, iOccur, bResetUserDefinedData );
+   ReinitLocalResetData( laResetDBIDs, lDBID, iOccur, bResetUserDefinedData, pTargetedDebugInfo );
 }
 
 

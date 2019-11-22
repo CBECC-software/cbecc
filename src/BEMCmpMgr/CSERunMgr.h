@@ -56,6 +56,10 @@ extern const char* pszRunAbbrev_pfxE;
 extern const char* pszRunAbbrev_pfxS;
 extern const char* pszRunAbbrev_pfxW;
 extern const char* pszRunAbbrev_dr;
+extern const char* pszRunAbbrev_hrtd;	// HERS Rated	- SAC 11/7/19
+extern const char* pszRunAbbrev_href;	// HERS Reference
+extern const char* pszRunAbbrev_hirt;	// HERS Idx Adjustment Rated
+extern const char* pszRunAbbrev_hirf;	// HERS Idx Adjustment Reference
 
 enum CRM_RunType	// SAC 3/26/15
 {
@@ -77,8 +81,14 @@ enum CRM_RunType	// SAC 3/26/15
    CRM_EPropFlex,
    CRM_SPropFlex,
    CRM_WPropFlex,
-   CRM_DesignRating
+   CRM_DesignRating,
+   CRM_HERSRtd,		// SAC 11/7/19
+   CRM_HERSRef,
+   CRM_HERSIdxRtd,
+   CRM_HERSIdxRef
 };
+
+extern bool RunIsHERS( int iRunID );
 
 class CSERun
 {
@@ -109,6 +119,7 @@ public:
 	void SetIsStdDesign(BOOL bIsStdDesign) { m_bIsStdDesign = bIsStdDesign; }
 	BOOL GetIsStdDesign() const { return m_bIsStdDesign; }
 	BOOL GetIsDesignRtg() const { return (m_iRunType == CRM_DesignRating); }
+	BOOL GetIsHERS() const { return RunIsHERS(m_iRunType); }
 	void SetExitCode(int iExitCode) { m_iExitCode = iExitCode; }
 	int GetExitCode() const { return m_iExitCode; }
 	void SetExecStream(class exec_stream_t* pES) { m_pES = pES; }

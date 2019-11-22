@@ -338,6 +338,8 @@ void LoadFileExtensionString( CString& sSaveAsExt, bool bUseProjectData, bool bX
 		sCodeYr = "16";
 #elif  UI_PROGYEAR2019
 		sCodeYr = "19";
+#elif  UI_PROGYEAR2022
+		sCodeYr = "22";
 #endif
 	}
 	sSaveAsExt.Format( "%s%s%s", sBaseExt, sCodeYr, sXML );
@@ -368,6 +370,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 	iProgYear = 2016;
 #elif UI_PROGYEAR2019	// SAC 10/10/16
 	iProgYear = 2019;
+#elif UI_PROGYEAR2022	// SAC 6/19/19
+	iProgYear = 2022;
 #endif
 	if (bUseProjectData)
 		CodeYearAbbrev( sCodeYr );	
@@ -375,6 +379,8 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		sCodeYr = "16";
 	else if (iProgYear == 2019)
 		sCodeYr = "19";
+	else if (iProgYear == 2022)
+		sCodeYr = "22";
 
 #ifdef UI_CANRES
 	sFileDescrip = "SDD ";
@@ -407,6 +413,10 @@ void LoadFileOptionString( CString& sSaveAs, bool bUseProjectData, bool bFileOpe
 		}
 		if (iProgYear > 2019 || (iProgYear < 2019 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2019" )))	// SAC 10/10/16
 		{	sFTTemp.Format( "2019 %sProject Files (*.%s19)|*.%s19|2019 %sXML Project Files (*.%s19x)|*.%s19x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
+			sInsertFileType += sFTTemp;
+		}
+		if (iProgYear > 2022 || (iProgYear < 2022 && bRuleSwitchingAllowed && CodeYearRulesetAvailable( "2022" )))	// SAC 6/19/19
+		{	sFTTemp.Format( "2022 %sProject Files (*.%s22)|*.%s22|2022 %sXML Project Files (*.%s22x)|*.%s22x|", sFileDescrip, sBaseExt,  sBaseExt, sFileDescrip, sBaseExt,  sBaseExt );
 			sInsertFileType += sFTTemp;
 		}
 	}
@@ -839,6 +849,9 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 		long lBypassRuleLimits    = ReadProgInt( "options", "BypassRuleLimits"  , 0 ),	lDBID_Proj_BypassRuleLimits   = BEMPX_GetDatabaseID( "BypassRuleLimits"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_BypassRuleLimits   > 0 );  // SAC 6/2/14 - added
 		long lAllowNegativeDesignRatings = ReadProgInt( "options", "AllowNegativeDesignRatings", 0 ),	lDBID_Proj_AllowNegativeDesignRatings = BEMPX_GetDatabaseID( "AllowNegativeDesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_AllowNegativeDesignRatings > 0 );  // SAC 1/11/18 - added
 		long lCalcCO2DesignRatings = ReadProgInt( "options", "EnableCO2DesignRatings", 0 ),	lDBID_Proj_CalcCO2DesignRatings = BEMPX_GetDatabaseID( "CalcCO2DesignRatings", BEMPX_GetDBComponentID( "Proj" ) );		ASSERT( lDBID_Proj_CalcCO2DesignRatings > 0 );  // SAC 1/27/18 - added
+		long lEnableHPAutosize    = ReadProgInt( "options", "EnableHPAutosize"  , 0 ),	lDBID_Proj_EnableHPAutosize   = BEMPX_GetDatabaseID( "EnableHPAutosize"  , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableHPAutosize > 0 );	// SAC 6/21/19
+		long lEnableRHERS         = ReadProgInt( "options", "EnableRHERS"       , 0 ),	lDBID_Proj_EnableRHERS        = BEMPX_GetDatabaseID( "EnableRHERS"       , BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_EnableRHERS      > 0 );	// SAC 10/19/19
+		long lSimulateCentralDHWBranches = ReadProgInt( "options", "SimulateCentralDHWBranches", 1 ),	lDBID_Proj_SimulateCentralDHWBranches = BEMPX_GetDatabaseID( "SimulateCentralDHWBranches", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimulateCentralDHWBranches > 0 );	// SAC 10/30/19		// SAC 11/6/19 - default 0->1
 		if (lEnableRptIncFile > 0 &&		lDBID_Proj_EnableRptIncFile   > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_EnableRptIncFile  , BEMP_Int, (void*) &lEnableRptIncFile  , BEMO_User, -1, BEMS_ProgDefault );
 		if (lEnableVarFlowOAV > 0 &&		lDBID_Proj_EnableVarFlowOAV   > 0)
@@ -853,7 +866,12 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 	      				BEMPX_SetBEMData( lDBID_Proj_AllowNegativeDesignRatings, BEMP_Int, (void*) &lAllowNegativeDesignRatings, BEMO_User, -1, BEMS_ProgDefault );
 		if (lCalcCO2DesignRatings > 0 &&	   lDBID_Proj_CalcCO2DesignRatings > 0)
 	      				BEMPX_SetBEMData( lDBID_Proj_CalcCO2DesignRatings, BEMP_Int, (void*) &lCalcCO2DesignRatings, BEMO_User, -1, BEMS_ProgDefault );
-
+		if (lEnableHPAutosize > 0 &&	   lDBID_Proj_EnableHPAutosize > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_EnableHPAutosize, BEMP_Int, (void*) &lEnableHPAutosize, BEMO_User, -1, BEMS_ProgDefault );
+		if (lEnableRHERS      > 0 &&	   lDBID_Proj_EnableRHERS > 0)
+	      				BEMPX_SetBEMData( lDBID_Proj_EnableRHERS     , BEMP_Int, (void*) &lEnableRHERS     , BEMO_User, -1, BEMS_ProgDefault );
+		if (lSimulateCentralDHWBranches == 0 &&	lDBID_Proj_SimulateCentralDHWBranches > 0)		// SAC 11/6/19 - default 0->1
+	      				BEMPX_SetBEMData( lDBID_Proj_SimulateCentralDHWBranches, BEMP_Int, (void*) &lSimulateCentralDHWBranches, BEMO_User, -1, BEMS_ProgDefault );
 		long lSimSpeedOption = ReadProgInt( "options", "SimSpeedOption", -1 ),		lDBID_Proj_SimSpeedOption = BEMPX_GetDatabaseID( "SimSpeedOption", BEMPX_GetDBComponentID( "Proj" ) );			ASSERT( lDBID_Proj_SimSpeedOption > 0 );  // SAC 1/14/15 - added
 		if (lSimSpeedOption >= 0 &&	lDBID_Proj_SimSpeedOption > 0)
 	   	BEMPX_SetBEMData( lDBID_Proj_SimSpeedOption, BEMP_Int, (void*) &lSimSpeedOption, BEMO_User, -1, BEMS_ProgDefault );
@@ -947,6 +965,8 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
 			VERIFY( BEMPX_WriteProjectFile( sXMLFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_XML /*iFileType*/,
 														false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, lModDate, false /*bOnlyValidInputs*/, false /*bAllowCreateDateReset*/ ) );
 		}
+
+		SetRulesetCodeYear();  // SAC 6/12/19
 
 
 //	else	// SAC 10/29/12 - added else to ensure tree view is updated even if errors occurred during project open

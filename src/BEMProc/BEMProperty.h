@@ -1,8 +1,8 @@
 // BEMProc.H - Public API exported from 'BEMProc.DLL' and describing
 //              all the building database classes.
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -127,8 +127,10 @@ public:
    bool CopyPropertyAcrossModels( BEMProperty* pProp, int iBEMProcIdx=-1 );
 //   bool ArchiveProperty( BEMProperty* pProp, bool bRestore=FALSE, int iBEMProcIdx=-1 ); 
    bool Default( long lDBID, int iOccur=-1, BEM_ObjType eObjType=BEMO_User, BOOL bReinitializing=FALSE, int iBEMProcIdx=-1 );
-   void ReinitResetData(      long lDBID, int iOccur=-1, BOOL bResetUserDefinedData=TRUE ); 
-   void ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lDBID, int iOccur=-1, BOOL bResetUserDefinedData=TRUE ); 
+   void ReinitResetData(      long lDBID, int iOccur=-1, BOOL bResetUserDefinedData=TRUE,
+   									BEMCompNameTypePropArray* pTargetedDebugInfo=NULL );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
+   void ReinitLocalResetData( std::vector<long>& laResetDBIDs, long lDBID, int iOccur=-1, BOOL bResetUserDefinedData=TRUE,
+   									BEMCompNameTypePropArray* pTargetedDebugInfo=NULL );		// SAC 9/25/19 - added pTargetedDebugInfo to enable logging of resets for targeted debug DBIDs
    bool CopyAssignedObject( BOOL bLibToUser=FALSE, int iBEMProcIdx=-1, int iImportUniqueRuleLibObjOption=2, 
 										const char* pszImportRuleLibParentName=NULL );
 //   bool Identical( CBEMProperty* pProp, const char* pszSymObjStr=NULL ); 

@@ -1005,8 +1005,10 @@ void BEMTextIO::CommentBlock(const char* comment)
 //   None
 //   
 /////////////////////////////////////////////////////////////////////////////
-QString BEMTextIO::ReadString( BOOL bReadPastEOL /*=FALSE*/ )
-{
+// SAC 8/14/19 - added bAllowMidQuote argument to allow for inclusion of quote chars mid-string (only for single-line strings) (Com tic #2986)
+// SAC 8/15/19 - added bMayBeArray argument to fix bug in retrieving array of object references (Com tic #2986) 
+QString BEMTextIO::ReadString( BOOL bReadPastEOL /*=FALSE*/, BOOL bAllowMidQuote /*=FALSE*/, BOOL bMayBeArray /*=FALSE*/ )
+{								assert( !bReadPastEOL || !bAllowMidQuote );
    Advance();
 
    char chr = GetChr();
@@ -1021,15 +1023,37 @@ QString BEMTextIO::ReadString( BOOL bReadPastEOL /*=FALSE*/ )
 //      string += chr;
 //      chr = GetChr();
 //   }
-   while (chr != Quote && (bReadPastEOL || !AtEOL()))  // SAC 6/17/01 - Added ability to read BEYOND EOLs
+	int iLastQuoteIdx = 0;	// SAC 8/14/19
+   while ((chr != Quote || bAllowMidQuote) && (bReadPastEOL || !AtEOL()))  // SAC 6/17/01 - Added ability to read BEYOND EOLs
    {
       if (bReadPastEOL && AtEOL())
          string += '\n';
       else
+      {	if (chr == Quote)
+      		iLastQuoteIdx = string.length();
          string += chr;
+      }
       chr = GetChr();
    }
-   
+
+	if (bAllowMidQuote && iLastQuoteIdx >= 1)  // SAC 8/14/19 - added code to remove trailing newline, whitespace and quote for single line quoted strings that allow mid-string quotes (Com tic #2986)   // SAC 10/31/19 - >1 to >=1 to allow single-char names
+	{	if (bMayBeArray && string.indexOf( "\", \"" ) >= 0)	// SAC 8/15/19 - handle separator between different array elements
+		{	// trim string and backtrack to separator between array elements
+			int iNewStrLen = string.indexOf( "\", \"" );
+			int iTrimChars = string.length() - iNewStrLen;
+			for (int iTrm=0; iTrm<iTrimChars; iTrm++)  // backup read point to capture next array element w/ following call
+				UnGetChr();
+			string = string.left( iNewStrLen );
+		}
+		else
+		{	int iTrimChars = string.length() - iLastQuoteIdx;
+			for (int iTrm=0; iTrm<iTrimChars; iTrm++)  // backup read point to capture characters immediately following read string
+				UnGetChr();
+			string = string.left( iLastQuoteIdx );
+		}
+		chr = Quote;
+	}
+
    if (chr != Quote)
       OurThrowTextioException(BEMTextioException::xQuote, m_fileName.toLocal8Bit().constData(), m_lineCount, m_chrIndex);
       

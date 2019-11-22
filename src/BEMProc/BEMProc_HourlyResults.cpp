@@ -293,6 +293,7 @@ double BEMPX_AddHourlyResultArray(	double* pDbl, const char* pszRunName, const c
 												int iBEMProcIdx /*=-1*/, BOOL bAddIfNotExist /*=FALSE*/ )
 {	double dRetVal = -99999.0;
 	BEMRunHourlyResultMeter* pMeter = GetHourlyResultMeter( pszRunName, pszMeterName, iBEMProcIdx, bAddIfNotExist );
+	QString qsErr;
 	if (pMeter && pMeter->getNumEnduses()+1 < BEMRun_NumEnduses && strlen( pszEnduse ) < BEMRun_EnduseNameLen)
 	{	BEMRunHourlyResultEnduse* pEnduse = GetHourlyResultEnduse( pMeter, pszEnduse );
 		if (pEnduse == NULL && pMeter->getNumEnduses() < BEMRun_NumEnduses)
@@ -309,18 +310,27 @@ double BEMPX_AddHourlyResultArray(	double* pDbl, const char* pszRunName, const c
 			dRetVal = pEnduse->getTotal();
 		}
 	}
-#ifdef _DEBUG
+//#ifdef _DEBUG
 	else if (pMeter)
-	{	QString qsErr;
-		if (pMeter->getNumEnduses()+1 >= BEMRun_NumEnduses)
-			qsErr = "Error:  BEMRun_NumEnduses too small";
+	{	if (pMeter->getNumEnduses()+1 >= BEMRun_NumEnduses)
+			qsErr = QString( "Error:  BEMRun_NumEnduses (%1) too small" ).arg( QString::number(BEMRun_NumEnduses) );
 		else if (strlen( pszEnduse ) >= BEMRun_EnduseNameLen)
 			qsErr = QString( "Error:  enduse name '%1' too long (cannot exceed %2 chars)" ).arg( pszEnduse, QString::number(BEMRun_EnduseNameLen) );
 		qsErr += QString( " calling BEMPX_AddHourlyResultArray( <fltarray>, %1, %2, %3, %4, %5 )" ).arg(
 							pszRunName, pszMeterName, pszEnduse, QString::number(iBEMProcIdx), (bAddIfNotExist ? "true" : "false") );
-		BEMMessageBox( qsErr );
 	}
+//#endif
+
+	if (dRetVal == -99999.0 && qsErr.isEmpty())
+		qsErr = QString( "Error:  calling BEMPX_AddHourlyResultArray( <fltarray>, %1, %2, %3, %4, %5 )" ).arg(
+							pszRunName, pszMeterName, pszEnduse, QString::number(iBEMProcIdx), (bAddIfNotExist ? "true" : "false") );
+	if (!qsErr.isEmpty())
+	{	BEMPX_WriteLogFile( qsErr, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+#ifdef _DEBUG
+		BEMMessageBox( qsErr );
 #endif
+	}
+
 	return dRetVal;
 }
 

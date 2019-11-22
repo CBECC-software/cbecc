@@ -486,6 +486,16 @@ static FuncTable functable[] =
    {                "#GRSS",       EXP_BEMPFunc, BF_GlobRefSymStr, VAR_ARGS },  /* SAC 4/4/18 - added */
    { "ScheduleSum",                EXP_BEMPFunc, BF_SchSum,        VAR_ARGS },  /* SAC 8/17/18 - added */
    {                "#SS",         EXP_BEMPFunc, BF_SchSum,        VAR_ARGS },  /* SAC 8/17/18 - added */
+   { "UniqueListRevRef",           EXP_BEMPFunc, BF_UListRevRef,   VAR_ARGS },  /* SAC 8/22/19 - added */
+   {                "#ULRR",       EXP_BEMPFunc, BF_UListRevRef,   VAR_ARGS },  /* SAC 8/22/19 - added */
+   { "UniqueListRevRefIf",         EXP_BEMPFunc, BF_UListRevRefIf, VAR_ARGS },  /* SAC 8/22/19 - added */
+   {                "#ULRRI",      EXP_BEMPFunc, BF_UListRevRefIf, VAR_ARGS },  /* SAC 8/22/19 - added */
+   { "Parent2ComponentType",       EXP_BEMPFunc, BF_Par2CompType, 0 },          /* SAC 9/5/19 - added */
+   {                "#P2CT",       EXP_BEMPFunc, BF_Par2CompType, 0 },          /* SAC 9/5/19 - added */
+   { "Parent3ComponentType",       EXP_BEMPFunc, BF_Par3CompType, 0 },          /* SAC 9/5/19 - added */
+   {                "#P3CT",       EXP_BEMPFunc, BF_Par3CompType, 0 },          /* SAC 9/5/19 - added */
+   { "SchDayHoursString",          EXP_BEMPFunc, BF_SchDayHrsStr, VAR_ARGS },   /* SAC 10/6/19 - added (MFamProto) */
+   {                "#SDHS",       EXP_BEMPFunc, BF_SchDayHrsStr, VAR_ARGS },   /* SAC 10/6/19 - added */
    { NULL,                         0,           0,              0 }
 };
 
@@ -493,7 +503,8 @@ static BOOL CurrentFunctionAllowsConditionalOperators( int iCurFunc )  // SAC 2/
 {	return ( iCurFunc ==  BF_SumAcrsIf    ||
 	         iCurFunc ==  BF_SumChldIf    ||
             iCurFunc ==  BF_IfValidAnd   ||
-            iCurFunc ==  BF_ListRevRefIf );  // SAC 2/13/14   // SAC 1/26/15
+            iCurFunc ==  BF_ListRevRefIf ||
+            iCurFunc ==  BF_UListRevRefIf );  // SAC 2/13/14   // SAC 1/26/15   // SAC 8/22/19
 }
 int eiParseCount_IfValidAnd = 0;		/* SAC 1/30/15 - added to ensure all arguments evaluate via *Valid() functions */
 int eiParseCount_ValidOr = 0;
