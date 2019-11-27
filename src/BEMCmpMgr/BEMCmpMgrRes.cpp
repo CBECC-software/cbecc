@@ -4345,7 +4345,7 @@ int CMX_ExportCSVHourlyResults_CECRes( const char* pszHourlyResultsPathFile, con
 						BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:NatGasCarbonEmis" ), dFuelCO2Emis );
 					else
 						BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:OtherCarbonEmis"  ), dFuelCO2Emis );
-					if (BEMPX_GetTableColumn( &daElecCO2Emis[0], 8760, "CA19_Carbon_Elec", lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daElecCO2Emis[0], 8760, "CA_Carbon_Elec", lClimateZone, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daElecCO2Data = &daZero[0];
 					}
