@@ -2409,6 +2409,8 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
    	   QString sPropType = pProp->getType()->getShortName();
 			if (pProp && m_iFileType == BEMFT_CSE && sPropType.right(2).compare("_x") == 0)
 				sPropType = sPropType.left( sPropType.length()-2 );
+			if (pProp && m_iFileType == BEMFT_CSE && sPropType.left(6).compare("alter_") == 0)	// SAC 12/4/19 - remove pre-pended 'alter_' from property name written to CSE input
+				sPropType = sPropType.right( sPropType.length()-6 );
    	
    	   // if property valid and should be written
    	   if ( pProp != NULL && MustWriteProperty( pObj, pProp, iProp/*pos*/, bWritePrimaryDefaultData ) )  // SAC 1/22/02
@@ -2786,6 +2788,8 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 		AddToSpecificProperties( "whTEx_x" );
 		AddToSpecificProperties( "whASHPSrcZn" );
 		AddToSpecificProperties( "whASHPSrcT_x" );
+		AddToSpecificProperties( "alter_whMult_x" );		// SAC 12/4/19 - to facilitate central elec DHWSys autosizing
+		AddToSpecificProperties( "alter_whVol_x" );		// SAC 12/4/19 - to facilitate central elec DHWSys autosizing
 	}
 
    // then loop over all classes, writing out the components for each class, one by one

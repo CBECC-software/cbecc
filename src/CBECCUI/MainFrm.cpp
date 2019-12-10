@@ -6216,7 +6216,7 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 
 				int iMaxTabs = 0;
 				long lNumUIDialogTabs;	// SAC 11/15/19 - RESNET
-				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", i1SelClassIdx ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
+				if (BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "NumUIDialogTabs", eiBDBCID_EUseSummary ), lNumUIDialogTabs ) && lNumUIDialogTabs > 0)
 					iMaxTabs = lNumUIDialogTabs;
 				else
 					iMaxTabs = 99;

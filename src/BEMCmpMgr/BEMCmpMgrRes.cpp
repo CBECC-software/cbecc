@@ -733,6 +733,13 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 			int iNumObjNameViolations = BEMPX_CheckObjectNames( (char*) pcCharsNotAllowedInObjNames_CECRes, sObjNameViolationMsg, -1 /*iBEMProcIdx*/ );			iNumObjNameViolations;
 																// BOOL bAllowTrailingSpaces=TRUE, BOOL bPerformRenames=TRUE, BOOL bLogRenames=TRUE );
 
+			long lDBID_ProjFileNameNoExt = BEMPX_GetDatabaseID( "Proj:ProjFileNameNoExt" );		// SAC 12/6/19
+			if (lDBID_ProjFileNameNoExt > 0)
+			{	QString sModelFileOnlyNoExt = (sModelFileOnlyNoExt.lastIndexOf('.') ? sModelFileOnlyNoExt.right( sModelFileOnlyNoExt.length() - sModelFileOnlyNoExt.lastIndexOf('.') - 1 ) : "");
+				if (!sModelFileOnlyNoExt.isEmpty())
+					BEMPX_SetBEMData( lDBID_ProjFileNameNoExt, BEMP_QStr, (void*) &sModelFileOnlyNoExt, BEMO_User, 0, BEMS_ProgDefault );
+			}
+
 		// SAC 11/19/15 - added logic to extract code year out of ruleset label
 			QString sLoadedRuleSetID, sLoadedRuleSetVer;
 			if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))	// SAC 10/2/14 - RESET iCodeType based on newly loaded ruleset

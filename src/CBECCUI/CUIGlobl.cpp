@@ -2755,7 +2755,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
-	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 610;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)
+	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
 	else if (iBDBClass == eiBDBCID_DHWLoopTankHeater)	{  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
