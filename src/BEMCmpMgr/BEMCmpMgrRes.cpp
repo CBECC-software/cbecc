@@ -734,8 +734,8 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 																// BOOL bAllowTrailingSpaces=TRUE, BOOL bPerformRenames=TRUE, BOOL bLogRenames=TRUE );
 
 			long lDBID_ProjFileNameNoExt = BEMPX_GetDatabaseID( "Proj:ProjFileNameNoExt" );		// SAC 12/6/19
-			if (lDBID_ProjFileNameNoExt > 0)
-			{	QString sModelFileOnlyNoExt = (sModelFileOnlyNoExt.lastIndexOf('.') ? sModelFileOnlyNoExt.right( sModelFileOnlyNoExt.length() - sModelFileOnlyNoExt.lastIndexOf('.') - 1 ) : "");
+			if (lDBID_ProjFileNameNoExt > 0 && !sModelFileOnly.isEmpty())
+			{	QString sModelFileOnlyNoExt = (sModelFileOnly.lastIndexOf('.') ? sModelFileOnly.left( sModelFileOnly.lastIndexOf('.') ) : "");
 				if (!sModelFileOnlyNoExt.isEmpty())
 					BEMPX_SetBEMData( lDBID_ProjFileNameNoExt, BEMP_QStr, (void*) &sModelFileOnlyNoExt, BEMO_User, 0, BEMS_ProgDefault );
 			}

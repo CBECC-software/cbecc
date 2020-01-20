@@ -142,7 +142,9 @@
 #define IDB_TREEPVAS2                   255
 #define IDB_TREEPVAG                    256
 #define IDB_TREEPVAG2                   257
-#define IDB_TREELAST                    257
+#define IDB_TREEDHWSS                   258
+#define IDB_TREEDHWSS2                  259
+#define IDB_TREELAST                    259
 #define IDD_WIZARD                      301
 #define IDD_ANALYSISSTATUS              302
 #define IDD_BEMPROCERRORS               303

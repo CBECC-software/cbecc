@@ -296,16 +296,26 @@ BEMTableCell* BEMTable::LookupCell( int iRetColID, vector<string>& saIndepNames,
 								bLookupValid = true;  // SAC 9/5/13
 						}
 						else
-						{	// incompatible row conditions vs. lookup arguments
-							//assert( FALSE );
-							bErrorEncountered = true;  // SAC 9/5/13
-							if (sErrMsg.length() < 1)
-							{	if (baIndepNumeric[iIndep])
-									sErrMsg = boost::str( boost::format( "Incompatible table row (#%d %s) and lookup (numeric %g) data" ) % (iRow+1) % pRowIndepCell->cellTypeDescription() % faIndepValues[iIndep] );
-								else
-									sErrMsg = boost::str( boost::format( "Incompatible table row (#%d %s) and lookup (string '%s') data" ) % (iRow+1) % pRowIndepCell->cellTypeDescription() % saIndepStrings[iIndep] );
+						{	bErrorEncountered = true;  // SAC 9/5/13
+							// one more attempt to match - table cell characterized as numeric being matched to string - SAC 1/14/20
+							if (!baIndepNumeric[iIndep] && pRowIndepCell->isFloat() && pRowIndepCell->getCondition() == BEMC_Equal)
+							{	double indepVal = strtod( saIndepStrings[iIndep].c_str(), NULL );
+								bRowMatches = pRowIndepCell->isMatch( indepVal );
+								if (bRowMatches)
+									bLookupValid = true;
+								bErrorEncountered = false;	// DON'T throww error here, because a subsequent table row may include a String in this table column - SAC 1/14/20
 							}
-							bRowMatches = false;
+							if (bErrorEncountered)
+							{	// incompatible row conditions vs. lookup arguments
+								//assert( FALSE );
+								if (sErrMsg.length() < 1)
+								{	if (baIndepNumeric[iIndep])
+										sErrMsg = boost::str( boost::format( "Incompatible table (row %d, col %d, %s %s) and lookup (numeric %g) data" ) % (iRow+1) % (iaIndepColIdx[iIndep]+1) % pRowIndepCell->cellTypeDescription() % pRowIndepCell->getStringRegardlessOfType() % faIndepValues[iIndep] );
+									else
+										sErrMsg = boost::str( boost::format( "Incompatible table (row %d, col %d, %s %s) and lookup (string '%s') data" ) % (iRow+1) % (iaIndepColIdx[iIndep]+1) % pRowIndepCell->cellTypeDescription() % pRowIndepCell->getStringRegardlessOfType() % saIndepStrings[iIndep] );
+								}
+								bRowMatches = false;
+							}
 						}
 					}
 				}
@@ -592,6 +602,8 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 							//BOOL bRecordMayBeIndepCheckRow = TRUE;
 							BOOL bFirstDataRecordRead = FALSE;
 							QStringList saFields;  //, saErrorCells, saWarningCells;
+							vector<bool> baForceString;		// ability to ForceString for specific columns via specification of "ForceString" in FIRST row of data in the table - SAC 1/14/20
+							int iDataRowIdx=1;	// SAC 1/14/20
 							while (bRetVal && !file.FoundInCurrentLine( "ENDTABLE", 30 /*??-how many reord-leading chars do we expect ENDTABLE to be in-??*/ ))
 							{
 								saFields.clear();
@@ -647,12 +659,20 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
 									   bRetVal = FALSE;		// throw an error here
 									}
 								}
-               			
+
+								if (!bIsIndepCellsRow && baForceString.size() < 1)		// SAC 1/14/20
+								{	for (i=0; i < iNumColsData; i++)
+										baForceString.push_back( false );	// initialize vector w/ 'false's
+								}
+
 								if (bRetVal)
 								{	pNewData = new BEMTableCell[ iNumColsData ];
 									bAddRecord = TRUE;
 									for (i=0; (bRetVal && bAddRecord && i < iNumColsData); i++)
-									{	if (saFields[i].length()==1 && saFields[i].indexOf('*')==0)
+									{
+										if (iDataRowIdx==1 && !bIsIndepCellsRow && saFields[i].length() > 10 && !saFields[i].left(11).compare( "ForceString", Qt::CaseInsensitive ))		// SAC 1/14/20
+											baForceString[i] = true;
+										if (saFields[i].length()==1 && saFields[i].indexOf('*')==0)
            								pNewData[i].setWildCard();
 										else if (saFields[i].isEmpty())
            								pNewData[i].setMissing();
@@ -688,26 +708,32 @@ bool BEMTable::ReadV2( const char* fileName, QFile& errorFile, int& iNextTableRe
             								pNewData[i].setMessage( iMsgType, iGetMsgIndex );
 										}
 										else
-										{	QString sThisFld = saFields[i];
-											int iCond = TrimBEMCondition( sThisFld );    // returns index of condition present at the BEGINNING of the string AND removes condition (and any following spaces) from the QString
-											if (iCond >= 0 && StringExclusivelyNumber( sThisFld ))
-            								pNewData[i].setValue( atof( sThisFld.toLocal8Bit().constData() ), iCond );
-											else if (StringExclusivelyNumber( sThisFld ))
-            								pNewData[i].setValue( atof( sThisFld.toLocal8Bit().constData() ) );
-											else
-											{	//assert( iCond < 0 );		// assert here means there is a condition listed prior to a character string field - which MAY be valid for enumeration strings that include a preceding condition symbol...
+										{
+											if (i < (int) baForceString.size() && baForceString[i] == true)		// don't bother checking for numeric vs. string - force to string - SAC 1/14/20
             								pNewData[i].setString( saFields[i].toLocal8Bit().constData() );
-											}
+            							else
+            							{
+												QString sThisFld = saFields[i];
+												int iCond = TrimBEMCondition( sThisFld );    // returns index of condition present at the BEGINNING of the string AND removes condition (and any following spaces) from the QString
+												if (iCond >= 0 && StringExclusivelyNumber( sThisFld ))
+         	   								pNewData[i].setValue( atof( sThisFld.toLocal8Bit().constData() ), iCond );
+												else if (StringExclusivelyNumber( sThisFld ))
+            									pNewData[i].setValue( atof( sThisFld.toLocal8Bit().constData() ) );
+												else
+												{	//assert( iCond < 0 );		// assert here means there is a condition listed prior to a character string field - which MAY be valid for enumeration strings that include a preceding condition symbol...
+            									pNewData[i].setString( saFields[i].toLocal8Bit().constData() );
+											}	}
 										}
 									}
 								}
-               			
+
 								if (bAddRecord)
 								{	if (bIsIndepCellsRow)
 		         			   	m_rowIndepCells.push_back( pNewData );  // add this row of data to m_rowIndepCells array
 									else
-		         			   	m_data.push_back( pNewData );  // add this row of data to m_data array
-								}
+		         			   {	m_data.push_back( pNewData );  // add this row of data to m_data array
+		         			   	iDataRowIdx++;
+								}	}
 								else if (pNewData)
 									delete [] pNewData;
 								pNewData = NULL;

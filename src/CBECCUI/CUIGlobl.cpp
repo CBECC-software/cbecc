@@ -2435,6 +2435,7 @@ int eiBDBCID_HX = 0;
 int eiBDBCID_ResDHWSys = 0;
 int eiBDBCID_ResDWHRSys = 0;
 int eiBDBCID_ResWtrHtr = 0;
+int eiBDBCID_ResLpTankHtr = 0;	// SAC 1/12/20 (Com tic #3156)
 int eiBDBCID_ResSpcDHWFeatures = 0;
 int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
@@ -2511,6 +2512,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PVArrayShade )		{  iTabCtrlWd =  350;    iTabCtrlHt = 250;   }
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
 	else if (iBDBClass == eiBDBCID_ResDWHRSys)	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
+	else if (iBDBClass == eiBDBCID_ResDHWSys )	  		{  iTabCtrlWd =  900;    iTabCtrlHt = 610;   }	// SAC 1/12/20 (Com tic #3156)
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2614,7 +2616,8 @@ int eiBDBCID_HVACFan    = 0;
 int eiBDBCID_IAQFan     = 0;
 int eiBDBCID_ClVentFan  = 0;
 int eiBDBCID_DHWSys     = 0;
-int eiBDBCID_DWHRSys       = 0;	// SAC 12/23/18
+int eiBDBCID_DHWSolarSys= 0;	// SAC 1/12/20 (Res tic #1013)
+int eiBDBCID_DWHRSys    = 0;	// SAC 12/23/18
 int eiBDBCID_DHWHeater  = 0;
 int eiBDBCID_DHWLoopTankHeater  = 0;
 int eiBDBCID_SCSysRpt   = 0;
@@ -2707,6 +2710,7 @@ long elDBID_HVAC_HtPumpSystem10 = 0;
 long elDBID_HVAC_DistribSystem = 0;
 long elDBID_HVAC_Fan = 0;
 long elDBID_HVACHeat_CHWHeater = 0;
+long elDBID_DHWSys_DHWSolarSysRef = 0;	// SAC 1/12/20 (Res tic #1013)
 long elDBID_DHWSys_DHWHeater1 = 0;
 long elDBID_DHWSys_DHWHeater2 = 0;
 long elDBID_DHWSys_DHWHeater3 = 0;
@@ -2756,6 +2760,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19
+	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 420;   }	// SAC 1/12/20 (Res tic #1013)
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
 	else if (iBDBClass == eiBDBCID_DHWLoopTankHeater)	{  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
@@ -3026,6 +3031,7 @@ void InitBEMDBIDs()
 	eiBDBCID_ResDHWSys          = BEMPX_GetDBComponentID( "ResDHWSys" );
 	eiBDBCID_ResDWHRSys         = BEMPX_GetDBComponentID( "ResDWHRSys" );	// SAC 1/24/19
 	eiBDBCID_ResWtrHtr          = BEMPX_GetDBComponentID( "ResWtrHtr" );
+	eiBDBCID_ResLpTankHtr       = BEMPX_GetDBComponentID( "ResLpTankHtr" );	// SAC 1/12/20 (Com tic #3156)
 	eiBDBCID_ResSpcDHWFeatures  = BEMPX_GetDBComponentID( "ResSpcDHWFeatures" );
 	eiBDBCID_ProcLd             = BEMPX_GetDBComponentID( "ProcLd" );        
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
@@ -3141,6 +3147,7 @@ void InitBEMDBIDs()
    eiBDBCID_IAQFan     = BEMPX_GetDBComponentID( "IAQFan" );
    eiBDBCID_ClVentFan  = BEMPX_GetDBComponentID( "ClVentFan" );
 	eiBDBCID_DHWSys     = BEMPX_GetDBComponentID( "DHWSys" );
+	eiBDBCID_DHWSolarSys= BEMPX_GetDBComponentID( "DHWSolarSys" );		// SAC 1/12/20 (Res tic #1013)
 	eiBDBCID_DWHRSys    = BEMPX_GetDBComponentID( "DWHRSys" );			// SAC 12/23/18
 	eiBDBCID_DHWHeater  = BEMPX_GetDBComponentID( "DHWHeater" );
 	eiBDBCID_DHWLoopTankHeater  = BEMPX_GetDBComponentID( "DHWLoopTankHeater" );	// SAC 11/14/19
@@ -3247,6 +3254,7 @@ void InitBEMDBIDs()
 
 	elDBID_HVACHeat_CHWHeater   = BEMPX_GetDatabaseID( "CHWHeater",        eiBDBCID_HVACHeat );
 
+	elDBID_DHWSys_DHWSolarSysRef = BEMPX_GetDatabaseID( "DHWSolarSysRef", eiBDBCID_DHWSys );	// SAC 1/12/20 (Res tic #1013)
 	elDBID_DHWSys_DHWHeater1	= BEMPX_GetDatabaseID( "DHWHeater", eiBDBCID_DHWSys );
 	elDBID_DHWSys_DHWHeater2	= elDBID_DHWSys_DHWHeater1 + 1;
 	elDBID_DHWSys_DHWHeater3	= elDBID_DHWSys_DHWHeater2 + 1;

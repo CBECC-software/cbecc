@@ -154,6 +154,9 @@ public:
 																			}
 
 	// returns floating point cell value
+	int getCondition()	 	{	return m_condition;
+									}
+	// returns floating point cell value
 	double getValue() 		{	assert( m_type == BEMTCT_Float );
 										return m_value;
 									}
@@ -176,6 +179,28 @@ public:
 														}
 														return "";
 													}
+	// returns string description of cell contents
+	std::string	getStringRegardlessOfType()		// SAC 1/14/20
+									{	string strRet;
+										switch (m_type)
+										{	case BEMTCT_Float     :  if (m_condition > BEMC_Equal)
+																			 {	switch (m_condition)
+																			 	{	case BEMC_LessOrEqual : strRet = "<= ";	break;
+																			 		case BEMC_GrtrOrEqual : strRet = ">= ";	break;
+																			 		case BEMC_Less        : strRet = "< ";		break;
+																			 		case BEMC_Greater     : strRet = "> ";		break;
+																			 		case BEMC_NotEqual    : strRet = "!= ";	break;
+																			 }	}
+																			 strRet += boost::str( boost::format( "%g" ) % m_value );	break;
+										   case BEMTCT_String    :  strRet = m_string;		break;
+										   case BEMTCT_Error     :  strRet = boost::str( boost::format( "error (%g)"   ) % m_value );	break;
+										   case BEMTCT_Warning   :  strRet = boost::str( boost::format( "warning (%g)" ) % m_value );	break;
+										   case BEMTCT_WildCard  :  strRet = "wildcard";	break;
+										   case BEMTCT_Missing   :  strRet = "missing";		break;
+										   case BEMTCT_Undefined :  strRet = "undefined";	break;
+										}
+										return strRet;
+									}
 };
 
 

@@ -515,11 +515,11 @@ END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 274, 126
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About CBECC-Res 2019"
+CAPTION "About CBECC-Res 2022"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            IDR_MAINFRAME,IDC_STATIC,7,99,21,20
-    LTEXT           "California Building Energy Code Compliance 2019",IDC_VERSIONSTRING,36,
+    LTEXT           "California Building Energy Code Compliance 2022",IDC_VERSIONSTRING,36,
                     105,190,8,SS_NOPREFIX
     DEFPUSHBUTTON   "Done",IDOK,235,105,32,14,WS_GROUP
     CONTROL         "",IDC_LICENSERTF,"RICHEDIT",ES_MULTILINE | 
@@ -684,7 +684,7 @@ END
 
 IDD_STARTUPLOAD DIALOG DISCARDABLE  0, 0, 296, 98
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "CBECC-Res 2019 Startup Options"
+CAPTION "CBECC-Res 2022 Startup Options"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,126,75,35,16
@@ -710,8 +710,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,1027,0,1116		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2019,1027,0,1116	//   examples:  2019,1007,0,### => 2019.1.0 RC (###) / 2019,1010,0,### => 2019.1.1 (###) / 2019,1024,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2022,26,0,1116		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2022,26,0,1116	//   examples:  2022,1007,0,### => 2022.1.0 RC (###) / 2022,1010,0,### => 2022.1.1 (###) / 2022,1024,0,### => 2022.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompMgrVersion  in ruleset to be consistent w/ CBECC-Res version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -728,15 +728,15 @@ BEGIN
         BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
-            VALUE "FileDescription", "California Building Energy Code Compliance (residential 2019)\0"
-            VALUE "FileVersion", "2019.1.2 RC (1116)\0"
+            VALUE "FileDescription", "California Building Energy Code Compliance (residential 2022)\0"
+            VALUE "FileVersion", "2022.0.2 RV (1116)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "CBECC-Res19.exe\0"
+            VALUE "OriginalFilename", "CBECC-Res22.exe\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "California Building Energy Code Compliance (residential 2019)\0"
-            VALUE "ProductVersion", "2019.1.2 RC\0"
+            VALUE "ProductName", "California Building Energy Code Compliance (residential 2022)\0"
+            VALUE "ProductVersion", "2022.0.2 RV\0"
             VALUE "SpecialBuild", "build 1116\0"
         END
     END
@@ -871,13 +871,13 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAME           "CBECC-Res 2019\n\nCBECC-Res 2019\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+    IDR_MAINFRAME           "CBECC-Res 2022\n\nCBECC-Res 2022\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
     IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDR_MAINFRAMEDEV        "CBECC-Res 2019\n\nCBECC-Res 2019\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
+    IDR_MAINFRAMEDEV        "CBECC-Res 2022\n\nCBECC-Res 2022\nCBECC-Res Files (*.ribd)\n.ribd\nCBECC-Res.Document\nCBECC-Res Document"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -887,7 +887,7 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "CBECC-Res 2019"
+    AFX_IDS_APP_TITLE       "CBECC-Res 2022"
     AFX_IDS_IDLEMESSAGE     "Ready"
     AFX_IDS_HELPMODEMESSAGE "Select an object on which to get Help"
 END
@@ -1080,7 +1080,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDM_VIEW_BUDGET         "View the budget building design for the current project\nBudget Building Design"
     IDM_WRITEINPDETAILS     "Write input details file (<project file>.ib2)\nWrite Input Details File"
-    ID_TOOL_BUILDNUM        "Display CBECC-Res 2019 version and build number"
+    ID_TOOL_BUILDNUM        "Display CBECC-Res 2022 version and build number"
     IDM_TOOLS_EVALLIST      "Evaluate selected compliance rulelist"
     IDM_ANALRANGECHECKS     "Range check all inputs at beginning of compliance analysis"
     IDM_POSTWIZHELP         "Check if viewing post-wizard compliance checklist help is desired."

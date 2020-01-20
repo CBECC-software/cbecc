@@ -26,13 +26,13 @@ BEGIN
         BLOCK "040904B0"
 		BEGIN 
 			VALUE "CompanyName",     "California Energy Commission\0"
-			VALUE "FileDescription", "BEM Compliance Manager (Title-24 Com)\0"
+			VALUE "FileDescription", "BEM Compliance Manager (Title-24 Res)\0"
 			VALUE "FileVersion",     "2022.0.2 (1115)\0"
-			VALUE "InternalName",    "BEMCmpMgr22c\0"
+			VALUE "InternalName",    "BEMCmpMgr22r\0"
 			VALUE "LegalCopyright",  "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
 			VALUE "LegalTrademarks", "\0"
-			VALUE "OriginalFilename","BEMCmpMgr22c.dll\0"
-			VALUE "ProductName",     "BEM Compliance Manager DLL (T-24 Com)\0"
+			VALUE "OriginalFilename","BEMCmpMgr22r.dll\0"
+			VALUE "ProductName",     "BEM Compliance Manager DLL (T-24 Res)\0"
 			VALUE "ProductVersion",  "2022.0.2\0"
 			VALUE "SpecialBuild",    "build 1115\0"
 		END

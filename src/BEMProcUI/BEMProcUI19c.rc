@@ -65,8 +65,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION    19,1,1,1110
- PRODUCTVERSION 19,1,1,1110
+ FILEVERSION    19,1,2,1115
+ PRODUCTVERSION 19,1,2,1115
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -83,14 +83,14 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "BEM Processor User Interface DLL (T-24 Com)\0"
-            VALUE "FileVersion", "2019.1.1 (1110)\0"
+            VALUE "FileVersion", "2019.1.2 (1115)\0"
             VALUE "InternalName", "BEMProcUI19c\0"
-            VALUE "LegalCopyright", "Copyright (C) 2012-2019, California Energy Commission. All rights reserved.\0"
+            VALUE "LegalCopyright", "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "BEMProcUI19c.dll\0"
             VALUE "ProductName", "BEM Processor UI DLL (T-24 Com)\0"
-            VALUE "ProductVersion", "2019.1.1\0"
-            VALUE "SpecialBuild", "build 1110\0"
+            VALUE "ProductVersion", "2019.1.2\0"
+            VALUE "SpecialBuild", "build 1115\0"
         END
     END
     BLOCK "VarFileInfo"

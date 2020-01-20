@@ -7495,18 +7495,18 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
       }
 
 		// SAC 6/14/00 - added code to perform RevRef functions over entire array if both assignment and sum/min/max arguments are arrays of the same length
-      int iStartArg = 0;
+      int iStartArg = 0, iSizeArg0Arr = -1;
       int iArrIdxLast = 0;
       if ( bGetCount && BEMPX_GetArrayID( plParams[0] ) < 2 && !bAbort )
       {
-         int iSizeArg0Arr = BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[0], i0Model );
+         iSizeArg0Arr = BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[0], i0Model );
          if (iSizeArg0Arr > 1)
             iArrIdxLast = iSizeArg0Arr-1;
          iStartArg++;
       }
       else if ( bRevRefFunc && !bStoreArgsForProcessing && nArgs > 1 && BEMPX_GetArrayID( plParams[0] ) < 2  &&  BEMPX_GetArrayID( plParams[1] ) < 2 && !bAbort )
       {
-         int iSizeArg0Arr = BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[0], i0Model );
+         iSizeArg0Arr = BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[0], i0Model );
          if (iSizeArg0Arr > 1  &&  iSizeArg0Arr == BEMPX_GetNumPropertyTypeElementsFromDBID( plParams[1], i0Model ))
             iArrIdxLast = iSizeArg0Arr-1;
          iStartArg++;
@@ -7548,8 +7548,10 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 					if (iStatus > 0  &&  (fMaxArr+0.1) > 0  &&  (fMaxArr-0.1) < iArrLoopMax)
 	               iArrLoopMax = (int) (fMaxArr+0.1) - 1;
 	            else if ((fMaxArr-0.1) > (iArrLoopMax+1))	// SAC 9/13/13 - fixed bug where fMax which would cause iArrLoopMax to be unchanged was throwing error
-	            {
-	               ExpSetErr( error, EXP_RuleProc, "Unable to load array loop maximum index" );
+	            {	sErrMsg = QString( "Unable to load array loop maximum index (fMaxArr %1, MaxArrayStatus %2, iArrLoopMax %3, iSizeArg0Arr %4, iObj %5, i0Model %6, args %7,%8,%9)" ).arg(
+	            						QString::number(fMaxArr), QString::number(iStatus), QString::number(iArrLoopMax), QString::number(iSizeArg0Arr), QString::number(iObj), QString::number(i0Model),
+	            						QString::number( (iNumOrigNodes > 0 ? plParams[0] : -1) ), QString::number( (iNumOrigNodes > 1 ? plParams[1] : -1) ), QString::number( (iNumOrigNodes > 2 ? plParams[2] : -1) ) );
+                  ExpSetErr( error, EXP_RuleProc, sErrMsg );
 	               bAbort = TRUE;
 	               assert( FALSE );
             }	}
@@ -12283,9 +12285,9 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 									{	BEMPX_GetString( lDBID_DUT_Name, sDUTName, FALSE, 0, -1, iDUTIdx );		assert( !sDUTName.isEmpty() );
 										BEMPX_GetInteger( lDBID_DUT_IAQOption, lIAQOption, 0, -1, iDUTIdx );			assert( lIAQOption == 1 || lIAQOption == 2 );
 																// IAQOption ->	1,	"Default Minimum IAQ Fan"   //   2,	"Specify Individual IAQ Fans"   //   3,	"CFI (Central Fan Integrated) IAQ"
-										if (lIAQOption == 1 || lIAQOption == 2)
+										if (lIAQOption == 1 || lIAQOption == 2 || lIAQOption == 4 || lIAQOption == 5)		// SAC 12/17/19 - accommodate new MFam options Default Balanced (4) and Minimum Exhaust (5) (Res 2019.2.0+)
 										{	for (long iCnt=1; (sErrMsg.isEmpty() && iCnt <= lDUCount); iCnt++)
-											{	if (lIAQOption == 1)	// "Default Minimum IAQ Fan"
+											{	if (lIAQOption != 2)	// one of several generic/default selections
 												{	sIAQVentRptName = QString( "%1 %2/%3" ).arg( sDUName, QString::number( iCnt ), QString::number( lDUCount ) );
 													pIAQVentRptObj = BEMPX_CreateObject( iCID_IAQVentRpt, sIAQVentRptName.toLocal8Bit().constData(), NULL, BEMO_User, FALSE );
 													if (pIAQVentRptObj == NULL || pIAQVentRptObj->getClass() == NULL)

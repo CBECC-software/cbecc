@@ -603,6 +603,7 @@ extern int eiBDBCID_HX;
 extern int eiBDBCID_ResDHWSys;
 extern int eiBDBCID_ResDWHRSys;	// SAC 1/24/19
 extern int eiBDBCID_ResWtrHtr;
+extern int eiBDBCID_ResLpTankHtr;		// SAC 1/12/20 (Com tic #3156)
 extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
 
 extern int eiBDBCID_ProcLd;
@@ -723,6 +724,7 @@ extern int eiBDBCID_HVACFan;
 extern int eiBDBCID_IAQFan;
 extern int eiBDBCID_ClVentFan;
 extern int eiBDBCID_DHWSys;
+extern int eiBDBCID_DHWSolarSys;		// SAC 1/12/20 (Res tic #1013)
 extern int eiBDBCID_DWHRSys;	// SAC 12/23/18  // SAC 1/5/19 - renamed (was DWHX)
 extern int eiBDBCID_DHWHeater;
 extern int eiBDBCID_DHWLoopTankHeater;	// SAC 11/14/19
@@ -816,6 +818,7 @@ extern long elDBID_HVAC_HtPumpSystem10;
 extern long elDBID_HVAC_DistribSystem;
 extern long elDBID_HVAC_Fan;
 extern long elDBID_HVACHeat_CHWHeater;
+extern long elDBID_DHWSys_DHWSolarSysRef;	// SAC 1/12/20 (Res tic #1013)
 extern long elDBID_DHWSys_DHWHeater1;
 extern long elDBID_DHWSys_DHWHeater2;
 extern long elDBID_DHWSys_DHWHeater3;

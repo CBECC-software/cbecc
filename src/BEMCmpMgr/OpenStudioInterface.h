@@ -46,7 +46,7 @@ typedef struct
 	double      daTDVTotal[3];
 	double      daSrcTotal[3];			// SAC 6/27/19 - 2022
 	double      daSrcPrmTotal[3];		// SAC 6/27/19 - 2022
-	double      daC02Total[3];			// SAC 9/11/19 - (tic #3106)
+	double      daCO2Total[3];			// SAC 9/11/19 - (tic #3106)
 	double      daTDSTotal[3];		// SAC 8/26/18 - A2030
 	double      daSupply[3];		// SAC 9/7/18 - A2030 [Elec,TDV,TDS]
 	double      dElecDemand;		// SAC 10/8/16

@@ -1,0 +1,30 @@
+; BEMProc22r.def : Declares the module parameters for the DLL.
+
+LIBRARY      "BEMProc22r"
+; DESCRIPTION  'Building Energy Model Processor DLL'  - throws compiler warning
+
+EXPORTS
+    ; Explicit exports can go here
+    BEMPX_GetClass
+    BEMPX_GetPropertyType
+    BEMPX_GetProperty
+    BEMPX_CreateObject
+    BEMPX_GetPropertyTypeFromDBID
+    BEMPX_ReadProjectComponent
+    BEMPX_GetObjectPtr
+    BEMPX_GetObjectByClass
+    BEMPX_GetObjectByName
+    BEMPX_GetObjectByNameQ
+    BEMPX_GetComponentByName
+    BEMPX_GetComponentByNameQ
+    BEMPX_GetParentObjectByName
+    BEMPX_GetParentObjectByNameQ
+    BEMPX_GetRulesetFilenameFromProjectFile
+    BEMPX_GetSymbolListPointer
+    BEMPX_GetSymbolString
+    BEMPX_OverwriteSymbolList
+    BEMPX_AddSymbolDepList
+    BEMPX_GetErrorPtr
+    BEMPX_GetBEMUnitsLabel
+    BEMPX_CopyComponentWithAssignments
+    BEMPX_ImportLibraryObjectToUserModel
