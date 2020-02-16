@@ -2544,6 +2544,11 @@ void CProjectFile::WriteProperties( BEMObject* pObj, int iBEMProcIdx /*=-1*/, bo
 		   //m_file.WriteToken( "   ..", 5 );
    		m_file.NewLine();
 		}
+		// SAC 1/29/20 - KLUDGE to force end/close of ExportFile, since CSE likes this to be parent to EXPORT but can't in BEMBase since not allowed to create parent EXPORTFILE for primary CSV output file
+		else if (pObj->getClass()->getShortName().indexOf("cseEXPORTFILE")==0)
+		{	m_file.WriteToken( "   endEXPORTFILE", 16 );
+			m_file.NewLine();
+		}
    	
    	m_file.NewLine();
 	}
@@ -2699,7 +2704,8 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
       // first thing to write is the ruleset filename
       WriteRulesetFilename( iBEMProcIdx );
 
-	bool bCSEPreRunReqd = false;
+	bool bCSEDHWPreRunReqd = false;
+	bool bCSEDHWSolarPreRunReqd = false;	// SAC 1/28/20 (StdSolarSys)
    if (m_iFileType == BEMFT_CSE)   // SAC 8/28/12 - special CSE '#define' writing stuff   - SAC 3/15/16 - and 
 	{	int iArr;
 		long lProjCommentDBID   = BEMPX_GetDatabaseID( "Proj:CSE_Comment" );
@@ -2778,18 +2784,26 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 		if (lProjCSEDHWPreRunReqdDBID < 1)	// SAC 5/17/16 - backward compat
 			lProjCSEDHWPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSEDHWPreRunReqd" );
 		if (lProjCSEDHWPreRunReqdDBID < 1)
-			bCSEPreRunReqd = true;		// always do pre-run for older rulesets
+			bCSEDHWPreRunReqd = true;		// always do pre-run for older rulesets
 		else if (BEMPX_GetInteger( lProjCSEDHWPreRunReqdDBID, lCSEDHWPreRunReqd, -1, -1, -1, BEMO_User, iBEMProcIdx ) && lCSEDHWPreRunReqd > 0)
-			bCSEPreRunReqd = true;
+			bCSEDHWPreRunReqd = true;
+
+		long lCSEDHWSolarPreRunReqd = 0;	// SAC 1/28/20 (StdSolarSys)
+		long lProjCSEDHWSolarPreRunReqdDBID = BEMPX_GetDatabaseID( "Proj:CSE_DHWSolarPreRunReqd" );
+		if (lProjCSEDHWSolarPreRunReqdDBID > 0 && BEMPX_GetInteger( lProjCSEDHWSolarPreRunReqdDBID, lCSEDHWSolarPreRunReqd, -1, -1, -1, BEMO_User, iBEMProcIdx ) && lCSEDHWSolarPreRunReqd > 0)
+			bCSEDHWSolarPreRunReqd = true;
 	}
 
-	if (bCSEPreRunReqd)		// SAC 3/22/16
+	if (bCSEDHWPreRunReqd)		// SAC 3/22/16
 	{	AddToSpecificProperties( "whZone" );
 		AddToSpecificProperties( "whTEx_x" );
 		AddToSpecificProperties( "whASHPSrcZn" );
 		AddToSpecificProperties( "whASHPSrcT_x" );
 		AddToSpecificProperties( "alter_whMult_x" );		// SAC 12/4/19 - to facilitate central elec DHWSys autosizing
 		AddToSpecificProperties( "alter_whVol_x" );		// SAC 12/4/19 - to facilitate central elec DHWSys autosizing
+	}
+	if (bCSEDHWSolarPreRunReqd)		// SAC 1/28/20
+	{	AddToSpecificProperties( "alter_scMult" );
 	}
 
    // then loop over all classes, writing out the components for each class, one by one
@@ -2843,13 +2857,84 @@ void CProjectFile::WriteProjectFile( int iBEMProcIdx /*=-1*/ )  // SAC 3/18/13
 				{	m_file.WriteWholeRecord( " DELETE Report \"eb\"    // move from end of CSE file" );		// SAC 9/8/15 - move this line UP, immediately following cseTOP command
 	      		m_file.NewLine();
 	      	}
-         	else if (bCSEPreRunReqd && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
+         	else if ((bCSEDHWPreRunReqd || bCSEDHWSolarPreRunReqd) && pClass->getShortName().compare("cseDHWSYS", Qt::CaseInsensitive)==0 && pClass->ObjectCount( BEMO_User ) > 0)
          	{	m_file.WriteWholeRecord( " verbose = -1          // suppress progress messages" );
-					m_file.WriteWholeRecord( " RUN                   // perform DHW pre-run calcs" );
+					m_file.WriteWholeRecord( " RUN                   // perform DHW (or DHWSolar) pre-run calcs" );
 					m_file.WriteWholeRecord( " UNSET verbose         // re-enable progress messages" );
          		//m_file.WriteToken( szCSE_Run, strlen( szCSE_Run ) );
 	      		//m_file.NewLine();		m_file.NewLine();
 	      		m_file.NewLine();
+
+				// more special pre-run logic - need to write out EXPORT objects and then another RUN command BEFORE the ALTER data - SAC 1/28/20 (StdSolarSys)
+					if (bCSEDHWSolarPreRunReqd)
+					{
+						int i1XClass = BEMPX_GetDBComponentID( "cseEXPORT" );			assert( i1XClass > 0 );
+						BEMObject* pXObj = BEMPX_GetObjectByName( i1XClass, iError, "DHWSolarSys Sizing Export" );		assert( pXObj );
+
+      				//BEMClass* pXClass = BEMPX_GetClass( i1XClass, iError, iBEMProcIdx );
+						//int ibx=0;
+						//for (; ibx < (int) pXClass->ObjectCount( BEMO_User ); ibx++)
+						//{	BEMObject* pXObj = pXClass->GetObject( BEMO_User, ibx );
+		         	//   if (pXObj != NULL)
+		         	//   {  // only write the component if it doesn't have a parent.
+		         	//      // if it DOES have a parent, then it will be written automatically during the
+		         	//      // course of its parent being written.
+		         	//      if (pXObj->getParent() == NULL)
+		         	//      {
+								if (pXObj)
+		         	         WriteComponent( pXObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, 0 /*IndentSpcs*/ );
+		         	//      }
+		         	//   }
+		         	//   else
+		         	//   {   assert( FALSE );
+		         	//}  }
+						// and FOLLOW the EXPORT objects by another RUN
+						m_file.WriteWholeRecord( " RUN                   // perform DHWSolar round 2 pre-run calcs" );
+		      		m_file.NewLine();
+
+					// NOW write alters for each DHWSOLARSYS (and children)
+						int i1SolSysClass = BEMPX_GetDBComponentID( "cseDHWSOLARSYS" );							assert( i1SolSysClass > 0 );
+      				BEMClass* pSolSysClass = BEMPX_GetClass( i1SolSysClass, iError, iBEMProcIdx );		assert( pSolSysClass );
+						// there ARE one or more objects that require ALTERation
+						SetSpecificPropertyMode( TRUE /*bWriteOnlySpecificProps*/ );
+						QString sCSERec;
+						for (ib=0; ib < (int) pSolSysClass->ObjectCount( BEMO_User ); ib++)
+						{	BEMObject* pObj = pSolSysClass->GetObject( BEMO_User, ib );
+      		   	   if (pObj != NULL)
+      		   	   {	BOOL bMainObjWritten = FALSE;
+      		   	   	if (ObjectInSpecificPropObjectArray( pObj ))
+      		   	   	{	sCSERec = "ALTER ";
+									WriteObjectName( sCSERec, pObj );
+								   bMainObjWritten = TRUE;
+								   WriteProperties( pObj, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/ );
+								}
+
+							   // then write each of this component's children (recursively)
+						   	if (pObj->getChildCount() > 0)
+							   {	// Cruise thru list of BEM child objects, writing each out to the file
+						      //	POSITION pos = pObj->m_children.GetHeadPosition();
+						      //	while ( pos != NULL )
+						      //	{	BEMObject* pChild = (BEMObject*) pObj->m_children.GetAt( pos );
+									for (int iCIdx=0; iCIdx < pObj->getChildCount(); iCIdx++)
+									{	BEMObject* pChild = pObj->getChild( iCIdx );					assert( pChild );
+										if (pChild)
+						      	   {
+			      		   	   	if (ObjectInSpecificPropObjectArray( pChild ))
+			      		   	   	{
+			      		   	   		if (!bMainObjWritten)
+			      		   		   	{	sCSERec = "ALTER ";
+													WriteObjectName( sCSERec, pObj );
+												   bMainObjWritten = TRUE;
+												}
+
+			      		   	   		sCSERec = " ALTER ";
+												WriteObjectName( sCSERec, pChild );
+											   WriteProperties( pChild, iBEMProcIdx, false /*bWritePrimaryDefaultData*/, true /*bSkipWritingComponentName*/, 0 /*iIndentSpcs*/ );
+											}
+						      	   }
+						      }	}
+						}	}
+					}
 
 				// go BACK through objects of this type and write properties excluded from the first writing of object - SAC 3/22/16
 					if (GetSpecificPropObject(0))

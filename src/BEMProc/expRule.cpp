@@ -3830,18 +3830,39 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             break; }
 
       case BF_EvalRules  : {// "EvalRulelist",       
-                            // SAC 5/26/00 - switched from 1 fixed to variable (1 or 2) args
-                            if (nArgs < 1 || nArgs > 2)
+                            // SAC 5/26/00 - switched from 1 fixed to variable (1 or 2) args		// SAC 2/5/20 - increased max # args to 3, Obj:Prop to store primary object ref to (Res tic #1174)
+                            if (nArgs < 1 || nArgs > 3)
                                ExpSetErr( error, EXP_RuleProc, "Invalid number of EvalRulelist() arguments" );
                             else
                             {
                                ExpNode* pNode = ExpxStackPop( stack );
                                // SAC 5/26/00 - Added EvalOption argument
                                int iEvalOption = 0;
-                               if (nArgs == 2)
+                               long lDBID_PrimObj = 0;
+                               bool bRuleEvalErr=false;
+                               if (nArgs > 2)
+                               {
+                                  if (pNode->type != EXP_String)   // SAC 2/5/20
+                                  {  ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() PrimObjRefStorageDBID argument (expecting \"Obj:Prop\")" );
+                                  	 bRuleEvalErr = true;
+                                  }
+                                  else
+                                  {	 lDBID_PrimObj = BEMPX_GetDatabaseID( QString( (char*) pNode->pValue ) );
+                                  	 if (lDBID_PrimObj < BEM_COMP_MULT)
+                                     {	 ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() PrimObjRefStorageDBID argument (error converting DBID)" );
+                                      	 bRuleEvalErr = true;
+                                     }
+											 }
+                                  // delete last argument node & pop next one
+                                  ExpxNodeDelete( pNode );
+                                  pNode = ExpxStackPop( stack );
+                               }
+                               if (nArgs > 1)
                                {
                                   if (pNode->type != EXP_Value || pNode->fValue < 0 || pNode->fValue > 2)   // SAC 1/22/06
-                                     ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() EvalOption argument" );
+                                  {  ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() EvalOption argument" );
+                                  	 bRuleEvalErr = true;
+                                  }
                                   else
                                      iEvalOption = (int) pNode->fValue;
 
@@ -3851,8 +3872,21 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                }
                                if (pNode->type != EXP_String)
                                   ExpSetErr( error, EXP_RuleProc, "Invalid EvalRulelist() argument" );
-                               else // post rulelist name to the eval struct
+                               else if (!bRuleEvalErr) // post rulelist name to the eval struct
                                {
+                               	 if (lDBID_PrimObj > BEM_COMP_MULT)		// SAC 2/5/20 - processing of 3rd argument (Res tic #1174)
+                               	 {	 int iERErr;
+												 int iPrimObjClass = (pEval->lPrimDBID < BEM_COMP_MULT ? pEval->lPrimDBID : BEMPX_GetClassID( pEval->lPrimDBID ));
+												 BEMObject* pPrimObj = BEMPX_GetObjectByClass( iPrimObjClass, iERErr, pEval->iPrimObjIdx, pEval->ePrimObjType );
+												 if (!pPrimObj)
+		                                  ExpSetErr( error, EXP_RuleProc, "EvalRulelist() Error retrieving primary rule object pointer" );
+		                               else
+		                               {		int iERSetRetVal = BEMPX_SetBEMData( lDBID_PrimObj, BEMP_Obj, (void*) pPrimObj, BEMO_User, -1 );
+														if (iERSetRetVal < 0)
+	 		                                  	ExpSetErr( error, EXP_RuleProc, "EvalRulelist() Error setting primary rule object pointer to BEMBase" );
+												 }
+                               	 }
+                               	 // continue processing EvalRulelist return...
                                   pEval->sRulelistToEvaluate = (char*) pNode->pValue;
                                   assert( pEval->maRulelistEvalObjIdxs.size() < 1 );
                                   if (iEvalOption == 1)

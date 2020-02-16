@@ -119,6 +119,8 @@ public:
 	void SetIsStdDesign(BOOL bIsStdDesign) { m_bIsStdDesign = bIsStdDesign; }
 	BOOL GetIsStdDesign() const { return m_bIsStdDesign; }
 	BOOL GetIsDesignRtg() const { return (m_iRunType == CRM_DesignRating); }
+	BOOL GetIsProposed() const { return (m_iRunType >= CRM_Prop &&
+													 m_iRunType <= CRM_WOrientProp); }
 	BOOL GetIsHERS() const { return RunIsHERS(m_iRunType); }
 	void SetExitCode(int iExitCode) { m_iExitCode = iExitCode; }
 	int GetExitCode() const { return m_iExitCode; }
@@ -160,6 +162,8 @@ public:
 								int iBEMProcIdx=-1, bool bRemovePVBatt=false );
 	bool T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
+	bool T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,
+								QString& sErrorMsg, int iModelType=0 );	// SAC 1/27/20 (StdSolarSys)
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	void SetNumRuns( int iNumRuns ) { m_iNumRuns = iNumRuns; }
 	int GetNumRuns() const { return m_iNumRuns; }

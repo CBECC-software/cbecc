@@ -386,27 +386,27 @@ static int* siapFolder0[] = { &eiBDBCID_Schedule, &eiBDBCID_SchWeek, &eiBDBCID_S
 
 // SAC 1/24/19 - added ResDWHRSys (for 2019 program only)
 #ifdef UI_PROGYEAR2019	// SAC 7/28/18 - shifted PV & Battery objects from Envelope to Mechanical tabs
-static int  siNumHVACComps = 34;
-static int  siNumHVACFolders = 7;
+static int  siNumHVACComps = 35;
+static int  siNumHVACFolders = 8;
 static int  siaMode1[]  = { 5, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_ResLpTankHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022	// SAC 6/19/19
-static int  siNumHVACComps = 34;
-static int  siNumHVACFolders = 7;
+static int  siNumHVACComps = 35;
+static int  siNumHVACFolders = 8;
 static int  siaMode1[]  = { 5, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler,
                             &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_ResLpTankHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /* &eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #else
 static int  siNumHVACComps = 29;
 static int  siNumHVACFolders = 4;
@@ -443,18 +443,18 @@ static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCI
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_ResLpTankHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #elif UI_PROGYEAR2022	// SAC 6/19/19
 static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, &eiBDBCID_PVArray, &eiBDBCID_Battery, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
 									 &eiBDBCID_HtRej, &eiBDBCID_ThrmlEngyStor, &eiBDBCID_HX,
 									 &eiBDBCID_WtrHtr, &eiBDBCID_ResWtrHtr, &eiBDBCID_ResLpTankHtr, &eiBDBCID_FluidSeg, &eiBDBCID_Pump, /*&eiBDBCID_StorTank, &eiBDBCID_ProcLd,*/
 									 &eiBDBCID_AirSys, &eiBDBCID_VRFSys, &eiBDBCID_ZnSys, &eiBDBCID_ThrmlZn, &eiBDBCID_AirSeg, &eiBDBCID_EvapClr, &eiBDBCID_TrmlUnit, &eiBDBCID_CoilClg, &eiBDBCID_CoilHtg,
-									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys,
+									 &eiBDBCID_Fan, /*&eiBDBCID_PrehtCoil,*/ &eiBDBCID_HtRcvry, &eiBDBCID_OACtrl, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys,
 									 &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade };
-static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
+static int* siapLibFolder1[] = { &eiBDBCID_CrvLin, &eiBDBCID_CrvQuad, &eiBDBCID_CrvCubic, &eiBDBCID_CrvDblQuad, &eiBDBCID_ResDWHRSys, &eiBDBCID_DHWSolarSys, &eiBDBCID_PVArrayGeom, &eiBDBCID_PVArrayShade, NULL };
 #else
 static int  siaLibMode1[]  = { 2, siNumHVACComps-siNumHVACFolders, siNumHVACComps };
 static int* siapLibMode1[] = { &eiBDBCID_FluidSys, &eiBDBCID_ResDHWSys, &eiBDBCID_Building, /*&eiBDBCID_RfrgEqp,*/ &eiBDBCID_Chiller, &eiBDBCID_Boiler, 
@@ -484,18 +484,21 @@ static long* slapOAControl[]		= {	&elDBID_OACtrl_AirSegSupRef, &elDBID_OACtrl_Ai
 static long* slapFluidSeg[]		= {	&elDBID_FluidSeg_PriSegRef, NULL };
 static long* slapChiller[]			= {	&elDBID_Chiller_CndsrInRef, &elDBID_Chiller_CndsrOutRef, &elDBID_Chiller_EvapInRef, &elDBID_Chiller_EvapOutRef, NULL };
 static long* slapBoiler[]			= {	&elDBID_Boiler_FluidFlowInRef, &elDBID_Boiler_FluidFlowOutRef, NULL };
+static long* slapResDHWSys[]		= {	&elDBID_ResDHWSys_DHWSolarSysRef, NULL };		// SAC 1/31/20 (Com tic #3157)
 
-static long** ClassToDBIDAssignmentList( int iBDBClass )
+static long** ClassToDBIDAssignmentList( int /*iBDBClass*/ )
 {
-   if      (iBDBClass == eiBDBCID_ThrmlZn )   return &slapThermalZone[0]; 
-   else if (iBDBClass == eiBDBCID_AirSeg  )   return &slapAirSegment[0];  
-   else if (iBDBClass == eiBDBCID_CoilClg )   return &slapCoilCooling[0];  
-   else if (iBDBClass == eiBDBCID_CoilHtg )   return &slapCoilHeating[0];  
-   else if (iBDBClass == eiBDBCID_TrmlUnit)   return &slapTerminalUnit[0];
-   else if (iBDBClass == eiBDBCID_OACtrl  )   return &slapOAControl[0];   
-   else if (iBDBClass == eiBDBCID_FluidSeg)   return &slapFluidSeg[0];
-   else if (iBDBClass == eiBDBCID_Chiller )   return &slapChiller[0];
-   else if (iBDBClass == eiBDBCID_Boiler  )   return &slapBoiler[0];
+// SAC 2/2/20 - debate about desire to list assigned components as children - for now we won't (consistent w/ past versions) (tic #3157)
+//   if      (iBDBClass == eiBDBCID_ThrmlZn )   return &slapThermalZone[0]; 
+//   else if (iBDBClass == eiBDBCID_AirSeg  )   return &slapAirSegment[0];  
+//   else if (iBDBClass == eiBDBCID_CoilClg )   return &slapCoilCooling[0];  
+//   else if (iBDBClass == eiBDBCID_CoilHtg )   return &slapCoilHeating[0];  
+//   else if (iBDBClass == eiBDBCID_TrmlUnit)   return &slapTerminalUnit[0];
+//   else if (iBDBClass == eiBDBCID_OACtrl  )   return &slapOAControl[0];   
+//   else if (iBDBClass == eiBDBCID_FluidSeg)   return &slapFluidSeg[0];
+//   else if (iBDBClass == eiBDBCID_Chiller )   return &slapChiller[0];
+//   else if (iBDBClass == eiBDBCID_Boiler  )   return &slapBoiler[0];
+//   else if (iBDBClass == eiBDBCID_ResDHWSys)  return &slapResDHWSys[0];		// SAC 1/31/20 (Com tic #3157)
    return &slapNULL[0];
 }
 
@@ -531,8 +534,15 @@ static int ClassToPopulateChildMode( int iBDBClass )		// SAC 7/27/14 - 0-Class/C
 	return 0;
 }
 
-bool DBIDAssignmentCompatible( long /*lAssignmentDBID*/, int /*iBEMClass*/, int /*iObjIdx*/, BEM_ObjType /*eBEMObjType*/ )	// SAC 12/9/13
-{	return true;
+bool DBIDAssignmentCompatible( long lAssignmentDBID, int iBEMClass, int iObjIdx, BEM_ObjType eBEMObjType )	// SAC 12/9/13
+{	bool bRetVal = true;
+	// SAC 1/31/20 - ensure ResDHWSys assigned children not listed for ResDHWSys where CentralSysType = 'HPWH' (2)  |  further mod to still include DHWSolarSys children (Com tic #3157)
+	if (iBEMClass == eiBDBCID_ResDHWSys && elDBID_ResDHWSys_CentralSysType > 0 && lAssignmentDBID != elDBID_ResDHWSys_DHWSolarSysRef)
+	{	long lCentralSysType = 0;
+		if (BEMPX_SetDataInteger( elDBID_ResDHWSys_CentralSysType, lCentralSysType, 0, -1, iObjIdx, (int) eBEMObjType ) && lCentralSysType == 2)
+			bRetVal = false;
+	}
+	return bRetVal;
 }
 
 int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
@@ -602,6 +612,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int iObjOccur )
    else if (iBDBClass == eiBDBCID_ResDWHRSys)   			return 112;  // SAC 1/24/19 - same as Com HX for now...
    else if (iBDBClass == eiBDBCID_ResWtrHtr)             return  74;
    else if (iBDBClass == eiBDBCID_ResLpTankHtr)          return  74;	 // SAC 1/12/20 (Com tic #3156)
+   else if (iBDBClass == eiBDBCID_DHWSolarSys)           return 126;	 // SAC 1/31/20 (Com tic #3157)
    else if (iBDBClass == eiBDBCID_Pump)                  return  50;
    else if (iBDBClass == eiBDBCID_ThrmlEngyStor)         return 116;  // SAC 2/21/17
    else if (iBDBClass == eiBDBCID_HX)                    return 112;  // SAC 10/17/15
@@ -642,12 +653,12 @@ static int** ClassToConvertList( int iBDBClass )
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
 // SAC 12/23/18 - added DWHX (for 2019 program only)  // SAC 1/5/19 - renamed DWHRSys
-// SAC 9/3/19 - added OtherZone (MFamProto) 
+// SAC 9/3/19 - added OtherZone (MFamProto)    - SAC 2/14/20 - removed OtherZone for 2019 EXE
 static int siZero = 0;
 #ifdef UI_PROGYEAR2019
-static int  siNumArchComps = 27;
-static int  siaMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int  siNumArchComps = 26;
+static int  siaMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
+static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -689,10 +700,10 @@ static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
 // SAC 12/23/18 - added DWHX (for 2019 program only)  // SAC 1/5/19 - renamed DWHRSys
-// SAC 9/3/19 - added OtherZone (MFamProto) 
+// SAC 9/3/19 - added OtherZone (MFamProto)   - SAC 2/14/20 - removed OtherZone for 2019 EXE
 #ifdef UI_PROGYEAR2019
-static int  siaLibMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
-static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int  siaLibMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
+static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -852,6 +863,12 @@ bool DBIDAssignmentCompatible( long lAssignmentDBID, int iBEMClass, int iObjIdx,
 			bRetVal = false;
 		else if (lAssignmentDBID >= elDBID_HVAC_HtPumpSystem1 && lAssignmentDBID <= elDBID_HVAC_HtPumpSystem10 && (lHVACSysType == 1 || lHVACSysType == 3))
 			// cannot assign HVACHtPump to HVACSys of Type = Other... or Var OAV...
+			bRetVal = false;
+	}
+	// SAC 1/21/20 - ensure DHWSys assigned children not listed for DHWSys where CentralDHWType = 'HPWH' (2)  |  further mod to still include DHWSolarSys children - SAC 1/22/20
+	else if (iBEMClass == eiBDBCID_DHWSys && elDBID_DHWSys_CentralDHWType > 0 && lAssignmentDBID != elDBID_DHWSys_DHWSolarSysRef)
+	{	long lCentralDHWType = 0;
+		if (BEMPX_SetDataInteger( elDBID_DHWSys_CentralDHWType, lCentralDHWType, 0, -1, iObjIdx, (int) eBEMObjType ) && lCentralDHWType == 2)
 			bRetVal = false;
 	}
 
@@ -1612,6 +1629,10 @@ HTREEITEM CTreeBDB::AddComponent( HTREEITEM hParent, int iBDBClass, int iObjOccu
          AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );
 //      }
 #endif  // UI_CARES
+#ifdef UI_CANRES
+         // Add other assigned components, regardless of tab
+         AddAssignedChildren( hNewItem, iBDBClass, iObjOccur, iSource, ClassToDBIDAssignmentList( iBDBClass ) );		// SAC 1/31/20 (Com tic #3157)
+#endif  // UI_CANRES
 
       // Expand item if BDBObject says to
       if (pObj->ObjectTreeStateExpanded( m_iTreeMode ))

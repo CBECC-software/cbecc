@@ -824,19 +824,19 @@ int RuleSet::NumRulesetPropertiesForObject( int iObjTypeID )
 }
 
 
-BOOL RuleSet::PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass /*=-1*/ )
+BOOL RuleSet::PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass /*=-1*/, int iFirstIdx /*=0*/ )		// SAC 1/30/20 - added iFirstIdx
 {	sErrantRuleProps.clear();
 	int iSize = (int) m_rulesetProperties.size();  // SAC 7/6/12
 
-	if (iSize > 0)		// SAC 9/26/16 - m_propTypes vector to BEMPropertyType* -- resize array ONCE, then subsequent insertions shift existing array but don't resize it
+	if (iSize > iFirstIdx)		// SAC 9/26/16 - m_propTypes vector to BEMPropertyType* -- resize array ONCE, then subsequent insertions shift existing array but don't resize it
 	{	assert( eActiveBEMProcIdx < 1 );
 	   BEMProcObject* pBEMProc = getBEMProcPointer( -1 );			assert( pBEMProc );
 	   if (pBEMProc)
 	   {	int iNumStartPropTypes = pBEMProc->getNumPropertyTypes();
-			pBEMProc->resizePropertyTypes( iNumStartPropTypes + iSize );
+			pBEMProc->resizePropertyTypes( iNumStartPropTypes + iSize - iFirstIdx );
 	}	}
 
-	for (int j=0; j<iSize; j++)
+	for (int j=iFirstIdx; j<iSize; j++)
 	{	RuleSetProperty* pRP = m_rulesetProperties[j];       assert( pRP );
 		if (pRP)
 		{	QString sErrMsg;
@@ -2327,7 +2327,8 @@ void RuleList::RemoveAll()
 bool RuleList::Write( CryptoFile& file, QFile& errorFile )
 {
    bool bRetVal = TRUE;
-	ruleSet.setDataModelRuleActive( (ruleSet.IsDataModel() && getName().left(3).compare("rl_")==0) );  // SAC 5/26/16 - added to enable combination of data model and procedural rule parsing within a data model ruleset
+					// SAC 1/22/20 - further modified to accommodate DataModel rules in Procedural rulesets
+	ruleSet.setDataModelRuleActive( (getName().left(3).compare("rl_")==0) );  // SAC 5/26/16 - added to enable combination of data model and procedural rule parsing within a data model ruleset
 
    // first write the rulelist name to the output file
    file.WriteQString( m_name );
@@ -2373,7 +2374,8 @@ bool RuleList::Write( CryptoFile& file, QFile& errorFile )
 bool RuleList::Parse( QFile& errorFile )    // SAC 1/29/18 - similar to Write() but doesn't write rule to file, just keeps it in memory for direct use/evaluation
 {
    bool bRetVal = TRUE;
-	ruleSet.setDataModelRuleActive( (ruleSet.IsDataModel() && getName().left(3).compare("rl_")==0) );  // SAC 5/26/16 - added to enable combination of data model and procedural rule parsing within a data model ruleset
+					// SAC 1/22/20 - further modified to accommodate DataModel rules in Procedural rulesets
+	ruleSet.setDataModelRuleActive( (getName().left(3).compare("rl_")==0) );  // SAC 5/26/16 - added to enable combination of data model and procedural rule parsing within a data model ruleset
 
     // then write the number of rules contained in the rulelist
    int size = (int) m_rules.size();

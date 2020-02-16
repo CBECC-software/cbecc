@@ -713,8 +713,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2019,1027,0,1116		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
- PRODUCTVERSION 2019,1027,0,1116	//   examples:  2019,1007,0,### => 2019.1.0 RC (###) / 2019,1010,0,### => 2019.1.1 (###) / 2019,1024,0,### => 2019.1.2 Beta (###)
+ FILEVERSION 2019,2004,0,1128		// minor # maps to major#/minor#/test portion of version:  WXYZ -> W.XY is version NUMBER (1.1, 1.2...) | Z is test release (0-'', 1-Alpha, 2-A2, 3-A3, 4-Beta, 5-B2, 6-RV, 7-RC (release candidate), 8-SP1, 9-SP2)
+ PRODUCTVERSION 2019,2004,0,1128	//   examples:  2019,1007,0,### => 2019.1.0 RC (###) / 2019,1010,0,### => 2019.1.1 (###) / 2019,1024,0,### => 2019.1.2 Beta (###)
  FILEFLAGSMASK 0x3fL					// XXX!!!XXX  - MAKE SURE TO UPDATE  Proj:CompManagerVersion  in ruleset to be consistent w/ CBECC-Com version -  XXX!!!XXX
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -732,15 +732,15 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "California Energy Commission\0"
             VALUE "FileDescription", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "FileVersion", "2019.1.2 RC (1116)\0"
+            VALUE "FileVersion", "2019.2.0 Beta (1128)\0"
             VALUE "InternalName", "California Building Energy Code Compliance\0"
             VALUE "LegalCopyright", "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "CBECC-Com19.exe\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "California Building Energy Code Compliance (commercial 2019)\0"
-            VALUE "ProductVersion", "2019.1.2 RC\0"
-            VALUE "SpecialBuild", "build 1116\0"
+            VALUE "ProductVersion", "2019.2.0 Beta\0"
+            VALUE "SpecialBuild", "build 1128\0"
         END
     END
     BLOCK "VarFileInfo"

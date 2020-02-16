@@ -675,7 +675,8 @@ int CSERunMgr::SetupRun_Simple(
 	{	QString sDbgFileName;
 		//sDbgFileName = QString( "%1%2 - run %3.ibd-b4Evals" ).arg( m_sProcessPath, m_sModelFileOnlyNoExt, QString::number(iRunIdx+1) );
 		//sDbgFileName = QString( "%1%2 - %3.ibd-b4Evals" ).arg( m_sProcessPath, m_sModelFileOnlyNoExt, pszRunAbbrev );
-		sDbgFileName = QString( "%1%2.ibd-b4Evals" ).arg( m_sProcessPath, sModelFileOnlyNoExt );
+//		sDbgFileName = QString( "%1%2.ibd-b4Evals" ).arg( m_sProcessPath, sModelFileOnlyNoExt );
+		sDbgFileName = QString( "%1%2.ibd-b4CSE" ).arg( m_sProcessPath, sModelFileOnlyNoExt );
 		BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
 	}
 
@@ -1221,6 +1222,12 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 				if (pObj)
 					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
 			}
+
+		// SAC 2/10/20 - added to enable solar systems to feed central DHWSystems
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+
 			laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iSIdx+1 );			// Main cseDHWSYS being sized
 			for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
 			{	BEMObject* pCentralSys2 = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iS2Idx );
@@ -1432,6 +1439,448 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 }
 
 
+//-----------------------------------------------------------------------------
+//  ModelType:		0  T24-Res
+//						1  T24-Com
+// SAC 1/27/20 - version of sizing that involves 1 sizing run (w/ 2 DHW-only 'pre-runs' included) w/ fit to calculate size expected to be (roughly) linear
+int CSE_PerformDHWSolarSysSizing( QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, double* pdSSFResults,
+											/*std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol,*/ bool bVerbose, int iModelType )
+// returns 0 iff success
+//         1 fail (CSE error, ...)
+{
+	bool bStoreBEMDetails = bVerbose;
+	bool bSilent = false;
+	CSERunMgr cseRunMgr( sCSEexe, sCSEWthr, sModelPathOnly, sModelFileOnlyNoExt, sProcessPath, false /*bFullComplianceAnalysis*/,
+						false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, 0 /*lAnalysisType*/, 2019 /*iRulesetCodeYear(unused?)*/, 0 /*lDesignRatingRunID*/,
+						bVerbose, bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, NULL /*pCompRuleDebugInfo*/, NULL /*pszUIVersionString*/,
+						0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);
+	int iNumRuns = 1;  //(int) daRunMults.size();
+	int iMultDecPrec=5, iCSESimRetVal=0, iR=0;
+	QString sErrMsg, sLogMsg;
+//	for (iR=0; (iCSESimRetVal == 0 && sErrMsg.isEmpty() && iR < iNumRuns); iR++)
+//	{
+//		QString sHPWHSizeCmdLineArg = QString( " -DHPWHSIZE=%1" ).arg( QString::number(daRunMults[iR], 'f', iMultDecPrec) );
+//		QString sNum = QString::number(iR+1);
+		iCSESimRetVal = cseRunMgr.SetupRun_Simple( iR /*iRunIdx*/, CRM_User /*iRunType*/, sErrMsg, true /*bAllowReportIncludeFile*/,
+													"SlrSz" /*pszRunAbbrev*/, NULL /*sHPWHSizeCmdLineArg.toLocal8Bit().constData()*/, NULL /*sNum.toLocal8Bit().constData()*/, iModelType );
+			//BEMMessageBox( QString("hsz_Run1():  cseRunMgr.SetupRun_Simple() returned %1 (0=>OK) for file:  %2").arg(QString::number(iCSESimRetVal), hsz_sModelFileOnlyNoExt) );		// debugging
+//	}
+
+	if (iCSESimRetVal == 0)
+	{	bool bSaveFreezeProg = sbFreezeProgress;
+		sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
+		cseRunMgr.DoRuns();
+		sbFreezeProgress = bSaveFreezeProg;
+	}
+
+//	double dHrlyRes[3][8760], dAnnUse[3] = {0.0,0.0,0.0};
+//	double dDbgRawRes[3] = {0.0,0.0,0.0};		// SAC 1/29/19
+//	for (iR=0; (iCSESimRetVal == 0 && sErrMsg.isEmpty() && iR < iNumRuns); iR++)
+//	{
+		const CSERun& cseRun = cseRunMgr.GetRun(iR/*iRunIdx*/);
+		const QString& sRunID = cseRun.GetRunID();
+		const QString& sRunAbbrev = cseRun.GetRunAbbrev();
+		//long lRunNumber = 1;  //(lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
+		int iCSERetVal = cseRun.GetExitCode();
+		if (bVerbose)  // SAC 1/31/13
+		{	sLogMsg.sprintf( "      %s simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
+			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+		BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+		if (iCSERetVal != 0)
+		{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", "CSE"/*qsCSEName.toLocal8Bit().constData()*/, iCSERetVal );
+			iCSESimRetVal = BEMAnal_CECRes_CSESimError;
+			BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+
+//		if (iCSESimRetVal == 0)
+//		{	assert( iR < 3 );	 // only set up for 3 runs of results (for now)
+//			if (iR >= 3)
+//				iCSESimRetVal = 1;
+//		}
+
+		if (iCSESimRetVal == 0 && pdSSFResults != NULL)
+		{
+			QString sResFile = QString( "%1%2.csv" ).arg( sProcessPath, sModelFileOnlyNoExt );
+//QString sDbgMsg = QString( "about to retrieve solar sizing results from:\n%1" ).arg( sResFile );
+//BEMMessageBox( sDbgMsg );
+			std::ifstream in( sResFile.toLocal8Bit().constData() );
+			if (!in.is_open())
+				sErrMsg.sprintf( "ERROR:  unable to open sizing run results file %s", sResFile.toLocal8Bit().constData() );
+
+			if (sErrMsg.isEmpty())
+			{
+				std::string line;
+				getline( in, line );		// first ver #
+				getline( in, line );		//  hdr 1
+				getline( in, line );		//  hdr 2
+				getline( in, line );		//  hdr 3
+
+				std::vector<std::vector<std::string> > lines;
+				getline( in, line );		// DATA #1
+				ParseCSV( line, lines );
+				assert( lines.size()==1 );
+				if (lines[0].size() > 6)
+				{	pdSSFResults[0] = atof( lines[0][6].c_str() );
+					if (pdSSFResults[0] < 0.0001)
+						sErrMsg.sprintf( "ERROR:  invalid %s solar sizing run result #1:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[0] );
+				}
+				else
+					sErrMsg.sprintf( "ERROR:  unable to parse %s solar sizing run result record #1", sRunID.toLocal8Bit().constData() );
+
+				if (sErrMsg.isEmpty())
+				{
+					getline( in, line );		// DATA #2
+					ParseCSV( line, lines );
+					assert( lines.size()==1 );
+					if (lines[0].size() > 6)
+					{	pdSSFResults[1] = atof( lines[0][6].c_str() );
+						if (pdSSFResults[1] < 0.0001)
+							sErrMsg.sprintf( "ERROR:  invalid %s solar sizing run result #2:  %g", sRunID.toLocal8Bit().constData(), pdSSFResults[1] );
+					}
+					else
+						sErrMsg.sprintf( "ERROR:  unable to parse %s solar sizing run result record #2", sRunID.toLocal8Bit().constData() );
+			}	}
+		}
+
+		if (iCSESimRetVal == 0)
+		{
+//			if (iModelType == 1)		// convert kBtu CSE results into kWh, as those are the units the Com TDV table are in
+//			{	for (int i=0;i<8760;i++)
+//					dHrlyRes[iR][i] /= 3.412;
+//			}
+//
+//			// apply hourly TDV multipliers to DHW results (or simply sum hourlys into single use result)
+//			if (!sStdHPWHSzTDVTbl.isEmpty() && lStdHPWHSzTDVCol > 0)
+//				dAnnUse[iR] = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[iR], sStdHPWHSzTDVTbl.toLocal8Bit().constData(),	lStdHPWHSzTDVCol, bVerbose );
+//			else
+//			{	for (int i=0;i<8760;i++)
+//					dAnnUse[iR] += dHrlyRes[iR][i];
+//			}
+//
+//			int iSetRetVal = BEMPX_SetBEMData( BEMPX_GetDatabaseID( "cseDHWSYS:StdHPWHSzRunUse[1]" )+iR, BEMP_Flt, (void*) &dAnnUse[iR], BEMO_User, iSysIdx-1 );
+//			if (iSetRetVal < 0)
+//			{	iCSESimRetVal = 1;
+//				sErrMsg = QString( "Error storing HPWH sizing run use for cseDHWSYS %1:  Setting of StdHPWHSzRunUse[%2] (%3) returned %4." ).arg(
+//														QString::number(iSysIdx), QString::number(iR+1), QString::number(dAnnUse[iR]), QString::number( iSetRetVal ) );
+//			}
+		}
+
+	//	if (bVerbose)
+		if (1)  // temporarily always log each sizing run
+		{	if (iCSESimRetVal != 0)
+				sLogMsg = QString( "   %1 DHWSolarSys Sizing system run %2, failed (returned %3)" ).arg(
+														sRunID, QString::number(iR+1), QString::number(iCSESimRetVal) );
+			else if (!sErrMsg.isEmpty())
+				sLogMsg = QString( "   %1 DHWSolarSys Sizing system run %2,  %3" ).arg(
+														sRunID, QString::number(iR+1), sErrMsg );
+			else
+				sLogMsg = QString( "   %1 DHWSolarSys Sizing system run %2 successful" ).arg(
+														sRunID, QString::number(iR+1) );
+//				sLogMsg = QString( "   DHWSolarSys Sizing system %1, run %2 resulted in %3 kTDV   (%4 kWh)" ).arg(
+//														QString::number(iSysIdx), QString::number(iR+1), QString::number(dAnnUse[iR], 'f', 0), QString::number(dDbgRawRes[iR]/3.412, 'f', 0) );
+			BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}
+
+//	}
+
+	if (bVerbose)
+	{	// output to Project Log file
+	}
+
+	int ret=0;
+	if (iCSESimRetVal != 0)
+		ret = iCSESimRetVal;
+	else if (!sErrMsg.isEmpty())
+		ret = 1;
+
+	return ret;
+}	// CSE_PerformDHWSolarSysSizing
+//-----------------------------------------------------------------------------
+//  ModelType:		0  T24-Res
+//						1  T24-Com
+bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,
+								QString& sErrorMsg, int iModelType )	// SAC 1/27/20 (StdSolarSys)
+{
+//	QString qsMainDWHSysClass = (iModelType == 1 ? "ResDHWSys" : "DHWSys");
+//	std::vector<int> iaCSEDHWSystemsSizedIdx, iaDHWSystemsSizedIdx;
+//	int iCID_DHWSys       = BEMPX_GetDBComponentID( qsMainDWHSysClass.toLocal8Bit().constData() );
+	int iCID_CSEDHWSys    = BEMPX_GetDBComponentID( "cseDHWSYS" );
+//	int iCID_CSEDHWHeater = BEMPX_GetDBComponentID( "cseDHWHEATER" );
+//	long lDBID_SzRunMults = BEMPX_GetDatabaseID( (iModelType == 1 ? "StdHPWHSizingRunMults[1]" : "StdHPWHSzRunMlts[1]"), iCID_DHWSys );
+//	int iSV, iErr, iNumCSEDHWSystems = BEMPX_GetNumObjects( iCID_CSEDHWSys );
+	int iErr;
+//	bool bFirstDHWSysBeingSized = true;
+//	for (int iSIdx=0; (sErrorMsg.isEmpty() && iSIdx < iNumCSEDHWSystems); iSIdx++)
+//	{	BEMObject* pCentralSys = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iSIdx );
+//		BEMObject* pSrcDHWSys  = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:SourceDHWSys"    ), iSV, iErr, iSIdx );
+//		int iDHWSysObjIdx = (pSrcDHWSys && pSrcDHWSys->getClass()) ? BEMPX_GetObjectIndex( pSrcDHWSys->getClass(), pSrcDHWSys ) : -1;
+//		long lHPWHSizingReqd=0;
+//		if (pCentralSys == NULL && iDHWSysObjIdx >= 0 && 
+//			 BEMPX_GetInteger( BEMPX_GetDatabaseID( "HPWHSizingReqd", iCID_DHWSys ), lHPWHSizingReqd, 0, -1, iDHWSysObjIdx ) && lHPWHSizingReqd > 0)
+//		{	// process each system that isn't a slave and that has the flag set HPWHSizingReqd
+//			iaCSEDHWSystemsSizedIdx.push_back( iSIdx );
+//			iaDHWSystemsSizedIdx.push_back( iDHWSysObjIdx );
+//			BEMObject* pCSEDHWSysObj = BEMPX_GetObjectByClass( iCID_CSEDHWSys, iErr, iSIdx );								assert( pCSEDHWSysObj );
+//			std::vector<int> iaCSEDHWHtrIdx;
+//			QString sWHHeatSrc;		bool bHaveFuelHtr=false;		BEM_ObjType bemObjTypeUser = BEMO_User;
+//			int iHtr, iNumCSEDHWHtrs = (int) BEMPX_GetNumChildren( iCID_CSEDHWSys, iSIdx, BEMO_User /*eParObjType*/, iCID_CSEDHWHeater );
+//			for (iHtr=1; (sErrorMsg.isEmpty() && iHtr <= iNumCSEDHWHtrs); iHtr++)
+//			{	int iCSEDHWHtrIdx = BEMPX_GetChildObjectIndex( iCID_CSEDHWSys, iCID_CSEDHWHeater, iErr, bemObjTypeUser, iHtr, iSIdx );
+//				if (iCSEDHWHtrIdx >= 0)
+//				{	BEMPX_GetString( BEMPX_GetDatabaseID( "cseDHWHEATER:whHeatSrc" ), sWHHeatSrc, TRUE, 0, -1, iCSEDHWHtrIdx );
+//					if (!sWHHeatSrc.compare("ASHPX"))
+//					{	// this is a heater child of the system being sized and is of type ASHPX, so set it up for sizing run
+//						BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iCSEDHWHtrIdx );			assert( pCSEDHWHtrObj );
+//							if (!CMX_EvaluateRuleset( "CSE_DHWHeater_SetupHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//														NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//														NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iCSEDHWHtrIdx, 0 /*iEvalOnlyObjType*/ ))
+//								sErrorMsg = QString( "Error evaluating 'CSE_DHWHeater_SetupHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+//																			sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+//							iaCSEDHWHtrIdx.push_back( iCSEDHWHtrIdx );
+//					}
+//					else if (!sWHHeatSrc.compare("Fuel"))
+//					{	bHaveFuelHtr = true;
+//					}
+//			}	}
+//			if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() < 1)
+//				sErrorMsg = QString( "Error performing %1 run HPWH sizing for DHWSys '%2' / cseDHWSYS '%3':  no ASHPX heaters identified." ).arg( sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+//			else if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() > 0)
+//			{	// evaluate rules to setup cseDHWSYS for HPWHSIZE run(s)
+//				if (!CMX_EvaluateRuleset( "CSE_DHWSystem_SetupHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//											NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//											NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWSys, iSIdx, 0 /*iEvalOnlyObjType*/ ))
+//					sErrorMsg = QString( "Error evaluating 'CSE_DHWSystem_SetupHPWHSizingRun' rulelist on %1 run during HPWH sizing for DHWSys '%2' / cseDHWSYS '%3'" ).arg(
+//																sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+//			}
+
+//			if (sErrorMsg.isEmpty() && iaCSEDHWHtrIdx.size() > 0 && bFirstDHWSysBeingSized)
+			if (sErrorMsg.isEmpty())
+			{	// call 1-time (project level) rulelist to setup Export and other objects used in DHWSolarSys Sizing runs
+//				bFirstDHWSysBeingSized = false;
+				if (!CMX_EvaluateRuleset( "CSE_Project_SetupSolarSysSizingExport", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+													NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo ))
+					sErrorMsg = QString( "Error evaluating 'T24Res_DHWSolarSysSizing' rulelist on %1 run during DHWSolarSys Sizing process" ).arg( sRunID );
+			}
+
+		// store flags for each object to be written to DHWSolarSys Sizing CSE input
+			std::vector<long> laClsObjIndicesToWrite;		// each index:  (ClassID * BEMF_ClassIDMult) + (0 for all objects, else 1-based object index)
+			laClsObjIndicesToWrite.push_back( BEMF_ClassIDMult );  // Proj object
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseTOP" ) * BEMF_ClassIDMult) );  // cseTOP object
+			int iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+			BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrElec" );		assert(pObj);
+			if (pObj)
+				laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
+			if (TRUE)  //bHaveFuelHtr)
+			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );		assert(pObj);
+				if (pObj)
+					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
+			}
+
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWMETER" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) * BEMF_ClassIDMult) );
+			laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "cseDHWSOLARCOLLECTOR" ) * BEMF_ClassIDMult) );
+
+			laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
+//			laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iSIdx+1 );			// Main cseDHWSYS being sized
+//			for (int iS2Idx=0; (sErrorMsg.isEmpty() && iS2Idx < iNumCSEDHWSystems); iS2Idx++)
+//			{	BEMObject* pCentralSys2 = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "cseDHWSYS:wsCentralDHWSYS" ), iSV, iErr, iS2Idx );
+//				if (pCentralSys2 && pCentralSys2 == pCSEDHWSysObj)
+//				{	assert( iSIdx != iS2Idx );
+//					laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) + iS2Idx+1 );		// Slave to Main cseDHWSYS being sized
+//			}	}
+			// output SolarSize-related EXPORT & REPORT objects
+		// DON'T include EXPORT - this will be done in hard code during CSE input file writing
+		//	int iCID_CSEExport = BEMPX_GetDBComponentID( "cseEXPORT" );
+		//	pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "DHWSolarSys Sizing Export" );		assert(pObj);  	// cseEXPORT object
+		//	if (pObj)
+		//		laClsObjIndicesToWrite.push_back( (iCID_CSEExport * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );
+// explicitly include each ExportCol CHILD ??
+
+
+//			long lStdHPWHSzNumRuns=0;
+//			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSzNumRuns" ), lStdHPWHSzNumRuns );				assert( lStdHPWHSzNumRuns > 0 );		// SAC 1/2/19
+//			QString sStdHPWHSzTDVTbl;		long lStdHPWHSzTDVCol;
+//			BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:StdHPWHSzTDVTbl" ), sStdHPWHSzTDVTbl );
+//			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSzTDVCol" ), lStdHPWHSzTDVCol );
+//
+//			long lStdHPWHSizingFormula=0;
+//			BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:StdHPWHSizingForm" ), lStdHPWHSizingFormula );		assert( lStdHPWHSizingFormula >= 0 && lStdHPWHSizingFormula <= 1 );
+
+//			QString sSzCSEFileOnlyNoExt = QString( "%1-dhwsz%2-1" ).arg( sProjFileAlone, QString::number(iSIdx+1) );
+			QString sSzCSEFileOnlyNoExt = QString( "%1-slrsz" ).arg( sProjFileAlone );
+			if (sErrorMsg.isEmpty())
+			{	QString sSzCSEFile = QString( "%1%2.cse" ).arg( m_sProcessPath, sSzCSEFileOnlyNoExt );
+				// Write CSE input file  (and store BEM details file)
+				QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+								 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+								 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sSzCSEFile );
+				if (!OKToWriteOrDeleteFile( sSzCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+				{	if (m_bSilent)
+						sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "DHWSolarSys Sizing CSE input", sSzCSEFile );
+					else
+						sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "DHWSolarSys Sizing CSE input", sSzCSEFile );
+				}
+				else if (!BEMPX_WriteProjectFile( sSzCSEFile.toLocal8Bit().constData(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/,
+											FALSE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, BEMFT_CSE /*iFileType*/, false /*bAppend*/,
+											NULL /*ModelName*/, true /*WriteTerminator*/, -1 /*BEMProcIdx*/, -1 /*ModDate*/, false /*OnlyValidInputs*/,
+											true /*AllowCreateDateReset*/, 1 /*PropertyCommentOption*/, &laClsObjIndicesToWrite ))
+					sErrorMsg = QString( "ERROR:  Unable to write %1 file:  %2" ).arg( "DHWSolarSys Sizing CSE input", sSzCSEFile );
+				else
+				{	// DHWSolarSys Sizing CSE input file written - so now process it
+
+//QString sDbg = QString( "   CSE_PerformHPWHSizing_Iterate( '%1', " ).arg( m_sCSEexe );			BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//sDbg = QString(         "                          '%1', " ).arg( sSzCSEFile );		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//sDbg = QString( "                          %1, %2, ... )" ).arg( QString::number(dHPWHSizingFrac), QString::number(dHPWHSizingTol) );		BEMPX_WriteLogFile( sDbg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+									boost::posix_time::ptime	tmHPWHSizingStartTime = boost::posix_time::microsec_clock::local_time();
+
+//					double dRunMult;
+//					std::vector<double> daRunMults;
+					QString sModelFileOnlyNoExt = sSzCSEFileOnlyNoExt.left( sSzCSEFileOnlyNoExt.length() ); //-1 );
+//					QString sSzRun1CSEPathFile = QString( "%1%21.cse" ).arg( m_sProcessPath, sSzCSEFileOnlyNoExt );
+//					for (int iM=0; iM < lStdHPWHSzNumRuns; iM++)
+//					{	BEMPX_GetFloat( lDBID_SzRunMults+iM, dRunMult, 0.0, -1, iDHWSysObjIdx );		assert( dRunMult > 0 );
+//						if (dRunMult > 0)
+//						{	daRunMults.push_back( dRunMult );
+//							if (iM>0)
+//							{	// COPY first CSE input file to subsequent (unique) run filenames
+//								QString sSzCSEFile = QString( "%1%2%3.cse" ).arg( m_sProcessPath, sModelFileOnlyNoExt, QString::number(iM+1) );
+//								// Write CSE input file  (and store BEM details file)
+//								QString sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+//												 "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+//												 "(once the file is closed), or \n'Abort' to abort the analysis." ).arg( "CSE input", sSzCSEFile );
+//								if (!OKToWriteOrDeleteFile( sSzCSEFile.toLocal8Bit().constData(), sMsg, m_bSilent ))
+//								{	if (m_bSilent)
+//										sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( "DHWSolarSys Sizing CSE input", sSzCSEFile );
+//									else
+//										sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( "DHWSolarSys Sizing CSE input", sSzCSEFile );
+//								}
+//								else if (!CopyFile( sSzRun1CSEPathFile.toLocal8Bit().constData(), sSzCSEFile.toLocal8Bit().constData(), FALSE ))
+//									sErrorMsg = QString( "Error:  Unable to copy run %1 cseDHWSYS '%2' DHWSolarSys Sizing run CSE file:  '%3'  to:  '%4'" ).arg(
+//																	sRunID, pCSEDHWSysObj->getName(), sSzRun1CSEPathFile, sSzCSEFile );
+//								//else
+//								//	saModelFileOnlyNoExt.push_back( sSzCSEFile );
+//						}	}
+//						else
+//						{
+//// POST ERROR
+//					}	}
+
+					int iSolarSzRetVal = -1;
+					double dSSFResults[2] = {0,0};
+					if (sErrorMsg.isEmpty())
+					{	iSolarSzRetVal = CSE_PerformDHWSolarSysSizing( m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sModelFileOnlyNoExt, m_sProcessPath, dSSFResults,
+																					/*daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol,*/ m_bVerbose, iModelType );		// sErrorMsg   // SAC 1/1/19 - version of sizing that involves 3 parallel sizing runs w/ fit to parabola to calculate optimum size
+					}
+
+				// set results back to BEMBase
+					int iSpecVal, iError;
+					BEMObject* pStdDHWSolarSys = BEMPX_GetObjectPtr( BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" ), iSpecVal, iError );		assert( pStdDHWSolarSys );
+					long lDBID_StdDsgnSSFCalced = BEMPX_GetDatabaseID( "DHWSolarSys:StdDsgnSSFCalced[1]" );		assert( lDBID_StdDsgnSSFCalced > 0 );
+					if (pStdDHWSolarSys && lDBID_StdDsgnSSFCalced > 0)
+					{	int iStdDHWSolarSysIdx = BEMPX_GetObjectIndex(  pStdDHWSolarSys->getClass(), pStdDHWSolarSys );
+						BEMPX_SetBEMData( lDBID_StdDsgnSSFCalced  , BEMP_Flt, (void*) &dSSFResults[0], BEMO_User, iStdDHWSolarSysIdx );
+						BEMPX_SetBEMData( lDBID_StdDsgnSSFCalced+1, BEMP_Flt, (void*) &dSSFResults[1], BEMO_User, iStdDHWSolarSysIdx );
+					}
+
+
+//					if (sErrorMsg.isEmpty() && iSolarSzRetVal==0)
+//					{	// evaluat RULES to calculate final heater multiplier based on sizing run results already posted to the cseDHWSYS
+//						if (!CMX_EvaluateRuleset( "CSE_DHWSystem_CalculateHPWHMultiplier", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//															NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//															NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWSys, iSIdx, 0 /*iEvalOnlyObjType*/ ))
+//							sErrorMsg = QString( "Error evaluating 'CSE_DHWSystem_CalculateHPWHMultiplier' rulelist on %1 run during DHWSolarSys Sizing for DHWSys '%2' / cseDHWSYS '%3'" ).arg(
+//														sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+//						else
+//						{	double dWHMult=0.0;
+//					 		BEMPX_GetFloat( BEMPX_GetDatabaseID( "cseDHWSYS:CentralWHMult" ), dWHMult, 0.0, -1, iSIdx );
+//
+//									double dTimeForHPWHSizing = DeltaTime( tmHPWHSizingStartTime );
+//									QString sLogMsg = QString( "DHWSolarSys Sizing for DHWSys '%1' / cseDHWSYS '%2' %3, multiplier %4, processing time %5" ).arg(
+//																	pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), (iSolarSzRetVal==0 ? "successful" : "failed"), QString::number(dWHMult, 'f', 4), QString::number(dTimeForHPWHSizing, 'f', 2) );
+//									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//
+//							// roll back project data mods setup specifically for the system & heaters of the current system being sized
+//							if (!CMX_EvaluateRuleset( "CSE_DHWSystem_RestoreFollowingHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//														NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//														NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWSys, iSIdx, 0 /*iEvalOnlyObjType*/ ))
+//								sErrorMsg = QString( "Error evaluating 'CSE_DHWSystem_RestoreFollowingHPWHSizingRun' rulelist on %1 run during DHWSolarSys Sizing for DHWSys '%2' / cseDHWSYS '%3'" ).arg(
+//															sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName() );
+//							for (iHtr=0; (sErrorMsg.isEmpty() && iHtr < (int) iaCSEDHWHtrIdx.size()); iHtr++)
+//							{	if (!CMX_EvaluateRuleset( "CSE_DHWHeater_RestoreFollowingHPWHSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+//													NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo,
+//													NULL /*QStringList* psaWarningMsgs*/, iCID_CSEDHWHeater, iaCSEDHWHtrIdx[iHtr], 0 /*iEvalOnlyObjType*/ ))
+//								{	BEMObject* pCSEDHWHtrObj = BEMPX_GetObjectByClass( iCID_CSEDHWHeater, iErr, iaCSEDHWHtrIdx[iHtr] );			assert( pCSEDHWHtrObj );
+//									sErrorMsg = QString( "Error evaluating 'CSE_DHWHeater_RestoreFollowingHPWHSizingRun' rulelist on %1 run during DHWSolarSys Sizing for DHWSys '%2' / cseDHWSYS '%3', heater '%4'" ).arg(
+//																	sRunID, pSrcDHWSys->getName(), pCSEDHWSysObj->getName(), pCSEDHWHtrObj->getName() );
+//							}	}
+//					}	}
+				}
+			}
+//		}
+		if (!sErrorMsg.isEmpty())		// write details file if SolarSize run error encountered
+		{	QString sDbgFileName = QString( "%1%2-slrsz-Error.ibd-Detail" ).arg( m_sProcessPath, sProjFileAlone );
+			BEMPX_WriteProjectFile( sDbgFileName.toLocal8Bit().constData(), BEMFM_DETAIL /*FALSE*/ );
+		}
+//	}	// end of loop over each cseDHWSYS
+
+	if (sErrorMsg.isEmpty())  // && !bFirstDHWSysBeingSized)		// roll back project data mods setup specifically for SolarSize runs
+	{	if (!CMX_EvaluateRuleset( "CSE_DHWSolarSys_RestoreFollowingSolarSysSizingRun", m_bVerbose /*bReportToLog*/, FALSE /*bTagDataAsUserDefined*/, m_bVerbose,
+											NULL /*plNumRuleEvals*/, NULL /*pdNumSeconds*/, NULL /*PLogMsgCallbackFunc pLogMsgCallbackFunc*/, m_pCompRuleDebugInfo ))
+			sErrorMsg = QString( "Error evaluating 'CSE_DHWSolarSys_RestoreFollowingSolarSysSizingRun' rulelist on %1 run during DHWSolarSys Sizing process" ).arg( sRunID );
+	}
+
+	return (sErrorMsg.isEmpty());
+}
+
+
+// return value:    > 0 : success - # of results returned
+//							-1 : file not found
+//							-2 : error opening file
+//							-3 : results record includes too few columns
+int CMX_RetrieveCSEAnnualCSVResult( QString qsPathFile, QVector<QString>& vqsObjectNames, std::vector<double>& daResults, QString& qsErrorMsg,
+						int iResultColInGroup /*=2*/, int iNameColInGroup /*=1*/, int iNumColsInGroup /*=2*/, int iNumHdrCols /*=2*/, int iNumHdrRows /*=4*/ )
+{	int iRetVal = 0;
+	if (!FileExists( qsPathFile ))
+	{	iRetVal = -1;
+		qsErrorMsg = QString( "Error:  CSE results file not found: '%1'" ).arg( qsPathFile );
+	}
+	else
+	{	std::ifstream in( qsPathFile.toLocal8Bit().constData() );
+		if (!in.is_open())
+		{	iRetVal = -2;
+			qsErrorMsg = QString( "Error:  unable to open CSE results file: '%1'" ).arg( qsPathFile );
+		}
+		else
+		{	std::string line;
+			for (int i=0; i < iNumHdrRows; i++)
+				getline( in, line );		// read header rows
+
+			std::vector<std::vector<std::string> > lines;
+			getline( in, line );		// DATA #1
+			ParseCSV( line, lines );									assert( lines.size()==1 );
+			if ((int) lines[0].size() < (iNumHdrCols + iNumColsInGroup))
+			{	iRetVal = -3;
+				qsErrorMsg = QString( "Error:  results record includes too few columns (found %1, expecting >= %2 (%3 header and %4 per grouping)) in CSE results file: '%5'" ).arg(
+										QString::number(lines[0].size()), QString::number((iNumHdrCols+iNumColsInGroup)), QString::number(iNumHdrCols), QString::number(iNumColsInGroup), qsPathFile );
+			}
+			else
+			{	int i0ThisGrpCol = iNumHdrCols;
+				while (iRetVal >= 0 && (int) lines[0].size() >= (i0ThisGrpCol+iNumColsInGroup))
+				{	if (iNameColInGroup > 0)	// else don't retrieve object names
+						vqsObjectNames.push_back( lines[0][i0ThisGrpCol+iNameColInGroup-1].c_str() );
+					daResults.push_back( atof( lines[0][i0ThisGrpCol+iResultColInGroup-1].c_str() ) );
+					iRetVal++;
+					i0ThisGrpCol += iNumColsInGroup;
+			}	}
+		}
+	}
+	return iRetVal;
+}
+
+
 int CSERunMgr::SetupRunFinish(
 	int iRunIdx, QString& sErrorMsg, const char* sCSEFileCopy /*=NULL*/ )
 {
@@ -1519,10 +1968,24 @@ int CSERunMgr::SetupRunFinish(
 						BEMPX_DefaultProperty( lProjReportIncludeFileDBID, m_iError );
 				}
 
+			// SAC 2/11/20 - mod to facilitate solar thermal sizing either before or after HPWH sizing depending on whether any solar system is assigned to multiple HPWH systems needing sizing (Res tic #862)
+				long lHPWHSizUseSSF = 0;
+				bool bSizeSolarAfterHPWH = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizUseSSF" ), lHPWHSizUseSSF ) && lHPWHSizUseSSF > 0);
+				if (!bSizeSolarAfterHPWH)
+				{
+					// DHWSolarSys Sizing - SAC 1/27/20
+					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
+					if (lDBID_Proj_StdDHWSolarSysRef > 0 && BEMPX_GetString( lDBID_Proj_StdDHWSolarSysRef, qsStdDHWSolarSysName ) && !qsStdDHWSolarSysName.isEmpty())
+					{
+					// PERFORM DHWSolarSys Sizing
+						if (!T24Res_DHWSolarSysSizing( sProjFileAlone, sRunID, sErrorMsg ))
+							iRetVal = BEMAnal_CECRes_SolarSysSizingError;
+				}	}
+
 				// SAC 12/12/18 - code to initiate HPWH Sizing run(s) when called for (HPWHSIZE)
 				long lCSE_HPWHSizingReqd=0, lHPWHSizInProc=0;
 				long lDBID_HPWHSizInProc = BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizInProc" );	// SAC 12/18/18
-				if (lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
+				if (iRetVal == 0 && lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingReqd" ), lCSE_HPWHSizingReqd ) && lCSE_HPWHSizingReqd > 0)
 				{	// set flag indicating that we are performing HPWHSizing (otherwise we get stuck in an infinite loop during setup of CSE run initiated by T24Res_HPWHSizing()
 					lHPWHSizInProc = 1;
@@ -1533,6 +1996,17 @@ int CSERunMgr::SetupRunFinish(
 					// re-default (blast) flag indicating that we are performing HPWHSizing
 					BEMPX_DefaultProperty( lDBID_HPWHSizInProc, m_iError );
 				}
+
+				if (iRetVal == 0 && bSizeSolarAfterHPWH)		// SAC 2/11/20 (Res tic #862)
+				{
+					// DHWSolarSys Sizing - SAC 1/27/20
+					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
+					if (lDBID_Proj_StdDHWSolarSysRef > 0 && BEMPX_GetString( lDBID_Proj_StdDHWSolarSysRef, qsStdDHWSolarSysName ) && !qsStdDHWSolarSysName.isEmpty())
+					{
+					// PERFORM DHWSolarSys Sizing
+						if (!T24Res_DHWSolarSysSizing( sProjFileAlone, sRunID, sErrorMsg ))
+							iRetVal = BEMAnal_CECRes_SolarSysSizingError;
+				}	}
 
 				QString sLpCSEFile = (iFLp==0 ? sProjCSEFile : sProjCSEBattFile);
 				// Write CSE input file  (and store BEM details file)
@@ -2290,13 +2764,28 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 
 
 
+			// SAC 2/11/20 - mod to facilitate solar thermal sizing either before or after HPWH sizing depending on whether any solar system is assigned to multiple HPWH systems needing sizing (Res tic #862)
+				long lHPWHSizUseSSF = 0;
+				bool bSizeSolarAfterHPWH = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizUseSSF" ), lHPWHSizUseSSF ) && lHPWHSizUseSSF > 0);
+				if (!bSizeSolarAfterHPWH)
+				{
+					// DHWSolarSys Sizing - SAC 2/2/20 (Com tic #3157)
+					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
+					if (lDBID_Proj_StdDHWSolarSysRef > 0 && BEMPX_GetString( lDBID_Proj_StdDHWSolarSysRef, qsStdDHWSolarSysName ) && !qsStdDHWSolarSysName.isEmpty())
+					{
+					// PERFORM DHWSolarSys Sizing
+						if (!T24Res_DHWSolarSysSizing( sProjFileAlone, sRunID, sErrorMsg, 1 /*iModelType*/ ))
+							iRetVal = 78;
+				}	}
+
+
 // debugging
 //bool bVerboseInit = m_bVerbose;
 //m_bVerbose = true;
 				// SAC 1/29/19 - code to initiate HPWH Sizing run(s) when called for (based on Res)
 				long lCSE_HPWHSizingReqd=0, lHPWHSizInProc=0;
 				long lDBID_HPWHSizInProc = BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizInProc" );	// SAC 12/18/18
-				if (lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
+				if (iRetVal == 0 && lDBID_HPWHSizInProc > 0 && (!BEMPX_GetInteger( lDBID_HPWHSizInProc, lHPWHSizInProc ) || lHPWHSizInProc < 1) &&
 					 BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizingReqd" ), lCSE_HPWHSizingReqd ) && lCSE_HPWHSizingReqd > 0)
 				{	// set flag indicating that we are performing HPWHSizing (otherwise we get stuck in an infinite loop during setup of CSE run initiated by T24Res_HPWHSizing()
 					lHPWHSizInProc = 1;
@@ -2313,6 +2802,17 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 // debugging
 //m_bVerbose = bVerboseInit;
 
+
+				if (iRetVal == 0 && bSizeSolarAfterHPWH)	// SAC 2/11/20 (Res tic #862)
+				{
+					// DHWSolarSys Sizing - SAC 2/2/20 (Com tic #3157)
+					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
+					if (lDBID_Proj_StdDHWSolarSysRef > 0 && BEMPX_GetString( lDBID_Proj_StdDHWSolarSysRef, qsStdDHWSolarSysName ) && !qsStdDHWSolarSysName.isEmpty())
+					{
+						// PERFORM DHWSolarSys Sizing
+						if (!T24Res_DHWSolarSysSizing( sProjFileAlone, sRunID, sErrorMsg, 1 /*iModelType*/ ))
+							iRetVal = 78;
+				}	}
 
 
 		QString sProjCSEFile;

@@ -727,6 +727,29 @@ UINT   BEMPROC_API __cdecl BEMPX_GetTopicHelpID( long lDBID );
 int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEMClass, int iObjIdx=-1, int iWhatToPlot=1,  // SAC 11/27/13
 															int iDayltMethod=1 );  // SAC 7/29/18
 
+/////////////////////////////////////////////////////////////////////////////
+// AnalysisAction
+
+#define  BEMAnalActPhase_LoadModel            1
+#define  BEMAnalActPhase_ProposedSizing      11
+#define  BEMAnalActPhase_ProposedAnnual      12
+#define  BEMAnalActPhase_BaselineSizing      13
+#define  BEMAnalActPhase_BaselineAnnual      14
+#define  BEMAnalActPhase_End                  2
+
+#define  BEMAnalActWhen_LoadModel_BeforeDefaulting         1
+#define  BEMAnalActWhen_LoadModel_AfterDefaulting          2
+#define  BEMAnalActWhen_End_BeforeAnalPostProc            11
+#define  BEMAnalActWhen_End_AfterAnalPostProc             12
+#define  BEMAnalActWhen_Transform_BeforeModelSetupRules   21
+#define  BEMAnalActWhen_Transform_AfterModelSetupRules    22
+#define  BEMAnalActWhen_Transform_ActOnSimInput           23
+#define  BEMAnalActWhen_Transform_FollowingResultsProc    24
+
+int  BEMPROC_API __cdecl BEMPX_PostAnalysisActionRulesetPropertiesToDatabase();		// SAC 1/26/20
+int  BEMPROC_API __cdecl BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter,
+																					QString& sErrorMsg, bool bVerbose=false );		// SAC 1/30/20
+
 
 /////////////////////////////////////////////////////////////////////////////
 //	BEMError

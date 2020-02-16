@@ -186,6 +186,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_CF1RXMLFinalError		68		//  Error evaluating CF1RPRF01E final/results rules
 #define  BEMAnal_CECRes_CF1RXMLCompIDError	69		//  Main CF1RPRF01E object type invalid
 #define  BEMAnal_CECRes_HPWHSizingError		70		//  Error in sizing HPWH system(s) using CSE
+#define  BEMAnal_CECRes_SolarSysSizingError	71		//  Error in sizing DHWSolarSys system(s) using CSE
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report
@@ -241,6 +242,9 @@ int  BEMCMPMGR_API __cdecl CMX_GetDataInteger( long* pReturnInt, const char* psz
 								                               const char* pszCompName=NULL, long lDefault=0 );
 int  BEMCMPMGR_API __cdecl CMX_GetDataFloat(   double* pReturnFlt, const char* pszCompParam,
 							 											 const char* pszCompName=NULL, float fDefault=0 );
+
+int  BEMCMPMGR_API __cdecl CMX_RetrieveCSEAnnualCSVResult( QString qsPathFile, QVector<QString>& vqsObjectNames, std::vector<double>& daResults, QString& qsErrorMsg,
+																int iResultColInGroup=2, int iNameColInGroup=1, int iNumColsInGroup=2, int iNumHdrCols=2, int iNumHdrRows=4 );		// SAC 1/29/20
 
 bool BEMCMPMGR_API __cdecl CMX_SecureExecutable();
 long BEMCMPMGR_API __cdecl CMX_EncodeBase64( const unsigned char *input, long length, char* output, long outLength, bool bSecure=false );

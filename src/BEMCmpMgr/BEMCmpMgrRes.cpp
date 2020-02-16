@@ -2036,6 +2036,50 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 						if (BEMPX_AddHourlyResultArray(	NULL, sRunID.toLocal8Bit().constData(), "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ ) != 0.0)
 						{	assert( false );
 						}
+
+						if (ResRetVal_ContinueProcessing( iRetVal ) && (bIsStdDesign || cseRun.GetIsProposed()))
+						{	long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "EUseSummary:StdDHW_SSF" : "EUseSummary:PropDHW_SSF") );
+							int iNumDHWSolarSys = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) );
+							if (lDBID_SSFResult > 0 && iNumDHWSolarSys > 0)
+							{	QString qsSSFPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );				assert( qsSSFPathFile.length() > 6 );
+								qsSSFPathFile = qsSSFPathFile.left( qsSSFPathFile.length()-4 ) + QString("-SSF.csv");
+								QVector<QString> vqsSSFObjectNames;
+								std::vector<double> daSSFResults;
+								QString qsSSFError;
+								int iSSFNum = CMX_RetrieveCSEAnnualCSVResult( qsSSFPathFile, vqsSSFObjectNames, daSSFResults, qsSSFError );
+															//	int iResultColInGroup=2, int iNameColInGroup=1, int iNumColsInGroup=2, int iNumHdrCols=2, int iNumHdrRows=4 );		// SAC 1/29/20
+								if (iSSFNum < 0)
+								{	sLogMsg = QString( "      %1" ).arg( qsSSFError );
+									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								}
+								else if (iSSFNum > 0)
+								{	if (bIsStdDesign)
+									{	// only store SSF result for model-wide Std design SolarSys
+										long lDBID_StdDHWSolarSys = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		assert( lDBID_StdDHWSolarSys > 0 );
+										QString sStdDHWSlrSys;
+										if (BEMPX_GetString( lDBID_StdDHWSolarSys, sStdDHWSlrSys ))
+										{	bool bSSFFound=false;
+											for (int iSSF=0; (!bSSFFound && iSSF < iSSFNum); iSSF++)
+											{	if (vqsSSFObjectNames[iSSF] == sStdDHWSlrSys)
+												{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
+													BEMPX_SetBEMData( lDBID_SSFResult, BEMP_Flt, &dSSF );
+													bSSFFound = true;
+											}	}
+											if (!bSSFFound)
+												BEMPX_WriteLogFile( "      Std model DHWSolarSys SSF result not found", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									}	}
+									else
+									{	// store results to first 10 Proposed SolarSystems
+										long lDBID_SSFNames = BEMPX_GetDatabaseID( "EUseSummary:PropDHWNames_SSF" );		assert( lDBID_SSFNames > 0 );
+										int iMaxNumSSFs = std::min( iSSFNum, BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_SSFNames ) );
+										for (int iSSF=0; iSSF < iMaxNumSSFs; iSSF++)
+										{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
+											QString sSSFName = vqsSSFObjectNames[iSSF];
+											BEMPX_SetBEMData( lDBID_SSFResult+iSSF, BEMP_Flt,  &dSSF );
+											BEMPX_SetBEMData( lDBID_SSFNames +iSSF, BEMP_QStr, (void*) &sSSFName );
+										}
+								}	}
+						}	}
 					}
 				}
 				else if (ResRetVal_ContinueProcessing( iRetVal ) && (!bPerformSimulations || bBypassCSE))  // SAC 6/10/13
@@ -3027,13 +3071,14 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 //											10 : Error retrieving Proj:ClimateZone and/or Proj:NumDwellingUnits (for format versions >= 10)
 //
 // SAC 8/6/13 - added pszRunOrientation argument to facilitate return of orientation-specific results (when performing All Orientation analysis)
-#define  CSVFmtVer_CECRes  21		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
+#define  CSVFmtVer_CECRes  22		// SAC 8/24/14 - 2->3  - SAC 11/24/14 - 3->4  - SAC 3/31/15 - 4->5  - SAC 2/1/16 - 5->6  - SAC 10/7/16 - 7->8  - SAC 2/13/17 - 8->9
 											// SAC 6/6/17 - 9->10  - SAC 7/19/17 - 10->11  - SAC 9/15/17 - 11->12  - SAC 10/6/17 - 12->13  - SAC 10/6/17 - 13->14  - SAC 1/4/18 - 14->15  - SAC 1/12/18 - 15->16
 											// SAC 1/29/18 - 16->17 added 102 columns to report CO2 design ratings and emissions by model, fuel and enduse - est. max rec length now 3072 chars
 											// SAC 9/30/18 - 17->18 INSERTED 10 new columns labeled 'Reference Design Rating Model TDV (before fuel multiplier adjustment)' @ col IF
 											// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
 											// SAC 2/8/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
 											// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
+											// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
 int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStringLength, const char* pszRunOrientation /*=NULL*/,
 														int iResultsFormatVersion /*=-1*/, const char* pszProjectPathFileName /*=NULL*/ )
 {	int iRetVal = 0;
@@ -3514,6 +3559,19 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 								else
 									sDRtg_Std = QString("%1,%2,%3,").arg( QString::number( fDRtg_Std ), QString::number( fStdDRtg_NoPV ), QString::number( fStdDRtg_StdDsgnPV ) );
 						}	}
+			}
+
+			QString sCalcedSSF=",,";
+			if (iResultsFormatVersion >= 22)		// SAC 1/29/20
+			{	double dCalcedSSF[2];
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:PropDHW_SSF[1]" ),  dCalcedSSF[0], -1, BEMP_Flt, iEUseSummaryObjIdx );
+						BEMPX_GetFloat( 	BEMPX_GetDatabaseID( "EUseSummary:StdDHW_SSF"     ),  dCalcedSSF[1], -1, BEMP_Flt, iEUseSummaryObjIdx );
+				if (dCalcedSSF[0] >= 0 && dCalcedSSF[1] >= 0)
+					sCalcedSSF = QString("%1,%2,").arg( QString::number( dCalcedSSF[0] ), QString::number( dCalcedSSF[1] ) );
+				else if (dCalcedSSF[0] >= 0)
+					sCalcedSSF = QString("%1,,").arg( QString::number( dCalcedSSF[0] ) );
+				else if (dCalcedSSF[1] >= 0)
+					sCalcedSSF = QString(",%1,").arg( QString::number( dCalcedSSF[1] ) );
 			}
 
 			QString sDRtg_Prop = ",,,";
@@ -4038,7 +4096,17 @@ int CMX_PopulateCSVResultSummary_CECRes(	char* pszResultsString, int iResultsStr
 				}
 
 			// concatenate individual strings into complete CSV record
-				if (iResultsFormatVersion >= 21)		// SAC 6/20/19 - source energy EDR1 addition
+				if (iResultsFormatVersion >= 22)		// SAC 1/29/20 - Prop & Std DHWSolarSys SSFs
+					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(),
+										sPropSrc.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), sStdSrc.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(),
+										sVersionFields.toLocal8Bit().constData(), sDemSav.toLocal8Bit().constData(), sCalcedSSF.toLocal8Bit().constData(), sDRtgEnergyTDV.toLocal8Bit().constData(), sDRtgRefTDVUnadj.toLocal8Bit().constData(),
+										sDRtgRefSrc.toLocal8Bit().constData(), sDRtgDemand.toLocal8Bit().constData(), sDRtg_Prop.toLocal8Bit().constData(), sDRtg_Std.toLocal8Bit().constData(), sDRtg_Src.toLocal8Bit().constData(), 
+										sCmpTDVbyFuel_Prop.toLocal8Bit().constData(), sCmpTDVbyFuel_Std.toLocal8Bit().constData(), sCmpTDVbyFuel_DRProp.toLocal8Bit().constData(), sCmpTDVbyFuel_DRRef.toLocal8Bit().constData(),
+										sCmpSrcbyFuel_Prop.toLocal8Bit().constData(), sCmpSrcbyFuel_Std.toLocal8Bit().constData(), sCmpSrcbyFuel_DRProp.toLocal8Bit().constData(), sCmpSrcbyFuel_DRRef.toLocal8Bit().constData(),
+										sPropPVScaling.toLocal8Bit().constData(), sTargetEDR.toLocal8Bit().constData(), sStdMixedFuel.toLocal8Bit().constData(), sCarbonEmissions.toLocal8Bit().constData(),
+										sGridHarmCred.toLocal8Bit().constData(), /*sStdPVResults.toLocal8Bit().constData(),*/ 
+										sPropCO2.toLocal8Bit().constData(), sStdCO2.toLocal8Bit().constData(), sDRtgCO2.toLocal8Bit().constData(), sCAHP.toLocal8Bit().constData() );
+				else if (iResultsFormatVersion >= 21)		// SAC 6/20/19 - source energy EDR1 addition
 					sprintf_s( pszResultsString, iResultsStringLength, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", sBeginFields.toLocal8Bit().constData(), sPropEnergy.toLocal8Bit().constData(),
 										sPropSrc.toLocal8Bit().constData(), sPropDemand.toLocal8Bit().constData(), sStdEnergy.toLocal8Bit().constData(), sStdSrc.toLocal8Bit().constData(), sStdDemand.toLocal8Bit().constData(),
 										sVersionFields.toLocal8Bit().constData(), sDemSav.toLocal8Bit().constData(), sDRtgEnergyTDV.toLocal8Bit().constData(), sDRtgRefTDVUnadj.toLocal8Bit().constData(),
@@ -4686,20 +4754,21 @@ int ExportCSVHourlyResultsComparison( const char* pszHourlyResultsPathFile, cons
 // SAC 10/1/18 - Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
 // SAC 2/5/19 - Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
 // SAC 6/20/19 - added EDR1 (source energy TDV) results to facilitate 2022 code research
+// SAC 1/29/20 - inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
 static char szCECResCSV1[]	=	",,,,Number of,Conditioned,,,,,,,,,Proposed Model Site Electric Use,,,,,,,,,,,,,,Proposed Model Site Fuel Use,,,,,,Proposed Model TDV,,,,,,"
 										",,,,,,,,Proposed Model Source Energy (EDR1),,,,,,,,,,,,Proposed Model Electric Demand,,,,,,,,,,,,,,Standard Model Site Electric Use,,,,,,,"
 										",,,,Standard Model Site Fuel Use,,,,,Standard Model TDV,,,,,,,,,,,Standard Model Source Energy (EDR1),,,,,,,,,,Standard Model Electric Dem"
-										"and,,,,,,,,,,,Software Versions,,,,Savings Results,,,,Proposed Design Rating Model Site Electric Use,,,,,,,,,,,,,Proposed Design Rating M"
-										"odel Site Fuel Use,,,,,Proposed Design Rating Model TDV,,,,,,,,,,,,,Proposed Design Rating Model Source Energy (EDR1),,,,,,,,,,,,Propose"
-										"d Design Rating Model Electric Demand,,,,,,,,,,,,,Reference Design Rating Model Site Electric Use,,,,,,,,,Reference Design Rating Model Si"
-										"te Fuel Use,,,,Reference Design Rating Model TDV (fuel multiplier adjusted),,,,,,,,,Reference Design Rating Model TDV (before fuel multipl"
-										"ier adjustment),,,,,,,,,Reference Design Rating Model Source Energy (EDR1) (fuel multiplier adjusted),,,,,,,,,Reference Design Rating Mode"
-										"l Source Energy (EDR1) (before fuel multiplier adjustment),,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,Energy Design Rat"
-										"ings,,,,,,EDR1 (source energy),,Compliance Total TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Source Energy (EDR1) Compliance Results By Fuel (kBtu/ft2-y"
-										"r),,,,,,,,Proposed PV Scaling,,,Target EDR,,Standard Design PV,,Proposed Design CO2 Emissions,,,Standard Design CO2 Emissions,,,Self Utili"
-										"zation Credit,,Proposed Model Site Electric CO2 Emissions,,,,,,,,,,,,,Proposed Model Site Fuel CO2 Emissions,,,,,Standard Model Site Elect"
-										"ric CO2 Emissions,,,,,,,,,,Standard Model Site Fuel CO2 Emissions,,,,Reference Design Rating Model Site Electric CO2 Emissions,,,,,,,,,Ref"
-										"erence Design Rating Model Site Fuel CO2 Emissions,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,\n";  // ~1891 chars
+										"and,,,,,,,,,,,Software Versions,,,,Savings Results,,,,Calculated SSFs,,Proposed Design Rating Model Site Electric Use,,,,,,,,,,,,,Proposed"
+										"  Design Rating Model Site Fuel Use,,,,,Proposed  Design Rating Model TDV,,,,,,,,,,,,,Proposed  Design Rating Model Source Energy (EDR1),,"
+										",,,,,,,,,,Proposed Design Rating Model Electric Demand,,,,,,,,,,,,,Reference Design Rating Model Site Electric Use,,,,,,,,,Reference Desig"
+										"n Rating Model Site Fuel Use,,,,Reference Design Rating Model TDV (fuel multiplier adjusted),,,,,,,,,Reference Design Rating Model TDV (be"
+										"fore fuel multiplier adjustment),,,,,,,,,Reference Design Rating Model Source Energy (EDR1) (fuel multiplier adjusted),,,,,,,,,Reference D"
+										"esign Rating Model Source Energy (EDR1) (before fuel multiplier adjustment),,,,,,,,,Reference Design Rating Model Electric Demand,,,,,,,,,"
+										"Energy Design Ratings,,,,,,EDR1 (source energy),,Compliance Total TDV Results By Fuel (kTDV/ft2-yr),,,,,,,,Source Energy (EDR1) Results By"
+										" Fuel (kBtu/ft2-yr),,,,,,,,Proposed PV Scaling,,,Target EDR,,Standard Design PV,,Proposed Design CO2 Emissions,,,Standard Design CO2 Emiss"
+										"ions,,,Self Utilization Credit,,Proposed Model Site Electric CO2 Emissions,,,,,,,,,,,,,Proposed Model Site Fuel CO2 Emissions,,,,,Standard"
+										" Model Site Electric CO2 Emissions,,,,,,,,,,Standard Model Site Fuel CO2 Emissions,,,,Reference Design Rating Model Site Electric CO2 Emis"
+										"sions,,,,,,,,,Reference Design Rating Model Site Fuel CO2 Emissions,,,,CAHP / CMFNH Results,,,,,,,,,,,,,,,\n";  // ~1901 chars
 static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,TDV Margin,EDR Efficiency,EDR Total,EDR,EDR1 (source energy),,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,"
 										"Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Wtr Heat,Flexibility,Appl & Coo"
 										"k,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TO"
@@ -4708,23 +4777,24 @@ static char szCECResCSV2[]	=	",Project,,Climate,Dwelling,Area,,Pass /,TDV Margin
 										"Vent,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Wtr Heat,Appl & Cook,TOTAL,Comp Total,Spc Heat,Spc Cool"
 										",IAQ Vent,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,PV,Ins Light,Appl & Coo"
 										"k,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,PV,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Comp Total,Compliance,,End "
-										"User,Fuel,Total Demand,Compliance Demand,Total TDV,Compliance TDV,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibi"
-										"lity,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Flexibility,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Sel"
-										"f Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,PV,Battery,Flexibi"
-										"lity,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,"
-										"Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Ap"
-										"pl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins "
-										"Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc C"
-										"ool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Ext"
-										"erior,TOTAL,Proposed,Proposed,Proposed,Standard,Standard,Standard,Proposed,Standard,Proposed Model,,Standard Model,,Proposed Design Rating"
-										" Model,,Reference Design Rating Model,,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design Rating Model,,Max PV"
-										",PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Std Design,Self Consumed Solar,Grid Exported Solar,CO2 Generated,Self Consumed Solar,Grid Expo"
-										"rted Solar,CO2 Generated,TDV Cap,Battery,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Coo"
-										"k,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Flexibility,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,PV,Ins Light,Appl & Cook,Plu"
-										"g Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL"
-										",Spc Heat,Wtr Heat,Appl & Cook,TOTAL,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone Kicker,High Perform"
-										"ance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ Kicker,DOE Zero E"
-										"nergy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Incentive,CAHP Total Incentive\n";  // 3458 chars
+										"User,Fuel,Total Demand,Compliance Demand,Total TDV,Compliance TDV,Proposed,Standard,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,"
+										"PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Flexibility,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ"
+										" Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,"
+										"PV,Battery,Flexibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flex"
+										"ibility,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Sp"
+										"c Heat,Wtr Heat,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ "
+										"Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TO"
+										"TAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl &"
+										" Cook,Plug Lds,Exterior,TOTAL,Proposed,Proposed,Proposed,Standard,Standard,Standard,Proposed,Standard,Proposed Model,,Standard Model,,Prop"
+										"osed Design Rating Model,,Reference Design Rating Model,,Proposed Model,,Standard Model,,Proposed Design Rating Model,,Reference Design Ra"
+										"ting Model,,Max PV,PV Scale,Scaled PV,,Target,Prop Mixed Fuel,Std Design,Self Consumed Solar,Grid Exported Solar,CO2 Generated,Self Consum"
+										"ed Solar,Grid Exported Solar,CO2 Generated,TDV Cap,Battery,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Self Util. Credit,PV,Battery,Flexibility,In"
+										"s Light,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Flexibility,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,PV,Ins Lig"
+										"ht,Appl & Cook,Plug Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Appl & Cook,TOTAL,Spc Heat,Spc Cool,IAQ Vent,Wtr Heat,Ins Light,Appl & Cook,Plug "
+										"Lds,Exterior,TOTAL,Spc Heat,Wtr Heat,Appl & Cook,TOTAL,EDR Bonus Points,CAHP Delta EDR,Cash Bonus Total,2019 Zone Ready Kicker,2019 Zone K"
+										"icker,High Performance Fenestration Kicker,High Performance Attic Kicker,High Performance Wall Kicker,Whole House Fans Kicker,Balanced IAQ"
+										" Kicker,DOE Zero Energy Kicker,Drain Water Heat Recovery Kicker,Design Charrette Kicker,ENERGYStar Laundry Recycling Kicker,CAHP Base Ince"
+										"ntive,CAHP Total Incentive\n";  // ~3477 chars
 static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2),Analysis Type,Fail,(kTDV/ft2-yr),Margin,Margin,Total,Margin,Total,(kWh),(kWh),(kWh),(kW"
 										"h),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/f"
 										"t2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV"
@@ -4733,20 +4803,20 @@ static char szCECResCSV3[]	=	"Run Date/Time,Path/File,Run Title,Zone,Units,(ft2)
 										"kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(Therms),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/ft2-yr),"
 										"(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kBtu/ft2-yr"
 										"),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kW),(kW),"
-										"(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Ruleset,CSE,Application,Type,(kW),(kW),(%),(%),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh"
-										"),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(kWh),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft"
-										"2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kBtu/ft2-yr),(kBtu/"
+										"(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Ruleset,CSE,Application,Type,(kW),(kW),(%),(%),(frac),(frac),(kWh),(kWh),(kWh),(kWh),(kWh),(k"
+										"Wh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),(Therms),(kWh),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft"
+										"2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kBtu/"
 										"ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBtu/ft2-yr),(kBt"
-										"u/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(Therms),"
-										"(Therms),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr)"
+										"u/ft2-yr),(kBtu/ft2-yr),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kW),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),(kWh),("
+										"kWh),(Therms),(Therms),(Therms),(Therms),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr)"
 										",(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-y"
 										"r),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2"
-										"-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(kW),(kW),(kW),("
-										"kW),(kW),(kW),(kW),(kW),Efficiency,PV+Batt+Flex Only,Total,Efficiency,PV+Batt+Flex Only,Total,Total,Total,Electric,Gas,Electric,Gas,Electr"
-										"ic,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(metric ton/yr),("
-										"metric ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(kTDV/ft2-yr),Ratio,(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg)"
-										",(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(k"
-										"g),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($)\n";  // 3013 chars
+										"-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kTDV/ft2-yr),(kW),(k"
+										"W),(kW),(kW),(kW),(kW),(kW),(kW),(kW),Efficiency,PV+Batt+Flex Only,Total,Efficiency,PV+Batt+Flex Only,Total,Total,Total,Electric,Gas,Elect"
+										"ric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Electric,Gas,Ratio,Factor,Total kW,EDR,Status,Total kWh,PV kW,(me"
+										"tric ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(metric ton/yr),(kTDV/ft2-yr),Ratio,(kg),(kg),(kg),(kg),(kg),"
+										"(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg"
+										"),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(kg),(int),(int),($),($),($),($),($),($),($),($),($),($),($),($),($),($)\n";  // ~3028 chars
 
 int CMX_PopulateResultsHeader_Res(	char* pszHdr1, int iHdr1Len, char* pszHdr2, int iHdr2Len, char* pszHdr3, int iHdr3Len )
 {	int iRetVal = 0;

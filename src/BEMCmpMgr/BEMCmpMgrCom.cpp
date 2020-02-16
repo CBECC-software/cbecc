@@ -2029,6 +2029,8 @@ static QString sDbgFileName;
 //											74 : Error copying EnergyPlus simulation input file to processing directory
 //											75 : Error copying EnergyPlus simulation weather file to processing directory
 //											76 : Error evaluating 'AnalysisPostProcessing' rulelist
+//											77 : Error applying AnalysisAction(s) to building model
+//											78	: Error in sizing standard design DHW solar system using CSE
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2109,6 +2111,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bPerformDupObjNameCheck		=  (GetCSVOptionValue( "PerformDupObjNameCheck"     ,   1,  saCSVOptions ) > 0);	// SAC 6/12/15
 	int  iPreAnalysisCheckPromptOption = GetCSVOptionValue( "PreAnalysisCheckPromptOption",  0,  saCSVOptions );		// SAC 1/26/19 - (tic #2924)
 	int  iCompReportWarningOption		=	 GetCSVOptionValue( "CompReportWarningOption"    ,   0,  saCSVOptions );		// SAC 7/5/16
+	int  iCompReportWarningTimeout	=	 GetCSVOptionValue( "CompReportWarningTimeout"   ,  20,  saCSVOptions );		// SAC 1/31/20
 	bool bReportStandardUMLHs		   =  (GetCSVOptionValue( "ReportStandardUMLHs"        ,   0,  saCSVOptions ) > 0);	// SAC 11/11/19
 	bool bReportAllUMLHZones    		=  (GetCSVOptionValue( "ReportAllUMLHZones"         ,   0,  saCSVOptions ) > 0);	// SAC 11/11/19
 	bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
@@ -2300,12 +2303,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	int iCodeType = CT_T24N;		// SAC 10/2/14 - added to facilitate code-specific processing
 	QString sLoadedRuleSetID, sLoadedRuleSetVer;
 	if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
-	{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+	{	if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 			iCodeType = CT_T24N;
-		else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+		else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||
+					(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 			iCodeType = CT_S901G;
 		else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 			iCodeType = CT_ECBC;
+		else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)	// SAC 1/30/20
+			iCodeType = CT_360;
 		else
 		{	assert( FALSE );	// what ruleset is this ??
 	}	}
@@ -2503,12 +2509,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		}
 
 		if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))	// SAC 10/2/14 - RESET iCodeType based on newly loaded ruleset
-		{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+		{	if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 				iCodeType = CT_T24N;
-			else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+			else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||
+						(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 				iCodeType = CT_S901G;
 			else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 				iCodeType = CT_ECBC;
+			else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)		// SAC 1/30/20
+				iCodeType = CT_360;
 			else
 			{	assert( FALSE );	// what ruleset is this ??
 		}	}
@@ -2709,6 +2718,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	{	QString sObjNameViolationMsg;
 		int iNumObjNameViolations = BEMPX_CheckObjectNames( (char*) pcCharsNotAllowedInObjNames_CECNonRes, sObjNameViolationMsg, -1 /*iBEMProcIdx*/,
 																				FALSE /*bAllowTrailingSpaces*/ );			iNumObjNameViolations;
+
+			long lDBID_ProjFileNameNoExt = BEMPX_GetDatabaseID( "Proj:ProjFileNameNoExt" );		// SAC 12/6/19  - SAC 2/2/20 - ported from Res (Com tic #3157)
+			if (lDBID_ProjFileNameNoExt > 0 && !sModelFileOnly.isEmpty())
+				BEMPX_SetBEMData( lDBID_ProjFileNameNoExt, BEMP_QStr, (void*) &sModelFileOnly, BEMO_User, 0, BEMS_ProgDefault );
 	}
 
   // SAC 8/23/18 - moved up from below initial defaulting for newly opened model to ensure certain properties (CSE_Name) are defauted before being retrieved/referenced
@@ -3130,6 +3143,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			if (pEUSObj)
 				BEMPX_DeleteObject( pEUSObj );
 		}
+	}
+
+	if (!bAbort && !BEMPX_AbortRuleEvaluation())		// SAC 2/1/20 - apply any AnalysisActions flagged for application LoadModel_AfterDefaulting
+	{		QString qsApplyAnalActError;
+			int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( BEMAnalActPhase_LoadModel, BEMAnalActWhen_LoadModel_AfterDefaulting, qsApplyAnalActError, bVerbose );		// SAC 1/30/20
+			if (iApplyAnalActRetVal > 0)
+				qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: LoadModel / BeforeDefaulting" ).arg( QString::number(iApplyAnalActRetVal) );
+			else if (!qsApplyAnalActError.isEmpty())
+			{	sErrMsg = qsApplyAnalActError;
+//											77 : Error applying AnalysisAction(s) to building model
+				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 77 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+			}
+			if (!qsApplyAnalActError.isEmpty())
+				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 	}
 
 	if (!bAbort && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
@@ -3783,6 +3810,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					if (iNumPreAnalChkErrs < 1)
 						msgBox.addButton( QMessageBox::Abort );
 					msgBox.setDefaultButton( QMessageBox::Ok );
+					if (iCompReportWarningTimeout > 0)
+						msgBox.button(QMessageBox::Ok)->animateClick(iCompReportWarningTimeout*1000);		// SAC 1/31/20 - set 10 sec timer, at which time 'OK' is automatically registered/clicked (CEC/LF request)
 					showDetailsInQMessageBox(msgBox, 770, 300);		// routine to OPEN Details (to start with) + resize text box (to larger size)
 					bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
 #endif
@@ -3993,14 +4022,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 // ----------
 		for (iRun=0; (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps && iRun < iNumRuns); iRun++)
 		{
-//			bLastOSSimSkipped = bThisOSSimSkipped;		// SAC 4/18/14
-//			bThisOSSimSkipped = false;
-			QString sProjFileAlone = sModelFileOnly;
-			BOOL bCallOpenStudio = TRUE;
 			BOOL bSimulateModel = bModelToBeSimulated[iRun];  // SAC 11/22/16 - was: TRUE;
-			bool bStoreHourlyResults = false;
-			QString sRunID, sRunIDLong;
 			int iProgressModel=0, iSizingRunIdx=-1, iAnalStep=-1, iModelGenErr=0, iResultRunIdx=0, iSimErrID=0, iResErrID=0;		//, iProgressModel2=0;
+			QString sRunID, sRunIDLong;
 			if (iCodeType == CT_T24N)
 			{	switch (iRun)
 				{	case  1 :				sRunID = "zb";			sRunIDLong = "Standard Sizing";		bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_zb;									iAnalStep = 3;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	/*siOSWrapProgressIndex = CNRP_StdSizSim;*/		break;
@@ -4025,7 +4049,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u   ;														}
 									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRAP_Model_zp ;								iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	}	break;
 			}	}
-							assert( iSizingRunIdx < 5 );	// otherwise above bSizingRunSimulated array requires re-sizing
 
 #ifdef CM_QTGUI
 							sqProgressRunName = ""; // sRunID;
@@ -4037,6 +4060,19 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									ProcessNonResAnalysisAbort( iCodeType, iProgressStep, sErrMsg, bAbort, iRetVal, pszErrorMsg, iErrorMsgLen );
 							}
 #endif
+
+			if (!bSimulateModel)
+			{	sLogMsg.sprintf( "  PerfAnal_NRes - Bypassing %s model setup and simulation", sRunID.toLocal8Bit().constData() );
+				BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			}
+			else
+			{
+//			bLastOSSimSkipped = bThisOSSimSkipped;		// SAC 4/18/14
+//			bThisOSSimSkipped = false;
+			QString sProjFileAlone = sModelFileOnly;
+			BOOL bCallOpenStudio = TRUE;
+			bool bStoreHourlyResults = false;
+							assert( iSizingRunIdx < 5 );	// otherwise above bSizingRunSimulated array requires re-sizing
 
 								if (bVerbose)
 								{	sLogMsg.sprintf( "  PerfAnal_NRes - Preparing model %s", sRunID.toLocal8Bit().constData() );
@@ -4813,6 +4849,57 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																}
 															// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
 									//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
+
+
+
+						bool bIsStdDesign = !sRunAbbrev.compare("ab");
+						if (iRetVal == 0 && (!sRunAbbrev.compare("ap") || bIsStdDesign))		// SAC 2/2/20 - ported from Res (Com tic #3157)
+						{	long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "EUseSummary:StdDHW_SSF" : "EUseSummary:PropDHW_SSF") );
+							int iNumDHWSolarSys = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) );
+							if (lDBID_SSFResult > 0 && iNumDHWSolarSys > 0)
+							{	QString qsSSFPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );				assert( qsSSFPathFile.length() > 6 );
+								qsSSFPathFile = qsSSFPathFile.left( qsSSFPathFile.length()-4 ) + QString("-SSF.csv");
+								QVector<QString> vqsSSFObjectNames;
+								std::vector<double> daSSFResults;
+								QString qsSSFError;
+								int iSSFNum = CMX_RetrieveCSEAnnualCSVResult( qsSSFPathFile, vqsSSFObjectNames, daSSFResults, qsSSFError );
+															//	int iResultColInGroup=2, int iNameColInGroup=1, int iNumColsInGroup=2, int iNumHdrCols=2, int iNumHdrRows=4 );		// SAC 1/29/20
+								if (iSSFNum < 0)
+								{	sLogMsg = QString( "      %1" ).arg( qsSSFError );
+									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								}
+								else if (iSSFNum > 0)
+								{	if (bIsStdDesign)
+									{	// only store SSF result for model-wide Std design SolarSys
+										long lDBID_StdDHWSolarSys = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		assert( lDBID_StdDHWSolarSys > 0 );
+										QString sStdDHWSlrSys;
+										if (BEMPX_GetString( lDBID_StdDHWSolarSys, sStdDHWSlrSys ))
+										{	bool bSSFFound=false;
+											for (int iSSF=0; (!bSSFFound && iSSF < iSSFNum); iSSF++)
+											{	if (vqsSSFObjectNames[iSSF] == sStdDHWSlrSys)
+												{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
+													BEMPX_SetBEMData( lDBID_SSFResult, BEMP_Flt, &dSSF );
+													bSSFFound = true;
+											}	}
+											if (!bSSFFound)
+												BEMPX_WriteLogFile( "      Std model DHWSolarSys SSF result not found", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									}	}
+									else
+									{	// store results to first 10 Proposed SolarSystems
+										long lDBID_SSFNames = BEMPX_GetDatabaseID( "EUseSummary:PropDHWNames_SSF" );		assert( lDBID_SSFNames > 0 );
+										int iMaxNumSSFs = std::min( iSSFNum, BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_SSFNames ) );
+										for (int iSSF=0; iSSF < iMaxNumSSFs; iSSF++)
+										{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
+											QString sSSFName = vqsSSFObjectNames[iSSF];
+											BEMPX_SetBEMData( lDBID_SSFResult+iSSF, BEMP_Flt,  &dSSF );
+											BEMPX_SetBEMData( lDBID_SSFNames +iSSF, BEMP_QStr, (void*) &sSSFName );
+										}
+								}	}
+						}	}
+
+
+
+
 															}
 														}
 									//				}
@@ -5234,7 +5321,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	cstrUMLHWarningDetails = "Zones exceeding unmet load hour limits:\n" + cstrUMLHWarningDetails;
 																	// SAC 4/2/19 - wording updated to include: watermarked 'not for compliance' (tic #2680)
 																	cstrUMLHWarningMsg += "<a>All thermal zones exceeding unmet load hour limits will be reported on PRF-1, which will be watermarked 'not for compliance'.<br></a>";
-																	cstrUMLHWarningMsg += "<a>In the future, projects with zones exceeding UMLH limits will not be useable for compliance.</a>";
+																	if (iRulesetCodeYear >= 2019)		// SAC 1/29/20 - remove trailing sentence from 2019+ analysis (Com tic #3173)
+																		cstrUMLHWarningMsg += "<a>In the future, projects with zones exceeding UMLH limits will not be useable for compliance.</a>";
 
 																	QString sUMLHFAQLink;
 																	if (!BEMPX_GetString( BEMPX_GetDatabaseID( "UnmetLdHrsFAQLink", iCID_Proj ), sUMLHFAQLink ))
@@ -5420,6 +5508,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			}
 			else if (bModelToBeSimulated[iRun])
 				iSimRunIdx++;
+
+			}
+
 		}	// end of:  for iRun = 0-iNumRuns
 		if (iRetVal == 0)
 			xmlResultsFile.Close();
@@ -5902,12 +5993,15 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 	int iCodeType = CT_T24N, iRulesetCodeYear = 0;
 	QString sLoadedRuleSetID, sLoadedRuleSetVer;
 	if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
-	{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+	{	if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 			iCodeType = CT_T24N;
-		else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+		else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||
+					(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 			iCodeType = CT_S901G;
 		else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 			iCodeType = CT_ECBC;
+		else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)		// SAC 1/30/20
+			iCodeType = CT_360;
 		else
 		{	assert( FALSE );	// what ruleset is this ??
 		}
@@ -6221,7 +6315,7 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 
 /////////////////////////////////////////////////////////////////////////////
 
-#define  CM_MAX_BATCH_VER  3		// SAC 6/21/18 - 2->3 (CSE path)
+#define  CM_MAX_BATCH_VER 4		// SAC 6/21/18 - 2->3 (CSE path)  | SAC 1/24/20 - 3->4 (AnalysisAction table)
 
 int path_len( std::string& str )
 {	int iPathLen = -1, iPathLen2 = -1;
@@ -6284,14 +6378,22 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 	int iaBatchFieldsPerRecordByVer[] = {	 9,	// ver 1
 														10,	// ver 2
 														11,	// ver 3 - CSE path - SAC 6/21/18
+														11,	// ver 4 - 11+(variable columns) - SAC 1/24/20
 														-1  };
 	std::string line;
-	int iMode = 0;		// <0-Error Code / 0-Reading Header / 1-Reading Run Records
+	int iMode = 0;		// <0-Error Code / 0-Reading Header / 1-Reading Run Records / 2-Reading AnalysisAction data
 	int iBatchVer = 1, iRunRecord = 0, iBatchRecNum = 0, iRunsToPerform = 0;
 	std::string sBatchResultsFN, sBatchLogFN, sOverwriteResultsFileMsg, sLogMsg, sErrMsg;
 	std::string sRecProjInFN, sRecProjOutFN, sRecRunTitle, sRecOutput, sRecOptionCSV, sRecCopySimXMLToPath, sRecCopyCSEToPath;
+	std::string sAnalActType, sAnalActPhase, sAnalActBeforeAfter, sAnalActObjProp, sAnalActAlterObj;	// SAC 1/24/20
 	int iRecAutosizeP=0, iRecAutosizeBZ=0, iRecAutosizeB=0;
 	std::vector<std::string> saProjInFN, saProjOutFN, saRunTitle, saOutput, saOptionCSV, saCopySimXMLToPath, saCopyCSEToPath, saBEMBaseFN, saRulesetFN;
+	std::vector<std::string> saAnalActType, saAnalActPhase, saAnalActBeforeAfter, saAnalActObjProp, saAnalActAlterObj;	// SAC 1/24/20
+	std::vector<int> iaAnalActDataType;		// SAC 1/25/20
+	std::vector<std::vector<std::string>> saaAnalActStrData;		// SAC 1/25/20 - saaAnalActStrData[AnalActionRow][BatchRunRecord]
+	std::vector<std::vector<double>> daaAnalActFltData;
+	std::vector<std::vector<int>> iaaAnalActIntData, iaaAnalActCellBlank;
+	int iNumAnalysisActions = 0;
 	std::vector<int> iaBatchRecNums;
 	while (iMode >= 0 && iRunRecord > -1 && getline( in, line ))
 	{	iBatchRecNum++;
@@ -6331,13 +6433,65 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 									sErrMsg = boost::str( boost::format( "Error:  Unable to write to batch results file specified in record %d:  '%s'" )
 																						% iBatchRecNum % sBatchResultsFN.c_str() );
 						}
+						else if (iBatchVer > 3)
+							iMode = 2;	// to read AnalysisAction table
 						else
 							iMode = 1;
 					}
 				}
 			}
+			else if (iMode == 2 && lines[0].size() > 0)	// read AnalysisAction table - SAC 1/24/20
+			{
+				sAnalActType = lines[0][0];
+				if (boost::iequals( sAnalActType, "END" ))
+					iMode = 1;  // begin reading batch run records next
+				else if (lines[0].size() > 2)
+				{	sAnalActPhase = lines[0][1];
+					sAnalActBeforeAfter = lines[0][2];
+					if (lines[0].size() > 3)
+						sAnalActObjProp = lines[0][3];
+					else
+						sAnalActObjProp.empty();
+					if (lines[0].size() > 4)
+						sAnalActAlterObj = lines[0][4];
+					else
+						sAnalActAlterObj.empty();
+
+					saAnalActType.push_back( sAnalActType );
+					saAnalActPhase.push_back( sAnalActPhase );
+					saAnalActBeforeAfter.push_back( sAnalActBeforeAfter );
+					saAnalActObjProp.push_back( sAnalActObjProp );
+					saAnalActAlterObj.push_back( sAnalActAlterObj );
+
+					int iAADataType = 2; // string
+					if (boost::iequals( sAnalActType, "NewFloat" ) || boost::iequals( sAnalActType, "SetFloat" ))
+						iAADataType = 0;  // float
+					else if (boost::iequals( sAnalActType, "NewInteger" ) || boost::iequals( sAnalActType, "SetInteger" ))
+						iAADataType = 1;  // integer
+					else if (boost::iequals( sAnalActType, "RulelistPathFile" ))
+						iAADataType = 3;  // path/file
+					iaAnalActDataType.push_back( iAADataType );
+
+					std::vector<std::string> saAnalActStrData;		// SAC 1/25/20 - saaAnalActStrData[AnalActionRow][BatchRunRecord]
+					saaAnalActStrData.push_back( saAnalActStrData );
+					std::vector<double> daAnalActFltData;
+					daaAnalActFltData.push_back( daAnalActFltData );
+					std::vector<int> iaAnalActIntData;
+					iaaAnalActIntData.push_back( iaAnalActIntData );
+					std::vector<int> iaAnalActCellBlank;
+					iaaAnalActCellBlank.push_back( iaAnalActCellBlank );
+				}
+				else
+				{				iMode = -12;
+								sErrMsg = boost::str( boost::format( "Error:  Too few values (%d) found for AnalysisAction #%d (file record %d) - expecting 3-5" )
+																					% (int) lines[0].size() % (int) (saAnalActType.size()+1) % iBatchRecNum );
+				}
+			}
 			else if (iMode == 1 && lines[0].size() > 0)
 			{
+				iNumAnalysisActions = (int) saAnalActType.size();
+				if (iaBatchFieldsPerRecordByVer[iBatchVer-1] == 11 && iNumAnalysisActions > 0)	// SAC 1/25/20
+					iaBatchFieldsPerRecordByVer[iBatchVer-1] += iNumAnalysisActions;
 				iRunRecord = atoi( lines[0][0].c_str() );
 				if (iRunRecord > 0)
 				{	if ((INT) lines[0].size() < iaBatchFieldsPerRecordByVer[iBatchVer-1])
@@ -6348,7 +6502,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 					else
 					{	// PARSE BATCH RUN RECORD
 						int iFld = 1;
-						std::string sThisBEMBaseFN, sThisProjRulesetFN;
+						std::string sThisBEMBaseFN, sThisProjRulesetFN, sAAData;
 						sRecProjInFN = lines[0][iFld++];
 						PrependPathIfNecessary( sRecProjInFN, sProjPath );
 						if (!FileExists( sRecProjInFN.c_str() ))
@@ -6434,8 +6588,39 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						}
 
 						if (iMode > 0)
-						{	sRecRunTitle = lines[0][iFld++];
-							if (lines[0][iFld++].size() < 1)
+							sRecRunTitle = lines[0][iFld++];
+
+						if (iMode > 0 && iNumAnalysisActions > 0)		// SAC 1/25/20 - read AnalysisAction data columns for this batch rec into array matrix
+						{
+							for (int iAA=0; (iMode > 0 && iAA < iNumAnalysisActions); iAA++)
+							{	if (iAA > 0)
+									sAAData += " | ";
+								if (lines[0][iFld++].size() < 1)
+								{	iaaAnalActCellBlank[iAA].push_back( 1 );
+									saaAnalActStrData[  iAA].push_back( "" );
+									daaAnalActFltData[  iAA].push_back( 0 );
+									iaaAnalActIntData[  iAA].push_back( 0 );
+									sAAData += "-";
+								}
+								else
+								{	iaaAnalActCellBlank[iAA].push_back( 0 );
+									sAAData += lines[0][iFld-1];
+									if (iaAnalActDataType[iAA] == 0)
+										daaAnalActFltData[iAA].push_back( atof( lines[0][iFld-1].c_str() ) );
+									else
+										daaAnalActFltData[iAA].push_back( 0 );
+									if (iaAnalActDataType[iAA] == 1)
+										iaaAnalActIntData[iAA].push_back( atoi( lines[0][iFld-1].c_str() ) );
+									else
+										iaaAnalActIntData[iAA].push_back( 0 );
+									if (iaAnalActDataType[iAA] == 2 || iaAnalActDataType[iAA] == 3)
+										saaAnalActStrData[iAA].push_back( lines[0][iFld-1] );
+									else
+										saaAnalActStrData[iAA].push_back( "" );
+						}	}	}
+
+						if (iMode > 0)
+						{	if (lines[0][iFld++].size() < 1)
 								iRecAutosizeP = -1;
 							else
 							{	iRecAutosizeP = atoi( lines[0][iFld-1].c_str() );
@@ -6446,6 +6631,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 								}
 							}
 						}
+
 						if (iMode > 0)
 						{	if (lines[0][iFld++].size() < 1)
 								iRecAutosizeBZ = -1;
@@ -6512,7 +6698,6 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							saCopyCSEToPath.push_back( sRecCopyCSEToPath );  // ver 3
 							saBEMBaseFN.push_back( sThisBEMBaseFN );
 							saRulesetFN.push_back( sThisProjRulesetFN );
-
 							QVector<QString> saClrOptions;  saClrOptions.push_back("ProxyServerAddress");  saClrOptions.push_back("ProxyServerCredentials");  // SAC 8/21/18
 							QString qsRecOptionCSV = sRecOptionCSV.c_str();
 							StripOutCSVOptions( qsRecOptionCSV, &saClrOptions, "***" );
@@ -6520,6 +6705,8 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 							sLogMsg = boost::str( boost::format( "  Run %d / record %d / in:  %s\n                                            / out:  %s\n"
 																			"                                            / title: '%s' / results: '%s' / options: '%s'" )
 																					% iRunsToPerform % iBatchRecNum % sRecProjInFN % sRecProjOutFN % sRecRunTitle % sRecOutput % qsRecOptionCSV.toLocal8Bit().constData() );
+							if (iNumAnalysisActions > 0)
+								sLogMsg += boost::str( boost::format( "\n                                            / AnalysisAction data: %s" ) % sAAData.c_str() );
 							BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 						}
 					}
@@ -6551,6 +6738,16 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 			std::string sProcessingPath = sProjPathFile.substr( 0, iLastDotIdx );
 			sProcessingPath += " - batch\\";
 			std::string sProjPath = sProjPathFile.substr( 0, iLastSlashIdx+1 );
+
+			bool bHaveAnalActionsThisRun = false;
+			if (iNumAnalysisActions > 0)
+			{	for (int iAA=0; (!bHaveAnalActionsThisRun && iAA<iNumAnalysisActions); iAA++)
+				{	assert( (int) iaaAnalActCellBlank[iAA].size() > iRun );
+					bHaveAnalActionsThisRun = (iaaAnalActCellBlank[iAA][iRun] == 0);
+			}	}
+			if (bHaveAnalActionsThisRun)		// APPEND special ID to end of sProjPathFile to be used to assemble the final file including AnalysisAction objects - SAC 1/26/20
+				sProjPathFile += "-orig";
+
 			if (!DirectoryExists( sProjPath.c_str() ))
 				CreateAndChangeDirectory( sProjPath.c_str(), FALSE );
 			if (!boost::iequals( saProjInFN[iRun].c_str(), sProjPathFile.c_str() ) &&   // only copy IN to OUT file if they are different
@@ -6559,6 +6756,56 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 									sErrMsg = boost::str( boost::format( "Error:  Unable to copy project file (run %d, record %d):  '%s'  to:  '%s'" )
 																						% (iRun+1) % iaBatchRecNums[iRun] % saProjInFN[iRun].c_str() % sProjPathFile.c_str() );
 			}
+			else if (bHaveAnalActionsThisRun)		// write AnalysisAction data into bottom of batch input before processing - SAC 1/25/20
+			{	std::string ibdLine;
+				std::ifstream bemInFile(  sProjPathFile );
+				std::ofstream bemOutFile( saProjOutFN[iRun] );  //, std::ios_base::binary | std::ios_base::app );
+				if (bemInFile.is_open() && bemOutFile.is_open())
+				{	//bemFile.seekg( -256, std::ios::end );		// move to 128 chars from the end of the file
+					while (getline(bemInFile, ibdLine))
+					{
+  						if (ibdLine.find( "END_OF_FILE" ) != std::string::npos)
+  						{	for (int iAA=0; iAA<iNumAnalysisActions; iAA++)
+							{	assert( (int) iaaAnalActCellBlank[iAA].size() > iRun );
+								if (iaaAnalActCellBlank[iAA][iRun] == 0)
+								{
+  									bemOutFile << boost::str( boost::format(    "\nAnalysisAction   \"AnalAct %d\"\n" ) % (iAA+1) );
+  									bemOutFile << boost::str( boost::format(    "   Type = \"%s\"\n" ) % saAnalActType[iAA] );
+  									bemOutFile << boost::str( boost::format(    "   AnalysisPhase = \"%s\"\n" ) % saAnalActPhase[iAA] );
+  									bemOutFile << boost::str( boost::format(    "   BeforeAfterPhase = \"%s\"\n" ) % saAnalActBeforeAfter[iAA] );
+									if (saAnalActObjProp[iAA].length() > 0)
+	  									bemOutFile << boost::str( boost::format( "   ObjPropertyName = \"%s\"\n" ) % saAnalActObjProp[iAA] );
+									if (saAnalActAlterObj[iAA].length() > 0)
+	  									bemOutFile << boost::str( boost::format( "   AlterObjName = \"%s\"\n" ) % saAnalActAlterObj[iAA] );
+									switch (iaAnalActDataType[iAA])
+									{	case  0 :  bemOutFile << boost::str( boost::format( "   SetValFloat = %g\n"        ) % daaAnalActFltData[iAA][iRun] );		break;
+										case  1 :  bemOutFile << boost::str( boost::format( "   SetValInteger = %d\n"      ) % iaaAnalActIntData[iAA][iRun] );		break;
+										case  2 :  bemOutFile << boost::str( boost::format( "   SetValString = \"%s\"\n"   ) % saaAnalActStrData[iAA][iRun] );		break;
+										default :  bemOutFile << boost::str( boost::format( "   SetValPathFile = \"%s\"\n" ) % saaAnalActStrData[iAA][iRun] );		break;
+									}
+  									bemOutFile << "   ..\n\n";
+  							}	}
+  							bemOutFile << "\nEND_OF_FILE\n\n";
+							break;
+  						}
+  						else
+  						{	bemOutFile << ibdLine;
+  							bemOutFile << '\n';
+  					}	}
+					//bemInFile.close();
+					bemOutFile.flush();
+					//bemOutFile.close();  - force destructor to perform close to ensure immediate read of the file (bleow) is successful
+				}
+				else
+				{					sErrMsg = boost::str( boost::format( "Error:  Unable to open and insert AnalysisAction objects to project file (run %d, record %d):  '%s'" )
+																						% (iRun+1) % iaBatchRecNums[iRun] % sProjPathFile.c_str() );
+				}
+				sProjPathFile = saProjOutFN[iRun];	// restore original proj out filename for further processing
+			}
+
+
+//	Sleep(5000);				// SAC 5/22/19 - additional pause to ensure directory clean-up successful
+
 
 			if (sErrMsg.size() < 1)
 			{
@@ -6603,12 +6850,15 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 					int iCodeType = CT_T24N;		// SAC 10/2/14 - added to facilitate code-specific processing
 					QString sLoadedRuleSetID, sLoadedRuleSetVer;
 					if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
-					{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+					{	if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 							iCodeType = CT_T24N;
-						else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+						else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||
+									(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 							iCodeType = CT_S901G;
 						else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 							iCodeType = CT_ECBC;
+						else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)	// SAC 1/30/20
+							iCodeType = CT_360;
 						else
 						{	assert( FALSE );	// what ruleset is this ??
 					}	}
@@ -6993,8 +7243,15 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 		sErrMsg = "CMX_SetupAnalysisWeatherPaths() Error:  One or more invalid database IDs";
 	}
 	else
-	{
-	   BEMPX_GetString( lDBID_Proj_WeatherStation, sWeatherStation );
+	{	QString sTmpAnnWthr, sTmpDDY;   bool bWthrOverride=false;
+	   BEMPX_GetString( lDBID_Proj_AnnualWeatherFile, sTmpAnnWthr );
+	   BEMPX_GetString( lDBID_Proj_DDWeatherFile    , sTmpDDY );
+	   if (!sTmpAnnWthr.isEmpty() && sTmpDDY.isEmpty() && sTmpAnnWthr.indexOf('/') < 0 && sTmpAnnWthr.indexOf('\\') < 0)
+		{	sWeatherStation = sTmpAnnWthr;	// SAC 2/1/20 - use AnnualWeatherFile as basis of annual & DDY sim weather files
+			bWthrOverride = true;
+		}
+		else
+		   BEMPX_GetString( lDBID_Proj_WeatherStation, sWeatherStation );
 		if (!DirectoryExists( sWthrPath ))
 		{	iRetVal = 2;
 			sErrMsg.sprintf( "CMX_SetupAnalysisWeatherPaths() Error:  Path containing weather files not found:  '%s'", sWthrPath.toLocal8Bit().constData() );
@@ -7008,7 +7265,10 @@ int CMX_SetupAnalysisWeatherPaths( const char* pszWthrPath, bool bAnnual, bool b
 	//		sAnnualWeatherFile = sWthrPath + sWeatherStation + "_CZ2010.epw";
 	//		sDDWeatherFile     = sWthrPath + sWeatherStation + "_CZ2010.ddy";
 			long lDBID_Proj_WeatherFileAppend = BEMPX_GetDatabaseID( "Proj:WeatherFileAppend" );		// SAC 9/15/14 - mods to allow wthr file names to vary based on rules (for S901G)
-			if (lDBID_Proj_WeatherFileAppend > 0)
+			if (bWthrOverride)
+			{	// no appending to wthr file if supplied via input AnnualWeatherFile
+			}
+			else if (lDBID_Proj_WeatherFileAppend > 0)
 			   BEMPX_GetString( lDBID_Proj_WeatherFileAppend, sWeatherFileAppend );
 			else
 				sWeatherFileAppend = "_CZ2010";

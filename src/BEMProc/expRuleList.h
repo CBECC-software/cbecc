@@ -610,7 +610,7 @@ public:
 	bool  DataModelRuleActive()	{	return m_bDataModelRuleActive;  };		// SAC 5/26/16
 	int   LabelIndex( QString& sLabel, BOOL bCaseSensitive=FALSE );	// SAC 9/9/14	// SAC 12/19/17 - switched from BOOL LabelMatches() to int LabelIndex() to return 1-based label index (0 if not found)
 	int   NumRulesetPropertiesForObject( int iObjTypeID );
-	BOOL	PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass=-1 );
+	BOOL	PostRulePropsToDatabase( QString& sErrantRuleProps, int iDefaultInputClass=-1, int iFirstIdx=0 );		// SAC 1/30/20 - added iFirstIdx
    QString  GetBEMBaseFile()		{	return m_sBEMBaseFile;	}
 
 	int   getFileStructVersion()				{	return m_iFileStructVersion;  }

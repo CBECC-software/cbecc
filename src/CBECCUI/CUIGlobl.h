@@ -604,6 +604,7 @@ extern int eiBDBCID_ResDHWSys;
 extern int eiBDBCID_ResDWHRSys;	// SAC 1/24/19
 extern int eiBDBCID_ResWtrHtr;
 extern int eiBDBCID_ResLpTankHtr;		// SAC 1/12/20 (Com tic #3156)
+extern int eiBDBCID_DHWSolarSys;		// SAC 1/31/20 (Com tic #3157)
 extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
 
 extern int eiBDBCID_ProcLd;
@@ -669,6 +670,9 @@ extern long elDBID_Chiller_EvapInRef;       // "FluidSeg"
 extern long elDBID_Chiller_EvapOutRef;      // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowInRef;   // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowOutRef;  // "FluidSeg"
+
+extern long elDBID_ResDHWSys_CentralSysType;	// SAC 1/31/20 (Com tic #3156)
+extern long elDBID_ResDHWSys_DHWSolarSysRef;	// SAC 1/31/20 (Com tic #3157)
 
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
@@ -736,6 +740,7 @@ extern int eiBDBCID_EUseSummary;
 extern long elDBID_Proj_Name;
 extern long elDBID_Proj_RunDate;
 extern long elDBID_Proj_SoftwareVersion;
+extern long elDBID_Proj_SoftwareVersionDetail;	// SAC 2/13/20 (tic #1192)
 extern long elDBID_Proj_AnalysisType;    // SAC 9/12/11
 extern long elDBID_Proj_IsMultiFamily;   // SAC 7/29/16
 extern long elDBID_Proj_RunTitle;    // SAC 1/8/12
@@ -826,6 +831,7 @@ extern long elDBID_DHWSys_DHWHeater4;
 extern long elDBID_DHWSys_DHWHeater5;
 extern long elDBID_DHWSys_DHWHeater6;
 extern long elDBID_DHWSys_LoopHeater;	// SAC 11/19/19
+extern long elDBID_DHWSys_CentralDHWType;	// SAC 1/21/20
 extern long elDBID_INISettings_ProxyServerCredentials;		// SAC 1/9/17
 extern long elDBID_INISettings_ShowProxyServerCredentials;	// SAC 1/9/17
 

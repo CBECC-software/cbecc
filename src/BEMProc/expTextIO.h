@@ -199,6 +199,7 @@ protected:
 public:
    // Test for end of line condition
    bool AtEOL();
+	bool AtEOF();  // SAC 1/23/20
 
    QString ReadString( BOOL bReadPastEOL=FALSE, BOOL bAllowMidQuote=FALSE, BOOL bMayBeArray=FALSE );
    QString ReadToNextToken( QStringList& saTokens, BOOL bReadPastEOL=TRUE );
@@ -309,6 +310,9 @@ inline BEMTextIO& BEMTextIO::operator>>(double& d)
 
 inline bool BEMTextIO::AtEOL()
 { return m_chrIndex >= m_lineLength; }
+
+inline bool BEMTextIO::AtEOF()
+{ return m_file.atEnd(); }
 
 inline void BEMTextIO::Flush()
 { m_file.flush();  return; }

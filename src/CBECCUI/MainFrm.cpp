@@ -2997,6 +2997,12 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 				sOptionsCSVString += sOptTemp;
 			}
 
+      int iCompReportWarningTimeout = ReadProgInt( sOptsSec, "CompReportWarningTimeout", (bFromAltSection ? -999 : (bBatchMode ? 1 : 20)) /*default*/ );		// SAC 1/31/20
+      if (iCompReportWarningTimeout >= -1)
+			{	sOptTemp.Format( "CompReportWarningTimeout,%d,", iCompReportWarningTimeout );
+				sOptionsCSVString += sOptTemp;
+			}
+
 	// Add loop to check/add rule-based reporting options based on the enumerations currently available in the ruleset data model
 		long lDBID_Proj_RuleReportType = BEMPX_GetDatabaseID( "RuleReportType", BEMPX_GetDBComponentID( "Proj" ) );					ASSERT( lDBID_Proj_RuleReportType > 0 );
 		if (lDBID_Proj_RuleReportType > 0)
@@ -5681,8 +5687,10 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 //			sRunName = "Proposed";		sRunIDProcFile = " - Prop";  		sRunAbbrev = "p";
 		}
 
+		CString sSftwrVerDtl;
+		BOOL bUseLongVer = (!BEMPX_SetDataString( elDBID_Proj_SoftwareVersionDetail, sSftwrVerDtl ) || sSftwrVerDtl.IsEmpty());		// SAC 2/13/20 (Res tic #1192)
 		CString sUIVersionString;
-		GetProgramVersion( sUIVersionString );																													ASSERT( !sUIVersionString.IsEmpty() );
+		GetProgramVersion( sUIVersionString, TRUE /*bPrependName*/, bUseLongVer );														ASSERT( !sUIVersionString.IsEmpty() );
 
 		int iVerbose = ReadProgInt( "options", "LogRuleEvaluation", 0 /*default*/ );
 	//		BOOL bStoreBEMProcDetails = (ReadProgInt( "options", "StoreBEMDetails", 0) > 0);
@@ -5736,9 +5744,10 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				// SAC 10/1/18 - 18->19 Shifted newly inserted Ref DRtg TDV (before fuel mult adj) from col IF to JY
 				// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
 				// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
-				CString sDfltResFN = "AnalysisResults-v21.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+				// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
+				CString sDfltResFN = "AnalysisResults-v22.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						21 /*iResFormatVer*/, sOriginalFileName );
+																						22 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
 					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3328];
@@ -6047,7 +6056,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "ProjFileName", BEMPX_GetDBComponentID( "Proj" ) ), BEMP_Str, (void*) ((const char*) sProjFileName) );
 		int iSimResult = 0;
 
-enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
+enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/2/14 - SAC 1/30/20
 		int iCodeType = CT_T24N;		// SAC 10/2/14 - added to facilitate code-specific processing
 		QString sLoadedRuleSetID, sLoadedRuleSetVer;
 		if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
@@ -6057,6 +6066,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,		CT_NumTypes  };	// SAC 10/2/14
 				iCodeType = CT_S901G;
 			else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 				iCodeType = CT_ECBC;
+			else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)
+				iCodeType = CT_360;
 			else
 			{	ASSERT( FALSE );	// what ruleset is this ??
 		}	}
@@ -8101,18 +8112,24 @@ void CMainFrame::OnReloadScreens()
 
 BOOL CMainFrame::UpdateSoftwareVersionString()		// SAC 9/17/12
 {	BOOL bRetVal = FALSE;
-	CString sSoftwareVer;
-	if (GetProgramVersion( sSoftwareVer ) && !sSoftwareVer.IsEmpty())
-	{	long lDBID_Proj_SoftwareVersion = BEMPX_GetDatabaseID( "SoftwareVersion", eiBDBCID_Proj );
-		CString sProjSoftwareVer;
-		if (lDBID_Proj_SoftwareVersion > 0 &&
-				(!BEMPX_SetDataString( lDBID_Proj_SoftwareVersion, sProjSoftwareVer ) || sProjSoftwareVer.IsEmpty() || sSoftwareVer.Compare( sProjSoftwareVer ) != 0) )
+	CString sSoftwareVer, sProjSoftwareVer;
+	long lDBID_Proj_SoftwareVersion       = BEMPX_GetDatabaseID( "SoftwareVersion",       eiBDBCID_Proj );
+	long lDBID_Proj_SoftwareVersionDetail = BEMPX_GetDatabaseID( "SoftwareVersionDetail", eiBDBCID_Proj );	// SAC 2/13/20 - added logic to store both short and long versions (Res tic #1192)
+	BOOL bFirstRoundLong = (lDBID_Proj_SoftwareVersionDetail < BEM_COMP_MULT);
+	if (lDBID_Proj_SoftwareVersion > 0 && GetProgramVersion( sSoftwareVer, TRUE /*bPrependName*/, bFirstRoundLong ) && !sSoftwareVer.IsEmpty())
+	{	if (!BEMPX_SetDataString( lDBID_Proj_SoftwareVersion, sProjSoftwareVer ) || sProjSoftwareVer.IsEmpty() || sSoftwareVer.Compare( sProjSoftwareVer ) != 0)
 		{  BEMPX_SetBEMData( lDBID_Proj_SoftwareVersion, BEMP_Str, (void*) ((const char*) sSoftwareVer) );
 			// set flag indicating project has been modified
 			SetDataModifiedFlag( TRUE );
 			bRetVal = TRUE;
-		}
-	}
+	}	}
+	if (lDBID_Proj_SoftwareVersionDetail > 0 && GetProgramVersion( sSoftwareVer ) && !sSoftwareVer.IsEmpty())
+	{	if (!BEMPX_SetDataString( lDBID_Proj_SoftwareVersionDetail, sProjSoftwareVer ) || sProjSoftwareVer.IsEmpty() || sSoftwareVer.Compare( sProjSoftwareVer ) != 0)
+		{  BEMPX_SetBEMData( lDBID_Proj_SoftwareVersionDetail, BEMP_Str, (void*) ((const char*) sSoftwareVer) );
+			// set flag indicating project has been modified
+			SetDataModifiedFlag( TRUE );
+			bRetVal = TRUE;
+	}	}
 	return bRetVal;
 }
 

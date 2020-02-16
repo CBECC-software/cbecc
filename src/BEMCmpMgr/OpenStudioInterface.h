@@ -59,7 +59,7 @@ extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 #define  NUM_T24_NRES_Fuels        3
 extern const char* pszaEPlusFuelNames[NUM_T24_NRES_Fuels];
 
-enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_NumTypes  };	// SAC 10/2/14 - SAC 4/13/15
+enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,	CT_NumTypes  };	// SAC 10/2/14 - SAC 4/13/15 - SAC 1/30/20
 
 extern double CMX_GetEnergyPlusVersion( const char* pszEPlusPath=NULL );
 //extern bool   CMX_IsEnergyPlusVersionInstalled( int iMajor, int iMinor=-1, int iBuild=-1 );  // SAC 12/27/13

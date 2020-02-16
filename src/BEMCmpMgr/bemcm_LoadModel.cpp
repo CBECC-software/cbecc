@@ -938,6 +938,27 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 			if (lDBID_Proj_BEMVersion > 0)
 				BEMPX_GetInteger( lDBID_Proj_BEMVersion, lBEMVersion );
 
+		// mid-project load processing to install NEW properties identified in the building model via AnalysisAction objects - SAC 1/26/20
+			int iNewAnalActRuleProps = BEMPX_PostAnalysisActionRulesetPropertiesToDatabase();
+			if (iNewAnalActRuleProps < 0)
+			{	assert( false ); 		// ERROR
+				iRetVal = 8;	// error adding new ruleset properties to ruleset
+			}
+			else if (iNewAnalActRuleProps > 0)
+			{	// ALL BEMBase object have been deleted (necessary to load new RulesetProperties) - so need to RE-load project file
+// ???
+// MAY NEED TO DELETE ALL OBJECT TYPES, INCLUDING RULE LIBRARY - WHICH WOULD MEAN WE NEED TO ALSO RE_LOAD THE RULESET
+// ???
+				BEMPX_DeleteAllObjects( BEMO_User /*iOnlyTypeToDelete*/, FALSE /*bReInitSymbols*/ );		// SAC 1/30/20
+				if (!BEMPX_ReadProjectFile( sInputFile.toLocal8Bit().constData(), BEMFM_INPUT /*iFileMode*/, false /*bRestore*/, false /*bResultsOnly*/,			// Load building model
+														pszLogPathFile /*pszLogFileExt*/, 0 /*iBEMProcIdx*/, lDBID_Proj_BEMVersion,
+														iMaxDBIDSetFailures, piDBIDSetFailures, sbemStraightMap /*BEMStraightMap* pStraightMap*/, sbemComponentMap /*BEMComponentMap* pCompMap*/,
+														sbemPropertyMap /*BEMPropertyMap* pPropMap*/, bSupressAllMsgBoxes, piObjIdxSetFailures, psaDataSetFailures, bLogDurations ) )
+					iRetVal = 9;	// error loading building model file - 2nd round, following addition of new Ruleset Properties
+			}
+			if (iRetVal == 0)
+			{
+
 		// SAC 8/7/14 - added code to blast certain properties that are switched from some user input type to NotInput - in which case we simply blast the input
 			int iINNI = -1;
 			while (sbemIgnorNewlyNotInputProperties[++iINNI].szOldPropType != NULL)
@@ -1010,12 +1031,17 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 			int iCodeType = CT_T24N;		// SAC 10/2/14 - added to facilitate code-specific processing
 			QString sLoadedRuleSetID, sLoadedRuleSetVer;
 			if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
-			{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+			{
+//BEMMessageBox( sLoadedRuleSetID, "" );
+				if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 					iCodeType = CT_T24N;
-				else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+				else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||
+							(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 					iCodeType = CT_S901G;
 				else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 					iCodeType = CT_ECBC;
+				else if (sLoadedRuleSetID.indexOf( "360" ) >= 0)	// SAC 1/30/20
+					iCodeType = CT_360;
 				else
 				{	assert( FALSE );	// what ruleset is this ??
 			}	}
@@ -1876,6 +1902,17 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 				//BEMPX_SetBEMData( BEMPX_GetDatabaseID( "Proj:ProcessingPath" ), BEMP_QStr, (void*) &sProcessingPath, BEMO_User, 0, BEMS_ProgDefault );
 			}
 
+		// SAC 1/30/20 - apply any AnalysisActions flagged for application LoadModel_BeforeDefaulting   - SAC 2/11/20 - Moved LoadModel / BeforeDefaulting AnalysisActions to BEFORE eval of LoadModelAdjustments (per DR request)
+	bool bApplyAnalActVerbose = true;
+			QString qsApplyAnalActError;
+			int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( BEMAnalActPhase_LoadModel, BEMAnalActWhen_LoadModel_BeforeDefaulting, qsApplyAnalActError, bApplyAnalActVerbose );		// SAC 1/30/20
+			if (iApplyAnalActRetVal > 0)
+				qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: LoadModel / BeforeDefaulting" ).arg( QString::number(iApplyAnalActRetVal) );
+			else if (!qsApplyAnalActError.isEmpty())
+				iRetVal = 10;	// error applying AnalysisAction(s) to building model
+			if (!qsApplyAnalActError.isEmpty())
+				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
 		// SAC 6/28/17 - added evaluation of rulelist to handle 1-time LoadModel processing
 			if (BEMPX_RulelistExists( "LoadModelAdjustments" ))
 			{	QString sLMAErrMsg;
@@ -1890,6 +1927,8 @@ int CMX_LoadModel( const char* pszBEMBinPathFile, const char* pszRulesetPathFile
 							sLMAErrMsg = QString( "ERROR:  Error encountered evaluating rulelist '%1'" ).arg( "LoadModelAdjustments" );
 						psaWarningsForUser->push_back( sLMAErrMsg );
 			}	}	}
+
+			}	// end of if (iRetVal == 0)   - SAC 1/30/20
 		}
 		BEMPX_RefreshLogFile();	// SAC 5/19/14
 	}

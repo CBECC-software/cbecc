@@ -2436,6 +2436,7 @@ int eiBDBCID_ResDHWSys = 0;
 int eiBDBCID_ResDWHRSys = 0;
 int eiBDBCID_ResWtrHtr = 0;
 int eiBDBCID_ResLpTankHtr = 0;	// SAC 1/12/20 (Com tic #3156)
+int eiBDBCID_DHWSolarSys = 0;		// SAC 1/31/20 (Com tic #3157)
 int eiBDBCID_ResSpcDHWFeatures = 0;
 int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
@@ -2478,6 +2479,8 @@ long elDBID_Chiller_EvapInRef = 0;          // "FluidSeg"
 long elDBID_Chiller_EvapOutRef = 0;         // "FluidSeg"
 long elDBID_Boiler_FluidFlowInRef = 0;      // "FluidSeg"
 long elDBID_Boiler_FluidFlowOutRef = 0;     // "FluidSeg"
+long elDBID_ResDHWSys_CentralSysType = 0;						// SAC 1/31/20 (Com tic #3156)
+long elDBID_ResDHWSys_DHWSolarSysRef = 0;						// SAC 1/31/20 (Com tic #3157)
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
@@ -2513,6 +2516,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
 	else if (iBDBClass == eiBDBCID_ResDWHRSys)	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_ResDHWSys )	  		{  iTabCtrlWd =  900;    iTabCtrlHt = 610;   }	// SAC 1/12/20 (Com tic #3156)
+	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd =  600;    iTabCtrlHt = 420;   }	// SAC 1/31/20 (Com tic #3157)
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2628,6 +2632,7 @@ int eiBDBCID_EUseSummary = 0;
 long elDBID_Proj_Name = 0;
 long elDBID_Proj_RunDate = 0;
 long elDBID_Proj_SoftwareVersion = 0;
+long elDBID_Proj_SoftwareVersionDetail = 0;
 long elDBID_Proj_AnalysisType = 0;    // SAC 9/12/11
 long elDBID_Proj_IsMultiFamily = 0;   // SAC 7/29/16
 long elDBID_Proj_RunTitle = 0;    // SAC 1/8/12
@@ -2718,6 +2723,7 @@ long elDBID_DHWSys_DHWHeater4 = 0;
 long elDBID_DHWSys_DHWHeater5 = 0;
 long elDBID_DHWSys_DHWHeater6 = 0;
 long elDBID_DHWSys_LoopHeater	= 0;	// SAC 11/19/19
+long elDBID_DHWSys_CentralDHWType = 0;	// SAC 1/21/20
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
 long elDBID_INISettings_ShowProxyServerCredentials = 0;	// SAC 1/9/17
 
@@ -2759,6 +2765,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
+	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19
 	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 420;   }	// SAC 1/12/20 (Res tic #1013)
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
@@ -3032,6 +3039,7 @@ void InitBEMDBIDs()
 	eiBDBCID_ResDWHRSys         = BEMPX_GetDBComponentID( "ResDWHRSys" );	// SAC 1/24/19
 	eiBDBCID_ResWtrHtr          = BEMPX_GetDBComponentID( "ResWtrHtr" );
 	eiBDBCID_ResLpTankHtr       = BEMPX_GetDBComponentID( "ResLpTankHtr" );	// SAC 1/12/20 (Com tic #3156)
+	eiBDBCID_DHWSolarSys        = BEMPX_GetDBComponentID( "DHWSolarSys" );	// SAC 1/31/20 (Com tic #3157)
 	eiBDBCID_ResSpcDHWFeatures  = BEMPX_GetDBComponentID( "ResSpcDHWFeatures" );
 	eiBDBCID_ProcLd             = BEMPX_GetDBComponentID( "ProcLd" );        
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
@@ -3077,6 +3085,9 @@ void InitBEMDBIDs()
 	elDBID_Chiller_EvapOutRef          = BEMPX_GetDatabaseID( "EvapOutRef",         eiBDBCID_Chiller  );
 	elDBID_Boiler_FluidFlowInRef       = BEMPX_GetDatabaseID( "FluidFlowInRef",     eiBDBCID_Boiler   );
 	elDBID_Boiler_FluidFlowOutRef      = BEMPX_GetDatabaseID( "FluidFlowOutRef",    eiBDBCID_Boiler   );
+
+	elDBID_ResDHWSys_CentralSysType    = BEMPX_GetDatabaseID( "CentralSysType",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3156)
+	elDBID_ResDHWSys_DHWSolarSysRef    = BEMPX_GetDatabaseID( "DHWSolarSysRef",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3157)
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 
@@ -3159,6 +3170,7 @@ void InitBEMDBIDs()
    elDBID_Proj_Name            = BEMPX_GetDatabaseID( "Name",            eiBDBCID_Proj );
    elDBID_Proj_RunDate         = BEMPX_GetDatabaseID( "RunDate",         eiBDBCID_Proj );
    elDBID_Proj_SoftwareVersion = BEMPX_GetDatabaseID( "SoftwareVersion", eiBDBCID_Proj );
+   elDBID_Proj_SoftwareVersionDetail = BEMPX_GetDatabaseID( "SoftwareVersionDetail", eiBDBCID_Proj );
    elDBID_Proj_AnalysisType    = BEMPX_GetDatabaseID( "AnalysisType",    eiBDBCID_Proj );    // SAC 9/12/11
    elDBID_Proj_IsMultiFamily   = BEMPX_GetDatabaseID( "IsMultiFamily",   eiBDBCID_Proj );    // SAC 7/29/16
    elDBID_Proj_RunTitle        = BEMPX_GetDatabaseID( "RunTitle",		    eiBDBCID_Proj );    // SAC 1/8/12
@@ -3262,6 +3274,7 @@ void InitBEMDBIDs()
 	elDBID_DHWSys_DHWHeater5	= elDBID_DHWSys_DHWHeater4 + 1;
 	elDBID_DHWSys_DHWHeater6	= elDBID_DHWSys_DHWHeater5 + 1;
 	elDBID_DHWSys_LoopHeater	= BEMPX_GetDatabaseID( "LoopHeater", eiBDBCID_DHWSys );
+	elDBID_DHWSys_CentralDHWType = BEMPX_GetDatabaseID( "CentralDHWType", eiBDBCID_DHWSys );
 
 	elDBID_INISettings_ProxyServerCredentials      = BEMPX_GetDatabaseID( "ProxyServerCredentials",      eiBDBCID_INISettings  );		// SAC 1/9/17
 	elDBID_INISettings_ShowProxyServerCredentials  = BEMPX_GetDatabaseID( "ShowProxyServerCredentials",  eiBDBCID_INISettings  ); 

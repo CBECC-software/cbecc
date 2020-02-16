@@ -464,6 +464,317 @@ BOOL BEMPX_LoadRuleset( LPCSTR fileName, BOOL bDeleteAllObjects )		// was RulePr
 }
 
 
+int BEMPX_PostAnalysisActionRulesetPropertiesToDatabase()
+{
+	int iRetVal = 0;		// > 0 Num RulesetProperties added / < 0 error code
+	long lDBID_AnalAct_Type = BEMPX_GetDatabaseID( "AnalysisAction:Type" );
+	int iCID_AnalAct = (lDBID_AnalAct_Type > BEM_COMP_MULT ? BEMPX_GetClassID( lDBID_AnalAct_Type ) : 0);
+	int iNumAnalActs = (iCID_AnalAct > 0 ? BEMPX_GetNumObjects( iCID_AnalAct ) : 0);
+	if (iNumAnalActs > 0)
+	{
+		int iNumInitRuleProps = ruleSet.numRulesetProperties();
+		int iNumRulePropsAdded = 0;
+
+		std::vector<int> iaExistingRulePropsByClass;
+		int iClassID, iNumClasses = BEMPX_GetNumClasses();
+		for (iClassID=1; iClassID<=iNumClasses; iClassID++)
+			iaExistingRulePropsByClass.push_back( ruleSet.NumRulesetPropertiesForObject( iClassID ) );
+
+	// scan all AnalysisAction objects for any New properties & add them to the ruleset
+		long lDBID_AnalAct_ObjPropertyName = BEMPX_GetDatabaseID( "ObjPropertyName", iCID_AnalAct );			assert( lDBID_AnalAct_ObjPropertyName > BEM_COMP_MULT );
+		long lAAType;		QString qsAAObjProp;		int iError;
+		
+		for (int iAA=0; (iRetVal >= 0 && iAA < iNumAnalActs); iAA++)
+		{	if (BEMPX_GetInteger( lDBID_AnalAct_Type, lAAType, 0, -1, iAA ) && lAAType >= 1 && lAAType <= 10 &&		// AAType in range of 1-10 => NewString/Int/Float...
+				 BEMPX_GetString(  lDBID_AnalAct_ObjPropertyName, qsAAObjProp, FALSE, 0, -1, iAA ) && !qsAAObjProp.isEmpty())
+			{	// this AnalysisAction probably requires addition of a RulesetProperty
+				long lAADBID = BEMPX_GetDatabaseID( qsAAObjProp );
+				if (lAADBID < 1)
+				{	iClassID = 1;  // default to Proj
+					int iColonIdx = qsAAObjProp.indexOf( ':' );			assert( iColonIdx < qsAAObjProp.length() );
+					if (iColonIdx >= qsAAObjProp.length())
+						iRetVal = -1;
+					else if (iColonIdx > 1)
+					{	QString qsClass = qsAAObjProp.left(iColonIdx);
+						iClassID = BEMPX_GetDBComponentID( qsClass.toLocal8Bit().constData() );			assert( iClassID > 0 );
+					}
+					if (iClassID > 0)
+					{
+					// add this RulesetProperty
+						BEMClass* pObjClass = BEMPX_GetClass( iClassID, iError );			assert( pObjClass );
+						int iNewPropID = pObjClass->getNumProps() + ruleSet.NumRulesetPropertiesForObject( iClassID ) - iaExistingRulePropsByClass[iClassID-1] + 1;
+						QString sNewPropName = qsAAObjProp.right( qsAAObjProp.length() - iColonIdx -1 );
+						lAADBID = BEMPX_GetDBID( iClassID, iNewPropID, 1 );
+						int iPropType = lAAType-1;
+						RuleSetProperty* pNewRuleProp = new RuleSetProperty( iClassID, iNewPropID, sNewPropName, sNewPropName, lAADBID, iPropType );				assert( pNewRuleProp );
+						if (!pNewRuleProp)
+							iRetVal = -2;
+						else
+						{	ruleSet.addRuleSetProperty( pNewRuleProp );
+							iRetVal++;
+						}
+		}	}	}	}					
+
+		if (iRetVal > 0)		// => ADD "ruleset variables" (RULE NEW items) to BEMBase  - SAC 1/30/20 - finished up implementation of function
+		{	QString sErrantRuleProps;
+			if (!ruleSet.PostRulePropsToDatabase( sErrantRuleProps, BEMD_NotInput, iNumInitRuleProps ))
+			{	//sErrMsg = QString( "   Error encountered inserting ruleset variables (RULE NEWs) into BEMBase: %1\n%2\n" ).arg( m_fileName, sErrantRuleProps );
+				//errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+				iRetVal = -3;
+		}	}
+	}  // end of  if (iNumAnalActs > 0)
+	return iRetVal;		// > 0 Num RulesetProperties added / < 0 error code
+}
+
+
+// #define  BEMAnalActPhase_LoadModel            1
+// #define  BEMAnalActPhase_ProposedSizing      11
+// #define  BEMAnalActPhase_ProposedAnnual      12
+// #define  BEMAnalActPhase_BaselineSizing      13
+// #define  BEMAnalActPhase_BaselineAnnual      14
+// #define  BEMAnalActPhase_End                  2
+// 
+// #define  BEMAnalActWhen_LoadModel_BeforeDefaulting         1
+// #define  BEMAnalActWhen_LoadModel_AfterDefaulting          2
+// #define  BEMAnalActWhen_End_BeforeAnalPostProc            11
+// #define  BEMAnalActWhen_End_AfterAnalPostProc             12
+// #define  BEMAnalActWhen_Transform_BeforeModelSetupRules   21
+// #define  BEMAnalActWhen_Transform_AfterModelSetupRules    22
+// #define  BEMAnalActWhen_Transform_ActOnSimInput           23
+// #define  BEMAnalActWhen_Transform_FollowingResultsProc    24
+QString AnalActDescrip( long iAnalPhase, long iBeforeAfter, int iAAIdx )
+{	QString str = QString( "#%1" ).arg( QString::number( iAAIdx+1 ) );
+	if (iBeforeAfter <= 20)
+	{	switch (iBeforeAfter)
+		{	case  BEMAnalActWhen_LoadModel_BeforeDefaulting :  str += " (load model, before defaulting)";   break;
+			case  BEMAnalActWhen_LoadModel_AfterDefaulting  :  str += " (load model, after defaulting)";   break;
+			case  BEMAnalActWhen_End_BeforeAnalPostProc     :  str += " (end, before AnalPostProc)";   break;
+			case  BEMAnalActWhen_End_AfterAnalPostProc      :  str += " (end, after AnalPostProc)";   break;
+	}	}
+	else
+	{	// transform-related
+		switch (iAnalPhase)
+		{	case  BEMAnalActPhase_ProposedSizing :  str += " (PropSz, ";    break;
+			case  BEMAnalActPhase_ProposedAnnual :  str += " (PropAnn, ";   break;
+			case  BEMAnalActPhase_BaselineSizing :  str += " (BaseSz, ";    break;
+			case  BEMAnalActPhase_BaselineAnnual :  str += " (BaseAnn, ";   break;
+		}
+		switch (iBeforeAfter)
+		{	case  BEMAnalActWhen_Transform_BeforeModelSetupRules :  str += "before model setup)";   break;
+			case  BEMAnalActWhen_Transform_AfterModelSetupRules  :  str += "after model setup)";   break;
+			case  BEMAnalActWhen_Transform_ActOnSimInput         :  str += "act on sim input)";   break;
+			case  BEMAnalActWhen_Transform_FollowingResultsProc  :  str += "following results proc)";   break;
+	}	}
+	return str;
+}
+//
+//	return value: >=0 : # of AnalysisActions applied to the database
+//						-1 : 
+int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrorMsg, bool bVerbose )
+{
+	int iRetVal = 0;		// > 0 Num AnalysisActions applied to the database / < 0 error code
+	long lDBID_AnalAct_Type = BEMPX_GetDatabaseID( "AnalysisAction:Type" );
+	if (lDBID_AnalAct_Type > BEM_COMP_MULT)
+	{	int iCID_AnalAct = BEMPX_GetClassID( lDBID_AnalAct_Type );				assert( iCID_AnalAct > 0 );
+		int iNumAnalActs = (iCID_AnalAct > 0 ? BEMPX_GetNumObjects( iCID_AnalAct ) : 0);
+		if (iNumAnalActs > 0)
+		{
+			QString sLogMsg;   int iError, iStatus, iSpecialVal;
+			long lDBID_AnalAct_AnalysisPhase    = BEMPX_GetDatabaseID( "AnalysisAction:AnalysisPhase"    );			assert( lDBID_AnalAct_AnalysisPhase    > 0 );
+			long lDBID_AnalAct_BeforeAfterPhase = BEMPX_GetDatabaseID( "AnalysisAction:BeforeAfterPhase" );			assert( lDBID_AnalAct_BeforeAfterPhase > 0 );
+			long lDBID_AnalAct_ObjPropertyName = 0;
+			long lDBID_AnalAct_AlterObjName    = 0;
+			long lDBID_AnalAct_SetValFloat     = 0;
+			long lDBID_AnalAct_SetValInteger   = 0;
+			long lDBID_AnalAct_SetValString    = 0;
+			long lDBID_AnalAct_SetValPathFile  = 0;
+			for (int iAA=0; (iRetVal >= 0 && iAA < iNumAnalActs); iAA++)
+			{	long lAAType, lPhase, lWhen;
+				if (BEMPX_GetInteger( lDBID_AnalAct_Type            , lAAType, 0, -1, iAA ) && lAAType > 0 &&
+					 BEMPX_GetInteger( lDBID_AnalAct_AnalysisPhase   , lPhase , 0, -1, iAA ) && lPhase == iAnalPhase &&		// iAnalPhase matches
+					 BEMPX_GetInteger( lDBID_AnalAct_BeforeAfterPhase, lWhen  , 0, -1, iAA ) && lWhen  == iBeforeAfter )		// iBeforeAfter matches
+				{
+				// APPLY THIS AnalysisAction
+					if (iRetVal == 0)
+					{	lDBID_AnalAct_ObjPropertyName = BEMPX_GetDatabaseID( "AnalysisAction:ObjPropertyName"  );			assert( lDBID_AnalAct_ObjPropertyName > 0 );
+						lDBID_AnalAct_AlterObjName    = BEMPX_GetDatabaseID( "AnalysisAction:AlterObjName"  );				assert( lDBID_AnalAct_AlterObjName    > 0 );
+						lDBID_AnalAct_SetValFloat     = BEMPX_GetDatabaseID( "AnalysisAction:SetValFloat"  );				assert( lDBID_AnalAct_SetValFloat     > 0 );
+						lDBID_AnalAct_SetValInteger   = BEMPX_GetDatabaseID( "AnalysisAction:SetValInteger"  );			assert( lDBID_AnalAct_SetValInteger   > 0 );
+						lDBID_AnalAct_SetValString    = BEMPX_GetDatabaseID( "AnalysisAction:SetValString"  );				assert( lDBID_AnalAct_SetValString    > 0 );
+						lDBID_AnalAct_SetValPathFile  = BEMPX_GetDatabaseID( "AnalysisAction:SetValPathFile"  );			assert( lDBID_AnalAct_SetValPathFile  > 0 );
+					}
+
+					long lDBID_ToSet = 0;
+					int iFirstAlterObjIdx=-1, iLastAlterObjIdx=-1, iNumAlterObjs=0;
+					QString qsAAObjProp;
+					QString sAlterClassName = "class(?)";
+					if (lAAType < 21)
+					{	// setting some sort of data to BEMBase
+						if (BEMPX_GetString( lDBID_AnalAct_ObjPropertyName, qsAAObjProp, FALSE, 0, -1, iAA ) && !qsAAObjProp.isEmpty())
+						{	lDBID_ToSet = BEMPX_GetDatabaseID( qsAAObjProp );
+							if (lDBID_ToSet < BEM_COMP_MULT)
+							{	iRetVal = -2;
+								sErrorMsg = QString( "Error applying AnalysisAction %1: cannot map '%s' to BEMBase DBID" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+						}	}
+						else
+						{	iRetVal = -1;
+							sErrorMsg = QString( "Error applying AnalysisAction %1: ObjPropertyName undefined" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+						}
+						if (iRetVal >= 0)
+						{	QString qsAlterObj;
+							if (BEMPX_GetString( lDBID_AnalAct_AlterObjName, qsAlterObj, FALSE, 0, -1, iAA ) && !qsAlterObj.isEmpty())
+							{	int iCID_AlterClass = BEMPX_GetClassID( lDBID_ToSet );			assert( iCID_AlterClass > 0 );
+								BEMClass* pClass = (iCID_AlterClass > 0 ? BEMPX_GetClass( iCID_AlterClass, iError ) : NULL);
+								if (pClass)
+									sAlterClassName = pClass->getShortName();
+								if (!qsAlterObj.compare("*"))
+								{	iNumAlterObjs = (iCID_AlterClass > 0 ? BEMPX_GetNumObjects( iCID_AlterClass ) : 0);
+									if (iNumAlterObjs < 1)
+									{	// don't throw error, but do log that no object found so no AnalAct will be processed
+										iFirstAlterObjIdx = -2;	// special flag indicating no further processing of this AnalAct
+										sLogMsg = QString( "      Warning: AnalysisAction %1 flagged for mod of all %2 objects, but none exist in model" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+										BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+									}
+									else
+									{	iFirstAlterObjIdx = 0;
+										iLastAlterObjIdx  = iNumAlterObjs-1;
+								}	}
+								else
+								{	// find iFirstAlterObjIdx for object specified for mod
+									BEMObject* pAlterObj = BEMPX_GetObjectByNameQ( iCID_AlterClass, iError, qsAlterObj );
+									if (pAlterObj)
+									{	iFirstAlterObjIdx = iLastAlterObjIdx = BEMPX_GetObjectIndex( pAlterObj->getClass(), pAlterObj );			assert( iFirstAlterObjIdx >= 0 );
+									}
+									else
+									{	iRetVal = -4;
+										sErrorMsg = QString( "Error applying AnalysisAction %1: Object flagged for alteration '%2' not found" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAlterObj );
+									}
+							}	}
+							else
+							{	iRetVal = -3;
+								sErrorMsg = QString( "Error applying AnalysisAction %1: AlterObjName undefined" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+						}	}
+					}
+					if (iRetVal >= 0 && iFirstAlterObjIdx > -2)
+					{	switch (lAAType)
+						{	case   2 :
+							case  12 :	{	// set FLOAT to BEMBase
+												double dAltVal = BEMPX_GetFloatAndStatus( lDBID_AnalAct_SetValFloat, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -5;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: SetValFloat undefined setting %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+												}
+												else
+												{	for (int iObj=iFirstAlterObjIdx; (iRetVal >= 0 && iObj <= iLastAlterObjIdx); iObj++)
+													{
+														if (BEMPX_SetBEMData( lDBID_ToSet, BEMP_Flt, (void*) &dAltVal, BEMO_User, iObj ) < 0)
+														{	iRetVal = -6;
+															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to set %2 to %3 for %4 #%5" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ),
+																									QString::number( dAltVal ), qsAAObjProp, sAlterClassName, QString::number( iObj+1 ) );
+														}
+														else
+														{	iRetVal++;
+															if (bVerbose)
+															{	sLogMsg = QString( "      %1 set to obj #%2, %3  by AnalysisAction %4" ).arg(
+																												QString::number( dAltVal ), QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+												}	}	}	}
+											}  break;
+							case   1 :
+							case  11 :	{	// set INTEGER to BEMBase
+												long lAltVal = BEMPX_GetIntegerAndStatus( lDBID_AnalAct_SetValInteger, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -7;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: SetValInteger undefined setting %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+												}
+												else
+												{	for (int iObj=iFirstAlterObjIdx; (iRetVal >= 0 && iObj <= iLastAlterObjIdx); iObj++)
+													{
+														if (BEMPX_SetBEMData( lDBID_ToSet, BEMP_Int, (void*) &lAltVal, BEMO_User, iObj ) < 0)
+														{	iRetVal = -8;
+															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to set %2 to %3 for %4 #%5" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ),
+																									QString::number( lAltVal ), qsAAObjProp, sAlterClassName, QString::number( iObj+1 ) );
+														}
+														else
+														{	iRetVal++;
+															if (bVerbose)
+															{	sLogMsg = QString( "      %1 set to obj #%2, %3  by AnalysisAction %4" ).arg(
+																												QString::number( lAltVal ), QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+												}	}	}	}
+											}  break;
+							case   4 :
+							case  14 :	{	// set STRING to BEMBase
+												QString qsAltVal = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -9;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: SetValString undefined setting %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+												}
+												else
+												{	for (int iObj=iFirstAlterObjIdx; (iRetVal >= 0 && iObj <= iLastAlterObjIdx); iObj++)
+													{
+														if (BEMPX_SetBEMData( lDBID_ToSet, BEMP_QStr, (void*) &qsAltVal, BEMO_User, iObj ) < 0)
+														{	iRetVal = -10;
+															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to set '%2' to %3 for %4 #%5" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ),
+																									qsAltVal, qsAAObjProp, sAlterClassName, QString::number( iObj+1 ) );
+														}
+														else
+														{	iRetVal++;
+															if (bVerbose)
+															{	sLogMsg = QString( "      '%1' set to obj #%2, %3  by AnalysisAction %4" ).arg(
+																												qsAltVal, QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+												}	}	}	}
+											}  break;
+
+							case  22 :	{	// EvalRulelist
+												QString qsRLName = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -12;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: unable to retrieve rulelist name from SetValString" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+												}
+												else
+												{	if (!BEMPX_EvaluateRuleList( qsRLName.toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/, 0 /*iEvalOnlyClass*/,
+																																-1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerbose ))
+												//			bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,	
+												//							int iEvalOnlyObjIdx=-1, int iEvalOnlyObjType=0, BOOL bVerboseOutput=FALSE,
+												//							void* pvTargetedDebugInfo=NULL, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL, 
+												//							PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL,
+												//							QStringList* psaWarningMsgs=NULL );		
+													{	iRetVal = -13;
+														sErrorMsg = QString( "Error applying AnalysisAction %1: evaluation of rulelist '%2' failed" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsRLName );
+													}
+													else
+														iRetVal++;
+												}
+											}  break;
+
+							case  21 :	{	// RulelistPathFile
+	// TO DO
+	// TO DO
+	// TO DO
+													//  AnalysisAction:SetValPathFile       BEMP_Str,  1,  0,  0,  Pres,  "",                 0,  0,                           1001, "SetValuePathFile",  "" 
+
+												iRetVal = -99;
+												sErrorMsg = QString( "Error applying AnalysisAction %1: RulelistPathFile Type not yet implemented" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+
+											}  break;
+
+							default  :	{	// Unrecognized Type
+												iRetVal = -11;
+												sErrorMsg = QString( "Error applying AnalysisAction %1: unrecognized Type (%2)" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), QString::number( lAAType ) );
+											}  break;
+						}	// end: switch (lAAType)
+					}
+				}	// end of if DBIDs valid
+			}	// end of:  for (int iAA=0...
+		}	// end of:  if (iNumAnalActs > 0)
+	}	// end of:  if (lDBID_AnalAct_Type > BEM_COMP_MULT)
+
+	return iRetVal;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Exported Function:  BEMPX_ReadRulesetID()
@@ -1535,7 +1846,7 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFileName, int i1RuleFileIdx,
       errorFile.write( readMsg.toLocal8Bit().constData(), readMsg.length() );
 
 		QString token = file.ReadToken();
-		while (!token.isEmpty() && token != "ENDFILE")
+		while (!token.isEmpty() && token != "ENDFILE" && !file.AtEOF())		// SAC 1/23/20 - added check for EOF
 		{	if (token == "RULELIST")
      	      bRetVal = ((ReadRuleList( ruleListIndex++, errorFile, iFileStructVer /*ruleSet.m_iFileStructVersion*/, 
      	      									i1RuleFileIdx, &file, pszRulePathFileName )) && (bRetVal));
@@ -2386,7 +2697,7 @@ bool RuleFile::ReadRuleList( int ruleListIndex, QFile& /*errorFile*/, int iFileS
 	int iRuleFileLineNum = pFile->GetLineCount();
    ruleIndex++;
 
-   while ( sRuleID != "END" )
+   while ( sRuleID != "END" && !pFile->AtEOF() )		// SAC 1/23/20 - added check for EOF
    {
       pFile->Advance();  // advance past any spaces or comments in ASCII ruleset file
       QString sParamID;
