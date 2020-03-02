@@ -1911,7 +1911,49 @@ void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int&
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// AnalysisAction stuff - SAC 2/20/20
 
+QString AnalysisAction_PhaseString( long iAnalPhase )
+{	switch (iAnalPhase)
+	{	case BEMAnalActPhase_LoadModel       :  return "LoadModel"     ;
+		case BEMAnalActPhase_ProposedSizing  :  return "ProposedSizing";
+		case BEMAnalActPhase_ProposedAnnual  :  return "ProposedAnnual";
+		case BEMAnalActPhase_BaselineSizing  :  return "BaselineSizing";
+		case BEMAnalActPhase_BaselineAnnual  :  return "BaselineAnnual";
+		case BEMAnalActPhase_End             :  return "End"           ;
+	}
+	return "";
+}
+QString AnalysisAction_BeforeAfter( long iBeforeAfter )
+{	switch (iBeforeAfter)
+	{	case BEMAnalActWhen_LoadModel_BeforeDefaulting      :  return "BeforeDefaulting";
+		case BEMAnalActWhen_LoadModel_AfterDefaulting       :  return "AfterDefaulting" ;
+		case BEMAnalActWhen_End_BeforeAnalPostProc          :  return "BeforeAnalPostProc";
+		case BEMAnalActWhen_End_AfterAnalPostProc           :  return "AfterAnalPostProc" ;
+		case BEMAnalActWhen_Transform_BeforeModelSetupRules :  return "BeforeModelSetupRules";
+		case BEMAnalActWhen_Transform_AfterModelSetupRules  :  return "AfterModelSetupRules" ;
+		case BEMAnalActWhen_Transform_ActOnSimInput         :  return "ActOnSimInput"        ;
+		case BEMAnalActWhen_Transform_FollowingResultsProc  :  return "FollowingResultsProc" ;
+	}
+	return "";
+}
+void MidAnalysis_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrMsg, bool& bAbort, int& iRetVal, int iErrID, bool bVerbose,
+																char* pszErrorMsg, int iErrorMsgLen, int iDontAbortOnErrorsThruStep, int iStepCheck ) 
+{
+			QString qsApplyAnalActError;
+			int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( iAnalPhase, iBeforeAfter, qsApplyAnalActError, bVerbose );		// SAC 1/30/20
+			if (iApplyAnalActRetVal > 0)
+				qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: %2 / %3" ).arg(
+													QString::number(iApplyAnalActRetVal), AnalysisAction_PhaseString(iAnalPhase), AnalysisAction_BeforeAfter(iBeforeAfter) );
+			else if (!qsApplyAnalActError.isEmpty())
+			{	sErrMsg = qsApplyAnalActError;
+				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, iErrID, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+			}
+			if (!qsApplyAnalActError.isEmpty())
+				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+}
+
+/////////////////////////////////////////////////////////////////////////////
 
 
 #ifdef CM_QTGUI
@@ -2756,6 +2798,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			BEMPX_RefreshLogFile();	// SAC 5/19/14
 	}	}
 
+	long lHVACAutoSizing=0;		// SAC 2/17/20 - load to alter order to eval of rl_REPORT rules vs. simulation runtime
+	if (!bAbort && !BEMPX_AbortRuleEvaluation())
+		BEMPX_GetInteger( BEMPX_GetDatabaseID( "HVACAutoSizing", iCID_Proj ), lHVACAutoSizing );
+
   // SAC 5/16/14 - added CSVOptions-based RunTitle specification
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !sRunTitle.isEmpty())
 	   BEMPX_SetBEMData( BEMPX_GetDatabaseID( "RunTitle", iCID_Proj ), BEMP_QStr, (void*) &sRunTitle, BEMO_User );
@@ -3146,18 +3192,20 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	}
 
 	if (!bAbort && !BEMPX_AbortRuleEvaluation())		// SAC 2/1/20 - apply any AnalysisActions flagged for application LoadModel_AfterDefaulting
-	{		QString qsApplyAnalActError;
-			int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( BEMAnalActPhase_LoadModel, BEMAnalActWhen_LoadModel_AfterDefaulting, qsApplyAnalActError, bVerbose );		// SAC 1/30/20
-			if (iApplyAnalActRetVal > 0)
-				qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: LoadModel / BeforeDefaulting" ).arg( QString::number(iApplyAnalActRetVal) );
-			else if (!qsApplyAnalActError.isEmpty())
-			{	sErrMsg = qsApplyAnalActError;
+			MidAnalysis_ApplyAnalysisActionToDatabase( BEMAnalActPhase_LoadModel, BEMAnalActWhen_LoadModel_AfterDefaulting, sErrMsg, bAbort, iRetVal,
+																		77 /*iErrID*/, bVerbose, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );	// SAC 2/20/20
 //											77 : Error applying AnalysisAction(s) to building model
-				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 77 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
-			}
-			if (!qsApplyAnalActError.isEmpty())
-				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-	}
+//			QString qsApplyAnalActError;
+//			int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( BEMAnalActPhase_LoadModel, BEMAnalActWhen_LoadModel_AfterDefaulting, qsApplyAnalActError, bVerbose );		// SAC 1/30/20
+//			if (iApplyAnalActRetVal > 0)
+//				qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: LoadModel / BeforeDefaulting" ).arg( QString::number(iApplyAnalActRetVal) );
+//			else if (!qsApplyAnalActError.isEmpty())
+//			{	sErrMsg = qsApplyAnalActError;
+////											77 : Error applying AnalysisAction(s) to building model
+//				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 77 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+//			}
+//			if (!qsApplyAnalActError.isEmpty())
+//				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 
 	if (!bAbort && !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ))
 	{	sMsg.sprintf( "The %s file '%s' is opened in another application.  This file must be closed in that "
@@ -4245,9 +4293,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 			}
 
-			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation() && plOverrideAutosize[iRun] >= 0)
-			{	// OVERRIDE global HVAC autosize flag (if specified in options settings)
-		      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "HVACAutoSizing", iCID_Proj ), BEMP_Int, (void*) &plOverrideAutosize[iRun], BEMO_User, 0, BEMS_UserDefined /*???*/ );
+			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
+			{	if (plOverrideAutosize[iRun] >= 0)
+				{	// OVERRIDE global HVAC autosize flag (if specified in options settings)
+			      BEMPX_SetBEMData( BEMPX_GetDatabaseID( "HVACAutoSizing", iCID_Proj ), BEMP_Int, (void*) &plOverrideAutosize[iRun], BEMO_User, 0, BEMS_UserDefined /*???*/ );
+					lHVACAutoSizing = plOverrideAutosize[iRun];		// SAC 2/17/20
+				}
+				else
+					BEMPX_GetInteger( BEMPX_GetDatabaseID( "HVACAutoSizing", iCID_Proj ), lHVACAutoSizing );
 			}
 
 			if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
@@ -4278,18 +4331,26 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 				}
 
 			// Generate Rule-Based model reports
+				bool bEvalReportRulesFollowingSim = false;
 				if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation())
-				{	int iModelReportsRetVal = ProcessModelReports( sProjSDDFile.toLocal8Bit().constData(), lDBID_Proj_RuleReportType, BEMPX_GetDatabaseID( "RuleReportFileAppend", iCID_Proj ),
-																					-1, true /*bProcessCurrentSelection*/, saModelReportOptions, bVerboseReportRules /*bVerbose*/, bSilent );
-					if (iModelReportsRetVal > 0 && bVerbose)
-					{	sLogMsg.sprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				{	if (lHVACAutoSizing == 0 || !bCallOpenStudio)
+					{
+//sLogMsg.sprintf( "about to process reports (prior to sim) for model:  %s", sProjSDDFile.toLocal8Bit().constData() );
+//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						int iModelReportsRetVal = ProcessModelReports( sProjSDDFile.toLocal8Bit().constData(), lDBID_Proj_RuleReportType, BEMPX_GetDatabaseID( "RuleReportFileAppend", iCID_Proj ),
+																						-1, true /*bProcessCurrentSelection*/, saModelReportOptions, bVerboseReportRules /*bVerbose*/, bSilent );
+						if (iModelReportsRetVal > 0 && bVerbose)
+						{	sLogMsg.sprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
+						else if (iModelReportsRetVal < 0)
+						{	// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
+							sLogMsg.sprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
+							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						}
 					}
-					else if (iModelReportsRetVal < 0)
-					{	// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
-						sLogMsg.sprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, sProjSDDFile.toLocal8Bit().constData() );
-						BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-					}
+					else
+						bEvalReportRulesFollowingSim = true;
 				}
 
 			// continue on processing run...
@@ -4318,203 +4379,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	// ----------------------
 	//		SIMULATE MODEL
 	// ----------------------
-
-
-// SAC 7/23/18 - CSE simulation moved DOWN, INSIDE if() statement launching E+ simulations, so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
-//			// SAC 5/27/16 - moved Recirc/Res DHW simulation outside code which gets bypassed due to bCallOpenStudio
-//						if (bSimulateModel && bStoreHourlyResults)
-//						{  int iNumRecircDHWSysObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "ResDHWSys" ) );
-//							int iNumPVArrayObjs      = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "PVArray" ) );
-//							if ((!bBypassRecircDHW && iNumRecircDHWSysObjs > 0) || iNumPVArrayObjs > 0)
-//							{
-//					// CSE (DHW &/or PVArray/Battery) SIMULATION
-//								BOOL bCSESimOK = TRUE;		QString sCSEErrMsg;
-//									// perform DHW simulation using CSE and add those results into the hourly results already stored in BEMProc (should be after reading E+ results but before applying TDV multipliers)
-//		// --- CSE DHW (&/or PVArray/Battery) simulation based on CECRes analysis ---
-//									QString sCSE_DHWUseMthd;
-//									BEMPX_GetString( BEMPX_GetDatabaseID( "CSE_DHWUseMthd", iCID_Proj ), sCSE_DHWUseMthd );
-//									if (!FileExists( sCSEexe.toLocal8Bit().constData() ))
-//									{	sErrMsg.sprintf( "%s (residential DHW/PV/Battery simulation engine) executable not found: '%s'", qsCSEName.toLocal8Bit().constData(), sCSEexe.toLocal8Bit().constData() );		assert( FALSE );
-////											54 : CSE (residential DHW & PV/Battery simulation engine) executable(s) not found
-//													// SAC 12/18/17 - replaced iDontAbortOnErrorsThruStep w/ '0' to prevent program crash when CSE exe not found
-//										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 54 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, iAnalStep /*iStepCheck*/ );
-//									}
-//									else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.isEmpty())
-//									{	sErrMsg.sprintf( "%s (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid", qsCSEName.toLocal8Bit().constData() );
-////											56 : CSE (residential DHW simulation) Day Use Type (Proj:CSE_DHWUseMthd) invalid
-//										ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 56 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-//									}
-//									else if (iNumRecircDHWSysObjs > 0 && sCSE_DHWUseMthd.compare("New (via wsDayUse)", Qt::CaseInsensitive)==0)
-//									{	// setup and copy CSE include file defining DHW use profiles - SAC 3/17/16
-//										QString sDHWUseIncFile = "DHWDUMF.txt";
-//										QString sDHWUseTo, sDHWUseFrom = sCSEEXEPath + sDHWUseIncFile;
-//										if (!FileExists( sDHWUseFrom.toLocal8Bit().constData() ))
-//										{	sErrMsg.sprintf( "%s (residential DHW simulation engine) use profile file not found:  %s", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData() );
-////												55 : CSE (residential DHW simulation engine) use profile file not found
-//											ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 55 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-//										}
-//										else
-//										{	sDHWUseTo = sProcessingPath + sDHWUseIncFile;
-//											if (!CopyFile( sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData(), FALSE ))
-//											{	sErrMsg.sprintf( "Unable to copy %s DHW Use/Load Profile include file from '%s' into processing directory '%s'", qsCSEName.toLocal8Bit().constData(), sDHWUseFrom.toLocal8Bit().constData(), sDHWUseTo.toLocal8Bit().constData() );
-////													57 : Unable to copy DHW Use/Load Profile CSE include file into processing directory
-//												ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 57 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-//											}
-//											assert( FileExists( sDHWUseTo.toLocal8Bit().constData() ) );
-//											// RE-check DHW incl file hash ??
-//									}	}
-//
-//				// WRITE TDV FILE FOR BATTERY SIM (tdvElec only)
-//
-//									int iCSESimRetVal = 0;
-//									if (iRetVal == 0 && !bAbort && !BEMPX_AbortRuleEvaluation())
-//									{
-//									// Check for specification of Report Include file - and if found, prevent secure report
-//										long lProjReportIncludeFileDBID = BEMPX_GetDatabaseID( "CSE_RptIncFile", iCID_Proj );
-//										QString sChkRptIncFile;
-//										if (lProjReportIncludeFileDBID > 0 && BEMPX_GetString( lProjReportIncludeFileDBID, sChkRptIncFile ) && !sChkRptIncFile.isEmpty())
-//											sCSEIncludeFileDBID = "Proj:CSE_RptIncFile";
-//									// DISABLE report include file use if all settings are conisistent w/ full secure report generation (to prevent invalid analysis)
-//										bool bAllowReportIncludeFile = true;
-//										if (!sCSEIncludeFileDBID.isEmpty() && iCodeType == CT_T24N && bSendRptSignature && (bComplianceReportPDF || bComplianceReportXML || bComplianceReportStd) &&
-//												!sXMLResultsFileName.isEmpty() && iAnalysisThruStep >= 8 && sIDFToSimulate.isEmpty() && iDLLCodeYear == iRulesetCodeYear && !bBypassInputChecks &&
-//												!pbBypassOpenStudio[0] && !pbBypassOpenStudio[1] && !pbBypassOpenStudio[2] && !pbBypassOpenStudio[3] && !bBypassUMLHChecks && !bBypassCheckSimRules && 
-//												plOverrideAutosize[0] == -1 && plOverrideAutosize[1] == -1 && plOverrideAutosize[2] == -1 && plOverrideAutosize[3] == -1 && !bBypassCheckCodeRules && 
-//												lQuickAnalysis <= 0 && !bIgnoreFileReadErrors && !bBypassValidFileChecks && sDevOptsNotDefaulted.isEmpty() && sExcptDsgnModelFile.isEmpty() &&
-//												lNumSpaceWithDefaultedDwellingUnitArea < 1)
-//										{	bAllowReportIncludeFile = false;
-//											sCSEIncludeFileDBID.clear();
-//																sLogMsg.sprintf( "%s report include file use disabled to ensure secure report generation.  Use one of the Bypass* or other research option(s) to ensure report include file use.", qsCSEName.toLocal8Bit().constData() );
-//																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//										}
-//
-//										/*QString sT24DHWEnduse = "T24DHW", sT24DHWPumpEnduse = "T24DHWPmp";*/			assert( FileExists( sAnnualWeatherFile.toLocal8Bit().constData() ) );
-//										bool bFullComplianceAnalysis = (!bResearchMode && !bProposedOnly);
-//										long lAnalysisType = (bResearchMode ? 0 : (bProposedOnly ? 12 : 13));  // based on CBECC-Res options: 0-Research / 12-Proposed Only / 13-Proposed and Standard
-//										CSERunMgr cseRunMgr(
-//													sCSEexe, sAnnualWeatherFile, sModelPathOnly, sModelFileOnly, sProcessingPath, bFullComplianceAnalysis,
-//													false /*bInitHourlyResults*/, 0 /*lAllOrientations*/, lAnalysisType, iRulesetCodeYear, 0 /*lDesignRatingRunID*/, bVerbose,
-//													bStoreBEMDetails, true /*bPerformSimulations*/, false /*bBypassCSE*/, bSilent, pCompRuleDebugInfo, pszUIVersionString,
-//													0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);		// SAC 11/7/16 - added sim report/error option arguments, disabled until/unless wanted for Com analysis
-//						//								dTimeToOther += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-//
-//						//				QString sMsg;
-//										int iRunType[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-//										iRunType[0] = (lAnalysisType < 1 ? CRM_User :
-//															(((iCodeType == CT_T24N && iRun == 3) || (iCodeType != CT_T24N && iRun >  5)) ? CRM_StdDesign : CRM_Prop));
-//						//				siNumProgressRuns = 1;
-//						//				int iRunIdx = 0;
-//						//				for (; (iRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-//						//				{
-//						//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
-//						//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
-//											iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
-//																							sRunIDLong.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), &sCSEVersion );
-//						//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-//						//				}
-//
-//	//	if (iRetVal == 0)
-//	//	{
-//	//				QMessageBox msgBox;
-//	//				msgBox.setWindowTitle( "CSE" );
-//	//				msgBox.setIcon( QMessageBox::Warning ); 
-//	//				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
-//	//				msgBox.setText( "About to launch CSE simulation(s)" );
-//	//		//		msgBox.setDetailedText( qsRptIssuesDlgDetails );
-//	//				msgBox.setStandardButtons( QMessageBox::Ok );
-//	//				msgBox.addButton( QMessageBox::Abort );
-//	//				msgBox.setDefaultButton( QMessageBox::Ok );
-//	//				msgBox.exec();
-//	//	}
-//
-//										if (iRetVal == 0 && iCSESimRetVal == 0)		// && bPerformSimulations && !bBypassCSE)
-//										{	bool bSaveFreezeProg = sbFreezeProgress;
-//											sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
-//											cseRunMgr.DoRuns();
-//											sbFreezeProgress = bSaveFreezeProg;
-//										}
-//						//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
-//
-//						//				for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
-//						//				{
-//						//					// SAC 6/19/14 - Set active model index to the appropriate value for this iRunIdx
-//						//					BEMPX_SetActiveModel( iRunIdx+1 );
-//								
-//											const CSERun& cseRun = cseRunMgr.GetRun(0/*iRunIdx*/);
-//											const QString& sRunID = cseRun.GetRunID();
-//						//					const QString& sRunIDProcFile = cseRun.GetRunIDProcFile();
-//											const QString& sRunAbbrev = cseRun.GetRunAbbrev();
-//											long lRunNumber = (lAnalysisType < 1 ? 1 : cseRun.GetRunNumber());
-//										//	BOOL bLastRun = cseRun.GetLastRun();
-//						//					BOOL bIsStdDesign = cseRun.GetIsStdDesign();
-//						//					BOOL bIsDesignRtg = cseRun.GetIsDesignRtg();
-//								
-//											if (iRetVal == 0 && iCSESimRetVal == 0)
-//											{
-//												int iCSERetVal = cseRun.GetExitCode();
-//												if (bVerbose)  // SAC 1/31/13
-//												{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
-//													BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//												}
-//												BEMPX_RefreshLogFile();	// SAC 5/19/14
-//								
-//												if (iCSERetVal != 0)
-//												{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
-//													iCSESimRetVal = BEMAnal_CECRes_CSESimError;
-//													BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//												}
-//						//						if (iRetVal == 0 && iCSESimRetVal == 0 && BEMPX_AbortRuleEvaluation())
-//						//							iCSESimRetVal = BEMAnal_CECRes_RuleProcAbort;
-//								
-//												// Retrieve CSE simulation results
-//												if (iRetVal == 0 && iCSESimRetVal == 0)
-//												{	// SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
-//													int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1, sRunID.toLocal8Bit().constData(),
-//																								sRunAbbrev.toLocal8Bit().constData(), -1, pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap );	// SAC 5/31/16
-//													if (iHrlyResRetVal < 0)  // SAC 6/12/17
-//													{	switch (iHrlyResRetVal)
-//														{	case -1 :  sLogMsg = QString( "Error retrieving hourly %1 results (-1) / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-//																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-//															case -2 :  sLogMsg = QString( "Error retrieving hourly %1 results (-2) / Unable to retrieve BEMProc pointer / run: %2, runID: %3, runAbrv: %4, file: %5" ).arg(
-//																													qsCSEName, QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-//															case -3 :  sLogMsg = QString( "Error retrieving hourly %1 results (-3) / Run index not in valid range 0-%2 / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-//																													qsCSEName, QString::number(BEMRun_MaxNumRuns-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-//															case -4 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunID too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-//																													qsCSEName, QString::number(BEMRun_RunNameLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-//															case -5 :  sLogMsg = QString( "Error retrieving hourly %1 results (-4) / RunAbrv too large (limit of %2 chars) / run: %3, runID: %4, runAbrv: %5, file: %6" ).arg( 
-//																													qsCSEName, QString::number(BEMRun_RunAbbrevLen-1), QString::number(lRunNumber-1), sRunID, sRunAbbrev, cseRun.GetOutFile(CSERun::OutFileCSV) );
-//														}
-//														if (sLogMsg.size() > 0)
-//															BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//													}
-//													else if (bVerbose)  // SAC 1/31/13
-//													{	sLogMsg.sprintf( "      Hourly %s results retrieval returned %d", qsCSEName.toLocal8Bit().constData(), iHrlyResRetVal );
-//														BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-//													}
-//												// add new Elec - SHWPmp enduse results array  (other arrays initialized based on enduse names in CSE results file)
-//						//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
-//												}
-//											}
-//						//				}
-//
-//									}
-//									bCSESimOK = (iCSESimRetVal == 0);
-//									if (sCSEErrMsg.isEmpty() && iCSESimRetVal != 0)
-//										sCSEErrMsg.sprintf( "error code %d", iCSESimRetVal );
-//
-//								if (!bCSESimOK)
-//								{	sErrMsg.sprintf( "CSE (ResDHW/PV/Battery) simulation not successful:  %s", sCSEErrMsg.toLocal8Bit().constData() );
-////										41 : CSE (ResDHW/PV/Battery) simulation not successful
-//									ProcessAnalysisError( sErrMsg, bAbort, iRetVal, 41 /*iErrID*/, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );
-//								}
-//								BEMPX_RefreshLogFile();	// SAC 5/19/14
-//							}
-//							else if (iNumRecircDHWSysObjs > 0 || iNumPVArrayObjs > 0)
-//							{	if (bVerbose)
-//									BEMPX_WriteLogFile( "      Skipping CSE ResDHW/PV/Battery simulation", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-////								CSE_MsgCallback( 0 /*level*/, "Skipping CSE ResDHW/PV/Battery simulation" );
-//						}	}
-//			// END OF CSE ResDHW/PV/Battery simulation
 
 					bool baSimPassesUMLHLimits[] = { true, true };
 					if (!bCallOpenStudio)
@@ -4562,8 +4426,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 							bool bIsDsgnSim = ((iCodeType == CT_T24N && iRun < 2) || (iCodeType != CT_T24N && iRun < 5));
 							osRunInfo[iSimRunIdx].InitializeRunInfo( NULL, iRun, sProjSDDFileNoPath.toLocal8Bit().constData(), sRunID.toLocal8Bit().constData(), sRunIDLong.toLocal8Bit().constData(),
-																					((iCodeType == CT_T24N && iRun > 2) || (iCodeType != CT_T24N && iRun > 5)) /*bIsStdRun*/, bIsDsgnSim /*bPostEquipCapsToBEMBase*/,
-																					bSimulateModel, iCurActiveBEMProcIdx, sLocalIDFToSim.toLocal8Bit().constData() );
+																					((iCodeType == CT_T24N && iRun > 2) || (iCodeType != CT_T24N && iRun > 5)) /*bIsStdRun*/,
+																					(bIsDsgnSim || lHVACAutoSizing > 0) /*bPostEquipCapsToBEMBase*/,		// SAC 2/17/20 - PostEquipCapsToBEMBase if lHVACAutoSizing
+																					bSimulateModel, iCurActiveBEMProcIdx, sLocalIDFToSim.toLocal8Bit().constData(), CT_T24N /*iCodeType*/,
+																					false /*bSimOutVarsCSV*/, bEvalReportRulesFollowingSim );
 
 #pragma warning(disable:4996)
 						// SAC 8/19/15 - setup "multiple" simulation input data
@@ -4642,7 +4508,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								if (/*bSimRunsNow &&*/ (iSimRetVal == 0 || iSimRetVal == OSI_SimEPlus_UserAbortedAnalysis))
 									for (iSimRun=0; iSimRun <= iSimRunIdx; iSimRun++)
 										saSimulatedRunIDs.push_back( osRunInfo[iSimRun].RunID() );
-
 
 
 						// CSE Simulation Loop -----
@@ -4851,7 +4716,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									//							BEMPX_AddHourlyResultArray(	NULL, sRunID, "MtrElec", "DHWPmp", -1 /*iBEMProcIdx*/, TRUE /*bAddIfNotExist*/ );
 
 
-
 						bool bIsStdDesign = !sRunAbbrev.compare("ab");
 						if (iRetVal == 0 && (!sRunAbbrev.compare("ap") || bIsStdDesign))		// SAC 2/2/20 - ported from Res (Com tic #3157)
 						{	long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "EUseSummary:StdDHW_SSF" : "EUseSummary:PropDHW_SSF") );
@@ -4899,7 +4763,6 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 
-
 															}
 														}
 									//				}
@@ -4937,6 +4800,33 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones );	// SAC 5/22/19   // SAC 11/11/19
 							}
+
+
+						// Generate Rule-Based model reports - second round FOLLOWING simulation & results retrieval (when lHVACAutoSizing)
+							if (!bCompletedAnalysisSteps && !bAbort && !BEMPX_AbortRuleEvaluation() && bSimRunsNow && iSimRetVal == 0)		// SAC 2/18/20
+							{	int iRptStoreActiveModel = BEMPX_GetActiveModel();
+								for (int iRptRun=0; iRptRun < iSimRunIdx+1; iRptRun++)
+									if (osRunInfo[iRptRun].EvalReportRulesFollowingSim())
+									{
+										BEMPX_SetActiveModel( osSimInfo[iRptRun].iBEMProcIdx );
+										QString sSDDPathFile = sProcessingPath + osRunInfo[iRptRun].SDDFile();
+//sLogMsg.sprintf( "about to process reports (following sim) for model:  %s", sSDDPathFile.toLocal8Bit().constData() );
+//BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										int iModelReportsRetVal = ProcessModelReports( sSDDPathFile.toLocal8Bit().constData(), lDBID_Proj_RuleReportType, BEMPX_GetDatabaseID( "RuleReportFileAppend", iCID_Proj ),
+																										-1, true /*bProcessCurrentSelection*/, saModelReportOptions, bVerboseReportRules /*bVerbose*/, bSilent );
+										if (iModelReportsRetVal > 0 && bVerbose)
+										{	sLogMsg.sprintf( "%d rule-based reports written for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() );
+											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+										else if (iModelReportsRetVal < 0)
+										{	// DON'T ABORT ANALYSIS if model report writing fails ???  (just logging message)
+											sLogMsg.sprintf( "Error generating rule-based reports (%d) for model:  %s", iModelReportsRetVal, osRunInfo[iRptRun].SDDFile().toLocal8Bit().constData() );
+											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+									}
+								BEMPX_SetActiveModel( iRptStoreActiveModel );
+							}
+
 
 						// SAC 8/21/14 - added export of hourly results CSV
 							if (bSimRunsNow && iSimRetVal == 0 && !bIsDsgnSim)
@@ -6964,6 +6854,9 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 									BEMPX_SetBEMData( lDBID_Proj_BEMVersion, BEMP_Int, (void*) &lBEMVerID );
 							}
 
+							if (GetCSVOptionValue( "ClassifyEditableDefaultsAsUserData", 0 /*default*/, saCSVOptions ) > 0)		// SAC 2/21/20
+								BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ );
+
 							bool bFileSaveAllDefinedProperties = (GetCSVOptionValue( "FileSaveAllDefinedProperties", 0, saCSVOptions ) > 0);
 							// SAC 6/14/16 - mod to ensure EITHER .xml OR .ribdx/.ribd16x are interpretted as XML files
 							std::string sProjFileLastThreeChars = sProjPathFile.substr( sProjPathFile.size()-3, 3 );
@@ -7750,9 +7643,6 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 							else
 								daMtrEUData[iEUOM][iEU] = &daZero[0];   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
 					}	}
-
-#define  IDX_T24_NRES_EU_PV  (IDX_T24_NRES_EU_Total-2)   // assumes PV & Battery come right before TOTAL enduse
-#define  IDX_T24_NRES_EU_BT  (IDX_T24_NRES_EU_Total-1)
 
 					// sum indiviudal enduse results into the CompTot & Tot enduses - SAC 2/1/17
 					for (iEU=0; iEU < iNumEUs; iEU++)

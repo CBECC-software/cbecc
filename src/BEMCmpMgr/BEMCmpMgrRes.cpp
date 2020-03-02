@@ -235,6 +235,10 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	GetCSVOptionString( "ProxyServerType"       , sProxyServerType       , saCSVOptions );
 	GetCSVOptionString( "NetComLibrary"         , sNetComLibrary         , saCSVOptions );
 
+	QString sBatchAnalysisType;
+	GetCSVOptionString( "BatchAnalysisType", sBatchAnalysisType, saCSVOptions );	// SAC 2/17/20
+	bool bBatchAnalysisType_LoadAndSave = (!sBatchAnalysisType.compare( "LoadAndSave", Qt::CaseInsensitive ));
+
 	char pszFullPath[_MAX_PATH];	// SAC 2/10/14
 	//sLogMsg = QString( "   ProcessingPath = %1 || ModelPathFile = %1" ).arg( pszProcessingPath, pszModelPathFile );	BEMPX_WriteLogFile( sLogMsg );
 	//if (_getcwd( pszFullPath, _MAX_PATH ))
@@ -721,11 +725,103 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 					iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );
 					if (iRV2 > 0)
 						iRetVal = iRV2;
+					else
+					{	iRV2 = LocalEvaluateRuleset( sErrorMsg, BEMAnal_CECRes_EvalPropInpError, "ProposedInput", bVerbose, pCompRuleDebugInfo );	// SAC 2/18/20 - added third defaulting round
+						if (iRV2 > 0)
+							iRetVal = iRV2;
+					}
 				}
 
 			}
 		}
 						dTimeToLoadModel += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
+
+		if (ResRetVal_ContinueProcessing( iRetVal ) && bBatchAnalysisType_LoadAndSave)		// SAC 2/17/20 - mechanism to bail on analysis - simply store loaded (& adjusted) model input
+		{
+				// Set SoftwareVersion to BEMBase Project
+					if (pszUIVersionString && strlen( pszUIVersionString ) > 0)
+					{	long lDBID_Proj_SoftwareVersion = BEMPX_GetDatabaseID( "Proj:SoftwareVersion" );
+						QString sProjSoftwareVer;
+						if (lDBID_Proj_SoftwareVersion > 0 &&
+								(!BEMPX_GetString( lDBID_Proj_SoftwareVersion, sProjSoftwareVer ) || sProjSoftwareVer.isEmpty() || sProjSoftwareVer.compare( pszUIVersionString ) != 0) )
+							BEMPX_SetBEMData( lDBID_Proj_SoftwareVersion, BEMP_Str, (void*) pszUIVersionString );
+					}
+
+				// Set BEMBase version ID value
+					int iBEMCID_BEMVersion = BEMPX_GetDBComponentID( "BEMVersion" );
+					long lBEMVerID = (iBEMCID_BEMVersion > 0 ? BEMPX_GetNumPropertyTypes( (int) iBEMCID_BEMVersion ) : 0);
+					if (lBEMVerID > 0)
+					{	long lCurBEMVer = 0;
+						long lDBID_Proj_BEMVersion = BEMPX_GetDatabaseID( "Proj:BEMVersion" );
+						if ( lDBID_Proj_BEMVersion > 0 &&
+								(!BEMPX_GetInteger( lDBID_Proj_BEMVersion, lCurBEMVer ) || lCurBEMVer != lBEMVerID) )
+							BEMPX_SetBEMData( lDBID_Proj_BEMVersion, BEMP_Int, (void*) &lBEMVerID );
+					}
+
+				// SAVE PROJECT FILE
+					std::string sProjPathFile = sFullModelPathFile.toLocal8Bit().constData();
+					bool bFileSaveAllDefinedProperties = false;	// (GetCSVOptionValue( "FileSaveAllDefinedProperties", 0, saCSVOptions ) > 0);
+					// SAC 6/14/16 - mod to ensure EITHER .xml OR .ribdx/.ribd16x are interpretted as XML files
+					std::string sProjFileLastThreeChars = sProjPathFile.substr( sProjPathFile.size()-3, 3 );
+					std::string sProjFileLastChar       = sProjPathFile.substr( sProjPathFile.size()-1, 1 );
+					int iFileType = (boost::iequals( sProjFileLastThreeChars.c_str(), "xml" ) || boost::iequals( sProjFileLastChar.c_str(), "x" ) ? BEMFT_XML : BEMFT_Std);
+							// debugging
+							//std::string sDbgResFileName = sProjPathFile.substr( 0, sProjPathFile.rfind(".") ) + ".idb-detail-results";
+							//BEMPX_WriteProjectFile( sDbgResFileName.c_str(), BEMFM_DETAIL /*FALSE*/ );
+					if (!BEMPX_WriteProjectFile( sProjPathFile.c_str(), BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, bFileSaveAllDefinedProperties /*bWriteAllProperties*/, TRUE /*bSupressAllMsgBoxes*/,
+															iFileType, false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lTime-1*/ /*lModDate*/,
+																	false /*bOnlyValidInputs*/, true /*bAllowCreateDateReset*/, 0 /*iPropertyCommentOption*/, NULL /*plaClsObjIndices*/, false /*bReportInvalidEnums*/ ))
+		      	{	assert( FALSE );  // failure to save file
+		      		iRetVal = BEMAnal_CECRes_InputSaveFailed;		// Attempt to save project inputs (including results) following analysis failed
+		      	}
+
+				// CLEAN-UP (normally done @ end of analysis)
+#ifdef CM_QTGUI
+							if (bAllowAnalysisAbort && sqt_progress && sqt_progress->wasCanceled())
+								iRetVal = BEMAnal_CECRes_UserAbortedAnalysis;
+							// QT Progress Dialog stuff
+							if (sqt_progress && sqt_win)
+							{	sqt_progress->setValue(100);
+								sqt_win->repaint();
+							}
+#endif
+							if (!sErrorMsg.isEmpty())
+							{	BEMPX_WriteLogFile( sErrorMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+								BEMPX_AddRulesetError( sErrorMsg.toLocal8Bit().constData() );  // SAC 1/9/13
+							}
+
+							slCurrentProgress = 0;
+							// SAC 6/5/14 - new callback mechanism - reset static function pointer
+							if (pAnalProgCallbackFunc)
+							{	spAnalProgCallbackFunc = NULL;
+								slAnalysisProgressCallbackRetVal = 0;
+							}
+							sbAllowCallbackAbort = bStoreAllowCallbackAbort;	// SAC 4/5/15
+
+							if (bRestoreBEMProcLogTimeStampSetting)		// SAC 11/17/13 - restore BEMProc log timestamp setting (if it was toggled during analysis)
+								BEMPX_EnableLogTimeStamps( bInitialBEMProcLogTimeStamp );
+							BEMPX_RefreshLogFile();	// SAC 5/19/14
+
+						// QT Progress Dialog stuff
+#ifdef CM_QTGUI
+							if (bDisplayProgress && sqt_win)
+								sqt_win->close();
+							if (bQtAppInitHere)  // bDisplayProgress || bPromptUserUMLHWarning)
+							{	delete sq_app;
+								sq_app = NULL;
+							}
+							if (bDisplayProgress)
+							{	if (pqt_progress)
+									delete pqt_progress;
+								if (pqt_win)
+									delete pqt_win;
+							}
+							sqt_progress = NULL;
+							sqt_win = NULL;
+#endif
+
+					return BEMAnal_CECRes_BatchLoadAndSaveOnly;
+		}
 
 	// SAC 8/20/14 - added to ensure valid object names prior to performing analysis
 		if (ResRetVal_ContinueProcessing( iRetVal ))
@@ -5208,7 +5304,7 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 //	pszLogPathFile;		pszUIVersionString;		pszOptionsCSV;
 //	pszErrorMsg;			iErrorMsgLen;				bDisplayProgress;			hWnd;
 
-	int iRunsGood = 0, iRunsBad = 0, iRunsFailedReports = 0;
+	int iRunsGood = 0, iRunsBad = 0, iRunsFailedReports = 0, iRunsLoadAndSaved = 0;
 	if (iMode > 0 && iRunsToPerform > 0)
 	{					si1ProgressRunNum = 0;		// SAC 11/13/17
 						siNumProgressRuns = iRunsToPerform;
@@ -5313,6 +5409,13 @@ int CMX_PerformBatchAnalysis_CECRes(	const char* pszBatchPathFile, const char* p
 					sErrMsg = boost::str( boost::format( "Report generation failed processing batch run %d, record %d." ) % (iRun+1) % iaBatchRecNums[iRun] );
 					iRunsFailedReports++;
 					bStoreResults = true;
+				}
+				else if (iAnalRetVal == BEMAnal_CECRes_BatchLoadAndSaveOnly)	// SAC 2/17/20 - new analysis return value -> means all OK, just loaded, processed and saved file...
+				{
+					//sErrMsg = boost::str( boost::format( "Batch run %d (record %d) loaded & saved." ) % (iRun+1) % iaBatchRecNums[iRun] );
+					//iRunsFailedReports++;
+					iRunsLoadAndSaved++;
+					bStoreResults = false;
 				}
 				else if (iAnalRetVal > 0)
 				{	// some error occurred - should be documented already
@@ -5503,9 +5606,9 @@ bStoreResultsToModelInput = false;
 			sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d errors/aborts / %d report generation failures", iRunsGood, iRunsBad, iRunsFailedReports );
 	}
 	else
-	{	sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d errors/aborts / return value: %d" ) % iRunsGood % iRunsBad % iRetVal );
+	{	sLogMsg = boost::str( boost::format( "Batch processing concluded - %d successful / %d loaded/saved / %d errors/aborts / return value: %d" ) % iRunsGood % iRunsLoadAndSaved % iRunsBad % iRetVal );
 		if (pszResultMsg && iResultMsgLen > 0)
-			sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d errors/aborts", iRunsGood, iRunsBad );
+			sprintf_s( pszResultMsg, iResultMsgLen, "%d runs successful / %d loaded/saved / %d errors/aborts", iRunsGood, iRunsLoadAndSaved, iRunsBad );
 	}
 	BEMPX_WriteLogFile( sLogMsg.c_str(), NULL /*psNewLogFileName*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 

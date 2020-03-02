@@ -11994,6 +11994,8 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
       long lDBID_DHWSys_NumDHWHeaters    = GetPropertyDBID_LogError( "DHWSys", "NumDHWHeaters",    iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int, 
       long lDBID_DHWSys_HeaterMult       = GetPropertyDBID_LogError( "DHWSys", "HeaterMult",       iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Int,  6, 
       long lDBID_DHWSys_DHWHeater        = GetPropertyDBID_LogError( "DHWSys", "DHWHeater",        iCID_DHWSys, iNumErrors, sTmp );	// BEMP_Obj,  6,  1,  0, "",     1, "DHWHeater",   
+      long lDBID_DHWSys_CentralDHW       =      BEMPX_GetDatabaseID( "DHWSys:CentralDHW" );			// SAC 2/20/20 (Res tic #1197)
+      long lDBID_DHWSys_CentralDHWType   =      BEMPX_GetDatabaseID( "DHWSys:CentralDHWType" );		// SAC 2/20/20 (Res tic #1197)
 
       long lDBID_DHWSysRpt_DHWHeaterRef  = GetPropertyDBID_LogError( "DHWSysRpt", "DHWHeaterRef",  iCID_DHWSysRpt, iNumErrors, sTmp );  // BEMP_Obj,  1,  0,  0, "",    0,  1, "DHWHeater",  
       long lDBID_DHWSysRpt_DHWHeaterIdx  = GetPropertyDBID_LogError( "DHWSysRpt", "DHWHeaterIdx",  iCID_DHWSysRpt, iNumErrors, sTmp );  // BEMP_Int,  1,  0,  0, "",    0,  0,               
@@ -12081,15 +12083,27 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 														vector<long> laDHWHtrTypIdx, laDHWHtrCntIdx;
 														vector<string> saDHWHtrName;
 														long lNumSysTypes = 0, lEqpCnt;		QString sEqpName;
-														// first load DHW heater info
-														if (BEMPX_GetInteger( lDBID_DHWSys_NumDHWHeaters, lNumSysTypes, 0, -1, iDHWSysIdx ) && lNumSysTypes > 0)
-															for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
-															{	if (	BEMPX_GetString(  lDBID_DHWSys_DHWHeater +iEqp, sEqpName, FALSE, 0, -1, iDHWSysIdx ) && !sEqpName.isEmpty() &&
-																		BEMPX_GetInteger( lDBID_DHWSys_HeaterMult+iEqp, lEqpCnt ,        0, -1, iDHWSysIdx ) && lEqpCnt > 0)
-																{	laDHWHtrTypIdx.push_back( iEqp+1 );
-																	laDHWHtrCntIdx.push_back( lEqpCnt );
-																	saDHWHtrName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
-															}	}
+														long lCentralDHW=0, lCentralDHWType=0;		bool bCentralHPWH=false;
+														if (lDBID_DHWSys_CentralDHW > 0 && lDBID_DHWSys_CentralDHWType > 0 &&		// SAC 2/20/20 - code to handle new Central HPWH systems (tic #1197)
+															 BEMPX_GetInteger( lDBID_DHWSys_CentralDHW    , lCentralDHW    , 0, -1, iDHWSysIdx ) && lCentralDHW > 0 &&
+															 BEMPX_GetInteger( lDBID_DHWSys_CentralDHWType, lCentralDHWType, 0, -1, iDHWSysIdx ) && lCentralDHWType == 2)
+														{	// no heater assignment to DHWSys - heater data defined in DHWSys
+															bCentralHPWH = true;
+															laDHWHtrTypIdx.push_back( 0 );
+															laDHWHtrCntIdx.push_back( 1 );
+															saDHWHtrName.push_back(   (const char*) sSysName.toLocal8Bit().constData() );
+														}
+														else
+														{	// first load DHW heater info
+															if (BEMPX_GetInteger( lDBID_DHWSys_NumDHWHeaters, lNumSysTypes, 0, -1, iDHWSysIdx ) && lNumSysTypes > 0)
+																for (iEqp=0; iEqp < lNumSysTypes; iEqp++)
+																{	if (	BEMPX_GetString(  lDBID_DHWSys_DHWHeater +iEqp, sEqpName, FALSE, 0, -1, iDHWSysIdx ) && !sEqpName.isEmpty() &&
+																			BEMPX_GetInteger( lDBID_DHWSys_HeaterMult+iEqp, lEqpCnt ,        0, -1, iDHWSysIdx ) && lEqpCnt > 0)
+																	{	laDHWHtrTypIdx.push_back( iEqp+1 );
+																		laDHWHtrCntIdx.push_back( lEqpCnt );
+																		saDHWHtrName.push_back(   (const char*) sEqpName.toLocal8Bit().constData() );
+																}	}
+														}
 													// SAC 10/14/14 - replaced below w/ above that causes only 1 DHWSysRpt for 1-N Count of this DHWHeater within this row of the DHWSys heater assignments
 													//				for (iCnt=0; iCnt < lEqpCnt; iCnt++)
 													//				{	laDHWHtrTypIdx.push_back( iEqp+1 );
@@ -12124,9 +12138,11 @@ int CreateDHWRptObjects( QString& sErrMsg, ExpEvalStruct* pEval, ExpError* error
 																	if (iEqp < (int) laDHWHtrTypIdx.size())
 																	{	if (BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWSysRef   , BEMP_Str, (void*)         sSysName.toLocal8Bit().constData(), BEMO_User, iDRIdx ) < 0 ||
 																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWSysIdx   , BEMP_Int, (void*)             &lDHWSysAssignIdx             , BEMO_User, iDRIdx ) < 0 ||
-																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterRef, BEMP_Str, (void*) ((const char*) saDHWHtrName[iEqp].c_str()), BEMO_User, iDRIdx ) < 0 ||
 																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterIdx, BEMP_Int, (void*)             &laDHWHtrTypIdx[iEqp]         , BEMO_User, iDRIdx ) < 0 ||
 																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterCnt, BEMP_Int, (void*)             &laDHWHtrCntIdx[iEqp]         , BEMO_User, iDRIdx ) < 0 )
+																			sErrMsg = QString( "CreateDHWRptObjects Error:  Unable to set %1 equip data of DHWSysRpt object '%2'" ).arg( "DHW", sDHWSysRptName );
+																		else if (!bCentralHPWH &&		// SAC 2/20/20 - don't assign DHWHeaterRef for Central HPWHs
+																			 BEMPX_SetBEMData( lDBID_DHWSysRpt_DHWHeaterRef, BEMP_Str, (void*) ((const char*) saDHWHtrName[iEqp].c_str()), BEMO_User, iDRIdx ) < 0)
 																			sErrMsg = QString( "CreateDHWRptObjects Error:  Unable to set %1 equip data of DHWSysRpt object '%2'" ).arg( "DHW", sDHWSysRptName );
 
 																		if (sErrMsg.isEmpty() && lDBID_DHWSysRpt_DwellUnitRptName > 0)		// SAC 11/7/19 (Res tic #1167)

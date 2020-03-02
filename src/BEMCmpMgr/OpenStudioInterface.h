@@ -54,6 +54,8 @@ typedef struct
 #define  NUM_T24_NRES_EndUses     15	// SAC 7/14/18 - 13->15 for PV/Batt
 #define  IDX_T24_NRES_EU_CompTot   7
 #define  IDX_T24_NRES_EU_Total    14	// SAC 7/15/18 - 12->14 for PV/Batt
+#define  IDX_T24_NRES_EU_PV  (IDX_T24_NRES_EU_Total-2)   // assumes PV & Battery come right before TOTAL enduse
+#define  IDX_T24_NRES_EU_BT  (IDX_T24_NRES_EU_Total-1)
 extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];
 
 #define  NUM_T24_NRES_Fuels        3
@@ -128,7 +130,8 @@ class COSRunInfo
 {	public:
 	   COSRunInfo()	{	}
 		void InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char* pszSDDFile, const char* pszRunID, const char* pszLongRunID, bool bIsStdRun, bool bPostEquipCapsToBEMBase,
-										bool bSimulateModel, int iBEMProcIdx=-1, const char* pszIDFToSimulate=NULL, int iCodeType=CT_T24N, bool bSimOutVarsCSV=false );
+										bool bSimulateModel, int iBEMProcIdx=-1, const char* pszIDFToSimulate=NULL, int iCodeType=CT_T24N, bool bSimOutVarsCSV=false,
+										bool bEvalReportRulesFollowingSim=false );
 
 		bool	StoreHourlyResults()				{	return m_bStoreHourlyResults;		}
 		bool	SimulatingFixedIDF()				{	return m_bSimulatingFixedIDF;		}
@@ -151,6 +154,7 @@ class COSRunInfo
 		long			RptFuelUseAs()		{	return					m_lRptFuelUseAs;	}	// SAC 10/28/15
 		long			RunPeriodYear()	{	return					m_lRunPeriodYear;	}	// SAC 3/1/19
 		bool			SimOutVarsCSV()	{	return					m_bSimOutVarsCSV;	}	// SAC 4/12/16
+		bool			EvalReportRulesFollowingSim()	{	return	m_bEvalReportRulesFollowingSim;	}	// SAC 2/18/20
 
 		int			NumQuickAnalysisPeriods()		{	return			(int) m_qaData.m_iNumQuickAnalysisPeriods;	}
 		double		QuickAnalysisResultsMult()		{	return			m_qaData.m_fQuickAnalysisResultsMult;			}
@@ -186,6 +190,7 @@ class COSRunInfo
 		long		m_lRptFuelUseAs;		// SAC 10/28/15
 		long		m_lRunPeriodYear;		// SAC 3/1/19
 		bool		m_bSimOutVarsCSV;		// SAC 4/12/16
+		bool     m_bEvalReportRulesFollowingSim;	// SAC 2/18/20
 };
 
 // SAC 7/23/18 - new routine to enable split of results processing needed for integration of PV/Battery simulation via CSE

@@ -2412,6 +2412,9 @@ void CMainFrame::SaveFile( const char* /*psFileName*/, long lModDate /*=-1*/, bo
 			if (ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 1 /*default*/ ) > 0 &&
 						 (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID("Proj:RetainRuleDefaults"), lRetainRuleDefaults, 0 ) || lRetainRuleDefaults == 0))	// SAC 2/4/16
 				VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
+#elif UI_CANRES
+			if (ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 0 /*default*/ ) > 0)	// SAC 2/21/20
+				VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
 #endif
 			bool bFileSaveAllDefinedProperties = (ReadProgInt( "options", "FileSaveAllDefinedProperties", 0 /*default*/ ) > 0);  // SAC 3/17/13
 			bool bFileSaveOnlyValidInputs = (ReadProgInt( "options", "FileSaveOnlyValidInputs", 0 /*default*/ ) > 0);  // SAC 4/16/14          
@@ -2632,6 +2635,9 @@ void CMainFrame::OnFileSaveAs()
 					long lRetainRuleDefaults = 0;
 					if (uiWriteSimExport == 0 && ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 1 /*default*/ ) > 0 &&
 						 (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID("Proj:RetainRuleDefaults"), lRetainRuleDefaults, 0 ) || lRetainRuleDefaults == 0))	// SAC 2/4/16
+						VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
+#elif UI_CANRES
+					if (uiWriteSimExport == 0 && ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 0 /*default*/ ) > 0)	// SAC 2/21/20
 						VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
 #endif
       	   	if (BEMPX_WriteProjectFile( sInputFile, (uiWriteSimExport ? BEMFM_SIM : BEMFM_INPUT) /*TRUE*/, FALSE /*bUseLogFileName*/,
@@ -3481,6 +3487,11 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 		   CString sWthrPath = ReadProgString( "paths", "WeatherPath", "EPW\\", TRUE );
 	// SAC 1/29/14 - consolidated all options string population into single routine shared by live & batch analyses functions
 			VERIFY( PopulateAnalysisOptionsString( sOptionsCSVString, true /*bBatchMode*/ ) );		// SAC 1/29/14
+
+			int iCEDAUD = ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 0 );		// SAC 2/21/20
+			if (iCEDAUD > 0)
+			{	sTemp.Format( "ClassifyEditableDefaultsAsUserData,%d,", iCEDAUD );		sOptionsCSVString += sTemp;
+			}
 
 			const char* pszAnalOpts = NULL;
 			if (!sOptionsCSVString.IsEmpty())

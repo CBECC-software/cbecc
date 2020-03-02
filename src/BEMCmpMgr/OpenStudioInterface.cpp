@@ -283,7 +283,8 @@ typedef struct filecopyinfo_
 const char* epszObjNames[] = {	"ThrmlZn",		"Fan",		"CoilClg",		"CoilHtg",		"Blr",		"Chlr",		"HtRej",		"Pump"  };
 
 void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char* pszSDDFile, const char* pszRunID, const char* pszLongRunID, bool bIsStdRun, bool bPostEquipCapsToBEMBase,
-												bool bSimulateModel, int iBEMProcIdx /*=-1*/, const char* pszIDFToSimulate /*=NULL*/, int iCodeType /*=CT_T24N*/, bool bSimOutVarsCSV /*=false*/ )
+												bool bSimulateModel, int iBEMProcIdx /*=-1*/, const char* pszIDFToSimulate /*=NULL*/, int iCodeType /*=CT_T24N*/, bool bSimOutVarsCSV /*=false*/,
+												bool bEvalReportRulesFollowingSim /*=false*/ )
 {	QString sObjName;
 	m_bStoreHourlyResults = false;
 	int iCID_Proj = BEMPX_GetDBComponentID( "Proj" );												assert( iCID_Proj > 0 );
@@ -351,6 +352,7 @@ void COSRunInfo::InitializeRunInfo( OSWrapLib* pOSWrap, int iRunIdx, const char*
 	m_iBEMProcIdx		= iBEMProcIdx;
 	m_iCodeType			= iCodeType;
 	m_bSimOutVarsCSV	= bSimOutVarsCSV;		// SAC 4/12/16
+	m_bEvalReportRulesFollowingSim = bEvalReportRulesFollowingSim;	// SAC 2/18/20
 
 	m_lRptFuelUseAs = -1;	// SAC 10/28/15
 	long lRFUA;
@@ -1025,7 +1027,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					}
 				}	// end of  while (esEUMap_CECNonRes[++iEUIdx]...
 			}	// end of  for (iFl...
-	
+
 			// now go BACK through enduses storing total kBTU/ft2-yr sums
 			QString sPassFail;
 			double dRndTDVTotMargin=0.0, dRndTDVCompTotMargin=0.0, dRndStdTDVTot = 0.0, dRndStdTDVCompTot=0.0;
@@ -1995,6 +1997,56 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 							}
 						}	// end of  if (iEUObjIdx >= 0)
 					}	// end of  while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
+
+				// SAC 2/16/20 - if PV present, then grab total elec array, calculate exports and set that data to EUseSummary:Prop/StdPV_*
+					long lDBID_PV_Export = BEMPX_GetDatabaseID( QString( "%1PV_Export" ).arg( sEUPropNameBase ), iCID_EUseSummary );
+					if (lDBID_PV_Export > 0)
+					{	double dPV_Total = esEUMap_CECNonRes[IDX_T24_NRES_EU_PV].daEnduseTotal[0/*elec*/];
+						double dPV_Export=0.0, dPV_PctExport=0.0;
+						if (dPV_Total != 0)
+						{
+						//	double* pTotElec=NULL;
+						//	if (BEMPX_GetHourlyResultArrayPtr( &pTotElec, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[0/*elec*/],
+			 			//													esEUMap_CECNonRes[IDX_T24_NRES_EU_Total].sEnduseName, osRunInfo.BEMProcIdx() ) == 0 && pTotElec != NULL)
+			 			//	{	for (int hr=0; hr<8760; hr++)
+			 			//		{	//if (pTotElec[hr] < 0)
+			 			//				dPV_Export += pTotElec[hr];
+				 		//	}	}
+						// IDX_T24_NRES_EU_Total hourly results series is NOT a sum of all enduses, so need to sum them by hour HERE to determine export result
+							int hr=0;
+							double* daElecEUData[NUM_T24_NRES_EndUses];
+							int iEU;
+							for (iEU=0; iEU < NUM_T24_NRES_EndUses; iEU++)
+							{	if (iEU == IDX_T24_NRES_EU_CompTot || iEU == IDX_T24_NRES_EU_Total)
+									daElecEUData[iEU] = NULL;
+								else if (BEMPX_GetHourlyResultArrayPtr( &daElecEUData[iEU], NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[0],
+			 																esEUMap_CECNonRes[iEU].sEnduseName, osRunInfo.BEMProcIdx() ) == 0 && daElecEUData[iEU] != NULL)
+								{	// OK - do nothing
+								}
+								else
+									daElecEUData[iEU] = NULL;   // this combination of meter & enduse does not have results, so assign 8760 of zeroes
+							}
+							for (hr=0; hr<8760; hr++)
+							{	// now sum enduse results by hour to determine export
+								double dEUSumThisHr = 0.0;
+								for (iEU=0; iEU < NUM_T24_NRES_EndUses; iEU++)
+									dEUSumThisHr += (daElecEUData[iEU]==NULL ? 0.0 : daElecEUData[iEU][hr]);
+								if (dEUSumThisHr < 0.0)
+		 							dPV_Export += dEUSumThisHr;
+							}
+							dPV_Total  *= -1.0;
+							dPV_Export *= -1.0;
+							dPV_PctExport = dPV_Export * 100.0 / dPV_Total;			assert( dPV_PctExport >= 0 && dPV_PctExport < 100 );
+				 		}
+						long lDBID_PV_Total  = BEMPX_GetDatabaseID( QString( "%1PV_Total"     ).arg( sEUPropNameBase ), iCID_EUseSummary );
+						long lDBID_PV_PctExp = BEMPX_GetDatabaseID( QString( "%1PV_PctExport" ).arg( sEUPropNameBase ), iCID_EUseSummary );
+//	sLogMsg = QString( "   storing PV data for model %1 (dbid %2): Tot %3  Exp %4" ).arg( sEUPropNameBase, QString::number( lDBID_PV_Total ), QString::number( dPV_Total ), QString::number( dPV_Export ) );
+//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+
+						BEMPX_SetBEMData( lDBID_PV_Total , BEMP_Flt, (void*) &dPV_Total    , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( lDBID_PV_Export, BEMP_Flt, (void*) &dPV_Export   , BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+						BEMPX_SetBEMData( lDBID_PV_PctExp, BEMP_Flt, (void*) &dPV_PctExport, BEMO_User, iResSet, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					}
 				}
 			}	// end of  if (iCID_EUseSummary > 0 && fTotBldgFlrArea > 0)
 

@@ -536,7 +536,7 @@ bool EPlusRunMgr::ProcessRunOutput(exec_stream_t* pES, size_t iRun, bool &bFirst
 								{	m_sEPlusVersion = sOut.substr( iVerStart, (iVerEnd-iVerStart) ).c_str();
 									double dVer[3] = {0.0,0.0,0.0};
 									int iFirstDot  = (int) m_sEPlusVersion.indexOf(".");
-									int iSecondDot = (int) m_sEPlusVersion.indexOf(".", 1);		assert( iFirstDot < iSecondDot );
+									int iSecondDot = (int) m_sEPlusVersion.indexOf(".", std::max( iFirstDot+1, 1 ));		assert( iFirstDot < iSecondDot );
 									int iHyphen    = (int) m_sEPlusVersion.indexOf("-");			assert( iSecondDot < iHyphen );
 									dVer[0] = atof( m_sEPlusVersion.left(iFirstDot).toLocal8Bit().constData() );
 									dVer[1] = atof( m_sEPlusVersion.mid(iFirstDot +1, (iSecondDot-iFirstDot-1)).toLocal8Bit().constData() );

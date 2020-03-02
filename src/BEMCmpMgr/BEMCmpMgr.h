@@ -198,6 +198,7 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_DHWUseHashChkFail		206	// DHW use/profile file hash failed consistency check
 #define  BEMAnal_CECRes_RptGenErrorReturned	207	// Report generator found errors in analysis inputs and/or results
 #define  BEMAnal_CECRes_RptGenPDFExtract		208	// Error extracting PDF report from full XML report file
+#define  BEMAnal_CECRes_BatchLoadAndSaveOnly	209	// Batch processing calling for load & save model only
 // -----------------------------------------------------------------------------
 
 #ifdef CECRPTGEN
