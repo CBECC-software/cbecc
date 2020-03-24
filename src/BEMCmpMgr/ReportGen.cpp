@@ -865,6 +865,8 @@ int GenerateReport_CEC(	const char* pszXMLResultsPathFile, const char* pszCACert
 							postthis[i+npost] = buff[i];}
 					}
 				npost += nread;	//; update index into postthis
+				if (npost >= FileInSize)		// SAC 3/19/20 - fix bug where SMALL results files not calculating hash properly due to lack of terminator on postthis
+					postthis[npost]='\0';	// postthis needs to be NULL terminated; later usage in SignXML uses strlen() when calling SHA1
 				// if we have more to read
 				while (iRetVal == 0 && npost < FileInSize) { // we have more to read	
 					nread = (long) fread(buff, sizeof(char), ChunkSize, fp_xml);
