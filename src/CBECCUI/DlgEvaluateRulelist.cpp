@@ -154,8 +154,12 @@ void CDlgEvaluateRulelist::EvaluateSelectedRulelist()
 						sDbgFileName.Format( "%s - %s.xml", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist );
 						VERIFY( BEMPX_WriteProjectFile( sDbgFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/,
 																	FALSE /*bSupressAllMessageBoxes*/, BEMFT_XML /*iFileType*/ ) );
-					// SAC 3/17/13 - added writing of file immediately following rule evaluation that includes ALL data and COULE by imported back into -Com/-Res program
-						sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, pszCUIFileExt[0] );
+					// SAC 3/17/13 - added writing of file immediately following rule evaluation that includes ALL data and COULD be imported back into -Com/-Res program
+					   CString sProjExt = ReadProgString( "options", "ProjectFileExt", "" );		// SAC 3/8/20
+					   if (sProjExt.IsEmpty())
+							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, pszCUIFileExt[0] );
+						else
+							sDbgFileName.Format( "%s - %s.%s", sInputFile.Left( sInputFile.ReverseFind('.') ), m_sRulelist, sProjExt );
 						BEMPX_WriteProjectFile( sDbgFileName, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, TRUE /*bWriteAllProperties*/ );
 					}
 				}

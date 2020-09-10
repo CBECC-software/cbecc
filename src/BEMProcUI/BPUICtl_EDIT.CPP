@@ -265,6 +265,8 @@ BOOL CEditCtl::Create( CWnd* pParentWnd, CBEMPUIControl* pControl, BOOL bAllowEd
 // SAC - 8/25/98
 //      winStyle = WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL|ES_MULTILINE|ES_RIGHT;
       winStyle = WS_CHILD|WS_TABSTOP|WS_BORDER|ES_AUTOHSCROLL|ES_MULTILINE|ES_RIGHT;
+   else if (m_bAcceptCarriageReturns && pControl->m_lValue == 10001)	// SAC 5/23/20 - remove ES_AUTOHSCROLL in order to enable word-wrapping
+      winStyle = WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VSCROLL|ES_AUTOVSCROLL|ES_MULTILINE|ES_WANTRETURN;
    else if (m_bAcceptCarriageReturns)  // SAC 6/17/01
       winStyle = WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VSCROLL|ES_AUTOHSCROLL|ES_AUTOVSCROLL|ES_MULTILINE|ES_WANTRETURN;
    else

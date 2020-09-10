@@ -14,8 +14,8 @@
 //
 
 VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       22,0,2,1132
-  PRODUCTVERSION    22,0,2,1132
+  FILEVERSION       22,0,4,1159
+  PRODUCTVERSION    22,0,4,1159
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -32,14 +32,14 @@ BEGIN
 		BEGIN 
 			VALUE "CompanyName",     "California Energy Commission\0"
 			VALUE "FileDescription", "OpenStudio Wrapper DLL\0"
-			VALUE "FileVersion",     "2022.0.2 (1132)\0"
+			VALUE "FileVersion",     "2022.0.4 (1159)\0"
 			VALUE "InternalName",    "OSWrap22\0"
 			VALUE "LegalCopyright",  "Copyright (C) 2012-2020, California Energy Commission. All rights reserved.\0"
 			VALUE "LegalTrademarks", "\0"
 			VALUE "OriginalFilename","OSWrap22.dll\0"
 			VALUE "ProductName",     "OS Wrapper DLL\0"
-			VALUE "ProductVersion",  "2022.0.2\0"
-			VALUE "SpecialBuild",    "build 1132\0"
+			VALUE "ProductVersion",  "2022.0.4\0"
+			VALUE "SpecialBuild",    "build 1159\0"
 		END
 	END
 	BLOCK "VarFileInfo" 

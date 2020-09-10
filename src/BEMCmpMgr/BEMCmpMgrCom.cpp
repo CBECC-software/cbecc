@@ -1913,30 +1913,6 @@ void DefaultModel_CECNonRes( int& iPrevRuleErrs, QString& sUIVersionString, int&
 /////////////////////////////////////////////////////////////////////////////
 // AnalysisAction stuff - SAC 2/20/20
 
-QString AnalysisAction_PhaseString( long iAnalPhase )
-{	switch (iAnalPhase)
-	{	case BEMAnalActPhase_LoadModel       :  return "LoadModel"     ;
-		case BEMAnalActPhase_ProposedSizing  :  return "ProposedSizing";
-		case BEMAnalActPhase_ProposedAnnual  :  return "ProposedAnnual";
-		case BEMAnalActPhase_BaselineSizing  :  return "BaselineSizing";
-		case BEMAnalActPhase_BaselineAnnual  :  return "BaselineAnnual";
-		case BEMAnalActPhase_End             :  return "End"           ;
-	}
-	return "";
-}
-QString AnalysisAction_BeforeAfter( long iBeforeAfter )
-{	switch (iBeforeAfter)
-	{	case BEMAnalActWhen_LoadModel_BeforeDefaulting      :  return "BeforeDefaulting";
-		case BEMAnalActWhen_LoadModel_AfterDefaulting       :  return "AfterDefaulting" ;
-		case BEMAnalActWhen_End_BeforeAnalPostProc          :  return "BeforeAnalPostProc";
-		case BEMAnalActWhen_End_AfterAnalPostProc           :  return "AfterAnalPostProc" ;
-		case BEMAnalActWhen_Transform_BeforeModelSetupRules :  return "BeforeModelSetupRules";
-		case BEMAnalActWhen_Transform_AfterModelSetupRules  :  return "AfterModelSetupRules" ;
-		case BEMAnalActWhen_Transform_ActOnSimInput         :  return "ActOnSimInput"        ;
-		case BEMAnalActWhen_Transform_FollowingResultsProc  :  return "FollowingResultsProc" ;
-	}
-	return "";
-}
 void MidAnalysis_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrMsg, bool& bAbort, int& iRetVal, int iErrID, bool bVerbose,
 																char* pszErrorMsg, int iErrorMsgLen, int iDontAbortOnErrorsThruStep, int iStepCheck ) 
 {
@@ -2073,6 +2049,7 @@ static QString sDbgFileName;
 //											76 : Error evaluating 'AnalysisPostProcessing' rulelist
 //											77 : Error applying AnalysisAction(s) to building model
 //											78	: Error in sizing standard design DHW solar system using CSE
+//											79	: Error in determining TDV of DHWSolarSys system(s) using CSE
 //				101-200 - OS/E+ simulation issues
 int CMX_PerformAnalysis_CECNonRes(	const char* pszBEMBasePathFile, const char* pszRulesetPathFile, const char* pszSimWeatherPath,
 												const char* pszCompMgrDLLPath, const char* pszDHWWeatherPath, const char* pszProcessingPath, const char* pszModelPathFile,
@@ -2153,9 +2130,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	bool bPerformDupObjNameCheck		=  (GetCSVOptionValue( "PerformDupObjNameCheck"     ,   1,  saCSVOptions ) > 0);	// SAC 6/12/15
 	int  iPreAnalysisCheckPromptOption = GetCSVOptionValue( "PreAnalysisCheckPromptOption",  0,  saCSVOptions );		// SAC 1/26/19 - (tic #2924)
 	int  iCompReportWarningOption		=	 GetCSVOptionValue( "CompReportWarningOption"    ,   0,  saCSVOptions );		// SAC 7/5/16
-	int  iCompReportWarningTimeout	=	 GetCSVOptionValue( "CompReportWarningTimeout"   ,  20,  saCSVOptions );		// SAC 1/31/20
+	int  iAnalysisDialogTimeout		=	 GetCSVOptionValue( "AnalysisDialogTimeout"      ,  20,  saCSVOptions );		// SAC 1/31/20   // SAC 7/1/20 - renamed & applied to UMLH dialog
 	bool bReportStandardUMLHs		   =  (GetCSVOptionValue( "ReportStandardUMLHs"        ,   0,  saCSVOptions ) > 0);	// SAC 11/11/19
 	bool bReportAllUMLHZones    		=  (GetCSVOptionValue( "ReportAllUMLHZones"         ,   0,  saCSVOptions ) > 0);	// SAC 11/11/19
+	bool bSimulateCSEOnly	   		=  (GetCSVOptionValue( "SimulateCSEOnly"            ,   0,  saCSVOptions ) > 0);	// SAC 3/10/20
+	bool bReportGenVerbose	   		=  (GetCSVOptionValue( "ReportGenVerbose"           ,   0,  saCSVOptions ) > 0);	// SAC 3/20/20
 	bool bAllowAnalysisAbort			=  true;		//(GetCSVOptionValue( "AllowAnalysisAbort"         ,   1,  saCSVOptions ) > 0);	// SAC 4/5/15
 	if (bPromptUserUMLHWarning && (bSilent || iDontAbortOnErrorsThruStep > 6))
 		bPromptUserUMLHWarning = false;		// SAC 3/19/15 - toggle OFF PromptUserUMLHWarning if 'silent' flag set or DontAbortOnErrorsThruStep includes UMLH check step
@@ -2188,6 +2167,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	    iDLLCodeYear = 2016;
 #elif  CODEYEAR2019
 	    iDLLCodeYear = 2019;
+#elif  CODEYEAR2022
+	    iDLLCodeYear = 2022;		// SAC 4/24/20
 #endif
 
 	int iNumFileOpenDefaultingRounds = GetCSVOptionValue( "NumFileOpenDefaultingRounds", 3, saCSVOptions );		// SAC 4/11/18
@@ -2323,6 +2304,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		if (FileExists( sUMLHTextFileName.toLocal8Bit().constData() ))	// if UMLH Zones text file already exists (from previous run), delete it before continuing processing
 			DeleteFile( sUMLHTextFileName.toLocal8Bit().constData() );
 	}
+	int iNumPropClgUMLHViolations=0, iNumPropHtgUMLHViolations=0;		// SAC 4/6/20
+	bool bFailAnalysisForUMLH = false;		// SAC 4/23/20 (tic #2680)
 
 	bool bRestoreBEMProcLogTimeStampSetting = false;  // SAC 11/17/13
 	bool bInitialBEMProcLogTimeStamp = BEMPX_GetLogTimeStamps();
@@ -2684,6 +2667,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		BEMPX_DeleteModels( false /*bIncludingUserModel*/ );   // SAC 3/24/13
 		BEMPX_SetActiveModel( 0 );
 		BEMPX_ClearRulesetErrors();
+		BEMPX_ClearTransformBEMProcMap();	// SAC 3/27/20
 	}
 
 		int iRulesetCodeYear = 0;
@@ -3184,7 +3168,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 	// SAC 10/3/14 - mod to delete any EUseSummary objects from user model to avoid having them written to the results' user model
 		int iNumEUseSUmObjs = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "EUseSummary" ) );
-		for (int iEUSidx=0; iEUSidx < iNumEUseSUmObjs; iEUSidx++)
+		for (int iEUSidx=iNumEUseSUmObjs-1; iEUSidx >= 0; iEUSidx--)
 		{	BEMObject* pEUSObj = BEMPX_GetObjectByClass( BEMPX_GetDBComponentID( "EUseSummary" ), iError, iEUSidx );			assert( pEUSObj );
 			if (pEUSObj)
 				BEMPX_DeleteObject( pEUSObj );
@@ -3633,7 +3617,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					long lDisableMandOccSensorCtrl;
 					if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "DisableMandOccSensorCtrl", iCID_Proj ), lDisableMandOccSensorCtrl ))		// SAC 11/1/19 - new cause for disabling report security
 						lDisableMandOccSensorCtrl = 0;
-			#define  NumRptSecOff  20
+			#define  NumRptSecOff  21
 					int iRptSecOffIdx[NumRptSecOff];
 					bool bRptSecOff[] = {	(bOrigSendRptSignature && iNumFileHashErrs > 0),
 													(iDLLCodeYear > 0 && iRulesetCodeYear > 0 && iDLLCodeYear != iRulesetCodeYear),  // inconsistency between software library year (%d) and ruleset code year (%d)", iDLLCodeYear, iRulesetCodeYear );
@@ -3654,7 +3638,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 													(iNumFileOpenDefaultingRounds != 3),	// number of model defaulting rounds overridden by user - SAC 4/11/18 
 													(lNumPVArraysChk > 0 && bEnablePVBattSim), 		// model includes PV array(s) (and possibly battery) which are not yet allowed in permit analysis  - SAC 4/3/19
 													(lResBaseSysChange > 0) ,					// flag (Proj:ResBaseSysChange) causing high-rise res baseline system type change for >8 stories set  - SAC 10/30/19
-													(lDisableMandOccSensorCtrl > 0) };		// flag (Proj:DisableMandOccSensorCtrl) disabling mandatory occupancy control sensor checks  - SAC 11/1/19
+													(lDisableMandOccSensorCtrl > 0),			// flag (Proj:DisableMandOccSensorCtrl) disabling mandatory occupancy control sensor checks  - SAC 11/1/19
+													(bSimulateCSEOnly) };						// causes analysis to skip past EPlus simulations
 					for (iRF=0; iRF < NumRptSecOff; iRF++)
 					{	if (bRptSecOff[iRF])
 							iRptSecOffIdx[iRF] = iNumRptSecOffTRUE++;
@@ -3700,6 +3685,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									case 17 :	sLogMsg =        "      model includes PV array(s) which are not yet allowed in permit analysis";		break;	// SAC 4/3/19
 									case 18 :	sLogMsg =        "      ResBaseSysChange flag causing high-rise residential baseline system type change for >8 stories set";		break;	// SAC 10/30/19
 									case 19 :	sLogMsg =        "      DisableMandOccSensorCtrl flag causing mandatory occupancy control sensor checks to be disabled";		break;	// SAC 11/1/19
+									case 20 :	sLogMsg =        "      SimulateCSEOnly flag causing EnergyPlus simulations to be skipped";		break;	// SAC 3/11/20
 									default :	sLogMsg.clear();		break;
 								}
 								if (!sLogMsg.isEmpty())
@@ -3858,8 +3844,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					if (iNumPreAnalChkErrs < 1)
 						msgBox.addButton( QMessageBox::Abort );
 					msgBox.setDefaultButton( QMessageBox::Ok );
-					if (iCompReportWarningTimeout > 0)
-						msgBox.button(QMessageBox::Ok)->animateClick(iCompReportWarningTimeout*1000);		// SAC 1/31/20 - set 10 sec timer, at which time 'OK' is automatically registered/clicked (CEC/LF request)
+					if (iAnalysisDialogTimeout > 0)
+						msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 1/31/20 - set 10 sec timer, at which time 'OK' is automatically registered/clicked (CEC/LF request)
 					showDetailsInQMessageBox(msgBox, 770, 300);		// routine to OPEN Details (to start with) + resize text box (to larger size)
 					bRptIssueAbort = (msgBox.exec() == QMessageBox::Abort);
 #endif
@@ -4057,6 +4043,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 			{	bModelToBeSimulated[1] = false;  bModelToBeSimulated[2] = false;  bModelToBeSimulated[3] = false;  bModelToBeSimulated[4] = false;	// toggle OFF baseline runs by orientation
 				bModelToBeSimulated[6] = false;  bModelToBeSimulated[7] = false;  bModelToBeSimulated[8] = false;  bModelToBeSimulated[9] = false;
 		}	}
+		int iPropModelRunIdx = (iCodeType == CT_T24N ? 2 : 5);		// SAC 4/6/20
 
 		int iLastHrlyStorModelIdx = -1;
 //		bool bThisOSSimSkipped = false, bLastOSSimSkipped = false;	// SAC 4/18/14
@@ -4485,14 +4472,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								OSWrapLib osWrap;		// SAC 7/23/18 - added when spliting results processing allowing for CSE simulations following E+
 								COSRunInfo osRunInfo[MultEPlusSim_MaxSims];
 
-							//	iSimRetVal = CMX_PerformSimulation_EnergyPlus_Multiple(	sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
-								iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
-																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
-																		// remaining general arguments
-																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
-																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
-																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
-																				false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr );		// SAC 5/27/15   // SAC 2/15/19
+								if (bSimulateCSEOnly)		// SAC 3/10/20 - added logic to SKIP E+ and move directly onto CSE simulation...
+									iSimRetVal = 0;
+								else
+								//	iSimRetVal = CMX_PerformSimulation_EnergyPlus_Multiple(	sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
+									iSimRetVal = PerformSimulation_EnergyPlus_Multiple( osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
+																					sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
+																			// remaining general arguments
+																					bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
+																					(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
+																					iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
+																					false /*bIncludeOutputDiagnostics*/, iProgressType, bUseEPlusRunMgr );		// SAC 5/27/15   // SAC 2/15/19
 
 							// moved some post-E+ processing into if (bSimRunsNow) statement
 								tmAnalOther = boost::posix_time::microsec_clock::local_time();		// reset timer for "other" bucket
@@ -4650,13 +4640,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 														{
 															int iCSERetVal = cseRun.GetExitCode();
 															if (bVerbose)  // SAC 1/31/13
-															{	sLogMsg.sprintf( "      %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+															{	sLogMsg.sprintf( "      %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber );
 																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															}
 															BEMPX_RefreshLogFile();	// SAC 5/19/14
-								
+
 															if (iCSERetVal != 0)
-															{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d", qsCSEName.toLocal8Bit().constData(), iCSERetVal );
+															{	sErrMsg.sprintf( "ERROR:  %s simulation returned %d (%s, Run# %ld)", qsCSEName.toLocal8Bit().constData(), iCSERetVal, sRunAbbrev.toLocal8Bit().constData(), lRunNumber );
 																iCSESimRetVal = BEMAnal_CECRes_CSESimError;
 																BEMPX_WriteLogFile( sErrMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 															}
@@ -4791,7 +4781,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 							// processing of analysis results foillowing ALL simulations - SAC 7/23/18
-								if (iSimRetVal == 0)
+								if (iSimRetVal == 0 && !bSimulateCSEOnly)
 									iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
 																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
 																		// remaining general arguments
@@ -5029,6 +5019,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 															double fMaxZoneClgUMLHs = 0, fMaxZoneHtgUMLHs = 0, fNumZoneClgUMLHs = 0, fNumZoneHtgUMLHs = 0;
 															QString sMaxZoneClgUMLHsName, sMaxZoneHtgUMLHsName, sErrantZoneList, sAppendToErrantZoneList;
 															int iNumZones = (iCID_ThrmlZn < 1 ? 0 : BEMPX_GetNumObjects( iCID_ThrmlZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ));			assert( iNumZones > 0 );
+															bool bIsPropModel = (osRunInfo[iR].OSRunIdx() == iPropModelRunIdx);		// SAC 4/6/20
 #define  UMLH_ERR_MSG_BASELINE	225	// space for leading line:  Error: In XXXXXXXXXXXXX model, ### zone(s) exceed maximum cooling unmet load hours (####) and ### zone(s) exceed maximum heating unmet load hours (####)
 															// and trailing line:       (and ### other zones, as reported in project log file)
 															QString sReducedErrantZoneList;
@@ -5063,12 +5054,15 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	}
 																	if (lBypassClgUMLHLimit == 0 && fNumZoneClgUMLHs > (fMaxUnmetClgLdHrs + 0.1))		// SAC 11/11/19 - moved lBypassClgUMLHLimit == 0 check from above to here (to enable reporting of Std model UMLH info)
 																	{	iNumZonesExceedClgUMLHs++;
+																		if (bIsPropModel)		// SAC 4/6/20
+																			iNumPropClgUMLHViolations++;
 																		if (lConstantClgUMLHLimit == -1)  // SAC 5/21/19
 																			lConstantClgUMLHLimit = (long) (fMaxUnmetClgLdHrs + 0.1);
 																		else if (lConstantClgUMLHLimit > 0 && lConstantClgUMLHLimit != (long) (fMaxUnmetClgLdHrs + 0.1))
 																			lConstantClgUMLHLimit = -2;  // => no constant UMLH limit
 																	}
 																}
+
 																if (fMaxUnmetHtgLdHrs > -0.5 && BEMPX_GetFloat( lDBID_ThrmlZn_HtgUnmetLdHrs, fNumZoneHtgUMLHs, 0, -1, iZn, BEMO_User, osRunInfo[iR].BEMProcIdx() ) &&
 																	 fNumZoneHtgUMLHs > 0 /*&& lBypassHtgUMLHLimit == 0*/)		// SAC 5/13/19 (tic #2680)
 																{	if ((lBypassClgUMLHLimit == 0 || bReportAllUMLHZones) && fNumZoneHtgUMLHs > (fMaxZoneHtgUMLHs + 0.1))
@@ -5077,6 +5071,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	}
 																	if (lBypassClgUMLHLimit == 0 && fNumZoneHtgUMLHs > (fMaxUnmetHtgLdHrs + 0.1))		// SAC 11/11/19 - moved lBypassClgUMLHLimit == 0 check from above to here (to enable reporting of Std model UMLH info)
 																	{	iNumZonesExceedHtgUMLHs++;
+																		if (bIsPropModel)		// SAC 4/6/20
+																			iNumPropHtgUMLHViolations++;
 																		if (lConstantHtgUMLHLimit == -1)  // SAC 5/21/19
 																			lConstantHtgUMLHLimit = (long) (fMaxUnmetHtgLdHrs + 0.1);
 																		else if (lConstantHtgUMLHLimit > 0 && lConstantHtgUMLHLimit != (long) (fMaxUnmetHtgLdHrs + 0.1))
@@ -5157,7 +5153,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																BEMPX_SetBEMData(      BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName", iCID_Proj ), BEMP_QStr, (void*) &sMaxZoneHtgUMLHsName, BEMO_User, -1, BEMS_SimResult, BEMO_User, TRUE, osRunInfo[iR].BEMProcIdx() );
                      		
 															if (iNumZonesExceedClgUMLHs > 0 || iNumZonesExceedHtgUMLHs > 0)
-															{	QString sClgHoursStr = "hours", sHtgHoursStr = "hours";		// SAC 5/21/19 - include max UMLH limits in warning message
+															{
+																if (!osRunInfo[iR].IsStdRun())
+																	bFailAnalysisForUMLH = true;		// SAC 4/23/20 - ensure final result not "PASS" when UMLHs exceeded in Prop model (tic #2680)
+
+																QString sClgHoursStr = "hours", sHtgHoursStr = "hours";		// SAC 5/21/19 - include max UMLH limits in warning message
 																if (lConstantClgUMLHLimit > 0)
 																	sClgHoursStr.sprintf( "hours of %d", lConstantClgUMLHLimit );
 																if (lConstantHtgUMLHLimit > 0)
@@ -5211,7 +5211,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	cstrUMLHWarningDetails = "Zones exceeding unmet load hour limits:\n" + cstrUMLHWarningDetails;
 																	// SAC 4/2/19 - wording updated to include: watermarked 'not for compliance' (tic #2680)
 																	cstrUMLHWarningMsg += "<a>All thermal zones exceeding unmet load hour limits will be reported on PRF-1, which will be watermarked 'not for compliance'.<br></a>";
-																	if (iRulesetCodeYear >= 2019)		// SAC 1/29/20 - remove trailing sentence from 2019+ analysis (Com tic #3173)
+																	if (iRulesetCodeYear < 2019)		// SAC 1/29/20 - remove trailing sentence from 2019+ analysis (Com tic #3173)   // SAC 4/23/20 - flipped equality to OMIT this sentence in 2019+ msgs (tic #2680)
 																		cstrUMLHWarningMsg += "<a>In the future, projects with zones exceeding UMLH limits will not be useable for compliance.</a>";
 
 																	QString sUMLHFAQLink;
@@ -5267,7 +5267,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																	//	qstrUMLHWarningDetails = "Zone(s) exceeding UMLH limits:\n  'Wing1_Side1_Zn' cooling 186 > 150 and heating 198 > 150\n  'Wing1_Side2_Zn' cooling 246 > 150\n"
 																	//									"  'Common_Lobby_Zn' heating 201 > 150\n  'Common_Corridor_Zn' cooling 153 > 150\n";
 																	if (bPromptUserUMLHWarning && !osRunInfo[iR].IsStdRun())	// SAC 11/11/19 - never prompt for Std model violations
-																	{	QString qstrUMLHWarningMsg = cstrUMLHWarningMsg;
+																	{	if (sq_app)		// added - SAC 7/1/20
+																			sq_app->beep();
+																		QString qstrUMLHWarningMsg = cstrUMLHWarningMsg;
 																		QString qstrUMLHWarningDetails = cstrUMLHWarningDetails;
 																		QString qstrUMLHDlgCaption = cstrUMLHDlgCaption;
 																		qstrUMLHDlgCaption = QString( "%1 Model Unmet Load Hours" ).arg( osRunInfo[iR].LongRunID() );
@@ -5277,6 +5279,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																		msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
 																		msgBox.setText( qstrUMLHWarningMsg );
 																		msgBox.setDetailedText( qstrUMLHWarningDetails );
+																		msgBox.setStandardButtons( QMessageBox::Ok );  // needed for timeout to function
+																		msgBox.setDefaultButton( QMessageBox::Ok );
+																		if (iAnalysisDialogTimeout > 0)
+																			msgBox.button(QMessageBox::Ok)->animateClick(iAnalysisDialogTimeout*1000);		// SAC 7/1/20 - apply dialog timeout here (Com tic #2680)
 																		msgBox.exec();
 																	}
 #endif
@@ -5369,18 +5375,38 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					sErrMsg.clear();
 					sErrMsgShortenedToFit.clear();
 				}
+
+				if (!bAbort && !BEMPX_AbortRuleEvaluation() && bFailAnalysisForUMLH)		// SAC 4/23/20 - code to change compliance result if needed for UMLH failures (tic #2680)
+				{	QString sPassFailResult;
+					for (int iR=0; iR <= iSimRunIdx; iR++)
+						if (osRunInfo[iR].OSRunIdx() >= 0 && osRunInfo[iR].RunID().length() > 0)
+						{	int iNumEUseSums = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "EUseSummary" ), BEMO_User, osRunInfo[iR].BEMProcIdx() );
+							for (int iEUS=0; iEUS < iNumEUseSums; iEUS++)
+								if (BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), sPassFailResult, TRUE, 0, -1, iEUS, BEMO_User, NULL, 0, osRunInfo[iR].BEMProcIdx() ) &&
+										sPassFailResult.compare("PASS", Qt::CaseInsensitive)==0)
+								{	// need to SWITCH this compliance result from PASS to FAIL-UMLH
+									sPassFailResult = "FAIL-UMLH";
+											if (bVerbose)		// SAC 4/23/20 - moved down INSIDE iR run loop
+											{	sLogMsg.sprintf( "  PerfAnal_NRes - Switching %s compliance result to '%s'", osRunInfo[iR].RunID().toLocal8Bit().constData(), sPassFailResult.toLocal8Bit().constData() );
+												BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+											}
+									BEMPX_SetBEMData( BEMPX_GetDatabaseID( "EUseSummary:PassFail" ), BEMP_QStr, (void*) &sPassFailResult, BEMO_User, iEUS, BEMS_UserDefined, BEMO_User, TRUE /*bPerfResets*/, osRunInfo[iR].BEMProcIdx() );
+						}		}
+				}
+
 				if ((!bAbort && !BEMPX_AbortRuleEvaluation()) || bForceXMLFileWriteDespiteAbort)		// SAC 9/6/13 - added to ensure XML results file still written despite errors (to help diagnose problems in model...)
-				{				if (bVerbose)
-								{	sLogMsg.sprintf( "  PerfAnal_NRes - Exporting %s model details to results XML", sRunID.toLocal8Bit().constData() );
-									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
-								}
+				{
 				// SAC 6/25/12 - added code to export detailed XML file following analysis
 			      //QString sXMLFileName = sOriginalFileName;		//assert( sXMLFileName.lastIndexOf('.') == sXMLFileName.length()-4 );
 //					if (!sXMLResultsFileName.isEmpty() && bStoreHourlyResults && !bThisOSSimSkipped)
 					if (!sXMLResultsFileName.isEmpty() && bStoreHourlyResults && bSimRunsNow)
 					{	for (int iR=0; iR <= iSimRunIdx; iR++)
 							if (osRunInfo[iR].OSRunIdx() >= 0 && osRunInfo[iR].RunID().length() > 0)
-							{	// SAC 1/6/15 - added args to prevent export of PolyLp objects (and in turn, also CartesianPts)
+							{			if (bVerbose)		// SAC 4/23/20 - moved down INSIDE iR run loop
+										{	sLogMsg.sprintf( "  PerfAnal_NRes - Exporting %s model details to results XML", osRunInfo[iR].RunID().toLocal8Bit().constData() );
+											BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+										}
+								// SAC 1/6/15 - added args to prevent export of PolyLp objects (and in turn, also CartesianPts)
 								// SAC 1/11/15 - added new argument to prevent export of RULE NEW (ruleset-defined) properties to all models following User Model
 								BOOL bXMLWriteOK = xmlResultsFile.WriteModel( TRUE /*bWriteAllProperties*/, FALSE /*bSupressAllMessageBoxes*/, osRunInfo[iR].LongRunID().toLocal8Bit().constData(),
 																								osRunInfo[iR].BEMProcIdx(), false /*bOnlyValidInputs*/, 1 /*iNumClassIDsToIgnore*/, &iCID_PolyLp /*piClassIDsToIgnore*/,
@@ -5413,6 +5439,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:PassFail"   ), sResTemp1 ) &&
 									BEMPX_GetString(  BEMPX_GetDatabaseID( "EUseSummary:Enduse8[8]" ), sResTemp2 ) );
 			bResultIsPass = (bHaveResult && (sResTemp1.indexOf("PASS") >= 0 || sResTemp1.indexOf("Pass") >= 0 || sResTemp1.indexOf("pass") >= 0));
+
+		// possible mods needed here OR where 'PASS' originally set if we need to switch result to FAIL when iNumPropClgUMLHViolations or iNumPropHtgUMLHViolations > 0 - SAC 4/6/20
+
 		}
 
 	// ----------
@@ -5452,7 +5481,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					QString sRptIDStr, sRptFileExt;
 					long lRptIDNum = -1;		// SAC 8/24/17 - enable specification of a report ID number Component:Property name
 					long lDBID_RptIDNum = BEMPX_GetDatabaseID( "Proj:CompReportNum" );
-					bool bRptToGen = false, bRptVerbose = bVerbose;
+					bool bRptToGen = false, bRptVerbose = (bVerbose || bReportGenVerbose);	// SAC 3/20/20
 					if (lDBID_RptIDNum > BEM_COMP_MULT)
 					{	if (!BEMPX_GetInteger( lDBID_RptIDNum, lRptIDNum, -1 ))
 							lRptIDNum = -1;
@@ -5540,12 +5569,21 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 							// update RptIDNum in database to reflect report(s) removed from generation list in above loop
 				      	BEMPX_SetBEMData( lDBID_RptIDNum, BEMP_Int, (void*) &lRptIDNum, BEMO_User, -1, BEMS_ProgDefault );
 
-						if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass))	// toggle OFF report security if compliance result is undefined or 'Fail'
+						if (lRptIDNum > 0 && bSendRptSignature && (!bHaveResult || !bResultIsPass ||		// toggle OFF report security if compliance result is undefined or 'Fail'
+																				 iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0))		// prevent signature when UMLH limits exceeded
 						{	// SAC 8/28/17 - prevent report signature if compliance result NOT PASS
 							if (!bHaveResult)
 								sLogMsg = "Compliance report will be generated without security measures due to compliance result not calculated";
 							else if (!bResultIsPass)
 								sLogMsg = "Compliance report will be generated without security measures due to non-passing compliance result";
+							else if (iNumPropClgUMLHViolations > 0 || iNumPropHtgUMLHViolations > 0)		// SAC 4/6/20
+							{	if (iNumPropClgUMLHViolations > 0 && iNumPropHtgUMLHViolations > 0)
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling and %2 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations), QString::number(iNumPropHtgUMLHViolations) );
+								else if (iNumPropClgUMLHViolations > 0)
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding cooling unmet load hour limits" ).arg( QString::number(iNumPropClgUMLHViolations) );
+								else
+									sLogMsg = QString( "Compliance report will be generated without security measures due to %1 zone(s) exceeding heating unmet load hour limits" ).arg( QString::number(iNumPropHtgUMLHViolations) );
+							}
 							BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							bSendRptSignature = false;
 						}
@@ -5903,6 +5941,11 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			assert( iRulesetCodeYear >= 2000 );
 	}	}
 
+	// ensure CodeType-specific BEMProcIdx used in retrieving UMLH (and other?) results
+	int iModelCount = BEMPX_GetModelCount();
+	int iBEMProcIdx_Prop = ((iCodeType == CT_T24N && iModelCount >= 4) ? 3 : (iCodeType != CT_T24N && iModelCount >= 7) ? 6 : (iModelCount >= 4) ? 3 : -1);
+	int iBEMProcIdx_Std  = ((iCodeType == CT_T24N && iModelCount >= 5) ? 4 : (iCodeType != CT_T24N && iModelCount >= 8) ? 7 : (iModelCount >= 5) ? 4 : -1);
+
 	//bool bExpectValidResults = true;
 	double dTimeOverall = 0;
 	BEMPX_GetFloat( BEMPX_GetDatabaseID( "Proj:AnalysisDuration" ), dTimeOverall );
@@ -5995,14 +6038,14 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 		double fPropMaxClgUMLHs, fPropMaxHtgUMLHs, fStdMaxClgUMLHs, fStdMaxHtgUMLHs;
 		QString sPropMaxClgUMLHZnName, sPropMaxHtgUMLHZnName, sStdMaxClgUMLHZnName, sStdMaxHtgUMLHZnName, sPropClgUMLHData, sPropHtgUMLHData, sStdClgUMLHData, sStdHtgUMLHData;
 		long lPropClgNumZonesExceed, lPropHtgNumZonesExceed, lStdClgNumZonesExceed, lStdHtgNumZonesExceed;
-		if (BEMPX_GetModelCount() < 4)  // SAC 10/28/13
+		if (iBEMProcIdx_Prop < 0)  // SAC 10/28/13
 		{		sPropClgUMLHData = ",,";
 				sPropHtgUMLHData = ",,";
 		}
 		else
-		{	if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedClgUnmetLdHrs", iCID_Proj ), lPropClgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     3 /*iBEMProcIdx*/ ) &&
-					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fPropMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     3 /*iBEMProcIdx*/ ) )
-			{	BEMPX_GetString(		 BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sPropMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, 3 /*iBEMProcIdx*/ );
+		{	if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedClgUnmetLdHrs", iCID_Proj ), lPropClgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) &&
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fPropMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) )
+			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sPropMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Prop /*iBEMProcIdx*/ );
 				if (sPropMaxClgUMLHZnName.isEmpty())
 					sPropClgUMLHData.sprintf( "%g,,%d", fPropMaxClgUMLHs, lPropClgNumZonesExceed );
 				else
@@ -6011,9 +6054,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			else
 				sPropClgUMLHData = ",,";
 
-			if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ), lPropHtgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     3 /*iBEMProcIdx*/ ) &&
-					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fPropMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     3 /*iBEMProcIdx*/ ) )
-			{	BEMPX_GetString(		 BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sPropMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, 3 /*iBEMProcIdx*/ );
+			if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ), lPropHtgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) &&
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fPropMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Prop /*iBEMProcIdx*/ ) )
+			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sPropMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Prop /*iBEMProcIdx*/ );
 				if (sPropMaxHtgUMLHZnName.isEmpty())
 					sPropHtgUMLHData.sprintf( "%g,,%d", fPropMaxHtgUMLHs, lPropHtgNumZonesExceed );
 				else
@@ -6022,14 +6065,14 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			else
 				sPropHtgUMLHData = ",,";
 		}
-		if (BEMPX_GetModelCount() < 5)  // SAC 10/28/13
+		if (iBEMProcIdx_Std < 0)  // SAC 10/28/13
 		{		sStdClgUMLHData = ",,";
 				sStdHtgUMLHData = ",,";
 		}
 		else
-		{	if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedClgUnmetLdHrs", iCID_Proj ), lStdClgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     4 /*iBEMProcIdx*/ ) &&
-					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fStdMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     4 /*iBEMProcIdx*/ ) )
-			{	BEMPX_GetString(		 BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sStdMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, 4 /*iBEMProcIdx*/ );
+		{	if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedClgUnmetLdHrs", iCID_Proj ), lStdClgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) &&
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrs"       , iCID_Proj ), fStdMaxClgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) )
+			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnClgUnmetLdHrsName"   , iCID_Proj ), sStdMaxClgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Std /*iBEMProcIdx*/ );
 				if (sStdMaxClgUMLHZnName.isEmpty())
 					sStdClgUMLHData.sprintf( "%g,,%d", fStdMaxClgUMLHs, lStdClgNumZonesExceed );
 				else
@@ -6038,9 +6081,9 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			else
 				sStdClgUMLHData = ",,";
 
-			if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ), lStdHtgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     4 /*iBEMProcIdx*/ ) &&
-					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fStdMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     4 /*iBEMProcIdx*/ ) )
-			{	BEMPX_GetString(		 BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sStdMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, 4 /*iBEMProcIdx*/ );
+			if (	BEMPX_GetInteger( BEMPX_GetDatabaseID( "NumZnsExceedHtgUnmetLdHrs", iCID_Proj ), lStdHtgNumZonesExceed, 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) &&
+					BEMPX_GetFloat(   BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrs"       , iCID_Proj ), fStdMaxHtgUMLHs      , 0, -1,  0 /*iOccur*/, BEMO_User,     iBEMProcIdx_Std /*iBEMProcIdx*/ ) )
+			{	BEMPX_GetString(		BEMPX_GetDatabaseID( "MaxZnHtgUnmetLdHrsName"   , iCID_Proj ), sStdMaxHtgUMLHZnName , FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx_Std /*iBEMProcIdx*/ );
 				if (sStdMaxHtgUMLHZnName.isEmpty())
 					sStdHtgUMLHData.sprintf( "%g,,%d", fStdMaxHtgUMLHs, lStdHtgNumZonesExceed );
 				else
@@ -7060,7 +7103,7 @@ int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, lo
 	QVector<int> iaRptRetVals;
 	BOOL bCurSelValid = (!sCurrentSelection.isEmpty() && iCurrentSelStatus > 0);
 	int iMaxRptIdx = saModelReportOptions.size() - (bCurSelValid ? 0 : 1);  // +1 for current selection
-	for (int iRpt=0; iRpt <= iMaxRptIdx; iRpt++)
+	for (int iRpt=1; iRpt <= iMaxRptIdx; iRpt++)		// revised loop start from 0->1 to skip 'None' (blank) CSV output - SAC 4/8/20
 	{	QString sRpt;
 		if (iRpt == saModelReportOptions.size())
 			sRpt = sCurrentSelection;
@@ -7070,7 +7113,7 @@ int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, lo
 				iMaxRptIdx--;  // if got here and report being processed same as current selection, then avoid writing it twice (now and at end of looping)
 		}
 
-		if (!sRpt.isEmpty())
+		if (!sRpt.isEmpty() && sRpt.compare("None", Qt::CaseInsensitive))		// prevent output of 'None' report - SAC 4/8/20
 		{	int iThisRptRetVal = 0;
 			if (BEMPX_SetBEMData( lDBID_ReportType, BEMP_QStr, (void*) &sRpt, BEMO_User, iObjIdx ) < 0)
 				iThisRptRetVal = -1;
@@ -7089,6 +7132,9 @@ int ProcessModelReports( const char* pszModelPathFile, long lDBID_ReportType, lo
 							{	sLogMsg.sprintf( "      about to generate '%s' model report:  %s", sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
 								BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 							}
+// DEBUGGING
+//	sLogMsg.sprintf( "      about to generate '%s' model report #%d:  %s", sRpt.toLocal8Bit().constData(), iRpt, sRptPathFile.toLocal8Bit().constData() );
+//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 					int iRptRetVal = Local_GenerateRulesetModelReport( sRptPathFile, "rl_REPORT", bVerbose, bSilent );
 					if (iRptRetVal > 0)
 					{	sLogMsg.sprintf( "Error:  Model report generation failed w/ error code %d - report: '%s' - file: '%s'", iRptRetVal, sRpt.toLocal8Bit().constData(), sRptPathFile.toLocal8Bit().constData() );
@@ -7460,25 +7506,37 @@ int CMX_ExportCSVHourlyResults_Com( const char* pszHourlyResultsPathFile, const 
 				double dFTMlt =  10.0;		// SAC 10/28/15 - kTDV/therm -> kTDV/MBtu
 				if (iCodeType == CT_T24N)		// SAC 10/7/14
 				{
+					long lPrimResultSetIdx = 1;	// SAC 3/11/20 - added to ensure main/primary result set TDV exported here
+					long lDBID_Proj_PrimResultSetIdx = BEMPX_GetDatabaseID( "Proj:PrimResultSetIdx" );
+					if (lDBID_Proj_PrimResultSetIdx < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_Proj_PrimResultSetIdx, lPrimResultSetIdx, 0, -1, -1, BEMO_User, iBEMProcIdx ) || lPrimResultSetIdx < 1)
+						lPrimResultSetIdx = 1;
 					QString sTDVMultTableName;		// SAC 11/5/19
-					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" ), sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+lPrimResultSetIdx-1, sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
 					if (sTDVMultTableName.isEmpty())
 						sTDVMultTableName = "TDVbyCZandFuel";
+
+					long lEngyCodeYearNum = 2016;	// SAC 3/11/20 - added to ensure correct TDV column indices (changed in 2022)
+					long lDBID_Proj_EngyCodeYearNum = BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" );
+					if (lDBID_Proj_EngyCodeYearNum < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_Proj_EngyCodeYearNum, lEngyCodeYearNum, 0, -1, -1, BEMO_User, iBEMProcIdx ) || lEngyCodeYearNum < 1)
+						lEngyCodeYearNum = 2016;
+					int iElecTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 0 + 2) : ((0 * 16) + lCliZnNum + 1) );	// SAC 3/11/20
+					int iNGasTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 1 + 2) : ((1 * 16) + lCliZnNum + 1) );
+					int iPropTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 2 + 2) : ((2 * 16) + lCliZnNum + 1) );
 
 					//	int iFuelTDVCol = (lNatGasAvailable > 0 ? 2 : 3);
 					double daTDVMults[3][8760];
 					double* daTDVData[3] = { &daTDVMults[0][0], &daTDVMults[1][0], &daTDVMults[2][0] };
 		//	int iTableCol = ((lCliZnNum-1) * 3) + iFl + 2;
 		//	dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
-					if (BEMPX_GetTableColumn( &daTDVMults[0][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCliZnNum-1) * 3) + 2    , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daTDVMults[0][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daTDVData[0] = &daZero[0];
 					}
-					if (BEMPX_GetTableColumn( &daTDVMults[1][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCliZnNum-1) * 3) + 2 + 1, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daTDVMults[1][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iNGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daTDVData[1] = &daZero[0];
 					}
-					if (BEMPX_GetTableColumn( &daTDVMults[2][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCliZnNum-1) * 3) + 2 + 2, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daTDVMults[2][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iPropTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daTDVData[2] = &daZero[0];
 					}
@@ -7653,20 +7711,31 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 						}
 				}
 
+				long lPrimResultSetIdx = 1;	// SAC 3/11/20 - added to ensure main/primary result set TDV exported here
+				long lDBID_Proj_PrimResultSetIdx = BEMPX_GetDatabaseID( "Proj:PrimResultSetIdx" );
+				if (lDBID_Proj_PrimResultSetIdx < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_Proj_PrimResultSetIdx, lPrimResultSetIdx, 0, -1, -1, BEMO_User, iBEMProcIdx ) || lPrimResultSetIdx < 1)
+					lPrimResultSetIdx = 1;
 				QString sTDVMultTableName;		// SAC 11/5/19
-				BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" ), sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
+				BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+lPrimResultSetIdx-1, sTDVMultTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, iBEMProcIdx );
 				if (sTDVMultTableName.isEmpty())
 					sTDVMultTableName = "TDVbyCZandFuel";
+
+				long lEngyCodeYearNum = 2016;	// SAC 3/11/20 - added to ensure correct TDV column indices (changed in 2022)
+				long lDBID_Proj_EngyCodeYearNum = BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" );
+				if (lDBID_Proj_EngyCodeYearNum < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_Proj_EngyCodeYearNum, lEngyCodeYearNum, 0, -1, -1, BEMO_User, iBEMProcIdx ) || lEngyCodeYearNum < 1)
+					lEngyCodeYearNum = 2016;
+				int iElecTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) +     0    + 2) : ((    0    * 16) + lCliZnNum + 1) );	// SAC 3/11/20
+				int  iGasTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + lGasType + 2) : ((lGasType * 16) + lCliZnNum + 1) );
 
 					double daTDVMults[2][8760];
 					double* daTDVData[2] = { &daTDVMults[0][0], &daTDVMults[1][0] };
 		//	int iTableCol = ((lCliZnNum-1) * 3) + iFl + 2;
 		//	dTDVSum = BEMPX_ApplyHourlyMultipliersFromTable( (bBEMHrlyResPtrOK ? pdBEMHrlyRes : dHrlyRes), "TDVbyCZandFuel", iTableCol, (bVerbose != FALSE) );
-					if (BEMPX_GetTableColumn( &daTDVMults[0][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCliZnNum-1) * 3) + 2           , NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daTDVMults[0][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daTDVData[0] = &daZero[0];
 					}
-					if (BEMPX_GetTableColumn( &daTDVMults[1][0], 8760, sTDVMultTableName.toLocal8Bit().constData(), ((lCliZnNum-1) * 3) + 2 + lGasType, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
+					if (BEMPX_GetTableColumn( &daTDVMults[1][0], 8760, sTDVMultTableName.toLocal8Bit().constData(),  iGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0)
 					{	assert( FALSE );
 						daTDVData[1] = &daZero[0];
 					}
@@ -7769,6 +7838,7 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 // SAC 6/28/19 - added 2022 Source & SrcPrime energy use columns out to the right
 // SAC 9/24/19 - removed 2022 SrcPrime energy use columns
 // SAC 11/4/19 - added Results Set (5th column) and C02 emissions by model (Prop/Std) and Fuel (Elec/Fuel)
+// SAC 3/20/20 - fixed col CK T24N header: Lighting -> Indoor Lighting (tic #3188)
 static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,"
 										",,,Proposed Model,,,Proposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standa"
 										"rd Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Calling,Compliance,,,,Seconda"
@@ -7788,7 +7858,7 @@ static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Wea
 										"tal,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp"
 										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,C"
 										"omp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zon"
-										"e Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,L"
+										"e Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor L"
 										"ighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot "
 										"Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic H"
 										"ot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domesti"
@@ -7802,7 +7872,7 @@ static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Wea
 										"le,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp "
 										"Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Co"
 										"mp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indo"
-										"or Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3019 chars
+										"or Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3026 chars
 
 static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
 										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";

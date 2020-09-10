@@ -132,7 +132,7 @@ BEMRunHourlyResultMeter* GetHourlyResultMeter( const char* pszRunName, const cha
 		}
 	}
 	else
-	{	assert( FALSE );  // BEMProc, run and/or meter NULL or empty
+	{	//assert( FALSE );  // BEMProc, run and/or meter NULL or empty
 	}
 	return NULL;
 }

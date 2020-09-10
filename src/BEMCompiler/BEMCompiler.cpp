@@ -82,11 +82,14 @@
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
-#ifdef CBECC_RES16
-	QApplication::setApplicationName("BEMCompiler - Residential 2016");
+#ifdef CBECC_RES19
+	QApplication::setApplicationName("BEMCompiler - Residential 2019");
+	QApplication::setApplicationVersion("1.0");
+#elif CBECC_RES22
+	QApplication::setApplicationName("BEMCompiler - Residential 2022");
 	QApplication::setApplicationVersion("1.0");
 #else		// CBECC-Com
-	QApplication::setApplicationName("BEMCompiler - Commercial 2016");
+	QApplication::setApplicationName("BEMCompiler - Commercial");
 	QApplication::setApplicationVersion("1.0");
 #endif
 
@@ -143,7 +146,7 @@ int main(int argc, char *argv[])
 	BEMCompiler bemCmplr;
 
 // before applying command line path/file settings, default all
-#ifdef CBECC_RES16
+#ifdef CBECC_RES19
 //// to compile rules relative to Debug/Release exe -> bin\Res\rule source locations
 //	bemCmplr.SetBEMBaseText(  "../Res/Rules/src/CAR13 BEMBase.txt" );
 //	bemCmplr.SetBEMEnumsText( "../Res/Rules/src/CAR16 BEMEnums.txt" );
@@ -161,12 +164,12 @@ int main(int argc, char *argv[])
 //	bemCmplr.SetRuleLog(      "../RulesetDev/Rulesets/CA Res/Rules/Rules-2016-os Log.out" );
 
 // to compile rules relative to SVN exe->rule source locations
-	bemCmplr.SetBEMBaseText(  "../../RuleDev/Rulesets/CA Res/CAR13 BEMBase.txt" );
-	bemCmplr.SetBEMEnumsText( "../../RuleDev/Rulesets/CA Res/CAR19 BEMEnums.txt" );
+	bemCmplr.SetBEMBaseText(  "../../RuleDev/Rulesets/CA RESNET/CAR13 BEMBase.txt" );
+	bemCmplr.SetBEMEnumsText( "../../RuleDev/Rulesets/CA RESNET/CAR19 BEMEnums.txt" );
 	bemCmplr.SetBEMBaseBin(   "../Res/Rules/CA Res 2019/CAR19 BEMBase.bin" );
-	bemCmplr.SetRuleText(     "../../RuleDev/Rulesets/CA Res/Rules/Rules-2019.txt" );
+	bemCmplr.SetRuleText(     "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-2-0.txt" );
 	bemCmplr.SetRuleBin(      "../Res/Rules/CA Res 2019.bin" );
-	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA Res/Rules/Rules-2019 dbg Log.out" );
+	bemCmplr.SetRuleLog(      "../../RuleDev/Rulesets/CA RESNET/Rules/Rules-2019-RESNET dbg Log.out" );
 #else		// CBECC-Com
 // to compile rules relative to Debug/Release exe -> bin\Com\rule source locations
 	bemCmplr.SetBEMBaseText(  "../Com/Rules/src/CEC 2013 NonRes BEMBase.txt" );

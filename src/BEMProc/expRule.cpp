@@ -91,6 +91,194 @@ static inline BOOL IsReserved_DEFAULT( double dVal )
    {	return WithinMargin( dVal, -99999.0, 0.1 );  };
 
 
+static QString FuncName( int iFuncID )
+{	switch (iFuncID)
+	{	case  OP_Log            :  return "log";      
+		case  OP_Exp            :  return "exp";      
+		case  OP_Pow            :  return "pow";      
+		case  OP_Abs            :  return "abs";      
+		case  OP_Upr            :  return "strupper"; 
+		case  OP_Lwr            :  return "strlower"; 
+		case  OP_Min            :  return "min";      
+		case  OP_Max            :  return "max";      
+		case  OP_Int            :  return "int";      
+		case  OP_Log10          :  return "log10";    
+		case  OP_Sin            :  return "sin";      
+		case  OP_ASin           :  return "asin";     
+		case  OP_Cos            :  return "cos";      
+		case  OP_ACos           :  return "acos";     
+		case  OP_Tan            :  return "tan";      
+		case  OP_ATan           :  return "atan";     
+		case  OP_Sqrt           :  return "sqrt";     
+		case  OP_Ftoa           :  return "ftoa";     
+		case  OP_Mod            :  return "mod";    
+		case  OP_SLen           :  return "strlen"; 
+		case  OP_Find           :  return "find";   
+		case  OP_FindN          :  return "findnocase"; 
+		case  OP_Atof           :  return "atof";  
+		case  OP_Round          :  return "round"; 
+		case  OP_ErrorExp       :  return "error";  
+		case  BF_SymValue       :  return "EnumValue";        
+		case  BF_SumAll         :  return "SumAll";          
+		case  BF_ChildCnt       :  return "ChildCount";      
+		case  BF_RuleLib        :  return "RuleLibrary";     
+		case  BF_ChildRef       :  return "ChildRef";        
+		case  BF_Parent         :  return "Parent";          
+		case  BF_Parent2        :  return "Parent2";         
+		case  BF_Parent3        :  return "Parent3";         
+		case  BF_Local          :  return "Local";           
+		case  BF_Global         :  return "Global";              
+		case  BF_SumChld        :  return "SumChildren";         
+		case  BF_LocalRef       :  return "LocalRef";            
+		case  BF_ParentRef      :  return "ParentRef";           
+		case  BF_Parent2Ref     :  return "Parent2Ref";          
+		case  BF_Parent3Ref     :  return "Parent3Ref";          
+		case  BF_SumRevRef      :  return "SumRevRef";           
+		case  BF_MaxChild       :  return "MaxChild";            
+		case  BF_MaxAll         :  return "MaxAll";              
+		case  BF_MaxRevRef      :  return "MaxRevRef";           
+		case  BF_CurTime        :  return "CurrentTime";         
+		case  BF_Date           :  return "Date";                
+		case  BF_CheckSym       :  return "EnsureSymbolExists";  
+		case  BF_EvalRules      :  return "EvalRulelist";        
+		case  BF_Cr8Child       :  return "CreateChildren";      
+		case  BF_DelChild       :  return "DeleteChildren";      
+		case  BF_Cr8Comp        :  return "CreateComp";          
+		case  BF_DelComp        :  return "DeleteComp";          
+		case  BF_DelAllComps    :  return "DeleteAllComps";      
+		case  BF_StoreBEMProc   :  return "StoreBEMProc";          
+		case  BF_LCompAssign    :  return "LocalCompAssigned";     
+		case  BF_PCompAssign    :  return "ParentCompAssigned";    
+		case  BF_LIsDefault     :  return "LocalIsDefault";        
+		case  BF_PIsDefault     :  return "ParentIsDefault";       
+		case  BF_CurYear        :  return "CurrentYear";           
+		case  BF_MinChild       :  return "MinChild";              
+		case  BF_MinAll         :  return "MinAll";                
+		case  BF_MinRevRef      :  return "MinRevRef";             
+		case  BF_FltToStr       :  return "FltToStr";              
+		case  BF_LocSymStr      :  return "LocalSymbolString";     
+		case  BF_CompIdx        :  return "ComponentIndex";        
+		case  BF_ChildIdx       :  return "ChildIndex";            
+		case  BF_Format         :  return "Format";                
+		case  BF_LocStatus      :  return "LocalStatus";           
+		case  BF_ParStatus      :  return "ParentStatus";          
+		case  BF_PostError      :  return "PostError";             
+		case  BF_PostWarn       :  return "PostWarning";           
+		case  BF_CompExists     :  return "CompExists";            
+		case  BF_GlobSymStr     :  return "GlobalSymbolString";    
+		case  BF_GlobStatus     :  return "GlobalStatus";             
+		case  BF_CountRefs      :  return "CountRefs";                
+		case  BF_CompName       :  return "CompName";                 
+		case  BF_CountUPRefs    :  return "CountUniqueParentRefs";    
+		case  BF_CountNoRefs    :  return "CountNoRefs";              
+		case  BF_MaxRevRefC     :  return "MaxRevRefComp";            
+		case  BF_MaxAllComp     :  return "MaxAllComp";               
+		case  BF_CompCnt        :  return "ComponentCount";           
+		case  BF_BitMatchCmp    :  return "FirstBitwiseMatchComp";    
+		case  BF_BitMatchCnt    :  return "BitwiseMatchCount";        
+		case  BF_UnqCompName    :  return "UniqueComponentName";      
+		case  BF_StrUnique      :  return "EnsureStringUniqueness";   
+		case  BF_FileExists     :  return "FileExists";               
+		case  BF_ImportComp     :  return "ImportComponentFromFile";  
+		case  BF_EnsureChild    :  return "EnsureChildAssigned";      
+		case  BF_SplitPath      :  return "SplitPath";                
+		case  BF_MaxRevRefA     :  return "MaxRevRefArray";           
+		case  BF_CountOccur     :  return "CountOccurrences";         
+		case  BF_SumToArray     :  return "SumIntoArrayElement";      
+		case  BF_SumRevRefEx    :  return "SumRevRefEx";              
+		case  BF_LocSymInv      :  return "LocalSymbolInvalid";       
+		case  BF_MsgBox         :  return "MessageBox";               
+		case  BF_GlobalRef      :  return "GlobalRef";                
+		case  BF_BEMProcDBID    :  return "BEMProcDBID";              
+		case  BF_PostLogMsg     :  return "PostMessageToLog";         
+		case  BF_FindInStr      :  return "FindInString";             
+		case  BF_RplcInStr      :  return "ReplaceInString";          
+		case  BF_LocMxStrLen    :  return "LocalMaxStringLength";     
+		case  BF_ParStrAElem    :  return "ParentStringArrayElement"; 
+		case  BF_ParCompType    :  return "ParentComponentType";      
+		case  BF_LocArrIdx      :  return "LocalArrayIndex";          
+		case  BF_CompArray      :  return "ComponentArray";           
+		case  BF_GCompAssign    :  return "GlobalCompAssigned";       
+		case  BF_HrlyResSum     :  return "HourlyResultSum";          
+		case  BF_HrlyResMult    :  return "ApplyHourlyResultMultipliers"; 
+		case  BF_CompType       :  return "ComponentType";        
+		case  BF_SumAcrsIf      :  return "SumAcrossIf";          
+		case  BF_SumChldIf      :  return "SumChildrenIf";        
+		case  BF_PolyLpArea     :  return "PolyLoopArea";         
+		case  BF_ScalePolyLp    :  return "ScalePolyLoop";        
+		case  BF_WriteToFile    :  return "WriteToFile";          
+		case  BF_ConsUFctr      :  return "ConsAssmUFactor";      
+		case  BF_DayltArea      :  return "DaylightableArea";     
+		case  BF_LogDuration    :  return "LogDuration";          
+		case  BF_InitPolyLp     :  return "InitializePolyLoop";     
+		case  BF_GlobalVal      :  return "GlobalValid";            
+		case  BF_LocalVal       :  return "LocalValid";             
+		case  BF_ParentVal      :  return "ParentValid";            
+		case  BF_Parent2Val     :  return "Parent2Valid";           
+		case  BF_Parent3Val     :  return "Parent3Valid";           
+		case  BF_IfValidAnd     :  return "IfValidAnd";             
+		case  BF_Cr8PolyLp      :  return "CreatePolyLoopChild";    
+		case  BF_ConsUFctrR     :  return "ConsUFactorRes";         
+		case  BF_Cr8SCSysRpt    :  return "CreateSCSysRptObjects";  
+		case  BF_AsgnCr8Comp    :  return "AssignOrCreateComp";     
+		case  BF_Cr8DHWRpt      :  return "CreateDHWRptObjects";    
+		case  BF_Cr8IAQRpt      :  return "CreateIAQRptObjects";    
+		case  BF_ValidOr        :  return "ValidOr";                
+		case  BF_LocRefSymStr   :  return "LocalRefSymbolString";   
+		case  BF_ParSymStr      :  return "ParentSymbolString";     
+		case  BF_ParRefSymStr   :  return "ParentRefSymbolString";  
+		case  BF_Par2SymStr     :  return "Parent2SymbolString";    
+		case  BF_Par2RefSymStr  :  return "Parent2RefSymbolString"; 
+		case  BF_Par3SymStr     :  return "Parent3SymbolString";    
+		case  BF_Par3RefSymStr  :  return "Parent3RefSymbolString"; 
+		case  BF_SymString      :  return "EnumString";             
+		case  BF_Cr8DUHVAC      :  return "CreateDwellUnitHVACSysObjects";  
+		case  BF_MaxChildC      :  return "MaxChildComp";               
+		case  BF_MinChildC      :  return "MinChildComp";               
+		case  BF_YrMoDa2Date    :  return "YrMoDaToSerial";             
+		case  BF_Date2WkDay     :  return "SerialDateToDayOfMonth";     
+		case  BF_Date2Mo        :  return "SerialDateToMonth";          
+		case  BF_Date2Yr        :  return "SerialDateToYear";           
+		case  BF_YrMoDa2DOW     :  return "YrMoDaToDayOfWeek";          
+		case  BF_Cr8DURpt       :  return "CreateDwellUnitRptObjects";  
+		case  BF_ListRevRef     :  return "ListRevRef";                 
+		case  BF_ListRevRefIf   :  return "ListRevRefIf";               
+		case  BF_OpenExpFile    :  return "OpenExportFile";             
+		case  BF_WriteExpFile   :  return "WriteToExportFile";          
+		case  BF_CloseExpFile   :  return "CloseExportFile";            
+		case  BF_StrToFlt       :  return "StrToFlt";                   
+		case  BF_Cr8DUWHtr      :  return "CreateDwellUnitDHWHeaters";        
+		case  BF_AddCSERptCol   :  return "AddCSEReportCol";                  
+		case  BF_HrlyResMltNEM  :  return "ApplyHourlyResultMultipliers_NEM"; 
+		case  BF_HrlyResMltNeg  :  return "ApplyHourlyResultMultipliers_Neg"; 
+		case  BF_CopyHrlyRes    :  return "CopyHourlyResults";        
+		case  BF_GlobRefSymStr  :  return "GlobalRefSymbolString";    
+		case  BF_SchSum         :  return "ScheduleSum";              
+		case  BF_UListRevRef    :  return "UniqueListRevRef";         
+		case  BF_UListRevRefIf  :  return "UniqueListRevRefIf";       
+		case  BF_Par2CompType   :  return "Parent2ComponentType";     
+		case  BF_Par3CompType   :  return "Parent3ComponentType";     
+		case  BF_SchDayHrsStr   :  return "SchDayHoursString";        
+		case  BF_WriteSimInp    :  return "WriteToSimInput";          
+		case  BF_RetCSVVal      :  return "RetrieveCSVValue";         
+		case  BF_EvalRLCSVCol   :  return "EvalRulelistOnCSVColumns"; 
+		case  BF_AppendMsg      :  return "AppendMessage";            
+
+		case  BF_LocSymVal      :  return "LocalSymbolValue";     
+		case  BF_GlobSymVal     :  return "GlobalSymbolValue";    
+		case  BF_LocRefSymVal   :  return "LocalRefSymbolValue";   
+		case  BF_ParSymVal      :  return "ParentSymbolValue";     
+		case  BF_ParRefSymVal   :  return "ParentRefSymbolValue";  
+		case  BF_Par2SymVal     :  return "Parent2SymbolValue";    
+		case  BF_Par2RefSymVal  :  return "Parent2RefSymbolValue"; 
+		case  BF_Par3SymVal     :  return "Parent3SymbolValue";    
+		case  BF_Par3RefSymVal  :  return "Parent3RefSymbolValue"; 
+
+		default                 :  return QString( "FunctionID_%1" ).arg( QString::number(iFuncID) );
+	}
+}
+
+
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 
@@ -995,6 +1183,7 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
    int iLocalCompID = crntCompID.GetCurrentCompID();
    //long lLocalDBID = crntCompID.GetCurrentLocalDBID();
 	bool bSymStr = (crntFunc == BF_SymString);	// SAC 4/10/14
+	bool bSymVal = (crntFunc == BF_SymValue );	// SAC 6/30/20
 	if (!bEnsureValidData && ( //sbParsingValidArgToFunc ||		// SAC 8/13/14
 										eiParseCount_IfValidAnd > 0 || eiParseCount_ValidOr > 0))	// SAC 1/30/15
 		bEnsureValidData = TRUE;
@@ -1081,11 +1270,11 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 								}
 							}
 							else if (iNumValidDBIDsByGeneration[0] >  0 && iNumValidDBIDsByGeneration[1] == 0 && iNumValidDBIDsByGeneration[2] == 0)
-								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_ParRefSymStr  : BF_ParSymStr ) : (bEnsureValidData ? BF_ParentVal  : (bPathIncludesObjRef ? BF_ParentRef  : BF_Parent )));			// PARENT function
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_ParRefSymStr  : BF_ParSymStr ) : (bSymVal ? (bPathIncludesObjRef ? BF_ParRefSymVal  : BF_ParSymVal ) : (bEnsureValidData ? BF_ParentVal  : (bPathIncludesObjRef ? BF_ParentRef  : BF_Parent ))));			// PARENT function
 							else if (iNumValidDBIDsByGeneration[0] == 0 && iNumValidDBIDsByGeneration[1] >  0 && iNumValidDBIDsByGeneration[2] == 0)
-								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par2RefSymStr : BF_Par2SymStr) : (bEnsureValidData ? BF_Parent2Val : (bPathIncludesObjRef ? BF_Parent2Ref : BF_Parent2)));			// GRAND-PARENT function
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par2RefSymStr : BF_Par2SymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_Par2RefSymVal : BF_Par2SymVal) : (bEnsureValidData ? BF_Parent2Val : (bPathIncludesObjRef ? BF_Parent2Ref : BF_Parent2))));			// GRAND-PARENT function
 							else if (iNumValidDBIDsByGeneration[0] == 0 && iNumValidDBIDsByGeneration[1] == 0 && iNumValidDBIDsByGeneration[2] >  0)
-								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par3RefSymStr : BF_Par3SymStr) : (bEnsureValidData ? BF_Parent3Val : (bPathIncludesObjRef ? BF_Parent3Ref : BF_Parent3)));			// GREAT-GRAND-PARENT function
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par3RefSymStr : BF_Par3SymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_Par3RefSymVal : BF_Par3SymVal) : (bEnsureValidData ? BF_Parent3Val : (bPathIncludesObjRef ? BF_Parent3Ref : BF_Parent3))));			// GREAT-GRAND-PARENT function
 							else
 							{	bAbort = TRUE;		assert( FALSE );		// This property found at MULTIPLE parent generation levels
 							}
@@ -1222,14 +1411,14 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 						else
 						{	// then find relationship between iParseCompID & the "local" object class
 							if (iParseCompID == iLocalCompID)
-								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_LocRefSymStr : BF_LocSymStr) : (bEnsureValidData ? BF_LocalVal : (bPathIncludesObjRef ? BF_LocalRef : BF_Local)));	// SAC 2/13/14
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_LocRefSymStr : BF_LocSymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_LocRefSymVal : BF_LocSymVal) : (bEnsureValidData ? BF_LocalVal : (bPathIncludesObjRef ? BF_LocalRef : BF_Local))));	// SAC 2/13/14   // SAC 6/30/20
 							else if (BEMPX_GetClassMaxDefinable( iParseCompID ) == 1)	// MaxDefinable==1 implies Global object type
 							//	{	assert( !bPathIncludesObjRef );  // don't have a BF_GlobalRef function
 							//		iFuncOpType = BF_Global;	// process as Global() function
 							//	}
 							// SAC 5/9/13 - allow for GlobalRef()
 							{	//assert( (!bSymStr || !bPathIncludesObjRef) );	// DON'T have GlobalRefSymbolString() (yet)  - GlobalRefSymbolString() added 4/4/18
-								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_GlobRefSymStr : BF_GlobSymStr) : (bEnsureValidData ? BF_GlobalVal : (bPathIncludesObjRef ? BF_GlobalRef : BF_Global)));   // SAC 2/13/14
+								iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_GlobRefSymStr : BF_GlobSymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_GlobRefSymVal : BF_GlobSymVal) : (bEnsureValidData ? BF_GlobalVal : (bPathIncludesObjRef ? BF_GlobalRef : BF_Global))));   // SAC 2/13/14   // SAC 6/30/20
 							}
 							else
 							{	BEMClass* pCls = BEMPX_GetClass( (int) iLocalCompID, iError );								assert( pCls );
@@ -1238,7 +1427,7 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 									int iPIdx;
 							      for (iPIdx=0; (!bAbort && iFuncOpType < 0 && iPIdx < BEM_MAX_PARENT_TYPES); iPIdx++)
 									{	if (pCls->getParentType(iPIdx) == (iParseCompID-1))
-											iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_ParRefSymStr : BF_ParSymStr) : (bEnsureValidData ? BF_ParentVal : (bPathIncludesObjRef ? BF_ParentRef : BF_Parent)));				// PARENT function
+											iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_ParRefSymStr : BF_ParSymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_ParRefSymVal : BF_ParSymVal) : (bEnsureValidData ? BF_ParentVal : (bPathIncludesObjRef ? BF_ParentRef : BF_Parent))));				// PARENT function
 										else if (pCls->getParentType(iPIdx) >= 0)
 											laParents.push_back( pCls->getParentType(iPIdx)+1 );
 									}
@@ -1251,7 +1440,7 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 											int iGPIdx;
 							      		for (iGPIdx=0; (!bAbort && iFuncOpType < 0 && iGPIdx < BEM_MAX_PARENT_TYPES); iGPIdx++)
 											{	if (pCls->getParentType(iGPIdx) == (iParseCompID-1))
-													iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par2RefSymStr : BF_Par2SymStr) : (bEnsureValidData ? BF_Parent2Val : (bPathIncludesObjRef ? BF_Parent2Ref : BF_Parent2)));	// GRAND-PARENT function
+													iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par2RefSymStr : BF_Par2SymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_Par2RefSymVal : BF_Par2SymVal) : (bEnsureValidData ? BF_Parent2Val : (bPathIncludesObjRef ? BF_Parent2Ref : BF_Parent2))));	// GRAND-PARENT function
 												else if (pCls->getParentType(iGPIdx) >= 0)
 													laGParents.push_back( pCls->getParentType(iGPIdx)+1 );
 											}
@@ -1262,7 +1451,7 @@ int SelectFunctionByArgument_Local( const char* name, int crntFunc, ExpError* pE
 												{	pCls = BEMPX_GetClass( (int) laGParents[iPIdx], iError );								assert( pCls );
 							      				for (iGPIdx=0; (!bAbort && iFuncOpType < 0 && iGPIdx < BEM_MAX_PARENT_TYPES); iGPIdx++)
 													{	if (pCls->getParentType(iGPIdx) == (iParseCompID-1))
-															iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par3RefSymStr : BF_Par3SymStr) : (bEnsureValidData ? BF_Parent3Val : (bPathIncludesObjRef ? BF_Parent3Ref : BF_Parent3)));	// GREAT-GRAND-PARENT function
+															iFuncOpType = (bSymStr ? (bPathIncludesObjRef ? BF_Par3RefSymStr : BF_Par3SymStr) : (bSymVal ? (bPathIncludesObjRef ? BF_Par3RefSymVal : BF_Par3SymVal) : (bEnsureValidData ? BF_Parent3Val : (bPathIncludesObjRef ? BF_Parent3Ref : BF_Parent3))));	// GREAT-GRAND-PARENT function
 														//else if (pCls->getParentType(iGPIdx) >= 0)
 														//	laGParents.push_back( pCls->getParentType(iGPIdx)+1 );
 													}
@@ -1594,6 +1783,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
    {
       case BF_Global :
       case BF_GlobSymStr :   // SAC 7/25/01
+      case BF_GlobSymVal :   // SAC 6/30/20
       case BF_GlobStatus :   // SAC 8/24/01
       case BF_GlobalRef :    // SAC 1/22/07
       case BF_GCompAssign :    // SAC 5/12/12
@@ -1725,6 +1915,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 // SAC 12/19/01 - Migrated the Local function parsing here when code added to actually parse those Parent*() functions where only one parent type exists
       case BF_Local :
       case BF_LocSymStr :  // SAC 2/8/01
+      case BF_LocSymVal :  // SAC 6/30/20
       case BF_LocSymInv  :  // SAC 8/11/06
       case BF_LocalRef :
       case BF_LCompAssign : // "LocalCompAssigned"
@@ -1751,6 +1942,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_IfValidAnd :  // arguments can be Local*/Parent*/Global* arguments
       case BF_ValidOr    :  // arguments can be Local*/Parent*/Global* arguments
 		case BF_SymString  :  // arguments can be Local*/Parent*/Global* arguments
+		case BF_SymValue   :  // arguments can be Local*/Parent*/Global* arguments
       case BF_HrlyResMltNEM :  // SAC 1/23/17 - ApplyHourlyResultMultipliers_NEM( <"NewEnduseName">, <"HrlyMultTableName">, #TableDepColumn, <HrlyResultMultiplier>, <"RunName">, <"MeterName">, <"SaleEnduse">, <"TotalEnduse">, <NEMconstant>, <SaleHrlyMultiplier>, <"OtherSaleEnduseOne">, ... )
 		case BF_Par2SymStr    :  // SAC 4/10/14
 		case BF_Par3SymStr    :  // SAC 4/10/14
@@ -1759,6 +1951,13 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 		case BF_ParRefSymStr  :  // SAC 4/10/14
 		case BF_Par2RefSymStr :  // SAC 4/10/14
 		case BF_Par3RefSymStr :  // SAC 4/10/14
+		case BF_Par2SymVal    :  // SAC 6/30/20
+		case BF_Par3SymVal    :  // SAC 6/30/20
+		case BF_LocRefSymVal  :  // SAC 6/30/20
+		case BF_ParSymVal     :  // SAC 6/30/20
+		case BF_ParRefSymVal  :  // SAC 6/30/20
+		case BF_Par2RefSymVal :  // SAC 6/30/20
+		case BF_Par3RefSymVal :  // SAC 6/30/20
 		case BF_SchDayHrsStr  :  // SAC 10/6/19
          {	bool bDoneParsingLocPar = false;
 						/* SAC 1/30/15 - logic to ensure all arguments evaluate via *Valid() functions for certain functions */
@@ -1817,7 +2016,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 					}
 
 					int iSubOrdFunc = 0;
-	         	if ( (crntFunc == BF_RuleLib || crntFunc == BF_IfValidAnd || crntFunc == BF_ValidOr || crntFunc == BF_SymString || crntFunc == BF_HrlyResMltNEM) && bTransformIDOK)  // SAC 2/13/14
+	         	if ( (crntFunc == BF_RuleLib || crntFunc == BF_IfValidAnd || crntFunc == BF_ValidOr || crntFunc == BF_SymString || crntFunc == BF_SymValue || crntFunc == BF_HrlyResMltNEM) && bTransformIDOK)  // SAC 2/13/14
 					{	// need to fully parse RuleLib Object:Property strings (separately), as they may actually by arguments to table look-ups within RuleLib arguments
 			// SAC 8/13/14 - mod to ensure that IfValidAnd & ValidOr function arguments translate into LocalVal/ParentVal... (version of routines the require return data to be valid)
 			//			iSubOrdFunc = SelectFunctionByArgument( temp, crntFunc, NULL );
@@ -1828,14 +2027,14 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
 
          	   if (iSubOrdFunc < 1 && bTransformIDOK)
 					{	int iCompType = 0;
-						if ( crntFunc == BF_Local       || crntFunc == BF_LocSymStr  || crntFunc == BF_LocalRef  || crntFunc == BF_LocSymInv  ||   // SAC 8/11/06
+						if ( crntFunc == BF_Local       || crntFunc == BF_LocSymStr  || crntFunc == BF_LocSymVal || crntFunc == BF_LocalRef  || crntFunc == BF_LocSymInv  ||   // SAC 8/11/06   // SAC 6/30/20
          	   	     crntFunc == BF_LCompAssign || crntFunc == BF_LIsDefault || crntFunc == BF_LocStatus || crntFunc == BF_LocalVal   ||
-         	   	     crntFunc == BF_LocMxStrLen || crntFunc == BF_LocArrIdx  || crntFunc == BF_LocRefSymStr  /*|| crntFunc == BF_RuleLib*/ )    // SAC 11/20/09  // SAC 3/3/10
+         	   	     crntFunc == BF_LocMxStrLen || crntFunc == BF_LocArrIdx  || crntFunc == BF_LocRefSymStr || crntFunc == BF_LocRefSymVal  /*|| crntFunc == BF_RuleLib*/ )    // SAC 11/20/09  // SAC 3/3/10
          	   	   iCompType = iCompID;
          	   	else
          	   	{	// SAC 12/19/01 - Added code to parse Parent*() arguments when only one Parent* component type exists - to prevent excessive evaluation time parsing.
-         	   	   int iNumGens = ((crntFunc == BF_Parent3 || crntFunc == BF_Parent3Ref || crntFunc == BF_Parent3Val || crntFunc == BF_Par3SymStr || crntFunc == BF_Par3RefSymStr) ? 3 :
-         	   	                  ((crntFunc == BF_Parent2 || crntFunc == BF_Parent2Ref || crntFunc == BF_Parent2Val || crntFunc == BF_Par2SymStr || crntFunc == BF_Par2RefSymStr) ? 2 : 1 ));
+         	   	   int iNumGens = ((crntFunc == BF_Parent3 || crntFunc == BF_Parent3Ref || crntFunc == BF_Parent3Val || crntFunc == BF_Par3SymStr || crntFunc == BF_Par3SymVal || crntFunc == BF_Par3RefSymStr || crntFunc == BF_Par3RefSymVal) ? 3 :
+         	   	                  ((crntFunc == BF_Parent2 || crntFunc == BF_Parent2Ref || crntFunc == BF_Parent2Val || crntFunc == BF_Par2SymStr || crntFunc == BF_Par2SymVal || crntFunc == BF_Par2RefSymStr || crntFunc == BF_Par2RefSymVal) ? 2 : 1 ));   // SAC 6/30/20
          	   	   iCompType = BEMPX_GetParentComponentType( iCompID, iNumGens );
 							if (iCompType <= 0)  // SAC 8/27/12 - added secondary check to see if first property name listed in argument exists for only a SINGLE possible Parent* object type
 	      	   	   {	QString sPropOnly = temp;
@@ -1867,10 +2066,11 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          	   	   	}
                	
 								// SAC 7/10/00 - Added check to confirm that the Local() function does not reference sub-components
-         	   	   	if (iRefCompID > 0 /*lMDBID >= 1000000*/  &&  (crntFunc == BF_Local  || crntFunc == BF_LocSymStr || crntFunc == BF_LocSymInv ||  // SAC 2/8/01   // SAC 8/11/06
+         	   	   	if (iRefCompID > 0 /*lMDBID >= 1000000*/  &&  (crntFunc == BF_Local  || crntFunc == BF_LocSymStr || crntFunc == BF_LocSymVal || crntFunc == BF_LocSymInv ||  // SAC 2/8/01   // SAC 8/11/06   // SAC 6/30/20
          	   	   	                                             crntFunc == BF_LocMxStrLen || crntFunc == BF_LocArrIdx ||   // SAC 11/20/09  // SAC 3/3/10
          	   	   	                                             crntFunc == BF_Parent || crntFunc == BF_Parent2 || crntFunc == BF_Parent3 || crntFunc == BF_ParStrAElem ||   // SAC 11/20/09
-         	   	   	                                             crntFunc == BF_ParSymStr || crntFunc == BF_Par2SymStr || crntFunc == BF_Par3SymStr ))   // SAC 4/10/14
+         	   	   	                                             crntFunc == BF_ParSymStr || crntFunc == BF_Par2SymStr || crntFunc == BF_Par3SymStr ||   // SAC 4/10/14
+         	   	   	                                             crntFunc == BF_ParSymVal || crntFunc == BF_Par2SymVal || crntFunc == BF_Par3SymVal ))   // SAC 6/30/20
          	   	   	   lMDBID = -1;  // this will cause return value of FALSE which will trigger output of compilation error
                	
 								int iError=0;
@@ -1951,10 +2151,10 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
          	}
 			}
          break;
-      case BF_SymValue :
-         // The argument for SymValue is a string with qoutes.  
-         // We should never get here for this function.
-         break;
+   //   case BF_SymValue :
+   //      // The argument for SymValue is a string with qoutes.  
+   //      // We should never get here for this function.
+   //      break;
       case BF_ChildCnt    : // convert to 1-based class index
       case BF_Cr8Child    : // "CreateChildren",  4 arguments - first arg is child comp type
       case BF_DelChild    : // "DeleteChildren",  2 arguments - first arg is child comp type
@@ -2013,6 +2213,11 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_OpenExpFile  : // SAC 9/15/15 - added OpenExportFile() - 1 fixed argument, path/filename, 2nd optional argument, FileOpen mode (typically 'wt' or 'at' write/append text), return integer file index 0-N or negative error code
       case BF_CloseExpFile : // SAC 9/15/15 - added CloseExportFile() - single argument is index of export file to close, -1 to close ALL files, return number of files closed successfully
       case BF_WriteExpFile : // SAC 9/15/15 - added WriteToExportFile() - same arguments as other message/log functions w/ additional first argument = export file index (0-N) (file pointer provided in ruleset data)
+      case BF_WriteSimInp  : // SAC 3/10/20 - added WriteToSimInput() - same arguments as other message/log functions (sim input file open/close handled outside ruleset functions)
+         break;
+
+      case BF_RetCSVVal    : // SAC 4/10/20 - added RetrieveCSVValue( PathFilename, RecordNum, SearchString, ColsFollowing )
+		case BF_EvalRLCSVCol : // SAC 5/9/20 - added EvalRulelistOnCSVColumns( "CSVPathFile", #StartRow, #StartCol, "RulelistName", "Function", "ResultBEMProp", "RecordNumBEMProp", "CSVCol1Title", "Col1ValBEMProp", <up to 5 more arg pairs> )
          break;
 
       case BF_Format      :
@@ -2021,6 +2226,7 @@ int GetNodeType( const char* name, int* pVar, int crntFunc, void* data )
       case BF_PostLogMsg  : // SAC 10/30/07
       case BF_MsgBox      : // SAC 9/29/06 - added MessageBox() function
       case BF_WriteToFile : // SAC 6/6/13 - added WriteToFile() - same arguments as other message/log functions (file pointer provided in ruleset data)
+      case BF_AppendMsg   : // SAC 5/21/20 - added AppendMessage( AbortAnalysis (Obj:Prop/0/1), LogMessage (Obj:Prop/0/1), MsgCount ("Obj:Prop"/"none"), MsgArray ("Obj:Prop"/"none"), <Format() arguments> ) 
          // SAC 5/14/01 - variable args where 1st is format string followed by up to 6 string or numeric arguments to sprintf()
 				// SAC 7/6/17 - added code to enable arguments of these functions to include table look-ups
       		dbId = ruleSet.getTableID( name );
@@ -2343,7 +2549,7 @@ BOOL ParseModelDBID( long long lMDBID, int& i0Model, long& lDBID, int& iObjIdx, 
 	i0Model = -1;
 	if (lMDBID > BEM_MODEL_MULT)
 	{	 lDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );
-		 i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+		 i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 	}
 	else
 		 lDBID = (long) lMDBID;
@@ -2568,9 +2774,9 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
    ExpEvalStruct* pEval = (ExpEvalStruct*) pEvalData;
    switch ( op )
    {
-      case BF_SymValue   : {// "SymValue",    
-                            ExpSetErr( error, EXP_RuleProc, "SymValue() function not implemented" );
-                            break; }
+   //   case BF_SymValue   : {// "SymValue",    
+   //                         ExpSetErr( error, EXP_RuleProc, "SymValue() function not implemented" );
+   //                         break; }
 
       case BF_RuleLib    : {//  RuleLibrary( CompType, "RuleLib Comp Name", <Always Retrieve 0/1>, <Imported object parent> )
 									 // optional arg #3 => whether to always retrieve item, regardless of it already existing in the model
@@ -2598,7 +2804,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											    BEM_ObjType eParNameObjType = BEMO_User;
 											//	 if (lMDBID > BEM_MODEL_MULT)
 											//	 {	 lParNameDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );
-											//	 	 i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+											//	 	 i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 											//	 }
 											//	 else
 											//	 	 lParNameDBID = (long) lMDBID;
@@ -2769,7 +2975,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 											long long lMDBID = (long long) pNode->fValue;
 											int iBEMProcIdx = -1;
 											if (lMDBID > BEM_MODEL_MULT)
-											{	iBEMProcIdx = (int) BEMPX_GetModelID( lMDBID ) - 1;
+											{	iBEMProcIdx = ruleSet.transformToBEMProcIdx( lMDBID );
 												lDBID = BEMPX_MDBIDtoDBID( lMDBID );
 											}
 											else
@@ -2788,13 +2994,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             break; }
 
       case BF_LocSymStr  :  // SAC 2/8/01
+      case BF_LocSymVal  :  // SAC 6/30/20
       case BF_Local      : {// "Local",       
                             ExpNode* pNode = ExpxStackPop( stack );
 									 if (!pNode)
                             	  ExpSetErr( error, EXP_RuleProc, "Local*() argument not found" );
 									 else
 									 {	if (pNode->type == EXP_Value)
-                            	   GetBEMProcData( (long long) pNode->fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || ruleSet.IsDataModel()), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                            	   GetBEMProcData( (long long) pNode->fValue, pEval->iPrimObjIdx, pEval->ePrimObjType, stack, error, (op == BF_LocSymStr || (ruleSet.IsDataModel() && op != BF_LocSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
                             	else
                             	   ExpSetErr( error, EXP_RuleProc, "Invalid Local*() argument" );
                             	ExpxNodeDelete( pNode );
@@ -2803,6 +3010,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 
       case BF_Global      :   // "Global",      
       case BF_GlobSymStr  :   // "GlobalSymbolString" - SAC 7/25/01
+      case BF_GlobSymVal  :   // "GlobalSymbolValue"  - SAC 6/30/20
 //      case BF_GlobStatus  :   // "GlobalStatus" - SAC 8/24/01
       case BF_GCompAssign : { // "GlobalCompAssigned" - SAC 5/12/12
 										assert( nArgs < 2 );  // following code not setup to handle multiple arguments (which is why GlobalStatus() now handled below)
@@ -2815,7 +3023,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	   long long lMDBID = (long long) pNode->fValue;
 											int iBEMProcIdx = -1;
 											if (lMDBID > BEM_MODEL_MULT)
-											{	iBEMProcIdx = (int) BEMPX_GetModelID( lMDBID ) - 1;
+											{	iBEMProcIdx = ruleSet.transformToBEMProcIdx( lMDBID );
 												lDBID = BEMPX_MDBIDtoDBID( lMDBID );
 											}
 											else
@@ -2850,7 +3058,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                             	      }
                             	      else
 													// SAC 4/2/14 - replaced 'lDBID' with 'lMDBID' to ensure that MODEL index is accounted for in all Global() data retrieval
-                            	         GetBEMProcData( lMDBID, 0, BEMO_User, stack, error, (op == BF_GlobSymStr || ruleSet.IsDataModel()), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets
+                            	         GetBEMProcData( lMDBID, 0, BEMO_User, stack, error, (op == BF_GlobSymStr || (ruleSet.IsDataModel() && op != BF_GlobSymVal)), pEval, FALSE );  // SAC 10/18/12 - revised bGetSymStr to retrieve string for DataModel rulesets   // SAC 6/30/20
                             	   }
                             	}
                             	else
@@ -3552,6 +3760,14 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 		case BF_Par2RefSymStr :  // SAC 4/10/14
 		case BF_Par3RefSymStr :  // SAC 4/10/14
       case BF_GlobRefSymStr :   // SAC 4/4/18
+		case BF_Par2SymVal    :  // SAC 6/30/20
+		case BF_Par3SymVal    :  // SAC 6/30/20
+		case BF_LocRefSymVal  :  // SAC 6/30/20
+		case BF_ParSymVal     :  // SAC 6/30/20
+		case BF_ParRefSymVal  :  // SAC 6/30/20
+		case BF_Par2RefSymVal :  // SAC 6/30/20
+		case BF_Par3RefSymVal :  // SAC 6/30/20
+      case BF_GlobRefSymVal :  // SAC 6/30/20
                             if (nArgs < 1)
 										 ExpSetErr( error, EXP_RuleProc, QString( "Missing %1() function argument(s)" ).arg( ExpGetFuncTableNameByOpType( op ) ) );  // SAC 5/3/17
                             else
@@ -4127,16 +4343,16 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                     case 1 :  iMaxIdx     = (int)  pNode->fValue;   break;
                                     case 2 :		lMDBID = (long long) pNode->fValue;
 																if (lMDBID > BEM_MODEL_MULT)
-																{	lDBIDReturn = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-																	i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+																{	lDBIDReturn = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+																	i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 																}
 																else
 																	lDBIDReturn = (long) lMDBID;
 																break;
                                     case 3 :		lMDBID = (long long) pNode->fValue;
 																if (lMDBID > BEM_MODEL_MULT)
-																{	lDBIDArray = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-																	i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+																{	lDBIDArray = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+																	i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 																}
 																else
 																	lDBIDArray = (long) lMDBID;
@@ -4334,22 +4550,25 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
       case BF_MsgBox      : // SAC 8/16/06 - added MessageBox() function
       case BF_WriteToFile : // SAC 6/6/13 - added WriteToFile() - same arguments as other message/log functions (file pointer provided in ruleset data)
       case BF_WriteExpFile : // SAC 9/15/15 - added WriteToExportFile() - same arguments as other message/log functions w/ additional first argument = export file index (0-N) (file pointer provided in ruleset data)
+      case BF_WriteSimInp  : // SAC 3/10/20 - added WriteToSimInput() - same arguments as other message/log functions (sim input file open/close handled outside ruleset functions)
+      case BF_AppendMsg   : // SAC 5/21/20 - added AppendMessage( AbortAnalysis (Obj:Prop/0/1), LogMessage (Obj:Prop/0/1), MsgCount ("Obj:Prop"/"none"), MsgArray ("Obj:Prop"/"none"), LogPrepend ("str"/"none"), <Format() arguments> ) 
          {  // SAC 5/14/01 - variable args where 1st is format string followed by up to 6 string or numeric arguments to sprintf()
             // First check for valid number of arguments
             ExpNode* pNode[31];
-            int iMinArgs = (op == BF_WriteExpFile ?  2 :  1 );
-            int iMaxArgs = (op == BF_WriteExpFile ? 31 : 30 );
+            int iPriorArgs = (op == BF_WriteExpFile ?  1 : (op == BF_AppendMsg ?  5 :  0 ));		// SAC 5/21/20
+            int iMinArgs =  1 + iPriorArgs;
+            int iMaxArgs = 30 + iPriorArgs;
             assert( nArgs >= iMinArgs && nArgs <= iMaxArgs );	// SAC 3/23/12 - cranked up max # arguments to 30 (to enable day schedule definitions)
             if (nArgs < iMinArgs)
             {  // post error & setup return argument
-               ExpSetErr( error, EXP_RuleProc, "Format() requires at least one argument." );
+               ExpSetErr( error, EXP_RuleProc, QString( "%1() requires at least %2 argument." ).arg( FuncName(op), QString::number(iMinArgs) ) );
                pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
                pNode[0]->type = EXP_Invalid;
                pNode[0]->fValue = 0;
             }
             else if (nArgs > iMaxArgs)
             {  // post error, delete all but one arguments & setup return argument
-               ExpSetErr( error, EXP_RuleProc, "Format() cannot have more than 30 arguments." );
+               ExpSetErr( error, EXP_RuleProc, QString( "%1() cannot have more than %2 arguments." ).arg( FuncName(op), QString::number(iMinArgs) ) );
                pNode[0] = ExpxStackPop( stack );
                for (int i=1; i<nArgs; i++)
                {
@@ -4368,8 +4587,8 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
             {
                // pop and check each function argument
                BOOL bArgsOK = TRUE;
-					if (op == BF_WriteExpFile)  // SAC 9/15/15 - decrement nArgs for WriteToExportFile() - first argument handled separately
-						nArgs-=1;
+               if (iPriorArgs > 0)
+						nArgs-=iPriorArgs;  // SAC 9/15/15 - decrement nArgs for WriteToExportFile() - first argument handled separately
 				   int i=nArgs-1;
                for (; i>=0; i--)
                {
@@ -4378,28 +4597,104 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                                               (i >  0 && pNode[i]->type != EXP_String && pNode[i]->type != EXP_Value) ))
                   {
                      bArgsOK = FALSE;
-                     QString sErrMsg = QString( "Invalid Format() function argument (# %1)." ).arg( QString::number( i+1 ) );
+                     QString sErrMsg = QString( "Invalid %1() function argument (# %2)." ).arg( FuncName(op), QString::number( i+iMinArgs ) );
                      ExpSetErr( error, EXP_RuleProc, sErrMsg );
                   }
                }
                int iExpFileIdx = -1;
+               long lDBID_MsgArray=0, lDBID_MsgCount=0;		int iLogMsg=0, iPostError=0;		// SAC 5/21/20 - AppendMessage() arguments
+               QString sAMLogPrepend;		// SAC 5/22/20
+               bool bReturnUnchanged=false;		// SAC 5/22/20
 					if (op == BF_WriteExpFile)  // SAC 9/15/15 - process first WriteToExportFile() argument - export file index
 					{  ExpNode* pXFINode = ExpxStackPop( stack );
                   if (pXFINode == NULL  ||  pXFINode->type != EXP_Value)
                   {  bArgsOK = FALSE;
-                     QString sErrMsg = "Invalid WriteToExportFile() function argument #1 - must be integer export file index (0-N).";
-                     ExpSetErr( error, EXP_RuleProc, sErrMsg );
+                     ExpSetErr( error, EXP_RuleProc, "Invalid WriteToExportFile() function argument #1 - must be integer export file index (0-N)." );
                   }
                   else if (pXFINode)
                   	iExpFileIdx = (int) pXFINode->fValue;
                   if (pXFINode)
 	                  ExpxNodeDelete( pXFINode );
 					}
+					else if (op == BF_WriteSimInp)	// SAC 3/10/20
+					{	iExpFileIdx = ruleSet.getSimInputExpFileIdx();
+						if (iExpFileIdx < 0)
+                  {  bArgsOK = FALSE;
+                     ExpSetErr( error, EXP_RuleProc, "WriteToSimInput() error - simulation input file not opened/available for writing." );
+               }	}
+               else if (op == BF_AppendMsg)	// SAC 5/21/20
+					{  ExpNode* pAMNode = ExpxStackPop( stack );
+						int iBadArgNum=0;
+                  if (pAMNode == NULL  ||  pAMNode->type != EXP_String  ||  pAMNode->pValue == NULL)
+                  	iBadArgNum = 5;
+                  else
+                  {	sAMLogPrepend = (char*) pAMNode->pValue;			// process arg #5: MsgArray Obj:Prop
+                  	if (!sAMLogPrepend.compare( "none", Qt::CaseInsensitive ))
+                  		sAMLogPrepend.clear();
+						}
+                  if (pAMNode)
+	                  ExpxNodeDelete( pAMNode );
+						if (iBadArgNum < 1)
+						{	pAMNode = ExpxStackPop( stack );			// process arg #4: MsgArray Obj:Prop
+	               	if (pAMNode == NULL  ||  pAMNode->type != EXP_String  ||  pAMNode->pValue == NULL)
+   	               	iBadArgNum = 4;
+      	            else
+         	         {	QString sAMStr = (char*) pAMNode->pValue;
+            	      	if (sAMStr.compare( "none", Qt::CaseInsensitive ))
+               	   	{	lDBID_MsgArray = BEMPX_GetDatabaseID( sAMStr );
+                  			if (lDBID_MsgArray < BEM_COMP_MULT)
+		               	   	iBadArgNum = 4;
+							}	}
+   	               if (pAMNode)
+	   	               ExpxNodeDelete( pAMNode );
+						}
+						if (iBadArgNum < 1)
+						{	pAMNode = ExpxStackPop( stack );			// process arg #3: MsgCount Obj:Prop
+	                  if (pAMNode == NULL  ||  pAMNode->type != EXP_String  ||  pAMNode->pValue == NULL)
+   	               	iBadArgNum = 3;
+      	            else
+         	         {	QString sAMStr = (char*) pAMNode->pValue;
+            	      	if (sAMStr.compare( "none", Qt::CaseInsensitive ))
+               	   	{	lDBID_MsgCount = BEMPX_GetDatabaseID( sAMStr );
+                  			if (lDBID_MsgCount < BEM_COMP_MULT)
+		               	   	iBadArgNum = 3;
+							}	}
+	                  if (pAMNode)
+		                  ExpxNodeDelete( pAMNode );
+						}
+						if (iBadArgNum < 1)
+						{	pAMNode = ExpxStackPop( stack );			// process arg #2: LogMessage flag
+	                  if (pAMNode == NULL  ||  pAMNode->type != EXP_Value)
+   	               	iBadArgNum = 2;
+   	               else
+								iLogMsg = (int) pAMNode->fValue;
+	                  if (pAMNode)
+		                  ExpxNodeDelete( pAMNode );
+						}
+						if (iBadArgNum < 1)
+						{	pAMNode = ExpxStackPop( stack );			// process arg #1: AbortAnalysis (PostError) flag
+	                  if (pAMNode == NULL  ||  pAMNode->type != EXP_Value)
+   	               	iBadArgNum = 1;
+   	               else
+								iPostError = (int) pAMNode->fValue;
+	                  if (pAMNode)
+		                  ExpxNodeDelete( pAMNode );
+						}
+						if (iBadArgNum > 0)
+						{	bArgsOK = FALSE;
+							switch (iBadArgNum)
+							{	case  1 :  ExpSetErr( error, EXP_RuleProc, "Invalid AppendMessage() function argument #1 - must be integer flag (AbortAnalysis 0/1)." );  break;
+								case  2 :  ExpSetErr( error, EXP_RuleProc, "Invalid AppendMessage() function argument #2 - must be integer flag (LogMessage 0/1)." );  break;
+								case  3 :  ExpSetErr( error, EXP_RuleProc, "Invalid AppendMessage() function argument #3 - must be string (message count Object:Property or 'none')." );  break;
+								case  4 :  ExpSetErr( error, EXP_RuleProc, "Invalid AppendMessage() function argument #4 - must be string (message array Object:Property or 'none')." );  break;
+								case  5 :  ExpSetErr( error, EXP_RuleProc, "Invalid AppendMessage() function argument #5 - must be string (string to prepend to log message or 'none')." );  break;	// SAC 5/22/20
+						}	}
+					}
 
                // now assemble string from arguments
                QString sRetStr;
                bool bFmtOK = true;	// SAC 4/25/16 - added to handle unsuccessful string formatting
-               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile);  // SAC 3/8/17
+               bool bPreserveNewlines = (op == BF_WriteToFile || op == BF_WriteExpFile || op == BF_WriteSimInp);  // SAC 3/8/17
                if (bArgsOK)
                {
                   QString sFormat = (char*) pNode[0]->pValue;
@@ -4408,7 +4703,81 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   // now perform the appropriate action with the resulting string
                   if (bFmtOK && sRetStr.length() > 0 && op != BF_Format)
                   {
-                     if (op == BF_PostError)  // SAC 5/21/01
+                     if (op == BF_AppendMsg && (lDBID_MsgArray > 0 || lDBID_MsgCount > 0))  // SAC 5/21/20
+							{	// AppendMessage( AbortAnalysis (Obj:Prop/0/1), LogMessage (Obj:Prop/0/1), MsgCount ("Obj:Prop"/"none"), MsgArray ("Obj:Prop"/"none"), <Format() arguments> ) 
+								int iMsgArrayClass=0, iMsgCountClass=0, iMsgCountDataType=-1, iMsgArrayLength=-1;
+								int iMsgArrayObjIdx=-1, iMsgCountObjIdx=-1;		BEM_ObjType eMsgArrayObjTyp=BEMO_User, eMsgCountObjTyp=BEMO_User;
+								QString qsAMErrMsg;
+								if (lDBID_MsgArray > 0)
+								{	iMsgArrayClass  = BEMPX_GetClassID( lDBID_MsgArray );		assert( iMsgArrayClass > 0 );
+									if (iMsgArrayClass < 1)
+										qsAMErrMsg = QString( "Unable to identify MsgArray (argument 4) object class ID for DBID %1, evaluating AppendMessage()" ).arg( QString::number(lDBID_MsgArray) );
+									else if (iMsgArrayClass == BEMPX_GetClassID( pEval->lPrimDBID ))
+									{	iMsgArrayObjIdx = pEval->iPrimObjIdx;		eMsgArrayObjTyp = pEval->ePrimObjType;
+									} else if (iMsgArrayClass == BEMPX_GetClassID( pEval->lLocDBID ))
+									{	iMsgArrayObjIdx = pEval->iLocObjIdx;		eMsgArrayObjTyp = pEval->eLocObjType;
+									} else if (BEMPX_GetNumObjects( iMsgArrayClass ) != 1)
+										qsAMErrMsg = QString( "Unable to identify object (class %1) to store MsgArray (argument 4) to, evaluating AppendMessage()" ).arg( QString::number(iMsgArrayClass) );
+									if (qsAMErrMsg.isEmpty())
+									{	int iMsgArrayDT = BEMPX_GetDataType( lDBID_MsgArray );
+										if (iMsgArrayDT != BEMP_Str)
+											qsAMErrMsg = QString( "Invalid MsgArray (argument 4) property type %1 (must be string), evaluating AppendMessage()" ).arg( QString::number(iMsgArrayDT) );
+										else
+										{	iMsgArrayLength = BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_MsgArray );
+											if (iMsgArrayLength < 1)
+												qsAMErrMsg = QString( "Unable to retrieve MsgArray (argument 4) length (%1), evaluating AppendMessage()" ).arg( QString::number(iMsgArrayLength) );
+								}	}	}
+								if (qsAMErrMsg.isEmpty() && lDBID_MsgCount > 0)
+								{	iMsgCountClass  = BEMPX_GetClassID( lDBID_MsgCount );		assert( iMsgCountClass > 0 );
+									if (iMsgCountClass < 1)
+										qsAMErrMsg = QString( "Unable to identify MsgCount (argument 3) object class ID for DBID %1, evaluating AppendMessage()" ).arg( QString::number(lDBID_MsgCount) );
+									else if (iMsgCountClass == iMsgArrayClass)
+									{	iMsgCountObjIdx = iMsgArrayObjIdx;			eMsgCountObjTyp = eMsgArrayObjTyp;
+									} else if (iMsgCountClass == BEMPX_GetClassID( pEval->lPrimDBID ))
+									{	iMsgCountObjIdx = pEval->iPrimObjIdx;		eMsgCountObjTyp = pEval->ePrimObjType;
+									} else if (iMsgCountClass == BEMPX_GetClassID( pEval->lLocDBID ))
+									{	iMsgCountObjIdx = pEval->iLocObjIdx;		eMsgCountObjTyp = pEval->eLocObjType;
+									} else if (BEMPX_GetNumObjects( iMsgCountClass ) != 1)
+										qsAMErrMsg = QString( "Unable to identify object (class %1) to store MsgCount (argument 3) to, evaluating AppendMessage()" ).arg( QString::number(iMsgCountClass) );
+									if (qsAMErrMsg.isEmpty())
+									{	iMsgCountDataType = BEMPX_GetDataType( lDBID_MsgCount );
+										if (iMsgCountDataType != BEMP_Int)
+											qsAMErrMsg = QString( "Invalid MsgCount (argument 3) property type %1 (must be integer), evaluating AppendMessage()" ).arg( QString::number(iMsgCountDataType) );
+								}	}
+								if (qsAMErrMsg.isEmpty())
+								{	long lMsgCount=1;
+									int iSV, iErr;
+									if (iMsgCountClass > 0)
+									{	// log MsgCount retrieval (if being tracked)
+										if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID_MsgCount, iMsgCountObjIdx ))
+											ReportTargetedDebugInfo( pEval, iMsgCountDataType, lDBID_MsgCount, iMsgCountObjIdx, eMsgCountObjTyp, "AppendMessage( MsgCount )", -1 );
+										// retrieve and increment MsgCount
+										int iCountStatus;
+										lMsgCount = BEMPX_GetIntegerAndStatus( lDBID_MsgCount, iCountStatus, iSV, iErr, iMsgCountObjIdx, eMsgCountObjTyp );
+										if (iCountStatus < 1)
+										{	lMsgCount = 1;		iCountStatus = BEMS_UserDefined;
+										}
+										else if (lMsgCount < 1)
+											lMsgCount = 1;
+										else
+											lMsgCount++;
+										if (BEMPX_SetBEMData( lDBID_MsgCount, BEMP_Int, (void*) &lMsgCount, eMsgCountObjTyp, iMsgCountObjIdx, (BEM_PropertyStatus) iCountStatus,
+																	 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)	
+											qsAMErrMsg = QString( "AppendMessage() error: unable to set MsgCount to %1" ).arg( QString::number(lMsgCount) );
+									}
+									if (qsAMErrMsg.isEmpty() && iMsgArrayClass > 0 && iMsgArrayLength >= lMsgCount)
+									{
+										if (BEMPX_SetBEMData( lDBID_MsgArray+lMsgCount-1, BEMP_QStr, (void*) &sRetStr, eMsgArrayObjTyp, iMsgArrayObjIdx, BEMS_UserDefined,
+																	 BEMO_User, TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)	
+											qsAMErrMsg = QString( "AppendMessage() error: unable to set MsgArray to '%1'" ).arg( sRetStr );
+								}	}
+								if (!qsAMErrMsg.isEmpty())
+									ExpSetErr( error, EXP_RuleProc, qsAMErrMsg );
+								else
+				               bReturnUnchanged = true;		// SAC 5/22/20
+							}
+
+                     if (op == BF_PostError || iPostError > 0)  // SAC 5/21/01
                      {
                //         if (pssaErrorMsgs)
                //            pssaErrorMsgs->push_back( sRetStr );
@@ -4438,8 +4807,10 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                      }
                      else if (op == BF_MsgBox)  // SAC 9/29/06
                         BEMMessageBox( sRetStr, NULL, 1 /*info*/ );
-                     else if (op == BF_PostLogMsg)  // SAC 10/30/07
-                     {  BEMPX_WriteLogFile( sRetStr );
+                     else if (op == BF_PostLogMsg || iLogMsg > 0)  // SAC 10/30/07
+                     {  if (!sAMLogPrepend.isEmpty())
+									sRetStr = sAMLogPrepend + sRetStr;		// SAC 5/22/20
+                     	BEMPX_WriteLogFile( sRetStr );
                      	ruleSet.logMsgCallback( logMsgMESSAGE, sRetStr, NULL );
                      }
                      else
@@ -4462,7 +4833,7 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 									{	QString sErrMsg = QString( "No ruleset file open to write string to:  '%1'" ).arg( sRetStr );
 										ExpSetErr( error, EXP_RuleProc, sErrMsg );
 								}	}
-								else if (op == BF_WriteExpFile)  // SAC 9/15/15 - added WriteToExportFile() - file pointer provided in ruleset data
+								else if (op == BF_WriteExpFile || op == BF_WriteSimInp)  // SAC 9/15/15 - added WriteToExportFile() - file pointer provided in ruleset data
 								{	int iWrtRetVal = ruleSet.writeToExportFile( iExpFileIdx, sRetStr );		assert( iWrtRetVal == 0 );
 									if (iWrtRetVal != 0)
 									{	QString sErrMsg = QString( "Invalid export file index (%1) or file not open:  '%2'" ).arg( QString::number( iExpFileIdx ), sRetStr );
@@ -4486,6 +4857,11 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                   pNode[0]->type = EXP_Invalid;
                   pNode[0]->fValue = 0;
                }
+               else if (bReturnUnchanged)
+					{
+                  pNode[0]->type = EXP_Value;
+                  pNode[0]->fValue = -99997.0;  // unchanged
+               }
                else
                {
                   pNode[0]->type = EXP_String;
@@ -4499,6 +4875,468 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
                }
             }
             ExpxStackPush( stack, pNode[0] );
+            break;
+         }
+
+      case BF_RetCSVVal    : // SAC 4/10/20 - added RetrieveCSVValue( PathFilename, RecordNum, SearchString, ColsFollowing )
+         {  QString sPathFile="", sSearchStr="", sRetCSVErr="";
+         	int iRecNum=-1, iColsFollowing=-1;
+         	double dCSVVal=0.0;
+            ExpNode* pNode = ExpxStackPop( stack );
+            if (pNode->type == EXP_Value)					// translate fourth argument
+               iColsFollowing = (int) pNode->fValue;
+            else
+               sRetCSVErr = "Fourth RetrieveCSVValue() function argument (#ColsFollowing) must be an integer > 0.";
+            ExpxNodeDelete( pNode );
+            pNode = ExpxStackPop( stack );
+            if (pNode->type == EXP_String)				// translate third argument
+               sSearchStr = (char*) pNode->pValue;
+            else if (sRetCSVErr.isEmpty())
+               sRetCSVErr = "Third RetrieveCSVValue() function argument (SearchString) must be a string.";
+            ExpxNodeDelete( pNode );
+            pNode = ExpxStackPop( stack );
+            if (pNode->type == EXP_Value)					// translate second argument
+               iRecNum = (int) pNode->fValue;
+            else if (sRetCSVErr.isEmpty())
+               sRetCSVErr = "Second RetrieveCSVValue() function argument (RecordNum) must be an integer > 0.";
+            ExpxNodeDelete( pNode );
+            pNode = ExpxStackPop( stack );
+            if (pNode->type == EXP_String)				// translate first argument
+            {  sPathFile = (char*) pNode->pValue;
+               free( pNode->pValue );
+               pNode->pValue = NULL;
+            }
+            else if (sRetCSVErr.isEmpty())
+               sRetCSVErr = "First RetrieveCSVValue() function argument (PathFilename) must be a string.";
+
+            if (sRetCSVErr.isEmpty())
+            {	//if (sPathFile.indexOf(':') > 0 || sPathFile.indexOf('\\') == 0 || sPathFile.indexOf('/') == 0 || sPathFile.indexOf("\\\\") > 0 || sPathFile.indexOf("//") > 0)
+            	//{  // do nothing - full path specified
+            	//}
+            	//else
+            	//   // append filename to processing path
+            	if (sPathFile.isEmpty())
+	               sRetCSVErr = "RetrieveCSVValue() error: CSV path/filename (1st argument) not specified";
+            	else if (iRecNum < 1)
+	               sRetCSVErr = QString( "RetrieveCSVValue() error: CSV file record number (%1) must be > 0" ).arg( QString::number(iRecNum) );
+            	else if (sSearchStr.isEmpty())
+	               sRetCSVErr = "RetrieveCSVValue() error: search string (3rd argument) not specified";
+            	else if (iColsFollowing < 1)
+	               sRetCSVErr = QString( "RetrieveCSVValue() error: columns following component name (%1) must be > 0" ).arg( QString::number(iColsFollowing) );
+            	else if (!FileExists( sPathFile.toLocal8Bit().constData() ))
+	               sRetCSVErr = QString( "RetrieveCSVValue() error: unable to open CSV file:  %1" ).arg( sPathFile );
+	            else
+	            {	QStringList saCSVFields;
+				   	try
+				   	{  // open file
+				   	   BEMTextIO file( sPathFile.toLocal8Bit().constData(), BEMTextIO::load );
+							int idx;
+				   	   try
+				   	   {	int iNumFlds;
+				   	   	for (idx=1; (idx<iRecNum && !file.AtEOF()); idx++)
+				   	   		iNumFlds = file.ParseCSVRecord( saCSVFields );		// GetLine() alone didn't increment to target line - SAC 4/12/20
+				   	   	if (file.AtEOF())
+			   	            sRetCSVErr = QString( "RetrieveCSVValue() error: too few records (%1) in CSV file:  %2" ).arg( QString::number(idx), sPathFile );
+				   	   	else
+				   	   	{	iNumFlds = file.ParseCSVRecord( saCSVFields );
+					   	   	bool bFoundKey=false;
+					   	   	for (int idx=1; (idx<=iNumFlds && !bFoundKey); idx++)
+									{
+// testing
+//BEMPX_WriteLogFile( (QString("   rec %1, field %2 '%3' ?= '%4'  in CSV file:  %5").arg( QString::number(iRecNum), QString::number(idx), saCSVFields[idx-1], sSearchStr, sPathFile )) );
+										if (!saCSVFields[idx-1].compare( sSearchStr ))
+										{	bFoundKey = true;
+											if (iNumFlds < (idx+iColsFollowing))
+						   	            sRetCSVErr = QString( "RetrieveCSVValue() error: too few columns of data (%1) following search string '%2' in record %3 of CSV file:  %4" ).arg( QString::number((iNumFlds-idx)), sSearchStr, QString::number(iRecNum), sPathFile );
+											else if (saCSVFields[idx+iColsFollowing-1].isEmpty())
+						   	            sRetCSVErr = QString( "RetrieveCSVValue() error: field to return (%1 col(s) past '%2') zero length in record %3 of CSV file:  %4" ).arg( QString::number(iColsFollowing), sSearchStr, QString::number(iRecNum), sPathFile );
+											else
+												dCSVVal = atof( saCSVFields[idx+iColsFollowing-1].toLocal8Bit().constData() );
+									}	}
+									if (!bFoundKey)
+				   	            sRetCSVErr = QString( "RetrieveCSVValue() error: search string '%1' not found in record %2 of CSV file:  %3" ).arg( sSearchStr, QString::number(iRecNum), sPathFile );
+								}
+				   	   }
+							catch (std::exception& e)
+							{	sRetCSVErr = QString( "RetrieveCSVValue() error: %1 reading CSV file:  %2" ).arg( e.what(), sPathFile );
+							}
+						 	catch (...)
+						  	{	sRetCSVErr = QString( "RetrieveCSVValue() error: reading CSV file:  %1" ).arg( sPathFile );
+							}
+				   		file.Close(); 
+				   	}
+						catch (std::exception& e)
+						{	sRetCSVErr = QString( "RetrieveCSVValue() error: %1 opening CSV file:  %2" ).arg( e.what(), sPathFile );
+						}
+					 	catch (...)
+					  	{	sRetCSVErr = QString( "RetrieveCSVValue() error: opening CSV file:  %1" ).arg( sPathFile );
+						}
+				}	}
+
+            if (!sRetCSVErr.isEmpty())
+            {  ExpSetErr( error, EXP_RuleProc, sRetCSVErr );
+					pNode->type   = EXP_Invalid;
+					pNode->fValue = 0;
+
+// testing
+//BEMPX_WriteLogFile( sRetCSVErr );
+
+				}
+				else
+				{	pNode->type   = EXP_Value;
+               pNode->fValue = dCSVVal;
+
+// testing
+//BEMPX_WriteLogFile( (QString( "RetrieveCSVValue() success: found %1 in rec #%2, %3 cols past '%4' from file:  %5" ).arg( QString::number(dCSVVal), QString::number(iRecNum), QString::number(iColsFollowing), sSearchStr, sPathFile )) );
+
+            }
+            ExpxStackPush( stack, pNode );
+	         break;
+			}
+
+		case BF_EvalRLCSVCol  :  // SAC 5/9/20 - EvalRulelistOnCSVColumns( "CSVPathFile", #StartRow, #StartCol, "RulelistName", "Function", "ResultBEMProp", "RecordNumBEMProp", "CSVCol1Title", "Col1ValBEMProp", <up to 5 more arg pairs> )
+         {  // First check for valid number of arguments
+            ExpNode* pNode[19];
+            int iMinArgs = 9;
+            int iMaxArgs = 19;
+			   QString sCSVErrMsg;
+            assert( nArgs >= iMinArgs && nArgs <= iMaxArgs );	
+            if (nArgs < iMinArgs)
+            {  // post error & setup return argument
+               ExpSetErr( error, EXP_RuleProc, QString( "EvalRulelistOnCSVColumns() requires at least %1 arguments." ).arg( QString::number(iMinArgs) ) );
+               pNode[0] = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
+               pNode[0]->type = EXP_Invalid;
+               pNode[0]->fValue = 0;
+            }
+            else if (nArgs > iMaxArgs || (nArgs % 2) < 1)
+            {  // post error, delete all but one arguments & setup return argument
+               if (nArgs > iMaxArgs)
+               	ExpSetErr( error, EXP_RuleProc, QString( "EvalRulelistOnCSVColumns() cannot have more than %1 arguments." ).arg( QString::number(iMaxArgs) ) );
+               else
+               	ExpSetErr( error, EXP_RuleProc, "EvalRulelistOnCSVColumns() must have odd number of arguments, 7 + (1-6) pairs (ColTitle, ColBEMProperty) ." );
+               pNode[0] = ExpxStackPop( stack );
+               for (int i=1; i<nArgs; i++)
+               {  ExpxNodeDelete( pNode[0] );
+                  pNode[0] = ExpxStackPop( stack );
+               }
+               if (pNode[0]->type == EXP_String)
+               {  free( pNode[0]->pValue );
+                  pNode[0]->pValue = NULL;
+               }
+               pNode[0]->type = EXP_Invalid;
+               pNode[0]->fValue = 0;
+            }
+            else  // # arguments OK
+            {
+               // pop and check each function argument
+				   int iNumArgPairs = (nArgs-7) / 2;
+				   int iPairIdx = iNumArgPairs-1;
+				   int i;
+// to remove -
+//					QString qsDbgArgMsg, qsTDAM;
+//               for (i=nArgs-1; i>=0; i--)
+//               {  pNode[i] = ExpxStackPop( stack );
+//                  if (pNode[i] == NULL)
+//                  	qsTDAM = QString( "\n   %1 : NULL" ).arg( QString::number(i+1) );
+//                  else if (pNode[i]->type == EXP_Value)
+//                  	qsTDAM = QString( "\n   %1 : val %2" ).arg( QString::number(i+1), QString::number(pNode[i]->fValue) );
+//                  else if (pNode[i]->type == EXP_String)
+//                  	qsTDAM = QString( "\n   %1 : str '%2'" ).arg( QString::number(i+1), (char*) pNode[i]->pValue );
+//						qsDbgArgMsg = qsTDAM + qsDbgArgMsg;
+//         //         if (i > 0)
+//			//            ExpxNodeDelete( pNode[i] );
+//			//         else if (pNode[i]->type == EXP_String)
+//	      //         {  free( pNode[0]->pValue );
+//   	   //            pNode[0]->pValue = NULL;
+//      	//         }
+//      	      }
+//               //BEMMessageBox( qsDbgArgMsg, NULL, 1 /*info*/ );
+//               BEMPX_WriteLogFile( qsDbgArgMsg );
+// ^^^ to remove ^^^
+
+				   int iaColCID[6]    = {0,0,0,0,0,0};
+				   int iaColObjIdx[6] = {0,0,0,0,0,0};
+				   BEM_ObjType otaColObjTyp[6];
+				   long laColDBID[6]   = {0,0,0,0,0,0};
+				   QString qsaColHdr[6], qsaColPropName[6];
+               for (i=nArgs-1; (sCSVErrMsg.isEmpty() && i>=7); i--)
+               {  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String)
+                     sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting Col%2BEMProperty name (string)." ).arg( QString::number( i+1 ), QString::number( iPairIdx+1 ) );
+                  else
+                  {	qsaColPropName[iPairIdx] = (char*) pNode[i]->pValue;
+                  	laColDBID[iPairIdx] = BEMPX_GetDatabaseID( qsaColPropName[iPairIdx], BEMPX_GetClassID( pEval->lPrimDBID ) );
+                  	if (laColDBID[iPairIdx] > 0)
+                  	{	iaColCID[    iPairIdx] = BEMPX_GetClassID( pEval->lPrimDBID );
+                  		iaColObjIdx[ iPairIdx] = pEval->iPrimObjIdx;
+                  		otaColObjTyp[iPairIdx] = pEval->ePrimObjType;
+                  	}
+                  	else
+                  	{	laColDBID[iPairIdx] = BEMPX_GetDatabaseID( qsaColPropName[iPairIdx], BEMPX_GetClassID( pEval->lLocDBID ) );
+	                  	if (laColDBID[iPairIdx] > 0)
+	                  	{	iaColCID[    iPairIdx] = BEMPX_GetClassID( pEval->lLocDBID );
+	                  		iaColObjIdx[ iPairIdx] = pEval->iLocObjIdx;
+	                  		otaColObjTyp[iPairIdx] = pEval->eLocObjType;
+	                  	}
+	                  	else
+	                  		sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting Col%2BEMProperty name (string)." ).arg( QString::number( i+1 ), QString::number( iPairIdx+1 ) );
+	                  }
+	               }
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+						if (sCSVErrMsg.isEmpty())
+						{	pNode[--i] = ExpxStackPop( stack );
+	                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+	                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting CSV Col%2Title (string)." ).arg( QString::number( i+1 ), QString::number( iPairIdx+1 ) );
+	                  else
+	                  	qsaColHdr[iPairIdx] = (char*) pNode[i]->pValue;
+		               if (pNode[i])
+				            ExpxNodeDelete( pNode[i] );
+						}
+						iPairIdx--;
+					}
+					long lRecNumDBID=0;		QString sRecNumPropName;	int iRecNumCID, iRecNumObjIdx;		BEM_ObjType otRecNumObjTyp;	i = 6;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #7:  "RecordNumBEMProp"
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting RecordNumBEMProp name (string)." ).arg( QString::number( i+1 ) );
+                  else
+                  {	lRecNumDBID = BEMPX_GetDatabaseID( (char*) pNode[i]->pValue, BEMPX_GetClassID( pEval->lPrimDBID ) );
+                  	if (lRecNumDBID > 0)
+                  	{	iRecNumCID = BEMPX_GetClassID( pEval->lPrimDBID );
+                  		iRecNumObjIdx = pEval->iPrimObjIdx;
+                  		otRecNumObjTyp = pEval->ePrimObjType;
+                  	}
+                  	else
+                  	{	sRecNumPropName = (char*) pNode[i]->pValue;
+                  		lRecNumDBID = BEMPX_GetDatabaseID( sRecNumPropName, BEMPX_GetClassID( pEval->lLocDBID ) );
+	                  	if (lRecNumDBID > 0)
+	                  	{	iRecNumCID = BEMPX_GetClassID( pEval->lLocDBID );
+	                  		iRecNumObjIdx = pEval->iLocObjIdx;
+	                  		otRecNumObjTyp = pEval->eLocObjType;
+	                  	}
+	                  	else
+	                  		sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting RecordNumBEMProp name (string)." ).arg( QString::number( i+1 ) );
+		               }
+	               }
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					long lResultDBID=0;		QString sResultPropName;	int iResultCID, iResultObjIdx;		BEM_ObjType otResultObjTyp;	i--;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #6:  "ResultBEMProp"
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting ResultBEMProp name (string)." ).arg( QString::number( i+1 ) );
+                  else
+                  {	lResultDBID = BEMPX_GetDatabaseID( (char*) pNode[i]->pValue, BEMPX_GetClassID( pEval->lPrimDBID ) );
+                  	if (lResultDBID > 0)
+                  	{	iResultCID = BEMPX_GetClassID( pEval->lPrimDBID );
+                  		iResultObjIdx = pEval->iPrimObjIdx;
+                  		otResultObjTyp = pEval->ePrimObjType;
+                  	}
+                  	else
+                  	{	sResultPropName = (char*) pNode[i]->pValue;
+                  		lResultDBID = BEMPX_GetDatabaseID( sResultPropName, BEMPX_GetClassID( pEval->lLocDBID ) );
+	                  	if (lResultDBID > 0)
+	                  	{	iResultCID = BEMPX_GetClassID( pEval->lLocDBID );
+	                  		iResultObjIdx = pEval->iLocObjIdx;
+	                  		otResultObjTyp = pEval->eLocObjType;
+	                  	}
+	                  	else
+	                  		sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting ResultBEMProp name (string)." ).arg( QString::number( i+1 ) );
+		               }
+	               }
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					i--;		int iCSVFunc = 0;  // 0-Sum, 1-Avg, 2-Min, 3-Max
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #5:  "Function"
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting Function name (string: Sum, Avg, Min or Max)." ).arg( QString::number( i+1 ) );
+                  else
+                  {	QString qsCSVFunc = (char*) pNode[i]->pValue;
+                  	if (!qsCSVFunc.compare( "Sum", Qt::CaseInsensitive ))
+                  		iCSVFunc = 0;
+                  	else if (!qsCSVFunc.compare( "Avg", Qt::CaseInsensitive ))
+                  		iCSVFunc = 1;
+                  	else if (!qsCSVFunc.compare( "Min", Qt::CaseInsensitive ))
+                  		iCSVFunc = 2;
+                  	else if (!qsCSVFunc.compare( "Max", Qt::CaseInsensitive ))
+                  		iCSVFunc = 3;
+                  	else
+	                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), unrecognized Function name '%2' (expecting: Sum, Avg, Min or Max)." ).arg( QString::number( i+1 ), qsCSVFunc );
+      	       	}
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					QString sCSVRulelistName;		i--;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #4:  "RulelistName"
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting RulelistName (string: rulelist name or 'None')." ).arg( QString::number( i+1 ) );
+                  else
+                  {	sCSVRulelistName = (char*) pNode[i]->pValue;
+                  	if (!sCSVRulelistName.compare( "None", Qt::CaseInsensitive ))
+                  		sCSVRulelistName.clear();
+         			}
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					int iStartCol=0, iStartRow=0;		i--;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #3:  #StartCol
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_Value || pNode[i]->fValue < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting StartCol # (integer > 0)." ).arg( QString::number( i+1 ) );
+                  else
+                  	iStartCol = (int) pNode[i]->fValue;
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					i--;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #2:  #StartRow
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_Value || pNode[i]->fValue < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting StartRow # (integer > 0)." ).arg( QString::number( i+1 ) );
+                  else
+                  	iStartRow = (int) pNode[i]->fValue;
+	               if (pNode[i])
+			            ExpxNodeDelete( pNode[i] );
+					}
+					QString sCSVPathFile;		i--;
+					if (sCSVErrMsg.isEmpty())
+					{	// parse arg #1:  "CSVPathFile"
+						assert( i==0 );
+                  pNode[i] = ExpxStackPop( stack );
+                  if (pNode[i] == NULL || pNode[i]->type != EXP_String || pNode[i]->pValue == NULL || strlen( (char*) pNode[i]->pValue ) < 1)
+                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), expecting CSVPathFile (string)." ).arg( QString::number( i+1 ) );
+                  else
+                  {	sCSVPathFile = (char*) pNode[i]->pValue;
+                  	if (!FileExists( sCSVPathFile.toLocal8Bit().constData() ))
+	                  	sCSVErrMsg = QString( "Invalid EvalRulelistOnCSVColumns() function argument (#%1), CSV file not found:  %2" ).arg( QString::number( i+1 ), sCSVPathFile );
+         			}
+	               if (pNode[i])
+	               {  free( pNode[i]->pValue );
+	                  pNode[i]->pValue = NULL;
+	            }	}
+
+               if (sCSVErrMsg.isEmpty())
+	            {	pNode[0]->fValue = 0;
+	            	QStringList saCSVFields;
+				   	try
+				   	{  // open file
+				   	   BEMTextIO file( sCSVPathFile.toLocal8Bit().constData(), BEMTextIO::load );
+							int idx, iCol;
+				   	   try
+				   	   {	int iNumFlds;
+				   	   	for (idx=1; (idx<iStartRow && !file.AtEOF()); idx++)
+				   	   		iNumFlds = file.ParseCSVRecord( saCSVFields );		// GetLine() alone didn't increment to target line - SAC 4/12/20
+				   	   	if (file.AtEOF())
+			   	            sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: too few records (%1) in CSV file:  %2" ).arg( QString::number(idx), sCSVPathFile );
+				   	   	else
+				   	   	{	iNumFlds = file.ParseCSVRecord( saCSVFields );
+								   int iaColFldIdx[6]  = { -1,-1,-1,-1,-1,-1 };
+									for (idx=0; (sCSVErrMsg.isEmpty() && idx<iNumFlds); idx++)
+									{	int iFldColIdx=-1;
+										if ((idx+1) >= iStartCol)
+										{	for (iCol=0; (iFldColIdx < 0 && sCSVErrMsg.isEmpty() && iCol < 6); iCol++)
+												if (iaColFldIdx[iCol] < 0 && laColDBID[iCol] > 0 && !qsaColHdr[iCol].compare( saCSVFields[idx], Qt::CaseInsensitive ))
+												{	iaColFldIdx[iCol] = idx;
+													iFldColIdx = iCol;
+												}
+										}
+									}
+									for (iCol=0; (sCSVErrMsg.isEmpty() && iCol < 6); iCol++)
+									{	// check to confirm that all columns searched for are present in CSV 
+										if (laColDBID[iCol] > 0 && iaColFldIdx[iCol] < 0)
+											sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: CSV column title '%1' not found on record %2 of CSV file:  %3" ).arg( qsaColHdr[iCol], QString::number(iStartRow), sCSVPathFile );
+									}
+				               if (sCSVErrMsg.isEmpty())
+				               {	long lRecNum=0, lNumRecsProcessed=0;
+				               	double dCSVVal;
+				               	do
+				               	{	iNumFlds = file.ParseCSVRecord( saCSVFields );
+				               		lRecNum++;
+				               		for (iCol=0; (sCSVErrMsg.isEmpty() && iCol < 6); iCol++)
+				               		{	assert( iNumFlds==0 || iNumFlds > iaColFldIdx[iCol] );
+				               			if (iaColFldIdx[iCol] >= 0 && iaColFldIdx[iCol] < iNumFlds)
+				               			{	// assumption is that all data are FLOATS
+													dCSVVal = atof( saCSVFields[iaColFldIdx[iCol]].toLocal8Bit().constData() );
+													if (BEMPX_SetBEMData( laColDBID[iCol], BEMP_Flt, (void*) &dCSVVal, BEMO_User, iaColObjIdx[iCol], BEMS_UserDefined,
+																				 otaColObjTyp[iCol], TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)	
+														sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: unable to set Col%1, record %2 value %3 to %4 for CSV file:  %5" ).arg( 
+																							QString::number(iCol+1), QString::number(iStartRow+lRecNum), QString::number(dCSVVal), qsaColPropName[iCol], sCSVPathFile );
+				               			}
+											}
+											if (sCSVErrMsg.isEmpty() && iNumFlds > 0)
+											{	// post lRecNum to BEMBase, call Rulelist and retrieve result for the record
+												if (lRecNumDBID > 0 && BEMPX_SetBEMData( lRecNumDBID, BEMP_Int, (void*) &lRecNum, BEMO_User, iRecNumObjIdx, BEMS_UserDefined, otRecNumObjTyp,
+																										TRUE /*bPerformResets*/, -1 /*iBEMProcIdx*/, 2, NULL, NULL, 0, pEval->pTargetedDebugInfo ) < 0)	
+													sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: unable to set %1 to %2, CSV file record %3 of:  %4" ).arg( 
+																						sRecNumPropName, QString::number(lRecNum), QString::number(iStartRow+lRecNum), sCSVPathFile );
+
+												if (sCSVErrMsg.isEmpty() && !BEMPX_EvaluateRuleList( sCSVRulelistName.toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/, iResultCID /*iEvalOnlyClass*/,
+																								iResultObjIdx /*iEvalOnlyObjIdx*/, otResultObjTyp /*iEvalOnlyObjType*/, pEval->bVerboseOutput, pEval->pTargetedDebugInfo ))
+													sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: evaluating rulelist %1 on CSV file record %2 of:  %3" ).arg( 
+																						sCSVRulelistName, QString::number(iStartRow+lRecNum), sCSVPathFile );
+
+												if (sCSVErrMsg.isEmpty())
+												{	if (!BEMPX_GetFloat( lResultDBID, dCSVVal, 0, -1, iResultObjIdx, otResultObjTyp, -1 /*iBEMProcIdx*/ ))
+														sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: unable to retrieve %1 result on CSV file record %2 of:  %3" ).arg( 
+																						sResultPropName, QString::number(iStartRow+lRecNum), sCSVPathFile );
+													else
+													{	if (iCSVFunc < 2 || lNumRecsProcessed == 0)
+															pNode[0]->fValue += dCSVVal;
+														else if (iCSVFunc == 2 && dCSVVal < pNode[0]->fValue)   // min
+															pNode[0]->fValue = dCSVVal;
+														else if (iCSVFunc == 3 && dCSVVal > pNode[0]->fValue)   // max
+															pNode[0]->fValue = dCSVVal;
+														lNumRecsProcessed++;
+													// testing
+													//if (lNumRecsProcessed > 8750 || lNumRecsProcessed % 720 == 0)
+													//	BEMPX_WriteLogFile( QString( "   processed CSV rec #%1 via %2 - running result = %3" ).arg( QString::number(iStartRow+lRecNum), sCSVRulelistName, QString::number(pNode[0]->fValue) ) );
+													}
+											}	}
+
+										} while (sCSVErrMsg.isEmpty() && !file.AtEOF());
+										//} while (sCSVErrMsg.isEmpty() && !file.AtEOF() && lNumRecsProcessed < 11);
+
+										if (sCSVErrMsg.isEmpty() && lNumRecsProcessed > 0 && iCSVFunc == 1)   // avg
+											pNode[0]->fValue /= lNumRecsProcessed;
+								}	}
+				   	   }
+							catch (std::exception& e)
+							{	sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: %1 reading CSV file:  %2" ).arg( e.what(), sCSVPathFile );
+							}
+						 	catch (...)
+						  	{	sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: reading CSV file:  %1" ).arg( sCSVPathFile );
+							}
+				   		file.Close(); 
+				   	}
+						catch (std::exception& e)
+						{	sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: %1 opening CSV file:  %2" ).arg( e.what(), sCSVPathFile );
+						}
+					 	catch (...)
+					  	{	sCSVErrMsg = QString( "EvalRulelistOnCSVColumns() error: opening CSV file:  %1" ).arg( sCSVPathFile );
+						}
+               }
+            }
+            if (!sCSVErrMsg.isEmpty())
+				{	ExpSetErr( error, EXP_RuleProc, sCSVErrMsg );
+					if (pNode[0])
+					{	pNode[0]->type   = EXP_Invalid;
+						pNode[0]->fValue = 0;
+				}	}
+				else 
+					pNode[0]->type = EXP_Value;
+				if (pNode[0])
+	            ExpxStackPush( stack, pNode[0] );
             break;
          }
 
@@ -5027,13 +5865,15 @@ void BEMPFunction( ExpStack* stack, int op, int nArgs, void* pEvalData, ExpError
 										ExpxStackPush( stack, pNode );
 										break; }
 
+		case BF_SymValue   :    // SAC 6/30/20
 		case BF_SymString  :  { // SAC 4/10/14
 										ExpNode* pNode = ExpxStackPop( stack );
-										if (pNode && pNode->type == EXP_String)
-										{	// simply push node back onto stack - this is ALREADY the valid return string
+										if (pNode && ((op == BF_SymString && pNode->type == EXP_String) ||
+														  (op == BF_SymValue  && pNode->type == EXP_Value )))
+										{	// simply push node back onto stack - this is ALREADY the valid return string/value
 										}
 										else
-										{	ExpSetErr( error, EXP_RuleProc, "Invalid EnumString() argument - should be Loc/Par#/Global Object:Property name" );
+										{	ExpSetErr( error, EXP_RuleProc, QString( "Invalid %1() argument - should be Loc/Par#/Global Object:Property name" ).arg( FuncName(op) ) );
 											if (pNode == NULL)
 												pNode = ExpNode_new();  //(ExpNode*) malloc( sizeof( ExpNode ) );
 											pNode->type = EXP_Invalid;
@@ -6752,8 +7592,11 @@ static void PopulateBEMProcInfo( QString& sBEMProcErr, long lDBID, int iOccur, B
 static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStruct* pEval, ExpError* error )
 {
 	bool bRetMustBeValid = (op == BF_GlobalVal || op == BF_LocalVal || op == BF_ParentVal || op == BF_Parent2Val || op == BF_Parent3Val);  // SAC 2/13/14
-	bool bGetSymStr = (ruleSet.IsDataModel() || op == BF_LocSymStr || op == BF_GlobSymStr || op == BF_Par2SymStr || op == BF_Par3SymStr || op == BF_LocRefSymStr ||
-								 op == BF_ParSymStr || op == BF_ParRefSymStr || op == BF_Par2RefSymStr || op == BF_Par3RefSymStr || op == BF_GlobRefSymStr );  // SAC 4/10/14  // SAC 4/4/18
+	bool bGetSymStr = (  op == BF_LocSymStr || op == BF_GlobSymStr || op == BF_Par2SymStr || op == BF_Par3SymStr || op == BF_LocRefSymStr ||
+								op == BF_ParSymStr || op == BF_ParRefSymStr || op == BF_Par2RefSymStr || op == BF_Par3RefSymStr || op == BF_GlobRefSymStr );  // SAC 4/10/14  // SAC 4/4/18
+	if (!bGetSymStr && ruleSet.IsDataModel() && op != BF_LocSymVal && op != BF_GlobSymVal && op != BF_Par2SymVal && op != BF_Par3SymVal && op != BF_LocRefSymVal &&
+			op != BF_ParSymVal && op != BF_ParRefSymVal && op != BF_Par2RefSymVal && op != BF_Par3RefSymVal && op != BF_GlobRefSymVal)		// SAC 6/30/20
+		bGetSymStr = true;
    // First grab trailing child index (if ChildRef())
    int iChildIdx = -1;
    if (op == BF_ChildRef)	// pop trailing numeric value to compare the Local* value to
@@ -6789,17 +7632,18 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 	int iParsedDBID0Model = -1;
 	QString sParseArg;
    if ( pNode->type == EXP_String  &&  nArgs == 1  &&
-        ( op == BF_ParentRef  || op == BF_Parent2Ref  || op == BF_Parent3Ref  || op == BF_Parent2Val  || op == BF_Parent3Val || op == BF_Par2SymStr  || op == BF_Par3SymStr   || op == BF_Par2RefSymStr  || op == BF_Par3RefSymStr   ||
-          op == BF_PIsDefault || op == BF_ParStatus   || op == BF_PCompAssign || op == BF_ParStrAElem || op == BF_ParentVal  || op == BF_ParSymStr   || op == BF_ParRefSymStr ||    // SAC 11/20/09
-			 op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus   || op == BF_LocalVal   || op == BF_LocSymStr   || op == BF_LocRefSymStr ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
-   		 op == BF_ChildRef   || op == BF_GlobalRef   || op == BF_GlobStatus  || op == BF_GlobRefSymStr || bRetMustBeValid  ) )   // SAC 8/28/12   // SAC 2/13/14   // SAC 4/4/18
+        ( op == BF_ParentRef  || op == BF_Parent2Ref    || op == BF_Parent3Ref    || op == BF_Parent2Val    || op == BF_Parent3Val    || op == BF_Par2SymStr    || op == BF_Par2SymVal    || op == BF_Par3SymStr   ||		// SAC 6/30/20
+          op == BF_Par3SymVal || op == BF_Par2RefSymStr || op == BF_Par2RefSymVal || op == BF_Par3RefSymStr || op == BF_Par3RefSymVal ||    // SAC 6/30/20
+          op == BF_PIsDefault || op == BF_ParStatus     || op == BF_PCompAssign   || op == BF_ParStrAElem   || op == BF_ParentVal     || op == BF_ParSymStr     || op == BF_ParSymVal     || op == BF_ParRefSymStr || op == BF_ParRefSymVal ||    // SAC 11/20/09
+			 op == BF_LocalRef   || op == BF_LCompAssign   || op == BF_LIsDefault    || op == BF_LocStatus     || op == BF_LocalVal      || op == BF_LocSymStr     || op == BF_LocSymVal     || op == BF_LocRefSymStr || op == BF_LocRefSymVal ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well  // SAC 6/30/20
+   		 op == BF_ChildRef   || op == BF_GlobalRef     || op == BF_GlobStatus    || op == BF_GlobSymStr    || op == BF_GlobSymVal    || op == BF_GlobRefSymStr || op == BF_GlobRefSymVal || bRetMustBeValid  ) )   // SAC 8/28/12   // SAC 2/13/14   // SAC 4/4/18
    {  // must PARSE ParentRef() argument -> multiple comp:param ID Args
 		bParseAsWeEvaluate = TRUE;
 		sParseArg = (char*) pNode->pValue;								assert( !sParseArg.isEmpty() );
 		if (op == BF_LocalRef   || op == BF_LCompAssign || op == BF_LIsDefault  || op == BF_LocStatus || op == BF_LocalVal ||   // SAC 8/28/12 - added LocalRef... options to enable these to be parsed at eval time as well
-			 op == BF_LocSymStr || op == BF_LocRefSymStr )		// SAC 5/19/17 - added Loc*SymStr checks
+			 op == BF_LocSymStr || op == BF_LocSymVal || op == BF_LocRefSymStr || op == BF_LocRefSymVal )		// SAC 5/19/17 - added Loc*SymStr checks   // SAC 6/30/20
 			i1ParsedClass = BEMPX_GetClassID( pEval->lPrimDBID );
-		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal || op == BF_GlobRefSymStr )  // SAC 8/28/12  // SAC 2/13/14  // SAC 4/4/18
+		else if (op == BF_ChildRef || op == BF_GlobalRef || op == BF_GlobalVal || op == BF_GlobSymStr || op == BF_GlobSymVal || op == BF_GlobRefSymStr || op == BF_GlobRefSymVal )  // SAC 8/28/12  // SAC 2/13/14  // SAC 4/4/18   // SAC 6/30/20
 		{	// first portion of argument string identifies the object type to start with
 			int iColon = sParseArg.indexOf(':');									assert( iColon > 0 );
 			if (iColon > 0)
@@ -6808,8 +7652,8 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
 				sParseArg = sParseArg.right( sParseArg.length() - iColon - 1 );  // remove leading child/global object type name
 		}	}
 		else
-      	i1ParsedClass = (op == BF_ParentRef || op == BF_PCompAssign || op == BF_PIsDefault || op == BF_ParStatus || op == BF_ParStrAElem || op == BF_ParentVal || op == BF_ParSymStr || op == BF_ParRefSymStr ? pEval->iPrimPar1Class :    // SAC 11/20/09
-                                             (op == BF_Parent2Ref || op == BF_Parent2Val || op == BF_Par2SymStr || op == BF_Par2RefSymStr ? pEval->iPrimPar2Class : pEval->iPrimPar3Class));
+      	i1ParsedClass = (op == BF_ParentRef || op == BF_PCompAssign || op == BF_PIsDefault || op == BF_ParStatus || op == BF_ParStrAElem || op == BF_ParentVal || op == BF_ParSymStr || op == BF_ParSymVal || op == BF_ParRefSymStr || op == BF_ParRefSymVal ? pEval->iPrimPar1Class :    // SAC 11/20/09   // SAC 6/30/20
+                                             (op == BF_Parent2Ref || op == BF_Parent2Val || op == BF_Par2SymStr || op == BF_Par2SymVal || op == BF_Par2RefSymStr || op == BF_Par2RefSymVal ? pEval->iPrimPar2Class : pEval->iPrimPar3Class));		// SAC 6/30/20
 		QString sRemainingStr = sParseArg;
 												assert( !ruleSet.IsDataModel() || (pEval && !pEval->sRuleListName.isEmpty()) );
 		int iCurTransID = ((ruleSet.IsDataModel() && pEval && !pEval->sRuleListName.isEmpty()) ? GetTransformationIDFromRulelistName( pEval->sRuleListName ) : 0); 	// SAC 3/29/14 - enable rulelist expression grouping
@@ -6875,8 +7719,8 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
          //   plParams[ arg-1 ] = (long) pNode->fValue;
          {	lMDBID = (long long) pNode->fValue;				// SAC 3/19/13 - code to handle DBIDs including MODEL index
 				if (lMDBID > BEM_MODEL_MULT)
-				{	plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );						assert( i0ArgModel<0 || i0ArgModel==((int) BEMPX_GetModelID( lMDBID )-1) );
-					i0ArgModel = (int) BEMPX_GetModelID( lMDBID ) - 1;
+				{	plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );						assert( i0ArgModel<0 || i0ArgModel==ruleSet.transformToBEMProcIdx( lMDBID ) );
+					i0ArgModel = ruleSet.transformToBEMProcIdx( lMDBID );
 				}
 				else
 					plParams[ arg-1 ] = (long) lMDBID;
@@ -6891,25 +7735,26 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
    // Get occurrence index for first data retrieval based on Local/Parent/ChildRef type
    // SAC 8/3/99 - added processing to handle ComponentAssigned()
 	int iFirstClassToCheck = -1;
-   if (op == BF_LocalRef || op == BF_LCompAssign || op == BF_LIsDefault || op == BF_LocStatus || op == BF_LocMxStrLen || op == BF_LocalVal || op == BF_LocSymStr || op == BF_LocRefSymStr)   // SAC 11/20/09
+   if (op == BF_LocalRef || op == BF_LCompAssign || op == BF_LIsDefault   || op == BF_LocStatus || op == BF_LocMxStrLen || op == BF_LocalVal ||
+       op == BF_LocSymStr || op == BF_LocSymVal  || op == BF_LocRefSymStr || op == BF_LocRefSymVal)   // SAC 11/20/09   // SAC 6/30/20
    {
 		iFirstClassToCheck = (pEval->lPrimDBID > BEM_COMP_MULT ? BEMPX_GetClassID( pEval->lPrimDBID ) : -1);
       iOccur = pEval->iPrimObjIdx;
       eObjType = pEval->ePrimObjType;
    }
-   else if (op == BF_ParentRef || op == BF_PCompAssign || op == BF_PIsDefault || op == BF_ParStatus || op == BF_ParStrAElem || op == BF_ParentVal || op == BF_ParSymStr || op == BF_ParRefSymStr)   // SAC 11/20/09
+   else if (op == BF_ParentRef || op == BF_PCompAssign || op == BF_PIsDefault || op == BF_ParStatus || op == BF_ParStrAElem || op == BF_ParentVal || op == BF_ParSymStr || op == BF_ParSymVal || op == BF_ParRefSymStr || op == BF_ParRefSymVal)   // SAC 11/20/09   // SAC 6/30/20
    {
 		iFirstClassToCheck = (pEval->iPrimPar1Class > 0 ? pEval->iPrimPar1Class : -1);
       iOccur = pEval->iPrimParObjIdx;
       eObjType = pEval->ePrimParObjType;
    }
-   else if (op == BF_Parent2Ref || op == BF_Parent2Val || op == BF_Par2SymStr || op == BF_Par2RefSymStr)
+   else if (op == BF_Parent2Ref || op == BF_Parent2Val || op == BF_Par2SymStr || op == BF_Par2SymVal || op == BF_Par2RefSymStr || op == BF_Par2RefSymVal)		// SAC 6/30/20
    {
 		iFirstClassToCheck = (pEval->iPrimPar2Class > 0 ? pEval->iPrimPar2Class : -1);
       iOccur = pEval->iPrimPar2ObjIdx;
       eObjType = pEval->ePrimPar2ObjType;
    }
-   else if (op == BF_Parent3Ref || op == BF_Parent3Val || op == BF_Par3SymStr || op == BF_Par3RefSymStr)
+   else if (op == BF_Parent3Ref || op == BF_Parent3Val || op == BF_Par3SymStr || op == BF_Par3SymVal || op == BF_Par3RefSymStr || op == BF_Par3RefSymVal)		// SAC 6/30/20
    {
 		iFirstClassToCheck = (pEval->iPrimPar3Class > 0 ? pEval->iPrimPar3Class : -1);
       iOccur = pEval->iPrimPar3ObjIdx;
@@ -6922,7 +7767,7 @@ static void LocalParentChildRef( int op, int nArgs, ExpStack* stack, ExpEvalStru
       iOccur = BEMPX_GetChildObjectIndex( i1ParClass, i1ChildClass, iError, eObjType, iChildIdx,
                                         pEval->iPrimObjIdx, pEval->ePrimObjType );
    }
-   else if (op == BF_GlobalRef || op == BF_GlobStatus || op == BF_GlobalVal || op == BF_GlobRefSymStr)  // SAC 1/22/07  // SAC 2/13/14  // SAC 4/4/18
+   else if (op == BF_GlobalRef || op == BF_GlobStatus || op == BF_GlobalVal || op == BF_GlobSymStr || op == BF_GlobSymVal || op == BF_GlobRefSymStr || op == BF_GlobRefSymVal)  // SAC 1/22/07  // SAC 2/13/14  // SAC 4/4/18   // SAC 6/30/20
    {
       iOccur = 0;
       eObjType = BEMPX_GetCurrentObjectType( BEMPX_GetClassID( (bParseAsWeEvaluate ? lParsedDBID : plParams[ 0 ]) ), iOccur,
@@ -7270,7 +8115,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						lMDBID = (long long) pThisNode->fValue;
 						if (lMDBID > BEM_MODEL_MULT)
 						{	lArgCondDBID[1] = (long) BEMPX_MDBIDtoDBID( lMDBID );
-							iArg0Model[1] = (int) BEMPX_GetModelID( lMDBID ) - 1;
+							iArg0Model[1] = ruleSet.transformToBEMProcIdx( lMDBID );
 						}
 						else
 							lArgCondDBID[1] = (long) lMDBID;
@@ -7306,7 +8151,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 						lMDBID = (long long) pThisNode->fValue;
 						if (lMDBID > BEM_MODEL_MULT)
 						{	lArgCondDBID[0] = (long) BEMPX_MDBIDtoDBID( lMDBID );
-							iArg0Model[0] = (int) BEMPX_GetModelID( lMDBID ) - 1;
+							iArg0Model[0] = ruleSet.transformToBEMProcIdx( lMDBID );
 						}
 						else
 							lArgCondDBID[0] = (long) lMDBID;
@@ -7348,8 +8193,8 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 	         nArgs--;
 			}
 			else if (lMDBID > BEM_MODEL_MULT)
-			{	plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-				i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+			{	plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+				i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 			}
 			else
 				plParams[ arg-1 ] = (long) lMDBID;
@@ -8043,7 +8888,7 @@ static void BEMProcSumChildrenAllOrRevRef( int op, int nArgs, ExpStack* stack, E
 								{  QString sBEMProcErr;
 									if (lMDBID > BEM_MODEL_MULT)
 									{	lDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );
-										iThisModel = (int) BEMPX_GetModelID( lMDBID ) - 1;
+										iThisModel = ruleSet.transformToBEMProcIdx( lMDBID );
 									}
 									else
 										lDBID = (long) lMDBID;
@@ -8224,8 +9069,8 @@ static void ComponentArray( int /*op*/, int nArgs, ExpStack* stack, ExpEvalStruc
 			lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT && (arg==3 || arg==4))
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
-				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-				i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+				i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 			}
 			else
 				plParams[ arg-1 ] = (long) lMDBID;
@@ -8368,8 +9213,8 @@ static void BEMProc_CountNoRefs( int /*op*/, int nArgs, ExpStack* stack, ExpEval
 		{	lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT)
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
-				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-				i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+				i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 			}
 			else
 				plParams[ arg-1 ] = (long) lMDBID;
@@ -8450,8 +9295,8 @@ void BEMProc_BitwiseMatches( int op, int nArgs, ExpStack* stack, ExpEvalStruct* 
 		{	lMDBID = (long long) pNode->fValue;
 			if (lMDBID > BEM_MODEL_MULT)
 			{	assert( FALSE );  // routine not yet MODEL-DBID compatible
-				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-				i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+				plParams[ arg-1 ] = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+				i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 			}
 			else
 				plParams[ arg-1 ] = (long) lMDBID;
@@ -8605,8 +9450,8 @@ void BEMProc_SumIntoArrayElement( int /*op*/, int nArgs, ExpStack* stack, ExpEva
 								{	lMDBID = (long long) pNode->fValue;
 									if (lMDBID > BEM_MODEL_MULT)
 									{	assert( FALSE );  // routine not yet MODEL-DBID compatible
-										lArrayDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-										i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+										lArrayDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+										i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 									}
 									else
 										lArrayDBID = (long) lMDBID;
@@ -8772,8 +9617,8 @@ static void BEMProc_EnsureStringUniqueness( int /*op*/, int nArgs, ExpStack* sta
 			{	lMDBID = (long long) pNode->fValue;
 				if (lMDBID > BEM_MODEL_MULT)
 				{	assert( FALSE );  // routine not yet MODEL-DBID compatible
-					lDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==((int) BEMPX_GetModelID( lMDBID ) - 1) );
-					i0Model = (int) BEMPX_GetModelID( lMDBID ) - 1;
+					lDBID = (long) BEMPX_MDBIDtoDBID( lMDBID );				assert( i0Model<0 || i0Model==ruleSet.transformToBEMProcIdx( lMDBID ) );
+					i0Model = ruleSet.transformToBEMProcIdx( lMDBID );
 				}
 				else
 					lDBID = (long) lMDBID;
@@ -9120,9 +9965,10 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 
 	long lDBID;					// SAC 3/14/13 - added Model DBID compatibility
 	int iBEMProcModel = -1;
+	bool bBEMModelError_ReturnInvalid = false;		// SAC 7/7/20 - mods to ensure *Valid*() functions simply return invalid data, not ERROR, when unable to determine iBEMProcModel
 	if (lMDBID > BEM_MODEL_MULT)
 	{
-		iBEMProcModel = (int)  BEMPX_GetModelID(  lMDBID ) - 1;  // convert model ID from 1- to 0-based
+		iBEMProcModel = ruleSet.transformToBEMProcIdx( lMDBID );  // convert model ID from 1- to 0-based
 		lDBID         = (long) BEMPX_MDBIDtoDBID( lMDBID );
 
 		assert( iBEMProcModel <= BEMPX_GetActiveModel() );
@@ -9136,180 +9982,110 @@ void GetBEMProcDataToNode( ExpNode* pNode, long long lMDBID, int iOccur, BEM_Obj
 			int iOrigOccur = iOccur;
 			iOccur = BEMPX_GetObjectIndexAcrossModels( BEMPX_GetClassID(lDBID), iBEMProcModel, eObjType, iOccur, iObjIdxModel );		// assert( iOccur >= 0 ); - already reported
 			if (iOccur < 0)
-		   {	QString sBEMProcErr, sBEMProcErr2;
-				sBEMProcErr2 = QString( "Error: Retrieving data from model %1 (" ).arg( QString::number( iBEMProcModel ) );
-		      PopulateBEMProcInfo( sBEMProcErr, lDBID, iOrigOccur, eObjType, iBEMProcModel, sBEMProcErr2.toLocal8Bit().constData(), ") in GetBEMProcData()" );
-		      ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
+		   {	if (bReturnInvalidWhenUndefined)
+		   		bBEMModelError_ReturnInvalid = true;
+		   	else
+		   	{	QString sBEMProcErr, sBEMProcErr2;
+					sBEMProcErr2 = QString( "Error: Retrieving data from model %1 (" ).arg( QString::number( iBEMProcModel ) );
+			      PopulateBEMProcInfo( sBEMProcErr, lDBID, iOrigOccur, eObjType, iBEMProcModel, sBEMProcErr2.toLocal8Bit().constData(), ") in GetBEMProcData()" );
+			      ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
 
-			// SAC 9/24/15 - retain detailed logging of object mapping across transforms for future reference
-				int iOutOccur, i1Class = BEMPX_GetClassID(lDBID);
-				if (iObjIdxModel == -1)
-					iObjIdxModel = BEMPX_GetActiveModel();
-				BEMObject* pInObj = BEMPX_GetObjectByClass( i1Class, iError, iOrigOccur, eObjType, iObjIdxModel );				assert( pInObj );
-				if (pInObj)
-				{	BEMObject* pOutObj = NULL;
-					sBEMProcErr = QString( "Error retrieving Object across models, from transform %1 to %2 for %3 '%4' - object mapping -->>" ).arg( QString::number( iObjIdxModel ), QString::number( iBEMProcModel ), pInObj->getClass()->getLongName(), pInObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
-					for (int i1=0; i1<BEMPROC_MAXMODELS; i1++)
-					{	if (pInObj->getModelMappedObject(i1) == NULL)
-						{	sBEMProcErr = QString( "   [%1] -> NULL" ).arg( QString::number( i1 ), 2 );		BEMPX_WriteLogFile( sBEMProcErr );
-						}
-						else
-						{	pOutObj = pInObj->getModelMappedObject(i1);
-							sBEMProcErr = QString( "   [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i1 ), 2 ).arg( QString::number( (int) pOutObj, 16 ) ).arg( pOutObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
-							for (int i2=0; i2<BEMPROC_MAXMODELS; i2++)
-							{	if (pOutObj->getModelMappedObject(i2) == NULL)
-								{	sBEMProcErr = QString( "        [%1] -> NULL" ).arg( QString::number( i2 ), 2 );		BEMPX_WriteLogFile( sBEMProcErr );
-								}
-								else
-								{	sBEMProcErr = QString( "        [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i2 ), 2 ).arg( QString::number( (int) pOutObj->getModelMappedObject(i2), 16 ), pOutObj->getModelMappedObject(i2)->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
-				}	}	}	}	}
+				// SAC 9/24/15 - retain detailed logging of object mapping across transforms for future reference
+					int iOutOccur, i1Class = BEMPX_GetClassID(lDBID);
+					if (iObjIdxModel == -1)
+						iObjIdxModel = BEMPX_GetActiveModel();
+					BEMObject* pInObj = BEMPX_GetObjectByClass( i1Class, iError, iOrigOccur, eObjType, iObjIdxModel );				assert( pInObj );
+					if (pInObj)
+					{	BEMObject* pOutObj = NULL;
+						sBEMProcErr = QString( "Error retrieving Object across models, from transform %1 to %2 for %3 '%4' - object mapping -->>" ).arg( QString::number( iObjIdxModel ), QString::number( iBEMProcModel ), pInObj->getClass()->getLongName(), pInObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
+						for (int i1=0; i1<BEMPROC_MAXMODELS; i1++)
+						{	if (pInObj->getModelMappedObject(i1) == NULL)
+							{	sBEMProcErr = QString( "   [%1] -> NULL" ).arg( QString::number( i1 ), 2 );		BEMPX_WriteLogFile( sBEMProcErr );
+							}
+							else
+							{	pOutObj = pInObj->getModelMappedObject(i1);
+								sBEMProcErr = QString( "   [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i1 ), 2 ).arg( QString::number( (int) pOutObj, 16 ) ).arg( pOutObj->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
+								for (int i2=0; i2<BEMPROC_MAXMODELS; i2++)
+								{	if (pOutObj->getModelMappedObject(i2) == NULL)
+									{	sBEMProcErr = QString( "        [%1] -> NULL" ).arg( QString::number( i2 ), 2 );		BEMPX_WriteLogFile( sBEMProcErr );
+									}
+									else
+									{	sBEMProcErr = QString( "        [%1] -> %2 | '%3' object mapping -->>" ).arg( QString::number( i2 ), 2 ).arg( QString::number( (int) pOutObj->getModelMappedObject(i2), 16 ), pOutObj->getModelMappedObject(i2)->getName() );		BEMPX_WriteLogFile( sBEMProcErr );
+				}	}	}	}	}	}
 			}
 		}
 	}
 	else
 		lDBID = (long) lMDBID;
 
-//   void* pData = (void*) BEMPX_GetDataAndStatus( lDBID, iDataStatus, iDataType, iSpecialVal, iError, iOccur, eObjType, FALSE /*bReturnParentObject*/, iBEMProcModel );
-//
-//   QString sCurrStr;
-//   if ( pData != NULL )
-//   {
-//      // SAC 8/7/10 - implementation of targeted debug output
-//      if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID, iOccur ))
-//         ReportTargetedDebugInfo( pEval, iDataStatus, iDataType, iSpecialVal, lDBID, iOccur, eObjType, "GetBEMProcData()", iBEMProcModel );
-//
-//		if (iDataStatus < 1)		// handle case where property is UNDEFINED
-//		{
-//			if (bReturnInvalidWhenUndefined)  // SAC 2/13/14
-//			{	pNode->type = EXP_Invalid;
-//				pNode->fValue = -99996.0;	// => UNDEFINED
-//			}
-//			else if (iDataType == BEMP_Int || (iDataType == BEMP_Sym && !bGetSymStr) || iDataType == BEMP_Flt)
-//			{	pNode->type = EXP_Value;
-//				pNode->fValue = -99996.0;	// => UNDEFINED
-//			}
-//			else
-//			{	pNode->type = EXP_String;
-//				pNode->fValue = -99996.0;	// => UNDEFINED
-//		      if (iDataType == BEMP_Obj)
-//	            sCurrStr = "NONE";
-//				else
-//   	         sCurrStr = "UNDEFINED";
-//			}
-//		}
-//      else if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
-//      {
-//			// SAC 2/8/01 - added option to return symbol STRING
-//         if (iDataType == BEMP_Sym  &&  bGetSymStr)
-//         {
-//            sCurrStr = BEMPX_GetSymbolString( (int) *(long*) pData, lDBID, iOccur, eObjType, iBEMProcModel );
-//            pNode->type = EXP_String;
-//         }
-//         else
-//         {
-//            // Get long data
-//            long lNewVal = *(long*) pData;
-//            pNode->type = EXP_Value;
-//            pNode->fValue = (double) lNewVal;
-//         }
-//      }
-//      else if (iDataType == BEMP_Flt)
-//      {
-//         // Get long data
-//         float fNewVal = *(float*) pData;
-//         pNode->type = EXP_Value;
-//         pNode->fValue = fNewVal;
-//      }
-//      else if (iDataType == BEMP_Str)
-//      {
-//         sCurrStr = *(QString*) pData;
-//         pNode->type = EXP_String;
-//      }
-//      else if (iDataType == BEMP_Obj)
-//      {
-//         BEMObject* pObj = (BEMObject*) pData;
-//         if (iError >= 0 && pObj != NULL)
-//            sCurrStr = pObj->getName();
-//         else
-//            sCurrStr = "NONE";
-//         pNode->type = EXP_String;
-//      }
-//   }
-//   else if (BEMPX_GetDataType(lDBID) == BEMP_Obj)
-//   {  // failed to get object - lets keep going
-//      sCurrStr = "NONE";
-//      pNode->type = EXP_String;
-//   }
-//   else
-//   {
-//      QString sBEMProcErr;  // SAC 12/24/07 - added more verbose BEMProc retrieval info
-//      PopulateBEMProcInfo( sBEMProcErr, lDBID, iOccur, eObjType, iBEMProcModel, "Data Retrieval from BEMProc failed (", ") in GetBEMProcData()" );
-//      ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
-//   }
-// SAC 9/5/16 - replaced above w/ following (during open source conversions)
-	QString sCurrStr, sBEMProcErr;
-	iDataType = BEMPX_GetDataType( lDBID );
-      // SAC 8/7/10 - implementation of targeted debug output
-      if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID, iOccur ))
-         ReportTargetedDebugInfo( pEval, iDataType, lDBID, iOccur, eObjType, "GetBEMProcData()", iBEMProcModel );
-	if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
-	{	pNode->fValue = (double) BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
-		if (iDataStatus > 0)
-		{	if (iDataType == BEMP_Sym  &&  bGetSymStr)
-			{	sCurrStr = BEMPX_GetSymbolString( (int) pNode->fValue, lDBID, iOccur, eObjType, iBEMProcModel );
-				pNode->type = EXP_String;
-			}
-			else
+	if (bBEMModelError_ReturnInvalid)		// SAC 7/7/20 - mods to ensure *Valid*() functions simply return invalid data, not ERROR, when unable to determine iBEMProcModel
+	{	pNode->type = EXP_Invalid;
+		pNode->fValue = -99996.0;	// => UNDEFINED
+	}
+	else
+	{	QString sCurrStr, sBEMProcErr;
+		iDataType = BEMPX_GetDataType( lDBID );
+	      // SAC 8/7/10 - implementation of targeted debug output
+	      if (pEval && pEval->iNumTargetedDebugItems > 0 && pEval->pTargetedDebugInfo && pEval->pTargetedDebugInfo->MatchExists( lDBID, iOccur ))
+	         ReportTargetedDebugInfo( pEval, iDataType, lDBID, iOccur, eObjType, "GetBEMProcData()", iBEMProcModel );
+		if (iDataType == BEMP_Int || iDataType == BEMP_Sym)
+		{	pNode->fValue = (double) BEMPX_GetIntegerAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
+			if (iDataStatus > 0)
+			{	if (iDataType == BEMP_Sym  &&  bGetSymStr)
+				{	sCurrStr = BEMPX_GetSymbolString( (int) pNode->fValue, lDBID, iOccur, eObjType, iBEMProcModel );
+					pNode->type = EXP_String;
+				}
+				else
+					pNode->type = EXP_Value;
+		}	}
+		else if (iDataType == BEMP_Flt)
+		{	pNode->fValue = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
+			if (iDataStatus > 0)
 				pNode->type = EXP_Value;
 		}
-	}
-	else if (iDataType == BEMP_Flt)
-	{	pNode->fValue = BEMPX_GetFloatAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
-		if (iDataStatus > 0)
-			pNode->type = EXP_Value;
-	}
-	else if (iDataType == BEMP_Str)
-	{	sCurrStr = BEMPX_GetStringAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
-		if (iDataStatus > 0)
+		else if (iDataType == BEMP_Str)
+		{	sCurrStr = BEMPX_GetStringAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
+			if (iDataStatus > 0)
+				pNode->type = EXP_String;
+		}
+		else if (iDataType == BEMP_Obj)
+		{	BEMObject* pObj = BEMPX_GetObjectAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
 			pNode->type = EXP_String;
-	}
-	else if (iDataType == BEMP_Obj)
-	{	BEMObject* pObj = BEMPX_GetObjectAndStatus( lDBID, iDataStatus, iSpecialVal, iError, iOccur, eObjType, iBEMProcModel );
-		pNode->type = EXP_String;
-		if (iError >= 0 && pObj)
-			sCurrStr = pObj->getName();
-		else
-			sCurrStr = "NONE";
-	}
-	else		// invalid DataType
-	{	PopulateBEMProcInfo( sBEMProcErr, lDBID, iOccur, eObjType, iBEMProcModel, "Data Retrieval from BEMProc failed (", ") in GetBEMProcData()" );
-		ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
-   }
-	if (iDataStatus < 1 && sBEMProcErr.isEmpty())		// property is UNDEFINED
-	{	if (bReturnInvalidWhenUndefined)  // SAC 2/13/14
-		{	pNode->type = EXP_Invalid;
-			pNode->fValue = -99996.0;	// => UNDEFINED
-		}
-		else if (iDataType == BEMP_Int || (iDataType == BEMP_Sym && !bGetSymStr) || iDataType == BEMP_Flt)
-		{	pNode->type = EXP_Value;
-			pNode->fValue = -99996.0;	// => UNDEFINED
-		}
-		else
-		{	pNode->type = EXP_String;
-			pNode->fValue = -99996.0;	// => UNDEFINED
-			if (iDataType == BEMP_Obj)
-				sCurrStr = "NONE";
+			if (iError >= 0 && pObj)
+				sCurrStr = pObj->getName();
 			else
-				sCurrStr = "UNDEFINED";
-	}	}
+				sCurrStr = "NONE";
+		}
+		else		// invalid DataType
+		{	PopulateBEMProcInfo( sBEMProcErr, lDBID, iOccur, eObjType, iBEMProcModel, "Data Retrieval from BEMProc failed (", ") in GetBEMProcData()" );
+			ExpSetErr( error, EXP_RuleProc, sBEMProcErr );
+	   }
+		if (iDataStatus < 1 && sBEMProcErr.isEmpty())		// property is UNDEFINED
+		{	if (bReturnInvalidWhenUndefined)  // SAC 2/13/14
+			{	pNode->type = EXP_Invalid;
+				pNode->fValue = -99996.0;	// => UNDEFINED
+			}
+			else if (iDataType == BEMP_Int || (iDataType == BEMP_Sym && !bGetSymStr) || iDataType == BEMP_Flt)
+			{	pNode->type = EXP_Value;
+				pNode->fValue = -99996.0;	// => UNDEFINED
+			}
+			else
+			{	pNode->type = EXP_String;
+				pNode->fValue = -99996.0;	// => UNDEFINED
+				if (iDataType == BEMP_Obj)
+					sCurrStr = "NONE";
+				else
+					sCurrStr = "UNDEFINED";
+		}	}
 
-   if (pNode->type == EXP_String)
-   {
+	   if (pNode->type == EXP_String)
+	   {
 #pragma warning(disable : 4996)		// SAC 9/9/16
-   	pNode->pValue = malloc( sCurrStr.length() + 1 );
-		strcpy( (char*) pNode->pValue, (const char*) sCurrStr.toLocal8Bit().constData() );
+	   	pNode->pValue = malloc( sCurrStr.length() + 1 );
+			strcpy( (char*) pNode->pValue, (const char*) sCurrStr.toLocal8Bit().constData() );
 #pragma warning(default : 4996)
-   }
+	   }
+	}
 }
 
 
@@ -10814,10 +11590,14 @@ double XCONS::xc_UParallelPath(	// construction U-factor, parallel path method
 
 	// layer order not significant
 	double Upp = 0.0;
+//BEMPX_WriteLogFile( QString("   ConsUFactorRes() on Cons '%1':  OutsdAirFilmR=%2  InsdAirFilmR=%3").arg( xc_consName, QString::number(xc_OutsdAirFilmR), QString::number(xc_InsdAirFilmR) ) );
 	for (iP=0; iP<xc_NumPaths; iP++)
 	{	xc_RPath[ iP] = xc_OutsdAirFilmR + xc_InsdAirFilmR;
 		for (int iL=0; iL<xc_NumLayers(); iL++)
-			xc_RPath[ iP] += xc_L[ iL].xl_mat[ iP].xm_GetResistance( iQII);
+		{	xc_RPath[ iP] += xc_L[ iL].xl_mat[ iP].xm_GetResistance( iQII);
+//BEMPX_WriteLogFile( QString("      path %1, mat %2 '%3':  R=%4   thick=%5  cond=%6").arg( QString::number(iP), QString::number(iL), xc_L[ iL].xl_mat[ iP].xm_Name,
+//										QString::number(xc_L[ iL].xl_mat[ iP].xm_GetResistance( iQII)), QString::number(xc_L[ iL].xl_mat[ iP].xm_Thickness), QString::number(xc_L[ iL].xl_mat[ iP].xm_GetConductivity( iQII)) ) );
+		}
 		Upp += xc_GetFFrm( iP) / max( xc_RPath[ iP], .0001);
 	}
 	return Upp;
@@ -12333,7 +13113,7 @@ int CreateIAQRptObjects( QString& sErrMsg, ExpEvalStruct* /*pEval*/, ExpError* e
 										sErrMsg = QString( "CreateIAQRptObjects Error encountered retrieving object index of DwellUnitTypeRef referenced by DwellUnit '%1'" ).arg( sDUName );
 									else
 									{	BEMPX_GetString( lDBID_DUT_Name, sDUTName, FALSE, 0, -1, iDUTIdx );		assert( !sDUTName.isEmpty() );
-										BEMPX_GetInteger( lDBID_DUT_IAQOption, lIAQOption, 0, -1, iDUTIdx );			assert( lIAQOption == 1 || lIAQOption == 2 );
+										BEMPX_GetInteger( lDBID_DUT_IAQOption, lIAQOption, 0, -1, iDUTIdx );			//assert( lIAQOption == 1 || lIAQOption == 2 );
 																// IAQOption ->	1,	"Default Minimum IAQ Fan"   //   2,	"Specify Individual IAQ Fans"   //   3,	"CFI (Central Fan Integrated) IAQ"
 										if (lIAQOption == 1 || lIAQOption == 2 || lIAQOption == 4 || lIAQOption == 5)		// SAC 12/17/19 - accommodate new MFam options Default Balanced (4) and Minimum Exhaust (5) (Res 2019.2.0+)
 										{	for (long iCnt=1; (sErrMsg.isEmpty() && iCnt <= lDUCount); iCnt++)

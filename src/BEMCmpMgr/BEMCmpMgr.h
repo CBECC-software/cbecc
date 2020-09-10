@@ -187,6 +187,11 @@ int  BEMCMPMGR_API __cdecl CMX_RestoreAnalysisResultsFromTempFiles( QVector<QStr
 #define  BEMAnal_CECRes_CF1RXMLCompIDError	69		//  Main CF1RPRF01E object type invalid
 #define  BEMAnal_CECRes_HPWHSizingError		70		//  Error in sizing HPWH system(s) using CSE
 #define  BEMAnal_CECRes_SolarSysSizingError	71		//  Error in sizing DHWSolarSys system(s) using CSE
+#define  BEMAnal_CECRes_SolarSysTDVError		72		//  Error in determining TDV of DHWSolarSys system(s) using CSE
+#define  BEMAnal_CECRes_RNXMLWriteError		73		//  Unable to overwrite RESNET report XML file
+#define  BEMAnal_CECRes_RNXMLPropError			74		//  Error evaluating RESNET Rated model rules
+#define  BEMAnal_CECRes_RNXMLFinalError		75		//  Error evaluating RESNET final/results rules
+#define  BEMAnal_CECRes_RNXMLCompIDError		76		//  Main RESNET-XML object type invalid
 // ^^^^ Errors listed above result in invalid results ^^^^ || vvvv Errors listed below should still allow users to VIEW analysis results vvvv
 #define  BEMAnal_CECRes_MinErrorWithResults	200	// marker for lowest errant retval that includes complete results
 #define  BEMAnal_CECRes_ModelRptError			200	// (was 40)  Error generating model report

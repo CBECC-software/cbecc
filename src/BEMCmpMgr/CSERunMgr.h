@@ -122,6 +122,8 @@ public:
 	BOOL GetIsProposed() const { return (m_iRunType >= CRM_Prop &&
 													 m_iRunType <= CRM_WOrientProp); }
 	BOOL GetIsHERS() const { return RunIsHERS(m_iRunType); }
+	void SetCSE_DHWonly(BOOL bCSE_DHWonly) { m_bCSE_DHWonly = bCSE_DHWonly; }		// SAC 7/7/20
+	BOOL GetCSE_DHWonly() const { return m_bCSE_DHWonly; }
 	void SetExitCode(int iExitCode) { m_iExitCode = iExitCode; }
 	int GetExitCode() const { return m_iExitCode; }
 	void SetExecStream(class exec_stream_t* pES) { m_pES = pES; }
@@ -138,6 +140,7 @@ private:
 	int  m_iRunType;	// SAC 3/26/15
 	BOOL m_bLastRun;
 	BOOL m_bIsStdDesign;
+	BOOL m_bCSE_DHWonly;		// SAC 7/7/20
 	int m_iExitCode;
 	class exec_stream_t* m_pES;
 };		// class CSERun
@@ -148,11 +151,12 @@ public:
 	CSERunMgr(QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, bool bFullComplianceAnalysis, bool bInitHourlyResults,
 		long lAllOrientations, long lAnalysisType, long lStdDesignBaseID, long lDesignRatingRunID, bool bVerbose, bool bStoreBEMProcDetails, bool bPerformSimulations,
 		bool bBypassCSE, bool bSilent, void* pCompRuleDebugInfo, const char* pszUIVersionString, int iSimReportOpt=1, int iSimErrorOpt=1, long lStdMixedFuelRunReqd=0,
-		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1, const char* pszCodeYear2Digit=NULL, std::vector<long>* plaRIBDIClsObjIndices=NULL );
+		long lPrelimPropRunReqd=0, long lPropFlexRunReqd=0, int iNumRuns=-1, const char* pszCodeYear2Digit=NULL, std::vector<long>* plaRIBDIClsObjIndices=NULL,
+		const char* pszAltWthrPathFile=NULL );
 	~CSERunMgr();
 	void DeleteRuns();
 	int SetupRun( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
-						const char* pszRunAbbrev=NULL );
+						const char* pszRunAbbrev=NULL, bool bCSE_DHWonly=false );		// SAC 7/7/20
 	int SetupRun_Simple( int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile=true,
 						const char* pszRunAbbrev=NULL, const char* pszExtraCSECmdLineArgs=NULL,
 						const char* pszAppendToCSEFile=NULL, int iModelType=0 );
@@ -164,6 +168,8 @@ public:
 									QString& sErrorMsg, int iModelType=0 );	// SAC 12/13/18 (HPWHSIZE)
 	bool T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID,
 								QString& sErrorMsg, int iModelType=0 );	// SAC 1/27/20 (StdSolarSys)
+	bool T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
+								QString& sErrorMsg, int iModelType=0 );		// SAC 5/4/20 (FlexibilityCredit)
 	const CSERun& GetRun(int iRun) { return *m_vCSERun[iRun]; }
 	void SetNumRuns( int iNumRuns ) { m_iNumRuns = iNumRuns; }
 	int GetNumRuns() const { return m_iNumRuns; }
@@ -212,6 +218,7 @@ private:
 	std::vector<CSERun*> m_vCSERun;
 	std::vector<CSERun*> m_vCSEActiveRun;
 	std::vector<long>* m_plaRIBDIClsObjIndices;
+	QString m_sAltWthrPathFile;		// SAC 6/4/20 (RESNET)
 
 };		// class CSERunMgr
 

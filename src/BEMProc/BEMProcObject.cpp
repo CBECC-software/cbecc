@@ -259,6 +259,172 @@ QString GetMappedString( const char** ppResEnduses, const char** ppEnduseMap, QS
 }
 
 // ----------------------------------------------------------------
+// BEMPX_RetrieveCSEHourlyResults() - similar to readCSEHourlyResults() except nothing posted to BEMBase/BEMRun
+//		reads potentially multiple enduses from a single meter and sums them into a single 8760 return array
+//		return values:		> 0 : number of meters for which hourly results were read
+//								  0 : 
+//								 -2 : results meter name not specified
+//								 -3 : enduse name too long
+//								 -4 : incorrect number of fields encountered while reading meter hourly results
+//								 -5 : meter name too long
+//								 -6 : error opening CSE hourly results file
+//								 -7 : error parsing CSE hourly results file
+//								 -8 : CSE hourly results file not found
+//								 -9 : no enduse names specified
+//								-10 : 1 or more specified enduses not found in hourly results file
+// ----------------------------------------------------------------
+int BEMPX_RetrieveCSEHourlyResults( const char* pszFilename, const char* pResMeter, const char** ppResEnduses, 
+												double* pdHourlyResults, double* pdResultMult /*=NULL*/ )
+{	int iRetVal = (FileExists( pszFilename ) ? 0 : -8);
+	if (iRetVal == 0 && (pResMeter==NULL || strlen(pResMeter) < 1))
+		iRetVal = -2;
+	else if (iRetVal == 0 && (ppResEnduses==NULL || ppResEnduses[0]==NULL || strlen(ppResEnduses[0]) < 1))
+		iRetVal = -9;
+	if (iRetVal == 0)
+	{	int iHour;
+		for (iHour=0; iHour<8760; iHour++)
+			pdHourlyResults[iHour] = 0.0;
+		QStringList saCSVFields, saColTitles;
+   	try
+   	{  // open file
+   	   BEMTextIO file( pszFilename, BEMTextIO::load );
+   	
+//sLogMsg.Format( "   RetrieveCSEResults():  Parsing CSE results file:  '%s'", saResultFiles[i] );
+//BEMPX_WriteLogFile( sLogMsg );
+
+			int iFld;
+		   std::vector<bool> vbIncl;
+   	   try
+   	   {
+//   	      TRY
+//   	      {	
+					int iMode=0, iNumFields=0, iNumHrlyFields=0;		iHour=0;
+					BOOL bEOFReached = FALSE;		double data, dMult=(pdResultMult ? *pdResultMult : 1.0);
+					bool bMtrMatch=false;
+					QString sMeterName;
+					do
+					{	if (iMode < 2)
+							iNumFields = file.ParseCSVRecord( saColTitles );
+						else
+							iNumFields = file.ParseCSVRecord( saCSVFields );
+						if (iNumFields == -1)
+							bEOFReached = TRUE;
+						else
+						{	switch (iMode)
+							{	case  0 :	// searching for next report header
+												if (iNumFields >= 2 && saColTitles[0].indexOf("Energy Use")>=0 && saColTitles[1].indexOf("Hour")>=0)
+													iMode = 1;  // found header, next record should be report column titles
+												break;
+								case  1 :	// just found report header, very next record should be report column titles
+												if (iNumFields >= 6 && saColTitles[0].indexOf("Meter")>=0 && saColTitles[1].indexOf("Mon")>=0 && saColTitles[2].indexOf("Day")>=0)
+												{	iNumHrlyFields = iNumFields;
+													iMode = 2;  // this record contains column titles
+												}
+												else
+												{	assert( FALSE );  // recod following Energy Use / Year header should always be report column title record!!
+												}	break;
+								case  2 :	// in process of reading results records
+												if (iHour == 0)	// check for matching meter name - if not this one, then read through all 8760 records to reach next meter
+												{	if (saCSVFields[0].length() >= BEMRun_MeterNameLen)
+													{	assert( FALSE );
+														iRetVal = -5;
+													}
+													else if (saCSVFields[0].compare( pResMeter )==0)
+														bMtrMatch = true;
+
+													if (iRetVal >= 0 && bMtrMatch)
+													{	// track which columns to sum into returned hourly array
+		   											vbIncl.resize( iNumHrlyFields, false );
+		   											for (iFld=0; iFld < iNumHrlyFields; iFld++)
+		   												vbIncl[iFld] = false;
+
+														int iEnduse=0;
+														while (iRetVal >= 0 && ppResEnduses[iEnduse] && strlen(ppResEnduses[iEnduse]) > 0)
+														{	bool bEUFound=false;
+			   											for (iFld=0; (iFld < iNumHrlyFields && !bEUFound); iFld++)
+			   												if (saColTitles[iFld].compare( ppResEnduses[iEnduse] ) == 0)
+				   											{	vbIncl[iFld] = true;
+				   												bEUFound = true;
+				   											}
+				   										if (!bEUFound)
+				   											iRetVal = -10;		// 1 or more specified enduses not found in hourly results file
+			   											iEnduse++;
+			   										}
+													}
+													else if (iRetVal >= 0 && !bMtrMatch)
+													{	// skip PAST this meter's results
+														for (; iHour < 8759; iHour++)
+															iNumFields = file.ParseCSVRecord( saCSVFields );
+													}
+												}
+
+												if (iRetVal >= 0 && bMtrMatch)
+												{	for (iFld=0; iFld < iNumHrlyFields; iFld++)
+													{
+			//	if (iHour == 0) {
+			//		// debugging
+			//		QString sLogMsg = QString( "          iFld %1  /  iaResFieldIdx[iFld] %2  /  m_hourlyResults[ iThisMtrIdx ].getNumEnduses() %3" ).arg(
+			//												QString::number(iFld), QString::number(iaResFieldIdx[iFld]), QString::number(m_hourlyResults[ iThisMtrIdx ].getNumEnduses()) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			//	}
+														if (vbIncl[iFld])
+														{	data = atof( saCSVFields[iFld].toLocal8Bit().constData() ) * dMult;
+															pdHourlyResults[iHour] += data;
+			//	if (iHour < 12) {
+			//		// debugging
+			//		QString sLogMsg = QString( "             hr %1 = %2" ).arg( QString::number(iHour), QString::number(data) );
+			//		BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			//	}
+												}	}	}
+												iHour++;
+												if (iHour == 8760)
+												{	iHour = 0;		// FINISHED parsing this set of hourly results, so reset hour count and mode and search for subsequent set of hourly results...
+													iMode = 0;
+													if (bMtrMatch)
+														iRetVal++;
+												}
+												break;
+							}
+						}
+					} while (!bEOFReached && iRetVal == 0);  // continue until EOF which results in 
+   	   }
+			catch (std::exception& e)
+			{
+				QString msg = QString( "Error retrieving CSE hourly results CSV.\nFrom File: %1\n\t - cause: %2\n" ).arg( pszFilename, e.what() );
+				std::cout << msg.toLocal8Bit().constData();
+	   //      BEMMessageBox( msg, "", 2 /*warning*/ );
+	         iRetVal = -7;
+			}
+		 	catch (...)
+		  	{
+				QString msg = QString( "Error retrieving CSE hourly results CSV.\nFrom File: %1\n" ).arg( pszFilename );
+				std::cout << msg.toLocal8Bit().constData();
+	   //      BEMMessageBox( msg, "", 2 /*warning*/ );
+	         iRetVal = -7;
+		  	}
+   	
+   	   file.Close();  // SAC 6/1/06
+   	}
+		catch (std::exception& e)
+		{
+			QString msg = QString( "Error opening CSE hourly results CSV file: %1\n\t - cause: %2\n" ).arg( pszFilename, e.what() );
+			std::cout << msg.toLocal8Bit().constData();
+  	//      BEMMessageBox( msg, "", 2 /*warning*/ );
+  	      iRetVal = -6;
+		}
+	 	catch (...)
+	  	{
+			QString msg = QString( "Error opening CSE hourly results CSV file: %1\n" ).arg( pszFilename );
+			std::cout << msg.toLocal8Bit().constData();
+  	//      BEMMessageBox( msg, "", 2 /*warning*/ );
+  	      iRetVal = -6;
+	  	}
+	}  // end of if file exists...
+	return iRetVal;
+}
+
+
+// ----------------------------------------------------------------
 // ReadCSEHourlyResults()
 //		return values:		> 0 : number of meters for which hourly results were read
 //								  0 : 

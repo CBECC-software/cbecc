@@ -135,6 +135,9 @@ extern void CM_CryptDecode( char* lpBuf, int length );
 extern void CM_CryptEncode( char* lpBuf, int length );
 extern void CM_CharSwap(    char* lpBuf, int length );
 
+extern QString AnalysisAction_PhaseString( long iAnalPhase );
+extern QString AnalysisAction_BeforeAfter( long iBeforeAfter );
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // CSE & Analysis progress tracking callback stuff

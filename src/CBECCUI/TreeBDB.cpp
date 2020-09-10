@@ -654,7 +654,7 @@ static int** ClassToConvertList( int iBDBClass )
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
 // SAC 12/23/18 - added DWHX (for 2019 program only)  // SAC 1/5/19 - renamed DWHRSys
-// SAC 9/3/19 - added OtherZone (MFamProto)    - SAC 2/14/20 - removed OtherZone for 2019 EXE
+// SAC 9/3/19 - added OtherZone (MFamProto)    - SAC 2/14/20 - removed OtherZone for 2019 EXE   - SAC 7/30/20 - added Opening to 2022
 // SAC 2/23/20 - removed DHWLoopTankHeater from both 2019 & 2022 UIs 
 static int siZero = 0;
 #ifdef UI_PROGYEAR2019
@@ -669,10 +669,10 @@ static int* siapMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVe
 										&eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
 static int* siapFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, NULL };
 #elif UI_PROGYEAR2022
-static int  siNumArchComps = 27;
+static int  siNumArchComps = 28;
 static int  siaMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
 static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
-									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
+									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_Opening, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
 static int  siaMode1[]  = { 3, 3, 15 };
@@ -702,7 +702,7 @@ static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 // SAC 1/14/13 - REMOVED CrawlSpace class ID for the time being
 // SAC 1/16/13 - REMOVED Garage class ID for the time being  -- 1/28/13 - RESTORED Garage class
 // SAC 12/23/18 - added DWHX (for 2019 program only)  // SAC 1/5/19 - renamed DWHRSys
-// SAC 9/3/19 - added OtherZone (MFamProto)   - SAC 2/14/20 - removed OtherZone for 2019 EXE
+// SAC 9/3/19 - added OtherZone (MFamProto)   - SAC 2/14/20 - removed OtherZone for 2019 EXE    - SAC 7/30/20 - added Opening to 2022
 #ifdef UI_PROGYEAR2019
 static int  siaLibMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
 static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
@@ -714,9 +714,9 @@ static int* siapLibMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IA
 											&eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
 static int* siapLibFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan,  &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ NULL };
 #elif UI_PROGYEAR2022
-static int  siaLibMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
+static int  siaLibMode0[]  = { 6, siNumArchComps-7, siNumArchComps };
 static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
-									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
+									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_Opening, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
 static int  siaLibMode1[]  = { 3, 3, 13 };
@@ -918,6 +918,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int /*iObjOccur*/ )
    else if (iBDBClass == eiBDBCID_FloorOverCrawl   )   return  60;
    else if (iBDBClass == eiBDBCID_InteriorFloor    )   return  62;
    else if (iBDBClass == eiBDBCID_InteriorCeiling  )   return  54;  // same as CeilingBelowAttic ??
+   else if (iBDBClass == eiBDBCID_Opening       	)   return 128;	// SAC 7/30/20 - MFamProto
    else if (iBDBClass == eiBDBCID_Win      			)   return  10;
    else if (iBDBClass == eiBDBCID_Skylt            )   return  58;
    else if (iBDBClass == eiBDBCID_Door     			)   return  12;

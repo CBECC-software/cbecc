@@ -530,6 +530,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
    ON_MESSAGE( WM_POPLIBTREE,   OnPopulateLibraryTree )
    ON_MESSAGE( WM_EVALPROPOSED, OnEvaluateProposedRules )
    ON_MESSAGE( WM_COMPANALYSIS, OnPerformAnalysis )
+   ON_MESSAGE( WM_APICOMPANALYSIS, OnPerformAPIAnalysisMsg )
 
    ON_MESSAGE( WM_BUTTONPRESSED,    OnButtonPressed )
    ON_MESSAGE( WM_QUICKMENU,        OnQuickMenu )
@@ -1251,7 +1252,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				{}
 			}
 		}
-		else if (wAction >= 3051 && wAction <= 3056)
+		else if (wAction >= 3051 && wAction <= 3057)
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1311,6 +1312,14 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				sFileExt	    = _T("rule");
 				lDBID_File	 = BEMPX_GetDatabaseID( "ExcptDsgnModelFile", eiBDBCID_Proj );		ASSERT( lDBID_File > 0 );
 			}
+			else if (wAction == 3057)	// SAC 6/3/20 - RESNET analysis weather file
+			{	sBrowsePath = esAltWeatherPath;
+				if (!DirectoryExists( sBrowsePath ))
+					sBrowsePath = sCurrentProjPath;
+				sFileDescrip = _T("Hourly simulation weather file (*.epw)|*.epw||");
+				sFileExt	    = _T("epw");
+				lDBID_File	 = BEMPX_GetDatabaseID( "Proj:rnWeatherFile" );	
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1325,6 +1334,12 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 						if (sSelectedFile.GetLength() > esProjectsPath.GetLength() &&
 							 esProjectsPath.CompareNoCase( sSelectedFile.Left( esProjectsPath.GetLength() ) ) == 0)
 							sSelectedFile = sSelectedFile.Right( sSelectedFile.GetLength() - esProjectsPath.GetLength() );
+					}
+					else if (wAction == 3057 && !esAltWeatherPath.IsEmpty())
+					{	// remove portion of path equal to default Weather path for alternate weather file selection
+						if (sSelectedFile.GetLength() > esAltWeatherPath.GetLength() &&
+							 esAltWeatherPath.CompareNoCase( sSelectedFile.Left( esAltWeatherPath.GetLength() ) ) == 0)
+							sSelectedFile = sSelectedFile.Right( sSelectedFile.GetLength() - esAltWeatherPath.GetLength() );
 					}
 					// Store filename to BEMBase
 					int iSetDataRetVal = BEMPX_SetBEMData( lDBID_File, BEMP_Str, (void*) ((const char*) sSelectedFile) );
@@ -1440,6 +1455,32 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 			//	MessageBox( sRefreshDfltMsg );
          lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
+		else if (wAction == 3066)		// trigger View Compliance Report action - SAC 7/28/20
+		{	ViewReport( 0 );
+         lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
+		}
+
+		else if (wAction == 3070)	// -3079 ??   new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
+		{	QString qsMBCaption, qsMBMessage, qsMBDetails;    long lIconID=0;
+			if (wAction == 3070)		// info re: Res Community Solar program(s)
+			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoCap" ), qsMBCaption );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoMsg" ), qsMBMessage );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoDtl" ), qsMBDetails );
+				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoIcn" ), lIconID );
+			}
+			if (!qsMBCaption.isEmpty() && !qsMBMessage.isEmpty())
+			{
+				BEMMessageBox( qsMBMessage, qsMBCaption, (UINT) lIconID, 1024, 0, qsMBDetails );
+	/*			QMessageBox msgBox;
+				msgBox.setWindowTitle( qsMBCaption );
+				msgBox.setIcon( (QMessageBox::Icon) lIconID ); 
+				msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
+				msgBox.setText( qsMBMessage );
+				if (!qsMBDetails.isEmpty())
+					msgBox.setDetailedText( qsMBDetails );
+				msgBox.exec();
+	 */
+		}	}
 
 #ifdef UI_CARES
       else if (wAction >= 171 && wAction <= 194)
@@ -1450,8 +1491,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
       		iDlgWd = 410;
       	}
       	else if (wAction == 188)	// SAC 2/2/15 - Present dialog to review/edit AirNet effective leakage area properties
-      	{	iDlgHt = 300;
-      		iDlgWd = 400;
+      	{	iDlgHt = 510;		// SAC 7/13/20 - was: 300;
+      		iDlgWd = 500;		//					  was: 400;
       	}
       	else if (wAction == 189)	// SAC 4/3/17 - Present dialog to review/edit PreCooling properties
       	{	iDlgHt = 350;
@@ -1640,6 +1681,16 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 							BEMPX_DefaultProperty( elDBID_PolyLp_Area, iError, iPolyLpObjIdx );
 							lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}	}
+		}
+		else if (wAction == 3030)		// present website w/ UMLH info - SAC 7/28/20
+		{	QString qsUMLHsite;
+			BEMPX_GetString( BEMPX_GetDatabaseID( "EUseSummary:ZoneUMLHsLink" ), qsUMLHsite );
+			if (qsUMLHsite.isEmpty())
+				AfxMessageBox( "Error retrieving UMLH information link from BEMBase (EUseSummary:ZoneUMLHsLink)." );
+			else
+			{	HINSTANCE hinstShellExec = ShellExecute( GetSafeHwnd(), "open", qsUMLHsite.toLatin1().constData(), NULL, NULL, SW_SHOWNORMAL );		hinstShellExec;
+			}
+         lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
       else if (wAction == 3050)
       {
@@ -2919,6 +2970,9 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 			sOptionsCSVString += sOptTemp;
 		}
 
+		if (ReadProgInt( "options", "ReportGenVerbose", 0 /*default*/ ) > 0)		// SAC 3/20/20
+			sOptionsCSVString += "ReportGenVerbose,1,";
+
 #ifdef UI_CANRES
 		AnalysisOption saCECNonResAnalOpts[] =	{	{  "LogRuleEvaluation"           ,  "Verbose"                     ,    0   },
 																{  "MaxNumErrorsReportedPerType" ,  "MaxNumErrorsReportedPerType" ,    5   },
@@ -2974,6 +3028,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
                                                 {  "UseEPlusRunMgr"              ,  "UseEPlusRunMgr"              ,    1   },  // SAC 2/15/19
                                                 {  "ReportStandardUMLHs"         ,  "ReportStandardUMLHs"         ,    0   },  // SAC 11/11/19
                                                 {  "ReportAllUMLHZones"          ,  "ReportAllUMLHZones"          ,    0   },  // SAC 11/11/19
+                                                {  "SimulateCSEOnly"             ,  "SimulateCSEOnly"             ,    0   },  // SAC 3/10/20
 																{  NULL, NULL, -1  }  };
 
 		int iAnalOptIdx = -1;
@@ -2987,7 +3042,7 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		}
 		if (bFromAltSection)
          sOptionsCSVString +=         "PromptUserUMLHWarning,0,";		// SAC 6/21/18 - always set this flag to '0' for bFromAltSection
-      else if (ReadProgInt( sOptsSec, "PromptUserUMLHWarning",   1 /*default*/ ) > 0)		// SAC 3/11/15 - special handling since CBECC-Com default = 1 while CompMgr analysis routine default is 0
+      else if (ReadProgInt( sOptsSec, "PromptUserUMLHWarning",   0 /*default*/ ) > 0)		// SAC 3/11/15 - special handling since CBECC-Com default = 1 while CompMgr analysis routine default is 0   // switch default to 0 - SAC 7/28/20
          sOptionsCSVString +=         "PromptUserUMLHWarning,1,";
 	// new, valid, temporary (?) option:  WriteUMLHViolationsToFile - default to 1		// SAC 3/18/15
 
@@ -3003,9 +3058,9 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 				sOptionsCSVString += sOptTemp;
 			}
 
-      int iCompReportWarningTimeout = ReadProgInt( sOptsSec, "CompReportWarningTimeout", (bFromAltSection ? -999 : (bBatchMode ? 1 : 20)) /*default*/ );		// SAC 1/31/20
-      if (iCompReportWarningTimeout >= -1)
-			{	sOptTemp.Format( "CompReportWarningTimeout,%d,", iCompReportWarningTimeout );
+      int iAnalysisDialogTimeout = ReadProgInt( sOptsSec, "AnalysisDialogTimeout", (bFromAltSection ? -999 : (bBatchMode ? 1 : 20)) /*default*/ );		// SAC 1/31/20   // SAC 7/1/20 - revised option name
+      if (iAnalysisDialogTimeout >= -1)
+			{	sOptTemp.Format( "AnalysisDialogTimeout,%d,", iAnalysisDialogTimeout );
 				sOptionsCSVString += sOptTemp;
 			}
 
@@ -3158,6 +3213,10 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "EnableRHERS,%d,", iEnableRHERS );
 			sOptionsCSVString += sOptTemp;
 		}
+		if (!esAltWeatherPath.IsEmpty())		// SAC 6/4/20
+		{	sOptTemp.Format( "AltWeatherPath,\"%s\",", esAltWeatherPath );
+			sOptionsCSVString += sOptTemp;
+		}
       int iWriteCF1RXML = ReadProgInt( sOptsSec, "WriteCF1RXML", (lEnergyCodeYr > 2018 ? 1 : 0) /*default*/ );		// SAC 3/5/18 - triggers population & writing of CF1RPRF01E XML   - SAC 10/29/18 - added default of 1 for 2019+
 		if (iWriteCF1RXML > 0)
 		{	sOptTemp.Format( "WriteCF1RXML,%d,", iWriteCF1RXML );
@@ -3210,9 +3269,19 @@ BOOL CMainFrame::PopulateAnalysisOptionsString( CString& sOptionsCSVString, bool
 		{	sOptTemp.Format( "StoreResultsToModelInput,%d,", iStoreResultsToModelInput );
 			sOptionsCSVString += sOptTemp;
 		}
+		int iCEDAUD = ReadProgInt( sOptsSec, "ClassifyEditableDefaultsAsUserData", 1 );	// SAC 4/1/20
+		if (iCEDAUD != 0)	// analysis default = 0 to retain existing/previous functionality - SAC 4/1/20
+		{	sOptTemp.Format( "ClassifyEditableDefaultsAsUserData,%d,", iCEDAUD );
+			sOptionsCSVString += sOptTemp;
+		}
       int iDHWCalcMethod = ReadProgInt( sOptsSec, "DHWCalcMethod", -1 /*default*/ );	// SAC 7/14/15
 		if (iDHWCalcMethod >= 0)
 		{	sOptTemp.Format( "DHWCalcMethod,%d,", iDHWCalcMethod );
+			sOptionsCSVString += sOptTemp;
+		}
+      int iCSE_DHWonly = ReadProgInt( sOptsSec, "CSE_DHWonly", 0 /*default*/ );	// SAC 7/7/20
+		if (iCSE_DHWonly > 0)
+		{	sOptTemp.Format( "CSE_DHWonly,%d,", iCSE_DHWonly );
 			sOptionsCSVString += sOptTemp;
 		}
 
@@ -5572,7 +5641,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 	BOOL bContinue = TRUE;
 
 #ifdef UI_CARES
-	long lEnergyCodeYearNum=0, lAllOrientations=0, lSpecifyTargetDRtg=0, lPVSizeOption=0;		double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+	long lEnergyCodeYearNum=0, lAllOrientations=0;		
 //	long lRunScope=0, lIsAddAlone=0;
 //	BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:AllOrientations"    ), lAllOrientations   );
 //	if (bContinue && BEMPX_GetUIActiveFlag() && 
@@ -5598,16 +5667,36 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 //	}
 
 	if (bContinue && BEMPX_GetUIActiveFlag() && 
-		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ) &&   // lEnergyCodeYearNum == 2019 &&  - removed to enable TDR confirmation in 2016 analysis - SAC 2/7/18
-		 BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0 &&
-		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) &&
-		 ( ( lSpecifyTargetDRtg > 0 && BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 ) ||
-		   ( lSpecifyTargetDRtg < 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVSizeOption"       ), lPVSizeOption ) && lPVSizeOption > 0 ) ))
-	{
-     		CWnd* pWnd = GetFocus();
-         CSACDlg dlgProj( pWnd, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, 186 /* lDBID_ScreenID */, 0, 0, 0,
+		 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:EnergyCodeYearNum"  ), lEnergyCodeYearNum ))   // lEnergyCodeYearNum == 2019 &&  - removed to enable TDR confirmation in 2016 analysis - SAC 2/7/18
+	{	// revisions to enable more ruleset-driven confirmation dialog settings - SAC 6/11/20 (CommunitySolar)
+		bool bShowConfirmAnalOptsDlg = false;
+		long lAnalOptsID=186, lAnalOptsHt=280, lAnalOptsWd=500;
+		long lDBID_ConfirmAnalOpts   = BEMPX_GetDatabaseID( "Proj:ConfirmAnalOpts"   );
+		long lDBID_ConfirmAnalOptsID = BEMPX_GetDatabaseID( "Proj:ConfirmAnalOptsID" );
+		long lDBID_ConfirmAnalOptsHt = BEMPX_GetDatabaseID( "Proj:ConfirmAnalOptsHt" );
+		long lDBID_ConfirmAnalOptsWd = BEMPX_GetDatabaseID( "Proj:ConfirmAnalOptsWd" );
+		if (lDBID_ConfirmAnalOpts > 0 && lDBID_ConfirmAnalOptsID > 0 && lDBID_ConfirmAnalOptsHt > 0 && lDBID_ConfirmAnalOptsWd > 0)
+		{	long lShowAnalOpts=0;
+			if (BEMPX_SetDataInteger( lDBID_ConfirmAnalOpts  , lShowAnalOpts ) && lShowAnalOpts > 0 &&
+				 BEMPX_SetDataInteger( lDBID_ConfirmAnalOptsID, lAnalOptsID ) && lAnalOptsID > 0 &&
+				 BEMPX_SetDataInteger( lDBID_ConfirmAnalOptsHt, lAnalOptsHt ) && lAnalOptsHt > 0 &&
+				 BEMPX_SetDataInteger( lDBID_ConfirmAnalOptsWd, lAnalOptsWd ) && lAnalOptsWd > 0)
+				bShowConfirmAnalOptsDlg = true;
+		}
+		else
+		{	long lSpecifyTargetDRtg=0, lPVSizeOption=0;
+			double dTargetDesignRtgInp=0, dPVWDCSysTotal=0;
+			if (BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:PVWDCSysTotal"      ), dPVWDCSysTotal,      -999 ) && dPVWDCSysTotal > 0 &&
+				 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:SpecifyTargetDRtg"  ), lSpecifyTargetDRtg ) &&
+				 ( ( lSpecifyTargetDRtg > 0 && BEMPX_GetFloat(       BEMPX_GetDatabaseID( "Proj:TargetDesignRtgInp" ), dTargetDesignRtgInp, -999 ) && dTargetDesignRtgInp > -200 ) ||
+				   ( lSpecifyTargetDRtg < 1 && BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:PVSizeOption"       ), lPVSizeOption ) && lPVSizeOption > 0 ) ))
+				bShowConfirmAnalOptsDlg = true;
+		}
+		if (bShowConfirmAnalOptsDlg)
+		{	CWnd* pWnd = GetFocus();
+         CSACDlg dlgProj( pWnd, eiBDBCID_Proj, 0 /* lDBID_ScreenIdx */, lAnalOptsID /* lDBID_ScreenID */, 0, 0, 0,
                            esDataModRulelist /*pszMidProcRulelist*/, "" /*pszPostProcRulelist*/, "Analysis Options" /*pszDialogCaption*/,
-									280 /*Ht*/, 500 /*Wd*/, 10 /*iBaseMarg*/,
+									lAnalOptsHt /*Ht*/, lAnalOptsWd /*Wd*/, 10 /*iBaseMarg*/,
                            0 /*uiIconResourceID*/, TRUE /*bEnableToolTips*/, FALSE /*bShowPrevNextButtons*/, 0 /*iSACWizDlgMode*/,
 									0 /*lDBID_CtrlDBIDOffset*/, "&Continue" /*pszFinishButtonText*/, NULL /*plCheckCharDBIDs*/, 0 /*iNumCheckCharDBIDs*/,
 									0 /*lDBID_ScreenIDArray*/, TRUE /*bPostHelpMessageToParent*/, ebIncludeCompParamStrInToolTip, ebIncludeStatusStrInToolTip,
@@ -5615,7 +5704,7 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
                            FALSE /*bBypassChecksOnCancel*/, TRUE /*bEnableCancelBtn*/, TRUE /*bGraphicalButtons*/, 120 /*iFinishBtnWd*/,
 									ebIncludeLongCompParamStrInToolTip );
          bContinue = (dlgProj.DoModal() == IDOK);
-	}
+	}	}
 #endif
 
 	SendMessage( WM_EVALPROPOSED, DefaultAction_InitAnalysis, 0 );		// SAC 4/15/18
@@ -5756,9 +5845,10 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 				// SAC 2/5/19 - 19->20 Major overhaul of CSV format, eliminating many unused columns, improving on the organization and consolidating C02-reporting format (tic #1053)
 				// SAC 6/20/19 - 20->21 added columns documenting EDR1 (source energy TDV) to facilitate 2022 code research
 				// SAC 1/29/20 - 21->22 inserted columns documenting Proposed and Std design model DHWSolarSys SSF (calced by CSE) (only 1st Prop solar sys) into cols EA-EB
-				CString sDfltResFN = "AnalysisResults-v22.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
+				// SAC 6/18/20 - 22->23 inserted 19 columns for RESNET/HERS analysis results in cols LS-MK (prior to CAHP/CMFNH)
+				CString sDfltResFN = "AnalysisResults-v23.csv";  // (bHaveCDRs ? "AnalysisResults-v19cdr.csv" : "AnalysisResults-v19.csv");
 				int iCSVResVal = CMX_PopulateCSVResultSummary_CECRes(	pszCSVResultSummary, CSV_RESULTSLENGTH, pszOrientation[iO] /*pszRunOrientation*/,
-																						22 /*iResFormatVer*/, sOriginalFileName );
+																						23 /*iResFormatVer*/, sOriginalFileName );
 				if (iCSVResVal == 0)
 				{
 					char pszCSVColLabel1[2048], pszCSVColLabel2[4096], pszCSVColLabel3[3328];
@@ -6071,9 +6161,10 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 		int iCodeType = CT_T24N;		// SAC 10/2/14 - added to facilitate code-specific processing
 		QString sLoadedRuleSetID, sLoadedRuleSetVer;
 		if (BEMPX_GetRulesetID( sLoadedRuleSetID, sLoadedRuleSetVer ))
-		{	if (sLoadedRuleSetID.indexOf( "CA " ) == 0)
+		{	if (sLoadedRuleSetID.indexOf( "T24N" ) >= 0 || sLoadedRuleSetID.indexOf( "CA " ) == 0)
 				iCodeType = CT_T24N;
-			else if (sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0)
+			else if (sLoadedRuleSetID.indexOf( "S901G" ) >= 0 ||		// SAC 3/13/20 - updated logic for S901G & T24N to be consistent w/ that in BEMCmpMgr library
+						(sLoadedRuleSetID.indexOf( "ASH" ) == 0 && sLoadedRuleSetID.indexOf( "90.1" ) > 0 && sLoadedRuleSetID.indexOf( " G" ) > 0))
 				iCodeType = CT_S901G;
 			else if (sLoadedRuleSetID.indexOf( "ECBC" ) >= 0)
 				iCodeType = CT_ECBC;
@@ -6082,7 +6173,6 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 			else
 			{	ASSERT( FALSE );	// what ruleset is this ??
 		}	}
-
 
 // vvv TEMPORARY vvv
 // vvv TEMPORARY vvv
@@ -6164,66 +6254,67 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 			}	}
 		}
 
-	// Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
-		if (iSimResult == 0 && bPerformSimulations)
-		{	long lCompRptPDFWritten=0, lCompRptStdWritten=0;
-			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompReportPDFWritten" ), lCompRptPDFWritten );
-			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompReportStdWritten" ), lCompRptStdWritten );
-			CString sZEROCodePathFile;  // SAC 9/10/18 - A2030 report
-			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:ZEROCodePathFile" ), sZEROCodePathFile );
-			if ( (lCompRptPDFWritten > 0 || lCompRptStdWritten > 0 || !sZEROCodePathFile.IsEmpty()) && BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent report file review prompt when GUI deactivated
-			{	CString sPDFRptFN = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
-				CString sStdRptFN = sPDFRptFN;
-				sPDFRptFN += " - AnalysisResults-BEES.pdf";
-				sStdRptFN += " - AnalysisResults-BEES-Std.pdf";
-				bool bHaveCompRpt   = (lCompRptPDFWritten > 0 && FileExists( sPDFRptFN ));
-				bool bHaveStdRpt    = (lCompRptStdWritten > 0 && FileExists( sStdRptFN ));
-				if (lCompRptPDFWritten > 0 && !bHaveCompRpt)
-				{	// report to log that PDF was expected but not found...
-					sMsg.Format( "PDF compliance report not found:  %s", sPDFRptFN );
-					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
-				}
-				if (lCompRptStdWritten > 0 && !bHaveStdRpt)
-				{	// report to log that PDF was expected but not found...
-					sMsg.Format( "PDF standard model report not found:  %s", sStdRptFN );
-					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
-				}
-
-				bool bHaveZeroCdRpt = (!sZEROCodePathFile.IsEmpty() && FileExists( sZEROCodePathFile ));
-				if (bHaveCompRpt || bHaveStdRpt || bHaveZeroCdRpt)
-				{	// prompt user to view one or more PDF report(s)
-					CString sBtn2File, sBtn3File, sBtn2Label, sBtn3Label, sAllLabel;
-					if (bHaveZeroCdRpt && !bHaveCompRpt && !bHaveStdRpt)
-					{	sMsg = "ZERO Code (CSV) report successfully generated during analysis.";
-						sBtn2File = sZEROCodePathFile;		sBtn2Label = "ZERO Code Report";
-					}
-					else if (bHaveZeroCdRpt && (bHaveCompRpt || bHaveStdRpt))
-					{	if (bHaveCompRpt)
-						{	sMsg = "PDF compliance and ZERO Code (CSV) reports successfully generated during analysis.";
-							sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
-						}
-						else
-						{	sMsg = "PDF standard model and ZERO Code (CSV) reports successfully generated during analysis.";
-							sBtn2File = sStdRptFN;		sBtn2Label = "Standard Model Report";
-						}
-						sBtn3File = sZEROCodePathFile;		sBtn3Label = "ZERO Code Report";		sAllLabel = "Both Reports";
-					}
-					else if (bHaveCompRpt && !bHaveStdRpt)
-					{	sMsg = "PDF compliance report successfully generated during analysis.";
-						sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
-					}
-					else if (!bHaveCompRpt && bHaveStdRpt)
-					{	sMsg = "PDF standard model report successfully generated during analysis.";
-						sBtn2File = sStdRptFN;		sBtn2Label = "Standard Model Report";
-					}
-					else
-					{	sMsg = "PDF compliance and standard model reports successfully generated during analysis.";
-						sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
-						sBtn3File = sStdRptFN;		sBtn3Label = "Standard Model Report";		sAllLabel = "Both Reports";
-					}
-					PromptToDisplayPDFs( "Analysis Report(s)", sMsg, sBtn2File, sBtn2Label, sBtn3File, sBtn3Label, "", "", sAllLabel );
-				}
-		}	}
+// removed separate dialog to view compliance report - now accessed through button on results screen - SAC 7/28/20
+//	// Prompt user to view generated PDF compliance report (if analysis successful & PDF written)
+//		if (iSimResult == 0 && bPerformSimulations)
+//		{	long lCompRptPDFWritten=0, lCompRptStdWritten=0;
+//			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompReportPDFWritten" ), lCompRptPDFWritten );
+//			BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "Proj:CompReportStdWritten" ), lCompRptStdWritten );
+//			CString sZEROCodePathFile;  // SAC 9/10/18 - A2030 report
+//			BEMPX_SetDataString( BEMPX_GetDatabaseID( "Proj:ZEROCodePathFile" ), sZEROCodePathFile );
+//			if ( (lCompRptPDFWritten > 0 || lCompRptStdWritten > 0 || !sZEROCodePathFile.IsEmpty()) && BEMPX_GetUIActiveFlag()) 		// SAC 2/24/14 - prevent report file review prompt when GUI deactivated
+//			{	CString sPDFRptFN = sOriginalFileName.Left( sOriginalFileName.ReverseFind('.') );
+//				CString sStdRptFN = sPDFRptFN;
+//				sPDFRptFN += " - AnalysisResults-BEES.pdf";
+//				sStdRptFN += " - AnalysisResults-BEES-Std.pdf";
+//				bool bHaveCompRpt   = (lCompRptPDFWritten > 0 && FileExists( sPDFRptFN ));
+//				bool bHaveStdRpt    = (lCompRptStdWritten > 0 && FileExists( sStdRptFN ));
+//				if (lCompRptPDFWritten > 0 && !bHaveCompRpt)
+//				{	// report to log that PDF was expected but not found...
+//					sMsg.Format( "PDF compliance report not found:  %s", sPDFRptFN );
+//					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
+//				}
+//				if (lCompRptStdWritten > 0 && !bHaveStdRpt)
+//				{	// report to log that PDF was expected but not found...
+//					sMsg.Format( "PDF standard model report not found:  %s", sStdRptFN );
+//					VERIFY( BEMPX_WriteLogFile( sMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ ) );
+//				}
+//
+//				bool bHaveZeroCdRpt = (!sZEROCodePathFile.IsEmpty() && FileExists( sZEROCodePathFile ));
+//				if (bHaveCompRpt || bHaveStdRpt || bHaveZeroCdRpt)
+//				{	// prompt user to view one or more PDF report(s)
+//					CString sBtn2File, sBtn3File, sBtn2Label, sBtn3Label, sAllLabel;
+//					if (bHaveZeroCdRpt && !bHaveCompRpt && !bHaveStdRpt)
+//					{	sMsg = "ZERO Code (CSV) report successfully generated during analysis.";
+//						sBtn2File = sZEROCodePathFile;		sBtn2Label = "ZERO Code Report";
+//					}
+//					else if (bHaveZeroCdRpt && (bHaveCompRpt || bHaveStdRpt))
+//					{	if (bHaveCompRpt)
+//						{	sMsg = "PDF compliance and ZERO Code (CSV) reports successfully generated during analysis.";
+//							sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
+//						}
+//						else
+//						{	sMsg = "PDF standard model and ZERO Code (CSV) reports successfully generated during analysis.";
+//							sBtn2File = sStdRptFN;		sBtn2Label = "Standard Model Report";
+//						}
+//						sBtn3File = sZEROCodePathFile;		sBtn3Label = "ZERO Code Report";		sAllLabel = "Both Reports";
+//					}
+//					else if (bHaveCompRpt && !bHaveStdRpt)
+//					{	sMsg = "PDF compliance report successfully generated during analysis.";
+//						sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
+//					}
+//					else if (!bHaveCompRpt && bHaveStdRpt)
+//					{	sMsg = "PDF standard model report successfully generated during analysis.";
+//						sBtn2File = sStdRptFN;		sBtn2Label = "Standard Model Report";
+//					}
+//					else
+//					{	sMsg = "PDF compliance and standard model reports successfully generated during analysis.";
+//						sBtn2File = sPDFRptFN;		sBtn2Label = "Compliance Report";
+//						sBtn3File = sStdRptFN;		sBtn3Label = "Standard Model Report";		sAllLabel = "Both Reports";
+//					}
+//					PromptToDisplayPDFs( "Analysis Report(s)", sMsg, sBtn2File, sBtn2Label, sBtn3File, sBtn3Label, "", "", sAllLabel );
+//				}
+//		}	}
 
 		BOOL bSimResultsDisplayed = FALSE;
 //		int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
@@ -6399,6 +6490,12 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
    return lRetVal;
 }
 
+LRESULT CMainFrame::OnPerformAPIAnalysisMsg(WPARAM, LPARAM)
+{	LONG lRetVal=0;
+	OnPerformAPIAnalysis();
+   return lRetVal;
+}
+
 void CMainFrame::OnPerformAPIAnalysis()
 {
 //	UpdateSoftwareVersionString();		// SAC 9/17/12		// SAC 1/13/15 - prevent unnecessarily modifying project file before analysis, so that proj files can flow into analysis unchanged
@@ -6535,13 +6632,15 @@ void CMainFrame::OnPerformAPIAnalysis()
 					EnableWindow( TRUE );
 #endif
 
-		CString sRetMsg;
-		if (iAnalysisResult == 0)
-			sRetMsg = "Analysis completed successfully!";
-		else
-			sRetMsg.Format( "Analysis failed - return code %d.  Examine log file for more information:\n%s", iAnalysisResult, sCurrentFileName );
-		sRetMsg += "\n\nPress OK to exit the application.";
-		AfxMessageBox( sRetMsg );
+		if (BEMPX_GetUIActiveFlag())	// SAC 3/19/20
+		{	CString sRetMsg;
+			if (iAnalysisResult == 0)
+				sRetMsg = "Analysis completed successfully!";
+			else
+				sRetMsg.Format( "Analysis failed - return code %d.  Examine log file for more information:\n%s", iAnalysisResult, sCurrentFileName );
+			sRetMsg += "\n\nPress OK to exit the application.";
+			AfxMessageBox( sRetMsg );
+		}
 		PostMessage( WM_COMMAND, ID_APP_EXIT, 0L );
 
    }
@@ -9016,10 +9115,14 @@ void CMainFrame::SwitchViewOption( InterfaceMode eIntMode )
    if (eInterfaceMode != eIntMode && pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
    {
       CString sFileName = pDoc->GetPathName();
+	   CString sProjExt = ReadProgString( "options", "ProjectFileExt", "" );		// SAC 3/8/20
       if (sFileName.GetLength() > 0 && FileExists( sFileName ))
       {
          // Import and Display eIntMode version of current project
-         sFileName = sFileName.Left( sFileName.GetLength()-3 ) + pszCUIFileExt[ eIntMode ];
+		   if (sProjExt.IsEmpty())
+      	   sFileName = sFileName.Left( sFileName.GetLength()-3 ) + pszCUIFileExt[ eIntMode ];
+      	else
+      	   sFileName = sFileName.Left( sFileName.GetLength()-3 ) + sProjExt;
          if (FileExists( sFileName ))
             ((CComplianceUIDoc*)pDoc)->OpenTheFile( sFileName, TRUE /*bWriteToLog*/, FALSE /*bRestore*/, NULL /*pszNewRuleFile*/,
             														-1 /*lRulesetSymVal*/, FALSE /*bNormalRulesetUpdates*/ );	// SAC 11/17/15

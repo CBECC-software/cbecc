@@ -84,7 +84,7 @@
 #define  DMRuleReserved_SecurityKeys	23		// SAC 9/14/13
 //#define  DMRuleReserved_PrevNames		22		// SAC 8/6/15		// SAC 1/26/19 - moved up to avoid rl_PREVNAMES rulelist creation
 #define  DMRuleReserved_Report			24
-//#define  DMRuleReserved_Resets			24		// SAC 11/2/16		// SAC 1/26/19 - moved up to avoid rl_PREVNAMES rulelist creation
+//#define  DMRuleReserved_Resets			24		// SAC 11/2/16		// SAC 1/26/19 - moved up to avoid rl_RESETS rulelist creation
 #define  DMRuleReserved_MAX_NUM			24
 
 static bool SetAllDataForDMRuleReserved( int iDMRuleRsrvd )		// SAC 8/8/13 - added to enable variation in bSetAllData rulelist property for "reserved" lists
@@ -540,8 +540,9 @@ int BEMPX_PostAnalysisActionRulesetPropertiesToDatabase()
 // #define  BEMAnalActWhen_End_AfterAnalPostProc             12
 // #define  BEMAnalActWhen_Transform_BeforeModelSetupRules   21
 // #define  BEMAnalActWhen_Transform_AfterModelSetupRules    22
-// #define  BEMAnalActWhen_Transform_ActOnSimInput           23
-// #define  BEMAnalActWhen_Transform_FollowingResultsProc    24
+// #define  BEMAnalActWhen_Transform_FollowingResultsProc    23
+// #define  BEMAnalActWhen_Transform_ActOnEPlusSimInput      31
+// #define  BEMAnalActWhen_Transform_ActOnCSESimInput        32
 QString AnalActDescrip( long iAnalPhase, long iBeforeAfter, int iAAIdx )
 {	QString str = QString( "#%1" ).arg( QString::number( iAAIdx+1 ) );
 	if (iBeforeAfter <= 20)
@@ -562,15 +563,17 @@ QString AnalActDescrip( long iAnalPhase, long iBeforeAfter, int iAAIdx )
 		switch (iBeforeAfter)
 		{	case  BEMAnalActWhen_Transform_BeforeModelSetupRules :  str += "before model setup)";   break;
 			case  BEMAnalActWhen_Transform_AfterModelSetupRules  :  str += "after model setup)";   break;
-			case  BEMAnalActWhen_Transform_ActOnSimInput         :  str += "act on sim input)";   break;
 			case  BEMAnalActWhen_Transform_FollowingResultsProc  :  str += "following results proc)";   break;
+			case  BEMAnalActWhen_Transform_ActOnEPlusSimInput    :  str += "act on E+ sim input)";   break;
+			case  BEMAnalActWhen_Transform_ActOnCSESimInput      :  str += "act on CSE sim input)";   break;
 	}	}
 	return str;
 }
 //
 //	return value: >=0 : # of AnalysisActions applied to the database
 //						-1 : 
-int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrorMsg, bool bVerbose )
+int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrorMsg, bool bVerbose,
+														const char* pszSimPathFileName /*=NULL*/ )			// SAC 3/10/20
 {
 	int iRetVal = 0;		// > 0 Num AnalysisActions applied to the database / < 0 error code
 	long lDBID_AnalAct_Type = BEMPX_GetDatabaseID( "AnalysisAction:Type" );
@@ -588,6 +591,7 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 			long lDBID_AnalAct_SetValInteger   = 0;
 			long lDBID_AnalAct_SetValString    = 0;
 			long lDBID_AnalAct_SetValPathFile  = 0;
+			int iSimInputExpFileIdx = -1;
 			for (int iAA=0; (iRetVal >= 0 && iAA < iNumAnalActs); iAA++)
 			{	long lAAType, lPhase, lWhen;
 				if (BEMPX_GetInteger( lDBID_AnalAct_Type            , lAAType, 0, -1, iAA ) && lAAType > 0 &&
@@ -728,25 +732,43 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 											}  break;
 
 							case  22 :	{	// EvalRulelist
-												QString qsRLName = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
-												if (iStatus < 1)
-												{	iRetVal = -12;
-													sErrorMsg = QString( "Error applying AnalysisAction %1: unable to retrieve rulelist name from SetValString" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
-												}
-												else
-												{	if (!BEMPX_EvaluateRuleList( qsRLName.toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/, 0 /*iEvalOnlyClass*/,
-																																-1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerbose ))
-												//			bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,	
-												//							int iEvalOnlyObjIdx=-1, int iEvalOnlyObjType=0, BOOL bVerboseOutput=FALSE,
-												//							void* pvTargetedDebugInfo=NULL, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL, 
-												//							PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL,
-												//							QStringList* psaWarningMsgs=NULL );		
-													{	iRetVal = -13;
-														sErrorMsg = QString( "Error applying AnalysisAction %1: evaluation of rulelist '%2' failed" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsRLName );
+												if (pszSimPathFileName && iSimInputExpFileIdx < 0)		// SAC 3/10/20
+												{	iSimInputExpFileIdx = ruleSet.nextExportFileIndex();
+													if (iSimInputExpFileIdx < 0)
+													{	iRetVal = -14;
+														sErrorMsg = QString( "Error applying AnalysisAction %1: too many ruleset export files open:  %2" ).arg(
+																								AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
 													}
 													else
-														iRetVal++;
-												}
+													{	int iOpenRetVal = ruleSet.openExportFile( iSimInputExpFileIdx, pszSimPathFileName, "a+" );
+														if (iOpenRetVal == 0)
+															ruleSet.setSimInputExpFileIdx( iSimInputExpFileIdx );
+														else
+														{	iRetVal = -15;
+															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to open simulaiton input file:  %2" ).arg(
+																								AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), pszSimPathFileName );
+												}	}	}
+
+												if (iRetVal >= 0)
+												{	QString qsRLName = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
+													if (iStatus < 1)
+													{	iRetVal = -12;
+														sErrorMsg = QString( "Error applying AnalysisAction %1: unable to retrieve rulelist name from SetValString" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+													}
+													else
+													{	if (!BEMPX_EvaluateRuleList( qsRLName.toLocal8Bit().constData(), FALSE /*bTagDataAsUserDefined*/, 0 /*iEvalOnlyClass*/,
+																																	-1 /*iEvalOnlyObjIdx*/, 0 /*iEvalOnlyObjType*/, bVerbose ))
+													//			bool BEMPX_EvaluateRuleList( LPCSTR listName, BOOL bTagDataAsUserDefined=FALSE, int iEvalOnlyClass=0,	
+													//							int iEvalOnlyObjIdx=-1, int iEvalOnlyObjType=0, BOOL bVerboseOutput=FALSE,
+													//							void* pvTargetedDebugInfo=NULL, long* plNumRuleEvals=NULL, double* pdNumSeconds=NULL, 
+													//							PLogMsgCallbackFunc pLogMsgCallbackFunc=NULL,
+													//							QStringList* psaWarningMsgs=NULL );		
+														{	iRetVal = -13;
+															sErrorMsg = QString( "Error applying AnalysisAction %1: evaluation of rulelist '%2' failed" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsRLName );
+														}
+														else
+															iRetVal++;
+												}	}
 											}  break;
 
 							case  21 :	{	// RulelistPathFile
@@ -768,6 +790,11 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 					}
 				}	// end of if DBIDs valid
 			}	// end of:  for (int iAA=0...
+
+			if (iSimInputExpFileIdx >= 0)		// SAC 3/10/20
+			{	ruleSet.closeExportFile( iSimInputExpFileIdx, iSimInputExpFileIdx );
+				ruleSet.setSimInputExpFileIdx( -1 );
+			}
 		}	// end of:  if (iNumAnalActs > 0)
 	}	// end of:  if (lDBID_AnalAct_Type > BEM_COMP_MULT)
 
@@ -2525,6 +2552,9 @@ bool RuleFile::Read( QFile& errorFile )
 		{
       	int ruleListIndex = 1;
       	int i1RuleFileIdx = 1;
+			QStringList saReservedStrs;
+			std::vector<RuleList*> paTransformRulelists;
+			int iNumDMRuleFiles = 0;
       	// Continue reading until "ENDFILE" encountered
       	while ( token != "ENDFILE" )
       	{
@@ -2584,16 +2614,174 @@ bool RuleFile::Read( QFile& errorFile )
 	      	   else
 						bRetVal = ((ReadRuleFile( libFileStr.toLocal8Bit().constData(), i1RuleFileIdx++, ruleListIndex, errorFile, ruleSet.getFileStructVersion() )) && (bRetVal));	// SAC 9/23/14 - new
       	   }
-      	
+
       	   else if ( token == "RULELIST" )
       	      // read a compliance rulelist
       	      bRetVal = (ReadRuleList( ruleListIndex++, errorFile, ruleSet.getFileStructVersion() ) && bRetVal);
-      	
+
+      	   else if ( token == "DATAMODELRULES" )		// SAC 3/24/20 - added ability to specify type of DataModelRule compatibility (initially just CA-HERS
+      	   {	token = m_file.ReadToken();  // read next token
+					if (token == "CAHERS")
+					{	// manually add each CAHERS transform into ruleset
+						RuleSetTransformation* pActiveTrans = new RuleSetTransformation( QString("USER"), QString("u"), QString("rl_USER"), 0 /*iSrcTransformIdx*/ );			assert( pActiveTrans );
+						if (pActiveTrans == NULL)
+						{	sErrMsg = QString( "   Error: Unable to add TRANSFORMATION USER/u to the ruleset.\n\n" );
+							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+							bRetVal = FALSE;
+						}
+						else
+						{	ruleSet.addTransformation( pActiveTrans );
+							pActiveTrans = new RuleSetTransformation( QString("RATED"), QString("rt"), QString("rl_RATED"), 0 /*iSrcTransformIdx*/ );			assert( pActiveTrans );
+							if (pActiveTrans == NULL)
+							{	sErrMsg = QString( "   Error: Unable to add TRANSFORMATION RATED/rt to the ruleset.\n\n" );
+								errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+								bRetVal = FALSE;
+							}
+							else
+							{	ruleSet.addTransformation( pActiveTrans );
+								pActiveTrans->addGroupLongName(  QString("ANNUAL") );
+								pActiveTrans->addGroupShortName( QString("a") );
+								pActiveTrans = new RuleSetTransformation( QString("REF"), QString("rf"), QString("rl_REF"), 0 /*iSrcTransformIdx*/ );			assert( pActiveTrans );
+								if (pActiveTrans == NULL)
+								{	sErrMsg = QString( "   Error: Unable to add TRANSFORMATION REF/rf to the ruleset.\n\n" );
+									errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+									bRetVal = FALSE;
+								}
+								else
+								{	ruleSet.addTransformation( pActiveTrans );
+									pActiveTrans->addGroupLongName(  QString("ANNUAL") );
+									pActiveTrans->addGroupShortName( QString("a") );
+									pActiveTrans = new RuleSetTransformation( QString("INDEX_RATED"), QString("it"), QString("rl_INDEX_RATED"), 0 /*iSrcTransformIdx*/ );			assert( pActiveTrans );
+									if (pActiveTrans == NULL)
+									{	sErrMsg = QString( "   Error: Unable to add TRANSFORMATION INDEX_RATED/it to the ruleset.\n\n" );
+										errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+										bRetVal = FALSE;
+									}
+									else
+									{	ruleSet.addTransformation( pActiveTrans );
+										pActiveTrans->addGroupLongName(  QString("ANNUAL") );
+										pActiveTrans->addGroupShortName( QString("a") );
+										pActiveTrans = new RuleSetTransformation( QString("INDEX_REF"), QString("if"), QString("rl_INDEX_REF"), 0 /*iSrcTransformIdx*/ );			assert( pActiveTrans );
+										if (pActiveTrans == NULL)
+										{	sErrMsg = QString( "   Error: Unable to add TRANSFORMATION INDEX_REF/if to the ruleset.\n\n" );
+											errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+											bRetVal = FALSE;
+										}
+										else
+										{	ruleSet.addTransformation( pActiveTrans );
+											pActiveTrans->addGroupLongName(  QString("ANNUAL") );
+											pActiveTrans->addGroupShortName( QString("a") );
+						}	}	}	}	}
+
+						if (bRetVal)
+						{	int i, iTr;
+							QString sTransRLName;
+							//QStringList saReservedStrs;
+							//std::vector<RuleList*> paTransformRulelists;
+							// setup of reserved words/terms & default/reserved rulelists
+							for (i=0; i<=DMRuleReserved_MAX_NUM; i++)
+								saReservedStrs.push_back( pszDMRuleReserved[i] );
+
+							// before reading individual RULEs, setup each generic TRANSFORM
+							for (i=DMRuleReserved_Default; i<=DMRuleReserved_MAX_NUM; i++)
+							{	sTransRLName = QString( "rl_%1" ).arg( pszDMRuleReserved[i] );
+								ruleSet.addNewRuleList( sTransRLName.toLocal8Bit().constData(), SetAllDataForDMRuleReserved(i) /*FALSE*/ /*bSetAllData*/, FALSE /*bAllowMultEvals*/,
+														FALSE /*bTagAllDataAsUserDef*/, m_file.GetLineCount(), m_fileName.toLocal8Bit().constData(), TRUE /*bPerformSetBEMDataResets*/ );   // "default" rulelist
+								paTransformRulelists.push_back( (RuleList*) ruleSet.getRuleList( sTransRLName.toLocal8Bit().constData() ) );
+							}
+
+							int iNumTransforms = ruleSet.getNumTransformations();
+							for (iTr=0; iTr < iNumTransforms; iTr++)
+							{	RuleSetTransformation* pTrans = ruleSet.getTransformation( iTr );			assert( pTrans );
+								if (pTrans && !pTrans->getRuleListName().isEmpty())
+								{	saReservedStrs.push_back( pTrans->getLongName() );
+									ruleSet.addNewRuleList( pTrans->getRuleListName().toLocal8Bit().constData(), TRUE /*bSetAllData*/, FALSE /*bAllowMultEvals*/,
+														// SAC 4/3/20 - switched bTagAllDataAsUserDef from FALSE to TRUE for CAHERS transform rulelists
+														TRUE /*bTagAllDataAsUserDef*/, m_file.GetLineCount(), m_fileName.toLocal8Bit().constData(), TRUE /*bPerformSetBEMDataResets*/ );   // rulelist for each TRANSFORMATION
+									paTransformRulelists.push_back( (RuleList*) ruleSet.getRuleList( pTrans->getRuleListName().toLocal8Bit().constData() ) );
+								}
+							}
+							for (iTr=0; iTr < iNumTransforms; iTr++)	// SAC 3/28/14 - add transform GROUP names AFTER all main transform names have been added
+							{	RuleSetTransformation* pTrans = ruleSet.getTransformation( iTr );			assert( pTrans );
+								if (pTrans)
+								{	for (i=0; i<pTrans->numGroupLongNames(); i++)
+									{	if (!pTrans->getGroupLongName(i).isEmpty() && IndexInStringArray( saReservedStrs, pTrans->getGroupLongName(i) ) == -1)
+											saReservedStrs.push_back( pTrans->getGroupLongName(i) );
+								}	}
+							}
+						}
+// DATAMODELRULES  CAHERS
+//       ; hardwires rulelists rl_CHECKSIM, rl_CHECKCODE, rl_DEFAULT
+//       ; and CA-HERS-specific transformations:
+//       ;        RATED  (rt  Or ANNUAL a  From USER (default))
+//       ;        INDEX_RATED  (it  Or ANNUAL a  From RATED)
+//       ;        REFERENCE  (rf  Or ANNUAL a  From RATED)
+//       ;        INDEX_REFERENCE  (if  Or ANNUAL a  From INDEX_RATED)
+
+					}
+					else
+					{	sErrMsg = QString( "   Error reading main ruleset definition file - unrecognized DATAMODELRULES type '%1': %2\n\n" ).arg( token, m_fileName );
+						errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+						bRetVal = FALSE;
+				}	}
+
+      	   else if ( token == "DMRULEFILE" )		// SAC 3/24/20 - added ability to specify type of DataModelRule compatibility (initially just CA-HERS
+				{	QString sRuleFilePath = m_file.ReadCSVString();
+					EnsureValidPath( m_fileName, sRuleFilePath );
+               if (!FileExists( sRuleFilePath.toLocal8Bit().constData() ))
+					{	sErrMsg = QString( "   Error: rule file not found: %1\n\n" ).arg( sRuleFilePath );
+						errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+						bRetVal = FALSE;
+					}
+					else
+      	      {	// restrict first round of rule file reading to TABLEs, which need to be read and parsed prior to RULE parsing in order to properly identify table look-up calls
+						if (!ReadRuleFile( sRuleFilePath.toLocal8Bit().constData(), saReservedStrs, paTransformRulelists, errorFile, 0 ))
+						{	sErrMsg = QString( "   Error: unable to parse rule file for table(s): %1\n\n" ).arg( sRuleFilePath );
+							errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+							bRetVal = FALSE;
+						}
+						else
+						{	if (!ReadRuleFile( sRuleFilePath.toLocal8Bit().constData(), saReservedStrs, paTransformRulelists, errorFile, 1, i1RuleFileIdx++ /*++iNumDMRuleFiles*/ ))
+							{	sErrMsg = QString( "   Error: unable to parse rule file: %1\n\n" ).arg( sRuleFilePath );
+								errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+								bRetVal = FALSE;
+						}	}
+				}	}
+
       	   else  // bogus token encountered
       	   {  assert( FALSE );  }  // throw exception ??
       	
       	   token = m_file.ReadToken();  // read next token
       	}
+
+		// added in rule compilation stuff previously only present in DataModel rules - SAC 3/25/20
+			if (ruleSet.numRulesetProperties() > 0)		// => ADD "ruleset variables" (RULE NEW items) to BEMBase prior to overwriting Symbol/enumeration definitions
+			{	QString sErrantRuleProps;
+				if (!ruleSet.PostRulePropsToDatabase( sErrantRuleProps, BEMD_NotInput ))
+				{	sErrMsg = QString( "   Error encountered inserting ruleset variables (RULE NEWs) into BEMBase: %1\n%2\n" ).arg( m_fileName, sErrantRuleProps );
+					errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+					bRetVal = FALSE;
+				}
+			}
+
+			if (ruleSet.getNumSymLsts() > 0)		// => need to "apply" these symbol selections to BEMBase
+			{	if (!ruleSet.postSymbolsToDatabase())
+				{	sErrMsg = QString( "   Error encountered posting enumeration data to BEMBase: %1\n\n" ).arg( m_fileName );
+					errorFile.write( sErrMsg.toLocal8Bit().constData(), sErrMsg.length() );
+					bRetVal = FALSE;
+				}
+			}
+
+		//	// Process library files only AFTER all ruleset variables and enumerations have been added to BEMBase (thereby fixing PropertyType array & symbol lists)
+		//	if (saLibFiles.size() > 0)
+		//	{	if (!ParseLibraryFiles( saLibFiles, errorFile ))
+		//			bRetVal = FALSE;
+		//		saLibFiles.clear();
+		//	}
+
+			if (ruleSet.getNumRangeChecks() > 0)		// => need to "apply" range check definitions to BEMBase
+				ruleSet.postRangeChecksToDatabase();
+
 		}   
    }
 	catch (std::exception& e)

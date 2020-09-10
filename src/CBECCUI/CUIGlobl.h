@@ -216,6 +216,7 @@ extern int    GetCUIFontHeight( int fontType );
 extern CString esProgramPath;
 extern CString esDataPath;
 extern CString esProjectsPath;
+extern CString esAltWeatherPath;	// SAC 6/3/20
 extern CString esProgramFName;   // SAC 8/19/11
 extern CString esProgramName;    // SAC 9/2/14
 extern CString iniFileName;
@@ -709,6 +710,7 @@ extern int eiBDBCID_ExteriorFloor;
 extern int eiBDBCID_FloorOverCrawl;
 extern int eiBDBCID_InteriorFloor;
 extern int eiBDBCID_InteriorCeiling;
+extern int eiBDBCID_Opening;	// SAC 7/30/20 - MFamProto
 extern int eiBDBCID_Win;
 extern int eiBDBCID_Skylt;
 extern int eiBDBCID_Door;

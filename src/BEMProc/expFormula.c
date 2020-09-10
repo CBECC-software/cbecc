@@ -213,6 +213,7 @@ static FuncTable functable[] =
 //   { "SymIndex",  EXP_BEMPFunc, BF_SymIndex,  1 },
 //   { "#SI",       EXP_BEMPFunc, BF_SymIndex,  1 },
    { "SymValue",                   EXP_BEMPFunc, BF_SymValue,    1 },
+   { "EnumValue",                  EXP_BEMPFunc, BF_SymValue,    1 },	/* use of preferred 'enum' term */
    {                "#SV",         EXP_BEMPFunc, BF_SymValue,    1 },
    { "SumAll",                     EXP_BEMPFunc, BF_SumAll,      1 },
    {                "#SA",         EXP_BEMPFunc, BF_SumAll,      1 },
@@ -496,6 +497,34 @@ static FuncTable functable[] =
    {                "#P3CT",       EXP_BEMPFunc, BF_Par3CompType, 0 },          /* SAC 9/5/19 - added */
    { "SchDayHoursString",          EXP_BEMPFunc, BF_SchDayHrsStr, VAR_ARGS },   /* SAC 10/6/19 - added (MFamProto) */
    {                "#SDHS",       EXP_BEMPFunc, BF_SchDayHrsStr, VAR_ARGS },   /* SAC 10/6/19 - added */
+   { "WriteToSimInput",            EXP_BEMPFunc, BF_WriteSimInp,  VAR_ARGS },   /* SAC 3/10/20 - added */
+   {                "#WSI",        EXP_BEMPFunc, BF_WriteSimInp,  VAR_ARGS },   /* SAC 3/10/20 - added */
+   { "RetrieveCSVValue",           EXP_BEMPFunc, BF_RetCSVVal,    4 },          /* SAC 4/10/20 - added */
+   {                "#RCSVV",      EXP_BEMPFunc, BF_RetCSVVal,    4 },          /* SAC 4/10/20 - added */
+   { "EvalRulelistOnCSVColumns",   EXP_BEMPFunc, BF_EvalRLCSVCol, VAR_ARGS },   /* SAC 5/9/20 - added */
+   {                "#ERCC",       EXP_BEMPFunc, BF_EvalRLCSVCol, VAR_ARGS },   /* SAC 5/9/20 - added */
+   { "AppendMessage",              EXP_BEMPFunc, BF_AppendMsg,    VAR_ARGS },   /* SAC 5/21/20 - added */
+   {                "#AM",         EXP_BEMPFunc, BF_AppendMsg,    VAR_ARGS },   /* SAC 5/21/20 - added */
+   { "GlobalSymbolValue",          EXP_BEMPFunc, BF_GlobSymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */ 
+   {                "#GSV",        EXP_BEMPFunc, BF_GlobSymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */ 
+   { "GlobalRefSymbolValue",       EXP_BEMPFunc, BF_GlobRefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#GRSV",       EXP_BEMPFunc, BF_GlobRefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "LocalSymbolValue",           EXP_BEMPFunc, BF_LocSymVal,     VAR_ARGS },  /* SAC 6/30/20 - added */ 
+   {                "#LSV",        EXP_BEMPFunc, BF_LocSymVal,     VAR_ARGS },  /* SAC 6/30/20 - added */ 
+   { "LocalRefSymbolValue",        EXP_BEMPFunc, BF_LocRefSymVal,  VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#LRSV",       EXP_BEMPFunc, BF_LocRefSymVal,  VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "ParentSymbolValue",          EXP_BEMPFunc, BF_ParSymVal,     VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#PSV",        EXP_BEMPFunc, BF_ParSymVal,     VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "ParentRefSymbolValue",       EXP_BEMPFunc, BF_ParRefSymVal,  VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#PRSV",       EXP_BEMPFunc, BF_ParRefSymVal,  VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "Parent2SymbolValue",         EXP_BEMPFunc, BF_Par2SymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#P2SV",       EXP_BEMPFunc, BF_Par2SymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "Parent2RefSymbolValue",      EXP_BEMPFunc, BF_Par2RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#PR2SV",      EXP_BEMPFunc, BF_Par2RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "Parent3SymbolValue",         EXP_BEMPFunc, BF_Par3SymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#P3SV",       EXP_BEMPFunc, BF_Par3SymVal,    VAR_ARGS },  /* SAC 6/30/20 - added */
+   { "Parent3RefSymbolValue",      EXP_BEMPFunc, BF_Par3RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
+   {                "#PR3SV",      EXP_BEMPFunc, BF_Par3RefSymVal, VAR_ARGS },  /* SAC 6/30/20 - added */
    { NULL,                         0,           0,              0 }
 };
 

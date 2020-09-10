@@ -243,6 +243,7 @@ static int dataTypeFontHt;
                   
 CString esProgramPath = "";
 CString esDataPath = "";
+CString esAltWeatherPath = "";	// SAC 6/3/20
 CString esProjectsPath = "";
 CString esProgramFName = "";   // SAC 8/19/11
 CString iniFileName = "";
@@ -1666,9 +1667,13 @@ BOOL ObjectIsFromLibrary( long lDBID )
 void DefaultProjectName( CString& sProjName )
 {
    CString sLeft = ReadProgString( "paths", "ProjectsPath", "", TRUE );
+   CString sProjExt = ReadProgString( "options", "ProjectFileExt", "" );		// SAC 3/8/20
 //   CString sRight = ".ibd";
    CString sRight;
-	sRight.Format( ".%s", pszCUIFileExt[0] );
+   if (sProjExt.IsEmpty())
+		sRight.Format( ".%s", pszCUIFileExt[0] );
+	else
+		sRight.Format( ".%s", sProjExt );
    long lProjIdx = 1;
    sProjName.Format( "Project %ld", lProjIdx );
    CString sTest = sLeft + sProjName + sRight;
@@ -1944,6 +1949,8 @@ static BOOL LoadRulesetList( CString& sINIRulesetFile )
    CString sDir = ReadProgString( "paths", "RulesetPath", "", TRUE );
    sDir = sDir.Left( sDir.GetLength()-1 );  // remove trailing '\'
 
+   CString sCompatRulesetVerKey = ReadProgString( "options", "CompatRulesetVerKey", "" );		// SAC 3/3/20 - added filter to prevent any/all rulesets from appearing in Ruleset listing
+
    struct _finddata_t c_file;
    BOOL bChangedDrive = FALSE;
    CString sRulesetFile;
@@ -1971,7 +1978,8 @@ static BOOL LoadRulesetList( CString& sINIRulesetFile )
                   bINIRulesetFileFound = TRUE;
 
                sRulesetFile = sRulePath + c_file.name;
-               if (CMX_ReadRulesetID( sRulesetFile, sRulesetID, sRulesetVer ))
+               if (CMX_ReadRulesetID( sRulesetFile, sRulesetID, sRulesetVer ) &&
+               	 (sCompatRulesetVerKey.IsEmpty() || sRulesetVer.indexOf( (const char*) sCompatRulesetVerKey ) >= 0))	// SAC 3/3/20
                {
 //                  ssaRulesetSymString[eiNumRulesetsAvailable++].Format( "%s, %s (%s)", sRulesetID, sRulesetVer, c_file.name );
                   ssaRulesetSymString[ eiNumRulesetsAvailable  ].Format( "%s (%s)", sRulesetVer.toLatin1().constData(), c_file.name );
@@ -2516,7 +2524,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_Battery      )		{  iTabCtrlWd =  730;    iTabCtrlHt = 550;   }	// SAC 7/16/18
 	else if (iBDBClass == eiBDBCID_ResDWHRSys)	  		{  iTabCtrlWd =  500;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_ResDHWSys )	  		{  iTabCtrlWd =  900;    iTabCtrlHt = 610;   }	// SAC 1/12/20 (Com tic #3156)
-	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd =  600;    iTabCtrlHt = 420;   }	// SAC 1/31/20 (Com tic #3157)
+	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd =  600;    iTabCtrlHt = 480;   }	// SAC 1/31/20 (Com tic #3157)
 	else                                					{  iTabCtrlWd =  900;    iTabCtrlHt = 550;   }
 	return TRUE;
 }
@@ -2601,6 +2609,7 @@ int eiBDBCID_ExteriorFloor = 0;
 int eiBDBCID_FloorOverCrawl = 0;
 int eiBDBCID_InteriorFloor = 0;
 int eiBDBCID_InteriorCeiling = 0;
+int eiBDBCID_Opening    = 0;	// SAC 7/30/20 - MFamProto
 int eiBDBCID_Win        = 0;
 int eiBDBCID_Skylt      = 0;
 int eiBDBCID_Door       = 0;
@@ -2739,7 +2748,7 @@ long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
-	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 400;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960
+	     if (iBDBClass == eiBDBCID_Proj)      			{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// was: iTabCtrlHt = 370;   - SAC 3/21/19 wd: 850->890   - SAC 11/9/19 wd: 890->960   - SAC 4/24/20 ht: 400->460
 	else if (iBDBClass == eiBDBCID_EUseSummary)			{  if (elRulesetCodeYear >= 2022)
 																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 520;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results
 																			else
@@ -2754,6 +2763,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 //	else if (iBDBClass == eiBDBCID_AtticRoof)    		{  iTabCtrlWd = 450;    iTabCtrlHt = 420;   }
 	else if (iBDBClass == eiBDBCID_CathedralCeiling)	{  iTabCtrlWd = 550;    iTabCtrlHt = 480;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 420;   }
 	else if (iBDBClass == eiBDBCID_SlabFloor)				{  iTabCtrlWd = 700;    iTabCtrlHt = 460;   }
+	else if (iBDBClass == eiBDBCID_Opening)   			{  iTabCtrlWd = 600;    iTabCtrlHt = 410;   }	// SAC 7/30/20 - MFamProto
 	else if (iBDBClass == eiBDBCID_Win    )				{	iTabCtrlWd = 650;		iTabCtrlHt = 610;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_WindowType)			{	iTabCtrlWd = 600;		iTabCtrlHt = 510;   }
 	else if (iBDBClass == eiBDBCID_Door   )	   		{  iTabCtrlWd = 550;    iTabCtrlHt = 360;   }	// was: iTabCtrlWd = 450;    iTabCtrlHt = 300;   }
@@ -2766,8 +2776,8 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
-	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19
-	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 420;   }	// SAC 1/12/20 (Res tic #1013)
+	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
+	else if (iBDBClass == eiBDBCID_DHWSolarSys)			{  iTabCtrlWd = 600;    iTabCtrlHt = 480;   }	// SAC 1/12/20 (Res tic #1013)  - SAC 6/11/20 (tic #1210)
 	else if (iBDBClass == eiBDBCID_DWHRSys)	   		{  iTabCtrlWd = 400;    iTabCtrlHt = 250;   }	// SAC 12/23/18
 	else if (iBDBClass == eiBDBCID_DHWHeater)	  			{  iTabCtrlWd = 600;    iTabCtrlHt = 540;   }	// Ht was 440 - increased to allow for UEF water heater labels
 	else if (iBDBClass == eiBDBCID_DHWLoopTankHeater)	{  iTabCtrlWd = 600;    iTabCtrlHt = 500;   }
@@ -3139,6 +3149,7 @@ void InitBEMDBIDs()
 	eiBDBCID_FloorOverCrawl    = BEMPX_GetDBComponentID( "FloorOverCrawl" );     
 	eiBDBCID_InteriorFloor     = BEMPX_GetDBComponentID( "InteriorFloor" );     
 	eiBDBCID_InteriorCeiling   = BEMPX_GetDBComponentID( "InteriorCeiling" );     
+   eiBDBCID_Opening    = BEMPX_GetDBComponentID( "Opening" );	// SAC 7/30/20 - MFamProto
 	eiBDBCID_Win        = BEMPX_GetDBComponentID( "Win" );
 	eiBDBCID_Skylt      = BEMPX_GetDBComponentID( "Skylt" );
 	eiBDBCID_Door       = BEMPX_GetDBComponentID( "Door" );

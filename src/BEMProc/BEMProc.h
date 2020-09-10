@@ -177,6 +177,10 @@ bool BEMPROC_API __cdecl BEMPX_GetRulesetErrorMessage( int i1ErrMsgIdx, char* ps
 void BEMPROC_API __cdecl BEMPX_ClearRulesetErrors();
 void BEMPROC_API __cdecl BEMPX_AddRulesetError( const char* pszErrMsg );
 
+// SAC 3/27/20 - routines to clear and add to mapping of Transform to BEMProcIdx (needed for enabling DataModel rules in Procedural rulsets)
+void BEMPROC_API __cdecl BEMPX_ClearTransformBEMProcMap();
+void BEMPROC_API __cdecl BEMPX_AddTransformBEMProcMap( int i1TransID, int i0BEMProcIdx );
+
 
 extern BEMPROC_API int nBEMProc;
 
@@ -353,9 +357,11 @@ bool BEMPROC_API __cdecl BEMPX_ReadProjectFile(  const char* fileName, int iFile
 #define  BEMFT_HPXML1  3    // SAC 12/2/15
 #define  BEMFT_HPXML2  4    // SAC 12/2/15
 #define  BEMFT_CF1RXML 5    // SAC 3/6/18
-#define BEMPX_IsHPXML(   iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
-#define BEMPX_IsCF1RXML( iFileType )  (int)  (iFileType == BEMFT_CF1RXML)
-#define BEMPX_IsXML(     iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 ||  iFileType == BEMFT_CF1RXML || iFileType == BEMFT_XML)
+#define  BEMFT_RNXML   6    // SAC 5/20/20 - RESNET ResXSD
+#define BEMPX_IsHPXML(     iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2)
+#define BEMPX_IsCF1RXML(   iFileType )  (int)  (iFileType == BEMFT_CF1RXML)
+#define BEMPX_IsRESNETXML( iFileType )  (int)  (iFileType == BEMFT_RNXML)
+#define BEMPX_IsXML(       iFileType )  (int)  (iFileType == BEMFT_HPXML1 || iFileType == BEMFT_HPXML2 || iFileType == BEMFT_CF1RXML || iFileType == BEMFT_RNXML || iFileType == BEMFT_XML)
 #define  BEMF_ClassIDMult  1000    // SAC 12/14/18
 bool BEMPROC_API __cdecl BEMPX_WriteProjectFile( const char* fileName, int iFileMode /*bool bIsInputMode*/, bool bUseLogFileName=false, bool bWriteAllProperties=false,
                                                           BOOL bSupressAllMessageBoxes=FALSE,   // SAC 4/27/03 - added to prevent MessageBoxes during processing
@@ -641,8 +647,11 @@ long BEMPROC_API __cdecl BEMPX_GetPrimaryPropertyDBID(       int i1BEMClass, int
 //			1,048,576 - Ignore (0x00100000)
 //			- for other options search:  QMessageBox::StandardButtons
 //		nDefault = single value corresponding to the default button (from above list)
-int  BEMPROC_API __cdecl BEMMessageBox(const TCHAR* msg, const TCHAR* caption = NULL, UINT nIcon = 0, UINT nType = 1024, UINT nDefault = 0);
-int  BEMPROC_API __cdecl BEMMessageBox( QString msg, QString caption = "", UINT nIcon = 0, UINT nType = 1024, UINT nDefault = 0 );
+//		details - added - SAC 6/30/20
+int  BEMPROC_API __cdecl BEMMessageBox(const TCHAR* msg, const TCHAR* caption = NULL, UINT nIcon = 0, UINT nType = 1024,
+														UINT nDefault = 0, const TCHAR* details = NULL);
+int  BEMPROC_API __cdecl BEMMessageBox( QString msg, QString caption = "", UINT nIcon = 0, UINT nType = 1024,
+														UINT nDefault = 0, QString details = "" );
 
 // Function(s) to evaluate conditions (for screen control toggling and range checking)
 BOOL BEMPROC_API __cdecl BEMPX_FloatConditionTrue( double fLtValue, int iCondition, double fRtValue, long lRtDBID=0,
@@ -653,6 +662,8 @@ BOOL BEMPROC_API __cdecl BEMPX_ConditionTrue( long lCondDBID, int iCondition, do
 // SAC 5/15/12 - added new export to facilitate reading/parsing of CSE hourly results
 void BEMPROC_API __cdecl BEMPX_InitializeHourlyResults( int iBEMProcIdx=-1 );
 BOOL BEMPROC_API __cdecl BEMPX_SetupResultRun( int iRunIdx, const char* pszRunName, const char* pszRunAbbrev, int iBEMProcIdx=-1 );
+int  BEMPROC_API __cdecl BEMPX_RetrieveCSEHourlyResults( const char* pszFilename, const char* pResMeter, const char** ppResEnduses, 
+																double* pdHourlyResults, double* pdResultMult=NULL );		// SAC 5/3/20
 int  BEMPROC_API __cdecl BEMPX_ReadCSEHourlyResults( const char* pszFilename, int iRunIdx, const char* pszRunName, const char* pszRunAbbrev, int iBEMProcIdx=-1,
 																const char** ppResMeters=NULL, const char** ppMetersMap=NULL, double* pdMetersMult=NULL,  // SAC 6/1/16
 																const char** ppResEnduses=NULL, const char** ppEnduseMap=NULL, bool bInitResults=true );	// SAC 5/31/16  // SAC 7/23/18
@@ -743,13 +754,14 @@ int    BEMPROC_API __cdecl BEMPX_ExportSVG( const char* pszSVGFileName, int iBEM
 #define  BEMAnalActWhen_End_AfterAnalPostProc             12
 #define  BEMAnalActWhen_Transform_BeforeModelSetupRules   21
 #define  BEMAnalActWhen_Transform_AfterModelSetupRules    22
-#define  BEMAnalActWhen_Transform_ActOnSimInput           23
-#define  BEMAnalActWhen_Transform_FollowingResultsProc    24
+#define  BEMAnalActWhen_Transform_FollowingResultsProc    23
+#define  BEMAnalActWhen_Transform_ActOnEPlusSimInput      31	// SAC 3/10/20
+#define  BEMAnalActWhen_Transform_ActOnCSESimInput        32
 
 int  BEMPROC_API __cdecl BEMPX_PostAnalysisActionRulesetPropertiesToDatabase();		// SAC 1/26/20
 int  BEMPROC_API __cdecl BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter,
-																					QString& sErrorMsg, bool bVerbose=false );		// SAC 1/30/20
-
+																					QString& sErrorMsg, bool bVerbose=false, 		// SAC 1/30/20
+																					const char* pszSimPathFileName=NULL );			// SAC 3/10/20
 
 /////////////////////////////////////////////////////////////////////////////
 //	BEMError

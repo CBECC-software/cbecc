@@ -259,6 +259,19 @@ void BEMP_AddRulesetErrorExt( const char* pszErrMsg, int iLocClass, long lLocDBI
 
 
 /////////////////////////////////////////////////////////////////////////////
+// SAC 3/27/20 - routines to clear and add to mapping of Transform to BEMProcIdx (needed for enabling DataModel rules in Procedural rulsets)
+void BEMPX_ClearTransformBEMProcMap()
+{	ruleSet.ClearTransformBEMProcMap();
+	return;
+}
+
+void BEMPX_AddTransformBEMProcMap( int i1TransID, int i0BEMProcIdx )
+{	ruleSet.AddTransformBEMProcMap( i1TransID, i0BEMProcIdx );
+	return;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 // SAC 8/6/13 - get/set flags indicating that rule processing was/should be aborted
 bool BEMPX_AbortRuleEvaluation()
 {	return ruleSet.getAbortRuleEvaluation();
@@ -707,10 +720,12 @@ void RuleSet::initMembers()
 	m_iaErrorPrimObjClass.clear();
 	m_iaErrorLocObjClass.clear();
 	m_laErrorLocDBID.clear();
+	ClearTransformBEMProcMap();
 
 	m_pfWriteToFile = NULL;  // SAC 6/6/13
 	for (int j=0; j<NUM_RULE_EXPORTFILES; j++)		// SAC 9/15/15
 		m_pfExportFile[j] = NULL;
+	m_iSimInputExpFileIdx = -1;
 
 	m_GeomIDs.Clear();		// SAC 10/1/13 - added in conjunction w/ daylighting calcs
 	m_bLogDurations = false;	// SAC 10/24/13

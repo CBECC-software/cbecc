@@ -245,6 +245,20 @@ typedef enum optypes_   /* types other than what the parser generates */
    BF_Par2CompType,  /* 172 */  /* SAC 9/5/19 - added */
    BF_Par3CompType,  /* 173 */  /* SAC 9/5/19 - added */
    BF_SchDayHrsStr,  /* 174 */  /* SAC 10/6/19 - added */
+   BF_WriteSimInp,   /* 175 */  /* SAC 3/10/20 - added */
+   BF_RetCSVVal,     /* 176 */  /* SAC 4/10/20 - added */
+	BF_EvalRLCSVCol,  /* 177 */  /* SAC 5/9/20 - added */
+   BF_AppendMsg,     /* 178 */  /* SAC 5/21/20 - added */
+   BF_GlobSymVal,    /* 179 */  /* SAC 6/30/20 - added */
+   BF_GlobRefSymVal, /* 180 */  /* SAC 6/30/20 - added */
+   BF_LocSymVal,     /* 181 */  /* SAC 6/30/20 - added */
+   BF_LocRefSymVal,  /* 182 */  /* SAC 6/30/20 - added */
+   BF_ParSymVal,     /* 183 */  /* SAC 6/30/20 - added */
+   BF_ParRefSymVal,  /* 184 */  /* SAC 6/30/20 - added */
+   BF_Par2SymVal,    /* 185 */  /* SAC 6/30/20 - added */
+   BF_Par2RefSymVal, /* 186 */  /* SAC 6/30/20 - added */
+   BF_Par3SymVal,    /* 187 */  /* SAC 6/30/20 - added */
+   BF_Par3RefSymVal, /* 188 */  /* SAC 6/30/20 - added */
 } OpTypes;
 
 typedef enum fmerrorcode_

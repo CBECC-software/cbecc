@@ -220,7 +220,7 @@ bool CMX_CopySizingResults_CECNonRes( int iBEMProcIdxSrc, int iBEMProcIdxDest, b
 									}
 								}
 								else
-								{	assert( FALSE );	// allow not all results to be retrieved
+								{	// assert( FALSE );	// allow not all results to be retrieved
 								}
 						}
 // SAC 6/13/13 - didn't seem to be looping over all objects in above code...
@@ -727,6 +727,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 			int iCID_EnergyUse = BEMPX_GetDBComponentID( "EnergyUse" );		assert( iCID_EnergyUse > 0 );
 			int iEUIdx, /*hr,*/ iError;
 			QString sEUPropNameBase = (osRunInfo.IsStdRun() ? "Std" : "Prop"), sPropName;
+			bool bIsT24Prop = (osRunInfo.CodeType() == CT_T24N && !osRunInfo.IsStdRun());		// SAC 7/28/20
 			for (iFl=0; iFl < OSF_NumFuels; iFl++)
 			{	iEUIdx = -1;
 				while (esEUMap_CECNonRes[++iEUIdx].sEnduseName != NULL)
@@ -794,7 +795,7 @@ BOOL ProcessNonresSimulationResults( OSWrapLib& osWrap, COSRunInfo& osRunInfo, i
 					double* pdBEMHrlyRes	= NULL;
 					int iBEMHrlyResPtrRV = BEMPX_GetHourlyResultArrayPtr( &pdBEMHrlyRes, NULL, 0, osRunInfo.LongRunID().toLocal8Bit().constData(), pszaEPlusFuelNames[iFl], esEUMap_CECNonRes[iEUIdx].sEnduseName, osRunInfo.BEMProcIdx() );
 					bool bBEMHrlyResPtrOK = (pdBEMHrlyRes && iBEMHrlyResPtrRV==0);			//assert( bBEMHrlyResPtrOK );  // needs to be valid following split of results processing routine? - SAC 7/23/18
-							assert( (bBEMHrlyResPtrOK || iEUIdx == IDX_T24_NRES_EU_CompTot || iEUIdx == IDX_T24_NRES_EU_Total ) );
+							// assert( (bBEMHrlyResPtrOK || iEUIdx == IDX_T24_NRES_EU_CompTot || iEUIdx == IDX_T24_NRES_EU_Total ) );
 	// debugging
 	//	// failure EXPECTED for enduses:  "COMPLIANCE TOTAL" & "TOTAL"
 	//if (!bBEMHrlyResPtrOK)
@@ -2063,8 +2064,15 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			long lDBID_ThrmlZn_HtgDsgnLd     = BEMPX_GetDatabaseID( "HtgDsgnLd",      osRunInfo.ClassID( ROT_Zone ) );			assert( lDBID_ThrmlZn_HtgDsgnLd     > 0 );    // "Btuh", 
 			long lDBID_ThrmlZn_ClgDsgnFlow   = BEMPX_GetDatabaseID( "ClgDsgnFlowSim", osRunInfo.ClassID( ROT_Zone ) );			assert( lDBID_ThrmlZn_ClgDsgnFlow   > 0 );    // "cfm",    - SAC 1/18/14 - added trailing "Sim" to prop names (GC issue #389)
 			long lDBID_ThrmlZn_HtgDsgnFlow   = BEMPX_GetDatabaseID( "HtgDsgnFlowSim", osRunInfo.ClassID( ROT_Zone ) );			assert( lDBID_ThrmlZn_HtgDsgnFlow   > 0 );    // "cfm",  
+			long lDBID_ThrmlZn_ClgUMLHLimit  = BEMPX_GetDatabaseID( "ClgUMLHLimit",   osRunInfo.ClassID( ROT_Zone ) );		// SAC 7/28/20
+			long lDBID_ThrmlZn_HtgUMLHLimit  = BEMPX_GetDatabaseID( "HtgUMLHLimit",   osRunInfo.ClassID( ROT_Zone ) );
+			long lDBID_ThrmlZn_BypassClgUMLHLimit = BEMPX_GetDatabaseID( "BypassClgUMLHLimit", osRunInfo.ClassID( ROT_Zone ) );
+			long lDBID_ThrmlZn_BypassHtgUMLHLimit = BEMPX_GetDatabaseID( "BypassHtgUMLHLimit", osRunInfo.ClassID( ROT_Zone ) );
+			long lDBID_Proj_MaxClgUnmetLdHrs = BEMPX_GetDatabaseID( "Proj:MaxClgUnmetLdHrs" );
+			long lDBID_Proj_MaxHtgUnmetLdHrs = BEMPX_GetDatabaseID( "Proj:MaxHtgUnmetLdHrs" );
 									if (bVerbose)
 										BEMPX_WriteLogFile( "  PerfSim_E+ - Pulling UMLH & sizing results from OSWrap", NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+			bool bTrackUMLHExceeded = (osRunInfo.StoreHourlyResults() && osRunInfo.CodeType() == CT_T24N && !osRunInfo.IsStdRun());		// SAC 7/28/20
 			if (osRunInfo.NumObjects( ROT_Zone ) > 0 && lDBID_ThrmlZn_ClgUnmetLdHrs > 0 && lDBID_ThrmlZn_HtgUnmetLdHrs > 0 &&
 					lDBID_ThrmlZn_ClgDsgnLd > 0 && lDBID_ThrmlZn_HtgDsgnLd > 0 && lDBID_ThrmlZn_ClgDsgnFlow > 0 && lDBID_ThrmlZn_HtgDsgnFlow > 0 )
 			{	//double fZnUnmetLdClg, fZnUnmetLdHtg;
@@ -2075,6 +2083,8 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 				long laDBID[6] = { lDBID_ThrmlZn_ClgUnmetLdHrs, lDBID_ThrmlZn_HtgUnmetLdHrs, lDBID_ThrmlZn_ClgDsgnLd, lDBID_ThrmlZn_HtgDsgnLd, lDBID_ThrmlZn_ClgDsgnFlow, lDBID_ThrmlZn_HtgDsgnFlow };
 				assert( osRunInfo.NumResultObjects( ROT_Zone ) == osRunInfo.NumObjects( ROT_Zone ) );	// otherwise, one or more zones missing from UMLH results
 				bool bMaxUMLHLenMet = false;
+				int iNumZonesExceedClgUMLHs = 0, iNumZonesExceedHtgUMLHs = 0;		// SAC 7/28/20
+				long lConstantClgUMLHLimit = -1, lConstantHtgUMLHLimit = -1;
 				for (int iZn=0; iZn < osRunInfo.NumObjects( ROT_Zone ); iZn++)
 				{
 					//fZnUnmetLdClg = osWrap.GetResult_ZoneUMLHClg( iZn );								assert( fZnUnmetLdClg >= 0.0 );
@@ -2090,6 +2100,38 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 					{	faZnResults[ir] *= faZnResMult[ir];
 						BEMPX_SetBEMData( laDBID[ir], BEMP_Flt, &faZnResults[ir], BEMO_User, iZn, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 					}
+
+					if (bTrackUMLHExceeded && (faZnResults[0] > 0 || faZnResults[1] > 0))		// SAC 7/28/20
+					{	double fMaxUnmetClgLdHrs, fMaxUnmetHtgLdHrs;
+						if (lDBID_ThrmlZn_ClgUMLHLimit < 1 || !BEMPX_GetFloat( lDBID_ThrmlZn_ClgUMLHLimit, fMaxUnmetClgLdHrs, 0, -1, iZn, BEMO_User, osRunInfo.BEMProcIdx() ))
+						{	if (lDBID_Proj_MaxClgUnmetLdHrs < 1 || !BEMPX_GetFloat( lDBID_Proj_MaxClgUnmetLdHrs, fMaxUnmetClgLdHrs, 0, -1, 0, BEMO_User, osRunInfo.BEMProcIdx() ))
+								fMaxUnmetClgLdHrs = -1;
+						}
+						if (lDBID_ThrmlZn_HtgUMLHLimit < 1 || !BEMPX_GetFloat( lDBID_ThrmlZn_HtgUMLHLimit, fMaxUnmetHtgLdHrs, 0, -1, iZn, BEMO_User, osRunInfo.BEMProcIdx() ))
+						{	if (lDBID_Proj_MaxHtgUnmetLdHrs < 1 || !BEMPX_GetFloat( lDBID_Proj_MaxHtgUnmetLdHrs, fMaxUnmetHtgLdHrs, 0, -1, 0, BEMO_User, osRunInfo.BEMProcIdx() ))
+								fMaxUnmetHtgLdHrs = -1;
+						}
+						long lBypassClgUMLHLimit=0, lBypassHtgUMLHLimit=0;		// SAC 5/12/19 (tic #2680)
+						if (lDBID_ThrmlZn_BypassClgUMLHLimit < 1 || !BEMPX_GetInteger( lDBID_ThrmlZn_BypassClgUMLHLimit, lBypassClgUMLHLimit, 0, -1, iZn, BEMO_User, osRunInfo.BEMProcIdx() ))
+							lBypassClgUMLHLimit = 0;
+						if (lDBID_ThrmlZn_BypassHtgUMLHLimit < 1 || !BEMPX_GetInteger( lDBID_ThrmlZn_BypassHtgUMLHLimit, lBypassHtgUMLHLimit, 0, -1, iZn, BEMO_User, osRunInfo.BEMProcIdx() ))
+							lBypassHtgUMLHLimit = 0;
+
+						if (fMaxUnmetClgLdHrs > -0.5 && lBypassClgUMLHLimit == 0 && faZnResults[0] > (fMaxUnmetClgLdHrs + 0.1))
+						{	iNumZonesExceedClgUMLHs++;
+							if (lConstantClgUMLHLimit == -1)
+								lConstantClgUMLHLimit = (long) (faZnResults[0] + 0.1);
+							else if (lConstantClgUMLHLimit > 0 && lConstantClgUMLHLimit != (long) (faZnResults[0] + 0.1))
+								lConstantClgUMLHLimit = -2;  // => no constant UMLH limit
+						}
+						if (fMaxUnmetHtgLdHrs > -0.5 && lBypassClgUMLHLimit == 0 && faZnResults[1] > (fMaxUnmetHtgLdHrs + 0.1))
+						{	iNumZonesExceedHtgUMLHs++;
+							if (lConstantHtgUMLHLimit == -1) 
+								lConstantHtgUMLHLimit = (long) (faZnResults[1] + 0.1);
+							else if (lConstantHtgUMLHLimit > 0 && lConstantHtgUMLHLimit != (long) (faZnResults[1] + 0.1))
+								lConstantHtgUMLHLimit = -2;  // => no constant UMLH limit
+					}	}
+
 					if (!bMaxUMLHLenMet)		// SAC 12/17/13 - prevent ZoneUMLH string from exceeding TextIO string length max - which in turn causes errors on File-Open
 					{	if (!sZoneUMLHSummary.isEmpty())	// SAC 5/31/14 - revised newline writing to prevent trailing \r\n @ end of string
 							sZoneUMLHSummary += "\r\n";
@@ -2108,12 +2150,50 @@ const char* pszaEPlusFuelNames[] = {		"Electricity",    // OSF_Elec,    //  ((El
 			// post zone UMLH summary to BEMBase  -  ONLY FOR runs where hourly results are stored
 				if (osRunInfo.StoreHourlyResults() && lDBID_EUseSummary_ZoneUMLHs > 0 && lDBID_EUseSummary_ZoneUMLHsLoaded > 0 && BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo.BEMProcIdx() ) > 0 && !sZoneUMLHSummary.isEmpty())
 				{	long l1 = 1;
-					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded + (osRunInfo.IsStdRun() ? 1 : 0), BEMP_Int,                       &l1,                BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
+					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHsLoaded + (osRunInfo.IsStdRun() ? 1 : 0), BEMP_Int,          &l1,               BEMO_User, 0, BEMS_ProgDefault, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 	#ifdef _DEBUG
 	//	QString sDbgMsg;	sDbgMsg = QString( "Posting UMLHs data to BEMBase:\n%1" ).arg( sZoneUMLHSummary );	::MessageBox( NULL, sDbgMsg, NULL, MB_ICONEXCLAMATION );
 	#endif
 					BEMPX_SetBEMData( lDBID_EUseSummary_ZoneUMLHs       + (osRunInfo.IsStdRun() ? 1 : 0), BEMP_QStr, (void*) &sZoneUMLHSummary, BEMO_User, 0, BEMS_SimResult, BEMO_User, TRUE /*bPerfResets*/, osRunInfo.BEMProcIdx() );
 				}
+
+				if (bTrackUMLHExceeded && (iNumZonesExceedClgUMLHs > 0 || iNumZonesExceedHtgUMLHs > 0))		// SAC 7/28/20
+				{
+					QString sClgHoursStr = "hours", sHtgHoursStr = "hours";	
+					if (lConstantClgUMLHLimit > 0)
+						sClgHoursStr.sprintf( "hours of %d", lConstantClgUMLHLimit );
+					if (lConstantHtgUMLHLimit > 0)
+						sHtgHoursStr.sprintf( "hours of %d", lConstantHtgUMLHLimit );
+
+					QString cstrUMLHWarningMsg;
+					if (iNumZonesExceedClgUMLHs > 0 && iNumZonesExceedHtgUMLHs > 0)
+						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s and %d zone(s) exceed maximum heating unmet load %s.",
+    																iNumZonesExceedClgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData(), iNumZonesExceedHtgUMLHs, sHtgHoursStr.toLocal8Bit().constData() );
+					else if (iNumZonesExceedClgUMLHs > 0)
+						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum cooling unmet load %s.",
+    																iNumZonesExceedClgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sClgHoursStr.toLocal8Bit().constData() );
+					else  // if (iNumZonesExceedHtgUMLHs > 0)
+						cstrUMLHWarningMsg.sprintf( "Warning:  %d zone(s) in %s model exceed maximum heating unmet load %s.",
+    																iNumZonesExceedHtgUMLHs, osRunInfo.LongRunID().toLocal8Bit().constData(), sHtgHoursStr.toLocal8Bit().constData() );
+					cstrUMLHWarningMsg += "\r\n\r\nAll thermal zones exceeding unmet load hour limits will be reported on PRF-1, which will be watermarked 'not for compliance'.";
+
+					// store warning message for display in UI results dialog - SAC 7/28/20
+					long lDBID_ZoneUMLHsMsg			= BEMPX_GetDatabaseID( "EUseSummary:ZoneUMLHsMsg" );
+					long lDBID_HaveZoneUMLHsMsg	= BEMPX_GetDatabaseID( "EUseSummary:HaveZoneUMLHsMsg" );
+					long lDBID_ZoneUMLHsLink		= BEMPX_GetDatabaseID( "EUseSummary:ZoneUMLHsLink" );
+					if (lDBID_ZoneUMLHsMsg > 0 && lDBID_HaveZoneUMLHsMsg > 0)
+					{	long lHaveErrMsg = 1;
+						BEMPX_SetBEMData( lDBID_HaveZoneUMLHsMsg, BEMP_Int , &lHaveErrMsg, BEMO_User, -1, BEMS_UserDefined, BEMO_User, TRUE, osRunInfo.BEMProcIdx() );
+						QString sUMLHErrMsg = cstrUMLHWarningMsg;
+						BEMPX_SetBEMData( lDBID_ZoneUMLHsMsg    , BEMP_QStr, &sUMLHErrMsg, BEMO_User, -1, BEMS_UserDefined, BEMO_User, TRUE, osRunInfo.BEMProcIdx() );
+					}
+					QString sUMLHFAQLink;
+					if (!BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:UnmetLdHrsFAQLink" ), sUMLHFAQLink ))
+						sUMLHFAQLink.clear();
+					if (!sUMLHFAQLink.isEmpty())
+					{	if (lDBID_ZoneUMLHsLink > 0)		// SAC 7/28/20
+							BEMPX_SetBEMData( lDBID_ZoneUMLHsLink, BEMP_QStr, &sUMLHFAQLink, BEMO_User, -1, BEMS_UserDefined, BEMO_User, TRUE, osRunInfo.BEMProcIdx() );
+				}	}
 			}
 	
 			long lDBID_Fan_FlowCap = BEMPX_GetDatabaseID( "FlowCapSim", osRunInfo.ClassID( ROT_Fan ) );			assert( lDBID_Fan_FlowCap > 0 );
@@ -2712,6 +2792,47 @@ int PerformSimulation_EnergyPlus_Multiple(	OSWrapLib& osWrap, COSRunInfo* osRunI
 					qsIDFPathFile = qsIDFPathFile.left( qsIDFPathFile.length()-3 );
 					qsIDFPathFile += "idf";
 				}
+
+			// Execute AnalysisActions that pertain to ActOnSimInput - SAC 3/10/20
+				if (lSimRetVal == 0 && FileExists( qsIDFPathFile ))
+				{	int iAnalPhase = -1;
+					if (iCodeType == CT_T24N)
+					{	switch (oswSimInfo[iSI].iProgressModel)
+						{	case BCM_NRP_Model_zb	:	iAnalPhase = BEMAnalActPhase_BaselineSizing;  break;
+							case BCM_NRP_Model_ab	:	iAnalPhase = BEMAnalActPhase_BaselineAnnual;  break;
+							case BCM_NRP_Model_zp	:	iAnalPhase = BEMAnalActPhase_ProposedSizing;  break;
+							case BCM_NRP_Model_ap	:	iAnalPhase = BEMAnalActPhase_ProposedAnnual;  break;
+					}	}
+					else
+					{	switch (oswSimInfo[iSI].iProgressModel)
+						{	case BCM_NRAP_Model_zp	:	iAnalPhase = BEMAnalActPhase_ProposedSizing;  break;
+							case BCM_NRAP_Model_ap	:	iAnalPhase = BEMAnalActPhase_ProposedAnnual;  break;
+							case BCM_NRAP_Model_zb1	:	iAnalPhase = BEMAnalActPhase_BaselineSizing;  break;
+							case BCM_NRAP_Model_zb2	:	iAnalPhase = BEMAnalActPhase_BaselineSizing;  break;
+							case BCM_NRAP_Model_zb3	:	iAnalPhase = BEMAnalActPhase_BaselineSizing;  break;
+							case BCM_NRAP_Model_zb4	:	iAnalPhase = BEMAnalActPhase_BaselineSizing;  break;
+							case BCM_NRAP_Model_ab1	:	iAnalPhase = BEMAnalActPhase_BaselineAnnual;  break;
+							case BCM_NRAP_Model_ab2	:	iAnalPhase = BEMAnalActPhase_BaselineAnnual;  break;
+							case BCM_NRAP_Model_ab3	:	iAnalPhase = BEMAnalActPhase_BaselineAnnual;  break;
+							case BCM_NRAP_Model_ab4	:	iAnalPhase = BEMAnalActPhase_BaselineAnnual;  break;
+					}	}
+					if (iAnalPhase > 0)
+					{	QString qsApplyAnalActError;
+						int iApplyAnalActRetVal = BEMPX_ApplyAnalysisActionToDatabase( iAnalPhase, BEMAnalActWhen_Transform_ActOnEPlusSimInput, qsApplyAnalActError, bVerbose,
+																											qsIDFPathFile.toLocal8Bit().constData() );
+						if (iApplyAnalActRetVal > 0)
+							qsApplyAnalActError = QString( "      %1 AnalysisAction(s) successfully applied to building model: %2 / %3" ).arg(
+																QString::number(iApplyAnalActRetVal), AnalysisAction_PhaseString(iAnalPhase), AnalysisAction_BeforeAfter(BEMAnalActWhen_Transform_ActOnEPlusSimInput) );
+						else if (iApplyAnalActRetVal < 0)
+							lSimRetVal = 77;		// Error applying AnalysisAction(s) to building model
+					//	else if (!qsApplyAnalActError.isEmpty())
+					//	{	lSimRetVal = 77;		// Error applying AnalysisAction(s) to building model
+					//	//	sErrMsg = qsApplyAnalActError;
+					//	//	ProcessAnalysisError( sErrMsg, bAbort, iRetVal, iErrID, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+					//	}
+						if (!qsApplyAnalActError.isEmpty())
+							BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+				}	}
 
 				if (lSimRetVal == 0)
 				{	int iRunOK = epRunMgr.SetupRun( iRunIdx++, oswSimInfo[iSI].pszRunSubdir, qsIDFPathFile,

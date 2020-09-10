@@ -102,7 +102,7 @@ END_MESSAGE_MAP()
 //HRESULT WINAPI setDPIAwareRetVal;
 
 CComplianceUIApp::CComplianceUIApp() :
-	m_bPerformSimulations( TRUE), m_bPerformAnalsysis( FALSE), m_bPerformSave( FALSE)
+	m_bPerformSimulations( TRUE), m_bPerformAnalysis( FALSE), m_bPerformAPIAnalysis( FALSE), m_bPerformSave( FALSE)
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
@@ -232,6 +232,10 @@ BOOL CComplianceUIApp::InitInstance()
 // END - SAC 3/19/99 - moved up from below...
 	esProgINIPathFile = esProgramPath + iniFileName;
 	esDataPath = ReadProgString( "paths", "DataPath", NULL, TRUE );  // this FIRST call to ReadProgString() will only work to get DataPath from the program dir's INI (since the data INI not yet defined)
+	esAltWeatherPath = esDataPath + "Weather\\";
+	esAltWeatherPath = ReadProgString( "paths", "WeatherPath", (const char*) esAltWeatherPath, TRUE );	// SAC 6/3/20
+	if (!DirectoryExists( esAltWeatherPath ))
+		esAltWeatherPath.Empty();
 	esDataINIPathFile = esDataPath + iniFileName;
 	esProxyINIPathFile = esDataPath + "proxy.ini";
 	esProjectsPath = ReadProgString( "paths", "ProjectsPath", NULL, TRUE );
@@ -419,6 +423,10 @@ BOOL CComplianceUIApp::InitInstance()
 	{	m_pMainWnd->SendMessage(WM_COMPANALYSIS);
 		return FALSE;
 	}
+	else if (PerformAPIAnalysis())
+	{	m_pMainWnd->SendMessage(WM_APICOMPANALYSIS);
+		return FALSE;
+	}
 
 	if (PerformSave())
 	{	((CMainFrame*)m_pMainWnd)->OnFileSave();
@@ -503,7 +511,11 @@ static BOOL LocalParseParam( const char* pszParam, BOOL bFlag, BOOL /*bLast*/ )
 			bRet = TRUE;
 		}
 		else if (bFlag && !_tcsnicmp( pszParam, _T("pa"), 2))
-		{	m_bPerformAnalsysis = TRUE;
+		{	m_bPerformAnalysis = TRUE;
+			bRet = TRUE;
+		}
+		else if (bFlag && !_tcsnicmp( pszParam, _T("api"), 3))
+		{	m_bPerformAPIAnalysis = TRUE;
 			bRet = TRUE;
 		}
 		else if (bFlag && !_tcsnicmp( pszParam, _T("save"), 4))

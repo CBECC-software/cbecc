@@ -740,6 +740,19 @@ public:
 	int							getNumTransformations()				{ return (int) m_transformations.size();  }
 	RuleSetTransformation*	getTransformation( int idx )		{ return m_transformations.at(idx);  }
 	void	addTransformation( RuleSetTransformation* pT )		{ m_transformations.push_back(pT);  return;  }
+	int   transformToBEMProcIdx( long long lMDBID )					// SAC 3/27/20
+					{	int iModelID = (lMDBID <= BEM_MODEL_MULT ? 1 : BEMPX_GetModelID( lMDBID ));
+						for (int i=0; i<(int) m_iaTransformBEMProcMap_Transform.size(); i++)
+						{	if (m_iaTransformBEMProcMap_Transform[i] == iModelID)
+								return m_iaTransformBEMProcMap_BEMProcIdx[i];
+						}
+						return iModelID-1;  }
+	void	ClearTransformBEMProcMap()									{	m_iaTransformBEMProcMap_Transform.clear();	// SAC 3/27/20
+																					m_iaTransformBEMProcMap_BEMProcIdx.clear();
+																					return;  }
+	void	AddTransformBEMProcMap( int i1T, int i0B )			{	m_iaTransformBEMProcMap_Transform.push_back( i1T);
+																					m_iaTransformBEMProcMap_BEMProcIdx.push_back(i0B);
+																					return;  }
 
 	BEMTable* getTablePtr( const char* tableName );
 	bool  getTableValue( int tableID, double* paramArray, int col, double* pfValue, BOOL bVerboseOutput=FALSE );
@@ -835,6 +848,8 @@ public:
 															iRetVal++;
 													}	}
 												return iRetVal;  }
+   int  getSimInputExpFileIdx()				{	return m_iSimInputExpFileIdx;  }		// SAC 3/10/20
+	void setSimInputExpFileIdx( int i )		{	m_iSimInputExpFileIdx = i;  }	
 
    FILE*	 getWriteToFilePtr()					{	return m_pfWriteToFile;  }
    void   setWriteToFilePtr( FILE* pF )	{	m_pfWriteToFile = pF;  }
@@ -894,9 +909,13 @@ private:
    std::vector<int>    m_iaErrorLocObjClass;
    std::vector<long>  m_laErrorLocDBID;
 
+   std::vector<int>    m_iaTransformBEMProcMap_Transform;	// SAC 3/27/20
+   std::vector<int>    m_iaTransformBEMProcMap_BEMProcIdx;
+
    FILE*		m_pfWriteToFile;		// SAC 6/6/13 - added in conjunction w/ new WriteToFile() ruleset function
 
    FILE*		m_pfExportFile[NUM_RULE_EXPORTFILES];		// SAC 9/15/15 - added in conjunction w/ new Open/Write/CloseExportFile() ruleset functions
+   int		m_iSimInputExpFileIdx;		// SAC 3/10/20 - to facilitate new WriteToSimInput() function
 
 	GeomDBIDs	m_GeomIDs;		// SAC 10/1/13 - added in conjunction w/ daylighting calcs
 

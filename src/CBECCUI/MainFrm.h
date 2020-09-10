@@ -536,6 +536,7 @@ protected:
    afx_msg LRESULT OnUpdateTree(WPARAM wParam, LPARAM lDBIDModified);
    afx_msg LRESULT OnPopulateLibraryTree(WPARAM uiTreeMode, LPARAM);
    afx_msg LRESULT OnPerformAnalysis(WPARAM, LPARAM);
+   afx_msg LRESULT OnPerformAPIAnalysisMsg(WPARAM, LPARAM);
    afx_msg LRESULT OnQuickMenu( WPARAM, LPARAM lParam );
    afx_msg LRESULT OnCheckCompat( WPARAM wParam, LPARAM lParam );
    afx_msg LRESULT OnSetStatusMessage( WPARAM wParam, LPARAM lParam );

@@ -117,6 +117,9 @@ inline float Divide(float n,float d)
 // Message passed to main frame to have screen data read
 #define WM_LOADSCREENFILES   WM_APP+18
 
+// Messages to spawn compliance analysis (via API mechanism) (handled by CMainFrame) - SAC 3/19/20
+#define WM_APICOMPANALYSIS    WM_APP+19
+
 //32 // Message indicating log file has been updated
 //32 #define WM_SETTOSUMMODE    WM_APP+16
 //32 #define WM_SETTOLOGMODE    WM_APP+17

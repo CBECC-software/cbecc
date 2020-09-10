@@ -1752,7 +1752,7 @@ bool CProjectFile::StatusRequiresWrite( BEMProperty* pProp, bool bWritePrimaryDe
 	   	   bRetVal = TRUE;
 			else
 		   	bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15
+								((m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() > 0) ||					// SAC 1/3/13	// SAC 12/2/15   // SAC 5/20/20
 	   		            (m_bWriteLibData && (pProp->getDataStatus() == BEMS_RuleLibrary ||
 	   	   	                              pProp->getDataStatus() == BEMS_UserLibrary) ) );
 	   }
@@ -1908,8 +1908,8 @@ bool CProjectFile::UseParenArrayFormat( BEMObject* pObj, BEMProperty* pProp, int
    {
       pProp = pObj->getProperty(iProp);
       //if ( pProp->m_iCritDefIdx > 0 || ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 9/12/16 - critical default comments not implemented
-      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType ) ||  BEMPX_IsCF1RXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15
-		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType ) && !BEMPX_IsCF1RXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
+      if ( ((m_iFileType == BEMFT_CSE ||  BEMPX_IsHPXML( m_iFileType ) ||  BEMPX_IsCF1RXML( m_iFileType ) ||  BEMPX_IsRESNETXML( m_iFileType )) && pProp->getDataStatus() == BEMS_Undefined  ) ||   // SAC 8/9/12 - added logic to allow CSE properties to be rule defined (just not undefined)	// SAC 12/2/15   // SAC 5/20/20
+		     ( m_iFileType != BEMFT_CSE && !BEMPX_IsHPXML( m_iFileType ) && !BEMPX_IsCF1RXML( m_iFileType ) && !BEMPX_IsRESNETXML( m_iFileType )  && pProp->getDataStatus() != BEMS_UserDefined) )
          return FALSE;
       iProp++;
       iNumLeft--;
@@ -2058,7 +2058,7 @@ void CProjectFile::PropertyToString( BEMObject* pObj, BEMProperty* pProp, QStrin
    }
    else if (iDataType == BEMP_Flt)
    {  // float => simple format
-		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15
+		if (m_iFileType == BEMFT_CSE || BEMPX_IsHPXML( m_iFileType ) || BEMPX_IsCF1RXML( m_iFileType ) || BEMPX_IsRESNETXML( m_iFileType ))  // SAC 4/11/12 - ensure exponential format NOT used for outputting float data		// SAC 12/2/15   // SAC 5/20/20
 			FloatToString_NoExpNotation( sData, pProp->getDouble() );
 		else
       	sData = QString( "%1" ).arg( QString::number(pProp->getDouble()) );
@@ -4307,7 +4307,8 @@ bool StatusRequiresWrite_XML( BEMProperty* pProp, int iFileMode /*bool bIsInputM
 
 	assert( (iFileMode != BEMFM_SIM || !bWriteAllProperties) );
    bool bRetVal = ( (pProp->getDataStatus() == BEMS_UserDefined) ||
-	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || BEMPX_IsCF1RXML( iFileType ) || iFileMode != BEMFM_INPUT /*!bIsInputMode*/)) );		// SAC 12/2/15
+	                 (pProp->getDataStatus() != BEMS_Undefined && (bWriteAllProperties || BEMPX_IsHPXML( iFileType ) || BEMPX_IsCF1RXML( iFileType ) ||
+																						BEMPX_IsRESNETXML( iFileType ) || iFileMode != BEMFM_INPUT /*!bIsInputMode*/)) );		// SAC 12/2/15   // SAC 5/20/20
 	if (iFileMode == BEMFM_SIM)  // SAC 5/22/12 - added logic to further specify when properties are to be written to SIMULATION export files
 	{	switch (pProp->getType()->getWriteSimulationFlag())
 		{	case  0 :  bRetVal = false;   break;
@@ -4529,6 +4530,11 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 		else if (sClassName.left(4).compare("cf1r") == 0)
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
+	else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
+	{	assert( sClassName.left(4).compare("rnx") == 0 );
+		if (sClassName.left(4).compare("rnx") == 0)
+			sClassName = sClassName.right( sClassName.length()-3 );
+	}
  	stream.writeStartElement( QString(sClassName) );
 
 	int iFirstProp = 0;
@@ -4659,7 +4665,7 @@ void WritePropertiesAfterChildren_XML( QXmlStreamWriter& stream, BEMObject* pObj
 				}
          }
          else  // pProp IS array
-         {		assert( false );  // if we get here we will need to trim property name written by the following routine to exclude leading "afterchildren_"
+         {		//assert( false );  // if we get here we will need to trim property name written by the following routine to exclude leading "afterchildren_"
                WriteBracketPropertyArray_XML( stream, pObj, pProp, iProp/*pos*/, iFileMode /*bIsInputMode*/, iFileType, bWriteAllProperties, iBEMProcIdx, bUseReportPrecisionSettings );
          }
       }
@@ -4797,6 +4803,10 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
 			else if (BEMPX_IsCF1RXML( iFileType ))		// SAC 3/6/18
 			{	// no specific starting elements for CF1R XML files...
 			}
+			else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
+			{	// write RESNET copywrite message ??
+
+			}
 			else
 			{
 				stream.writeStartElement("SDDXML");
@@ -4831,6 +4841,7 @@ bool WriteXMLFile( const char* pszFileName, int iFileMode /*bool bIsInputMode*/,
    	   if ( (iError >= 0) && (pClass != NULL) &&
    	   	  (!BEMPX_IsHPXML( iFileType ) || pClass->getShortName().indexOf("hpx")==0) &&		// SAC 12/2/15 - when in HPXML writing mode, only write objects whose class name begins w/ "hpx"
    	   	  (!BEMPX_IsCF1RXML( iFileType ) || pClass->getShortName().indexOf("cf1r")==0) &&		// SAC 3/6/18 - when in CF1RXML writing mode, only write objects whose class name begins w/ "cf1r"
+   	   	  (!BEMPX_IsRESNETXML( iFileType ) || pClass->getShortName().indexOf("rnx")==0) &&		// SAC 5/20/20 - when in RESNETXML writing mode, only write objects whose class name begins w/ "rnx"
    	          // don't write class objects tagged as AutoCreate to INPUT file
    	        ( (iFileMode != BEMFM_INPUT /*!bIsInputMode*/) || (!pClass->getAutoCreate()) ) )
    	   {
@@ -4898,8 +4909,8 @@ BEMXMLWriter::BEMXMLWriter( const char* pszFileName /*=NULL*/, int iBEMProcIdx /
 		mp_stream->writeStartDocument();
 		//mp_stream->writeDTD("<?xml  version=\"1.0\"  encoding=\"utf-8\" ?>");
 
-		if (BEMPX_IsCF1RXML( iFileType ))
-		{	// SAC 3/6/18 - when in CF1RXML writing mode, don't write SDD and ruleset stuff
+		if (BEMPX_IsCF1RXML( iFileType ) || BEMPX_IsRESNETXML( iFileType ))
+		{	// SAC 3/6/18 - when in CF1RXML writing mode, don't write SDD and ruleset stuff   // SAC 5/20/20 - same for RESNET
 		}
 		else
 		{	mp_stream->writeStartElement("SDDXML");

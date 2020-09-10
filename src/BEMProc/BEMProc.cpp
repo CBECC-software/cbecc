@@ -5875,7 +5875,7 @@ UINT GetDefaultMsgBoxButton( UINT nAllBtns, UINT nDefault )
 	return sbDefault;
 }
 
-int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/ )
+int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/, const TCHAR* details /*=NULL*/ )
 {	int iRetVal = -1;
 #ifdef BEM_QTGUI
 		QApplication* pqApp = NULL;
@@ -5898,7 +5898,8 @@ int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /
 					msgBox.setIcon( (QMessageBox::Icon) nIcon ); 
 		//			msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
 					msgBox.setText( msg );
-		//			msgBox.setDetailedText( qsRptIssuesDlgDetails );
+					if (details)
+						msgBox.setDetailedText( details );
 					msgBox.setStandardButtons( (QMessageBox::StandardButtons) nType );		// QMessageBox::Ok );
 		//			msgBox.addButton( QMessageBox::Abort );
 					if (sbDefault != QMessageBox::NoButton)
@@ -5912,7 +5913,7 @@ int BEMMessageBox(const TCHAR* msg, const TCHAR* caption /*=NULL*/, UINT nIcon /
 	return iRetVal;
 }
 
-int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/ )
+int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT nType /*=1024*/, UINT nDefault /*=0*/, QString details /*=""*/ )
 {	int iRetVal = -1;
 #ifdef BEM_QTGUI
 		QApplication* pqApp = NULL;
@@ -5932,7 +5933,8 @@ int BEMMessageBox( QString msg, QString caption /*=""*/, UINT nIcon /*=0*/, UINT
 					msgBox.setIcon( (QMessageBox::Icon) nIcon ); 
 		//			msgBox.setTextFormat(Qt::RichText); //this is what makes the links clickable
 					msgBox.setText( msg );
-		//			msgBox.setDetailedText( qsRptIssuesDlgDetails );
+					if (!details.isEmpty())
+						msgBox.setDetailedText( details );
 					msgBox.setStandardButtons( (QMessageBox::StandardButtons) nType );		// QMessageBox::Ok );
 		//			msgBox.addButton( QMessageBox::Abort );
 					if (sbDefault != QMessageBox::NoButton)

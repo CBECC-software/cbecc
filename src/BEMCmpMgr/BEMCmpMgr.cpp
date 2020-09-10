@@ -1885,6 +1885,35 @@ int  CMX_ExtractErrorsFromReportXML( const char* xmlFileName, QString& sErrors, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+/////////////////////////////////////////////////////////////////////////////
+// AnalysisAction stuff - SAC 2/20/20
+QString AnalysisAction_PhaseString( long iAnalPhase )
+{	switch (iAnalPhase)
+	{	case BEMAnalActPhase_LoadModel       :  return "LoadModel"     ;
+		case BEMAnalActPhase_ProposedSizing  :  return "ProposedSizing";
+		case BEMAnalActPhase_ProposedAnnual  :  return "ProposedAnnual";
+		case BEMAnalActPhase_BaselineSizing  :  return "BaselineSizing";
+		case BEMAnalActPhase_BaselineAnnual  :  return "BaselineAnnual";
+		case BEMAnalActPhase_End             :  return "End"           ;
+	}
+	return "";
+}
+QString AnalysisAction_BeforeAfter( long iBeforeAfter )
+{	switch (iBeforeAfter)
+	{	case BEMAnalActWhen_LoadModel_BeforeDefaulting      :  return "BeforeDefaulting";
+		case BEMAnalActWhen_LoadModel_AfterDefaulting       :  return "AfterDefaulting" ;
+		case BEMAnalActWhen_End_BeforeAnalPostProc          :  return "BeforeAnalPostProc";
+		case BEMAnalActWhen_End_AfterAnalPostProc           :  return "AfterAnalPostProc" ;
+		case BEMAnalActWhen_Transform_BeforeModelSetupRules :  return "BeforeModelSetupRules";
+		case BEMAnalActWhen_Transform_AfterModelSetupRules  :  return "AfterModelSetupRules" ;
+		case BEMAnalActWhen_Transform_FollowingResultsProc  :  return "FollowingResultsProc" ;
+		case BEMAnalActWhen_Transform_ActOnEPlusSimInput    :  return "ActOnEPlusSimInput"   ;
+		case BEMAnalActWhen_Transform_ActOnCSESimInput      :  return "ActOnCSESimInput"     ;
+	}
+	return "";
+}
+/////////////////////////////////////////////////////////////////////////////
+
 
 
 
