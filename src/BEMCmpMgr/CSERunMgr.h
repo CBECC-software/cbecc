@@ -219,7 +219,8 @@ private:
 	std::vector<CSERun*> m_vCSEActiveRun;
 	std::vector<long>* m_plaRIBDIClsObjIndices;
 	QString m_sAltWthrPathFile;		// SAC 6/4/20 (RESNET)
-
+//	QStringList m_sCopiedPathFileSrc;		// SAC 9/13/20
+//	QStringList m_sCopiedPathFileDest;		// SAC 9/13/20
 };		// class CSERunMgr
 
 #endif // __CSERUNMGR_H__

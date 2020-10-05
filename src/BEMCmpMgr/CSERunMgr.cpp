@@ -1732,7 +1732,7 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 // SAC 5/2/20 - created based on CSE_PerformDHWSolarSysSizing)
 //  ModelType:		0  T24-Res
 //						1  T24-Com
-int CSE_PerformDHWMinusSolarSys( QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, double* pdResults,
+int CSE_PerformDHWMinusSolarSys( QString& sErrMsg, QString sCSEexe, QString sCSEWthr, QString sModelPathOnly, QString sModelFileOnlyNoExt, QString sProcessPath, double* pdResults,
 											int iModelType, /*std::vector<double>& daRunMults, int iSysIdx, QString sStdHPWHSzTDVTbl, long lStdHPWHSzTDVCol,*/ bool bVerbose )
 // returns 0 iff success
 //         1 fail (CSE error, ...)
@@ -1745,11 +1745,10 @@ int CSE_PerformDHWMinusSolarSys( QString sCSEexe, QString sCSEWthr, QString sMod
 						0 /*iSimReportDetailsOption*/, 0 /*iSimErrorDetailsOption*/	);
 	int iNumRuns = 1;  //(int) daRunMults.size();
 	int iMultDecPrec=5, iR=0;
-	QString sErrMsg, sLogMsg;
+	QString sLogMsg;
 	int iCSESimRetVal = cseRunMgr.SetupRun_Simple( iR /*iRunIdx*/, CRM_User /*iRunType*/, sErrMsg, true /*bAllowReportIncludeFile*/,
-												"NoDHWSlrTh" /*pszRunAbbrev*/, NULL /*sHPWHSizeCmdLineArg.toLocal8Bit().constData()*/, NULL /*sNum.toLocal8Bit().constData()*/, 0 /*iModelType*/ );
+												"NoDHWSlrTh" /*pszRunAbbrev*/, NULL /*sHPWHSizeCmdLineArg.toLocal8Bit().constData()*/, NULL /*sNum.toLocal8Bit().constData()*/, iModelType );
 		//BEMMessageBox( QString("hsz_Run1():  cseRunMgr.SetupRun_Simple() returned %1 (0=>OK) for file:  %2").arg(QString::number(iCSESimRetVal), hsz_sModelFileOnlyNoExt) );		// debugging
-
 	if (iCSESimRetVal == 0)
 	{	bool bSaveFreezeProg = sbFreezeProgress;
 		sbFreezeProgress = true;	// SAC 5/31/16 - prevent progress reporting during (very quick) CSE DHW simulations
@@ -1777,83 +1776,254 @@ int CSE_PerformDHWMinusSolarSys( QString sCSEexe, QString sCSEWthr, QString sMod
 		{	long lDBID_EUS_StdDHWNoSlrSysEnergy = BEMPX_GetDatabaseID( "EUseSummary:StdDHWNoSlrSysEnergy" );		// BEMP_Flt,  3,  1,  0, "",      "Standard design energy use of DHW w/out SolarSys [1-ElecKWH, 2-NGasKBtu, 3-OthrKBtu]"    ; SAC 5/3/20
 			long lDBID_EUS_StdDHWNoSlrSysTDV    = BEMPX_GetDatabaseID( "EUseSummary:StdDHWNoSlrSysTDV"    );		// BEMP_Flt,  3,  1,  0, "kTDV",  "Standard design kTDV of DHW w/out SolarSys [1-Elec, 2-NGas, 3-Othr]"
 			long lDBID_EUS_StdDHWNoSlrSysTotTDV = BEMPX_GetDatabaseID( "EUseSummary:StdDHWNoSlrSysTotTDV" );		// BEMP_Flt,  1,  1,  0, "kTDV",  "Standard design kTDV of DHW w/out SolarSys (sum across all fuels)"
-			long lDBID_Proj_TDVTableName = BEMPX_GetDatabaseID( "Proj:TDVTableName" );
-			long lDBID_Proj_TDVTableCols = BEMPX_GetDatabaseID( "Proj:TDVTableCols" );
-			long lDBID_Proj_TDVMult_Elec = BEMPX_GetDatabaseID( "Proj:TDVMult_Elec" );		// SAC 5/4/20
-			long lDBID_Proj_TDVMult_Fuel = BEMPX_GetDatabaseID( "Proj:TDVMult_Fuel" );
-			if (lDBID_EUS_StdDHWNoSlrSysEnergy > 0 && lDBID_EUS_StdDHWNoSlrSysTDV > 0 && lDBID_EUS_StdDHWNoSlrSysTotTDV > 0 &&
-				 lDBID_Proj_TDVTableName > 0 && lDBID_Proj_TDVTableCols > 0 && lDBID_Proj_TDVMult_Elec > 0 && lDBID_Proj_TDVMult_Fuel > 0)
-			{	double dHrlyRes[3][8760], dTotTDV=0.0;
-				char* pszMtrNames[3] = { "MtrElec", "MtrNatGas", "MtrOther" };
-				double daMtrMults[3] = {  1/3.412,      1.0,         1.0    };		// conversion from CSE reporting units to BEMBase units (kWh,kBtu,kBtu)
-				char* pszEnduses[]   = { "Tot", NULL };
-				int iErr, iSetRetVal, iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
-				QString sResFile = QString( "%1%2.csv" ).arg( sProcessPath, sModelFileOnlyNoExt );
-				QString sTDVTableName;		long laTDVTableCols[3];
-				BEMPX_GetString(  lDBID_Proj_TDVTableName  , sTDVTableName );
-				BEMPX_GetInteger( lDBID_Proj_TDVTableCols  , laTDVTableCols[0] );
-				BEMPX_GetInteger( lDBID_Proj_TDVTableCols+1, laTDVTableCols[1] );
-				BEMPX_GetInteger( lDBID_Proj_TDVTableCols+2, laTDVTableCols[2] );
-				double daMtrTDVMults[3];		// (CSE kBTU * TDV Mult) conversion to kTDV
-				BEMPX_GetFloat(   lDBID_Proj_TDVMult_Elec  , daMtrTDVMults[0]  );
-				BEMPX_GetFloat(   lDBID_Proj_TDVMult_Fuel  , daMtrTDVMults[1]  );		daMtrTDVMults[2] = daMtrTDVMults[1];
+
+			if (iModelType == 0)
+			{	// RES
+				long lDBID_Proj_TDVTableName = BEMPX_GetDatabaseID( "Proj:TDVTableName" );
+				long lDBID_Proj_TDVTableCols = BEMPX_GetDatabaseID( "Proj:TDVTableCols" );
+				long lDBID_Proj_TDVMult_Elec = BEMPX_GetDatabaseID( "Proj:TDVMult_Elec" );		// SAC 5/4/20
+				long lDBID_Proj_TDVMult_Fuel = BEMPX_GetDatabaseID( "Proj:TDVMult_Fuel" );
+				if (lDBID_EUS_StdDHWNoSlrSysEnergy > 0 && lDBID_EUS_StdDHWNoSlrSysTDV > 0 && lDBID_EUS_StdDHWNoSlrSysTotTDV > 0 &&
+					 lDBID_Proj_TDVTableName > 0 && lDBID_Proj_TDVTableCols > 0 && lDBID_Proj_TDVMult_Elec > 0 && lDBID_Proj_TDVMult_Fuel > 0)
+				{	double dHrlyRes[3][8760], dTotTDV=0.0;
+					char* pszMtrNames[3] = { "MtrElec", "MtrNatGas", "MtrOther" };
+					double daMtrMults[3] = {  1/3.412,      1.0,         1.0    };		// conversion from CSE reporting units to BEMBase units (kWh,kBtu,kBtu)
+					char* pszEnduses[]   = { "Tot", NULL };
+					int iErr, iSetRetVal, iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+					QString sResFile = QString( "%1%2.csv" ).arg( sProcessPath, sModelFileOnlyNoExt );
+					QString sTDVTableName;		long laTDVTableCols[3];
+					BEMPX_GetString(  lDBID_Proj_TDVTableName  , sTDVTableName );
+					BEMPX_GetInteger( lDBID_Proj_TDVTableCols  , laTDVTableCols[0] );
+					BEMPX_GetInteger( lDBID_Proj_TDVTableCols+1, laTDVTableCols[1] );
+					BEMPX_GetInteger( lDBID_Proj_TDVTableCols+2, laTDVTableCols[2] );
+					double daMtrTDVMults[3];		// (CSE kBTU * TDV Mult) conversion to kTDV
+					BEMPX_GetFloat(   lDBID_Proj_TDVMult_Elec  , daMtrTDVMults[0]  );
+					BEMPX_GetFloat(   lDBID_Proj_TDVMult_Fuel  , daMtrTDVMults[1]  );		daMtrTDVMults[2] = daMtrTDVMults[1];
 //QString sDbgMsg = QString( "about to retrieve solar sizing results from:\n%1" ).arg( sResFile );
 //BEMMessageBox( sDbgMsg );
-				for (int iMtr=0; (iMtr<3 && sErrMsg.isEmpty()); iMtr++)
-				{	BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, pszMtrNames[iMtr] );
-					if (pObj)
-					{	double dAnnUse=0.0;
-						int iNumMtrRes = BEMPX_RetrieveCSEHourlyResults( sResFile.toLocal8Bit().constData(), pszMtrNames[iMtr],
-																							(const char**) pszEnduses, dHrlyRes[iMtr] );
-						if (iNumMtrRes < 1)
-						{	sErrMsg = QString( "Error encountered retrieving %1 CSE results for DHW minus SolarSys run (%2):  %3" ).arg( pszMtrNames[iMtr], QString::number(iNumMtrRes), sResFile );
-							iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;	//  Error in determining TDV of DHWSolarSys system(s) using CSE
-						}
-						else
-						{	for (int i=0;i<8760;i++)
-								dAnnUse += dHrlyRes[iMtr][i];
-							dAnnUse *= daMtrMults[iMtr];
-							// store annual use for this Meter
-							iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysEnergy+iMtr, BEMP_Flt, (void*) &dAnnUse );
-							if (iSetRetVal < 0)
-							{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
-								sErrMsg = QString( "Error storing %1 Standard design energy use of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysEnergy[%2] (%3) returned %4." ).arg(
-																		pszMtrNames[iMtr], QString::number(iMtr+1), QString::number(dAnnUse), QString::number( iSetRetVal ) );
-							}
-							else if (sTDVTableName.isEmpty() || laTDVTableCols[iMtr] < 1)
-							{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
-								sErrMsg = QString( "Error calculating %1 Standard design TDV of DHW w/out SolarSys:  Invalid TDV table name (%2) and/or column index (%3)." ).arg(
-																		pszMtrNames[iMtr], sTDVTableName, QString::number(laTDVTableCols[iMtr]) );
+					for (int iMtr=0; (iMtr<3 && sErrMsg.isEmpty()); iMtr++)
+					{	BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, pszMtrNames[iMtr] );
+						if (pObj)
+						{	double dAnnUse=0.0;
+							int iNumMtrRes = BEMPX_RetrieveCSEHourlyResults( sResFile.toLocal8Bit().constData(), pszMtrNames[iMtr],
+																								(const char**) pszEnduses, dHrlyRes[iMtr] );
+							if (iNumMtrRes < 1)
+							{	sErrMsg = QString( "Error encountered retrieving %1 CSE results for DHW minus SolarSys run (%2):  %3" ).arg( pszMtrNames[iMtr], QString::number(iNumMtrRes), sResFile );
+								iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;	//  Error in determining TDV of DHWSolarSys system(s) using CSE
 							}
 							else
-							{	// calc & store TDV by fuel
-								dAnnUse = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[iMtr], sTDVTableName.toLocal8Bit().constData(), laTDVTableCols[iMtr], bVerbose );
-								dAnnUse *= daMtrTDVMults[iMtr];	// (CSE kBTU * TDV Mult) conversion to kTDV
-								iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTDV+iMtr, BEMP_Flt, (void*) &dAnnUse );
+							{	for (int i=0;i<8760;i++)
+									dAnnUse += dHrlyRes[iMtr][i];
+								dAnnUse *= daMtrMults[iMtr];
+								// store annual use for this Meter
+								iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysEnergy+iMtr, BEMP_Flt, (void*) &dAnnUse );
 								if (iSetRetVal < 0)
 								{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
-									sErrMsg = QString( "Error storing %1 Standard design TDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTDV[%2] (%3) returned %4." ).arg(
+									sErrMsg = QString( "Error storing %1 Standard design energy use of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysEnergy[%2] (%3) returned %4." ).arg(
 																			pszMtrNames[iMtr], QString::number(iMtr+1), QString::number(dAnnUse), QString::number( iSetRetVal ) );
 								}
+								else if (sTDVTableName.isEmpty() || laTDVTableCols[iMtr] < 1)
+								{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+									sErrMsg = QString( "Error calculating %1 Standard design TDV of DHW w/out SolarSys:  Invalid TDV table name (%2) and/or column index (%3)." ).arg(
+																			pszMtrNames[iMtr], sTDVTableName, QString::number(laTDVTableCols[iMtr]) );
+								}
 								else
-									dTotTDV += dAnnUse;
-							}
+								{	// calc & store TDV by fuel
+									dAnnUse = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[iMtr], sTDVTableName.toLocal8Bit().constData(), laTDVTableCols[iMtr], bVerbose );
+									dAnnUse *= daMtrTDVMults[iMtr];	// (CSE kBTU * TDV Mult) conversion to kTDV
+									iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTDV+iMtr, BEMP_Flt, (void*) &dAnnUse );
+									if (iSetRetVal < 0)
+									{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+										sErrMsg = QString( "Error storing %1 Standard design TDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTDV[%2] (%3) returned %4." ).arg(
+																				pszMtrNames[iMtr], QString::number(iMtr+1), QString::number(dAnnUse), QString::number( iSetRetVal ) );
+									}
+									else
+										dTotTDV += dAnnUse;
+								}
+						}	}
+					}	// end of iMtr loop
+
+					// store total TDV
+					if (sErrMsg.isEmpty())
+					{	iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTotTDV, BEMP_Flt, (void*) &dTotTDV );
+						if (iSetRetVal < 0)
+						{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+							sErrMsg = QString( "Error storing Standard design kTDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTotTDV (%1) returned %2." ).arg(
+																	QString::number(dTotTDV), QString::number( iSetRetVal ) );
 					}	}
-				}	// end of iMtr loop
-
-				// store total TDV
-				if (sErrMsg.isEmpty())
-				{	iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTotTDV, BEMP_Flt, (void*) &dTotTDV );
-					if (iSetRetVal < 0)
-					{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
-						sErrMsg = QString( "Error storing Standard design kTDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTotTDV (%1) returned %2." ).arg(
-																QString::number(dTotTDV), QString::number( iSetRetVal ) );
-				}	}
+			}	}
 
 
 
+			else
 
-			}
+
+
+			{	// COM      - SAC 9/10/20
+
+
+//				long lDBID_Proj_TDVTableName = BEMPX_GetDatabaseID( "Proj:TDVMultTableName" );
+//				//long lDBID_Proj_TDVTableCols = BEMPX_GetDatabaseID( "Proj:TDVTableCols" );
+//				long lDBID_Proj_TDVMult_Elec = BEMPX_GetDatabaseID( "Proj:TDVMult_Elec" );	
+//				long lDBID_Proj_TDVMult_Fuel = BEMPX_GetDatabaseID( "Proj:TDVMult_Fuel" );
+//
+//				long lEngyCodeYearNum=2019, lCliZnNum=0;
+//				if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" ), lEngyCodeYearNum, 0, -1, -1, BEMO_User, -1 /*iBEMProcIdx*/ ) || lEngyCodeYearNum < 1900 ||
+//				    !BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum"        ), lCliZnNum       , 0, -1,  0, BEMO_User, -1 /*iBEMProcIdx*/ ))
+//				{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+//					sErrMsg = QString( "Error storing Standard design kTDV of DHW w/out SolarSys:  Retrieving EngyCodeYearNum and/or CliZnNum." );
+//				}
+//				int iElecTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 0 + 2) : ((0 * 16) + lCliZnNum + 1) );
+//				int iNGasTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 1 + 2) : ((1 * 16) + lCliZnNum + 1) );
+//				int iPropTableCol = (lEngyCodeYearNum <= 2019 ? (((lCliZnNum-1) * 3) + 2 + 2) : ((2 * 16) + lCliZnNum + 1) );
+
+				long lDBID_Proj_StdDHWNoSlrSysEnergy = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysEnergy" );		// BEMP_Flt, 30,  1,  0,  NInp,  "",      "StandardDHWNoSolarSystemEnergy", ""    ; "Standard design energy use of DHW w/out SolarSys [1-ElecKWH, 2-NGasKBtu, 3-OthrKBtu]"    ; SAC 9/14/20
+				long lDBID_Proj_StdDHWNoSlrSysTDV    = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysTDV"    );		// BEMP_Flt, 30,  1,  0,  NInp,  "kTDV",  "StandardDHWNoSolarSystemTDV", ""       ; "Standard design kTDV of DHW w/out SolarSys [1-Elec, 2-NGas, 3-Othr]"
+				long lDBID_Proj_StdDHWNoSlrSysTotTDV = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysTotTDV" );		// BEMP_Flt, 10,  1,  0,  NInp,  "kTDV",  "StandardDHWNoSolarSystemTotalTDV", ""  ; "Standard design kTDV of DHW w/out SolarSys (sum across all fuels)"
+				long lDBID_Proj_TDVof1KWCFIPV        = BEMPX_GetDatabaseID( "Proj:TDVof1KWCFIPV"        );		// BEMP_Flt, 10,  1,  0,  NInp,  "kTDV",  "TDVof1KWCFIPV", ""                     ; TDV of a generic 1kW CFI PV array
+
+				long lGas=0;
+				bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
+				BOOL bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
+				if (bGasTypeOK && lGas > 2)
+				{	long lNatGasAvail=1;
+					if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
+						lGas = (lNatGasAvail ? 1 : 2);
+				}
+
+				long lCZ, lEngyCodeYearNum = 2016;	// SAC 3/11/20 - added to ensure correct TDV column indices (changed in 2022)
+				long lDBID_Proj_EngyCodeYearNum = BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" );
+				if (lDBID_Proj_EngyCodeYearNum < BEM_COMP_MULT || !BEMPX_GetInteger( lDBID_Proj_EngyCodeYearNum, lEngyCodeYearNum, 0, -1, -1, BEMO_User, -1 /*iBEMProcIdx*/ ) || lEngyCodeYearNum < 1)
+					lEngyCodeYearNum = 2016;
+				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CliZnNum" ), lCZ  );
+				int iElecTableCol = (lEngyCodeYearNum <= 2019 ? (((lCZ-1) * 3) +   0  + 2) : ((  0  * 16) + lCZ + 1) );	// SAC 3/11/20
+				int  iGasTableCol = (lEngyCodeYearNum <= 2019 ? (((lCZ-1) * 3) + lGas + 2) : ((lGas * 16) + lCZ + 1) );
+
+				long lNumResultsSets;		// allow for multiple results sets (2022)
+				BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:NumResultsSets"), lNumResultsSets, 1, -1, -1, BEMO_User, -1 /*iBEMProcIdx*/ );			assert( (lNumResultsSets > 0 && lNumResultsSets < 11) );
+
+				for (int iResSet=0; (sErrMsg.isEmpty() && iResSet < lNumResultsSets); iResSet++)
+				{
+				//	QString sResultSetName;		// SAC 11/3/19
+				//	BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo.BEMProcIdx() );
+					QString sTDVTableName;		// SAC 11/3/19
+					BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:TDVMultTableName" )+iResSet, sTDVTableName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, -1 /*iBEMProcIdx*/ );
+					if (sTDVTableName.isEmpty())
+						sTDVTableName = "TDVbyCZandFuel";
+
+//				if (	lCZ  < 1 || lCZ > 16 || !bGasTypeOK || lGas < 1 || lGas > 2 ||
+//						BEMPX_GetTableColumn( &daTDVElec[0], 8760, sTDVMultTableName.toLocal8Bit().constData(), iElecTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 ||
+//						BEMPX_GetTableColumn( &daTDVFuel[0], 8760, sTDVMultTableName.toLocal8Bit().constData(),  iGasTableCol, NULL /*pszErrMsgBuffer*/, 0 /*iErrMsgBufferLen*/ ) != 0 )
+//				{	assert( false );
+//					sErrorMsg = QString( "ERROR:  Unable to retrieve Electric TDV data for CZ %1 (required for CSE simulation)" ).arg( QString::number(lCZ) );
+//					iRetVal = 60;		// BEMAnal_CECRes_TDVFileWriteError;	//  Error writing CSV file w/ TDV data (required for CSE simulation)
+//				}
+
+					if (lDBID_EUS_StdDHWNoSlrSysEnergy > 0 && lDBID_EUS_StdDHWNoSlrSysTDV > 0 && lDBID_EUS_StdDHWNoSlrSysTotTDV > 0 &&
+						 !sTDVTableName.isEmpty())
+					{	double dHrlyRes[3][8760], dPVHrlyRes[8760], dTotTDV=0.0;
+						char* pszMtrNames[3] = { "MtrElec", "MtrNatGas", "MtrOther" };
+						double daMtrMults[3] = {  1/3.412,      1.0,         1.0    };		// conversion from CSE reporting units to BEMBase units (kWh,kBtu,kBtu)
+						char* pszEnduses[]   = { "Tot", NULL };
+						char* pszPVEnduse[]  = { "PV" , NULL };
+						int iErr, iSetRetVal, iCID_CSEMeter = BEMPX_GetDBComponentID( "cseMETER" );
+						QString sResFile = QString( "%1%2.csv" ).arg( sProcessPath, sModelFileOnlyNoExt );
+						long laTDVTableCols[3] = { iElecTableCol, iGasTableCol, iGasTableCol };
+						double daMtrTDVMults[3] = { 1/3.412 /*kBtu->kWh*/,  0.01 /*kBtu->therm*/,  0.01 /*kBtu->therm*/ };		// (CSE kBTU * TDV Mult) conversion to kTDV - SAC 9/13/20
+				//		BEMPX_GetFloat(   lDBID_Proj_TDVMult_Elec  , daMtrTDVMults[0]  );
+				//		BEMPX_GetFloat(   lDBID_Proj_TDVMult_Fuel  , daMtrTDVMults[1]  );		daMtrTDVMults[2] = daMtrTDVMults[1];
+//QString sDbgMsg = QString( "about to retrieve solar sizing results from:\n%1" ).arg( sResFile );
+//BEMMessageBox( sDbgMsg );
+						for (int iMtr=0; (iMtr<3 && sErrMsg.isEmpty()); iMtr++)
+						{	BEMObject* pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, pszMtrNames[iMtr] );
+							if (pObj)
+							{	double dAnnUse=0.0;
+								int iNumMtrRes = BEMPX_RetrieveCSEHourlyResults( sResFile.toLocal8Bit().constData(), pszMtrNames[iMtr],
+																									(const char**) pszEnduses, dHrlyRes[iMtr] );
+								if (iMtr==0)	// ELEC		- SAC 9/13/20
+								{	int iNumPVMtrRes = BEMPX_RetrieveCSEHourlyResults( sResFile.toLocal8Bit().constData(), pszMtrNames[iMtr],
+																										(const char**) pszPVEnduse, dPVHrlyRes );
+									if (iNumPVMtrRes < 1)
+									{	sErrMsg = QString( "Error encountered retrieving %1 CSE PV results for DHW minus SolarSys run (%2):  %3" ).arg( pszMtrNames[iMtr], QString::number(iNumPVMtrRes), sResFile );
+										iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;	//  Error in determining TDV of DHWSolarSys system(s) using CSE
+									}
+									else
+									{	for (int i=0;i<8760;i++)
+											dHrlyRes[iMtr][i] -= dPVHrlyRes[i];		// remove PV from Tot (DHW) hourly results
+
+										double dAnnPVTDV = BEMPX_ApplyHourlyMultipliersFromTable( dPVHrlyRes, sTDVTableName.toLocal8Bit().constData(), laTDVTableCols[iMtr], bVerbose );
+										dAnnPVTDV *= daMtrTDVMults[iMtr];	// (CSE kBTU * TDV Mult) conversion to kTDV
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CSE_PerformDHWMinusSolarSys(), setting TDVof1KWCFIPV to %1" ).arg( QString::number( dAnnPVTDV ) ), NULL, FALSE, TRUE, FALSE );
+										//iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_TDVof1KWCFIPV, BEMP_Flt, (void*) &dAnnPVTDV, BEMO_User, iResSet );
+										iSetRetVal = BEMPX_SetBEMData( lDBID_Proj_TDVof1KWCFIPV+iResSet, BEMP_Flt, (void*) &dAnnPVTDV, BEMO_User, 0 );
+										if (iSetRetVal < 0)
+										{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+											sErrMsg = QString( "Error storing TDV of generic 1kW CFI PV system:  Setting of TDVof1KWCFIPV (%1) returned %2." ).arg(
+																					QString::number(dAnnPVTDV), QString::number( iSetRetVal ) );
+										}
+								}	}
+								if (sErrMsg.isEmpty())
+								{	if (iNumMtrRes < 1)
+									{	sErrMsg = QString( "Error encountered retrieving %1 CSE results for DHW minus SolarSys run (%2):  %3" ).arg( pszMtrNames[iMtr], QString::number(iNumMtrRes), sResFile );
+										iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;	//  Error in determining TDV of DHWSolarSys system(s) using CSE
+									}
+									else
+									{	for (int i=0;i<8760;i++)
+											dAnnUse += dHrlyRes[iMtr][i];
+										dAnnUse *= daMtrMults[iMtr];
+										// store annual use for this Meter
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CSE_PerformDHWMinusSolarSys(), setting StdDHWNoSlrSysEnergy[%1] to %2" ).arg( QString::number( iMtr+1 ), QString::number( dAnnUse ) ), NULL, FALSE, TRUE, FALSE );
+										//iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysEnergy+iMtr, BEMP_Flt, (void*) &dAnnUse, BEMO_User, iResSet );
+										iSetRetVal = BEMPX_SetBEMData( lDBID_Proj_StdDHWNoSlrSysEnergy+(iResSet*3)+iMtr, BEMP_Flt, (void*) &dAnnUse, BEMO_User, 0 );
+										if (iSetRetVal < 0)
+										{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+											sErrMsg = QString( "Error storing %1 Standard design energy use of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysEnergy[%2] (%3) returned %4." ).arg(
+																					pszMtrNames[iMtr], QString::number(iMtr+1), QString::number(dAnnUse), QString::number( iSetRetVal ) );
+										}
+										else if (sTDVTableName.isEmpty() || laTDVTableCols[iMtr] < 1)
+										{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+											sErrMsg = QString( "Error calculating %1 Standard design TDV of DHW w/out SolarSys:  Invalid TDV table name (%2) and/or column index (%3)." ).arg(
+																					pszMtrNames[iMtr], sTDVTableName, QString::number(laTDVTableCols[iMtr]) );
+										}
+										else
+										{	// calc & store TDV by fuel
+											dAnnUse = BEMPX_ApplyHourlyMultipliersFromTable( dHrlyRes[iMtr], sTDVTableName.toLocal8Bit().constData(), laTDVTableCols[iMtr], bVerbose );
+											dAnnUse *= daMtrTDVMults[iMtr];	// (CSE kBTU * TDV Mult) conversion to kTDV
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CSE_PerformDHWMinusSolarSys(), setting StdDHWNoSlrSysTDV[%1] to %2" ).arg( QString::number( iMtr+1 ), QString::number( dAnnUse ) ), NULL, FALSE, TRUE, FALSE );
+											//iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTDV+iMtr, BEMP_Flt, (void*) &dAnnUse, BEMO_User, iResSet );
+											iSetRetVal = BEMPX_SetBEMData( lDBID_Proj_StdDHWNoSlrSysTDV+(iResSet*3)+iMtr, BEMP_Flt, (void*) &dAnnUse, BEMO_User, 0 );
+											if (iSetRetVal < 0)
+											{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+												sErrMsg = QString( "Error storing %1 Standard design TDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTDV[%2] (%3) returned %4." ).arg(
+																						pszMtrNames[iMtr], QString::number(iMtr+1), QString::number(dAnnUse), QString::number( iSetRetVal ) );
+											}
+											else
+												dTotTDV += dAnnUse;
+										}
+								}	}
+							}
+						}	// end of iMtr loop
+
+						// store total TDV
+						if (sErrMsg.isEmpty())
+						{
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CSE_PerformDHWMinusSolarSys(), setting StdDHWNoSlrSysTotTDV to %1" ).arg( QString::number( dTotTDV ) ), NULL, FALSE, TRUE, FALSE );
+							//iSetRetVal = BEMPX_SetBEMData( lDBID_EUS_StdDHWNoSlrSysTotTDV, BEMP_Flt, (void*) &dTotTDV, BEMO_User, iResSet );
+							iSetRetVal = BEMPX_SetBEMData( lDBID_Proj_StdDHWNoSlrSysTotTDV+iResSet, BEMP_Flt, (void*) &dTotTDV, BEMO_User, 0 );
+							if (iSetRetVal < 0)
+							{	iCSESimRetVal = BEMAnal_CECRes_SolarSysTDVError;
+								sErrMsg = QString( "Error storing Standard design kTDV of DHW w/out SolarSys:  Setting of StdDHWNoSlrSysTotTDV (%1) returned %2." ).arg(
+																		QString::number(dTotTDV), QString::number( iSetRetVal ) );
+						}	}
+					}
+
+				}	// end:  for (int iResSet=0; iResSet < lNumResultsSets; iResSet++)
+
+			}	// end:  else COM
 		}
 
 		if (!sErrMsg.isEmpty())
@@ -1923,6 +2093,9 @@ bool CSERunMgr::T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
 
 				laClsObjIndicesToWrite.push_back( (iCID_CSEDHWSys * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
 
+				if (iModelType==1)	// include PVARRAY in Com run 
+					laClsObjIndicesToWrite.push_back( (BEMPX_GetDBComponentID( "csePVARRAY" ) * BEMF_ClassIDMult) );			// ALL cseDHWSYS objects
+
 				int iCID_CSEExport = BEMPX_GetDBComponentID( "cseEXPORT" );
 				pObj = BEMPX_GetObjectByName( iCID_CSEExport, iErr, "ExportElec" );		assert(pObj);
 				if (pObj)
@@ -1967,7 +2140,10 @@ bool CSERunMgr::T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
 					int iSolarSzRetVal = -1;
 					double dSSFResults[2] = {0,0};
 					if (sErrorMsg.isEmpty())
-					{	iSolarSzRetVal = CSE_PerformDHWMinusSolarSys( m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sModelFileOnlyNoExt, m_sProcessPath, dSSFResults,		// SAC 5/2/20
+					{
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in T24Res_DHWNoSolarSysRun(), about to call CSE_PerformDHWMinusSolarSys() on run %1" ).arg( sRunID ), NULL, FALSE, TRUE, FALSE );
+						iSolarSzRetVal = CSE_PerformDHWMinusSolarSys( sErrorMsg, m_sCSEexe /*"CSE"*/, m_sCSEWthr, m_sModelPathOnly, sModelFileOnlyNoExt, m_sProcessPath, dSSFResults,		// SAC 5/2/20
 																					 iModelType, /*daRunMults, iSIdx+1, sStdHPWHSzTDVTbl, lStdHPWHSzTDVCol,*/ m_bVerbose );
 					}
 
@@ -2398,6 +2574,18 @@ int CSERunMgr::SetupRunFinish(
 	return iRetVal;
 }		// CSERunMgr::SetupRunFinish
 
+/////////////////////////////////////////////////////////////////////////////		// SAC 9/13/20
+static int LocStringInArray( QStringList& saStrs, QString& sStr ) 
+{
+   int iSize = (int) saStrs.size();
+   for (int i=0; i<iSize; i++)
+   {  if (saStrs[i].compare( sStr, Qt::CaseInsensitive ) == 0)
+         return i;
+   }
+   return -1;
+}
+/////////////////////////////////////////////////////////////////////////////
+
 int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bool bAllowReportIncludeFile /*=true*/,		// SAC 5/24/16
 											const char* pszRunID /*=NULL*/, const char* pszRunAbbrev /*=NULL*/, QString* psCSEVer /*=NULL*/, int iBEMProcIdx /*=-1*/,
 											bool bRemovePVBatt /*=false*/ )
@@ -2667,20 +2855,32 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			int      iaCopyError[] = {			 60,					 60,                                                            64,																-1		};  // -1 ends looping
 			for (i=0; (iaCopyError[i] >= 0 && iRetVal == 0); i++)
 			{	if (psaCopySrc[i] != NULL)
-				{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
-										"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
-										"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
-					if (!OKToWriteOrDeleteFile( psaCopyDest[i]->toLocal8Bit().constData(), sMsg, m_bSilent ))
-					{	if (m_bSilent)
-							sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
-						else
-							sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
-						iRetVal = iaCopyError[i];
+//				{	int iCopySrcIdx  = LocStringInArray( m_sCopiedPathFileSrc , *psaCopySrc[ i] );		// SAC 9/13/20
+//					int iCopyDestIdx = LocStringInArray( m_sCopiedPathFileDest, *psaCopyDest[i] );
+//					if (iCopySrcIdx < 0 || iCopyDestIdx < 0 || iCopySrcIdx != iCopyDestIdx)
+					{	sMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+											"application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+											"(once the file is closed), or \n'Abort' to abort the analysis." ).arg( pszFileDescs[i], *psaCopyDest[i] );
+// debugging
+//	BEMPX_WriteLogFile( QString( "   run idx %1, type %2, %3: attempting to copy %4:  %5" ).arg( QString::number( iRunIdx ), QString::number( iRunType ), pszRunID, pszFileDescs[i], *psaCopySrc[i] ),
+//														NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+						if (!OKToWriteOrDeleteFile( psaCopyDest[i]->toLocal8Bit().constData(), sMsg, m_bSilent ))
+						{	if (m_bSilent)
+								sErrorMsg = QString( "ERROR:  Unable to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
+							else
+								sErrorMsg = QString( "ERROR:  User chose not to overwrite %1 file:  %2" ).arg( pszFileDescs[i], *psaCopyDest[i] );
+							iRetVal = iaCopyError[i];
+						}
+						else if (!CopyFile( psaCopySrc[i]->toLocal8Bit().constData(), psaCopyDest[i]->toLocal8Bit().constData(), FALSE ))
+						{	sErrorMsg = QString( "ERROR:  Unable to copy %1 file:  '%2'  to:  '%3'" ).arg( pszFileDescs[i], *psaCopySrc[i], *psaCopyDest[i] );
+							iRetVal = iaCopyError[i]+1;
+						}
+//						else
+//						{	m_sCopiedPathFileSrc.push_back(  *psaCopySrc[ i] );
+//							m_sCopiedPathFileDest.push_back( *psaCopyDest[i] );
+//						}
 					}
-					else if (!CopyFile( psaCopySrc[i]->toLocal8Bit().constData(), psaCopyDest[i]->toLocal8Bit().constData(), FALSE ))
-					{	sErrorMsg = QString( "ERROR:  Unable to copy %1 file:  '%2'  to:  '%3'" ).arg( pszFileDescs[i], *psaCopySrc[i], *psaCopyDest[i] );
-						iRetVal = iaCopyError[i]+1;
-				}	}
+//				}
 			}
 //		// similar loop as above but for Zone include files
 //			for (i=0; (i < saZoneIncFiles.size() && iRetVal == 0); i++)
@@ -2983,7 +3183,7 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 			// SAC 2/11/20 - mod to facilitate solar thermal sizing either before or after HPWH sizing depending on whether any solar system is assigned to multiple HPWH systems needing sizing (Res tic #862)
 				long lHPWHSizUseSSF = 0;
 				bool bSizeSolarAfterHPWH = (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CSE_HPWHSizUseSSF" ), lHPWHSizUseSSF ) && lHPWHSizUseSSF > 0);
-				if (!bSizeSolarAfterHPWH)
+				if (iRetVal == 0 && !bSizeSolarAfterHPWH)
 				{
 					// DHWSolarSys Sizing - SAC 2/2/20 (Com tic #3157)
 					long lDBID_Proj_StdDHWSolarSysRef = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		QString qsStdDHWSolarSysName;
@@ -3036,6 +3236,8 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 					long lDBID_UseCentralElecDHWSolPVCredPct = BEMPX_GetDatabaseID( "Proj:UseCentralElecDHWSolPVCredPct" );		//assert( lDBID_UseCentralElecDHWSolPVCredPct > 0 );
 					if (lDBID_UseCentralElecDHWSolPVCredPct > 0 && BEMPX_GetFloat( lDBID_UseCentralElecDHWSolPVCredPct, dUseCentralElecDHWSolPVCredPct ) && dUseCentralElecDHWSolPVCredPct > 0.001)
 					{
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CSERunMgr::SetupRun_NonRes(), about to call T24Res_DHWNoSolarSysRun() on run %1" ).arg( sRunID ), NULL, FALSE, TRUE, FALSE );
 						// PERFORM DHW-only Minus SolarSys (plus 1kW CFI PV) run
 						if (!T24Res_DHWNoSolarSysRun( sProjFileAlone, sRunID, sErrorMsg, 1 /*iModelType*/ ))
 							iRetVal = 79;		// Error in determining TDV of DHWSolarSys system(s) using CSE

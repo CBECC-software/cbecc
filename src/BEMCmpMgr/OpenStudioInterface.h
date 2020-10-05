@@ -54,6 +54,7 @@ typedef struct
 #define  NUM_T24_NRES_EndUses     15	// SAC 7/14/18 - 13->15 for PV/Batt
 #define  IDX_T24_NRES_EU_CompTot   7
 #define  IDX_T24_NRES_EU_Total    14	// SAC 7/15/18 - 12->14 for PV/Batt
+#define  IDX_T24_NRES_EU_DHW (IDX_T24_NRES_EU_CompTot-2) // assumes DHW placed second before CompTotal enduse - SAC 9/15/20
 #define  IDX_T24_NRES_EU_PV  (IDX_T24_NRES_EU_Total-2)   // assumes PV & Battery come right before TOTAL enduse
 #define  IDX_T24_NRES_EU_BT  (IDX_T24_NRES_EU_Total-1)
 extern EndUseMap esEUMap_CECNonRes[ NUM_T24_NRES_EndUses+1 ];

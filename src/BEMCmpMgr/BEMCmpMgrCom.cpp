@@ -3984,6 +3984,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 		BEMPX_InitializeHourlyResults();  // initialize hourly results stored in BEMProc
 		// DELETE ALL EUseSummary & EnergyUse objects from previous hourly results storage run into the current model
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to delete any/all EUseSummary & EnergyUse" ), NULL, FALSE, TRUE, FALSE );
 		int iResObjCls[3] = { BEMPX_GetDBComponentID( "EUseSummary" ), BEMPX_GetDBComponentID( "EnergyUse" ), 0 };		assert( iResObjCls[0] > 0 && iResObjCls[1] > 0 );
 		int iResObjClsIdx=-1;
 		while (iResObjCls[++iResObjClsIdx] > 0)
@@ -4500,6 +4502,35 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										saSimulatedRunIDs.push_back( osRunInfo[iSimRun].RunID() );
 
 
+// bailed on this mod as pre-population of EUseSummary objects get blasted during subsequent results object copying code - SAC 9/14/20
+// RESTORED this mod to setup EUseSummary objects before trying to store DHW SSF results to them
+//							// added code here based on portion of ProcessNonresSimulationResults() to create EUseSummary object(s) before needing them to be present - SAC 9/14/20
+//								int iCID_EUseSummary = BEMPX_GetDBComponentID( "EUseSummary" );
+//								for (int iSR2=0; iSR2 <= iSimRunIdx; iSR2++)	// loop over runs just simulated in E+ above
+//								{
+//// debugging PV-solar
+////	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), checking EUseSummary object existence:  %1 run, class ID %2, store hourly %3" ).arg( osRunInfo[iSR2].RunID(), QString::number( iCID_EUseSummary ), QString::number( osRunInfo[iSR2].StoreHourlyResults() ) ), NULL, FALSE, TRUE, FALSE );
+//									if (osSimInfo[iSR2].bSimulateModel && bStoreHourlyResults && iCID_EUseSummary > 0)
+//									{	long lNumResultsSets;
+//										BEMPX_GetInteger(BEMPX_GetDatabaseID( "Proj:NumResultsSets"), lNumResultsSets, 1, -1, -1, BEMO_User, osRunInfo[iSR2].BEMProcIdx());			assert( (lNumResultsSets > 0 && lNumResultsSets < 11) );
+//										int iNumEUseSummaryObjs = BEMPX_GetNumObjects( iCID_EUseSummary, BEMO_User, osRunInfo[iSR2].BEMProcIdx() );
+//										for (int iResSet = iNumEUseSummaryObjs; iResSet < lNumResultsSets; iResSet++)		// SAC 11/3/19
+//										{		//  "NumResultsSets",          BEMP_Int,  1,  0,  0,  NInp,  "",             "NumberResultsSets",                 ""  ; number of SETS of results (first implemented for 2022 testing to include 6 sets of TDV & CO2 multiplier tables & results) - SAC 11/03/19
+//												//  "TDVMultTableName",        BEMP_Str, 10,  1,  0,  NInp,  "",             "TDVMultiplierTableName",            "" 
+//												//  "ElecDemMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "ElectricDemandMultiplierTableName", "" 
+//												//  "CO2EmissionsElecTable",   BEMP_Str, 10,  1,  0,  NInp,  "",             "CO2EmissionsElecricTable",          "" 
+//												//  "CO2EmissionsNatGasMult",  BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "CO2EmissionsNaturalGasMultiplier",  "" 
+//												//  "CO2EmissionsOtherMult",   BEMP_Flt, 10,  1,  0,  NInp,  "ton/MBtuh",    "CO2EmissionsOtherMultiplier",       "" 
+//												//  "SrcEngyMultTableName",    BEMP_Str, 10,  1,  0,  NInp,  "",             "SourceEnergyMultiplierTableName",   "" 
+//											QString sResultSetName;	
+//											BEMPX_GetString( BEMPX_GetDatabaseID( "Proj:ResultSetName" )+iResSet, sResultSetName, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osRunInfo[iSR2].BEMProcIdx() );
+//// debugging PV-solar
+////	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), creating EUseSummary object %1 '%2' for run %3" ).arg( QString::number( iResSet ), sResultSetName, osRunInfo[iSR2].RunID() ), NULL, FALSE, TRUE, FALSE );
+//											BEMPX_CreateObject( iCID_EUseSummary, sResultSetName.toLocal8Bit().constData() /*szName*/, NULL /*pPar*/, BEMO_User, true /*bDfltPar*/, true /*bAutoCr8*/, osRunInfo[iSR2].BEMProcIdx() );
+//										}
+//								}	}
+
+
 						// CSE Simulation Loop -----
 								for (int iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs just simulated in E+ above
 								{
@@ -4594,9 +4625,13 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									//				{
 									//					if (iRunIdx > 0 || !bFirstModelCopyCreated)
 									//						BEMPX_AddModel( std::min( iRunIdx, 1 ) /*iBEMProcIdxToCopy=0*/, NULL /*plDBIDsToBypass=NULL*/, true /*bSetActiveBEMProcToNew=true*/ );
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call cseRunMgr.SetupRun_NonRes() for run %1" ).arg( osSimInfo[iSR].pszRunID ), NULL, FALSE, TRUE, FALSE );
 														iCSESimRetVal = cseRunMgr.SetupRun_NonRes( 0/*iRunIdx*/, iRunType[0/*iRunIdx*/], sErrMsg, bAllowReportIncludeFile, 
 																													osSimInfo[iSR].pszLongRunID, osSimInfo[iSR].pszRunID, &sCSEVersion,
 																													osSimInfo[iSR].iBEMProcIdx, (lNumPVArraysChk > 0 && !bEnablePVBattSim) );  // SAC 4/3/19 - added new arg to cause removal of PVArray & Battery objects
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), back from cseRunMgr.SetupRun_NonRes() - returned %1: %2" ).arg( QString::number( iCSESimRetVal ), sErrMsg ), NULL, FALSE, TRUE, FALSE );
 									//								dTimeToPrepModel[iRunIdx] += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 									//				}
 
@@ -4620,6 +4655,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 														cseRunMgr.DoRuns();
 														sbFreezeProgress = bSaveFreezeProg;
 													}
+
 									//								dTimeCSESim += DeltaTime( tmMark );		tmMark = boost::posix_time::microsec_clock::local_time();		// SAC 1/12/15 - log time spent & reset tmMark
 
 									//				for (iRunIdx = 0; (iRetVal == 0 && iCSESimRetVal == 0 && iRunIdx < iNumRuns); iRunIdx++)
@@ -4707,9 +4743,12 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 						bool bIsStdDesign = !sRunAbbrev.compare("ab");
-						if (iRetVal == 0 && (!sRunAbbrev.compare("ap") || bIsStdDesign))		// SAC 2/2/20 - ported from Res (Com tic #3157)
-						{	long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "EUseSummary:StdDHW_SSF" : "EUseSummary:PropDHW_SSF") );
-							int iNumDHWSolarSys = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ) );
+						if (iRetVal == 0 && (!sRunAbbrev.compare("ap") || bIsStdDesign))		// SAC 2/2/20 - ported from Res (Com tic #3157)  // SAC 9/17/20 - made to work (tic #3215)
+						{	// revised to set data to Proj rather than EUseSummary due to how we blast & re-create EUseSummary objects later in analysis - SAC 9/17/20 (tic #3215)
+							long lDBID_SSFResult = BEMPX_GetDatabaseID( (bIsStdDesign ? "Proj:StdDHW_SSF" : "Proj:PropDHW_SSF") );
+							int iNumDHWSolarSys = BEMPX_GetNumObjects( BEMPX_GetDBComponentID( "cseDHWSOLARSYS" ), BEMO_User, osSimInfo[iSR].iBEMProcIdx );
+// debugging DHW-SSFreporting - SAC 9/17/20
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), run %1, iNumDHWSolarSys %2" ).arg( sRunAbbrev, QString::number( iNumDHWSolarSys ) ), NULL, FALSE, TRUE, FALSE );
 							if (lDBID_SSFResult > 0 && iNumDHWSolarSys > 0)
 							{	QString qsSSFPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );				assert( qsSSFPathFile.length() > 6 );
 								qsSSFPathFile = qsSSFPathFile.left( qsSSFPathFile.length()-4 ) + QString("-SSF.csv");
@@ -4718,6 +4757,8 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 								QString qsSSFError;
 								int iSSFNum = CMX_RetrieveCSEAnnualCSVResult( qsSSFPathFile, vqsSSFObjectNames, daSSFResults, qsSSFError );
 															//	int iResultColInGroup=2, int iNameColInGroup=1, int iNumColsInGroup=2, int iNumHdrCols=2, int iNumHdrRows=4 );		// SAC 1/29/20
+// debugging DHW-SSFreporting - SAC 9/17/20
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), CMX_RetrieveCSEAnnualCSVResult returned %1 for run %2 from CSV file: %3" ).arg( QString::number( iSSFNum ), sRunAbbrev, qsSSFPathFile ), NULL, FALSE, TRUE, FALSE );
 								if (iSSFNum < 0)
 								{	sLogMsg = QString( "      %1" ).arg( qsSSFError );
 									BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -4727,12 +4768,14 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									{	// only store SSF result for model-wide Std design SolarSys
 										long lDBID_StdDHWSolarSys = BEMPX_GetDatabaseID( "Proj:StdDHWSolarSysRef" );		assert( lDBID_StdDHWSolarSys > 0 );
 										QString sStdDHWSlrSys;
-										if (BEMPX_GetString( lDBID_StdDHWSolarSys, sStdDHWSlrSys ))
+										if (BEMPX_GetString( lDBID_StdDHWSolarSys, sStdDHWSlrSys, FALSE, 0, -1, 0, BEMO_User, NULL, 0, osSimInfo[iSR].iBEMProcIdx ))
 										{	bool bSSFFound=false;
 											for (int iSSF=0; (!bSSFFound && iSSF < iSSFNum); iSSF++)
 											{	if (vqsSSFObjectNames[iSSF] == sStdDHWSlrSys)
 												{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
-													BEMPX_SetBEMData( lDBID_SSFResult, BEMP_Flt, &dSSF );
+													BEMPX_SetBEMData( lDBID_SSFResult, BEMP_Flt, &dSSF, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
+// debugging DHW-SSFreporting - SAC 9/17/20
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set std model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sStdDHWSlrSys ), NULL, FALSE, TRUE, FALSE );
 													bSSFFound = true;
 											}	}
 											if (!bSSFFound)
@@ -4740,13 +4783,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 									}	}
 									else
 									{	// store results to first 10 Proposed SolarSystems
-										long lDBID_SSFNames = BEMPX_GetDatabaseID( "EUseSummary:PropDHWNames_SSF" );		assert( lDBID_SSFNames > 0 );
+										long lDBID_SSFNames = BEMPX_GetDatabaseID( "Proj:PropDHWNames_SSF" );		assert( lDBID_SSFNames > 0 );
 										int iMaxNumSSFs = std::min( iSSFNum, BEMPX_GetNumPropertyTypeElementsFromDBID( lDBID_SSFNames ) );
+// debugging DHW-SSFreporting - SAC 9/17/20
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to set prop model SSF... lDBID_SSFNames %1 / iSSFNum %2 / iMaxNumSSFs %3" ).arg( QString::number( lDBID_SSFNames ), QString::number( iSSFNum ), QString::number( iMaxNumSSFs ) ), NULL, FALSE, TRUE, FALSE );
 										for (int iSSF=0; iSSF < iMaxNumSSFs; iSSF++)
 										{	double dSSF = std::min( 1.0, daSSFResults[iSSF] );
 											QString sSSFName = vqsSSFObjectNames[iSSF];
-											BEMPX_SetBEMData( lDBID_SSFResult+iSSF, BEMP_Flt,  &dSSF );
-											BEMPX_SetBEMData( lDBID_SSFNames +iSSF, BEMP_QStr, (void*) &sSSFName );
+											BEMPX_SetBEMData( lDBID_SSFResult+iSSF, BEMP_Flt,  &dSSF,             BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
+											BEMPX_SetBEMData( lDBID_SSFNames +iSSF, BEMP_QStr, (void*) &sSSFName, BEMO_User, 0, BEMS_UserDefined, BEMO_User, TRUE, osSimInfo[iSR].iBEMProcIdx );
+// debugging DHW-SSFreporting - SAC 9/17/20
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), just set prop model SSF to %1 for DHWSolarSys '%2'" ).arg( QString::number( dSSF ), sSSFName ), NULL, FALSE, TRUE, FALSE );
 										}
 								}	}
 						}	}
@@ -4782,6 +4829,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 							// processing of analysis results foillowing ALL simulations - SAC 7/23/18
 								if (iSimRetVal == 0 && !bSimulateCSEOnly)
+								{
+// debugging PV-solar
+//	BEMPX_WriteLogFile( QString( "   in CMX_PerformAnalysisCB_NonRes(), about to call ProcessSimulationResults_Multiple() for %1 run(s)" ).arg( QString::number( iSimRunIdx ) ), NULL, FALSE, TRUE, FALSE );
 									iSimRetVal = ProcessSimulationResults_Multiple(	osWrap, &osRunInfo[0], sEPlusSimErrMsg, sEPlusPath.toLocal8Bit().constData(), sSimWeatherPath.toLocal8Bit().constData(),
 																				sProcessingPath.toLocal8Bit().constData(), posSimInfo, iSimRunIdx+1, 
 																		// remaining general arguments
@@ -4789,6 +4839,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
 																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones );	// SAC 5/22/19   // SAC 11/11/19
+								}
 							}
 
 
@@ -6148,6 +6199,25 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 			//sSrcEnergyResults = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
 			sSrcEnergyResults = ",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,";
 
+		double dFlexTDV = 0.0;		// SAC 9/16/20 (tic #3218)
+		QString sFlexReqdPV = ",", sPropSSF = ",", sStdSSF = ",";			// SAC 9/17/20 (tic #3215)
+		if (iCodeType == CT_T24N && iRulesetCodeYear >= 2019)
+		{	if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:FlexibilityTDV" ), dFlexTDV, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dFlexTDV != 0)
+			{	fEnergyResults[0][3][ 7] += dFlexTDV;			// adjust CompTotal
+				if (fEnergyResults[0][3][12] < 0)
+					fEnergyResults[0][3][12] -= dFlexTDV;		// adjust PV ... or
+				else
+					fEnergyResults[0][3][14] += dFlexTDV;		// total
+			}
+			double dSSFtemp;
+			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:ReqdPV_SolThrml" ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)		// SAC 9/17/20 (tic #3215)
+				sFlexReqdPV.sprintf( "%g,", dSSFtemp );
+			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:PropDHW_SSF"     ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)
+				sPropSSF.sprintf(    "%g,", dSSFtemp );
+			if (BEMPX_GetFloat( BEMPX_GetDatabaseID( "EUseSummary:StdDHW_SSF"      ), dSSFtemp, 0, -1, iEUseSummaryIdx /*iOccur*/ ) && dSSFtemp > 0)
+				sStdSSF.sprintf(     "%g,", dSSFtemp );
+		}
+
 // SAC 5/5/15 - ResultSummary Logging
 	sLogMsg.sprintf( "      ResultsSummary components1:  %s / %s / %s / %s / %s / %d:%.2d / %s / %s", 
 						sTimeStamp.toLocal8Bit().constData(), sModelFileOnly.toLocal8Bit().constData(), sRunTitle.toLocal8Bit().constData(), sWthrStn.toLocal8Bit().constData(),
@@ -6162,7 +6232,7 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 		if (iCodeType == CT_T24N)		// SAC 10/7/14 - export of TDV results needed only for T24 analysis
 			_snprintf( pszResultsString, iResultsStringLength, "%s,\"%s\",\"%s\",\"%s\",\"%s\",%g,%g,\"%s\",%d:%.2d,%s,%s,"					// begin thru CompMargin
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// prop      - SAC 7/20/18 - addition of PV & Batt Elec enduses
-							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // prop
+							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,%s%s%s"    // prop   - SAC 9/16/20 - added dFlexTDV (tic #3218)  // SAC 9/17/20 (tic #3215)
 							"\"%s\",\"%s\",\"%s\",%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"		// std
 							"%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%s,%s,"    // std
 							"%s"                                                                                                     // prop & std kW
@@ -6178,9 +6248,10 @@ int CMX_PopulateCSVResultSummary_NonRes(	char* pszResultsString, int iResultsStr
 						fEnergyResults[0][2][ 0], fEnergyResults[0][2][ 1], fEnergyResults[0][2][ 2], fEnergyResults[0][2][ 3], fEnergyResults[0][2][ 4], fEnergyResults[0][2][ 5],
 						fEnergyResults[0][2][ 6], fEnergyResults[0][2][ 7], fEnergyResults[0][2][ 8], fEnergyResults[0][2][ 9], fEnergyResults[0][2][10], fEnergyResults[0][2][11], fEnergyResults[0][2][14],
 						fEnergyResults[0][3][ 0], fEnergyResults[0][3][ 1], fEnergyResults[0][3][ 2], fEnergyResults[0][3][ 3], fEnergyResults[0][3][ 4], fEnergyResults[0][3][ 5],
-						fEnergyResults[0][3][ 6], fEnergyResults[0][3][ 7], fEnergyResults[0][3][ 8], fEnergyResults[0][3][ 9], fEnergyResults[0][3][10], fEnergyResults[0][3][11], fEnergyResults[0][3][12], fEnergyResults[0][3][13], fEnergyResults[0][3][14],
+						fEnergyResults[0][3][ 6], dFlexTDV,                 fEnergyResults[0][3][ 7], fEnergyResults[0][3][ 8], fEnergyResults[0][3][ 9], fEnergyResults[0][3][10], fEnergyResults[0][3][11], fEnergyResults[0][3][12], fEnergyResults[0][3][13], fEnergyResults[0][3][14],
 						fTDVbyFuel[0][0],	fTDVbyFuel[0][1],	fTDVbyFuel[0][2],	// TDV results: Prop - Elec/NGas/Othr  - SAC 2/19/17
 						sPropClgUMLHData.toLocal8Bit().constData(), sPropHtgUMLHData.toLocal8Bit().constData(),			// UMLHs
+						sFlexReqdPV.toLocal8Bit().constData(), sPropSSF.toLocal8Bit().constData(), sStdSSF.toLocal8Bit().constData(),			// SAC 9/17/20 (tic #3215)
 				// Standard model
 						"--", "--", sStdSimSummary.toLocal8Bit().constData(),
 						fEnergyResults[1][0][ 0], fEnergyResults[1][0][ 1], fEnergyResults[1][0][ 2], fEnergyResults[1][0][ 3], fEnergyResults[1][0][ 4], fEnergyResults[1][0][ 5],
@@ -7839,26 +7910,28 @@ int CMX_ExportCSVHourlyResults_A2030( const char* pszHourlyResultsPathFile, cons
 // SAC 9/24/19 - removed 2022 SrcPrime energy use columns
 // SAC 11/4/19 - added Results Set (5th column) and C02 emissions by model (Prop/Std) and Fuel (Elec/Fuel)
 // SAC 3/20/20 - fixed col CK T24N header: Lighting -> Indoor Lighting (tic #3188)
-static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,"
-										",,,Proposed Model,,,Proposed Model,,,,,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standa"
+// SAC 9/16/20 - added Flexibility Proposed TDV (col BK) (tic #3218)
+// SAC 9/17/20 - added Flexibility Req'd PV and Prop & Std DHW SSF (cols CC-CE) (tic #3215)
+static char szT24NCSV1[]	 =	",,,,,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,"
+										",,,Proposed Model,,,Proposed Model,,,,,,Flexibility,Calculated SSFs,,Standard Model:,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Standa"
 										"rd Model,,,,,,,,,,,,,,,Standard Model,,,Standard Model,,,,,,Proposed Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Calling,Compliance,,,,Seconda"
 										"ry,,,Proposed Model,,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,,,,S"
-										"tandard Model,,,,,,,,,,,,,,\n";   // 616 chars
+										"tandard Model,,,,,,,,,,,,,,\n";   // 646 chars
 static char szT24NCSV2[]	 =	",,,,,Conditioned Floor,Total Floor,,,Pass /,Compliance,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (th"
-										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling "
-										"Unmet Load Hours,,,Heating Unmet Load Hours,,,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,"
+										"erms),,,,,,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling "
+										"Unmet Load Hours,,,Heating Unmet Load Hours,,,Req'd PV,Proposed,Standard,Elapsed,,,Electric Energy Consumption (kWh),,,,,,,,,,,,,,,Natural Gas Energy Consumption (therms),,,,"
 										",,,,,,,,,Propane Energy Consumption (MBtu),,,,,,,,,,,,,Time Dependent Valuation (kTDV/ft2),,,,,,,,,,,,,,,TDV by Fuel (kTDV/ft2),,,Cooling Unmet Loa"
 										"d Hours,,,Heating Unmet Load Hours,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Generation Coincident Peak Demand (kW),,,,,,,,,,,,,,,Appl"
 										"ication,Manager,Ruleset,OpenStudio,EnergyPlus,Simulation,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,"
 										",,,,,,Site Electric CO2 Emissions (tonne),,,,,,,,,,,,,,,Site Fuel CO2 Emissions (tonne),,,,,,,,,,,,,Source Energy Use (kBtu/ft2),,,,,,,,,,,,,,,Sour"
-										"ce Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1068 chars
+										"ce Energy Use (kBtu/ft2),,,,,,,,,,,,,,\n";   // 1096 chars
 static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Weather Station,Results Set,Area (SqFt),Area (SqFt),Analysis Type,Elapsed Time,Fail,Margin,Time,Rul"
 										"e Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp Total,Receptacle"
 										",Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp To"
 										"tal,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp"
-										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,C"
+										" Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Flexibility,C"
 										"omp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Electric,Natural Gas,Propane,Zone Max,Zone Name,Num Zones Exceed Max,Zone Max,Zon"
-										"e Name,Num Zones Exceed Max,Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor L"
+										"e Name,Num Zones Exceed Max,(kW),(frac),(frac),Time,Rule Eval Status,Simulation Status,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor L"
 										"ighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot "
 										"Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic H"
 										"ot Water,Indoor Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domesti"
@@ -7872,7 +7945,7 @@ static char szT24NCSV3[]	 =	"Start Date & Time,Filename (saved to),Run Title,Wea
 										"le,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Comp "
 										"Total,Receptacle,Process,Other Ltg,Proc Mtrs,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indoor Lighting,Co"
 										"mp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL,Spc Heating,Spc Cooling,Indoor Fans,Ht Reject,Pumps & Misc,Domestic Hot Water,Indo"
-										"or Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3026 chars
+										"or Lighting,Comp Total,Receptacle,Process,Other Ltg,Proc Mtrs,PV,Battery,TOTAL\n";   // 3057 chars
 
 static char szS901GCSV1[]	=	",,,,Analysis:,,,,Proposed Model:,,,Proposed Model,,,,Proposed Model,,,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model,,,,,,,,,,,,Proposed Model"
 										",,,,,,Standard Model:,,,Standard Model,,,,Standard Model,,,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,,,,,,,Standard Model,,,,,,Calling,Compliance,,,,Secondary,,\n";

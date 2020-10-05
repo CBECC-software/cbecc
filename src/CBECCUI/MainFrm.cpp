@@ -6214,8 +6214,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 		//	CString sCSVLogFN = BEMPX_GetLogFilename( true );				ASSERT( !sCSVLogFN.IsEmpty() );
 			QString qsCSVLogFN = BEMPX_GetLogFilename( true );		CString sCSVLogFN = qsCSVLogFN.toLatin1().constData();		ASSERT( !sCSVLogFN.IsEmpty() );
 
-			char pszCSVColLabel1[640], pszCSVColLabel2[1280], pszCSVColLabel3[3072];	// SAC 7/20/18 - inc #3 2048->2304 due to truncation   // SAC 6/28/19 - 560 / 968 / 2706 chars   // SAC 11/4/19 - 616 / 1068 / 3019 chars
-			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 640, pszCSVColLabel2, 1280, pszCSVColLabel3, 3072, iCodeType ) == 0 );	// SAC 12/3/14
+			char pszCSVColLabel1[704], pszCSVColLabel2[1280], pszCSVColLabel3[3136];	// SAC 7/20/18 - inc #3 2048->2304 due to truncation   // SAC 6/28/19 - 560 / 968 / 2706 chars   // SAC 11/4/19 - 616 / 1068 / 3019 chars   // SAC 9/17/20 - 704 / 1280 / 3136 chars
+			VERIFY( CMX_PopulateResultsHeader_NonRes( pszCSVColLabel1, 704, pszCSVColLabel2, 1280, pszCSVColLabel3, 3136, iCodeType ) == 0 );	// SAC 12/3/14
 			const char* szaCSVColLabels[4]	=	{ pszCSVColLabel1, pszCSVColLabel2, pszCSVColLabel3, NULL };
 			bool bWroteToLogCSV = false;
 			if (!sCSVLogFN.IsEmpty())
@@ -6235,7 +6235,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 			// SAC 6/28/19 - updated default T24N CSVResultsLog filename adding '-v6' for new CSV format that includes 2022 Source & SrcPrime energy use columns out to the right
 			// SAC 9/24/19 - updated default T24N CSVResultsLog filename adding '-v7' for new CSV format that EXcludes 2022 SrcPrime energy use columns
 			// SAC 11/04/19 - updated default T24N CSVResultsLog filename adding '-v8' for new CSV format that includes ResultsSet (EUseSummary) name and C02 results
-			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v8.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v8.csv" : "AnalysisResults-v8.csv"));
+			// SAC 9/16/20 - updated default T24N CSVResultsLog filename adding '-v9' for new CSV format that includes Flexibility Proposed TDV (tic #3218)
+			CString sAnalResDefault = (iCodeType == CT_S901G ? "AnalysisResults_S901G-v9.csv" : (iCodeType == CT_ECBC ? "AnalysisResults_ECBC-v9.csv" : "AnalysisResults-v9.csv"));
 			CString sCSVResultsLogFN = ReadProgString( "files", "CSVResultsLog", sAnalResDefault, TRUE /*bGetPath*/ );
 			VERIFY( AppendToTextFile( pszCSVResultSummary, sCSVResultsLogFN, "CSV results log", "writing of results to the file", szaCSVColLabels ) );
 
