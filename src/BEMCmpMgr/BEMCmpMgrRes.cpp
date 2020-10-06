@@ -55,6 +55,7 @@ static char THIS_FILE[] = __FILE__;
 #include "BEMCM_I.h"
 #include <fstream>      // fstream
 #include "memLkRpt.h"
+#include "zip.h"			// SAC 9/29/20
 
 #define CSE_MULTI_RUN
 
@@ -413,9 +414,11 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	sCF1RXMLFileName += " - CF1RPRF01E.xml";
 	int iCF1RXMLClassID = 0;
 
+	bool bWriteRNXML = false;
 	QString sRNXMLFileName = sModelPathFile;		// SAC 5/20/20
 	if (sRNXMLFileName.lastIndexOf('.'))
 		sRNXMLFileName  = sRNXMLFileName.left( sRNXMLFileName.lastIndexOf('.') );
+	QString sRNZIPFileName = sRNXMLFileName + " - RESNET.zip";		// SAC 9/29/20
 	sRNXMLFileName += " - RESNET.xml";
 	int iRNXMLClassID = 0;
 
@@ -978,7 +981,7 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 		{	if (!BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RHERSEnabled" ), lRHERSEnabled ))
 				lRHERSEnabled = 0;
 		}
-		bool bWriteRNXML = (lRHERSEnabled > 0);
+		bWriteRNXML = (lRHERSEnabled > 0);
 		if (ResRetVal_ContinueProcessing( iRetVal ) && bWriteRNXML && !sRNXMLFileName.isEmpty() && FileExists( sRNXMLFileName ))	// SAC 5/20/20
 		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
 	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
@@ -3377,6 +3380,48 @@ int CMX_PerformAnalysisCB_CECRes(	const char* pszBEMBasePathFile, const char* ps
 	if (!bAnalAborted && bAllowAnalysisAbort && sqt_progress && sqt_progress->wasCanceled())
 		bAnalAborted = true;
 #endif
+
+//BEMPX_WriteLogFile( QString( "RESNET ZIP:  aborted %1 / retVal %2 / writeRNXML %3 / RNXMLFileName %4" ).arg( QString::number( bAnalAborted ), QString::number( iRetVal ), QString::number( bWriteRNXML ), sRNXMLFileName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//BEMPX_WriteLogFile( QString( "RESNET ZIP:  XMLResultsFile %1" ).arg( sXMLResultsFileName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//if (FileExists( sRNXMLFileName ))
+//	BEMPX_WriteLogFile( QString( "RESNET ZIP:  RNXMLfileExists TRUE"  ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//else
+//	BEMPX_WriteLogFile( QString( "RESNET ZIP:  RNXMLfileExists FALSE" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//if (FileExists( sXMLResultsFileName ))
+//	BEMPX_WriteLogFile( QString( "RESNET ZIP:  XMLResultsFileExists TRUE"  ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//else
+//	BEMPX_WriteLogFile( QString( "RESNET ZIP:  XMLResultsFileExists FALSE" ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+//BEMPX_WriteLogFile( QString( "RESNET ZIP:  RNZIPFile %1" ).arg( sRNZIPFileName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+	// mods to ZIP RESNET & AnalysisResults XMLs when present - SAC 9/29/20
+	if (!bAnalAborted && iRetVal == 0 && bWriteRNXML && !sRNXMLFileName.isEmpty() && FileExists( sRNXMLFileName ) &&
+		 !sXMLResultsFileName.isEmpty() && FileExists( sXMLResultsFileName ) && !sRNZIPFileName.isEmpty())
+	{	bool bContinueZipping = true;
+		if (FileExists( sRNZIPFileName ))
+		{	sLogMsg = QString( "The %1 file '%2' is opened in another application.  This file must be closed in that "
+	   	             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+							 "(once the file is closed), or \n'Abort' to abort the %3." ).arg( "RESNET ZIP", sRNZIPFileName.toLocal8Bit().constData(), "results zipping" );
+			if (!OKToWriteOrDeleteFile( sRNZIPFileName.toLocal8Bit().constData(), sLogMsg, bSilent ))
+			{	bContinueZipping = false;
+				BEMPX_WriteLogFile( QString( "Warning:  User chose not to overwrite RESNET results zip file:  %1" ).arg( sRNZIPFileName ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+		}	}
+		if (bContinueZipping)
+		{	QString sRNNoPath, sAnalResNoPath;
+			int iLastSlash = std::max( sRNXMLFileName.lastIndexOf('\\'), sRNXMLFileName.lastIndexOf('/') );
+			if (iLastSlash > 0)
+				sRNNoPath = sRNXMLFileName.right( sRNXMLFileName.length()-iLastSlash-1 );
+			else
+				sRNNoPath = sRNXMLFileName;
+			iLastSlash = std::max( sXMLResultsFileName.lastIndexOf('\\'), sXMLResultsFileName.lastIndexOf('/') );
+			if (iLastSlash > 0)
+				sAnalResNoPath = sXMLResultsFileName.right( sXMLResultsFileName.length()-iLastSlash-1 );
+			else
+				sAnalResNoPath = sXMLResultsFileName;
+
+			HZIP hz = CreateZip( sRNZIPFileName.toLocal8Bit().constData(), 0 );
+			ZipAdd( hz, sRNNoPath.toLocal8Bit().constData(),      sRNXMLFileName.toLocal8Bit().constData() );
+			ZipAdd( hz, sAnalResNoPath.toLocal8Bit().constData(), sXMLResultsFileName.toLocal8Bit().constData() );
+			CloseZip( hz );
+	}	}
 
 	// SAC 6/5/14 - new callback mechanism - report return value indicating abort via calling application callback
 	if (pAnalProgCallbackFunc)

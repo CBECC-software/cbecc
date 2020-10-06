@@ -691,6 +691,7 @@ extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
+extern int eiBDBCID_RESNETBldg;		// SAC 9/27/20
 extern int eiBDBCID_DwellUnitType;	// SAC 6/18/14
 extern int eiBDBCID_DwellUnit;
 extern int eiBDBCID_Zone;
@@ -749,6 +750,7 @@ extern long elDBID_Proj_RunTitle;    // SAC 1/8/12
 extern long elDBID_Proj_ElecMETER;			// SAC 6/19/12
 extern long elDBID_Proj_NatGasMETER;		// SAC 6/19/12
 extern long elDBID_Proj_OtherFuelMETER;	// SAC 6/19/12
+extern long elDBID_Proj_RHERSEnabled;		// SAC 9/28/20
 //extern long elDBID_Site_WeatherFile;
 	// SAC 12/9/13 - added several Zone properties to enhance tree display to confirm to E+A+A assignments
 extern long elDBID_Zone_HVACSysStatus;			//	BEMP_Sym,   0,                            3008, "Status of HVAC System - New, Altered or Existing"                                      

@@ -542,6 +542,8 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
    ON_MESSAGE( WM_BEMGRID_OPEN,   OnBEMGridOpen )
    ON_MESSAGE( WM_BEMGRID_CLOSE,  OnBEMGridClose )
    ON_MESSAGE( WM_BEMGRID_UPDATE, OnBEMGridUpdate )
+
+   ON_MESSAGE( WM_AUTOSAVEAS, OnAutoSaveAs )		// SAC 9/30/20
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -563,6 +565,7 @@ CMainFrame::CMainFrame()
    m_bDoingSummaryReport = FALSE;  // SAC 6/19/13
    m_bPerformingAnalysis = FALSE;	// SAC 4/1/15
    m_bDoingCustomRuleEval = FALSE;	// SAC 1/28/18
+   m_iNumInitRESNETBldgObjs = 0;		// SAC 9/29/20
 	gridDialog = NULL;
 }
 
@@ -1460,13 +1463,19 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
          lRetVal = 0;	// no data modified by this call alone, so don't perform Data Modified stuff
 		}
 
-		else if (wAction == 3070)	// -3079 ??   new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
+		else if (wAction >= 3070 && wAction <= 3071)	// -3079 ??   new range to present QMessageBox w/ Caption, Message & Details (that can include hyperlinks) - SAC 6/30/20 (Res tic #1018)
 		{	QString qsMBCaption, qsMBMessage, qsMBDetails;    long lIconID=0;
 			if (wAction == 3070)		// info re: Res Community Solar program(s)
 			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoCap" ), qsMBCaption );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoMsg" ), qsMBMessage );
 				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoDtl" ), qsMBDetails );
 				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CmntySlrProjInfoIcn" ), lIconID );
+			}
+			else if (wAction == 3071)		// info re: RESNET support & information - SAC 9/24/20
+			{	BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoCap" ), qsMBCaption );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoMsg" ), qsMBMessage );
+				BEMPX_GetString(  BEMPX_GetDatabaseID( "Proj:rnSupportInfoDtl" ), qsMBDetails );
+				BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:rnSupportInfoIcn" ), lIconID );
 			}
 			if (!qsMBCaption.isEmpty() && !qsMBMessage.isEmpty())
 			{
@@ -2125,6 +2134,10 @@ void CMainFrame::OnQuickEdit()
 								iMaxTabs = lNumUIDialogTabs;
 							else
 								iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( siQuickCr8Class, 0 /*iUIMode*/ );		// SAC 9/18/19 - added BEMPUIX_GetNumConsecutiveDialogTabIDs()
+
+		if (siQuickCr8Class == eiBDBCID_Proj)
+			AutoSaveAsPrecheck( siQuickCr8Class );		// SAC 9/30/20
+
       CWnd* pWnd = GetFocus();
 //      CBEMDialog td( siQuickCr8Class, pWnd );
       CSACBEMProcDialog td( siQuickCr8Class, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), pWnd,
@@ -2142,6 +2155,9 @@ void CMainFrame::OnQuickEdit()
          pWnd->GetParent()->PostMessage( WM_DISPLAYMODS );
          pWnd->SetFocus();
       }
+
+		if (siQuickCr8Class == eiBDBCID_Proj)
+			ExecuteAutoSaveAs( siQuickCr8Class );		// SAC 9/30/20
    }
 }
 
@@ -2663,19 +2679,32 @@ void CMainFrame::OnFileSaveAs()
       	                 (LPCTSTR) sSAFileOption, this );
       	if (dlg.DoModal()==IDOK)
       	{
+				CString sInputFile = dlg.GetPathName();
+	   		int iLastDotIdx = sInputFile.ReverseFind('.');			ASSERT( iLastDotIdx > 0 );
+	   		CString sExt = sInputFile.Right( sInputFile.GetLength()-iLastDotIdx );
+				if (iLastDotIdx <= 0 || !FileExtensionAllowsSave( sExt ))
+					// invalid or missing file extension, so append the default one
+					sInputFile += sDfltExt;
+				FileSaveAsCore( sInputFile );	// moved core code into subordinate routine to access from other functions - SAC 9/30/20
+      	}
+		}
+   }
+}
+
+void CMainFrame::FileSaveAsCore( CString sProjFile )		// moved core SaveAs code into subordinate routine to access from other functions - SAC 9/30/20
+{
 				UpdateSoftwareVersionString();		// SAC 9/17/12
 				SetBEMVersionID();						// SAC 9/17/12
 
 				bool bFileSaveAllDefinedProperties = (ReadProgInt( "options", "FileSaveAllDefinedProperties", 0 /*default*/ ) > 0);  // SAC 3/17/13
 				bool bFileSaveOnlyValidInputs = (ReadProgInt( "options", "FileSaveOnlyValidInputs", 0 /*default*/ ) > 0);  // SAC 4/16/14
 				BOOL bPostInputSaveProcessing = FALSE;
-      	   CString sInputFile = dlg.GetPathName();
-		//		CString sExt = sInputFile.Right( 4 );
-	   		int iLastDotIdx = sInputFile.ReverseFind('.');			ASSERT( iLastDotIdx > 0 );
-	   		CString sExt = sInputFile.Right( sInputFile.GetLength()-iLastDotIdx );
-				if (iLastDotIdx <= 0 || !FileExtensionAllowsSave( sExt ))
-					// invalid or missing file extension, so append the default one
-					sInputFile += sDfltExt;
+
+	   		int iLastDotIdx = sProjFile.ReverseFind('.');			ASSERT( iLastDotIdx > 0 );
+	   		CString sExt = sProjFile.Right( sProjFile.GetLength()-iLastDotIdx );
+		//		if (iLastDotIdx <= 0 || !FileExtensionAllowsSave( sExt ))
+		//			// invalid or missing file extension, so append the default one
+		//			sProjFile += sDfltExt;
 
 				//if (sExt.CompareNoCase( ".xml" ) == 0)		// SAC 10/27/11 - testing XML project file writing
 				if (IsXMLFileExt( sExt ))		// SAC 10/27/11 - testing XML project file writing
@@ -2691,7 +2720,7 @@ void CMainFrame::OnFileSaveAs()
 					if (uiWriteSimExport == 0 && ReadProgInt( "options", "ClassifyEditableDefaultsAsUserData", 0 /*default*/ ) > 0)	// SAC 2/21/20
 						VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
 #endif
-      	   	if (BEMPX_WriteProjectFile( sInputFile, (uiWriteSimExport ? BEMFM_SIM : BEMFM_INPUT) /*TRUE*/, FALSE /*bUseLogFileName*/,
+      	   	if (BEMPX_WriteProjectFile( sProjFile, (uiWriteSimExport ? BEMFM_SIM : BEMFM_INPUT) /*TRUE*/, FALSE /*bUseLogFileName*/,
 															bFileSaveAllDefinedProperties /*bWriteAllProperties*/, FALSE, BEMFT_XML /*iFileType*/,
 															false /*bAppend*/, NULL /*pszModelName*/, true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, bFileSaveOnlyValidInputs ))
 						// add log file output and document naming stuff once available to users...
@@ -2709,10 +2738,10 @@ void CMainFrame::OnFileSaveAs()
 					if (!IsRecognizedFileExt( sExt ))
       	   	{	CString sUIExt;
 						LoadFileExtensionString( sUIExt, true );	// SAC 10/29/15
-      	   	   CPathName sTempPath = sInputFile;
+      	   	   CPathName sTempPath = sProjFile;
       	   	//   sTempPath.SetExt( sUIExt.Right( sUIExt.GetLength()-1 ) );
       	   	   sTempPath.SetExt( sUIExt );
-      	   	   sInputFile = sTempPath;   // sTempPath.GetData();
+      	   	   sProjFile = sTempPath;   // sTempPath.GetData();
       	   	}
          	
       			CWaitCursor wait;
@@ -2722,7 +2751,7 @@ void CMainFrame::OnFileSaveAs()
 						 (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID("Proj:RetainRuleDefaults"), lRetainRuleDefaults, 0 ) || lRetainRuleDefaults == 0))	// SAC 2/4/16
 						VERIFY( BEMPX_SetPropertiesToUserDefined( /*iBEMProcIdx=-1*/ ) >= 0 );
 #endif
-      	   	if (BEMPX_WriteProjectFile( sInputFile, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, bFileSaveAllDefinedProperties /*bWriteAllProperties*/,
+      	   	if (BEMPX_WriteProjectFile( sProjFile, BEMFM_INPUT /*TRUE*/, FALSE /*bUseLogFileName*/, bFileSaveAllDefinedProperties /*bWriteAllProperties*/,
 															FALSE /*bSupressAllMessageBoxes*/, 0 /*iFileType*/, false /*bAppend*/, NULL /*pszModelName*/,
 															true /*bWriteTerminator*/, -1 /*iBEMProcIdx*/, -1 /*lModDate*/, bFileSaveOnlyValidInputs ))
 						bPostInputSaveProcessing = TRUE;
@@ -2733,34 +2762,108 @@ void CMainFrame::OnFileSaveAs()
       	      CString sNewLogFile;
       	      const char* psLogFileName = NULL;
 // SAC - 3/9/98
-//    	        if (m_sCurrentFileName.CompareNoCase( sInputFile ) != 0)
+//    	        if (m_sCurrentFileName.CompareNoCase( sProjFile ) != 0)
 //    	        {
-      	         sNewLogFile = sInputFile.Left( sInputFile.ReverseFind('.')+1 );
+      	         sNewLogFile = sProjFile.Left( sProjFile.ReverseFind('.')+1 );
       	         sNewLogFile += "log";
       	         psLogFileName = (const char*) sNewLogFile;
 //    	        }
 
 // SAC - 3/9/98
-//    	        m_sCurrentFileName = sInputFile;
+//    	        m_sCurrentFileName = sProjFile;
 
 //      	      WriteToLogFile( WM_LOGUPDATED, "Project Saved", psLogFileName );
 					WriteToLogFile( WM_LOGUPDATED, "-----------------------------------------------------------------------------", psLogFileName );  // SAC 1/14/17
-		   		int iLastSlashIdx = std::max( sInputFile.ReverseFind('\\'), sInputFile.ReverseFind('/') );			ASSERT( iLastSlashIdx > 0 );
-		   		CString sLogMsg;   sLogMsg.Format( "Project Saved as '%s'", sInputFile.Right( sInputFile.GetLength()-iLastSlashIdx-1 ) );
+		   		int iLastSlashIdx = std::max( sProjFile.ReverseFind('\\'), sProjFile.ReverseFind('/') );			ASSERT( iLastSlashIdx > 0 );
+		   		CString sLogMsg;   sLogMsg.Format( "Project Saved as '%s'", sProjFile.Right( sProjFile.GetLength()-iLastSlashIdx-1 ) );
       	      VERIFY( BEMPX_WriteLogFile( sLogMsg, NULL, false /*bBlankFile*/ ) );
 
       	      // TODO: Do we need to refresh the interface?
-//    	        AfxGetApp()->AddToRecentFileList( sInputFile );
+//    	        AfxGetApp()->AddToRecentFileList( sProjFile );
       	      CDocument* pDoc = GetActiveDocument();
       	      if ( (pDoc != NULL) && (pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc))) )
       	      {
-      	         pDoc->SetPathName( sInputFile );
+      	         pDoc->SetPathName( sProjFile );
       	         pDoc->SetModifiedFlag( FALSE );
       	      }
       	   }
-      	}
-		}
+}
+
+afx_msg LRESULT CMainFrame::OnAutoSaveAs(WPARAM wID, LPARAM /*lParam*/ )		// SAC 9/29/20
+{	LRESULT lRetVal = 0;
+   if (eInterfaceMode != IM_INPUT)
+   {	ASSERT( FALSE );
    }
+   else if (eiCurAnalysisStep != AS_None)
+   {	ASSERT( FALSE );
+   }
+   else
+   {	BOOL bWriteUserModel = (BEMPX_GetActiveModel() == 0);		// SAC 3/24/13 - prevent storage of non-User model as normal project input file
+		if (!bWriteUserModel)
+	   {	ASSERT( FALSE );
+	   }
+	   else
+	   {	CString sCurrentProjFile = "", sExt, sNewProjFile;
+			CDocument* pDoc = GetActiveDocument();
+			if (pDoc && pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+				sCurrentProjFile = pDoc->GetPathName();
+			int iLastDot = sCurrentProjFile.ReverseFind('.');			ASSERT( iLastDot > 0 );
+			if (iLastDot > 0)
+			{	sExt             = sCurrentProjFile.Right( sCurrentProjFile.GetLength()-iLastDot );
+				sCurrentProjFile = sCurrentProjFile.Left( iLastDot );
+			}
+			else
+      	{	CString sDfltExt;
+      		if (pDoc  &&  pDoc->IsKindOf(RUNTIME_CLASS(CComplianceUIDoc)))
+				{	LoadFileExtensionString( sExt, true /*bUseProjectData*/ );			ASSERT( !sExt.IsEmpty() );
+					sExt = CString('.') + sExt;
+			}	}
+
+			bool bPerformSaveAs = false;
+			switch (wID)
+			{	case  1 : {	CString sRight = ReadProgString( "options", "RHERSSaveAs", NULL );  // " - RESNET";
+								int iLastCopy = sCurrentProjFile.Find( sRight );
+								if (iLastCopy > 0)
+								{	int iNext = sCurrentProjFile.Find( sRight, iLastCopy+6 );
+									while (iNext > iLastCopy)
+									{	iLastCopy = iNext;
+										iNext = sCurrentProjFile.Find( sRight, iLastCopy+6 );
+								}	}
+								if (sCurrentProjFile.GetLength() > 13 && iLastCopy >= (sCurrentProjFile.GetLength()-12))
+									sCurrentProjFile = sCurrentProjFile.Left( iLastCopy );
+								sCurrentProjFile += sRight;
+								sNewProjFile = sCurrentProjFile + sExt;
+								int idx=0;
+								while (FileExists( sNewProjFile ) && idx < 100)
+									sNewProjFile.Format( "%s-%d%s", sCurrentProjFile, ++idx, sExt );
+								CString sMsg;
+								sMsg.Format( "The %s file '%s' is opened in another application.  This file must be closed in that "
+								             "application before an updated file can be written.\n\nSelect 'Retry' to update the file "
+												 "(once the file is closed), or \n'Cancel' to abort the %s.", "project file", sNewProjFile, "auto-SaveAs action" );
+								if (OKToWriteOrDeleteFile( sNewProjFile, sMsg ))
+									bPerformSaveAs = true;
+							}	break;
+			}
+			if (bPerformSaveAs)
+			{
+				FileSaveAsCore( sNewProjFile );
+
+				CMainView* pView = (CMainView*) m_wndSplitter.GetPane(0,0);
+				if (pView)
+				{	BEMObject* pSelTreeObj = pView->GetSelectedObjectInTree();
+					pView->PostMessage( WM_DISPLAYDATA, (pSelTreeObj ? pSelTreeObj->getClass()->get1BEMClassIdx() : 0) /*i1BDBClass*/ );
+				}
+
+				QString sMsg;
+				switch (wID)
+				{	case  1 :	{	sMsg = QString( "Model automatically saved as new RESNET project:  %1" ).arg( (const char*) sNewProjFile );	
+									}	break;
+				}
+				if (!sMsg.isEmpty())
+					BEMMessageBox( sMsg, "Project SaveAs", 1 /*info*/ );
+			}
+	}	}
+	return lRetVal;
 }
 
 
@@ -2904,6 +3007,52 @@ void CMainFrame::CheckBuildingModel( BOOL bReportModelOK /*=TRUE*/, BOOL bPerfor
    }
    else if (bReportModelOK && bIsUIActive)
       MessageBox( "Building Model OK." );
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// routines to initiate Auto-SaveAs in certain circumstances
+
+void CMainFrame::AutoSaveAsPrecheck( int iBDBClass )
+{
+#ifdef UI_CARES
+	if (iBDBClass == eiBDBCID_Proj)
+	{	int iLocDBDCID_RESNETBldg = (eiBDBCID_RESNETBldg > 0 ? eiBDBCID_RESNETBldg : BEMPX_GetDBComponentID( "RESNETBldg" ));
+		m_iNumInitRESNETBldgObjs = (iLocDBDCID_RESNETBldg < 1 ? 0 : BEMPX_GetNumObjects( iLocDBDCID_RESNETBldg ));
+	}
+//   m_bPossibleRESNETAutoSaveAs = (iBDBClass == eiBDBCID_Proj && iLocDBDCID_RESNETBldg > 0 &&
+//				BEMPX_GetNumObjects( iLocDBDCID_RESNETBldg ) < 1 &&
+//				ReadProgInt( "options", "EnableRHERS", 0 /*default*/ ) > 1);			// SAC 9/29/20
+#endif
+	return;
+}
+
+void CMainFrame::ExecuteAutoSaveAs(  int iBDBClass )
+{	WPARAM wSaveAsID = 0;
+#ifdef UI_CARES
+	if (iBDBClass == eiBDBCID_Proj)
+	{	int iLocDBDCID_RESNETBldg = (eiBDBCID_RESNETBldg > 0 ? eiBDBCID_RESNETBldg : BEMPX_GetDBComponentID( "RESNETBldg" ));
+		int iSV, iErr;
+		long lCalcRHERSEnergyRtgIdx = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:CalcRHERSEnergyRtgIdx" ), iSV, iErr );
+		if (BEMPX_GetNumObjects( iLocDBDCID_RESNETBldg ) > 0 && lCalcRHERSEnergyRtgIdx > 0)
+		{	eiBDBCID_RESNETBldg = iLocDBDCID_RESNETBldg;
+			if (m_iNumInitRESNETBldgObjs < 1)
+			{	CString sResnetSvAs = ReadProgString( "options", "RHERSSaveAs", NULL );
+				//if (ReadProgInt( "options", "EnableRHERS", 0 /*default*/ ) > 1)
+				if (!sResnetSvAs.IsEmpty())
+					wSaveAsID = 1;
+				else
+				{	CMainView* pView = (CMainView*) m_wndSplitter.GetPane(0,0);
+					if (pView)
+					{	BEMObject* pSelTreeObj = pView->GetSelectedObjectInTree();
+						pView->PostMessage( WM_DISPLAYDATA, (pSelTreeObj ? pSelTreeObj->getClass()->get1BEMClassIdx() : 0) /*i1BDBClass*/ );
+				}	}
+		}	}
+		if (wSaveAsID > 0)
+			PostMessage( WM_AUTOSAVEAS, wSaveAsID, 0 );
+	}
+#endif
+	return;
 }
 
 
@@ -3993,9 +4142,9 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 								 "once the file is closed, or \n'Cancel' to abort processing.", qsFileDescrip.toLatin1().constData(), qsOutputLogFN.toLatin1().constData() );
 				if (!OKToWriteOrDeleteFile( qsOutputLogFN.toLatin1().constData(), sFileMsg, (!bIsUIActive) ))
 				{	if (!bIsUIActive)
-						qsErrMsg = QString( "Unable to open %s file:  %s" ).arg( qsFileDescrip, qsOutputLogFN );
+						qsErrMsg = QString( "Unable to open %1 file:  %2" ).arg( qsFileDescrip, qsOutputLogFN );
 					else
-						qsErrMsg = QString( "User chose not to use/reference %s file:  %s" ).arg( qsFileDescrip, qsOutputLogFN );
+						qsErrMsg = QString( "User chose not to use/reference %1 file:  %2" ).arg( qsFileDescrip, qsOutputLogFN );
 			}	}
 
 			if (qsErrMsg.isEmpty())
@@ -4015,9 +4164,9 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 								 "once the file is closed, or \n'Cancel' to abort processing.", qsFileDescrip.toLatin1().constData(), qsResultsCSVFN.toLatin1().constData() );
 				if (!OKToWriteOrDeleteFile( qsResultsCSVFN.toLatin1().constData(), sFileMsg, (!bIsUIActive) ))
 				{	if (!bIsUIActive)
-						qsErrMsg = QString( "Unable to open %s file:  %s" ).arg( qsFileDescrip, qsResultsCSVFN );
+						qsErrMsg = QString( "Unable to open %1 file:  %2" ).arg( qsFileDescrip, qsResultsCSVFN );
 					else
-						qsErrMsg = QString( "User chose not to use/reference %s file:  %s" ).arg( qsFileDescrip, qsResultsCSVFN );
+						qsErrMsg = QString( "User chose not to use/reference %1 file:  %2" ).arg( qsFileDescrip, qsResultsCSVFN );
 			}	}
 
 			if (qsErrMsg.isEmpty())
@@ -4088,7 +4237,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 										if (!dir.exists())
 											dir.mkpath(".");
 										if (!dir.exists() && qsErrMsg.isEmpty())
-											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlashOut ) );
+											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlashOut ) );
 									}
 									str.Format( "1,\"%s\",\"%s%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
 													qsFile.mid( qsFullProjDir.length(), qsFile.length()-qsFullProjDir.length()-qsFileExt.length() ).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
@@ -4120,7 +4269,7 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 									if (!dir.exists())
 										dir.mkpath(".");
 									if (!dir.exists() && qsErrMsg.isEmpty())
-										qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %s" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
+										qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
 								}
 								str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
 																			 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
@@ -4481,6 +4630,7 @@ void CMainFrame::OnFileImportResGeometry()    // SAC 2/20/17
 		         {
 //#ifdef UI_CARES
 						pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+						pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
 //#endif
 		            pMainView->SendMessage( WM_DISPLAYDATA );
 
@@ -5209,6 +5359,7 @@ void CMainFrame::OnToolsGenerateModel()
          {
 #ifdef UI_CARES
 				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
 #endif
             pMainView->SendMessage( WM_DISPLAYDATA );
 
@@ -8081,6 +8232,10 @@ void CMainFrame::OnEditComponent()
 					iMaxTabs = lNumUIDialogTabs;
 				else
 					iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( i1SelClassIdx, 0 /*iUIMode*/ );
+
+				if (i1SelClassIdx == eiBDBCID_Proj)
+					AutoSaveAsPrecheck( i1SelClassIdx );	// SAC 9/30/20
+
 //         CBEMDialog td( i1SelClassIdx, this );
          CSACBEMProcDialog td( i1SelClassIdx, eiCurrentTab, ebDisplayAllUIControls, (eInterfaceMode == IM_INPUT), this,
 // SAC 1/2/01 - added several arguments in order to pass in "OK" button label
@@ -8111,6 +8266,9 @@ void CMainFrame::OnEditComponent()
          CView* pView = (CView*) m_wndSplitter.GetPane(0,0);
          if (pView != NULL)            // update main view's tree control(s)
             pView->SendMessage( WM_DISPLAYDATA, i1SelClassIdx, 1 );
+
+				if (i1SelClassIdx == eiBDBCID_Proj)
+					ExecuteAutoSaveAs( i1SelClassIdx );	// SAC 9/30/20
       }
    }
 }

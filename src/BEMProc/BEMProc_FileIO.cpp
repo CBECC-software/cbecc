@@ -4531,8 +4531,8 @@ int WriteProperties_XML( QXmlStreamWriter& stream, BEMObject* pObj, int iFileMod
 			sClassName = sClassName.right( sClassName.length()-4 );
 	}
 	else if (BEMPX_IsRESNETXML( iFileType ))		// SAC 5/20/20
-	{	assert( sClassName.left(4).compare("rnx") == 0 );
-		if (sClassName.left(4).compare("rnx") == 0)
+	{	assert( sClassName.left(3).compare("rnx") == 0 );		// 4->3 char check - SAC 9/29/20
+		if (sClassName.left(3).compare("rnx") == 0)
 			sClassName = sClassName.right( sClassName.length()-3 );
 	}
  	stream.writeStartElement( QString(sClassName) );

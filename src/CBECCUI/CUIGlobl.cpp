@@ -2590,6 +2590,7 @@ void GetObjectConversionInfo( int iBEMClassFrom, int iBEMClassTo, int& iDlgID, i
 #endif   // UI_CANRES
 
 #ifdef UI_CARES
+int eiBDBCID_RESNETBldg = 0;		// SAC 9/27/20
 int eiBDBCID_DwellUnitType = 0;	// SAC 6/18/14
 int eiBDBCID_DwellUnit     = 0;
 int eiBDBCID_Zone       = 0;
@@ -2648,6 +2649,7 @@ long elDBID_Proj_RunTitle = 0;    // SAC 1/8/12
 long elDBID_Proj_ElecMETER = 0;			// SAC 6/19/12
 long elDBID_Proj_NatGasMETER = 0;		// SAC 6/19/12
 long elDBID_Proj_OtherFuelMETER = 0;	// SAC 6/19/12
+long elDBID_Proj_RHERSEnabled = 0;		// SAC 9/28/20
 //extern long elDBID_Site_WeatherFile;
 	// SAC 12/9/13 - added several Zone properties to enhance tree display to confirm to E+A+A assignments
 long elDBID_Zone_HVACSysStatus = 0;			//	BEMP_Sym,   0,                            3008, "Status of HVAC System - New, Altered or Existing"                                      
@@ -2753,6 +2755,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 																			{	iTabCtrlWd = 1080;    iTabCtrlHt = 520;		}		// SAC 6/12/19 - accommodate additional columns in 2022 results
 																			else
 																			{	iTabCtrlWd =  810;    iTabCtrlHt = 520;		}  }	// SAC 12/28/17
+	else if (iBDBClass == eiBDBCID_RESNETBldg)			{  iTabCtrlWd = 960;    iTabCtrlHt = 460;   }	// SAC 9/27/20
 	else if (iBDBClass == eiBDBCID_DwellUnitType)		{  iTabCtrlWd = 820;    iTabCtrlHt = 670;   }
 	else if (iBDBClass == eiBDBCID_DwellUnit)				{  iTabCtrlWd = 600;    iTabCtrlHt = 450;   }
 	else if (iBDBClass == eiBDBCID_Zone)      			{  iTabCtrlWd = 750;    iTabCtrlHt = 450;   }
@@ -3130,6 +3133,7 @@ void InitBEMDBIDs()
 	eiBDBCID_INISettings		= BEMPX_GetDBComponentID( "INISettings" );					// SAC 5/31/14
 	elDBID_Proj_StdsVersion = BEMPX_GetDatabaseID( "StandardsVersion", eiBDBCID_Proj );;	// SAC 8/15/14
 
+   eiBDBCID_RESNETBldg    = BEMPX_GetDBComponentID( "RESNETBldg" );		// SAC 9/27/20
    eiBDBCID_DwellUnitType = BEMPX_GetDBComponentID( "DwellUnitType" );	// SAC 6/18/14
    eiBDBCID_DwellUnit     = BEMPX_GetDBComponentID( "DwellUnit" );
    eiBDBCID_Zone       = BEMPX_GetDBComponentID( "Zone" );
@@ -3188,6 +3192,9 @@ void InitBEMDBIDs()
    elDBID_Proj_ElecMETER       = BEMPX_GetDatabaseID( "ElecMETER",		 eiBDBCID_Proj );    // SAC 6/19/12
    elDBID_Proj_NatGasMETER     = BEMPX_GetDatabaseID( "NatGasMETER",		 eiBDBCID_Proj );    // SAC 6/19/12
    elDBID_Proj_OtherFuelMETER  = BEMPX_GetDatabaseID( "OtherFuelMETER",	 eiBDBCID_Proj );    // SAC 6/19/12
+   elDBID_Proj_RHERSEnabled    = BEMPX_GetDatabaseID( "RHERSEnabled",	 eiBDBCID_Proj );    // SAC 9/28/20
+   if (elDBID_Proj_RHERSEnabled < BEM_COMP_MULT)
+		eiBDBCID_RESNETBldg = 0;
 
 //   elDBID_SURFACE_sfType   = BEMPX_GetDatabaseID( "sfType",     eiBDBCID_SURFACE );
 

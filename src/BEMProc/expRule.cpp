@@ -10478,7 +10478,7 @@ x								//  = 0 - 1, -1 = not framed
 										//    if empty, no errors so far
 
 								// static IDs etc; constant, resolve once
-	static int xc_staticsOK;			
+//	static int xc_staticsOK;    - removed - SAC 9/29/20			
 	static int xc_consCompID;
 	static long xc_UfactorCalcMethodID;
 	static long xc_CanAssignToID;
@@ -11015,7 +11015,8 @@ BEMPropertyType* XCONS::xc_GetPropType( long propID)
 //--------------------------------------------------------------------------
 // constant property IDs
 //    resolved on first call by xc_Setup
-int XCONS::xc_staticsOK = 0;		// status of static vals (both XCONS and XMAT)
+static int xc_staticsOK = 0;  // moved OUT of CONS to facilitate reset following each BEMBase re-init - SAC 9/29/20			
+//int XCONS::xc_staticsOK = 0;		// status of static vals (both XCONS and XMAT)
 									//   0=not set, 1=set OK, -1=set fail
 
 int XMAT::xm_matCompID         = -1;
@@ -11070,6 +11071,10 @@ x long XCONS::xc_FrameLayerMapIdxID	 = -1;
 x long XCONS::xc_LayerPropertyIndexID	 = -1;
 #endif
 
+void ResetConsDBIDs()	// SAC 9/29/20 - ensure DBIDs reset between each model (re-)load
+{	xc_staticsOK = 0;
+}
+
 //-----------------------------------------------------------------------------
 int XCONS::xc_Setup()			// setup XCONS/XMAT
 // returns 1 if all OK
@@ -11079,7 +11084,7 @@ int XCONS::xc_Setup()			// setup XCONS/XMAT
 	if (xc_staticsOK == 0)
 	{	xc_consCompID = xc_GetCompID( "Cons" );
 
-		#define CONSPROPID( s) xc_##s##ID = xc_GetPropID( #s)
+		#define CONSPROPID( s) xc_##s##ID = xc_GetPropID( #s, xc_consCompID)		// specify class ID - SAC 9/25/20
 		CONSPROPID( CanAssignTo);
 		CONSPROPID( Type);
 		CONSPROPID( UfactorCalcMethod);

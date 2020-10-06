@@ -114,6 +114,7 @@ BOOL BEMPX_LoadDataModel( const char* psBEMProcFileName, int iBEMType, const cha
    eBEMProc.setType( iBEMType );
 	eBEMProc.initSrcBEMProcObj();		// SAC 4/30/15
 	eActiveBEMProcIdx = 0;
+	ResetConsDBIDs();						// SAC 9/29/20
    bRetVal = eBEMProc.decompileBinBEMProc( psBEMProcFileName );	// SAC 10/10/13 - was: sBEMProcFileName );
    if (!bRetVal)
       BEMMessageBox( "decompileBinBEMProc() Failed.", "BEMProc.dll Error", 3 /*error*/ );

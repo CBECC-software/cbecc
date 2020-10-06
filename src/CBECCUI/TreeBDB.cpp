@@ -658,9 +658,9 @@ static int** ClassToConvertList( int iBDBClass )
 // SAC 2/23/20 - removed DHWLoopTankHeater from both 2019 & 2022 UIs 
 static int siZero = 0;
 #ifdef UI_PROGYEAR2019
-static int  siNumArchComps = 26;
-static int  siaMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int  siNumArchComps = 27;
+static int  siaMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
+static int* siapMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -669,9 +669,9 @@ static int* siapMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IAQVe
 										&eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, &eiBDBCID_SCSysRpt, &eiBDBCID_DHWSysRpt };
 static int* siapFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan, &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWSolarSys, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ &eiBDBCID_DWHRSys, NULL };
 #elif UI_PROGYEAR2022
-static int  siNumArchComps = 28;
-static int  siaMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
-static int* siapMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int  siNumArchComps = 29;
+static int  siaMode0[]  = { 6, siNumArchComps-7, siNumArchComps };
+static int* siapMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_Opening, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 									 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -704,8 +704,8 @@ static HTREEITEM shaModes[] = { TVI_LAST, TVI_LAST };
 // SAC 12/23/18 - added DWHX (for 2019 program only)  // SAC 1/5/19 - renamed DWHRSys
 // SAC 9/3/19 - added OtherZone (MFamProto)   - SAC 2/14/20 - removed OtherZone for 2019 EXE    - SAC 7/30/20 - added Opening to 2022
 #ifdef UI_PROGYEAR2019
-static int  siaLibMode0[]  = { 4, siNumArchComps-7, siNumArchComps };
-static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int  siaLibMode0[]  = { 5, siNumArchComps-7, siNumArchComps };
+static int* siapLibMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -715,7 +715,7 @@ static int* siapLibMode1[] = {	&eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_IA
 static int* siapLibFolder1[] = { &eiBDBCID_HVACHeat, &eiBDBCID_HVACCool, &eiBDBCID_HVACHtPump, &eiBDBCID_HVACDist, &eiBDBCID_HVACFan,  &eiBDBCID_IAQFan, &eiBDBCID_ClVentFan, &eiBDBCID_DHWHeater, /*&eiBDBCID_DHWLoopTankHeater,*/ NULL };
 #elif UI_PROGYEAR2022
 static int  siaLibMode0[]  = { 6, siNumArchComps-7, siNumArchComps };
-static int* siapLibMode0[] = { &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
+static int* siapLibMode0[] = { &eiBDBCID_RESNETBldg, &eiBDBCID_Attic, &eiBDBCID_Zone, &eiBDBCID_OtherZone, &eiBDBCID_Garage, &eiBDBCID_CrawlSpace, &eiBDBCID_DwellUnit, /*&eiBDBCID_AtticRoof,*/ &eiBDBCID_CathedralCeiling, &eiBDBCID_CeilingBelowAttic,
 									 	 &eiBDBCID_InteriorCeiling, &eiBDBCID_ExtWall, &eiBDBCID_IntWall, &eiBDBCID_UndWall, &eiBDBCID_Opening, &eiBDBCID_InteriorFloor, &eiBDBCID_SlabFloor, &eiBDBCID_ExteriorFloor, &eiBDBCID_FloorOverCrawl, &eiBDBCID_UndFloor,
 										 &eiBDBCID_Win, &eiBDBCID_Skylt, &eiBDBCID_Door, &eiBDBCID_HVACSys, &eiBDBCID_DHWSys, &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade };
 static int* siapLibFolder0[] = { &eiBDBCID_DwellUnitType, &eiBDBCID_Cons, /*&eiBDBCID_Mat,*/ &eiBDBCID_WindowType, &eiBDBCID_PVArrayGeom, &eiBDBCID_Shade, NULL };
@@ -900,6 +900,7 @@ int CTreeBDB::GetBitmapID( int iBDBClass, int /*iObjOccur*/ )
 //             }
 //	}
 
+   else if (iBDBClass == eiBDBCID_RESNETBldg			)   return 130;	// SAC 9/28/20
 //   else if (iBDBClass == eiBDBCID_Building 		)   return  18;
    else if (iBDBClass == eiBDBCID_Garage   			)   return  66;
    else if (iBDBClass == eiBDBCID_Attic    			)   return  66;
@@ -2026,6 +2027,18 @@ void CTreeBDB::CheckAndUpdateTree( long lDBIDModified )
 			m_bTreeCurrent = FALSE;
 		}
 	}
+	else if ( elDBID_Proj_RHERSEnabled > 1 && lDBIDModified == elDBID_Proj_RHERSEnabled )	// SAC 9/28/20 - toggle access to RESNETBldg object
+	{	long lRHERSEnabled;
+		BEMPX_SetDataInteger( elDBID_Proj_RHERSEnabled, lRHERSEnabled );
+		if (lRHERSEnabled > 0 && eiBDBCID_RESNETBldg < 1)
+		{	eiBDBCID_RESNETBldg = BEMPX_GetDBComponentID( "RESNETBldg" );
+			m_bTreeCurrent = FALSE;
+		}
+		else if (lRHERSEnabled == 0 && eiBDBCID_RESNETBldg > 1)
+		{	eiBDBCID_RESNETBldg = 0;
+			m_bTreeCurrent = FALSE;
+		}
+	}
 #endif  // UI_*
 }
 
@@ -3063,6 +3076,10 @@ void CTreeBDB::OnQuickEdit()
 				else
 					iMaxTabs = BEMPUIX_GetNumConsecutiveDialogTabIDs( iBDBClass, 0 /*iUIMode*/ );
 
+				CWnd* pMainWnd = AfxGetMainWnd();
+				if (pMainWnd && (pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame))) && iBDBClass == eiBDBCID_Proj)
+					((CMainFrame*)pMainWnd)->AutoSaveAsPrecheck( iBDBClass );		// SAC 9/30/20
+
             m_bTreeCurrent = TRUE;
 				int iTabCtrlWd, iTabCtrlHt;
 				VERIFY( GetDialogTabDimensions( iBDBClass, iTabCtrlWd, iTabCtrlHt ) );  // SAC 8/29/11
@@ -3085,6 +3102,9 @@ void CTreeBDB::OnQuickEdit()
                PopulateBDBTree( m_iTreeMode, iBDBClass );
             else
                SetHighlight( iBDBClass );
+
+				if (pMainWnd && (pMainWnd->IsKindOf(RUNTIME_CLASS(CMainFrame))) && iBDBClass == eiBDBCID_Proj)
+					((CMainFrame*)pMainWnd)->ExecuteAutoSaveAs( iBDBClass );		// SAC 9/30/20
          }
       }
    }

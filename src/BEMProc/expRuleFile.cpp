@@ -503,16 +503,22 @@ int BEMPX_PostAnalysisActionRulesetPropertiesToDatabase()
 					// add this RulesetProperty
 						BEMClass* pObjClass = BEMPX_GetClass( iClassID, iError );			assert( pObjClass );
 						int iNewPropID = pObjClass->getNumProps() + ruleSet.NumRulesetPropertiesForObject( iClassID ) - iaExistingRulePropsByClass[iClassID-1] + 1;
-						QString sNewPropName = qsAAObjProp.right( qsAAObjProp.length() - iColonIdx -1 );
-						lAADBID = BEMPX_GetDBID( iClassID, iNewPropID, 1 );
-						int iPropType = lAAType-1;
-						RuleSetProperty* pNewRuleProp = new RuleSetProperty( iClassID, iNewPropID, sNewPropName, sNewPropName, lAADBID, iPropType );				assert( pNewRuleProp );
-						if (!pNewRuleProp)
-							iRetVal = -2;
-						else
-						{	ruleSet.addRuleSetProperty( pNewRuleProp );
-							iRetVal++;
+						if (iNewPropID >= (BEM_COMP_MULT/BEM_PARAM_MULT))		// SAC 9/22/20 - added error if/when max # properties exceeded w/ a RULE NEW
+						{	//sErr = QString( "\n\tError:  Maximum # Properties per Class (%1) exceeded @ RULE NEW property '%2' - rule '%3' found on line: %4\n" ).arg( QString::number((BEM_COMP_MULT/BEM_PARAM_MULT)), sNewPropName, sNewFullPath, QString::number(file.GetLineCount()) );
+							//errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+							iRetVal = -4;
 						}
+						else
+						{	QString sNewPropName = qsAAObjProp.right( qsAAObjProp.length() - iColonIdx -1 );
+							lAADBID = BEMPX_GetDBID( iClassID, iNewPropID, 1 );
+							int iPropType = lAAType-1;
+							RuleSetProperty* pNewRuleProp = new RuleSetProperty( iClassID, iNewPropID, sNewPropName, sNewPropName, lAADBID, iPropType );				assert( pNewRuleProp );
+							if (!pNewRuleProp)
+								iRetVal = -2;
+							else
+							{	ruleSet.addRuleSetProperty( pNewRuleProp );
+								iRetVal++;
+						}	}
 		}	}	}	}					
 
 		if (iRetVal > 0)		// => ADD "ruleset variables" (RULE NEW items) to BEMBase  - SAC 1/30/20 - finished up implementation of function
@@ -1142,13 +1148,20 @@ bool RuleFile::ReadRuleFile( const char* pszRulePathFile, QStringList& saReserve
 
 												if (lDatabaseID[0] < 1)
 												{	int iNewPropID = pObjClass->getNumProps() + ruleSet.NumRulesetPropertiesForObject( iObjTypeID ) + 1;
-													lDatabaseID[0] = BEMPX_GetDBID( iObjTypeID, iNewPropID, 1 );
-													pNewRuleProp = new RuleSetProperty( iObjTypeID, iNewPropID, sNewPropName, sNewPropName, lDatabaseID[0] );				assert( pNewRuleProp );
-													if (!pNewRuleProp)
-														bContinue = FALSE;
+													if (iNewPropID >= (BEM_COMP_MULT/BEM_PARAM_MULT))		// SAC 9/22/20 - added error if/when max # properties exceeded w/ a RULE NEW
+													{	sErr = QString( "\n\tError:  Maximum # Properties per Class (%1) exceeded @ RULE NEW property '%2' - rule '%3' found on line: %4\n" ).arg( QString::number((BEM_COMP_MULT/BEM_PARAM_MULT)), sNewPropName, sNewFullPath, QString::number(file.GetLineCount()) );
+														errorFile.write( sErr.toLocal8Bit().constData(), sErr.length() );
+            		      	   				bContinue = FALSE;
+														bRetVal = FALSE;
+													}
 													else
-														ruleSet.addRuleSetProperty( pNewRuleProp );
-												}
+													{	lDatabaseID[0] = BEMPX_GetDBID( iObjTypeID, iNewPropID, 1 );
+														pNewRuleProp = new RuleSetProperty( iObjTypeID, iNewPropID, sNewPropName, sNewPropName, lDatabaseID[0] );				assert( pNewRuleProp );
+														if (!pNewRuleProp)
+															bContinue = FALSE;
+														else
+															ruleSet.addRuleSetProperty( pNewRuleProp );
+												}	}
 
                                     if (bContinue && iNextColon > 0)
 												{	sAncestorStr = sNewFullPath.left( iNextColon );	// SAC 4/11/13

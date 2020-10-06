@@ -1,6 +1,6 @@
 /**********************************************************************
- *  Copyright (c) 2012-2016, California Energy Commission
- *  Copyright (c) 2012-2016, Wrightsoft Corporation
+ *  Copyright (c) 2012-2017, California Energy Commission
+ *  Copyright (c) 2012-2017, Wrightsoft Corporation
  *  All rights reserved.
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions are met:
@@ -70,5 +70,7 @@ void BEMP_AddRulesetErrorExt( const char* pszErrMsg, int iLocClass, long lLocDBI
 
 extern void ExpCryptDecode( char* lpBuf, int length );
 extern void ExpCryptEncode( char* lpBuf, int length );
+
+extern void ResetConsDBIDs();		// SAC 9/29/20 - ensure DBIDs reset between each model (re-)load
 
 #endif // __BEMPROCI_H__

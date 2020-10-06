@@ -175,4 +175,7 @@ inline float Divide(float n,float d)
 #define WM_BEMGRID_CLOSE     WM_APP+56
 #define WM_BEMGRID_UPDATE    WM_APP+57
 
+// Message to initiate an automatic Save As process - SAC 9/29/20
+#define WM_AUTOSAVEAS        WM_APP+58
+
 #endif // !defined(AFX_STDAFX_H__245352C7_5683_11D1_9002_0080C732DDC2__INCLUDED_)

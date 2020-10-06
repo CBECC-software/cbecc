@@ -922,6 +922,7 @@ BOOL CComplianceUIDoc::CheckAndDefaultModel( BOOL bCheckModel, BOOL /*bWriteToLo
          {
 #ifdef UI_CARES
 				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_IsMultiFamily );		// SAC 7/29/16 - ensure access/non-access to DwellUnit* objects based on whether model is multifamily
+				pMainView->SendMessage( WM_UPDATETREE, 0, elDBID_Proj_RHERSEnabled );		// SAC 9/28/20 - ensure access/non-access to RESNETBldg object
 #endif
             pMainView->SendMessage( WM_DISPLAYDATA );
 

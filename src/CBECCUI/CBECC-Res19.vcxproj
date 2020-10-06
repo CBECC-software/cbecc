@@ -601,6 +601,8 @@
     <Image Include="res\t_mech1_2.bmp" />
     <Image Include="res\t_open_1.bmp" />
     <Image Include="res\t_open_2.bmp" />
+    <Image Include="res\t_RESNET_1.bmp" />
+    <Image Include="res\t_RESNET_2.bmp" />
     <Image Include="res\t_PVArray_1.bmp" />
     <Image Include="res\t_PVArray_2.bmp" />
     <Image Include="res\t_PVArrayGeom_1.bmp" />

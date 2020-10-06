@@ -68,6 +68,7 @@ public:
    BOOL  m_bDoingSummaryReport;
    BOOL  m_bPerformingAnalysis;	// SAC 4/1/15
    BOOL  m_bDoingCustomRuleEval;	// SAC 1/28/18
+   int   m_iNumInitRESNETBldgObjs;	// SAC 9/29/20
 
 	int   m_iNumFileListMenuItems;  // SAC 11/19/13
 	CStringArray m_saFileListPathFiles;
@@ -138,6 +139,9 @@ public:
 
    void PostBEMGridClose( UINT wClass=0, LONG l1Occur=0);
    void PostBEMGridUpdate(UINT wClass=0, LONG l1Occur=0);
+
+	void AutoSaveAsPrecheck( int iBDBClass );
+	void ExecuteAutoSaveAs(  int iBDBClass );
 
 protected:  // control bar embedded members
 	CStatusBar  m_wndStatusBar;
@@ -546,6 +550,7 @@ protected:
    afx_msg LRESULT OnBEMGridOpen(  WPARAM wClass, LPARAM l1Occur);   // SAC 3/15/18
    afx_msg LRESULT OnBEMGridClose( WPARAM wClass, LPARAM l1Occur);
    afx_msg LRESULT OnBEMGridUpdate(WPARAM wClass, LPARAM l1Occur);
+   afx_msg LRESULT OnAutoSaveAs(WPARAM wID, LPARAM lParam );		// SAC 9/29/20
 
    BOOL DetailedFileOK( CString& sFileName, BOOL bProposed, BOOL bPromptUser );
    void UpdateViewOption(InterfaceMode eIntMode, CCmdUI* pCmdUI);
@@ -567,6 +572,8 @@ protected:
 	void ProcessCustomRulelistFile();
 	void EvalProposedRules( int iEvalOnlyClass, int iEvalOnlyObjIdx, CString* pDurationStr );
 	void RefreshDefaultsButtonPressed( int iBEMClassID, CWnd* pButton );
+
+	void FileSaveAsCore( CString sProjFile );		// SAC 9/30/20
 
 	DECLARE_MESSAGE_MAP()
 };
