@@ -1957,6 +1957,7 @@ static const char* pszMeters[Com_NumCSEMeters+1]			= { "MtrElec",     "MtrNatGas
 static const char* pszMeters_ComMap[Com_NumCSEMeters+1]	= { "Electricity", "NaturalGas", "OtherFuel", NULL };		// SAC 5/31/16 - added to enable retrieval of CSE results to -Com analysis
 double         sdaMeterMults_ComMap[Com_NumCSEMeters+1]	= {    0.293,         0.01,         0.01,     0.0  };		// SAC 6/1/16 - added to convert units of CSE results to -Com analysis (1/3.412 for elec)  // SAC 6/29/16 - inc NG & Oth fuel mults by 10 fixing MBtu->therms
 
+static const char* pszCSEDHWEnduseList[] = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2",              /*"User2", "PV",            "BT",*/      NULL };	// added to facilitate retrieval of Res DHW separate from other enduses - SAC 10/8/20 (tic #3218)
 static const char* pszCSEEnduseList[]    = { /*"Tot", "Clg", "Htg", "HPHtg",*/ "Dhw",                "DhwBU",              "DhwMFL",             /*"FanC", "FanH", "FanV", "Fan", "Aux", "Proc", "Lit", "Rcp", "Ext", "Refr", "Dish", "Dry", "Wash", "Cook",*/ "User2",              /*"User2",*/ "PV",            "BT",      NULL };	// "DHWPmp", ??   // SAC 7/15/18 - added PV & Batt  	// SAC 7/27/18 - added "DhwMFL" (DHWLOOP pumping energy - CSE19 v0.850.0, SVN r1098)
 static const char* pszCSEEUList_ComMap[] = { /* NULL,  NULL,  NULL,   NULL ,*/ "Domestic Hot Water", "Domestic Hot Water", "Domestic Hot Water", /* NULL ,  NULL ,  NULL ,  NULL,  NULL,  NULL ,  NULL,  NULL,  NULL,  NULL ,  NULL ,  NULL,  NULL ,  NULL ,*/ "Domestic Hot Water", /*  NULL ,*/ "Photovoltaics", "Battery", NULL }; 				// SAC 1/8/19 - summed in CSE enduse 'User2' to each elec DHW results retrieval (to capture HPWH XBU energy)
 
@@ -4532,6 +4533,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 
 
 						// CSE Simulation Loop -----
+								QString sStdDsgnCSEResultsPathFile;		// added to fix bug in Flexibility credit calcs - SAC 10/8/20 (tic #3218)
 								for (int iSR=0; iSR <= iSimRunIdx; iSR++)	// loop over runs just simulated in E+ above
 								{
 								// SAC 7/23/18 - CSE simulation moved down HERE so that CSE inputs can include E+ elec use hourly data that feeds into the Battery simulation
@@ -4695,6 +4697,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																int iHrlyResRetVal = BEMPX_ReadCSEHourlyResults( cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), -1 /*lRunNumber-1*/,
 																											sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx /*-1*/,
 																											pszMeters, pszMeters_ComMap, sdaMeterMults_ComMap, pszCSEEnduseList, pszCSEEUList_ComMap, false /*bInitResults*/ );	// SAC 5/31/16  // SAC 7/23/18
+
+																if (iHrlyResRetVal > 0 && iRunType[0] == CRM_StdDesign)		// SAC 10/8/20 (tic #3218)
+																	sStdDsgnCSEResultsPathFile = cseRun.GetOutFile( CSERun::OutFileCSV );
+
 		//	sLogMsg.sprintf( "      BEMPX_ReadCSEHourlyResults( %s, %d, %s, %s, BEMProc %d, ... ) returned %d", cseRun.GetOutFile( CSERun::OutFileCSV).toLocal8Bit().constData(), lRunNumber-1,
 		//																									sRunID.toLocal8Bit().constData(), sRunAbbrev.toLocal8Bit().constData(), osSimInfo[iSR].iBEMProcIdx, iHrlyResRetVal );
 		//	BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -4838,9 +4844,10 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 																				bVerbose, FALSE /*bDurationStats*/, &dTimeToTranslate[iNumTimeToTranslate++],
 																				(bIsDsgnSim ? &dTimeToSimDsgn[iNumTimeToSimDsgn++] : &dTimeToSimAnn[iNumTimeToSimAnn++]),
 																				iSimulationStorage, &dEPlusVer, pszEPlusVerStr, 60, pszOpenStudioVerStr, 60 , iCodeType,
-																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones );	// SAC 5/22/19   // SAC 11/11/19
+																				false /*bIncludeOutputDiagnostics*/, iProgressType, &saEPlusProcDirsToBeRemoved, bReportAllUMLHZones,		// SAC 5/22/19   // SAC 11/11/19
+																				&sStdDsgnCSEResultsPathFile );	// SAC 10/8/20 (tic #3218)
 								}
-							}
+							}	// end of: if (bSimRunsNow)
 
 
 						// Generate Rule-Based model reports - second round FOLLOWING simulation & results retrieval (when lHVACAutoSizing)

@@ -214,6 +214,7 @@ extern int ProcessSimulationResults_Multiple(	OSWrapLib& osWrap, COSRunInfo* osR
 															int iSimulationStorage=-1, double* dEPlusVer=NULL, char* pszEPlusVerStr=NULL, int iEPlusVerStrLen=0,  // SAC 1/23/14  // SAC 5/16/14  // SAC 5/19/14
 															char* pszOpenStudioVerStr=NULL, int iOpenStudioVerStrLen=0, int iCodeType=CT_T24N,
 															bool bIncludeOutputDiagnostics=false, int iProgressType=0, 	// SAC 4/2/15		// SAC 5/27/15 - iProgressType see BCM_NRP_*
-															QStringList* psaEPlusProcDirsToBeRemoved=NULL, bool bReportAllUMLHZones=false );	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
+															QStringList* psaEPlusProcDirsToBeRemoved=NULL, bool bReportAllUMLHZones=false, 	// SAC 5/22/19 - added to postpone E+ directory cleanup until end of analysis to avoid deletion errors   // SAC 11/11/19
+															QString* sStdDsgnCSEResultsPathFile=NULL );		// SAC 10/8/20 (tic #3218)
 
 #endif  // _OPENSTUDIOINTERFACE_H

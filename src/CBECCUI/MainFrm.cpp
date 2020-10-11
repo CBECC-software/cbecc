@@ -3023,6 +3023,8 @@ void CMainFrame::AutoSaveAsPrecheck( int iBDBClass )
 //   m_bPossibleRESNETAutoSaveAs = (iBDBClass == eiBDBCID_Proj && iLocDBDCID_RESNETBldg > 0 &&
 //				BEMPX_GetNumObjects( iLocDBDCID_RESNETBldg ) < 1 &&
 //				ReadProgInt( "options", "EnableRHERS", 0 /*default*/ ) > 1);			// SAC 9/29/20
+#else
+	iBDBClass;
 #endif
 	return;
 }
@@ -3051,6 +3053,8 @@ void CMainFrame::ExecuteAutoSaveAs(  int iBDBClass )
 		if (wSaveAsID > 0)
 			PostMessage( WM_AUTOSAVEAS, wSaveAsID, 0 );
 	}
+#else
+	iBDBClass;
 #endif
 	return;
 }

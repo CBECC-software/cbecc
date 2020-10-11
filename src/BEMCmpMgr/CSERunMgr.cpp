@@ -1240,7 +1240,9 @@ bool CSERunMgr::T24Res_HPWHSizing( QString sProjFileAlone, QString sRunID,
 			if (pObj)
 				laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
 			if (bHaveFuelHtr)
-			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );		assert(pObj);
+			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+					pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
 				if (pObj)
 					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
 			}
@@ -1644,7 +1646,9 @@ bool CSERunMgr::T24Res_DHWSolarSysSizing( QString sProjFileAlone, QString sRunID
 			if (pObj)
 				laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
 			if (TRUE)  //bHaveFuelHtr)
-			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );		assert(pObj);
+			{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+					pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
 				if (pObj)
 					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
 			}
@@ -1882,14 +1886,21 @@ int CSE_PerformDHWMinusSolarSys( QString& sErrMsg, QString sCSEexe, QString sCSE
 				long lDBID_Proj_StdDHWNoSlrSysTotTDV = BEMPX_GetDatabaseID( "Proj:StdDHWNoSlrSysTotTDV" );		// BEMP_Flt, 10,  1,  0,  NInp,  "kTDV",  "StandardDHWNoSolarSystemTotalTDV", ""  ; "Standard design kTDV of DHW w/out SolarSys (sum across all fuels)"
 				long lDBID_Proj_TDVof1KWCFIPV        = BEMPX_GetDatabaseID( "Proj:TDVof1KWCFIPV"        );		// BEMP_Flt, 10,  1,  0,  NInp,  "kTDV",  "TDVof1KWCFIPV", ""                     ; TDV of a generic 1kW CFI PV array
 
-				long lGas=0;
+				long lGas=0, lRptFuelUseAs=0;
 				bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
-				BOOL bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
-				if (bGasTypeOK && lGas > 2)
-				{	long lNatGasAvail=1;
-					if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
-						lGas = (lNatGasAvail ? 1 : 2);
+				BOOL bGasTypeOK = FALSE;
+				// mod to rely FIRST on Proj:RptFuelUseAs, since this is needed when modeling Std model w/ GasType=Propane and NatGasAvail (GasType needs to be NatGas) - SAC 10/9/20
+				if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RptFuelUseAs" ), lRptFuelUseAs ) && lRptFuelUseAs > 0)
+				{	lGas = lRptFuelUseAs;
+					bGasTypeOK = TRUE;
 				}
+				else
+				{	bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
+					if (bGasTypeOK && lGas > 2)
+					{	long lNatGasAvail=1;
+						if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
+							lGas = (lNatGasAvail ? 1 : 2);
+				}	}
 
 				long lCZ, lEngyCodeYearNum = 2016;	// SAC 3/11/20 - added to ensure correct TDV column indices (changed in 2022)
 				long lDBID_Proj_EngyCodeYearNum = BEMPX_GetDatabaseID( "Proj:EngyCodeYearNum" );
@@ -2082,7 +2093,9 @@ bool CSERunMgr::T24Res_DHWNoSolarSysRun( QString sProjFileAlone, QString sRunID,
 				if (pObj)
 					laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
 				if (TRUE)  //bHaveFuelHtr)
-				{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );		assert(pObj);
+				{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+				if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+						pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
 					if (pObj)
 						laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
 				}
@@ -2369,7 +2382,9 @@ int CSERunMgr::SetupRunFinish(
 					if (pObj)
 						laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );			// Elec Meter
 					if (TRUE)  //bHaveFuelHtr)
-					{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );		assert(pObj);
+					{	pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrNatGas" );	
+						if (pObj==NULL)	// fix bug where MtrOther not included in runs that have it in place of MtrNatGas - SAC 10/9/20 (Com tic #3218)
+							pObj = BEMPX_GetObjectByName( iCID_CSEMeter, iErr, "MtrOther" );		assert(pObj);
 						if (pObj)
 							laClsObjIndicesToWrite.push_back( (iCID_CSEMeter * BEMF_ClassIDMult) + BEMPX_GetObjectIndex( pObj->getClass(), pObj )+1 );		// NatGas Meter
 					}
@@ -2936,15 +2951,22 @@ int CSERunMgr::SetupRun_NonRes(int iRunIdx, int iRunType, QString& sErrorMsg, bo
 				}
 				else
 				{	double daTDVElec[8760], daTDVFuel[8760];  //, daTDVSecElec[8760], daTDVSecFuel[8760];
-					long lCZ=0, lGas=0;
+					long lCZ=0, lGas=0, lRptFuelUseAs=0;
 					bool bHaveSecTDVElec=false, bHaveSecTDVFuel=false;
-					BOOL bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
-					if (bGasTypeOK && lGas > 2)
-					{	// SAC 9/27/19 - switch GasType from 'None' to either NatGas or Propane based on whether NatGas available
-						long lNatGasAvail=1;
-						if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
-							lGas = (lNatGasAvail ? 1 : 2);
+					BOOL bGasTypeOK = FALSE;
+					// mod to rely FIRST on Proj:RptFuelUseAs, since this is needed when modeling Std model w/ GasType=Propane and NatGasAvail (GasType needs to be NatGas) - SAC 10/9/20
+					if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:RptFuelUseAs" ), lRptFuelUseAs ) && lRptFuelUseAs > 0)
+					{	lGas = lRptFuelUseAs;
+						bGasTypeOK = TRUE;
 					}
+					else
+					{	bGasTypeOK = BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:GasType"  ), lGas );
+						if (bGasTypeOK && lGas > 2)
+						{	// SAC 9/27/19 - switch GasType from 'None' to either NatGas or Propane based on whether NatGas available
+							long lNatGasAvail=1;
+							if (BEMPX_GetInteger( BEMPX_GetDatabaseID( "Proj:NatGasAvail" ), lNatGasAvail ))
+								lGas = (lNatGasAvail ? 1 : 2);
+					}	}
 
 					long lPrimResultSetIdx = 1;	// SAC 3/11/20 - added to ensure main/primary result set TDV used here
 					long lDBID_Proj_PrimResultSetIdx = BEMPX_GetDatabaseID( "Proj:PrimResultSetIdx" );

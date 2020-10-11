@@ -171,6 +171,9 @@ inline double Divide(double n,double d)
 #define WM_BEMGRID_CLOSE     WM_APP+56
 #define WM_BEMGRID_UPDATE    WM_APP+57
 
+// Message to initiate an automatic Save As process - SAC 9/29/20
+#define WM_AUTOSAVEAS        WM_APP+58
+
 // SAC 2/7/00 - added message to have wizard dialog post message to parent to handle help system calls
 #define WM_PARENTHELP        WM_APP+1001
 
