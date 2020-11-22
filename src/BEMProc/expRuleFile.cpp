@@ -576,8 +576,31 @@ QString AnalActDescrip( long iAnalPhase, long iBeforeAfter, int iAAIdx )
 	return str;
 }
 //
-//	return value: >=0 : # of AnalysisActions applied to the database
-//						-1 : 
+//	return value: >= 0 : # of AnalysisActions applied to the database
+//						 -1 :  Error applying AnalysisAction XXXX: ObjPropertyName undefined
+//						 -2 :  Error applying AnalysisAction XXXX: cannot map 'XXXX' to BEMBase DBID
+//						 -3 :  Error applying AnalysisAction XXXX: AlterObjName undefined
+//						 -4 :  Error applying AnalysisAction XXXX: Object flagged for alteration 'XXXX' not found
+//						 -5 :  Error applying AnalysisAction XXXX: SetValFloat undefined setting XXXX
+//						 -6 :  Error applying AnalysisAction XXXX: unable to set XXXX to XXXX for XXXX #X
+//						 -7 :  Error applying AnalysisAction XXXX: SetValInteger undefined setting XXXX
+//						 -8 :  Error applying AnalysisAction XXXX: unable to set XXXX to XXXX for XXXX #X
+//						 -9 :  Error applying AnalysisAction XXXX: SetValString undefined setting XXXX
+//						-10 :  Error applying AnalysisAction XXXX: unable to set 'XXXX' to XXXX for XXXX #X
+//						-11 :  Error applying AnalysisAction XXXX: unrecognized Type (XXXX)
+//						-12 :  Error applying AnalysisAction XXXX: unable to retrieve rulelist name from SetValString
+//						-13 :  Error applying AnalysisAction XXXX: evaluation of rulelist 'XXXX' failed
+//						-14 :  Error applying AnalysisAction XXXX: too many ruleset export files open:  XXXX
+//						-15 :  Error applying AnalysisAction XXXX: unable to open simulaiton input file:  XXXX
+//						-16 :  Error applying AnalysisAction XXXX: RulelistPathFile undefined setting XXXX
+//						-17 :  Error applying AnalysisAction XXXX: RulelistPathFile file not found:  XXXX
+//						-18 :  Error applying AnalysisAction XXXX: RulelistPathFile parsing error:  XXXX
+//						-19 :  Error applying AnalysisAction XXXX: TablePathFile undefined setting XXXX
+//						-20 :  Error applying AnalysisAction XXXX: TablePathFile file not found:  XXXX
+//						-21 :  Error applying AnalysisAction XXXX: error opening TablePathFile parsing log file:  XXXX
+//						-22 :  Error applying AnalysisAction XXXX: TablePathFile parsing error:  XXXX
+//						-23 :  Error ...
+//						-99 :  Error applying AnalysisAction XXXX: XXXX analysis action type not yet implemented
 int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QString& sErrorMsg, bool bVerbose,
 														const char* pszSimPathFileName /*=NULL*/ )			// SAC 3/10/20
 {
@@ -714,6 +737,7 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 												}	}	}	}
 											}  break;
 							case   4 :
+							case  15 :				// SAC 10/28/20 - added AppendString
 							case  14 :	{	// set STRING to BEMBase
 												QString qsAltVal = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValString, iStatus, iSpecialVal, iError, iAA );
 												if (iStatus < 1)
@@ -722,17 +746,22 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 												}
 												else
 												{	for (int iObj=iFirstAlterObjIdx; (iRetVal >= 0 && iObj <= iLastAlterObjIdx); iObj++)
-													{
-														if (BEMPX_SetBEMData( lDBID_ToSet, BEMP_QStr, (void*) &qsAltVal, BEMO_User, iObj ) < 0)
+													{	QString qsSetStr = qsAltVal;
+														if (lAAType == 15)	// SAC 10/28/20 - added AppendString
+														{	QString qsExStr = BEMPX_GetStringAndStatus( lDBID_ToSet, iStatus, iSpecialVal, iError, iObj );
+															if (iStatus > 0 && !qsExStr.isEmpty())
+																qsSetStr = qsExStr + qsAltVal;
+														}
+														if (BEMPX_SetBEMData( lDBID_ToSet, BEMP_QStr, (void*) &qsSetStr, BEMO_User, iObj ) < 0)
 														{	iRetVal = -10;
 															sErrorMsg = QString( "Error applying AnalysisAction %1: unable to set '%2' to %3 for %4 #%5" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ),
-																									qsAltVal, qsAAObjProp, sAlterClassName, QString::number( iObj+1 ) );
+																									qsSetStr, qsAAObjProp, sAlterClassName, QString::number( iObj+1 ) );
 														}
 														else
 														{	iRetVal++;
 															if (bVerbose)
 															{	sLogMsg = QString( "      '%1' set to obj #%2, %3  by AnalysisAction %4" ).arg(
-																												qsAltVal, QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
+																												qsSetStr, QString::number( iObj+1 ), qsAAObjProp, AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sAlterClassName );
 																BEMPX_WriteLogFile( sLogMsg, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
 												}	}	}	}
 											}  break;
@@ -778,14 +807,83 @@ int BEMPX_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAfter, QSt
 											}  break;
 
 							case  21 :	{	// RulelistPathFile
-	// TO DO
-	// TO DO
-	// TO DO
-													//  AnalysisAction:SetValPathFile       BEMP_Str,  1,  0,  0,  Pres,  "",                 0,  0,                           1001, "SetValuePathFile",  "" 
+												//  AnalysisAction:SetValPathFile       BEMP_Str,  1,  0,  0,  Pres,  "",                 0,  0,                           1001, "SetValuePathFile",  "" 
+												QString qsRLFile = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValPathFile, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -16;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: RulelistPathFile undefined setting %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+												}
+												else if (!FileExists( qsRLFile.toLocal8Bit().constData() ))
+												{	iRetVal = -17;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: RulelistPathFile file not found:  %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsRLFile );
+												}
+												else
+												{	QString sRLLogFilename = BEMPX_GetLogFilename( false /*bCSVLog*/ );
+													int iLogFileExtIdx = sRLLogFilename.lastIndexOf('.');
+													if (iLogFileExtIdx > 0)		// need to alter log filename since BEMPX_ParseRuleListFile() will always overwrite it - SAC 11/14/20
+														sRLLogFilename = QString( "%1-ParseRL%2" ).arg( sRLLogFilename.left( iLogFileExtIdx ), sRLLogFilename.right( sRLLogFilename.length()-iLogFileExtIdx-1 ) );
+													QStringList qslRuleListNames;		QString qsRuleCompileMsg, qsParseRLErrorMsg;
+													int iNumRLs = BEMPX_ParseRuleListFile(	qsRLFile.toLocal8Bit().constData(), qslRuleListNames,
+																										sRLLogFilename.toLocal8Bit().constData(), &qsRuleCompileMsg, true /*bParseRules*/, &qsParseRLErrorMsg );
+													if (!qsParseRLErrorMsg.isEmpty())
+													{	iRetVal = -18;
+														sErrorMsg = QString( "Error applying AnalysisAction %1: RulelistPathFile parsing error:  %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsParseRLErrorMsg );
+													}
+													else
+														BEMPX_WriteLogFile( QString( "batch RulelistPathFile successful, returned %1, file:  %2" ).arg( QString::number(iNumRLs), qsRLFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+												}
+											}  break;
 
-												iRetVal = -99;
-												sErrorMsg = QString( "Error applying AnalysisAction %1: RulelistPathFile Type not yet implemented" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ) );
+							case  23 :	{	// TablePathFile     - SAC 11/16/20
+												//  AnalysisAction:SetValPathFile       BEMP_Str,  1,  0,  0,  Pres,  "",                 0,  0,                           1001, "SetValuePathFile",  "" 
+												QString qsTblFile = BEMPX_GetStringAndStatus( lDBID_AnalAct_SetValPathFile, iStatus, iSpecialVal, iError, iAA );
+												if (iStatus < 1)
+												{	iRetVal = -19;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: TablePathFile undefined setting %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsAAObjProp );
+												}
+												else if (!FileExists( qsTblFile.toLocal8Bit().constData() ))
+												{	iRetVal = -20;
+													sErrorMsg = QString( "Error applying AnalysisAction %1: TablePathFile file not found:  %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), qsTblFile );
+												}
+												else
+												{	QString sTblLogFilename = BEMPX_GetLogFilename( false /*bCSVLog*/ );
+													int iLogFileExtIdx = sTblLogFilename.lastIndexOf('.');
+													if (iLogFileExtIdx > 0)		// need to alter log filename since BEMPX_ParseRuleListFile() will always overwrite it - SAC 11/14/20
+														sTblLogFilename = QString( "%1-ParseTbl%2" ).arg( sTblLogFilename.left( iLogFileExtIdx ), sTblLogFilename.right( sTblLogFilename.length()-iLogFileExtIdx-1 ) );
+													bool bTblLogFileExists = FileExists( sTblLogFilename.toLocal8Bit().constData() );
+													int iNumInitTables = ruleSet.numTables();
+													QFile fileTblLog( sTblLogFilename );
+													try
+													{
+														if (fileTblLog.open( QIODevice::Text | QIODevice::WriteOnly | QIODevice::Append ))
+														{	if (bTblLogFileExists)
+																fileTblLog.write( "\n---------\n" );
+															fileTblLog.write( QString("parsing table file:  %1\n" ).arg( qsTblFile ).toLocal8Bit().constData() );
 
+															if (!ruleSet.addTable( qsTblFile.toLocal8Bit().constData(), fileTblLog ))
+															{	iRetVal = -22;
+																sErrorMsg = QString( "Error applying AnalysisAction %1: TablePathFile parsing error occurred, refer to log file:  %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sTblLogFilename );
+															}
+
+															fileTblLog.close();                  // close log file
+														}
+														else
+															iRetVal = -21;
+													}
+													catch (std::exception& e)
+													{	iRetVal = -21;
+														sErrorMsg = QString( "Error applying AnalysisAction %1: TablePathFile parsing error occurred - cause: %2\n" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), e.what() );
+													}
+												 	catch (...)
+												  	{	iRetVal = -21;
+												  	}
+												  	if (iRetVal == -21 && sErrorMsg.isEmpty())
+														sErrorMsg = QString( "Error applying AnalysisAction %1: TablePathFile parsing error occurred, refer to log file:  %2" ).arg( AnalActDescrip( iAnalPhase, iBeforeAfter, iAA ), sTblLogFilename );
+													else if (iRetVal >= 0)
+													{	int iNumTablesAdded = ruleSet.numTables() - iNumInitTables;
+														BEMPX_WriteLogFile( QString( "batch TablePathFile successful, %1 table(s) parsed, file:  %2" ).arg( QString::number(iNumTablesAdded), qsTblFile ), NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
+													}
+												}
 											}  break;
 
 							default  :	{	// Unrecognized Type

@@ -2248,6 +2248,13 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 //		}
 #endif
 
+#ifdef _DEBUG  // from VS19 port
+      if (sErrMsg.isEmpty())
+         BEMPX_WriteLogFile( QString("      daylighting details for Space:  %1").arg( pszSpcName ) );
+      else
+         BEMPX_WriteLogFile( sErrMsg );
+#endif
+
 		if (dDaylitArea >= 0 && spcDLAs.m_daylitAreas.size() > 0)
 		{
 		// Mods to ensure secondary side daylit area reference points are not inside any primary sidelit areas (of different glazings)
@@ -2406,6 +2413,21 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 				}
 			}
 
+#ifdef _DEBUG
+         if (sErrMsg.isEmpty())
+         {  int iDbgIdx=0;
+            BEMPX_WriteLogFile( QString("         daylit area effective aperture details") );
+            for (std::vector<BEMDaylitArea>::iterator chk1=spcDLAs.m_daylitAreas.begin(); chk1!=spcDLAs.m_daylitAreas.end(); ++chk1)
+	   		{	BEMDaylitArea* pChk1 = &(*chk1);    iDbgIdx++;
+		   		if (pChk1 && pChk1->m_bDLRefPntValid[0] && boost::geometry::area( pChk1->m_polyOrigDaylitArea[0] ) > 0)
+                  BEMPX_WriteLogFile( QString("            daylit area %1, ref point 1, effective aperture %2  in std loc %3   point %4, %5").arg( QString::number(iDbgIdx)).arg( 
+                       QString::number(pChk1->m_fEffectiveAperture[0]),9).arg( QString::number(pChk1->m_bDLRefPntInStdLoc[0])).arg( QString::number(boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[0] )),9).arg( QString::number(boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[0] )),9) );
+		   		if (pChk1 && pChk1->m_bDLRefPntValid[1] && boost::geometry::area( pChk1->m_polyOrigDaylitArea[1] ) > 0)
+                  BEMPX_WriteLogFile( QString( "                           ref point 2, effective aperture %1  in std loc %2   point %3, %4").arg( 
+                       QString::number(pChk1->m_fEffectiveAperture[1]),9).arg( QString::number(pChk1->m_bDLRefPntInStdLoc[1])).arg( QString::number(boost::geometry::get<0>( pChk1->m_pntDayltgRefPnts[1] )),9).arg( QString::number(boost::geometry::get<1>( pChk1->m_pntDayltgRefPnts[1] )),9) );
+         }  }
+#endif
+
 		// Next Step - Calculate RDP (relative daylighting potential) for each valid daylighting reference point & keep track of DaylitAreas of each type w/ maximum RDPs
 			std::vector<BEMDaylitArea*> paDLATopStdLoc, paDLATopOthLoc, paDLAPrimStdLoc, paDLAPrimOthLoc, paDLASecStdLoc, paDLASecOthLoc;
 			double fMaxRDPTopStdLoc=-9999, fMaxRDPTopOthLoc=-9999, fMaxRDPPrimStdLoc=-9999, fMaxRDPPrimOthLoc=-9999, fMaxRDPSecStdLoc=-9999, fMaxRDPSecOthLoc=-9999;
@@ -2481,6 +2503,25 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 			}	}
 			dDaylitArea = dDLAreaByType[0] + dDLAreaByType[1] + dDLAreaByType[2];
 
+#ifdef _DEBUG
+         if (sErrMsg.isEmpty())
+         {  int iDbgIdx=0;
+            BEMPX_WriteLogFile( QString("         relative daylighting potentials - # max RDPs (std/oth) top %1/%2, prim side %3/%4, sec side %5/%6").arg( QString::number(paDLATopStdLoc.size()), QString::number(paDLATopOthLoc.size()),
+                                                                         QString::number(paDLAPrimStdLoc.size()), QString::number(paDLAPrimOthLoc.size()), QString::number(paDLASecStdLoc.size()), QString::number(paDLASecOthLoc.size()) ) );
+            for (std::vector<BEMDaylitArea>::iterator chk1=spcDLAs.m_daylitAreas.begin(); chk1!=spcDLAs.m_daylitAreas.end(); ++chk1)
+	   		{	BEMDaylitArea* pChk1 = &(*chk1);    iDbgIdx++;
+		   		if (pChk1 && pChk1->GetDaylitArea(0) > 0 && pChk1->m_fDegreesFromSouth == -1 && pChk1->m_bDLRefPntValid[0])
+					   BEMPX_WriteLogFile( QString("            area %1, toplit    %2  dist to parent ctr %3").arg( QString::number(iDbgIdx)).arg( QString::number(pChk1->m_fRelativeDayltPotential[0]),9).arg( 
+                                                                                    QString::number(pChk1->m_dRefPntToSpcCenterDist[0]),9) );
+		   		if (pChk1 && pChk1->GetDaylitArea(1) > 0 && pChk1->m_fDegreesFromSouth >=  0 && pChk1->m_bDLRefPntValid[0])
+					   BEMPX_WriteLogFile( QString("            area %1, prim side %2  dist to parent ctr %3  (deg from S %4)").arg( QString::number(iDbgIdx)).arg( QString::number(pChk1->m_fRelativeDayltPotential[0]),9).arg( 
+                                                                                    QString::number(pChk1->m_dRefPntToSpcCenterDist[0]),9).arg( QString::number(pChk1->m_fDegreesFromSouth) ) );
+		   		if (pChk1 && pChk1->GetDaylitArea(2) > 0 && pChk1->m_fDegreesFromSouth >=  0 && pChk1->m_bDLRefPntValid[1])
+					   BEMPX_WriteLogFile( QString("            area %1, sec  side %2  dist to parent ctr %3  (deg from S %4)").arg( QString::number(iDbgIdx)).arg( QString::number(pChk1->m_fRelativeDayltPotential[1]),9).arg( 
+                                                                                    QString::number(pChk1->m_dRefPntToSpcCenterDist[0]),9).arg( QString::number(pChk1->m_fDegreesFromSouth) ) );
+         }  }
+#endif
+
 		// Next Step - Sort DaylitArea groups (w/ max RDP values) by distance from space centroid and store a pointer to the closest of each type
 			if (paDLATopStdLoc.size() > 0)
 			{	// we HAVE toplit areas w/ a "standard" location ref pt, so choose one of those
@@ -2549,6 +2590,22 @@ double SetupSpaceDaylighting( BEMSpaceDaylitArea& spcDLAs, GeomDBIDs* pGeomIDs, 
 					spcDLAs.m_dlaSec = *paDLASecOthLoc[0];  // choose the first one in the list - should be closest to the space centroid
 				}	assert( spcDLAs.m_dlaSec.m_bDLRefPntValid[0] );
 			}
+
+#ifdef _DEBUG 
+         if (sErrMsg.isEmpty())
+         {  int iDbgIdx=0;
+            BEMPX_WriteLogFile( QString("         sorting and selection of dayltg ref points") );
+            if (spcDLAs.m_dlaTop.m_bDLRefPntValid[0])
+				   BEMPX_WriteLogFile( QString("            toplit    area %1  eff aperture %2  dayltg ref pnt: %3, %4").arg( QString::number(spcDLAs.m_dlaTop.PrimArea()),9).arg(
+                                                                     QString::number(spcDLAs.m_dlaTop.m_fEffectiveAperture[0]),9).arg( QString::number(boost::geometry::get<0>(spcDLAs.m_dlaTop.m_pntDayltgRefPnts[0])),9).arg( QString::number(boost::geometry::get<1>(spcDLAs.m_dlaTop.m_pntDayltgRefPnts[0])),9) );
+            if (spcDLAs.m_dlaPrim.m_bDLRefPntValid[0])
+				   BEMPX_WriteLogFile( QString("            prim side area %1  eff aperture %2  dayltg ref pnt: %3, %4").arg( QString::number(spcDLAs.m_dlaPrim.PrimArea()),9).arg(
+                                                                     QString::number(spcDLAs.m_dlaPrim.m_fEffectiveAperture[0]),9).arg( QString::number(boost::geometry::get<0>(spcDLAs.m_dlaPrim.m_pntDayltgRefPnts[0])),9).arg( QString::number(boost::geometry::get<1>(spcDLAs.m_dlaPrim.m_pntDayltgRefPnts[0])),9) );
+            if (spcDLAs.m_dlaSec.m_bDLRefPntValid[0])
+				   BEMPX_WriteLogFile( QString("            sec  side area %1  eff aperture %2  dayltg ref pnt: %3, %4").arg( QString::number(spcDLAs.m_dlaSec.SecArea()),9).arg(
+                                                                     QString::number(spcDLAs.m_dlaSec.m_fEffectiveAperture[1]),9).arg( QString::number(boost::geometry::get<0>(spcDLAs.m_dlaSec.m_pntDayltgRefPnts[1])),9).arg( QString::number(boost::geometry::get<1>(spcDLAs.m_dlaSec.m_pntDayltgRefPnts[1])),9) );
+         }
+#endif
 
 //			std::vector<BEMDaylitArea*> paDLATopStdLoc, paDLATopOthLoc, paDLAPrimStdLoc, paDLAPrimOthLoc, paDLASecStdLoc, paDLASecOthLoc;
 //			double fMaxRDPTopStdLoc=0, fMaxRDPTopOthLoc=0, fMaxRDPPrimStdLoc=0, fMaxRDPPrimOthLoc=0, fMaxRDPSecStdLoc=0, fMaxRDPSecOthLoc=0;

@@ -766,6 +766,7 @@ public:
 	bool  addTable( const char* name, const char* fileName, BEMTextIO& file, QFile& errorFile );
 	bool  addTable( const char* fileName, QFile& errorFile );
 	void  addTable( BEMTable* pTable )					{	m_tables.push_back(pTable);  return;  }
+	int   numTables()											{	return (int) m_tables.size();  }		// SAC 11/16/20
 
 	int               numRulesetProperties()			{	return (int) m_rulesetProperties.size();  }
 	RuleSetProperty*  getRuleSetProperty(int i)		{	return (i>=0 && i<numRulesetProperties()) ? m_rulesetProperties.at(i) : NULL;  }

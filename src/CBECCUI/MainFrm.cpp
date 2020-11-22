@@ -238,6 +238,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(IDM_HELP_CSEDOCU, OnUpdateHelpCSEDocumentation)
 	ON_WM_PAINT()
 	ON_WM_SETCURSOR()
+   ON_WM_TIMER()
 	ON_COMMAND(ID_FILE_SAVE, OnFileSave)
 	ON_COMMAND(ID_FILE_SAVE_AS, OnFileSaveAs)
 	ON_UPDATE_COMMAND_UI(IDM_POSTWIZHELP, OnUpdatePostHizHelpChecklist)
@@ -1255,7 +1256,7 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				{}
 			}
 		}
-		else if (wAction >= 3051 && wAction <= 3057)
+		else if (wAction >= 3051 && wAction <= 3058)
 		{
 			CString sBrowsePath, sFileDescrip, sFileExt, sInitString;
 			long lDBID_File = 0;
@@ -1323,6 +1324,12 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 				sFileExt	    = _T("epw");
 				lDBID_File	 = BEMPX_GetDatabaseID( "Proj:rnWeatherFile" );	
 			}
+			else if (wAction == 3058)     // SAC 10/06/20
+			{	sBrowsePath = esProjectsPath;
+				sFileDescrip = _T("Batch RunSet file (*.csv)|*.csv||");
+				sFileExt	    = _T("csv");
+				lDBID_File	 = BEMPX_GetDatabaseID( "BatchRuns:RunSetFile" );			   ASSERT( lDBID_File > 0 );
+			}
 
 			if (lDBID_File <= 0 || !DirectoryExists( sBrowsePath ))
 			{  ASSERT( FALSE );
@@ -1351,6 +1358,8 @@ LRESULT CMainFrame::OnButtonPressed( WPARAM wParam, LPARAM lParam )
 							pDoc->SetModifiedFlag();
 						if (wAction == 3056 && m_bDoingCustomRuleEval)
 							ProcessCustomRulelistFile();
+						else if (wAction == 3058)		// SAC 10/28/20
+							BatchUIDefaulting();
 						lRetVal = 1;  // ensure ret val is > 0 to cause WM_DATAMODIFIED to get thrown
 			}	}	}
 		}
@@ -2928,8 +2937,8 @@ long CMainFrame::DataModified(long lDBID, int iObjIdx /*=-1*/)
 		elDefaultOptionObj  = (elDBID_Proj_DefaultOptionObj  < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionObj , iSpecVal, iErr ));
 		elDefaultOptionDone = (elDBID_Proj_DefaultOptionDone < 1 ? DefaultOption_Model : BEMPX_GetInteger( elDBID_Proj_DefaultOptionDone, iSpecVal, iErr ));
 	}
-	else if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName || lDBID == elDBID_BatchRuns_ProjDirectory ||
-				lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir )
+	else if (lDBID == elDBID_BatchRuns_BatchDefsCSV   || lDBID == elDBID_BatchRuns_BatchDefsCSV  || lDBID == elDBID_BatchRuns_BatchName     || lDBID == elDBID_BatchRuns_ProjDirectory ||
+				lDBID == elDBID_BatchRuns_IncludeSubdirs || lDBID == elDBID_BatchRuns_ProjFileNames || lDBID == elDBID_BatchRuns_OutputProjDir || lDBID == elDBID_BatchRuns_RunSetFile )
 	{	BatchUIDefaulting();		// SAC 11/10/17
 		lRetVal = 1;		// need to return > 0 to cause batch dialog refresh - SAC 5/16/18
 	}
@@ -3055,6 +3064,7 @@ void CMainFrame::ExecuteAutoSaveAs(  int iBDBClass )
 	}
 #else
 	iBDBClass;
+	wSaveAsID;
 #endif
 	return;
 }
@@ -3520,10 +3530,10 @@ static void InitBatchRunsFromINI()
 	if (lAdditionalInputs > 0)
 		BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:AdditionalInputs" ), BEMP_Int, (void*) &lAdditionalInputs );
 	// SAC 4/21/19 - added WeatherFileKey
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,  lAdditionalInputs ,   lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "RunSetFile"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   lAdditionalInputs ,   lAdditionalInputs ,  lAdditionalInputs ,   lAdditionalInputs ,         1       ,  lAdditionalInputs,  lAdditionalInputs,   lAdditionalInputs  ,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  lAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3562,10 +3572,10 @@ static void WriteBatchRunDataToINI()
 //	int	  	iaProcessProp[] = {       1          ,   iAdditionalInputs ,         1       ,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
 //	int	iaProcessPropStr[] = {       0          ,       0             ,         0       ,     0                ,     1             ,     1             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	// SAC 4/21/19 - added WeatherFileKey
-	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "BatchDefsCSV"   ,  NULL  };
-	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
-	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,  iAdditionalInputs ,   iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
-	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
+	const char* pszBRProps[] = {  "ProjDirectory",  "IncludeSubdirs",  "StoreProjToSepDir",  "OutputProjDir"    ,  "RunsSpanClimates",  "WeatherFileKey"   ,  "ProjFileNames",  "LogFileName"    ,  "ResultsFileName",  "AnalOptsINISection",  "SDDXMLFilePath" ,  "CSEFilePath"    ,  "Comparison"     ,  "RunSetFile"     ,  "BatchDefsCSV"   ,  NULL  };
+	int   	 iaBRPropType[] = {     BEMP_Str    ,       BEMP_Int   ,       BEMP_Int      ,       BEMP_Str      ,       BEMP_Int     ,       BEMP_Str      ,     BEMP_Str    ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str         ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,     BEMP_Str      ,  0     };
+	long  	iaProcessProp[] = {         1       ,       1          ,   iAdditionalInputs ,   iAdditionalInputs ,  iAdditionalInputs ,   iAdditionalInputs ,         1       ,  iAdditionalInputs,  iAdditionalInputs,   iAdditionalInputs  ,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  iAdditionalInputs,  0     };
+	int	iaProcessPropStr[] = {         1       ,       0          ,       0             ,       1             ,       0            ,       0             ,         0       ,     2             ,     2             ,     0                ,     1             ,     1             ,     2             ,     2             ,     2             ,  0     };  // 0-n/a, 1-Path, 2-Path/File
 	int iPropIdx = -1;
 	while (pszBRProps[++iPropIdx] != NULL)
 		if (iaProcessProp[iPropIdx])
@@ -3661,7 +3671,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			// new method to enable simplified batch UI via BatchRuns object
 			BatchUIDefaulting();
 	      //VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) );
-			int iTabCtrlWd = 610, iTabCtrlHt = 630;
+			int iTabCtrlWd = 610, iTabCtrlHt = 680;	// SAC 10/28/20 - Ht 630->680
 			CWnd* pWnd = GetFocus();
 			//CWnd* pWnd = GetTopLevelParent();
          CSACDlg dlgBatchRun( pWnd /*this*/, iCID_BatchRuns, 0 /* lDBID_ScreenIdx */, 5010 /*iDlgID*/, 0, 0, 0,
@@ -3719,6 +3729,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			if (!sOptionsCSVString.IsEmpty())
 				pszAnalOpts = (const char*) sOptionsCSVString;
 
+			PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
 			int iBatchResult = CMX_PerformBatchAnalysis_CECNonRes(	sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
 																			sWthrPath /*pszSimWeatherPath*/,
 																			NULL /*pszCompMgrDLLPath*/, NULL /*pszDHWWeatherPath*/,
@@ -3726,6 +3737,7 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 																			NULL /*pszLogPathFile*/, sUIVersionString, 
 																			sOptionsCSVString, pszBatchErr, 1024, true /*bDisplayProgress*/, GetSafeHwnd() /*HWND hWnd*/,
 																			bOLDRules, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
+			RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
 				sResult.Format( "Batch processing routine returned %d:\n\n   %s", iBatchResult, pszBatchErr );
@@ -3892,10 +3904,12 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 			if (!sOptionsCSVString.IsEmpty())
 				pszAnalOpts = (const char*) sOptionsCSVString;
 
+			PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
 			int iBatchResult = CMX_PerformBatchAnalysis_CECRes( sBatchPathFile, esProjectsPath, sBEMPathFile, sRulePathFile,
 														sCSEPath, sCSEPath, sT24DHWPath, NULL /*pszDHWWeatherPath*/, sBatchLogPathFile /*pszLogPathFile*/,
 														sUIVersionString, pszAnalOpts, pszBatchErr, 1024, true /*bDisplayProgress*/,
 														GetSafeHwnd() /*HWND hWnd*/, 1 /*SecKeyIndex*/, esSecurityKey, pszBatchReturn, 128 );
+			RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 			CString sResult;
 			if (strlen( pszBatchErr ) > 0)
 				sResult.Format( "Batch processing routine returned %d:\n\n   %s", iBatchResult, pszBatchErr );
@@ -3953,6 +3967,90 @@ void CMainFrame::BatchProcessing( bool bOLDRules /*=false*/ )		// SAC 4/2/14
 
 /////////////////////////////////////////////////////////////////////////////
 
+static CString sRunSetPathFile;
+void ParseBatchRunSetDescription()     // SAC 10/07/20
+{  long lRSFStatus=-1;
+	if (!BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:RunSetFileStatus" ), lRSFStatus, -1 ) || lRSFStatus < 0)
+   {
+	CString sRunSetFile, sRunSetFileDescrip;		//int iSV, iErr;    
+	if (!BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:RunSetFile" ), sRunSetFile ) || sRunSetFile.IsEmpty())
+      lRSFStatus = 0;   // RunSetFile not set
+   else
+   {  sRunSetPathFile = sRunSetFile;
+      if (sRunSetPathFile.Find(':') < 1 && sRunSetPathFile[0] != '\\' && sRunSetPathFile[0] != '/')
+      {  // sRunSetFile excludes path, so look for it in expected places
+         CString sINIPath = ReadProgString( "paths", "ProjectsPath", "", TRUE );
+         if (!sINIPath.IsEmpty())
+            sRunSetPathFile = sINIPath + CString( "BatchRunSets\\" ) + sRunSetFile;
+         if (!FileExists( sRunSetPathFile ))
+         {  if (BEMPX_SetDataString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), sINIPath ) && !sINIPath.IsEmpty())
+               sRunSetPathFile = sINIPath + sRunSetFile;
+         }
+      }
+
+      if (!FileExists( sRunSetPathFile ))
+         lRSFStatus = 1;   // RunSetFile not found
+      else
+      {	CStdioFile inFile;
+			if (inFile.Open( sRunSetPathFile, CFile::modeRead ) == 0)
+         {  lRSFStatus = 2;   // RunSetFile invalid
+            sRunSetFileDescrip.Format( "Error opening RunSet definitions file:  %s", sRunSetPathFile );
+         }
+         else
+         {	CString str;
+				int i=0, iFormatVer=0, iComma;
+				while (++i < 200 && lRSFStatus < 2)
+				{	inFile.ReadString( str );
+               if (str.IsEmpty() || str[0] == ';' || (str[0] == '\"' && str[1] == ';'))
+               {  // skip to next line
+               }
+               else if (iFormatVer < 1)
+               {  iComma = str.Find( ',' );
+                  if (iComma > 0)
+                     str = str.Left(iComma);
+                  iFormatVer = atoi( (const char*) str );
+                  if (iFormatVer > 0)
+                  {  // skip to next line
+                  }
+                  else
+                  {  lRSFStatus = 2;   // RunSetFile invalid
+                     sRunSetFileDescrip.Format( "Error:  invalid RunSet definitions file Format Version #:  %s", str );
+               }  }
+               else
+               {  if (str[0] == '\"')
+                  {  str = str.Right( str.GetLength()-1 );
+                     iComma = str.Find( '\"' );
+                     if (iComma > 0)
+                        str = str.Left(iComma);
+                  }
+                  else
+                  {  iComma = str.Find( ',' );
+                     if (iComma > 0)
+                        str = str.Left(iComma);
+                  }
+                  if (str.IsEmpty())
+                  {  lRSFStatus = 2;   // RunSetFile invalid
+                     sRunSetFileDescrip.Format( "Error:  RunSet description not found" );
+                  }
+                  else
+                  {  lRSFStatus = 3;   // RunSetFile OK
+                     sRunSetFileDescrip = str;
+               }  }
+            }  // end of While loop
+            if (i >= 200 || lRSFStatus == 0)
+            {  lRSFStatus = 2;   // RunSetFile invalid
+               sRunSetFileDescrip.Format( "Error:  RunSet description not found" );
+            }
+         }
+      }
+   }
+	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:RunSetFileStatus" ), BEMP_Int,
+		   					(void*) &lRSFStatus, BEMO_User, -1, BEMS_ProgDefault );
+  	BEMPX_SetBEMData( BEMPX_GetDatabaseID( "BatchRuns:RunSetDescrip" ), BEMP_Str,
+		   					(void*) ((const char*) sRunSetFileDescrip), BEMO_User, -1, BEMS_ProgDefault );
+   }
+}
+
 BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 {
 	BOOL bRetVal = TRUE;
@@ -4003,6 +4101,8 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 									(void*) ((const char*) sTemp), BEMO_User, -1, BEMS_ProgDefault );
 	}
 
+   ParseBatchRunSetDescription();     // SAC 10/07/20
+
 	VERIFY( CMX_EvaluateRuleset( "Default_BatchRuns", FALSE /*bLogRuleEvaluation*/, FALSE /*bTagDataAsUserDefined*/, FALSE /*bVerboseOutput*/ ) ); // to set FullProjDirectory prior to the following logic
 
 	QString qsFullProjDir   = BEMPX_GetString( BEMPX_GetDatabaseID( "BatchRuns:FullProjDirectory" ), iSV, iErr );
@@ -4051,17 +4151,21 @@ BOOL CMainFrame::BatchUIDefaulting()	// SAC 11/10/17
 
 
 #ifdef UI_CARES
-static int siBatchDefsFileVer = 1;
-static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11,12\n";
-static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,,,,,,Multiple,Front,Program,Processing\n";
-static const char* pszBatchDefsColLabel3 = "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Output,Options\n";
+static int siBatchDefsFileVer = 2;		// SAC 10/28/20 - 1->2
+//static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11,12\n";
+static const char* pszBatchDefsColLabel2  = "; Process,Existing,New or Save As,,,,,,Multiple,Front,PV Sys,Battery,Target,";
+static const char* pszBatchDefsColLabel22 = "Program,Processing\n";
+static const char* pszBatchDefsColLabel3  = "; Record,File Name,File Name,Run Title,Climate Zone,Analysis Type,Standards Ver,Sim Report File,Orientation,Orientation,Size,Size,EDR,";
+static const char* pszBatchDefsColLabel32 = "Output,Options\n";
 static const char* pszCZs[] = {  "CZ1  (Arcata)", "CZ2  (Santa Rosa)", "CZ3  (Oakland)", "CZ4  (San Jose)", "CZ5  (Santa Maria)", "CZ6  (Torrance)", "CZ7  (San Diego)", "CZ8  (Fullerton)",
 											"CZ9  (Burbank)", "CZ10  (Riverside)", "CZ11  (Red Bluff)", "CZ12  (Sacramento)", "CZ13  (Fresno)", "CZ14  (Palmdale)", "CZ15  (Palm Springs)", "CZ16  (Blue Canyon)" };
 #elif UI_CANRES
 static int siBatchDefsFileVer = 3;
-static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11\n";
-static const char* pszBatchDefsColLabel2 = "; Process,Existing,New or Save As,Path to Copy,Path to Copy,,Override AutoSize Flag,,,Program,Processing\n";
-static const char* pszBatchDefsColLabel3 = "; Record,Project or File Name (full path or relative to \\Projects),Project or File Name,SDD XML files to,CSE files to,Run Title,p,bz,b,Output,Options\n";
+//static const char* pszBatchDefsColLabel1 = ";   1,2,3,4,5,6,7,8,9,10,11\n";
+static const char* pszBatchDefsColLabel2  = "; Process,Existing,New or Save As,Path to Copy,Path to Copy,,";
+static const char* pszBatchDefsColLabel22 = "Override AutoSize Flag,,,Program,Processing\n";
+static const char* pszBatchDefsColLabel3  = "; Record,Project or File Name (full path or relative to \\Projects),Project or File Name,SDD XML files to,CSE files to,Run Title,";
+static const char* pszBatchDefsColLabel32 = "p,bz,b,Output,Options\n";
 static const char* pszCZs[] = {  "ClimateZone1", "ClimateZone2", "ClimateZone3", "ClimateZone4", "ClimateZone5", "ClimateZone6", "ClimateZone7", "ClimateZone8",
 											"ClimateZone9", "ClimateZone10", "ClimateZone11", "ClimateZone12", "ClimateZone13", "ClimateZone14", "ClimateZone15", "ClimateZone16" };
 #endif
@@ -4173,6 +4277,163 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 						qsErrMsg = QString( "User chose not to use/reference %1 file:  %2" ).arg( qsFileDescrip, qsResultsCSVFN );
 			}	}
 
+		// reading & parsing of RunSet definitions file - SAC 10/16/20 (tic #3228)
+			int iNumRunSetDataElements=0, iNumRunSetRecords=0;
+			CStringArray saRunSetDataElementLabels;
+			std::vector<std::vector<std::string>> saaRunSetRecords;
+			std::vector<std::vector<std::string>> saaRunSetAnalysisActionRecords;
+			std::vector<int> iaAnalActPathFile;		// SAC 11/14/20
+			CString sRunSetFile, sRunSetPathFile, sRunSetPathOnly;		long lRSFStatus = 0;
+			if (qsErrMsg.isEmpty() &&
+				 BEMPX_SetDataString(  BEMPX_GetDatabaseID( "BatchRuns:RunSetFile"       ), sRunSetFile ) && !sRunSetFile.IsEmpty() &&
+				 BEMPX_SetDataInteger( BEMPX_GetDatabaseID( "BatchRuns:RunSetFileStatus" ), lRSFStatus  ) && lRSFStatus > 2)
+			{	// ensure complete & valid sRunSetPathFile
+				sRunSetPathFile = sRunSetFile;
+		      if (sRunSetPathFile.Find(':') < 1 && sRunSetPathFile[0] != '\\' && sRunSetPathFile[0] != '/')
+		      {  // sRunSetFile excludes path, so look for it in expected places
+		         CString sINIPath = ReadProgString( "paths", "ProjectsPath", "", TRUE );
+		         if (!sINIPath.IsEmpty())
+		            sRunSetPathFile = sINIPath + CString( "BatchRunSets\\" ) + sRunSetFile;
+		         if (!FileExists( sRunSetPathFile ))
+		         {  if (!qsFullProjDir.isEmpty())
+		            {  sRunSetPathFile  = qsFullProjDir.toLatin1().constData();
+		               sRunSetPathFile += sRunSetFile;
+		         }	}
+		      }
+		      if (!FileExists( sRunSetPathFile ))
+		      {	assert( false );
+		      }
+		      else
+		      {	CStdioFile inFile;
+					if (inFile.Open( sRunSetPathFile, CFile::modeRead ) == 0)
+		         {	assert( false );
+		         }
+		         else
+		         {	int iRSPathEndIdx = std::max( sRunSetPathFile.ReverseFind('/'), sRunSetPathFile.ReverseFind('\\') );		// SAC 11/14/20
+		         	if (iRSPathEndIdx > 0)
+		         		sRunSetPathOnly = sRunSetPathFile.Left( iRSPathEndIdx+1 );
+		         	CString str;		CStringArray saCSVdata;
+						int i=0, iFormatVer=0, iReadMode=0, iNumCSVElements=0, iRunSetFileLineNum=0, iComma;
+						while (++i < 1000 && iReadMode >= 0 && iReadMode < 5)
+						{	inFile.ReadString( str );
+							iRunSetFileLineNum++;
+		               if (str.IsEmpty() || str[0] == ';' || (str[0] == '\"' && str[1] == ';'))
+		               {  // skip past comment line
+		               }
+		               else
+		               {	switch (iReadMode)
+		               	{	case  0 : {	// reading iFormatVer
+								               iComma = str.Find( ',' );
+								               if (iComma > 0)
+								                  str = str.Left(iComma);
+								               iFormatVer = atoi( (const char*) str );
+								               if (iFormatVer > 0)
+								               	iReadMode = 1;		// then skip to next line
+								               else
+								               	iReadMode = -1;
+												 }	break;
+									case  1 : { // reading RunSetDescription
+													if (str[0] == '\"')
+								               {  str = str.Right( str.GetLength()-1 );
+								                  iComma = str.Find( '\"' );
+								                  if (iComma > 0)
+								                     str = str.Left(iComma);
+								               }
+								               else
+								               {  iComma = str.Find( ',' );
+								                  if (iComma > 0)
+								                     str = str.Left(iComma);
+								               }
+								               if (str.IsEmpty())
+								               	iReadMode = -2;
+								               else
+								                  iReadMode = 2;		// then skip to next line
+								   			 }	break;
+									case  2 : { // reading RunSet Column Labels Record
+													iNumCSVElements = ParseCSVRecord( (const char*) str, saCSVdata );
+													if (iNumCSVElements < 3)
+													{	iReadMode = -3;
+														qsErrMsg = QString( "Error encountered parsing RunSet CSV file:  RunSet table column labels (%1 found, 3 or more expected) on line %2" ).arg( QString::number( iNumCSVElements ), QString::number( iRunSetFileLineNum ) );
+													}
+													else
+													{	if (saCSVdata.GetSize() > 3)		// first three are: InputFN, OutSubDir, AppendOutFN
+														{	for (int icsv=3; icsv<saCSVdata.GetSize(); icsv++)
+															{	if (saCSVdata[icsv].Find(';')==0 || saCSVdata[icsv].Find("\";")==0)
+																	icsv = saCSVdata.GetSize();
+																else
+																	saRunSetDataElementLabels.Add( saCSVdata[icsv] );
+														}	}
+														iNumRunSetDataElements = saRunSetDataElementLabels.GetSize();
+								                  iReadMode = 3;		// then skip to next line
+													}
+								   			 }	break;
+									case  3 : { // reading RunSetRecords
+													iNumCSVElements = ParseCSVRecord( (const char*) str, saCSVdata );
+													if (iNumCSVElements < 1)
+													{	// do nothing - continue onto next record (?)
+													}
+													else if (!saCSVdata[0].CompareNoCase("END_RUN_SET") || saCSVdata[0].Find("END_RUN_SET")==0)
+													{	if (saaRunSetRecords.size() < 1)
+														{	iReadMode = -4;
+															qsErrMsg = QString( "Error encountered parsing RunSet CSV file:  RunSet table includes no records (line %1)" ).arg( QString::number( iRunSetFileLineNum ) );
+														}
+														else
+									               {	iNumRunSetRecords = (int) saaRunSetRecords.size();
+									                  iReadMode = 4;		// then skip to next section
+													}	}
+													else
+													{	std::vector<std::string> saRunSetRec;
+														int iNumRunSetCols = iNumRunSetDataElements + 3;
+														for (int icsv=0; icsv < iNumRunSetCols; icsv++)
+														{	if (icsv < saCSVdata.GetSize())
+															{	if (saCSVdata[icsv].Find(',') >= 0 && saCSVdata[icsv][0] != '\"')
+																	saCSVdata[icsv] = CString("\"") + saCSVdata[icsv] + CString("\"");	// add leading & trailing quotes for CSV fields containing commas - SAC 10/22/20
+																saRunSetRec.push_back( (const char*) saCSVdata[icsv] );
+															}
+															else
+																saRunSetRec.push_back( "" );
+														}
+														saaRunSetRecords.push_back( saRunSetRec );
+													}
+								   			 }	break;
+									case  4 : { // reading AnalysisActionRecords
+													iNumCSVElements = ParseCSVRecord( (const char*) str, saCSVdata );
+													if (iNumCSVElements < 1)
+													{	// do nothing - continue onto next record (?)
+													}
+													else if (!saCSVdata[0].CompareNoCase("END") || saCSVdata[0].Find("END")==0)
+													{	if (saaRunSetAnalysisActionRecords.size() < 1)
+														{	iReadMode = -5;
+															qsErrMsg = QString( "Error encountered parsing RunSet CSV file:  AnalysisAction table includes no records (line %1)" ).arg( QString::number( iRunSetFileLineNum ) );
+														}
+														else
+									                  iReadMode = 5;		// done!
+													}
+													else
+													{	std::vector<std::string> saAnalActRec;
+														for (int icsv=0; icsv < 6; icsv++)
+														{	if (icsv < saCSVdata.GetSize())
+															{	if (saCSVdata[icsv].Find(',') >= 0 && saCSVdata[icsv][0] != '\"')
+																	saCSVdata[icsv] = CString("\"") + saCSVdata[icsv] + CString("\"");	// add leading & trailing quotes for CSV fields containing commas - SAC 10/22/20
+																saAnalActRec.push_back( (const char*) saCSVdata[icsv] );
+															}
+															else
+																saAnalActRec.push_back( "" );
+														}
+														saaRunSetAnalysisActionRecords.push_back( saAnalActRec );
+													}
+								   			 }	break;
+								}	// end of RunSet file reading switch statement
+
+		            }	}  // end of else & While loop
+						if (iReadMode < 5)
+						{	assert( false );	// some read error
+							iNumRunSetDataElements = 0;
+							if (qsErrMsg.isEmpty())
+								qsErrMsg = QString( "Error encountered parsing RunSet CSV file (error code %1)" ).arg( QString::number( iReadMode ) );
+						}
+			}	}	}	// end of code reading/parsing RunSet CSV file
+
 			if (qsErrMsg.isEmpty())
 			{	sBatchLogPathFile = qsOutputLogFN.toLatin1().constData();
 				sBatchResultsPathFile = qsResultsCSVFN.toLatin1().constData();
@@ -4190,8 +4451,8 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 					}	while (FileExists( sBatchDefsPathFile ));
 				}
 
-				QString qsProjFileNames = BEMPX_GetString(                elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
-				long lIncludeSubdirs     = BEMPX_GetInteger(               elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
+				QString qsProjFileNames = BEMPX_GetString(   elDBID_BatchRuns_ProjFileNames       , iSV, iErr );
+				long lIncludeSubdirs    = BEMPX_GetInteger(  elDBID_BatchRuns_IncludeSubdirs       , iSV, iErr );
 				bool bOutDirSameAsIn = (qsFullProjDir.compare( qsOutputProjDir, Qt::CaseInsensitive ) == 0);
 		      CStdioFile defsFile;
 		      // open file
@@ -4203,92 +4464,222 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 					if (qsAnalOptsINI.length() > 0)
 						VERIFY( PopulateAnalysisOptionsString( sBatchAnalOpts, true /*bBatchMode*/, qsAnalOptsINI.toLatin1().constData() ) );		// SAC 1/29/14  // SAC 2/1/19 - switched BatchMode argument from false->true (seemed wrong)
 
+					bool bHaveRunSetData = (iNumRunSetDataElements > 0 && iNumRunSetRecords > 0);
+					int iUseBatchDefsFileVer = (bHaveRunSetData ? 4 : siBatchDefsFileVer);
+
 					CString str, str2;
 					defsFile.WriteString( "; Fmt Ver,Summary Results File\n" );
-					str.Format( "%d,\"%s\"\n", siBatchDefsFileVer, qsResultsCSVFN.toLatin1().constData() );		defsFile.WriteString( str );
-					defsFile.WriteString( ";\n" );
-					defsFile.WriteString( pszBatchDefsColLabel1 );
-					defsFile.WriteString( pszBatchDefsColLabel2 );
-					defsFile.WriteString( pszBatchDefsColLabel3 );
-					int iRunNum=0;
-					QStringList filters;
-					filters << qsProjFileNames;
-					QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
-					QString qsFile, qsOutDir;
-					while (it.hasNext())
-					{	qsFile = it.next();
-						qsOutDir.clear();
-						iRunNum++;
+					str.Format( "%d,\"%s\"\n", iUseBatchDefsFileVer, qsResultsCSVFN.toLatin1().constData() );		defsFile.WriteString( str );
 
-						if (lRunsSpanClimates > 0)		// SAC 1/4/19
-						{	int iCZ=1;
-							for (; (qsErrMsg.isEmpty() && iCZ<=16); iCZ++)
-							{
-								int iLastSlashIn = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
-								int iLastDotIn   = qsFile.lastIndexOf( "." );		ASSERT( iLastDotIn > (iLastSlashIn+1) );
-								QString qsRunTitle = qsFile.mid( iLastSlashIn+1, std::max( 1, (iLastDotIn-iLastSlashIn-1) ) );
-								QString qsFileExt  = qsFile.right( qsFile.length()-iLastDotIn ); // includes leading '.'
+					CString sRunSetColLbls2, sRunSetColLbls3;
+					if (bHaveRunSetData)
+					{	// write AnalysisAction data records into batch defs CSV
+						defsFile.WriteString( ";\n" );
+						defsFile.WriteString( ";\n" );
+						defsFile.WriteString( ";Type,AnalysisPhase,BeforeAfterPhase,Obj:Prop,Obj to alter,,Run Col Label\n" );
+						for (int iAAidx=0; (qsErrMsg.isEmpty() && iAAidx < (int) saaRunSetAnalysisActionRecords.size()); iAAidx++)
+						{	str.Format( "%s,%s,%s,%s,%s,;,%s\n", saaRunSetAnalysisActionRecords[iAAidx][0].c_str(), saaRunSetAnalysisActionRecords[iAAidx][1].c_str(), saaRunSetAnalysisActionRecords[iAAidx][2].c_str(),
+																			 saaRunSetAnalysisActionRecords[iAAidx][3].c_str(), saaRunSetAnalysisActionRecords[iAAidx][4].c_str(), saaRunSetAnalysisActionRecords[iAAidx][5].c_str() );
+							defsFile.WriteString( str );
+							sRunSetColLbls2 += ",";
+							sRunSetColLbls3 += (CString(saaRunSetAnalysisActionRecords[iAAidx][5].c_str()) + CString(","));
+							iaAnalActPathFile.push_back( ((saaRunSetAnalysisActionRecords[iAAidx][0].find("PathFile") != std::string::npos) ? 1 : 0) );		// SAC 11/14/20
+						}
+						defsFile.WriteString( "END,\n" );
+					}
+
+					defsFile.WriteString( ";\n" );
+					defsFile.WriteString( ";\n" );
+//					defsFile.WriteString( pszBatchDefsColLabel1 );
+					str.Format( "%s%s%s", pszBatchDefsColLabel2, sRunSetColLbls2, pszBatchDefsColLabel22 );
+					defsFile.WriteString( str );
+					str.Format( "%s%s%s", pszBatchDefsColLabel3, sRunSetColLbls3, pszBatchDefsColLabel32 );
+					defsFile.WriteString( str );
+
+					int iRunNum=0;
+					if (bHaveRunSetData)
+					{	// very different process for populating individual run records when RunSet data present
+						ASSERT( iNumRunSetRecords == (int) saaRunSetRecords.size() );
+						for (int iRunSet=0; (qsErrMsg.isEmpty() && iRunSet < iNumRunSetRecords); iRunSet++)
+						{
+							QString qsInpFiles = saaRunSetRecords[iRunSet][0].c_str();		// SAC 10/28/20
+							if (qsInpFiles.indexOf('.') < 0)
+							{	int iDotIdx = qsProjFileNames.indexOf('.');
+								if (iDotIdx >= 0)
+									qsInpFiles += qsProjFileNames.right( qsProjFileNames.length()-iDotIdx );
+							}
+							QStringList filters;
+							filters << qsInpFiles;
+							QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
+							QString qsFile, qsOutDir;
+							while (it.hasNext() && qsErrMsg.isEmpty())
+							{	qsFile = it.next();
+								qsOutDir.clear();
+								iRunNum++;
+
 								if (bOutDirSameAsIn)
-								{	str.Format( "1,\"%s\",\"%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsFile.left(iLastDotIn).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
-									if (iLastSlashIn > 0)
-										qsOutDir = qsFile.left( iLastSlashIn+1 );
+								{	//str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+									int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+									if (iLastSlash > 0)
+										qsOutDir = qsFile.left( iLastSlash+1 );
 								}
 								else
 								{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
-									int iLastSlashOut = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
-									if (iLastSlashOut > qsOutputProjDir.length())
-									{	QDir dir( qsOutDir.left( iLastSlashOut ) );
+									int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+									if (iLastSlash > qsOutputProjDir.length())
+									{	QDir dir( qsOutDir.left( iLastSlash ) );
 										if (!dir.exists())
 											dir.mkpath(".");
 										if (!dir.exists() && qsErrMsg.isEmpty())
-											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlashOut ) );
+											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
 									}
-									str.Format( "1,\"%s\",\"%s%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
-													qsFile.mid( qsFullProjDir.length(), qsFile.length()-qsFullProjDir.length()-qsFileExt.length() ).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
-									if (iLastSlashOut > 0)
-										qsOutDir = qsOutDir.left( iLastSlashOut+1 );
+									//str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+									//											 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+									if (iLastSlash > 0)
+										qsOutDir = qsOutDir.left( iLastSlash+1 );
+								}
+								QString qsOutSubdir = saaRunSetRecords[iRunSet][1].c_str();
+								if (!qsOutSubdir.isEmpty())
+									qsOutDir += QString( "%1/" ).arg( qsOutSubdir );
+								QString qsOutFilename = qsFile.right( qsFile.length()-qsFullProjDir.length() );
+								QString qsRunSetOutFile = saaRunSetRecords[iRunSet][2].c_str();
+								if (!qsRunSetOutFile.isEmpty())
+								{	if ((qsRunSetOutFile.left(1).compare("…")==0 || qsRunSetOutFile.left(3).compare("...")==0) &&
+										 qsOutFilename.lastIndexOf('.') > 0)
+									{	// insert string @ end of default output filename (before extension)
+										int iNumCharsToAppend = qsRunSetOutFile.length() - (qsRunSetOutFile.left(1).compare("…")==0 ? 1 : 3);
+										qsOutFilename.insert( qsOutFilename.lastIndexOf('.'), qsRunSetOutFile.right(iNumCharsToAppend) );
+									}
+									else
+										// replace output filename
+										qsOutFilename = QString( "%1.%2" ).arg( qsRunSetOutFile, qsOutFilename.right( qsOutFilename.length()-qsOutFilename.lastIndexOf('.')-1 ) );
+								}
+								str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutDir.toLatin1().constData(), qsOutFilename.toLatin1().constData() );
+#ifdef UI_CARES
+								str2 = ",,,,,,,,,,";
+#elif UI_CANRES
+								str2.Format( "\"%s%s\",\"%s%s\",,", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+																				qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData() );
+#endif
+								str += str2;
+
+								for (int iAAidx=0; (qsErrMsg.isEmpty() && iAAidx < iNumRunSetDataElements); iAAidx++)
+								{	QString qsRunSetVal = saaRunSetRecords[iRunSet][3+iAAidx].c_str();
+									QString qsAppend = ",";
+									if (!qsRunSetVal.isEmpty())
+									{	//if (qsRunSetVal.indexOf(',') >= 0)
+										//	qsAppend = QString( "\"%1\"," ).arg( qsRunSetVal );
+										//else
+										if (iaAnalActPathFile[iAAidx] > 0 && qsRunSetVal.indexOf(':') < 1 &&
+											 qsRunSetVal[0]!='\\' && qsRunSetVal[0]!='/')
+										{	// this is a *PathFile column but data not a complete path
+											QString sAAItemFullPath = qsFullProjDir + qsRunSetVal;
+											if (FileExists( sAAItemFullPath.toLatin1().constData() ))						// first check for *PathFile in Input project directory - SAC 11/14/20
+												qsRunSetVal = sAAItemFullPath;
+											else
+											{	sAAItemFullPath = sRunSetPathOnly + qsRunSetVal;
+												if (FileExists( sAAItemFullPath.toLatin1().constData() ))					// next check for *PathFile in RunSet file directory - SAC 11/14/20
+													qsRunSetVal = sAAItemFullPath;
+												else
+													qsErrMsg = QString( "Unable to find %1 '%2' in following locations for run #%3:  '%4'  '%5'" ).arg(		// SAC 11/14/20
+																		saaRunSetAnalysisActionRecords[iAAidx][0].c_str(), qsRunSetVal, QString::number(iRunNum), qsFullProjDir, (const char*) sRunSetPathOnly );
+										}	}
+										qsAppend = QString( "%1," ).arg( qsRunSetVal );
+									}
+									str += qsAppend.toLatin1().constData();
 								}
 
 #ifdef UI_CARES
-								str2.Format( "\"%s-CZ%.2i\",\"%s\",,,,,,CumCSV,,,\n", qsRunTitle.toLatin1().constData(), iCZ, pszCZs[iCZ-1] );
+								str2 = "CumCSV,,\n";
 #elif UI_CANRES
-								str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
-																qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );		ASSERT( FALSE );  // need to incorporate CZ detail
+								str2.Format( ",,,CumCSV,\"%s\",\n", sBatchAnalOpts );
 #endif
 								str += str2;
 								defsFile.WriteString( str );
-						}	}
-						else	// runs DON'T span all CZs 
-						{	if (bOutDirSameAsIn)
-							{	str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
-								int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
-								if (iLastSlash > 0)
-									qsOutDir = qsFile.left( iLastSlash+1 );
-							}
-							else
-							{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
-								int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
-								if (iLastSlash > qsOutputProjDir.length())
-								{	QDir dir( qsOutDir.left( iLastSlash ) );
-									if (!dir.exists())
-										dir.mkpath(".");
-									if (!dir.exists() && qsErrMsg.isEmpty())
-										qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
-								}
-								str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
-																			 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
-								if (iLastSlash > 0)
-									qsOutDir = qsOutDir.left( iLastSlash+1 );
-							}
+							}	// end of:  while (it.hasNext())
+						}	// end of:  for (int iRunSet=...
+					}
+					else
+					{
+						QStringList filters;
+						filters << qsProjFileNames;
+						QDirIterator it( qsFullProjDir, filters, QDir::Files, (lIncludeSubdirs ? QDirIterator::Subdirectories : QDirIterator::NoIteratorFlags) );
+						QString qsFile, qsOutDir;
+						while (it.hasNext())
+						{	qsFile = it.next();
+							qsOutDir.clear();
+							iRunNum++;
+
+							if (lRunsSpanClimates > 0)		// SAC 1/4/19
+							{	int iCZ=1;
+								for (; (qsErrMsg.isEmpty() && iCZ<=16); iCZ++)
+								{
+									int iLastSlashIn = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+									int iLastDotIn   = qsFile.lastIndexOf( "." );		ASSERT( iLastDotIn > (iLastSlashIn+1) );
+									QString qsRunTitle = qsFile.mid( iLastSlashIn+1, std::max( 1, (iLastDotIn-iLastSlashIn-1) ) );
+									QString qsFileExt  = qsFile.right( qsFile.length()-iLastDotIn ); // includes leading '.'
+									if (bOutDirSameAsIn)
+									{	str.Format( "1,\"%s\",\"%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsFile.left(iLastDotIn).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
+										if (iLastSlashIn > 0)
+											qsOutDir = qsFile.left( iLastSlashIn+1 );
+									}
+									else
+									{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+										int iLastSlashOut = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+										if (iLastSlashOut > qsOutputProjDir.length())
+										{	QDir dir( qsOutDir.left( iLastSlashOut ) );
+											if (!dir.exists())
+												dir.mkpath(".");
+											if (!dir.exists() && qsErrMsg.isEmpty())
+												qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlashOut ) );
+										}
+										str.Format( "1,\"%s\",\"%s%s-CZ%.2i%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+														qsFile.mid( qsFullProjDir.length(), qsFile.length()-qsFullProjDir.length()-qsFileExt.length() ).toLatin1().constData(), iCZ, qsFileExt.toLatin1().constData() );
+										if (iLastSlashOut > 0)
+											qsOutDir = qsOutDir.left( iLastSlashOut+1 );
+									}
 
 #ifdef UI_CARES
-							str2 = ",,,,,,,,,CumCSV,,\n";
+									str2.Format( "\"%s-CZ%.2i\",\"%s\",,,,,,CumCSV,,,\n", qsRunTitle.toLatin1().constData(), iCZ, pszCZs[iCZ-1] );
 #elif UI_CANRES
-							str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
-															qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );
+									str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+																	qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );		ASSERT( FALSE );  // need to incorporate CZ detail
 #endif
-							str += str2;
-							defsFile.WriteString( str );
+									str += str2;
+									defsFile.WriteString( str );
+							}	}
+							else	// runs DON'T span all CZs 
+							{	if (bOutDirSameAsIn)
+								{	str.Format( "1,\"%s\",\"%s\",", qsFile.toLatin1().constData(), qsFile.toLatin1().constData() );
+									int iLastSlash = std::max( qsFile.lastIndexOf( "\\" ), qsFile.lastIndexOf( "/" ) );
+									if (iLastSlash > 0)
+										qsOutDir = qsFile.left( iLastSlash+1 );
+								}
+								else
+								{	qsOutDir = qsOutputProjDir + qsFile.right( qsFile.length()-qsFullProjDir.length() );
+									int iLastSlash = std::max( qsOutDir.lastIndexOf( "\\" ), qsOutDir.lastIndexOf( "/" ) );
+									if (iLastSlash > qsOutputProjDir.length())
+									{	QDir dir( qsOutDir.left( iLastSlash ) );
+										if (!dir.exists())
+											dir.mkpath(".");
+										if (!dir.exists() && qsErrMsg.isEmpty())
+											qsErrMsg = QString( "Unable to create run #%1 output directory:\n   %2" ).arg( QString::number(iRunNum), qsOutDir.left( iLastSlash ) );
+									}
+									str.Format( "1,\"%s\",\"%s%s\",", qsFile.toLatin1().constData(), qsOutputProjDir.toLatin1().constData(),
+																				 qsFile.right( qsFile.length()-qsFullProjDir.length() ).toLatin1().constData() );
+									if (iLastSlash > 0)
+										qsOutDir = qsOutDir.left( iLastSlash+1 );
+								}
+
+#ifdef UI_CARES
+								str2 = ",,,,,,,,,,CumCSV,,\n";
+#elif UI_CANRES
+								str2.Format( "\"%s%s\",\"%s%s\",,,,,CumCSV,\"%s\",\n", qsOutDir.toLatin1().constData(), qsSDDXMLFilePath.toLatin1().constData(),
+																qsOutDir.toLatin1().constData(), qsCSEFilePath.toLatin1().constData(), sBatchAnalOpts );
+#endif
+								str += str2;
+								defsFile.WriteString( str );
+							}
 						}
 					}
 
@@ -4311,6 +4702,27 @@ BOOL CMainFrame::GenerateBatchInput( CString& sBatchDefsPathFile, CString& sBatc
 	return qsErrMsg.isEmpty();
 }
 
+/////////////////////////////////////////////////////////////////////////////
+
+void CMainFrame::OnTimer(UINT_PTR nIDEvent)		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+{
+   if (nIDEvent == 5)
+   {
+		SetThreadExecutionState( ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED );
+   }
+   CFrameWnd::OnTimer(nIDEvent);
+}
+
+void CMainFrame::PreventSystemSleepDuringAnalysis()		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+{
+	SetTimer( 5, 30000, NULL );	// causes timer to be processed every 30 seconds
+}
+
+void CMainFrame::RestoreSystemSleepFollowingAnalysis()		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+{
+	KillTimer( 5 );
+	SetThreadExecutionState( ES_CONTINUOUS );
+}
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -5902,6 +6314,8 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 		BOOL bPerformSimulations = pApp->PerformSimulations();		
 		bPerformSimulations &= (m_bDoingSummaryReport == FALSE);  // SAC 6/19/13
 
+		PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+
 
 #ifdef UI_CARES
 
@@ -5977,6 +6391,8 @@ afx_msg LRESULT CMainFrame::OnPerformAnalysis(WPARAM, LPARAM)
 					//												/*GetSafeHwnd() HWND hWnd,*/ (PAnalysisProgressCallbackFunc) AnalysisProgressCallbackFunc );
 					EnableWindow( TRUE );
    	lRetVal = iSimResult;
+
+		RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 
 	// Populate string w/ summary results of analysis
 		if ((iSimResult == 0 || iSimResult >= BEMAnal_CECRes_MinErrorWithResults) && bPerformSimulations)
@@ -6360,6 +6776,8 @@ enum CodeType	{	CT_T24N,		CT_S901G,	CT_ECBC,	CT_360,		CT_NumTypes  };	// SAC 10/
 					EnableWindow( TRUE );
    	lRetVal = iSimResult;
 
+		RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
+
 	// Populate string w/ summary results of analysis  - SAC 5/19/14 - added similar to -Res
 		if (iSimResult == 0 && bPerformSimulations && strlen( pszCSVResultSummary ) > 0)
 		{
@@ -6690,6 +7108,8 @@ void CMainFrame::OnPerformAPIAnalysis()
 		CString sRuleFile = ReadProgString( "files", "RulesetFile", "" );									ASSERT( !sRuleFile.IsEmpty() );
 		sRulePathFile += sRuleFile;																					ASSERT( FileExists( sRulePathFile ) );
 
+		PreventSystemSleepDuringAnalysis();			// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+
 		int iAnalysisResult = 0;
 
 #ifdef UI_CARES
@@ -6787,6 +7207,8 @@ void CMainFrame::OnPerformAPIAnalysis()
 																	(PAnalysisProgressCallbackFunc) NonResAnalysisProgressCallbackFunc );
 					EnableWindow( TRUE );
 #endif
+
+		RestoreSystemSleepFollowingAnalysis();		// SAC 10/21/20 - kill timer used to prevent system sleep during analysis
 
 		if (BEMPX_GetUIActiveFlag())	// SAC 3/19/20
 		{	CString sRetMsg;

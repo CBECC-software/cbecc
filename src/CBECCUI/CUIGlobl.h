@@ -243,6 +243,8 @@ extern BOOL		WriteProgString(LPCSTR section, LPCSTR entry, LPCSTR string);
 extern void TransferProxyINISettings();	// transfer Proxy settings from Data INI file into Proxy-specific file (w/ encryption) - SAC 1/4/17
 extern BOOL GetEncodedSetting( LPCSTR section, LPCSTR entry, CString& sOption );
 
+int ParseCSVRecord( const char* pszParseStr, CStringArray& saCSVFields );		// SAC 10/16/20
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Change Program Directory
@@ -611,6 +613,7 @@ extern int eiBDBCID_ResSpcDHWFeatures;	// SAC 1/23/19
 extern int eiBDBCID_ProcLd;
 extern int eiBDBCID_StorTank;
 extern int eiBDBCID_WtrHtr;
+extern int eiBDBCID_BlrHP;			// SAC 10/23/20
 
 extern long elDBID_Proj_Name;
 extern long elDBID_Proj_RunDate;
@@ -671,6 +674,8 @@ extern long elDBID_Chiller_EvapInRef;       // "FluidSeg"
 extern long elDBID_Chiller_EvapOutRef;      // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowInRef;   // "FluidSeg"
 extern long elDBID_Boiler_FluidFlowOutRef;  // "FluidSeg"
+extern long elDBID_BlrHP_FluidSegInRef;     // "FluidSeg"	SAC 10/23/20
+extern long elDBID_BlrHP_FluidSegOutRef;    // "FluidSeg"
 
 extern long elDBID_ResDHWSys_CentralSysType;	// SAC 1/31/20 (Com tic #3156)
 extern long elDBID_ResDHWSys_DHWSolarSysRef;	// SAC 1/31/20 (Com tic #3157)
@@ -687,6 +692,9 @@ extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string 
 extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
 extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
 extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
+extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/06/20
+extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
+extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
 
 #endif   // UI_CANRES
 
@@ -848,6 +856,9 @@ extern long elDBID_BatchRuns_ProjFileNames;       // BEMP_Str "Character string 
 extern long elDBID_BatchRuns_StoreProjToSepDir;   // BEMP_Int "Whether or not to store processed projects to separate directory" 
 extern long elDBID_BatchRuns_OutputProjDir;       // BEMP_Str "Directory where processed projects will be placed (complete path or relative to Projects folder)" 
 extern long elDBID_BatchRuns_RunsSpanClimates;    // BEMP_Int "Whether or not to process each project across ALL 16 climate zones (appends 'CZ#' to output project filenames and run titles)" - SAC 1/4/19 
+extern long elDBID_BatchRuns_RunSetFile;          // BEMP_Str "(relative path and) name of RunSet CSV file"     ; SAC 10/21/20
+extern long elDBID_BatchRuns_RunSetFileStatus;    // BEMP_Int "status of RunSet file (0-blank, 1-not found, 2-invalid, 3-OK)"
+extern long elDBID_BatchRuns_RunSetDescrip;       // BEMP_Str "Description of batch processing from RunSet file"
 #endif   // UI_CARES
 
 extern BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt );   // SAC 8/29/11 - enable class-specific dialog tab dimensions

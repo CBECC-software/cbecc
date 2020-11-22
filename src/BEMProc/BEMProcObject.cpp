@@ -2431,7 +2431,8 @@ BOOL BEMPX_CompileRuleset(	const char* sBEMBinFileName, const char* sPrimRuleFil
 /////////////////////////////////////////////////////////////////////////////
 
 int BEMPX_ParseRuleListFile(	const char* sRuleListFileName, QStringList& saRuleListNames,
-										const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg/*=NULL*/, bool bParseRules /*=false*/ )
+										const char* sLogFileName /*=NULL*/, QString* psRuleCompileMsg/*=NULL*/, bool bParseRules /*=false*/,
+										QString* psRuleCompErrorMsg /*=NULL*/ )	// added psRuleCompErrorMsg - SAC 11/12/20
 {
 	int iRetVal = 0;
 
@@ -2485,6 +2486,8 @@ int BEMPX_ParseRuleListFile(	const char* sRuleListFileName, QStringList& saRuleL
 
 			fileLog.close();                  // close log file
 		}
+		else if (psRuleCompErrorMsg)
+			*psRuleCompErrorMsg = QString( "Unable to open rulelist parsing log file:\n  %1" ).arg( sLogFileName );
 		else
 			BEMMessageBox( QString( "Unable to open rulelist parsing log file:\n  %1" ).arg( sLogFileName ), "", 3 /*error*/ );
 	}
@@ -2492,13 +2495,19 @@ int BEMPX_ParseRuleListFile(	const char* sRuleListFileName, QStringList& saRuleL
 	{
 		QString sErrMsg = QString( "Error writing rulelist parsing log file: %1\n\t - cause: %2\n" ).arg( sLogFileName, e.what() );
 		std::cout << sErrMsg.toLocal8Bit().constData();
-		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+		if (psRuleCompErrorMsg)
+			*psRuleCompErrorMsg = sErrMsg;
+		else
+			BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
 	}
  	catch (...)
   	{
 		QString sErrMsg = QString( "Error writing rulelist parsing log file: %1\n" ).arg( sLogFileName );
 		std::cout << sErrMsg.toLocal8Bit().constData();
-		BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
+		if (psRuleCompErrorMsg)
+			*psRuleCompErrorMsg = sErrMsg;
+		else
+			BEMMessageBox( sErrMsg, "", 2 /*warning*/ );
   	}
 	return iRetVal;
 }

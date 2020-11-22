@@ -276,6 +276,7 @@ protected:
 	afx_msg void OnHelpCompFormChecklist_New();
 	afx_msg void OnUpdateHelpCompFormChecklist_Alterations(CCmdUI* pCmdUI);
 	afx_msg void OnHelpCompFormChecklist_Alterations();
+   afx_msg void OnTimer( UINT_PTR nIDEvent );		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
 	//}}AFX_MSG
 
 	afx_msg BOOL OnSetCursor( CWnd* pWnd, UINT nHitTest, UINT message );
@@ -572,6 +573,9 @@ protected:
 	void ProcessCustomRulelistFile();
 	void EvalProposedRules( int iEvalOnlyClass, int iEvalOnlyObjIdx, CString* pDurationStr );
 	void RefreshDefaultsButtonPressed( int iBEMClassID, CWnd* pButton );
+
+	void PreventSystemSleepDuringAnalysis();		// SAC 10/21/20 - setup timer to prevent system sleep during analysis
+	void RestoreSystemSleepFollowingAnalysis();
 
 	void FileSaveAsCore( CString sProjFile );		// SAC 9/30/20
 

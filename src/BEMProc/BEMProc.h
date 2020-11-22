@@ -729,7 +729,8 @@ double BEMPROC_API __cdecl BEMPX_ApplyHourlyMultipliersFromTable( double* dHrlyV
 														int iTableColumn, bool bVerbose=false );
 
 int    BEMPROC_API __cdecl BEMPX_ParseRuleListFile( const char* sRuleListFileName, QStringList& saRuleListNames,
-														const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL, bool bParseRules=false );
+														const char* sLogFileName=NULL, QString* psRuleCompileMsg=NULL, bool bParseRules=false,
+														QString* psRuleCompErrorMsg=NULL );
 
 // Functions to retrieve Help IDs
 UINT   BEMPROC_API __cdecl BEMPX_GetItemHelpID(  long lDBID );

@@ -838,6 +838,74 @@ BOOL GetEncodedSetting( LPCSTR section, LPCSTR entry, CString& sOption )
 }
 
 
+// SAC 10/16/20 - based on BEMCmpMgr -- SAC 5/22/13 - Based on BEMTextIO::ParseCSVRecord()
+int ParseCSVRecord( const char* pszParseStr, CStringArray& saCSVFields )
+{
+	int iRetVal = 0;
+	int iParseLen = (int) strlen( pszParseStr );			assert( iParseLen > 0 );
+	if (iParseLen > 0)
+	{	CString string;
+		saCSVFields.RemoveAll();
+		int iChrIdx = 0;
+   	char chr;
+		BOOL bQuoteOpen=FALSE, bQuoteClosed=FALSE;
+		while (iChrIdx <= (iParseLen-1))
+		{
+		   chr = pszParseStr[iChrIdx++];
+			if (chr == '\"')
+			{	if (!bQuoteOpen)
+				{	// at beginning of quoted field
+					bQuoteOpen = TRUE;
+					bQuoteClosed = FALSE;
+					if (!string.IsEmpty())
+					{	assert( FALSE );		// string should be empty if/when we encounter an opening quote
+						string.Empty();		// blast data loaded into string prior to encountering an opening quote ???
+					}
+				}
+				else if (!bQuoteClosed)
+				{	// at the end of quoted field
+					bQuoteClosed = TRUE;
+					saCSVFields.Add( string );
+					string.Empty();
+				}
+				else
+				{	assert( FALSE );	// quote found after end of quoted field but before following delimiter!!!
+				}
+			}
+   		else if (chr == ',')
+			{	if (bQuoteOpen && !bQuoteClosed)
+					string += chr;		// delimeter included in quoted string...
+				else if (bQuoteOpen && bQuoteClosed)
+				{	// string already added to arry (@ closing quote), so all we need do here is reset to the quote BOOLs
+					bQuoteOpen   = FALSE;
+					bQuoteClosed = FALSE;
+				}
+				else if (!bQuoteOpen && !bQuoteClosed)
+				{	// add unquoted string to array
+					saCSVFields.Add( string );
+					string.Empty();
+				}
+				else
+				{	assert( FALSE );			// invalid condition where:  !bQuoteOpen && bQuoteClosed
+				}
+			}
+			else if (bQuoteOpen && bQuoteClosed)
+			{	assert( chr == ' ' );		// allow for space chars to follow a quoted string (and preceding a delimeter or EOL)??
+			}
+			else
+				string += chr;		// add character to string...
+		}
+
+		if (!string.IsEmpty())	// add trailing field (numeric, not followed by comma)
+			saCSVFields.Add( string );
+
+		iRetVal = (saCSVFields.GetSize() > 0 ? saCSVFields.GetSize() : 0);
+	}
+	
+	return iRetVal;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // Change Program Directory
 
@@ -2449,6 +2517,7 @@ int eiBDBCID_ResSpcDHWFeatures = 0;
 int eiBDBCID_ProcLd = 0;
 int eiBDBCID_StorTank = 0;
 int eiBDBCID_WtrHtr = 0;
+int eiBDBCID_BlrHP = 0;			// SAC 10/23/20
 
 
 long elDBID_Proj_Name = 0;
@@ -2487,6 +2556,9 @@ long elDBID_Chiller_EvapInRef = 0;          // "FluidSeg"
 long elDBID_Chiller_EvapOutRef = 0;         // "FluidSeg"
 long elDBID_Boiler_FluidFlowInRef = 0;      // "FluidSeg"
 long elDBID_Boiler_FluidFlowOutRef = 0;     // "FluidSeg"
+long elDBID_BlrHP_FluidSegInRef = 0;        // "FluidSeg"	SAC 10/23/20
+long elDBID_BlrHP_FluidSegOutRef = 0;       // "FluidSeg"
+
 long elDBID_ResDHWSys_CentralSysType = 0;						// SAC 1/31/20 (Com tic #3156)
 long elDBID_ResDHWSys_DHWSolarSysRef = 0;						// SAC 1/31/20 (Com tic #3157)
 long elDBID_INISettings_ProxyServerCredentials = 0;		// SAC 1/9/17
@@ -2501,6 +2573,9 @@ long elDBID_BatchRuns_ProjFileNames = 0;
 long elDBID_BatchRuns_StoreProjToSepDir = 0; 
 long elDBID_BatchRuns_OutputProjDir = 0;     
 long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19 
+long elDBID_BatchRuns_RunSetFile = 0;          // SAC 10/06/20
+long elDBID_BatchRuns_RunSetFileStatus = 0;  
+long elDBID_BatchRuns_RunSetDescrip = 0;   
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2747,6 +2822,9 @@ long elDBID_BatchRuns_ProjFileNames = 0;
 long elDBID_BatchRuns_StoreProjToSepDir = 0; 
 long elDBID_BatchRuns_OutputProjDir = 0;     
 long elDBID_BatchRuns_RunsSpanClimates = 0;    // SAC 1/4/19 
+long elDBID_BatchRuns_RunSetFile = 0;          // SAC 10/21/20
+long elDBID_BatchRuns_RunSetFileStatus = 0;  
+long elDBID_BatchRuns_RunSetDescrip = 0;   
 
 BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 {
@@ -2776,7 +2854,7 @@ BOOL GetDialogTabDimensions( int iBDBClass, int& iTabCtrlWd, int& iTabCtrlHt )
 	else if (iBDBClass == eiBDBCID_PolyLp  )				{  iTabCtrlWd = 730;    iTabCtrlHt = 535;   }	// SAC 2/21/17
 	else if (iBDBClass == eiBDBCID_HVACSys)				{	iTabCtrlWd = 750;		iTabCtrlHt = 540;   }
 	else if (iBDBClass == eiBDBCID_HVACHeat)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }
-	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 580;   }
+	else if (iBDBClass == eiBDBCID_HVACHtPump)   		{  iTabCtrlWd = 600;    iTabCtrlHt = 640;   }	// SAC 11/10/20 - Ht 580 -> 640
 	else if (iBDBClass == eiBDBCID_HVACDist)	   		{  iTabCtrlWd = 600;    iTabCtrlHt = 510;   }	// was: iTabCtrlWd = 600;    iTabCtrlHt = 430;
 	else if (iBDBClass == eiBDBCID_IAQFan)	   			{  iTabCtrlWd = 660;    iTabCtrlHt = 510;   }	// SAC 2/7/20 (Res tic #1174)
 	else if (iBDBClass == eiBDBCID_DHWSys)	   			{  iTabCtrlWd = 600;    iTabCtrlHt = 670;   }	// increased ht from 510 to 540 - SAC 2/16/18 (tic #978)   - ht 540 -> 610 SAC 12/5/18 (tic #975)   - ht 610 -> 640 SAC 12/2/19   - ht 640->670 SAC 5/12/20
@@ -3057,6 +3135,7 @@ void InitBEMDBIDs()
 	eiBDBCID_ProcLd             = BEMPX_GetDBComponentID( "ProcLd" );        
 	eiBDBCID_StorTank           = BEMPX_GetDBComponentID( "StorTank" );      
 	eiBDBCID_WtrHtr             = BEMPX_GetDBComponentID( "WtrHtr" );        
+	eiBDBCID_BlrHP              = BEMPX_GetDBComponentID( "BlrHP" );        
 
    elDBID_Proj_Name               = BEMPX_GetDatabaseID( "Name",               eiBDBCID_Project );
    elDBID_Proj_RunDate            = BEMPX_GetDatabaseID( "RunDate",            eiBDBCID_Project );
@@ -3098,6 +3177,8 @@ void InitBEMDBIDs()
 	elDBID_Chiller_EvapOutRef          = BEMPX_GetDatabaseID( "EvapOutRef",         eiBDBCID_Chiller  );
 	elDBID_Boiler_FluidFlowInRef       = BEMPX_GetDatabaseID( "FluidFlowInRef",     eiBDBCID_Boiler   );
 	elDBID_Boiler_FluidFlowOutRef      = BEMPX_GetDatabaseID( "FluidFlowOutRef",    eiBDBCID_Boiler   );
+	elDBID_BlrHP_FluidSegInRef         = BEMPX_GetDatabaseID( "FluidSegInRef",      eiBDBCID_BlrHP   );
+	elDBID_BlrHP_FluidSegOutRef        = BEMPX_GetDatabaseID( "FluidSegOutRef",     eiBDBCID_BlrHP   );
 
 	elDBID_ResDHWSys_CentralSysType    = BEMPX_GetDatabaseID( "CentralSysType",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3156)
 	elDBID_ResDHWSys_DHWSolarSysRef    = BEMPX_GetDatabaseID( "DHWSolarSysRef",     eiBDBCID_ResDHWSys );	// SAC 1/31/20 (Com tic #3157)
@@ -3114,6 +3195,9 @@ void InitBEMDBIDs()
 	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
 	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
 	elDBID_BatchRuns_RunsSpanClimates   = BEMPX_GetDatabaseID( "RunsSpanClimates",   eiBDBCID_BatchRuns );    // SAC 1/4/19 
+   elDBID_BatchRuns_RunSetFile         = BEMPX_GetDatabaseID( "RunSetFile",         eiBDBCID_BatchRuns );    // SAC 10/06/20
+   elDBID_BatchRuns_RunSetFileStatus   = BEMPX_GetDatabaseID( "RunSetFileStatus",   eiBDBCID_BatchRuns );  
+   elDBID_BatchRuns_RunSetDescrip      = BEMPX_GetDatabaseID( "RunSetDescrip",      eiBDBCID_BatchRuns );   
 
 // SAC 5/13/14 - revised to keep this property characterized as Required (but still marked as Primary)
 	// make adjustments to the InputClass of certain properties to ensure proper UI functionality
@@ -3306,6 +3390,9 @@ void InitBEMDBIDs()
 	elDBID_BatchRuns_StoreProjToSepDir  = BEMPX_GetDatabaseID( "StoreProjToSepDir",  eiBDBCID_BatchRuns ); 
 	elDBID_BatchRuns_OutputProjDir      = BEMPX_GetDatabaseID( "OutputProjDir",      eiBDBCID_BatchRuns );     
 	elDBID_BatchRuns_RunsSpanClimates   = BEMPX_GetDatabaseID( "RunsSpanClimates",   eiBDBCID_BatchRuns );    // SAC 1/4/19 
+   elDBID_BatchRuns_RunSetFile         = BEMPX_GetDatabaseID( "RunSetFile",         eiBDBCID_BatchRuns );    // SAC 10/21/20
+   elDBID_BatchRuns_RunSetFileStatus   = BEMPX_GetDatabaseID( "RunSetFileStatus",   eiBDBCID_BatchRuns );  
+   elDBID_BatchRuns_RunSetDescrip      = BEMPX_GetDatabaseID( "RunSetDescrip",      eiBDBCID_BatchRuns );   
 
 	BEMPUIX_AddPasswordDBIDPair( elDBID_INISettings_ProxyServerCredentials, elDBID_INISettings_ShowProxyServerCredentials, TRUE );	// SAC 1/9/17
 #endif   // UI_CARES

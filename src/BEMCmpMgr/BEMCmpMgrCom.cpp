@@ -1923,7 +1923,7 @@ void MidAnalysis_ApplyAnalysisActionToDatabase( long iAnalPhase, long iBeforeAft
 													QString::number(iApplyAnalActRetVal), AnalysisAction_PhaseString(iAnalPhase), AnalysisAction_BeforeAfter(iBeforeAfter) );
 			else if (!qsApplyAnalActError.isEmpty())
 			{	sErrMsg = qsApplyAnalActError;
-				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, iErrID, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, 0 /*iDontAbortOnErrorsThruStep*/, 1 /*iStepCheck*/ );
+				ProcessAnalysisError( sErrMsg, bAbort, iRetVal, iErrID, true /*bErrCausesAbort*/, true /*bWriteToLog*/, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iStepCheck );
 			}
 			if (!qsApplyAnalActError.isEmpty())
 				BEMPX_WriteLogFile( qsApplyAnalActError, NULL /*sLogPathFile*/, FALSE /*bBlankFile*/, TRUE /*bSupressAllMessageBoxes*/, FALSE /*bAllowCopyOfPreviousLog*/ );
@@ -3941,6 +3941,7 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 	QString sCSEVersion;  // SAC 10/10/16
 	bool bHaveResult=false, bResultIsPass=false;
 	QString sResTemp1, sResTemp2;
+	int iAnalStep=-1;		//, iProgressModel2=0;
 	if (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps)
 	{
 
@@ -4060,16 +4061,17 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 // ----------
 		for (iRun=0; (!bAbort && !BEMPX_AbortRuleEvaluation() && !bCompletedAnalysisSteps && iRun < iNumRuns); iRun++)
 		{
-			BOOL bSimulateModel = bModelToBeSimulated[iRun];  // SAC 11/22/16 - was: TRUE;
-			int iProgressModel=0, iSizingRunIdx=-1, iAnalStep=-1, iModelGenErr=0, iResultRunIdx=0, iSimErrID=0, iResErrID=0;		//, iProgressModel2=0;
+			BOOL bSimulateModel = bModelToBeSimulated[iRun], bFinalRun = FALSE;  // SAC 11/22/16 - was: TRUE;		// SAC 11/18/20 - bFinalRun
+			int iProgressModel=0, iSizingRunIdx=-1, iModelGenErr=0, iResultRunIdx=0, iSimErrID=0, iResErrID=0;		//, iProgressModel2=0;
+			iAnalStep=-1;
 			QString sRunID, sRunIDLong;
 			if (iCodeType == CT_T24N)
 			{	switch (iRun)
 				{	case  1 :				sRunID = "zb";			sRunIDLong = "Standard Sizing";		bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_zb;									iAnalStep = 3;		iResultRunIdx = 1;	iModelGenErr = 18;	iSimErrID = 24;		iResErrID = 27;	/*siOSWrapProgressIndex = CNRP_StdSizSim;*/		break;
 					case  2 :				sRunID = "ap";			sRunIDLong = "Proposed";				bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[3]);		iProgressModel = BCM_NRP_Model_ap;		iSizingRunIdx = 0;	iAnalStep = 4;		iResultRunIdx = 0;	iModelGenErr = 17;	iSimErrID = 25;		iResErrID = 28;	/*siOSWrapProgressIndex = CNRP_PropSim;*/			break;
-					case  3 :				sRunID = "ab";			sRunIDLong = "Standard";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_ab;		iSizingRunIdx = 1;	iAnalStep = 6;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	/*siOSWrapProgressIndex = CNRP_StdAnnSim;*/		break;
+					case  3 :				sRunID = "ab";			sRunIDLong = "Standard";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_ab;		iSizingRunIdx = 1;	iAnalStep = 6;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	bFinalRun = TRUE;		/*siOSWrapProgressIndex = CNRP_StdAnnSim;*/		break;
 					default :	if (bResearchMode)
-											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u;																																										/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}
+											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u;																																										bFinalRun = TRUE;		/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}
 									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRP_Model_zp;									iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	/*siOSWrapProgressIndex = CNRP_PropSizSim;*/	}	break;
 			}	}
 			else
@@ -4082,9 +4084,9 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 					case  6 :				sRunID = "ab1";		sRunIDLong = "Baseline1";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab1;	iSizingRunIdx = 1;	iAnalStep = 4;		iResultRunIdx = 1;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
 					case  7 :				sRunID = "ab2";		sRunIDLong = "Baseline2";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab2;	iSizingRunIdx = 2;	iAnalStep = 4;		iResultRunIdx = 2;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
 					case  8 :				sRunID = "ab3";		sRunIDLong = "Baseline3";				bSimRunsNow = (bSimulateModel && !bParallelSimulations);											iProgressModel = BCM_NRAP_Model_ab3;	iSizingRunIdx = 3;	iAnalStep = 4;		iResultRunIdx = 3;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
-					case  9 :				sRunID = "ab4";		sRunIDLong = "Baseline4";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRAP_Model_ab4;	iSizingRunIdx = 4;	iAnalStep = 6;		iResultRunIdx = 4;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	break;
+					case  9 :				sRunID = "ab4";		sRunIDLong = "Baseline4";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRAP_Model_ab4;	iSizingRunIdx = 4;	iAnalStep = 6;		iResultRunIdx = 4;	iModelGenErr = 19;	iSimErrID = 26;		iResErrID = 29;	bFinalRun = TRUE;		break;
 					default :	if (bResearchMode)
-											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u   ;														}
+											{	sRunID = "r";			sRunIDLong = "Research";				bSimRunsNow = bSimulateModel;																				iProgressModel = BCM_NRP_Model_u   ;																																									bFinalRun = TRUE;		}
 									else	{	sRunID = "zp";			sRunIDLong = "Proposed Sizing";		bSimRunsNow = bSimulateModel && (!bParallelSimulations || !bModelToBeSimulated[1]);		iProgressModel = BCM_NRAP_Model_zp ;								iAnalStep = 2;		iResultRunIdx = 0;	iModelGenErr = 16;	iSimErrID = 45;		iResErrID = 46;	}	break;
 			}	}
 
@@ -5380,6 +5382,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 										}	// else  => perform UMLH checks
 							}	}	}
 
+						// AnalysisAction - End / BeforeAnalPostProc processing   - SAC 11/17/20
+							if (iRetVal == 0 && !bAbort && bFinalRun)
+								MidAnalysis_ApplyAnalysisActionToDatabase( BEMAnalActPhase_End, BEMAnalActWhen_End_BeforeAnalPostProc, sErrMsg, bAbort, iRetVal,
+																							77 /*iErrID*/, bVerbose, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );	// SAC 11/17/20
+
 						// evaluate 'AnalysisPostProcessing' rulelist - SAC 4/20/19
 							if (!bAbort && !BEMPX_AbortRuleEvaluation() && iSimRetVal==0 && (iRun+1) == iNumRuns &&
 								 BEMPX_RulelistExists( "AnalysisPostProcessing" ))
@@ -5501,6 +5508,11 @@ int CMX_PerformAnalysisCB_NonRes(	const char* pszBEMBasePathFile, const char* ps
 		// possible mods needed here OR where 'PASS' originally set if we need to switch result to FAIL when iNumPropClgUMLHViolations or iNumPropHtgUMLHViolations > 0 - SAC 4/6/20
 
 		}
+
+	// AnalysisAction - End / AfterAnalPostProc processing   - SAC 11/17/20
+		if (iRetVal == 0 && !bAbort)
+			MidAnalysis_ApplyAnalysisActionToDatabase( BEMAnalActPhase_End, BEMAnalActWhen_End_AfterAnalPostProc, sErrMsg, bAbort, iRetVal,
+																		77 /*iErrID*/, bVerbose, pszErrorMsg, iErrorMsgLen, iDontAbortOnErrorsThruStep, iAnalStep /*iStepCheck*/ );	// SAC 11/17/20
 
 	// ----------
 	// COMPLIANCE REPORT GENERATION   - SAC 9/14/13
@@ -6479,7 +6491,7 @@ int CMX_PerformBatchAnalysis_CECNonRes(	const char* pszBatchPathFile, const char
 						iAADataType = 0;  // float
 					else if (boost::iequals( sAnalActType, "NewInteger" ) || boost::iequals( sAnalActType, "SetInteger" ))
 						iAADataType = 1;  // integer
-					else if (boost::iequals( sAnalActType, "RulelistPathFile" ))
+					else if (boost::iequals( sAnalActType, "RulelistPathFile" ) || boost::iequals( sAnalActType, "TablePathFile" ))		// SAC 11/16/20
 						iAADataType = 3;  // path/file
 					iaAnalActDataType.push_back( iAADataType );
 
