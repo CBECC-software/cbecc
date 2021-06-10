@@ -9,7 +9,7 @@ CBECC-Res:  https://sourceforge.net/projects/cbecc-res/
 Only occasional release versions of rule source for these products will be posted to this repository. For the latest rules, refer to the repositories above.
 
 # Supported Compiler and Platform
-This project currently supports compilation using Visual Studio 2013 to produce Windows executables.   Refer to the descriptions of each module under \src\ for more information on system dependencies.
+This project currently supports compilation using Visual Studio 2013 to produce Windows executables, 32-bit (x86) for CBECC-Res and 64-bit (x64) for CBECC-Com.   Refer to the descriptions of each module under \src\ for more information on system dependencies.
 
 # Build Guidance
 Visual Studio 2013 solution and project files are located under src. The main solution file is: \src\CBECC.sln
@@ -23,25 +23,25 @@ We recommend that you read through and download (& unzip) the vendor binaries be
 # Vendor Binaries
 Executable and library files for each of these tools can either be compiled by you, the devloper, or downloaded via the following links. Each of these compressed files are designed to be unzipped into the root repository directory.
 
-*CSE v0.836*:  https://drive.google.com/file/d/1J3tNCYhP0PX3h22aWYHVqtREb3fXRmJl/view?usp=sharing (~3.4 MB, updated 7/27 for 2016 releases)  
+*CSE v0.884*:  https://drive.google.com/file/d/1J3tNCYhP0PX3h22aWYHVqtREb3fXRmJl/view?usp=sharing (~2.9 MB, updated 11/19/20 for 2019 releases)  
 - Project site:  https://github.com/cse-sim  
-- Files needed for CBECC:  bin\Debug_VC12\CSE\cse.exe & bin\Release_VC12\CSE\cse.exe
+- Files needed for CBECC:  bin\Debug_VC12\CSE\cse19.exe & bin\Release_VC12\CSE\cse19.exe
 
-*OpenStudio / EnergyPlus v8.5*:  https://drive.google.com/file/d/1wHOdwVaddrhO4iiwpOJ3--EA7eRTAGYe/view?usp=sharing (~76 MB, updated 7/27/18)  
+*OpenStudio / EnergyPlus v9.0.1-bb7ca4f0da*:  https://drive.google.com/file/d/1wHOdwVaddrhO4iiwpOJ3--EA7eRTAGYe/view?usp=sharing (~116 MB, updated 8/19/20)  
 - OpenStudio project site:  https://github.com/NREL/OpenStudio  
-- Link to [OpenStudio branch CBECC-8-5 commit]https://github.com/NREL/OpenStudio/commit/a1601dc2c12058eb1b34327072caedd02fb18bd1) used by CBECC 2016.3.0 SP2.  
-- OS files needed for CBECC:  subset of OpenStudio DLLs in bin\Debug_VC12 & bin\Release_VC12  
+- Link to [OpenStudio branch CBECC-9-0 commit]https://github.com/NREL/OpenStudio/commit/59fe8e7e6f5c09c7d93c1da78fe7350f6fbf1400) used by CBECC 2019.3.1 SP1.  
+- OS files needed for CBECC:  subset of OpenStudio DLLs in bin\Debug_VC12x64 & bin\Release_VC12x64  
 - EnergyPlus project site:  https://github.com/NREL/EnergyPlus  
-- E+ files needed for CBECC:  EnergyPlus.exe and some supporting files in bin\Debug_VC12\EPlus & bin\Release_VC12\EPlus
+- E+ files needed for CBECC:  EnergyPlus.exe and some supporting files in bin\Debug_VC12x64\EPlus & bin\Release_VC12x64\EPlus
 
-*Boost v1.55.0*:  https://drive.google.com/file/d/0B8fX6euIT5rfeDBkdWFiWFJVQ00/view?usp=sharing (~26 MB)  
+*Boost v1.55.0*:  https://drive.google.com/file/d/1X_Rijrt9DJZPVJzIBxDBJPnshlqi7XgQ/view?usp=sharing (~56 MB)  
 - Project site:  http://www.boost.org/
 - Files needed for CBECC:  (all Boost libraries integrated into program executables)
 
-*Qt v5.3.2*:  https://drive.google.com/file/d/1ee-VGrN_cErDbwlQSCueal43daXI1gQh/view?usp=sharing (~61 MB, updated 7/27/18 to include Qt5WinExtras)  
+*Qt v5.3.2 for CBECC-Res and v5.6.1 for CBECC-Com*:  https://drive.google.com/file/d/1ee-VGrN_cErDbwlQSCueal43daXI1gQh/view?usp=sharing (~113 MB, updated 3/26/19)  
 - Project site:  https://www.qt.io/  
-- Files needed for CBECC:  Qt5Core/Gui/Network/Sql/Webkit/Wdigets/Xml in bin\Debug_VC12 & bin\Release_VC12  
+- Files needed for CBECC:  Qt5Core/Gui/Network/Sql/Webkit/Wdigets/Xml in bin\Debug_VC12, bin\Debug_VC12x64, bin\Release_VC12 & bin\Release_VC12x64  
 
-*OpenSSL v1.0.1j*:  https://drive.google.com/file/d/0B8fX6euIT5rfb3BrRzZMclVKY1k/view?usp=sharing (~1.7 MB)  
+*OpenSSL v1.0.1j for CBECC-Res and v1.0.2q for CBECC-Com*:  https://drive.google.com/file/d/16wjLKvKFQvflo8rRDxXYHtWZJGZuu30Q/view?usp=sharing (~4.3 MB)  
 - Project site:  https://www.openssl.org/  
-- Files needed for CBECC:  libeay32.dll & ssleay32.dll in bin\Debug_VC12 & bin\Release_VC12  
+- Files needed for CBECC:  libeay32.dll & ssleay32.dll in bin\Debug_VC12, bin\Debug_VC12x64, bin\Release_VC12 & bin\Release_VC12x64  
